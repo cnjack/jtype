@@ -1,0 +1,14 @@
+C:\Users\Jack\Documents\jtype\services\jtype-web\target\debug\deps\thiserror-3c52b9b91c5eeba2.d: C:\Users\Jack\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.18\src\lib.rs C:\Users\Jack\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.18\src\aserror.rs C:\Users\Jack\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.18\src\display.rs C:\Users\Jack\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.18\src\var.rs C:\Users\Jack\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.18\src\private.rs C:\Users\Jack\Documents\jtype\services\jtype-web\target\debug\build\thiserror-3412fd36ecd9b4c1\out/private.rs
+
+C:\Users\Jack\Documents\jtype\services\jtype-web\target\debug\deps\libthiserror-3c52b9b91c5eeba2.rlib: C:\Users\Jack\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.18\src\lib.rs C:\Users\Jack\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.18\src\aserror.rs C:\Users\Jack\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.18\src\display.rs C:\Users\Jack\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.18\src\var.rs C:\Users\Jack\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.18\src\private.rs C:\Users\Jack\Documents\jtype\services\jtype-web\target\debug\build\thiserror-3412fd36ecd9b4c1\out/private.rs
+
+C:\Users\Jack\Documents\jtype\services\jtype-web\target\debug\deps\libthiserror-3c52b9b91c5eeba2.rmeta: C:\Users\Jack\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.18\src\lib.rs C:\Users\Jack\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.18\src\aserror.rs C:\Users\Jack\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.18\src\display.rs C:\Users\Jack\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.18\src\var.rs C:\Users\Jack\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.18\src\private.rs C:\Users\Jack\Documents\jtype\services\jtype-web\target\debug\build\thiserror-3412fd36ecd9b4c1\out/private.rs
+
+C:\Users\Jack\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.18\src\lib.rs:
+C:\Users\Jack\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.18\src\aserror.rs:
+C:\Users\Jack\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.18\src\display.rs:
+C:\Users\Jack\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.18\src\var.rs:
+C:\Users\Jack\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\thiserror-2.0.18\src\private.rs:
+C:\Users\Jack\Documents\jtype\services\jtype-web\target\debug\build\thiserror-3412fd36ecd9b4c1\out/private.rs:
+
+# env-dep:OUT_DIR=C:\\Users\\Jack\\Documents\\jtype\\services\\jtype-web\\target\\debug\\build\\thiserror-3412fd36ecd9b4c1\\out

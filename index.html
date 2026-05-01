@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="/src/styles.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JType</title>
+    <script type="module" src="/src/main.ts" defer></script>
+  </head>
+
+  <body class="app-empty h-screen overflow-hidden bg-stone-100 text-stone-950 antialiased">
+    <main class="grid h-screen grid-rows-[auto_1fr]">
+      <header class="flex min-h-14 items-center justify-between gap-4 border-b border-stone-200 bg-stone-50 px-4">
+        <div class="flex min-w-0 items-center gap-4">
+          <div class="flex min-w-0 items-center gap-2">
+            <img class="h-8 w-8 rounded-lg" src="/src/assets/jtype-icon.svg" alt="" />
+            <div class="min-w-0">
+            <p class="text-[11px] font-semibold uppercase text-teal-700">JType</p>
+              <h1 id="app-context-title" class="truncate text-sm font-semibold text-stone-950">Markdown editor</h1>
+            </div>
+          </div>
+          <div class="hidden min-w-0 border-l border-stone-200 pl-4 md:block">
+            <p id="document-breadcrumbs" class="truncate text-xs text-stone-500">No document selected</p>
+          </div>
+        </div>
+        <div class="flex flex-wrap items-center justify-end gap-2">
+          <button id="quick-switcher-button" class="toolbar-button" type="button">Search</button>
+          <button id="command-palette-button" class="hidden" type="button">Commands</button>
+          <button id="open-folder" class="toolbar-button" type="button">Open Workspace</button>
+          <button id="open-file" class="hidden" type="button">Open File</button>
+          <button id="save-file" class="toolbar-button toolbar-button-primary" type="button" disabled>
+            Save
+          </button>
+          <button id="sync-panel-button" class="account-button" type="button">Sign in</button>
+        </div>
+      </header>
+
+      <section id="app-shell" class="grid min-h-0 grid-cols-[292px_minmax(0,1fr)]">
+        <aside id="workspace-sidebar" class="flex min-h-0 flex-col border-r border-stone-200 bg-stone-50">
+          <div class="border-b border-stone-200 p-4">
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <p id="workspace-name" class="truncate text-sm font-semibold text-stone-950">No workspace</p>
+                <p id="workspace-path" class="mt-1 truncate text-xs text-stone-500">Open a folder or Markdown file.</p>
+              </div>
+            </div>
+            <div class="mt-3 grid grid-cols-3 gap-2">
+              <button id="new-document" class="sidebar-action" type="button" disabled>New</button>
+              <button id="rename-entry" class="sidebar-action" type="button" disabled>Rename</button>
+              <button id="delete-entry" class="sidebar-action" type="button" disabled>Delete</button>
+            </div>
+          </div>
+
+          <section class="sidebar-panel min-h-0 flex-1 overflow-auto" data-panel="files">
+            <div class="border-b border-stone-200 p-3">
+              <div class="mb-2 flex items-center justify-between">
+                <p class="text-xs font-semibold uppercase text-stone-500">Favorites</p>
+                <button id="favorite-current" class="subtle-button" type="button" disabled>Toggle</button>
+              </div>
+              <div id="favorite-list" class="space-y-1"></div>
+            </div>
+            <nav id="file-tree" class="p-3" aria-label="Workspace files">
+              <p class="rounded-md border border-dashed border-stone-300 p-3 text-sm text-stone-500">
+                Drop a folder here to start a workspace.
+              </p>
+            </nav>
+            <section class="border-t border-stone-200 p-3">
+              <p class="mb-2 text-xs font-semibold uppercase text-stone-500">Recent</p>
+              <div id="recent-list" class="space-y-1">
+                <p class="text-xs text-stone-500">No recent items yet.</p>
+              </div>
+            </section>
+          </section>
+
+          <section class="sidebar-panel hidden min-h-0 flex-1 overflow-auto p-3" data-panel="search">
+            <label class="text-xs font-semibold uppercase text-stone-500" for="workspace-search">Search</label>
+            <input id="workspace-search" class="sync-input mt-2" placeholder="Search files, titles, paths" />
+            <div id="search-results" class="mt-3 space-y-1"></div>
+          </section>
+
+          <section class="sidebar-panel hidden min-h-0 flex-1 overflow-auto p-3" data-panel="library">
+            <div class="mb-3 flex items-center justify-between">
+              <p class="text-xs font-semibold uppercase text-stone-500">Library</p>
+              <select id="library-filter" class="compact-select" aria-label="Library filter">
+                <option value="all">All</option>
+                <option value="draft">Drafts</option>
+                <option value="published">Published</option>
+                <option value="review">Needs review</option>
+              </select>
+            </div>
+            <div id="library-view" class="space-y-1"></div>
+          </section>
+
+          <section class="sidebar-panel hidden min-h-0 flex-1 overflow-auto p-3" data-panel="publish">
+            <div class="mb-3 flex items-center justify-between">
+              <p class="text-xs font-semibold uppercase text-stone-500">Publish Queue</p>
+              <button id="publish-checks" class="subtle-button" type="button" disabled>Check</button>
+            </div>
+            <button id="publish-site" class="sidebar-action mb-3 w-full" type="button" disabled>Export static preview</button>
+            <div id="publish-queue" class="space-y-2"></div>
+          </section>
+
+          <section class="sidebar-panel hidden min-h-0 flex-1 overflow-auto p-3" data-panel="ai" aria-hidden="true">
+            <p class="text-xs font-semibold uppercase text-stone-500">AI Commands</p>
+            <div class="mt-3 space-y-2">
+              <button id="ai-propose-title" class="sidebar-action w-full" type="button" disabled>Propose title frontmatter</button>
+              <button id="build-ai-index" class="sidebar-action w-full" type="button" disabled>AI Index</button>
+            </div>
+            <p class="mt-3 text-xs text-stone-500">AI writes are staged as reviewable patches before files change.</p>
+          </section>
+
+          <section class="sidebar-panel hidden min-h-0 flex-1 overflow-auto p-3" data-panel="settings">
+            <p class="text-xs font-semibold uppercase text-stone-500">Web Sync</p>
+            <div class="mt-3 space-y-2">
+              <input id="sync-service-url" class="sync-input" value="http://localhost:8080" aria-label="Sync service URL" />
+              <input id="sync-username" class="sync-input" placeholder="Username" aria-label="Sync username" />
+              <input id="sync-password" class="sync-input" placeholder="Password" type="password" aria-label="Sync password" />
+              <div class="grid grid-cols-3 gap-2">
+                <button id="sync-register" class="sidebar-action" type="button">Register</button>
+                <button id="sync-login" class="sidebar-action" type="button">Login</button>
+                <button id="sync-now" class="sidebar-action" type="button" disabled>Sync</button>
+              </div>
+              <a id="sync-site-link" class="hidden truncate text-xs font-semibold text-teal-700" target="_blank" rel="noreferrer"></a>
+            </div>
+          </section>
+        </aside>
+
+        <section id="welcome-screen" class="welcome-screen min-h-0 overflow-y-auto bg-[#fbfaf7]">
+          <div class="mx-auto flex min-h-full max-w-4xl flex-col justify-center px-8 py-10">
+            <div class="max-w-2xl">
+              <p class="text-xs font-semibold uppercase text-teal-700">JType</p>
+              <h2 class="mt-3 text-3xl font-semibold tracking-normal text-stone-950">Open a workspace or edit a Markdown file.</h2>
+              <p class="mt-3 max-w-xl text-sm leading-6 text-stone-600">
+                Use a workspace when you want files, publishing, and web sync. Open a single file when you just want a clean Markdown editor.
+              </p>
+              <div class="mt-6 flex flex-wrap gap-2">
+                <button id="welcome-open-folder" class="toolbar-button toolbar-button-primary" type="button">Open Workspace</button>
+                <button id="welcome-open-file" class="toolbar-button" type="button">Open Markdown File</button>
+              </div>
+            </div>
+            <section class="mt-10 max-w-2xl rounded-lg border border-stone-200 bg-white p-4">
+              <div class="mb-3 flex items-center justify-between">
+                <p class="text-sm font-semibold text-stone-950">Recent</p>
+                <button id="welcome-command-palette" class="subtle-button" type="button">Commands</button>
+              </div>
+              <div id="welcome-recent-list" class="space-y-1">
+                <p class="text-sm text-stone-500">No recent workspaces or Markdown files yet.</p>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section id="editor-shell" class="flex min-h-0 flex-col bg-[#fbfaf7]">
+          <div class="flex min-h-14 items-center justify-between gap-3 border-b border-stone-200 px-4">
+            <div class="min-w-0">
+              <div class="flex items-center gap-2">
+                <p id="file-name" class="truncate text-sm font-semibold text-stone-950">No file selected</p>
+                <button id="favorite-current-top" class="icon-text-button" type="button" disabled title="Toggle favorite">Star</button>
+              </div>
+              <p id="file-path" class="truncate text-xs text-stone-500"></p>
+            </div>
+            <div id="state-chips" class="flex shrink-0 items-center gap-1">
+              <span id="file-state" class="status-chip status-chip-neutral">Ready</span>
+            </div>
+          </div>
+          <div class="flex min-h-10 items-center gap-1 border-b border-stone-200 bg-stone-50 px-3">
+            <button class="editor-tool" data-command="editor.bold" type="button" title="Bold - Ctrl+B">B</button>
+            <button class="editor-tool" data-command="editor.italic" type="button" title="Italic - Ctrl+I">I</button>
+            <button class="editor-tool" data-command="editor.link" type="button" title="Link - Ctrl+K">Link</button>
+            <button class="editor-tool" data-command="editor.code" type="button" title="Inline code">Code</button>
+            <button class="editor-tool" data-command="insert.table" type="button" title="Insert or edit table - Ctrl+Shift+T">Table</button>
+            <button class="editor-tool" data-command="insert.math" type="button" title="Insert formula block">Math</button>
+            <button class="editor-tool" data-command="insert.mermaid" type="button" title="Insert Mermaid diagram">Mermaid</button>
+            <button class="editor-tool" data-command="insert.task" type="button" title="Task list">Task</button>
+            <div class="ml-auto flex items-center gap-1 rounded-md border border-stone-200 bg-white p-0.5">
+              <button class="view-mode-button view-mode-button-active" data-view-mode="write" type="button">Write</button>
+              <button class="view-mode-button" data-view-mode="split" type="button">Split</button>
+              <button class="view-mode-button" data-view-mode="preview" type="button">Preview</button>
+            </div>
+            <button id="document-info-toggle" class="editor-tool" type="button" title="Document info">Info</button>
+            <button class="editor-tool" data-command="view.focus" type="button" title="Focus mode">Focus</button>
+          </div>
+          <div id="workbench-body" class="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_320px]">
+            <div id="editor-preview-grid" class="editor-preview-grid view-mode-split min-h-0">
+              <textarea
+                id="editor"
+                class="min-h-0 resize-none bg-[#fbfaf7] p-6 font-mono text-sm leading-6 text-stone-800 outline-none placeholder:text-stone-400"
+                spellcheck="false"
+                aria-label="Markdown editor"
+                placeholder="Open or drop a Markdown file to start editing."
+              ></textarea>
+              <article id="preview" class="preview empty min-h-0 overflow-y-auto overflow-x-hidden border-l border-stone-200 bg-stone-50 p-8" data-inspector-panel="preview">
+                <h2>Select a Markdown file</h2>
+                <p>Your rendered document will appear here.</p>
+              </article>
+            </div>
+
+            <aside id="document-panel" class="document-panel min-h-0 overflow-y-auto border-l border-stone-200 bg-stone-50 p-4">
+              <div class="mb-4 flex items-center justify-between gap-3">
+                <div>
+                  <p class="text-sm font-semibold text-stone-950">Document Info</p>
+                  <p class="text-xs text-stone-500">Properties, outline, links, and publish.</p>
+                </div>
+                <button id="document-info-close" class="subtle-button" type="button">Hide</button>
+              </div>
+              <section id="properties-panel" class="document-info-section"></section>
+              <section id="outline-panel" class="document-info-section"></section>
+              <section id="links-panel" class="document-info-section"></section>
+              <section id="publish-panel" class="document-info-section"></section>
+              <section id="ai-panel" class="hidden" aria-hidden="true"></section>
+            </aside>
+          </div>
+          <div id="operation-log" class="border-t border-stone-200 bg-stone-50 px-4 py-3 text-xs text-stone-500">
+            Local-first mode. Files remain on disk.
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <div id="command-dialog" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-label="Command palette">
+      <div class="command-modal">
+        <input id="command-input" class="command-input" placeholder="Search commands..." aria-label="Search commands" />
+        <div id="command-results" class="max-h-[420px] overflow-auto p-2"></div>
+      </div>
+    </div>
+
+    <div id="quick-dialog" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-label="Quick switcher">
+      <div class="command-modal">
+        <input id="quick-input" class="command-input" placeholder="Open or create note..." aria-label="Open or create note" />
+        <div id="quick-results" class="max-h-[420px] overflow-auto p-2"></div>
+      </div>
+    </div>
+
+    <div id="context-menu" class="context-menu hidden" role="menu"></div>
+
+    <div id="account-dialog" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-label="Account and sync">
+      <div class="command-modal max-w-lg">
+        <div class="border-b border-stone-200 px-4 py-3">
+          <p class="text-sm font-semibold text-stone-950">Account and Web Site</p>
+          <p id="account-status" class="mt-1 text-xs text-stone-500">Sign in to sync this workspace to your web site.</p>
+        </div>
+        <div class="space-y-3 p-4">
+          <input id="account-service-url" class="sync-input" value="http://localhost:8080" aria-label="Account service URL" />
+          <input id="account-username" class="sync-input" placeholder="Username" aria-label="Account username" />
+          <input id="account-password" class="sync-input" placeholder="Password" type="password" aria-label="Account password" />
+          <div class="grid grid-cols-3 gap-2">
+            <button id="account-register" class="sidebar-action" type="button">Register</button>
+            <button id="account-login" class="sidebar-action" type="button">Login</button>
+            <button id="account-sync" class="sidebar-action" type="button" disabled>Sync</button>
+          </div>
+          <a id="account-site-link" class="hidden truncate text-xs font-semibold text-teal-700" target="_blank" rel="noreferrer"></a>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

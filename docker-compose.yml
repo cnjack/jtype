@@ -1,0 +1,54 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: jtype-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-jtype-root}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-jtype}
+      MYSQL_USER: ${MYSQL_USER:-jtype}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-jtype-local}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./infra/mysql:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u$${MYSQL_USER} -p$${MYSQL_PASSWORD} --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  rustfs:
+    image: rustfs/rustfs:latest
+    container_name: jtype-rustfs
+    restart: unless-stopped
+    environment:
+      RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY:-jtype}
+      RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY:-jtype-local-secret}
+    command: ["server", "/data", "--console-address", "0.0.0.0:9001"]
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - rustfs-data:/data
+
+  jtype-web:
+    build:
+      context: .
+      dockerfile: services/jtype-web/Dockerfile
+    container_name: jtype-web
+    restart: unless-stopped
+    environment:
+      JTYPED_DATABASE_URL: mysql://jtype:${MYSQL_PASSWORD:-jtype-local}@mysql:3306/${MYSQL_DATABASE:-jtype}
+      JTYPED_BIND_ADDR: 0.0.0.0:8080
+      JTYPED_PUBLIC_BASE_URL: http://localhost:8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+volumes:
+  mysql-data:
+  rustfs-data:
