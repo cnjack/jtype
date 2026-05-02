@@ -166,7 +166,25 @@ pub fn extract_title(content: &str) -> Option<String> {
 }
 
 pub fn markdown_to_html(content: &str) -> String {
-    let parser = Parser::new_ext(content, Options::all());
+    let frontmatter = parse_frontmatter(content);
+    let body = if !frontmatter.is_empty() {
+        // Strip the frontmatter block from content
+        let normalized = content.replace("\r\n", "\n");
+        if let Some(end) = normalized.find("\n---") {
+            normalized.split_at(end + 4).1.trim_start().to_string()
+        } else {
+            content.to_string()
+        }
+    } else {
+        content.to_string()
+    };
+    let title = frontmatter.get("title").cloned().unwrap_or_default();
+    let markdown_input = if !title.is_empty() {
+        format!("# {}\n\n{}", title, body)
+    } else {
+        body
+    };
+    let parser = Parser::new_ext(&markdown_input, Options::all());
     let mut output = String::new();
     html::push_html(&mut output, parser);
     output
@@ -174,6 +192,15 @@ pub fn markdown_to_html(content: &str) -> String {
 
 pub fn site_url(public_base_url: &str, username: &str) -> String {
     format!("{}/u/{}", public_base_url.trim_end_matches('/'), username)
+}
+
+pub fn workspace_site_url(public_base_url: &str, username: &str, workspace_slug: &str) -> String {
+    format!(
+        "{}/u/{}/{}",
+        public_base_url.trim_end_matches('/'),
+        username,
+        workspace_slug
+    )
 }
 
 pub fn conflict_sibling_path(relative_path: &str) -> String {

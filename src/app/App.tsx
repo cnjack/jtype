@@ -97,10 +97,10 @@ function AppContent() {
 
   return (
     <CommandsContext.Provider value={commands}>
-      <div className={`${state.mode === "empty" ? "app-empty" : state.mode === "workspace" ? "workspace-mode" : "single-file-mode"} ${state.focusMode ? "focus-mode" : ""} h-screen overflow-hidden bg-stone-100 text-stone-950 antialiased`}>
+      <div className={`${state.mode === "empty" ? "app-empty" : state.mode === "workspace" ? "workspace-mode" : "single-file-mode"} ${state.focusMode ? "focus-mode" : ""} h-screen overflow-hidden bg-[#f5f8f6] text-stone-950 antialiased`}>
         <main className="grid h-screen grid-rows-[auto_1fr]">
           <Header />
-          <section className={`grid min-h-0 ${sidebarVisible ? "grid-cols-[292px_minmax(0,1fr)]" : "grid-cols-[minmax(0,1fr)]"}`}>
+          <section className={`grid min-h-0 ${sidebarVisible ? "grid-cols-[272px_minmax(0,1fr)]" : "grid-cols-[minmax(0,1fr)]"}`}>
             {sidebarVisible && <Sidebar />}
             {showWelcome ? <WelcomeScreen /> : showVaultHome ? <VaultHome /> : state.currentPath ? <EditorShell /> : <WelcomeScreen />}
           </section>

@@ -13,6 +13,7 @@ export function EditorShell() {
   const commands = useCommandsList();
   const editorRef = useRef<HTMLTextAreaElement>(null);
   const previewRef = useRef<HTMLElement>(null);
+  const isSyncingScroll = useRef(false);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
@@ -81,19 +82,46 @@ export function EditorShell() {
     return () => document.removeEventListener("click", handler);
   }, [contextMenu]);
 
+  useEffect(() => {
+    const editor = editorRef.current;
+    const preview = previewRef.current;
+    if (!editor || !preview) return;
+
+    const syncScroll = (source: HTMLElement, target: HTMLElement) => {
+      if (isSyncingScroll.current) return;
+      isSyncingScroll.current = true;
+      const ratio = source.scrollTop / (source.scrollHeight - source.clientHeight || 1);
+      target.scrollTop = ratio * (target.scrollHeight - target.clientHeight || 1);
+      requestAnimationFrame(() => {
+        isSyncingScroll.current = false;
+      });
+    };
+
+    const onEditorScroll = () => syncScroll(editor, preview);
+    const onPreviewScroll = () => syncScroll(preview, editor);
+
+    editor.addEventListener("scroll", onEditorScroll);
+    preview.addEventListener("scroll", onPreviewScroll);
+
+    return () => {
+      editor.removeEventListener("scroll", onEditorScroll);
+      preview.removeEventListener("scroll", onPreviewScroll);
+    };
+  }, []);
+
   return (
-    <section className="flex min-h-0 flex-col bg-[#fbfaf7]">
-      <div className="flex min-h-14 items-center justify-between gap-3 border-b border-stone-200 px-4">
+    <section className="flex min-h-0 flex-col bg-[#fbfdfb]">
+      <div className="flex min-h-[68px] items-center justify-between gap-3 border-b border-black/[0.04] bg-white/70 px-6 backdrop-blur-xl">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <p id="document-breadcrumbs" className="truncate text-xs text-stone-500">
+            <p id="document-breadcrumbs" className="truncate text-xs font-medium text-[#6b7773]">
               {state.currentRelativePath
                 ? `${state.workspace?.name ?? "Vault"} / ${state.currentRelativePath}`
                 : state.currentPath || "No document selected"}
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <p className="truncate text-sm font-semibold text-stone-950">{fileName}</p>
+          <div className="mt-1 flex items-center gap-2">
+            <p className="truncate text-lg font-semibold tracking-[-0.01em] text-stone-950">{fileName}</p>
             {state.currentPath && (
               <button type="button" className="editor-tool text-xs" aria-label="Star" onClick={toggleFavorite}>
                 {isFavorite ? "Starred" : "Star"}
@@ -109,7 +137,7 @@ export function EditorShell() {
         </div>
       </div>
 
-      <div className="flex min-h-10 items-center gap-1 border-b border-stone-200 bg-stone-50 px-3">
+      <div className="flex min-h-12 items-center gap-1 border-b border-black/[0.04] bg-[#fbfdfb] px-5">
         <EditorToolbarButton command="editor.bold" title="Bold - Ctrl+B" disabled={!isMarkdown} runCommand={runCommand}>B</EditorToolbarButton>
         <EditorToolbarButton command="editor.italic" title="Italic - Ctrl+I" disabled={!isMarkdown} runCommand={runCommand}>I</EditorToolbarButton>
         <EditorToolbarButton command="editor.link" title="Link - Ctrl+K" disabled={!isMarkdown} runCommand={runCommand}>Link</EditorToolbarButton>
@@ -118,7 +146,7 @@ export function EditorShell() {
         <EditorToolbarButton command="insert.math" title="Insert formula block" disabled={!isMarkdown} runCommand={runCommand}>Math</EditorToolbarButton>
         <EditorToolbarButton command="insert.mermaid" title="Insert Mermaid diagram" disabled={!isMarkdown} runCommand={runCommand}>Mermaid</EditorToolbarButton>
         <EditorToolbarButton command="insert.task" title="Task list" disabled={!isMarkdown} runCommand={runCommand}>Task</EditorToolbarButton>
-        <div className="ml-auto flex items-center gap-1 rounded-md border border-stone-200 bg-white p-0.5">
+        <div className="ml-auto flex items-center gap-1 rounded-full bg-[#eef5f1] p-1">
           {(["write", "split", "preview"] as EditorMode[]).map((mode) => (
             <button
               key={mode}
@@ -130,16 +158,16 @@ export function EditorShell() {
             </button>
           ))}
         </div>
-        <button className={`editor-tool ${state.documentPanelOpen ? "bg-stone-900 text-white hover:bg-stone-900 hover:text-white" : ""}`} type="button" title="Document info" onClick={() => dispatch({ type: "TOGGLE_DOCUMENT_PANEL" })}>Info</button>
+        <button className={`editor-tool ${state.documentPanelOpen ? "bg-[#0d0d0c] text-white hover:bg-[#0d0d0c] hover:text-white" : ""}`} type="button" title="Document info" onClick={() => dispatch({ type: "TOGGLE_DOCUMENT_PANEL" })}>Info</button>
         <button className="editor-tool" type="button" title="Focus mode" onClick={() => dispatch({ type: "TOGGLE_FOCUS_MODE" })}>Focus</button>
       </div>
 
-      <div id="workbench-body" className={`workbench-body grid min-h-0 flex-1 ${state.documentPanelOpen ? "grid-cols-[minmax(0,1fr)_340px]" : "grid-cols-[minmax(0,1fr)]"}`}>
+      <div id="workbench-body" className={`workbench-body grid min-h-0 flex-1 bg-[#fbfdfb] ${state.documentPanelOpen ? "grid-cols-[minmax(0,1fr)_340px]" : "grid-cols-[minmax(0,1fr)]"}`}>
         <div className={getGridClass(state.editorMode)} style={{ position: "relative" }}>
           <textarea
             id="editor"
             ref={editorRef}
-            className="h-full w-full min-h-0 resize-none bg-[#fbfaf7] p-6 font-mono text-sm leading-6 text-stone-800 outline-none placeholder:text-stone-400"
+            className="h-full min-h-0 w-full resize-none bg-white/40 p-8 font-mono text-[13px] leading-7 text-stone-800 outline-none placeholder:text-[#9aa6a1]"
             style={{ position: "relative", zIndex: 2 }}
             spellCheck={false}
             aria-label="Markdown editor"
@@ -151,7 +179,7 @@ export function EditorShell() {
           <article
             id="preview"
             ref={previewRef}
-            className="preview empty min-h-0 overflow-y-auto overflow-x-hidden border-l border-stone-200 bg-stone-50 p-8"
+            className="preview empty min-h-0 overflow-y-auto overflow-x-hidden border-l border-black/[0.04] bg-[#f8fbf9] p-10"
             style={{ position: "relative", zIndex: 1 }}
           >
             <h2>Select a Markdown file</h2>
@@ -160,11 +188,11 @@ export function EditorShell() {
         </div>
 
         {state.documentPanelOpen && (
-          <aside id="document-panel" className="min-h-0 overflow-y-auto border-l border-stone-200 bg-stone-50 p-4">
+          <aside id="document-panel" className="min-h-0 overflow-y-auto border-l border-black/[0.04] bg-[#f6faf7] p-5">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
                 <p className="text-sm font-semibold text-stone-950">Document Info</p>
-                <p className="text-xs text-stone-500">Properties, outline, links, and publish.</p>
+                <p className="text-xs text-[#6b7773]">Properties, outline, links, and publish.</p>
               </div>
               <button className="subtle-button" type="button" onClick={() => dispatch({ type: "TOGGLE_DOCUMENT_PANEL" })}>Hide</button>
             </div>
@@ -176,7 +204,7 @@ export function EditorShell() {
         )}
       </div>
 
-      <div id="operation-log" className="border-t border-stone-200 bg-stone-50 px-4 py-3 text-xs text-stone-500">
+      <div id="operation-log" className="border-t border-black/[0.04] bg-white/70 px-5 py-3 text-xs text-[#6b7773]">
         {state.statusMessage}
       </div>
 

@@ -60,11 +60,17 @@ pub async fn sync_legacy(
     }
     tx.commit().await?;
 
+    let workspace_slug: String = sqlx::query("SELECT COALESCE(slug, LOWER(REPLACE(name, ' ', '-'))) AS slug FROM workspaces WHERE id = ?")
+        .bind(&workspace_id)
+        .fetch_one(&state.pool)
+        .await?
+        .try_get("slug")?;
+
     Ok(Json(SyncWorkspaceResponse {
         workspace_id,
         workspace_name: payload.workspace_name,
         document_count: payload.documents.len(),
-        site_url: site_url(&state.public_base_url, &user.username),
+        site_url: workspace_site_url(&state.public_base_url, &user.username, &workspace_slug),
     }))
 }
 

@@ -171,15 +171,24 @@ pub struct CreateWorkspaceRequest {
     pub storage_budget_bytes: Option<i64>,
 }
 
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateWorkspaceRequest {
+    pub name: Option<String>,
+    pub publish_title: Option<String>,
+}
+
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WorkspaceSummary {
     pub id: String,
     pub name: String,
     pub slug: String,
+    pub publish_title: String,
     pub role: String,
     pub document_count: i64,
     pub storage_budget_bytes: i64,
+    pub storage_used_bytes: i64,
 }
 
 #[derive(Debug, Serialize)]
@@ -385,6 +394,13 @@ pub struct DeviceOAuthApproveRequest {
 #[serde(rename_all = "camelCase")]
 pub struct AddDomainRequest {
     pub domain: String,
+    pub workspace_id: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BindDomainRequest {
+    pub workspace_id: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -392,6 +408,8 @@ pub struct AddDomainRequest {
 pub struct DomainResponse {
     pub id: String,
     pub domain: String,
+    pub workspace_id: Option<String>,
+    pub workspace_name: Option<String>,
     pub verification_token: String,
     pub dns_txt_record: String,
     pub status: String,

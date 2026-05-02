@@ -75,7 +75,7 @@ pub fn build_router(pool: Pool<MySql>, public_base_url: String) -> Router {
         .route("/api/oauth/device/poll", post(handlers::oauth::poll))
         // Workspaces API
         .route("/api/v1/workspaces", get(handlers::workspace::list_workspaces).post(handlers::workspace::create_workspace))
-        .route("/api/v1/workspaces/:workspace_id", get(handlers::workspace::get_workspace))
+        .route("/api/v1/workspaces/:workspace_id", get(handlers::workspace::get_workspace).put(handlers::workspace::update_workspace))
         .route("/api/v1/workspaces/:workspace_id/manifest", get(handlers::workspace::get_workspace_manifest))
         .route("/api/v1/workspaces/:workspace_id/invites", post(handlers::workspace::create_invite))
         .route("/api/v1/workspaces/:workspace_id/invites/:invite_id/revoke", post(handlers::workspace::revoke_invite))
@@ -93,11 +93,13 @@ pub fn build_router(pool: Pool<MySql>, public_base_url: String) -> Router {
         // Domains API
         .route("/api/v1/domains", get(handlers::domain::list).post(handlers::domain::add))
         .route("/api/v1/domains/:domain_id", get(handlers::domain::get))
+        .route("/api/v1/domains/:domain_id/binding", put(handlers::domain::bind_workspace))
         .route("/api/v1/domains/:domain_id/verify", post(handlers::domain::verify))
         .route("/api/v1/domains/:domain_id/certificate", post(handlers::domain::upload_certificate))
         // Public sites
-        .route("/u/:site_user", get(handlers::site::site_index))
-        .route("/u/:site_user/*page_path", get(handlers::site::site_page))
+        .route("/u/:site_user", get(handlers::site::user_site_index))
+        .route("/u/:site_user/:workspace_slug", get(handlers::site::workspace_index))
+        .route("/u/:site_user/:workspace_slug/*page_path", get(handlers::site::workspace_page))
         // Frontend SPA - catch all other routes
         .fallback(serve_frontend)
         .layer(

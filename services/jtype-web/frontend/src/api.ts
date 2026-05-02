@@ -66,9 +66,11 @@ export const api = {
 
   // Workspaces
   listWorkspaces: () => request<{ workspaces: WorkspaceSummary[] }>('/api/v1/workspaces'),
-  createWorkspace: (name: string) =>
-    request<WorkspaceSummary>('/api/v1/workspaces', { method: 'POST', body: JSON.stringify({ name }) }),
+  createWorkspace: (name: string, storageBudgetBytes?: number) =>
+    request<WorkspaceSummary>('/api/v1/workspaces', { method: 'POST', body: JSON.stringify({ name, storageBudgetBytes }) }),
   getWorkspace: (id: string) => request<WorkspaceSummary>(`/api/v1/workspaces/${id}`),
+  updateWorkspace: (id: string, data: { name?: string; publishTitle?: string }) =>
+    request<WorkspaceSummary>(`/api/v1/workspaces/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
 
   // Documents
   listDocuments: (workspaceId: string) =>
@@ -90,8 +92,10 @@ export const api = {
 
   // Domains
   listDomains: () => request<DomainResponse[]>('/api/v1/domains'),
-  addDomain: (domain: string) =>
-    request<DomainResponse>('/api/v1/domains', { method: 'POST', body: JSON.stringify({ domain }) }),
+  addDomain: (domain: string, workspaceId?: string) =>
+    request<DomainResponse>('/api/v1/domains', { method: 'POST', body: JSON.stringify({ domain, workspaceId }) }),
+  bindDomain: (id: string, workspaceId?: string) =>
+    request<DomainResponse>(`/api/v1/domains/${id}/binding`, { method: 'PUT', body: JSON.stringify({ workspaceId }) }),
   verifyDomain: (id: string) =>
     request<DomainResponse>(`/api/v1/domains/${id}/verify`, { method: 'POST', body: '{}' }),
   uploadCertificate: (id: string, certChainPem: string, privateKeyPem: string) =>
@@ -176,9 +180,11 @@ export interface WorkspaceSummary {
   id: string
   name: string
   slug: string
+  publishTitle: string
   role: string
   documentCount: number
   storageBudgetBytes: number
+  storageUsedBytes: number
 }
 
 export interface DocumentListItem {
@@ -213,6 +219,8 @@ export interface DocumentVersion {
 export interface DomainResponse {
   id: string
   domain: string
+  workspaceId: string | null
+  workspaceName: string | null
   verificationToken: string
   dnsTxtRecord: string
   status: string

@@ -1,64 +1,79 @@
 @import "tailwindcss";
 
+@layer base {
+  :root {
+    --jtype-green: #008884;
+    --jtype-green-dark: #006f6b;
+    --jtype-green-soft: #e8f6f2;
+    --jtype-green-gray: #6f817a;
+    --jtype-line: rgb(13 13 12 / 0.06);
+  }
+
+  html,
+  body {
+    background: #f5f8f6;
+  }
+}
+
 @layer components {
   .toolbar-button {
-    @apply inline-flex h-9 items-center justify-center rounded-md border border-stone-300 bg-stone-50 px-3 text-sm font-semibold text-stone-700 shadow-sm shadow-stone-200/40 transition hover:border-stone-400 hover:bg-white disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex h-9 items-center justify-center rounded-lg border border-black/[0.06] bg-white/80 px-3.5 text-sm font-semibold text-stone-800 shadow-sm shadow-emerald-950/5 transition hover:border-emerald-700/20 hover:bg-white hover:text-stone-950 disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .toolbar-button-primary {
-    @apply border-teal-700 bg-teal-700 text-white hover:bg-teal-800;
+    @apply border-[#008884] bg-[#008884] text-white shadow-[#008884]/15 hover:border-[#006f6b] hover:bg-[#006f6b];
   }
 
   .account-button {
-    @apply inline-flex h-9 min-w-9 items-center justify-center rounded-full border border-stone-300 bg-white px-3 text-sm font-semibold text-stone-700 shadow-sm shadow-stone-200/40 transition hover:border-teal-300 hover:bg-teal-50 hover:text-teal-800 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex h-9 min-w-9 items-center justify-center rounded-full border border-black/[0.06] bg-white px-3 text-sm font-semibold text-stone-700 shadow-sm shadow-emerald-950/5 transition hover:border-[#008884]/30 hover:bg-[#e8f6f2] hover:text-[#006f6b] disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .sidebar-action {
-    @apply inline-flex h-8 items-center justify-center rounded-md border border-stone-300 bg-stone-50 px-2 text-xs font-semibold text-stone-700 transition hover:border-stone-400 hover:bg-white disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex h-9 items-center justify-center rounded-lg border border-black/[0.06] bg-white/80 px-3 text-xs font-semibold text-stone-800 shadow-sm shadow-emerald-950/5 transition hover:border-[#008884]/25 hover:bg-white hover:text-[#006f6b] disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .workspace-row {
-    @apply flex w-full items-center justify-between gap-3 rounded-md border border-stone-200 bg-white px-3 py-2 text-left text-sm text-stone-800 transition hover:border-teal-300 hover:bg-teal-50;
+    @apply flex w-full items-center justify-between gap-3 rounded-lg border border-black/[0.06] bg-white/80 px-3 py-2 text-left text-sm text-stone-800 transition hover:border-[#008884]/30 hover:bg-[#e8f6f2];
   }
 
   .workspace-row-bound {
-    @apply border-teal-300 bg-teal-50 ring-1 ring-teal-100;
+    @apply border-[#008884]/30 bg-[#e8f6f2] ring-1 ring-[#008884]/10;
   }
 
   .sync-input {
-    @apply h-8 w-full rounded-md border border-stone-300 bg-white px-2 text-xs text-stone-800 outline-none transition placeholder:text-stone-400 focus:border-teal-500 focus:ring-2 focus:ring-teal-100;
+    @apply h-9 w-full rounded-lg border border-black/[0.06] bg-white/80 px-3 text-xs text-stone-800 outline-none transition placeholder:text-[#9aa6a1] focus:border-[#008884]/45 focus:bg-white focus:ring-4 focus:ring-[#008884]/10;
   }
 
   .tree-button {
-    @apply flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-stone-700 transition hover:bg-stone-200/70;
+    @apply flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm text-[#4b5753] transition hover:bg-white/80 hover:text-stone-950;
   }
 
   .tree-button-active {
-    @apply bg-teal-50 font-semibold text-teal-800 ring-1 ring-teal-200;
+    @apply bg-[#e8f6f2] font-semibold text-[#006f6b] ring-1 ring-[#008884]/15;
   }
 
   .activity-button {
-    @apply flex h-9 items-center justify-center rounded-md px-2 text-xs font-semibold text-stone-500 transition hover:bg-stone-200 hover:text-stone-900;
+    @apply flex h-9 items-center justify-center rounded-lg px-3 text-xs font-semibold text-[#65736e] transition hover:bg-white/80 hover:text-stone-950;
   }
 
   .activity-button-active {
-    @apply bg-teal-100 text-teal-800 ring-1 ring-teal-200 hover:bg-teal-100 hover:text-teal-900;
+    @apply bg-white text-[#006f6b] shadow-sm shadow-emerald-950/5 ring-1 ring-[#008884]/10 hover:bg-white hover:text-[#006f6b];
   }
 
   .subtle-button {
-    @apply inline-flex h-7 items-center justify-center rounded-md px-2 text-xs font-semibold text-stone-600 transition hover:bg-stone-200 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex h-7 items-center justify-center rounded-md px-2 text-xs font-semibold text-[#6f817a] transition hover:bg-[#e8f6f2] hover:text-[#006f6b] disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .compact-select {
-    @apply h-7 rounded-md border border-stone-300 bg-white px-2 text-xs font-semibold text-stone-700 outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100;
+    @apply h-8 rounded-lg border border-black/[0.08] bg-white px-2 text-xs font-semibold text-stone-700 outline-none focus:border-[#008884]/45 focus:ring-4 focus:ring-[#008884]/10;
   }
 
   .status-chip {
-    @apply inline-flex h-6 items-center rounded-full px-2 text-[11px] font-semibold uppercase;
+    @apply inline-flex h-6 items-center rounded-full px-2.5 text-[11px] font-semibold uppercase tracking-[0.04em];
   }
 
   .status-chip-neutral {
-    @apply bg-stone-200 text-stone-700;
+    @apply bg-[#edf1ef] text-[#5f6d68];
   }
 
   .status-chip-warning {
@@ -66,11 +81,11 @@
   }
 
   .status-chip-success {
-    @apply bg-teal-200 text-teal-950;
+    @apply bg-[#d9f2ed] text-[#006f6b];
   }
 
   .status-chip-info {
-    @apply bg-sky-300 text-sky-950;
+    @apply bg-[#d9f2ed] text-[#006f6b];
   }
 
   .status-chip-error {
@@ -78,15 +93,15 @@
   }
 
   .editor-tool {
-    @apply inline-flex h-7 items-center justify-center rounded-md px-2 text-xs font-semibold text-stone-600 transition hover:bg-stone-200 hover:text-stone-950 disabled:cursor-not-allowed disabled:opacity-40;
+    @apply inline-flex h-8 items-center justify-center rounded-lg px-2.5 text-xs font-semibold text-[#5f6d68] transition hover:bg-[#e8f6f2] hover:text-[#006f6b] disabled:cursor-not-allowed disabled:opacity-40;
   }
 
   .view-mode-button {
-    @apply inline-flex h-6 items-center justify-center rounded px-2 text-[11px] font-semibold text-stone-500 transition hover:bg-stone-100 hover:text-stone-900;
+    @apply inline-flex h-7 items-center justify-center rounded-full px-3 text-[11px] font-semibold text-[#66746f] transition hover:bg-white/70 hover:text-stone-900;
   }
 
   .view-mode-button-active {
-    @apply bg-stone-900 text-white hover:bg-stone-900 hover:text-white;
+    @apply bg-white text-[#006f6b] shadow-sm shadow-emerald-950/5 hover:bg-white hover:text-[#006f6b];
   }
 
   .icon-text-button {
@@ -102,23 +117,23 @@
   }
 
   .modal-backdrop {
-    @apply fixed inset-0 z-50 flex items-start justify-center bg-stone-950/30 px-4 pt-24;
+    @apply fixed inset-0 z-50 flex items-start justify-center bg-stone-950/25 px-4 pt-24 backdrop-blur-sm;
   }
 
   .command-modal {
-    @apply w-full max-w-2xl overflow-hidden rounded-lg border border-stone-200 bg-stone-50 shadow-2xl shadow-stone-900/20;
+    @apply w-full max-w-2xl overflow-hidden rounded-2xl border border-white/70 bg-[#fbfdfb] shadow-2xl shadow-stone-900/20;
   }
 
   .command-input {
-    @apply h-12 w-full border-b border-stone-200 bg-stone-50 px-4 text-sm font-medium outline-none placeholder:text-stone-400 focus:border-teal-500;
+    @apply h-12 w-full border-b border-black/[0.06] bg-white/70 px-4 text-sm font-medium outline-none placeholder:text-[#9aa6a1] focus:border-[#008884]/40;
   }
 
   .command-row {
-    @apply flex w-full items-center justify-between gap-3 rounded-md px-3 py-2 text-left text-sm transition hover:bg-stone-200/70 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition hover:bg-[#e8f6f2] disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .user-avatar {
-    @apply flex h-8 w-8 items-center justify-center rounded-full bg-teal-700 text-sm font-semibold text-white transition hover:bg-teal-800;
+    @apply flex h-9 w-9 items-center justify-center rounded-full bg-[#008884] text-sm font-semibold text-white shadow-sm shadow-[#008884]/20 transition hover:bg-[#006f6b];
   }
 
   .context-menu {
@@ -134,19 +149,19 @@
   }
 
   .field-input {
-    @apply mt-1 h-9 w-full rounded-md border border-stone-300 bg-white px-2 text-sm text-stone-800 outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100;
+    @apply mt-1 h-9 w-full rounded-lg border border-black/[0.08] bg-white/90 px-3 text-sm text-stone-800 outline-none focus:border-[#008884]/45 focus:ring-4 focus:ring-[#008884]/10;
   }
 
   .field-textarea {
-    @apply mt-1 min-h-20 w-full rounded-md border border-stone-300 bg-white p-2 text-sm text-stone-800 outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100;
+    @apply mt-1 min-h-20 w-full rounded-lg border border-black/[0.08] bg-white/90 p-3 text-sm text-stone-800 outline-none focus:border-[#008884]/45 focus:ring-4 focus:ring-[#008884]/10;
   }
 
   .panel-card {
-    @apply rounded-md border border-stone-200 bg-white p-3;
+    @apply rounded-2xl border border-white/80 bg-white/80 p-3 shadow-sm shadow-emerald-950/5 ring-1 ring-black/[0.03];
   }
 
   .document-info-section {
-    @apply mb-4 rounded-md border border-stone-200 bg-white p-3;
+    @apply mb-4 rounded-2xl border border-white/80 bg-white/80 p-4 shadow-sm shadow-emerald-950/5 ring-1 ring-black/[0.03];
   }
 }
 
@@ -196,7 +211,8 @@
 .editor-preview-grid > article {
   position: relative;
   z-index: 1;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .editor-preview-grid.view-mode-write {
@@ -216,14 +232,14 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  color: #78716c;
+  color: #6b7773;
 }
 
 .preview h1,
 .preview h2,
 .preview h3 {
   margin: 1.6em 0 0.45em;
-  color: #292524;
+  color: #111827;
   line-height: 1.15;
   font-weight: 700;
 }
@@ -271,14 +287,15 @@
 }
 
 .preview a {
-  color: #0f766e;
+  color: #008884;
   text-decoration: underline;
 }
 
 .preview code {
   padding: 0.1em 0.35em;
-  background: #f5f5f4;
-  border-radius: 4px;
+  color: #0d0d0c;
+  background: #e8f6f2;
+  border-radius: 6px;
   font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
 }
 
@@ -287,8 +304,8 @@
   overflow: auto;
   padding: 16px;
   color: #f8fafc;
-  background: #292524;
-  border-radius: 8px;
+  background: #101816;
+  border-radius: 14px;
 }
 
 .preview pre code {
@@ -300,8 +317,8 @@
 .preview blockquote {
   margin-left: 0;
   padding-left: 18px;
-  color: #57534e;
-  border-left: 4px solid #14b8a6;
+  color: #5f6d68;
+  border-left: 4px solid #008884;
 }
 
 .preview table {
@@ -314,7 +331,7 @@
 .preview th,
 .preview td {
   padding: 10px 12px;
-  border: 1px solid #e7e5e4;
+  border: 1px solid rgb(13 13 12 / 0.08);
   text-align: left;
   vertical-align: top;
 }
@@ -325,8 +342,8 @@
   overflow: auto;
   margin: 1rem 0;
   padding: 12px;
-  border: 1px solid #e7e5e4;
-  border-radius: 8px;
+  border: 1px solid rgb(13 13 12 / 0.06);
+  border-radius: 16px;
   background: #ffffff;
 }
 
@@ -341,7 +358,7 @@
     right: 0;
     bottom: 40px;
     width: min(360px, 92vw);
-    border-left: 1px solid #e7e5e4;
+    border-left: 1px solid rgb(13 13 12 / 0.06);
     box-shadow: -18px 0 40px rgb(28 25 23 / 0.12);
     z-index: 20;
   }

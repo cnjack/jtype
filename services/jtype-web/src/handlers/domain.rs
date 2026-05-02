@@ -8,6 +8,7 @@ use uuid::Uuid;
 
 use crate::db::models::*;
 use crate::error::AppError;
+use crate::handlers::workspace::require_workspace_role;
 use crate::middleware::auth::extract_user;
 use crate::util::*;
 use crate::AppState;
@@ -22,13 +23,17 @@ pub async fn add(
     if domain.is_empty() || domain.len() > 253 || !domain.contains('.') {
         return Err(AppError::BadRequest("invalid domain name".to_string()));
     }
+    if let Some(workspace_id) = payload.workspace_id.as_deref() {
+        require_workspace_role(&state.pool, workspace_id, &user.id, &["owner", "admin"]).await?;
+    }
     let id = Uuid::new_v4().to_string();
     let verification_token = random_token();
     sqlx::query(
-        r#"INSERT INTO custom_domains (id, user_id, domain, verification_token) VALUES (?, ?, ?, ?)"#,
+        r#"INSERT INTO custom_domains (id, user_id, workspace_id, domain, verification_token) VALUES (?, ?, ?, ?, ?)"#,
     )
     .bind(&id)
     .bind(&user.id)
+    .bind(&payload.workspace_id)
     .bind(&domain)
     .bind(&verification_token)
     .execute(&state.pool)
@@ -39,16 +44,7 @@ pub async fn add(
         }
         other => AppError::Database(other),
     })?;
-    Ok(Json(DomainResponse {
-        id,
-        domain: domain.clone(),
-        verification_token: verification_token.clone(),
-        dns_txt_record: format!("jtype-verify={}", verification_token),
-        status: "pending".to_string(),
-        verified_at: None,
-        ssl_status: None,
-        ssl_expires_at: None,
-    }))
+    Ok(Json(load_domain_response(&state.pool, &user.id, &id).await?))
 }
 
 pub async fn list(
@@ -57,9 +53,11 @@ pub async fn list(
 ) -> Result<Json<Vec<DomainResponse>>, AppError> {
     let user = extract_user(&state.pool, &headers).await?;
     let rows = sqlx::query(
-        r#"SELECT d.id, d.domain, d.verification_token, d.status, d.verified_at,
+        r#"SELECT d.id, d.domain, d.workspace_id, w.name AS workspace_name,
+                  d.verification_token, d.status, d.verified_at,
                   c.status AS ssl_status, c.not_after AS ssl_expires_at
            FROM custom_domains d
+           LEFT JOIN workspaces w ON w.id = d.workspace_id
            LEFT JOIN ssl_certificates c ON c.domain_id = d.id AND c.status = 'active'
            WHERE d.user_id = ?
            ORDER BY d.created_at ASC"#,
@@ -74,6 +72,8 @@ pub async fn list(
             DomainResponse {
                 id: row.try_get("id").unwrap_or_default(),
                 domain: row.try_get("domain").unwrap_or_default(),
+                workspace_id: row.try_get::<Option<String>, _>("workspace_id").unwrap_or(None),
+                workspace_name: row.try_get::<Option<String>, _>("workspace_name").unwrap_or(None),
                 dns_txt_record: format!("jtype-verify={}", vt),
                 verification_token: vt,
                 status: row.try_get("status").unwrap_or_default(),
@@ -93,9 +93,11 @@ pub async fn get(
 ) -> Result<Json<DomainResponse>, AppError> {
     let user = extract_user(&state.pool, &headers).await?;
     let row = sqlx::query(
-        r#"SELECT d.id, d.domain, d.verification_token, d.status, d.verified_at,
+        r#"SELECT d.id, d.domain, d.workspace_id, w.name AS workspace_name,
+                  d.verification_token, d.status, d.verified_at,
                   c.status AS ssl_status, c.not_after AS ssl_expires_at
            FROM custom_domains d
+           LEFT JOIN workspaces w ON w.id = d.workspace_id
            LEFT JOIN ssl_certificates c ON c.domain_id = d.id AND c.status = 'active'
            WHERE d.id = ? AND d.user_id = ?"#,
     )
@@ -108,6 +110,8 @@ pub async fn get(
     Ok(Json(DomainResponse {
         id: row.try_get("id")?,
         domain: row.try_get("domain")?,
+        workspace_id: row.try_get::<Option<String>, _>("workspace_id").unwrap_or(None),
+        workspace_name: row.try_get::<Option<String>, _>("workspace_name").unwrap_or(None),
         dns_txt_record: format!("jtype-verify={}", vt),
         verification_token: vt,
         status: row.try_get("status")?,
@@ -115,6 +119,28 @@ pub async fn get(
         ssl_status: row.try_get::<Option<String>, _>("ssl_status").unwrap_or(None),
         ssl_expires_at: row.try_get::<Option<String>, _>("ssl_expires_at").unwrap_or(None),
     }))
+}
+
+pub async fn bind_workspace(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Path(domain_id): Path<String>,
+    Json(payload): Json<BindDomainRequest>,
+) -> Result<Json<DomainResponse>, AppError> {
+    let user = extract_user(&state.pool, &headers).await?;
+    if let Some(workspace_id) = payload.workspace_id.as_deref() {
+        require_workspace_role(&state.pool, workspace_id, &user.id, &["owner", "admin"]).await?;
+    }
+    let result = sqlx::query("UPDATE custom_domains SET workspace_id = ? WHERE id = ? AND user_id = ?")
+        .bind(&payload.workspace_id)
+        .bind(&domain_id)
+        .bind(&user.id)
+        .execute(&state.pool)
+        .await?;
+    if result.rows_affected() == 0 {
+        return Err(AppError::NotFound);
+    }
+    Ok(Json(load_domain_response(&state.pool, &user.id, &domain_id).await?))
 }
 
 pub async fn verify(
@@ -137,17 +163,7 @@ pub async fn verify(
         .bind(&domain_id)
         .execute(&state.pool)
         .await?;
-    let vt: String = row.try_get("verification_token")?;
-    Ok(Json(DomainResponse {
-        id: domain_id,
-        domain: row.try_get("domain")?,
-        dns_txt_record: format!("jtype-verify={}", vt),
-        verification_token: vt,
-        status: "verified".to_string(),
-        verified_at: Some("now".to_string()),
-        ssl_status: None,
-        ssl_expires_at: None,
-    }))
+    Ok(Json(load_domain_response(&state.pool, &user.id, &domain_id).await?))
 }
 
 pub async fn upload_certificate(
@@ -190,15 +206,39 @@ pub async fn upload_certificate(
     .bind(&private_key_hash)
     .execute(&state.pool)
     .await?;
+    Ok(Json(load_domain_response(&state.pool, &user.id, &domain_id).await?))
+}
+
+async fn load_domain_response(
+    pool: &sqlx::Pool<sqlx::MySql>,
+    user_id: &str,
+    domain_id: &str,
+) -> Result<DomainResponse, AppError> {
+    let row = sqlx::query(
+        r#"SELECT d.id, d.domain, d.workspace_id, w.name AS workspace_name,
+                  d.verification_token, d.status, d.verified_at,
+                  c.status AS ssl_status, c.not_after AS ssl_expires_at
+           FROM custom_domains d
+           LEFT JOIN workspaces w ON w.id = d.workspace_id
+           LEFT JOIN ssl_certificates c ON c.domain_id = d.id AND c.status = 'active'
+           WHERE d.id = ? AND d.user_id = ?"#,
+    )
+    .bind(domain_id)
+    .bind(user_id)
+    .fetch_optional(pool)
+    .await?
+    .ok_or(AppError::NotFound)?;
     let vt: String = row.try_get("verification_token")?;
-    Ok(Json(DomainResponse {
-        id: domain_id,
+    Ok(DomainResponse {
+        id: row.try_get("id")?,
         domain: row.try_get("domain")?,
+        workspace_id: row.try_get::<Option<String>, _>("workspace_id").unwrap_or(None),
+        workspace_name: row.try_get::<Option<String>, _>("workspace_name").unwrap_or(None),
+        verification_token: vt.clone(),
         dns_txt_record: format!("jtype-verify={}", vt),
-        verification_token: vt,
-        status: "verified".to_string(),
-        verified_at: Some(String::new()),
-        ssl_status: Some("active".to_string()),
-        ssl_expires_at: None,
-    }))
+        status: row.try_get("status")?,
+        verified_at: row.try_get::<Option<String>, _>("verified_at").unwrap_or(None),
+        ssl_status: row.try_get::<Option<String>, _>("ssl_status").unwrap_or(None),
+        ssl_expires_at: row.try_get::<Option<String>, _>("ssl_expires_at").unwrap_or(None),
+    })
 }

@@ -7,7 +7,6 @@ export function Settings() {
   const [devices, setDevices] = useState<DeviceInfo[]>([])
   const [displayName, setDisplayName] = useState('')
   const [email, setEmail] = useState('')
-  const [siteTitle, setSiteTitle] = useState('')
   const [msg, setMsg] = useState('')
 
   useEffect(() => {
@@ -15,7 +14,6 @@ export function Settings() {
       setProfile(p)
       setDisplayName(p.displayName || '')
       setEmail(p.email || '')
-      setSiteTitle(p.siteTitle)
     })
     api.getStorage().then(setStorage)
     api.getDevices().then(setDevices)
@@ -25,13 +23,6 @@ export function Settings() {
     e.preventDefault()
     await api.updateProfile({ displayName: displayName || undefined, email: email || undefined })
     setMsg('Profile updated')
-    setTimeout(() => setMsg(''), 3000)
-  }
-
-  async function handleSiteSubmit(e: FormEvent) {
-    e.preventDefault()
-    await api.updateSite({ siteTitle })
-    setMsg('Site settings updated')
     setTimeout(() => setMsg(''), 3000)
   }
 
@@ -60,15 +51,12 @@ export function Settings() {
         </form>
       </section>
 
-      {/* Site section */}
+      {/* Publishing section */}
       <section className="mb-8">
         <h2 className="mb-4 text-lg font-semibold text-zinc-800 dark:text-zinc-200">Publishing</h2>
-        <form onSubmit={handleSiteSubmit} className="flex flex-col gap-4">
-          <Field label="Site Title" value={siteTitle} onChange={setSiteTitle} />
-          <button type="submit" className="self-start rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-dark">
-            Save site
-          </button>
-        </form>
+        <div className="rounded-lg border border-zinc-200 p-4 text-sm text-zinc-600 dark:border-zinc-800 dark:text-zinc-400">
+          Publishing settings are managed per workspace. Open a workspace to set its publish title, public path, storage limit, and custom domain mapping.
+        </div>
       </section>
 
       {/* Storage section */}

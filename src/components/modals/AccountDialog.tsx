@@ -44,10 +44,10 @@ export function AccountDialog() {
       }}
     >
       <div className="command-modal max-w-lg">
-        <div className="flex items-start justify-between gap-3 border-b border-stone-200 px-4 py-3">
+        <div className="flex items-start justify-between gap-3 border-b border-black/[0.06] bg-white/70 px-5 py-4">
           <div>
             <p className="text-sm font-semibold text-stone-950">Account and Cloud</p>
-            <p className="mt-1 text-xs text-stone-500">
+            <p className="mt-1 text-xs text-[#6b7773]">
               {state.syncToken
                 ? `Connected as ${state.syncUsername || "your account"}. Sync vaults with cloud workspaces.`
                 : state.oauthUserCode
@@ -59,7 +59,7 @@ export function AccountDialog() {
             Close
           </button>
         </div>
-        <div className="space-y-3 p-4">
+        <div className="space-y-3 p-5">
           <input
             className="sync-input"
             value={state.serviceUrl}
@@ -90,7 +90,7 @@ export function AccountDialog() {
           )}
 
           {state.workspace && (
-            <div className="rounded-md border border-stone-200 bg-white p-3 text-xs">
+            <div className="rounded-2xl border border-white/80 bg-white/80 p-4 text-xs shadow-sm shadow-emerald-950/5 ring-1 ring-black/[0.03]">
               <p className="font-semibold text-stone-900">Current vault</p>
               <p className="mt-1 truncate text-stone-500">{state.workspace.rootPath}</p>
               <p className="mt-2 text-stone-600">

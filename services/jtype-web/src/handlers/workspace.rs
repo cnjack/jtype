@@ -20,14 +20,16 @@ pub async fn list_workspaces(
     let rows = sqlx::query(
         r#"SELECT w.id, w.name,
                   COALESCE(w.slug, LOWER(REPLACE(w.name, ' ', '-'))) AS slug,
+                  COALESCE(w.publish_title, w.name) AS publish_title,
                   COALESCE(m.role, 'owner') AS role,
                   COALESCE(w.storage_budget_bytes, 1073741824) AS storage_budget_bytes,
-                  COUNT(d.id) AS document_count
+                  COUNT(d.id) AS document_count,
+                  CAST(COALESCE(SUM(OCTET_LENGTH(d.content)), 0) AS SIGNED) AS storage_used_bytes
            FROM workspaces w
            LEFT JOIN workspace_members m ON m.workspace_id = w.id AND m.user_id = ? AND m.status = 'active'
            LEFT JOIN documents d ON d.workspace_id = w.id
            WHERE m.user_id IS NOT NULL OR w.user_id = ? OR w.owner_user_id = ?
-           GROUP BY w.id, w.name, w.slug, m.role, w.storage_budget_bytes
+           GROUP BY w.id, w.name, w.slug, w.publish_title, m.role, w.storage_budget_bytes
            ORDER BY w.updated_at DESC"#,
     )
     .bind(&user.id)
@@ -43,9 +45,11 @@ pub async fn list_workspaces(
                 id: row.try_get("id")?,
                 name: row.try_get("name")?,
                 slug: row.try_get("slug")?,
+                publish_title: row.try_get("publish_title")?,
                 role: row.try_get("role")?,
                 document_count: row.try_get("document_count")?,
                 storage_budget_bytes: row.try_get("storage_budget_bytes")?,
+                storage_used_bytes: row.try_get("storage_used_bytes")?,
             })
         })
         .collect::<Result<Vec<_>, AppError>>()?;
@@ -71,6 +75,38 @@ pub async fn create_workspace(
     tx.commit().await?;
     let summary = load_workspace_summary(&state.pool, &user.id, &workspace_id).await?;
     Ok(Json(summary))
+}
+
+pub async fn update_workspace(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Path(workspace_id): Path<String>,
+    Json(payload): Json<UpdateWorkspaceRequest>,
+) -> Result<Json<WorkspaceSummary>, AppError> {
+    let user = extract_user(&state.pool, &headers).await?;
+    require_workspace_role(&state.pool, &workspace_id, &user.id, &["owner", "admin"]).await?;
+
+    if let Some(name) = payload.name.as_deref() {
+        let name = normalize_workspace_name(name)?;
+        sqlx::query("UPDATE workspaces SET name = ? WHERE id = ?")
+            .bind(name)
+            .bind(&workspace_id)
+            .execute(&state.pool)
+            .await?;
+    }
+    if let Some(title) = payload.publish_title.as_deref() {
+        let title = title.trim();
+        if title.is_empty() || title.len() > 255 {
+            return Err(AppError::BadRequest("publish title must be 1-255 chars".to_string()));
+        }
+        sqlx::query("UPDATE workspaces SET publish_title = ? WHERE id = ?")
+            .bind(title)
+            .bind(&workspace_id)
+            .execute(&state.pool)
+            .await?;
+    }
+
+    Ok(Json(load_workspace_summary(&state.pool, &user.id, &workspace_id).await?))
 }
 
 pub async fn get_workspace(
@@ -226,12 +262,13 @@ pub async fn upsert_workspace(
     }
     let workspace_id = Uuid::new_v4().to_string();
     let slug = slugify(workspace_name);
-    sqlx::query("INSERT INTO workspaces (id, user_id, owner_user_id, name, slug) VALUES (?, ?, ?, ?, ?)")
+    sqlx::query("INSERT INTO workspaces (id, user_id, owner_user_id, name, slug, publish_title) VALUES (?, ?, ?, ?, ?, ?)")
         .bind(&workspace_id)
         .bind(user_id)
         .bind(user_id)
         .bind(workspace_name)
         .bind(slug)
+        .bind(workspace_name)
         .execute(&mut **tx)
         .await?;
     sqlx::query(
@@ -254,14 +291,16 @@ pub async fn load_workspace_summary(
     let row = sqlx::query(
         r#"SELECT w.id, w.name,
                   COALESCE(w.slug, LOWER(REPLACE(w.name, ' ', '-'))) AS slug,
+                  COALESCE(w.publish_title, w.name) AS publish_title,
                   COALESCE(m.role, 'owner') AS role,
                   COALESCE(w.storage_budget_bytes, 1073741824) AS storage_budget_bytes,
-                  COUNT(d.id) AS document_count
+                  COUNT(d.id) AS document_count,
+                  CAST(COALESCE(SUM(OCTET_LENGTH(d.content)), 0) AS SIGNED) AS storage_used_bytes
            FROM workspaces w
            LEFT JOIN workspace_members m ON m.workspace_id = w.id AND m.user_id = ? AND m.status = 'active'
            LEFT JOIN documents d ON d.workspace_id = w.id
            WHERE w.id = ? AND (m.user_id IS NOT NULL OR w.user_id = ? OR w.owner_user_id = ?)
-           GROUP BY w.id, w.name, w.slug, m.role, w.storage_budget_bytes"#,
+           GROUP BY w.id, w.name, w.slug, w.publish_title, m.role, w.storage_budget_bytes"#,
     )
     .bind(user_id)
     .bind(workspace_id)
@@ -275,9 +314,11 @@ pub async fn load_workspace_summary(
         id: row.try_get("id")?,
         name: row.try_get("name")?,
         slug: row.try_get("slug")?,
+        publish_title: row.try_get("publish_title")?,
         role: row.try_get("role")?,
         document_count: row.try_get("document_count")?,
         storage_budget_bytes: row.try_get("storage_budget_bytes")?,
+        storage_used_bytes: row.try_get("storage_used_bytes")?,
     })
 }
 

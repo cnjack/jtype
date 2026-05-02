@@ -2,6 +2,7 @@ import DOMPurify from "dompurify";
 import katex from "katex";
 import "katex/dist/katex.min.css";
 import { marked } from "marked";
+import { parseFrontmatter } from "./frontmatter";
 
 marked.use({ gfm: true, breaks: false });
 
@@ -57,7 +58,12 @@ export async function renderMarkdownToHtml(content: string): Promise<string> {
   if (!content.trim()) {
     return '<h2>Empty document</h2><p>Start typing Markdown to preview it here.</p>';
   }
-  const rendered = await marked.parse(renderMath(content));
+  const { data, body, hasFrontmatter } = parseFrontmatter(content);
+  let markdownBody = body;
+  if (hasFrontmatter && data.title) {
+    markdownBody = `# ${data.title}\n\n${markdownBody}`;
+  }
+  const rendered = await marked.parse(renderMath(markdownBody));
   return DOMPurify.sanitize(rendered);
 }
 

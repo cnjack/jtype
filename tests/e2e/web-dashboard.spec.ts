@@ -19,7 +19,7 @@ function mockApi(page: Page) {
         body: JSON.stringify({
           token: "tok_test",
           username: body?.username || "testuser",
-          siteUrl: "http://localhost:13345/@testuser",
+          siteUrl: "http://localhost:13345/u/testuser",
           role: "admin",
         }),
       });
@@ -31,7 +31,7 @@ function mockApi(page: Page) {
         body: JSON.stringify({
           token: "tok_test",
           username: body?.username || "testuser",
-          siteUrl: "http://localhost:13345/@testuser",
+          siteUrl: "http://localhost:13345/u/testuser",
           role: "admin",
         }),
       });
@@ -43,7 +43,7 @@ function mockApi(page: Page) {
         body: JSON.stringify({
           token: "tok_test",
           username: "testuser",
-          siteUrl: "http://localhost:13345/@testuser",
+          siteUrl: "http://localhost:13345/u/testuser",
           role: "admin",
         }),
       });
@@ -216,8 +216,8 @@ function mockApi(page: Page) {
         contentType: "application/json",
         body: JSON.stringify({
           workspaces: [
-            { id: "ws-1", name: "notes", slug: "notes", role: "owner", documentCount: 5, storageBudgetBytes: 536870912 },
-            { id: "ws-2", name: "blog", slug: "blog", role: "editor", documentCount: 3, storageBudgetBytes: 536870912 },
+            { id: "ws-1", name: "notes", slug: "notes", publishTitle: "Notes", role: "owner", documentCount: 5, storageBudgetBytes: 536870912, storageUsedBytes: 52428800 },
+            { id: "ws-2", name: "blog", slug: "blog", publishTitle: "Blog", role: "editor", documentCount: 3, storageBudgetBytes: 536870912, storageUsedBytes: 10485760 },
           ],
         }),
       });
@@ -230,9 +230,27 @@ function mockApi(page: Page) {
           id: "ws-new",
           name: body?.name || "new-workspace",
           slug: (body?.name || "new-workspace").toLowerCase().replace(/\s+/g, "-"),
+          publishTitle: body?.name || "new-workspace",
           role: "owner",
           documentCount: 0,
           storageBudgetBytes: 536870912,
+          storageUsedBytes: 0,
+        }),
+      });
+    }
+    if (url.match(/\/api\/v1\/workspaces\/[^/]+$/) && method === "PUT") {
+      return route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          id: "ws-1",
+          name: "notes",
+          slug: body?.slug || "notes",
+          publishTitle: body?.publishTitle || "Notes",
+          role: "owner",
+          documentCount: 2,
+          storageBudgetBytes: body?.storageBudgetBytes || 536870912,
+          storageUsedBytes: 52428800,
         }),
       });
     }
@@ -244,9 +262,56 @@ function mockApi(page: Page) {
           id: "ws-1",
           name: "notes",
           slug: "notes",
+          publishTitle: "Notes",
           role: "owner",
           documentCount: 2,
           storageBudgetBytes: 536870912,
+          storageUsedBytes: 52428800,
+        }),
+      });
+    }
+
+    // Domains
+    if (url.endsWith("/api/v1/domains") && method === "GET") {
+      return route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify([]),
+      });
+    }
+    if (url.endsWith("/api/v1/domains") && method === "POST") {
+      return route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          id: "dom-new",
+          domain: body?.domain,
+          workspaceId: body?.workspaceId || null,
+          workspaceName: body?.workspaceId ? "notes" : null,
+          verificationToken: "verify",
+          dnsTxtRecord: "jtype-verify=verify",
+          status: "pending",
+          verifiedAt: null,
+          sslStatus: null,
+          sslExpiresAt: null,
+        }),
+      });
+    }
+    if (url.match(/\/api\/v1\/domains\/[^/]+\/binding$/) && method === "PUT") {
+      return route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          id: "dom-new",
+          domain: "docs.example.com",
+          workspaceId: body?.workspaceId || null,
+          workspaceName: body?.workspaceId ? "notes" : null,
+          verificationToken: "verify",
+          dnsTxtRecord: "jtype-verify=verify",
+          status: "pending",
+          verifiedAt: null,
+          sslStatus: null,
+          sslExpiresAt: null,
         }),
       });
     }
@@ -294,6 +359,13 @@ function mockApi(page: Page) {
     }
     if (url.match(/\/api\/v1\/workspaces\/[^/]+\/documents\/[^/]+$/) && method === "DELETE") {
       return route.fulfill({ status: 204 });
+    }
+    if (url.match(/\/api\/v1\/workspaces\/[^/]+\/documents\/[^/]+\/status$/) && method === "PUT") {
+      return route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ id: "doc-1", relativePath: "intro.md", title: "Intro", status: body?.status || "draft", contentHash: "abc", updatedClock: 6, versionId: "v1" }),
+      });
     }
     if (url.match(/\/api\/v1\/workspaces\/[^/]+\/documents\/[^/]+\/versions$/) && method === "GET") {
       return route.fulfill({

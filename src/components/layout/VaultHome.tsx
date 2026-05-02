@@ -12,16 +12,17 @@ export function VaultHome() {
   const documents = useMemo(() => markdownNodes(state.workspace?.entries ?? []), [state.workspace]);
   const recentItems = useMemo(() => readRecentItems(), [state.currentPath]);
   const recentDocs = recentItems.filter((item) => item.kind === "file").slice(0, 4);
+  const vaultName = state.workspace?.name ?? "Vault";
 
   return (
-    <section id="vault-home" className="flex min-h-0 flex-col bg-[#fbfaf7]">
+    <section id="vault-home" className="flex min-h-0 flex-col bg-[#fbfdfb]">
       <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto w-full max-w-5xl px-8 py-10">
-          <div className="max-w-2xl">
-            <p className="text-xs font-semibold uppercase text-teal-700">Vault ready</p>
-            <h2 className="mt-3 text-3xl font-semibold tracking-normal text-stone-950">Choose a note or create a new one.</h2>
-            <p className="mt-3 text-sm leading-6 text-stone-600">
-              This vault lives at <span className="font-mono text-stone-800">{state.workspace?.rootPath}</span>. Local notes stay on disk until you connect a cloud workspace.
+        <div className="mx-auto w-full max-w-6xl px-10 py-12">
+          <div className="max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#008884]">Vault ready</p>
+            <h2 className="mt-4 text-4xl font-semibold tracking-[-0.035em] text-stone-950">{vaultName}</h2>
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-[#5f6d68]">
+              Choose a note or create a new one. This vault lives at <span className="font-mono text-stone-800">{state.workspace?.rootPath}</span>.
             </p>
             <div className="mt-6 flex flex-wrap gap-2">
               <button className="toolbar-button toolbar-button-primary" type="button" onClick={() => dispatch({ type: "SET_CREATE_NOTE_DIALOG", open: true })}>
@@ -30,17 +31,14 @@ export function VaultHome() {
               <button className="toolbar-button" type="button" onClick={() => dispatch({ type: "SET_QUICK_SWITCHER", open: true })}>
                 Quick open
               </button>
-              <button className="toolbar-button" type="button" onClick={() => dispatch({ type: "SET_ACCOUNT_DIALOG", open: true })}>
-                {state.syncToken ? "Cloud sync" : "Connect cloud"}
-              </button>
             </div>
           </div>
 
-          <div className="mt-10 grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
-            <section className="rounded-lg border border-stone-200 bg-white p-4">
+          <div className="mt-10 grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
+            <section className="panel-card p-5">
               <div className="mb-3 flex items-center justify-between">
                 <p className="text-sm font-semibold text-stone-950">Documents</p>
-                <span className="text-xs text-stone-500">{documents.length} Markdown file{documents.length === 1 ? "" : "s"}</span>
+                <span className="text-xs text-[#6b7773]">{documents.length} Markdown file{documents.length === 1 ? "" : "s"}</span>
               </div>
               <div className="space-y-1">
                 {documents.length === 0 ? (
@@ -62,8 +60,8 @@ export function VaultHome() {
               </div>
             </section>
 
-            <aside className="space-y-4">
-              <section className="rounded-lg border border-stone-200 bg-white p-4">
+            <aside className="space-y-5">
+              <section className="panel-card p-5">
                 <p className="text-sm font-semibold text-stone-950">Recent</p>
                 <div className="mt-3 space-y-1">
                   {recentDocs.length === 0 ? (
@@ -78,21 +76,11 @@ export function VaultHome() {
                   )}
                 </div>
               </section>
-
-              <section className="rounded-lg border border-stone-200 bg-white p-4">
-                <p className="text-sm font-semibold text-stone-950">Cloud</p>
-                <p className="mt-1 text-sm text-stone-500">
-                  {state.syncToken ? `Connected as ${state.syncUsername || "your account"}.` : "Connect when you want sync, collaboration, and publishing."}
-                </p>
-                <button className="toolbar-button mt-3 w-full" type="button" onClick={() => dispatch({ type: "SET_ACCOUNT_DIALOG", open: true })}>
-                  {state.syncToken ? "Manage cloud" : "Connect cloud"}
-                </button>
-              </section>
             </aside>
           </div>
         </div>
       </div>
-      <div id="operation-log" className="border-t border-stone-200 bg-stone-50 px-4 py-3 text-xs text-stone-500">
+      <div id="operation-log" className="border-t border-black/[0.04] bg-white/70 px-5 py-3 text-xs text-[#6b7773]">
         {state.statusMessage}
       </div>
     </section>

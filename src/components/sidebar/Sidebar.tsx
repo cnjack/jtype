@@ -13,12 +13,13 @@ export function Sidebar() {
   if (state.focusMode) return null;
 
   return (
-    <aside id="workspace-sidebar" className="flex min-h-0 flex-col border-r border-stone-200 bg-stone-50">
-      <div className="border-b border-stone-200 p-4">
+    <aside id="workspace-sidebar" className="flex min-h-0 flex-col border-r border-black/[0.04] bg-[#f7faf8]">
+      <div className="p-5 pb-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p id="workspace-name" className="truncate text-sm font-semibold text-stone-950">{state.workspace?.name ?? "No vault"}</p>
-            <p id="workspace-path" className="mt-1 truncate text-xs text-stone-500">{state.workspace?.rootPath ?? "Open a vault or Markdown file."}</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#008884]">Vault</p>
+            <p id="workspace-name" className="mt-2 truncate text-base font-semibold text-stone-950">{state.workspace?.name ?? "No vault"}</p>
+            <p id="workspace-path" className="mt-1 truncate text-xs text-[#6b7773]">{state.workspace?.rootPath ?? "Open a vault or Markdown file."}</p>
           </div>
         </div>
         <div className="mt-3">
@@ -33,20 +34,13 @@ export function Sidebar() {
         </div>
       </div>
 
-      <div className="flex gap-1 border-b border-stone-200 px-2 py-1">
+      <div className="px-3 pb-3">
         <button
           type="button"
-          className={`activity-button ${state.activeActivity === "explorer" ? "activity-button-active" : ""}`}
+          className={`activity-button w-full justify-start ${state.activeActivity === "explorer" ? "activity-button-active" : ""}`}
           onClick={() => dispatch({ type: "SET_ACTIVITY", activity: "explorer" as Activity })}
         >
           Explorer
-        </button>
-        <button
-          type="button"
-          className="activity-button"
-          onClick={() => dispatch({ type: "SET_ACCOUNT_DIALOG", open: true })}
-        >
-          Account
         </button>
       </div>
 
@@ -72,7 +66,7 @@ function ExplorerPanel() {
   }, [state.workspace, query]);
 
   return (
-    <div className="p-3">
+    <div className="px-3 pb-4">
       <input
         className="sync-input"
         placeholder="Search files..."
@@ -99,7 +93,7 @@ function ExplorerPanel() {
         <>
           {favorites.length > 0 && (
             <>
-              <div className="mb-2 mt-3 flex items-center justify-between">
+              <div className="mb-2 mt-4 flex items-center justify-between">
                 <p className="text-xs font-semibold uppercase text-stone-500">Favorites</p>
                 <button className="subtle-button" type="button" disabled={!state.currentPath} onClick={() => {
                   toggleFavorite(state.currentPath, state.workspace?.rootPath);
@@ -119,7 +113,7 @@ function ExplorerPanel() {
             </>
           )}
 
-          <nav className="mt-3" aria-label="Workspace files">
+          <nav className="mt-2" aria-label="Workspace files">
             {!state.workspace ? (
               <p className="rounded-md border border-dashed border-stone-300 p-3 text-sm text-stone-500">
                 Drop a folder here to open it as a vault.
@@ -133,7 +127,7 @@ function ExplorerPanel() {
             )}
           </nav>
 
-          <section className="mt-4 border-t border-stone-200 pt-3">
+          <section className="mt-5 border-t border-emerald-900/10 pt-4">
             <p className="mb-2 text-xs font-semibold uppercase text-stone-500">Recent</p>
             <div className="space-y-1">
               {recentItems.length === 0 ? (
@@ -186,7 +180,8 @@ function TreeNode({ node, depth }: { node: FileTreeNode; depth: number }) {
           dispatch({ type: "SET_CONTEXT_NODE", node });
         }}
       >
-        {iconForNode(node)} {node.name}
+        {iconForNode(node) && <span className="shrink-0 text-[#8a9691]">{iconForNode(node)}</span>}
+        <span className="truncate">{node.name}</span>
       </button>
       {node.children.length > 0 && (
         <ul className="mt-1 space-y-1">
@@ -201,8 +196,8 @@ function TreeNode({ node, depth }: { node: FileTreeNode; depth: number }) {
 
 function iconForNode(node: FileTreeNode) {
   if (node.kind === "folder") return ">";
-  if (node.kind === "markdown") return "Note";
-  return "*";
+  if (node.kind === "markdown") return "";
+  return "";
 }
 
 function readFavorites(rootPath?: string): FileTreeNode[] {

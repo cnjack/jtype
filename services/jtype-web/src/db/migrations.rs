@@ -12,6 +12,7 @@ pub async fn run_all(pool: &Pool<MySql>) -> Result<(), AppError> {
         ("001_init", include_str!("../../../../infra/mysql/001_init.sql")),
         ("002_user_columns", M002_USER_COLUMNS),
         ("003_compat_workspaces", M003_COMPAT_WORKSPACES),
+        ("004_workspace_publish_settings", M004_WORKSPACE_PUBLISH_SETTINGS),
     ];
 
     for (name, sql) in migrations {
@@ -28,6 +29,11 @@ pub async fn run_all(pool: &Pool<MySql>) -> Result<(), AppError> {
                 record_migration(pool, name).await?;
                 continue;
             }
+        }
+        if *name == "004_workspace_publish_settings" {
+            apply_workspace_publish_settings_migration(pool).await?;
+            record_migration(pool, name).await?;
+            continue;
         }
         for statement in sql.split(';').map(str::trim).filter(|s| !s.is_empty()) {
             sqlx::query(statement).execute(pool).await?;
@@ -71,6 +77,52 @@ async fn record_migration(pool: &Pool<MySql>, name: &str) -> Result<(), AppError
     Ok(())
 }
 
+async fn column_exists(pool: &Pool<MySql>, table: &str, column: &str) -> Result<bool, AppError> {
+    let count: i64 = sqlx::query_scalar(
+        "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?",
+    )
+    .bind(table)
+    .bind(column)
+    .fetch_one(pool)
+    .await?;
+    Ok(count > 0)
+}
+
+async fn constraint_exists(pool: &Pool<MySql>, constraint: &str) -> Result<bool, AppError> {
+    let count: i64 = sqlx::query_scalar(
+        "SELECT COUNT(*) FROM information_schema.TABLE_CONSTRAINTS WHERE TABLE_SCHEMA = DATABASE() AND CONSTRAINT_NAME = ?",
+    )
+    .bind(constraint)
+    .fetch_one(pool)
+    .await?;
+    Ok(count > 0)
+}
+
+async fn apply_workspace_publish_settings_migration(pool: &Pool<MySql>) -> Result<(), AppError> {
+    if !column_exists(pool, "workspaces", "publish_title").await? {
+        sqlx::query("ALTER TABLE workspaces ADD COLUMN publish_title VARCHAR(255) NULL AFTER slug")
+            .execute(pool)
+            .await?;
+    }
+    sqlx::query("UPDATE workspaces SET publish_title = name WHERE publish_title IS NULL")
+        .execute(pool)
+        .await?;
+
+    if !column_exists(pool, "custom_domains", "workspace_id").await? {
+        sqlx::query("ALTER TABLE custom_domains ADD COLUMN workspace_id CHAR(36) NULL AFTER user_id")
+            .execute(pool)
+            .await?;
+    }
+    if !constraint_exists(pool, "custom_domains_workspace_id_fk").await? {
+        sqlx::query(
+            "ALTER TABLE custom_domains ADD CONSTRAINT custom_domains_workspace_id_fk FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE SET NULL",
+        )
+        .execute(pool)
+        .await?;
+    }
+    Ok(())
+}
+
 async fn seed_first_admin(pool: &Pool<MySql>) -> Result<(), AppError> {
     // Ensure the first user ever registered is admin
     sqlx::query(
@@ -109,4 +161,11 @@ ALTER TABLE workspaces ADD COLUMN user_id CHAR(36) NULL AFTER id;
 ALTER TABLE workspaces ADD COLUMN owner_user_id CHAR(36) NULL AFTER user_id;
 ALTER TABLE workspaces ADD COLUMN slug VARCHAR(255) NULL AFTER name;
 ALTER TABLE workspaces ADD COLUMN storage_budget_bytes BIGINT NOT NULL DEFAULT 1073741824 AFTER root_hint
+"#;
+
+const M004_WORKSPACE_PUBLISH_SETTINGS: &str = r#"
+ALTER TABLE workspaces ADD COLUMN publish_title VARCHAR(255) NULL AFTER slug;
+UPDATE workspaces SET publish_title = name WHERE publish_title IS NULL;
+ALTER TABLE custom_domains ADD COLUMN workspace_id CHAR(36) NULL AFTER user_id;
+ALTER TABLE custom_domains ADD CONSTRAINT custom_domains_workspace_id_fk FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE SET NULL
 "#;

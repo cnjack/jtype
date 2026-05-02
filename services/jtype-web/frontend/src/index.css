@@ -1,14 +1,24 @@
 @import 'tailwindcss';
 
 @theme {
-  --color-brand: #0f766e;
-  --color-brand-light: #14b8a6;
-  --color-brand-dark: #0d6359;
+  --color-brand: #008884;
+  --color-brand-light: #22b8ad;
+  --color-brand-dark: #006f6b;
+}
+
+@layer base {
+  body {
+    @apply bg-[#f5f8f6] text-zinc-950 antialiased;
+  }
 }
 
 @layer components {
+  .workspace-card-link {
+    @apply inline-flex h-9 items-center justify-center rounded-full bg-[#eef7f4] px-3 text-sm font-semibold text-brand transition hover:bg-brand hover:text-white;
+  }
+
   .editor-tool {
-    @apply inline-flex h-7 items-center justify-center rounded-md px-2 text-xs font-semibold text-stone-600 transition hover:bg-stone-200 hover:text-stone-950 disabled:cursor-not-allowed disabled:opacity-40;
+    @apply inline-flex h-8 items-center justify-center rounded-lg px-2.5 text-xs font-semibold text-[#5f6d68] transition hover:bg-[#e8f6f2] hover:text-brand disabled:cursor-not-allowed disabled:opacity-40;
   }
 
   .view-mode-button {
@@ -16,7 +26,7 @@
   }
 
   .view-mode-button-active {
-    @apply bg-stone-900 text-white hover:bg-stone-900 hover:text-white;
+    @apply bg-white text-brand shadow-sm hover:bg-white hover:text-brand;
   }
 
   .subtle-button {
@@ -32,7 +42,7 @@
   }
 
   .status-chip-neutral {
-    @apply bg-stone-200 text-stone-700;
+    @apply bg-[#edf1ef] text-[#5f6d68];
   }
 
   .status-chip-warning {
@@ -40,7 +50,7 @@
   }
 
   .status-chip-success {
-    @apply bg-teal-200 text-teal-950;
+    @apply bg-[#d9f2ed] text-brand;
   }
 
   .field-label {
@@ -56,7 +66,7 @@
   }
 
   .document-info-section {
-    @apply mb-4 rounded-md border border-stone-200 bg-white p-3;
+    @apply mb-4 rounded-xl border border-black/[0.06] bg-white p-3 shadow-sm shadow-emerald-950/5;
   }
 
   .context-menu {

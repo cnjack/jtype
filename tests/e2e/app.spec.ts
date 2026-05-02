@@ -155,7 +155,7 @@ test.beforeEach(async ({ page }) => {
           JSON.stringify({
             token: "test-token",
             username: "jack",
-            siteUrl: "http://localhost:8080/@jack",
+            siteUrl: "http://localhost:8080/u/jack/workspace",
           }),
           { status: 200, headers: { "Content-Type": "application/json" } },
         );
@@ -175,7 +175,7 @@ test.beforeEach(async ({ page }) => {
           JSON.stringify({
             token: "test-token",
             username: "jack",
-            siteUrl: "http://localhost:8080/@jack",
+            siteUrl: "http://localhost:8080/u/jack/workspace",
           }),
           { status: 200, headers: { "Content-Type": "application/json" } },
         );
@@ -193,7 +193,7 @@ test.beforeEach(async ({ page }) => {
             workspaceId: "workspace-e2e",
             workspaceName: "workspace",
             documentCount: 2,
-            siteUrl: "http://localhost:8080/@jack",
+            siteUrl: "http://localhost:8080/u/jack/workspace",
           }),
           { status: 200, headers: { "Content-Type": "application/json" } },
         );
@@ -268,7 +268,7 @@ test("connects in browser and syncs a vault to the web service", async ({ page }
 
   await page.locator("#account-sync").click();
   await expect(page.locator("#operation-log")).toContainText("Synced 2 document");
-  await expect(page.locator("#account-site-link")).toHaveAttribute("href", "http://localhost:8080/u/jack");
+  await expect(page.locator("#account-site-link")).toHaveAttribute("href", "http://localhost:8080/u/jack/workspace");
 
   const requestCount = await page.evaluate(() => window.__SYNC_REQUESTS__.length);
   expect(requestCount).toBe(1);

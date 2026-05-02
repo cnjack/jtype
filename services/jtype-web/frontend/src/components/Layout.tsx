@@ -11,9 +11,9 @@ export function Layout() {
   }
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-[#f5f8f6]">
       {/* Sidebar */}
-      <nav className="flex w-64 flex-col border-r border-zinc-200 bg-zinc-50 px-4 py-6 dark:border-zinc-800 dark:bg-zinc-950">
+      <nav className="flex w-64 flex-col bg-white/60 px-4 py-7 ring-1 ring-black/[0.03] dark:bg-zinc-950/80">
         <div className="mb-8">
           <div
             className="select-none"
@@ -30,7 +30,7 @@ export function Layout() {
           <SidebarLink to="/settings">Settings</SidebarLink>
           {user?.role === 'admin' && <SidebarLink to="/admin">Admin</SidebarLink>}
         </div>
-        <div className="mt-auto border-t border-zinc-200 pt-4 dark:border-zinc-800">
+        <div className="mt-auto border-t border-emerald-900/10 pt-4 dark:border-zinc-800">
           <div className="mb-2 text-sm text-zinc-500">{user?.username}</div>
           <button
             onClick={handleLogout}
@@ -54,10 +54,10 @@ function SidebarLink({ to, children }: { to: string; children: React.ReactNode }
     <NavLink
       to={to}
       className={({ isActive }) =>
-        `rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+        `rounded-xl px-3 py-2 text-sm font-semibold transition-colors ${
           isActive
             ? 'bg-brand/10 text-brand dark:bg-brand/20'
-            : 'text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800'
+            : 'text-zinc-700 hover:bg-white/80 hover:text-brand dark:text-zinc-300 dark:hover:bg-zinc-800'
         }`
       }
     >

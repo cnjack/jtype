@@ -1,19 +1,33 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
-import { useParams } from 'react-router-dom'
-import { api, type WorkspaceSummary, type DocumentListItem } from '../api'
+import { useLocation, useParams } from 'react-router-dom'
+import { api, getStoredUsername, type WorkspaceSummary, type DocumentListItem, type DomainResponse } from '../api'
 import { renderToContainer } from '../lib/markdown'
 import { parseFrontmatter, writeFrontmatter } from '../lib/frontmatter'
 import type { EditorMode } from '../lib/utils'
 
+type WorkspaceSection = 'documents' | 'publishing' | 'domains'
+
 export function Workspace() {
   const { workspaceId } = useParams<{ workspaceId: string }>()
+  const location = useLocation()
+  const initialSection = ((location.state as { section?: WorkspaceSection } | null)?.section) ?? 'documents'
   const [workspace, setWorkspace] = useState<WorkspaceSummary | null>(null)
   const [documents, setDocuments] = useState<DocumentListItem[]>([])
+  const [domains, setDomains] = useState<DomainResponse[]>([])
   const [loading, setLoading] = useState(true)
+  const [activeSection, setActiveSection] = useState<WorkspaceSection>(initialSection)
   const [selectedDoc, setSelectedDoc] = useState<string | null>(null)
   const [docContent, setDocContent] = useState('')
   const [newPath, setNewPath] = useState('')
   const [saving, setSaving] = useState(false)
+  const [workspaceName, setWorkspaceName] = useState('')
+  const [publishTitle, setPublishTitle] = useState('')
+  const [settingsMessage, setSettingsMessage] = useState('')
+  const [newDomain, setNewDomain] = useState('')
+  const [certDomainId, setCertDomainId] = useState('')
+  const [certChainPem, setCertChainPem] = useState('')
+  const [privateKeyPem, setPrivateKeyPem] = useState('')
+  const [domainMessage, setDomainMessage] = useState('')
   const [editorMode, setEditorMode] = useState<EditorMode>('split')
   const [infoPanel, setInfoPanel] = useState(false)
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null)
@@ -22,17 +36,54 @@ export function Workspace() {
 
   const editorRef = useRef<HTMLTextAreaElement>(null)
   const previewRef = useRef<HTMLElement>(null)
+  const isSyncingScroll = useRef(false)
 
   useEffect(() => {
     if (!workspaceId) return
     Promise.all([
       api.getWorkspace(workspaceId),
       api.listDocuments(workspaceId),
-    ]).then(([ws, docs]) => {
+      api.listDomains(),
+    ]).then(([ws, docs, domainList]) => {
       setWorkspace(ws)
       setDocuments(docs)
+      setDomains(domainList)
+      setWorkspaceName(ws.name === '.jtype' ? (ws.publishTitle || '') : ws.name)
+      setPublishTitle(ws.publishTitle || ws.name)
     }).finally(() => setLoading(false))
   }, [workspaceId])
+
+  useEffect(() => {
+    const nextSection = (location.state as { section?: WorkspaceSection } | null)?.section
+    if (nextSection) setActiveSection(nextSection)
+  }, [location.state])
+
+  useEffect(() => {
+    const editor = editorRef.current
+    const preview = previewRef.current
+    if (!editor || !preview) return
+
+    const syncScroll = (source: HTMLElement, target: HTMLElement) => {
+      if (isSyncingScroll.current) return
+      isSyncingScroll.current = true
+      const ratio = source.scrollTop / (source.scrollHeight - source.clientHeight || 1)
+      target.scrollTop = ratio * (target.scrollHeight - target.clientHeight || 1)
+      requestAnimationFrame(() => {
+        isSyncingScroll.current = false
+      })
+    }
+
+    const onEditorScroll = () => syncScroll(editor, preview)
+    const onPreviewScroll = () => syncScroll(preview, editor)
+
+    editor.addEventListener('scroll', onEditorScroll)
+    preview.addEventListener('scroll', onPreviewScroll)
+
+    return () => {
+      editor.removeEventListener('scroll', onEditorScroll)
+      preview.removeEventListener('scroll', onPreviewScroll)
+    }
+  }, [])
 
   useEffect(() => {
     if (previewRef.current) {
@@ -54,7 +105,12 @@ export function Workspace() {
     if (!doc) return
     setSaving(true)
     try {
-      await api.saveDocument(workspaceId, { relativePath: doc.relativePath, content: docContent })
+      const parsedDoc = parseFrontmatter(docContent)
+      await api.saveDocument(workspaceId, {
+        relativePath: doc.relativePath,
+        content: docContent,
+        title: parsedDoc.data.title || undefined,
+      })
       setDirty(false)
       const docs = await api.listDocuments(workspaceId)
       setDocuments(docs)
@@ -69,6 +125,75 @@ export function Workspace() {
     setNewPath('')
     const docs = await api.listDocuments(workspaceId)
     setDocuments(docs)
+  }
+
+  async function saveWorkspaceSettings() {
+    if (!workspaceId) return
+    setSaving(true)
+    try {
+      const updated = await api.updateWorkspace(workspaceId, {
+        name: workspaceName.trim() || undefined,
+        publishTitle: publishTitle.trim() || undefined,
+      })
+      setWorkspace(updated)
+      setWorkspaceName(updated.name)
+      setPublishTitle(updated.publishTitle || updated.name)
+      setSettingsMessage('Publishing details saved')
+      setTimeout(() => setSettingsMessage(''), 2500)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function reloadDomains() {
+    setDomains(await api.listDomains())
+  }
+
+  async function addDomain() {
+    if (!newDomain.trim() || !workspaceId) return
+    await api.addDomain(newDomain.trim(), workspaceId)
+    setNewDomain('')
+    await reloadDomains()
+  }
+
+  async function verifyDomain(id: string) {
+    await api.verifyDomain(id)
+    await reloadDomains()
+  }
+
+  async function bindDomain(domain: DomainResponse, bind: boolean) {
+    await api.bindDomain(domain.id, bind ? workspaceId : undefined)
+    await reloadDomains()
+  }
+
+  async function uploadCertificate() {
+    if (!certDomainId) return
+    await api.uploadCertificate(certDomainId, certChainPem, privateKeyPem)
+    setCertChainPem('')
+    setPrivateKeyPem('')
+    setDomainMessage('SSL certificate uploaded')
+    setTimeout(() => setDomainMessage(''), 2500)
+    await reloadDomains()
+  }
+
+  async function setDocumentPublishStatus(status: 'published' | 'draft' | 'archived') {
+    if (!workspaceId || !selectedDoc) return
+    const doc = documents.find(d => d.id === selectedDoc)
+    if (!doc) return
+    const nextContent = writeFrontmatter(docContent, { status })
+    setSaving(true)
+    try {
+      await api.saveDocument(workspaceId, {
+        relativePath: doc.relativePath,
+        content: nextContent,
+        title: parseFrontmatter(nextContent).data.title || undefined,
+      })
+      setDocContent(nextContent)
+      setDirty(false)
+      setDocuments(await api.listDocuments(workspaceId))
+    } finally {
+      setSaving(false)
+    }
   }
 
   async function deleteDocument(docId: string) {
@@ -128,6 +253,11 @@ export function Workspace() {
 
   const parsed = parseFrontmatter(docContent)
   const publishStatus = parsed.data.status || 'draft'
+  const selectedDocument = selectedDoc ? documents.find(d => d.id === selectedDoc) : null
+  const publicUrl = workspace ? `/u/${getStoredUsername() || 'me'}/${workspace.slug}` : ''
+  const boundDomains = workspace ? domains.filter(domain => domain.workspaceId === workspace.id) : []
+  const availableDomains = workspace ? domains.filter(domain => !domain.workspaceId || domain.workspaceId === workspace.id) : []
+  const verifiedDomains = boundDomains.filter(domain => domain.status === 'verified')
 
   const getGridClass = (mode: EditorMode) => {
     if (mode === 'write') return 'editor-preview-grid view-mode-write'
@@ -139,40 +269,99 @@ export function Workspace() {
 
   return (
     <div className="flex h-[calc(100vh-4rem)] flex-col">
-      <div className="mb-2 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            className="rounded-md px-2 py-1 text-xs font-semibold text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
-            onClick={() => setSidebarCollapsed(c => !c)}
-          >
-            {sidebarCollapsed ? 'Files' : 'Hide'}
-          </button>
-          <h1 className="text-lg font-bold text-zinc-900 dark:text-white">{workspace?.name}</h1>
-          {selectedDoc && (
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-zinc-500">
-                {documents.find(d => d.id === selectedDoc)?.relativePath}
+      <WorkspaceSectionNav active={activeSection} onChange={setActiveSection} />
+
+      {activeSection === 'publishing' && workspace && (
+        <WorkspacePublishingPanel
+          workspace={workspace}
+          workspaceName={workspaceName}
+          publishTitle={publishTitle}
+          message={settingsMessage}
+          saving={saving}
+          publicUrl={publicUrl}
+          onNameChange={setWorkspaceName}
+          onTitleChange={setPublishTitle}
+          onSave={saveWorkspaceSettings}
+          onOpenDomains={() => setActiveSection('domains')}
+        />
+      )}
+
+      {activeSection === 'domains' && workspace && (
+        <WorkspaceDomainsPanel
+          workspace={workspace}
+          domains={availableDomains}
+          boundDomains={boundDomains}
+          verifiedDomains={verifiedDomains}
+          newDomain={newDomain}
+          certDomainId={certDomainId}
+          certChainPem={certChainPem}
+          privateKeyPem={privateKeyPem}
+          message={domainMessage}
+          onNewDomainChange={setNewDomain}
+          onCertDomainChange={setCertDomainId}
+          onCertChainChange={setCertChainPem}
+          onPrivateKeyChange={setPrivateKeyPem}
+          onAddDomain={addDomain}
+          onVerifyDomain={verifyDomain}
+          onBindDomain={bindDomain}
+          onUploadCertificate={uploadCertificate}
+        />
+      )}
+
+      {activeSection === 'documents' && (
+      <>
+      <div className="my-5 flex items-start justify-between gap-6">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              className="rounded-full bg-white/70 px-3 py-1.5 text-xs font-semibold text-zinc-500 ring-1 ring-black/[0.04] hover:text-brand"
+              onClick={() => setSidebarCollapsed(c => !c)}
+            >
+              {sidebarCollapsed ? 'Show files' : 'Hide files'}
+            </button>
+            <h1 className="truncate text-2xl font-semibold text-zinc-950 dark:text-white">{displayWorkspaceName(workspace)}</h1>
+            {workspace && (
+              <span className="rounded-full bg-brand/10 px-3 py-1 text-xs font-semibold text-brand">
+                {workspace.documentCount} docs
               </span>
-              <span className={`status-chip ${dirty ? 'status-chip-warning' : 'status-chip-neutral'}`}>
-                {dirty ? 'Unsaved' : 'Saved'}
-              </span>
-              <span className="status-chip status-chip-neutral">{publishStatus}</span>
-            </div>
-          )}
+            )}
+          </div>
+          <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-zinc-500">
+            <a className="font-semibold text-brand" href={publicUrl} target="_blank" rel="noreferrer">{publicUrl}</a>
+            {selectedDoc && <span>{documents.find(d => d.id === selectedDoc)?.relativePath}</span>}
+            {selectedDoc && <span className={`status-chip ${dirty ? 'status-chip-warning' : 'status-chip-neutral'}`}>{dirty ? 'Unsaved' : 'Saved'}</span>}
+            {selectedDoc && <span className="status-chip status-chip-neutral">{publishStatus}</span>}
+          </div>
         </div>
         {selectedDoc && (
-          <button
-            onClick={saveDocument}
-            disabled={saving || !dirty}
-            className="rounded-md bg-brand px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-dark disabled:opacity-50"
-          >
-            {saving ? 'Saving...' : 'Save'}
-          </button>
+          <div className="flex items-center gap-2 rounded-2xl bg-white/75 p-1 shadow-sm shadow-emerald-950/5 ring-1 ring-black/[0.04]">
+            <button
+              onClick={() => setDocumentPublishStatus(publishStatus === 'published' ? 'draft' : 'published')}
+              disabled={saving}
+              className="h-9 rounded-xl px-3 text-xs font-semibold text-brand hover:bg-brand/10 disabled:opacity-50"
+            >
+              {publishStatus === 'published' ? 'Unpublish' : 'Publish'}
+            </button>
+            <button
+              onClick={() => setDocumentPublishStatus('archived')}
+              disabled={saving}
+              className="h-9 rounded-xl px-3 text-xs font-semibold text-zinc-500 hover:bg-zinc-100 disabled:opacity-50"
+            >
+              Archive
+            </button>
+            <button
+              onClick={saveDocument}
+              disabled={saving || !dirty}
+              className="h-9 rounded-xl bg-brand px-4 text-xs font-semibold text-white hover:bg-brand-dark disabled:opacity-50"
+            >
+              {saving ? 'Saving...' : 'Save'}
+            </button>
+          </div>
         )}
       </div>
 
-      <div className="flex flex-1 gap-3 overflow-hidden">
+      <div className="flex flex-1 gap-4 overflow-hidden">
         {!sidebarCollapsed && (
           <div className="w-56 shrink-0 overflow-y-auto rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
             <div className="border-b border-zinc-200 p-2 dark:border-zinc-800">
@@ -200,7 +389,8 @@ export function Workspace() {
                   className={`flex cursor-pointer items-center justify-between px-2.5 py-1.5 text-xs transition hover:bg-zinc-50 dark:hover:bg-zinc-800 ${selectedDoc === doc.id ? 'bg-brand/5 font-medium text-brand' : 'text-zinc-600 dark:text-zinc-400'}`}
                   onClick={() => openDocument(doc.id)}
                 >
-                  <span className="truncate">{doc.relativePath}</span>
+                  <span className="min-w-0 truncate">{doc.relativePath}</span>
+                  <span className={`ml-2 rounded-full px-1.5 py-0.5 text-[10px] ${doc.status === 'published' ? 'bg-brand/10 text-brand' : 'bg-zinc-100 text-zinc-500'}`}>{doc.status}</span>
                   <button
                     onClick={e => { e.stopPropagation(); deleteDocument(doc.id) }}
                     className="ml-1 text-zinc-400 hover:text-red-500"
@@ -270,6 +460,16 @@ export function Workspace() {
                       <p className="text-sm font-semibold text-stone-950">Document Info</p>
                       <button className="subtle-button" type="button" onClick={() => setInfoPanel(false)}>Hide</button>
                     </div>
+                    {selectedDocument && (
+                      <section className="document-info-section">
+                        <p className="text-sm font-semibold text-stone-950">Publish</p>
+                        <p className="mt-1 text-xs text-stone-500">Current status: {publishStatus}</p>
+                        <div className="mt-3 grid grid-cols-2 gap-2">
+                          <button className="sidebar-action" type="button" onClick={() => setDocumentPublishStatus('published')}>Publish</button>
+                          <button className="sidebar-action" type="button" onClick={() => setDocumentPublishStatus('draft')}>Unpublish</button>
+                        </div>
+                      </section>
+                    )}
                     <WebPropertiesSection
                       content={docContent}
                       onChange={(c) => { setDocContent(c); setDirty(true) }}
@@ -287,8 +487,10 @@ export function Workspace() {
           )}
         </div>
       </div>
+      </>
+      )}
 
-      {contextMenu && (
+      {activeSection === 'documents' && contextMenu && (
         <div
           role="menu"
           className="context-menu"
@@ -305,6 +507,319 @@ export function Workspace() {
       )}
     </div>
   )
+}
+
+function WorkspaceSectionNav({ active, onChange }: { active: WorkspaceSection; onChange: (section: WorkspaceSection) => void }) {
+  const items: Array<{ id: WorkspaceSection; label: string }> = [
+    { id: 'documents', label: 'Documents' },
+    { id: 'publishing', label: 'Publishing' },
+    { id: 'domains', label: 'Domains' },
+  ]
+  return (
+    <nav className="flex flex-wrap gap-2">
+      {items.map(item => (
+        <button
+          key={item.id}
+          type="button"
+          onClick={() => onChange(item.id)}
+          className={`rounded-full px-4 py-2 text-sm font-semibold transition ${active === item.id ? 'bg-brand text-white shadow-sm shadow-brand/20' : 'bg-white/70 text-zinc-500 ring-1 ring-black/[0.04] hover:text-brand dark:bg-zinc-900/70'}`}
+        >
+          {item.label}
+        </button>
+      ))}
+    </nav>
+  )
+}
+
+function WorkspacePublishingPanel({
+  workspace,
+  workspaceName,
+  publishTitle,
+  publicUrl,
+  message,
+  saving,
+  onNameChange,
+  onTitleChange,
+  onSave,
+  onOpenDomains,
+}: {
+  workspace: WorkspaceSummary
+  workspaceName: string
+  publishTitle: string
+  publicUrl: string
+  message: string
+  saving: boolean
+  onNameChange: (value: string) => void
+  onTitleChange: (value: string) => void
+  onSave: () => void
+  onOpenDomains: () => void
+}) {
+  const usedPct = Math.min(100, (workspace.storageUsedBytes / Math.max(1, workspace.storageBudgetBytes)) * 100)
+  return (
+    <section className="mx-auto mt-8 w-full max-w-5xl rounded-[32px] bg-white/85 p-8 shadow-sm shadow-emerald-950/5 ring-1 ring-black/[0.04] dark:bg-zinc-900/85">
+      <div className="flex flex-wrap items-start justify-between gap-6">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand">Publishing</p>
+          <h1 className="mt-2 text-3xl font-semibold text-zinc-950 dark:text-white">Workspace identity</h1>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-500">
+            Keep the publish name and workspace name here. The workspace slug and storage limit are assigned by the service.
+          </p>
+        </div>
+        <a className="rounded-full bg-brand/10 px-4 py-2 text-sm font-semibold text-brand" href={publicUrl} target="_blank" rel="noreferrer">
+          {publicUrl}
+        </a>
+      </div>
+
+      <div className="mt-8 grid gap-5 md:grid-cols-2">
+        <WorkspaceField label="Workspace name" value={workspaceName} onChange={onNameChange} />
+        <WorkspaceField label="Publish title" value={publishTitle} onChange={onTitleChange} />
+        <ReadOnlyField label="Workspace slug" value={workspace.slug} />
+        <ReadOnlyField label="Vault space" value={`${formatBytes(workspace.storageBudgetBytes)} allocated`} />
+      </div>
+
+      <div className="mt-7 rounded-3xl bg-[#f7faf8] p-5">
+        <div className="mb-2 flex justify-between text-sm text-zinc-500">
+          <span>Storage used</span>
+          <span>{formatBytes(workspace.storageUsedBytes)} / {formatBytes(workspace.storageBudgetBytes)}</span>
+        </div>
+        <div className="h-2 rounded-full bg-white">
+          <div className="h-2 rounded-full bg-brand" style={{ width: `${usedPct}%` }} />
+        </div>
+      </div>
+
+      <div className="mt-8 flex items-center justify-between gap-4">
+        <button className="workspace-card-link" type="button" onClick={onOpenDomains}>Manage custom domains</button>
+        <div className="flex items-center gap-3">
+          {message && <p className="text-sm font-semibold text-brand">{message}</p>}
+          <button className="h-10 rounded-xl bg-brand px-5 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-50" onClick={onSave} disabled={saving}>
+            {saving ? 'Saving...' : 'Save'}
+          </button>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function WorkspaceDomainsPanel({
+  workspace,
+  domains,
+  boundDomains,
+  verifiedDomains,
+  newDomain,
+  certDomainId,
+  certChainPem,
+  privateKeyPem,
+  message,
+  onNewDomainChange,
+  onCertDomainChange,
+  onCertChainChange,
+  onPrivateKeyChange,
+  onAddDomain,
+  onVerifyDomain,
+  onBindDomain,
+  onUploadCertificate,
+}: {
+  workspace: WorkspaceSummary
+  domains: DomainResponse[]
+  boundDomains: DomainResponse[]
+  verifiedDomains: DomainResponse[]
+  newDomain: string
+  certDomainId: string
+  certChainPem: string
+  privateKeyPem: string
+  message: string
+  onNewDomainChange: (value: string) => void
+  onCertDomainChange: (value: string) => void
+  onCertChainChange: (value: string) => void
+  onPrivateKeyChange: (value: string) => void
+  onAddDomain: () => void
+  onVerifyDomain: (id: string) => void
+  onBindDomain: (domain: DomainResponse, bind: boolean) => void
+  onUploadCertificate: () => void
+}) {
+  return (
+    <div className="mx-auto mt-8 w-full max-w-6xl overflow-y-auto pb-8">
+      <section className="rounded-[32px] bg-white/85 p-8 shadow-sm shadow-emerald-950/5 ring-1 ring-black/[0.04] dark:bg-zinc-900/85">
+        <div className="flex flex-wrap items-start justify-between gap-6">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand">Custom domains</p>
+            <h1 className="mt-2 text-3xl font-semibold text-zinc-950 dark:text-white">{displayWorkspaceName(workspace)} domains</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-500">
+              Add domains, verify DNS ownership, bind them to this workspace, and manage SSL certificates from one place.
+            </p>
+          </div>
+          <div className="rounded-2xl bg-[#f7faf8] px-4 py-3 text-sm">
+            <span className="font-semibold text-zinc-950">{boundDomains.length}</span>
+            <span className="ml-1 text-zinc-500">bound</span>
+          </div>
+        </div>
+
+        <div className="mt-8 flex gap-2 rounded-2xl bg-[#f7faf8] p-1 ring-1 ring-black/[0.04]">
+          <input
+            value={newDomain}
+            onChange={e => onNewDomainChange(e.target.value)}
+            placeholder="docs.example.com"
+            className="h-11 flex-1 border-0 bg-transparent px-3 text-sm outline-none placeholder:text-zinc-400"
+            onKeyDown={e => e.key === 'Enter' && onAddDomain()}
+          />
+          <button onClick={onAddDomain} className="h-11 rounded-xl bg-brand px-4 text-sm font-semibold text-white hover:bg-brand-dark">Add domain</button>
+        </div>
+
+        <div className="mt-8 grid gap-4">
+          {domains.length === 0 ? (
+            <div className="rounded-3xl bg-[#f7faf8] p-8 text-center text-sm text-zinc-500">No domains yet.</div>
+          ) : (
+            domains.map(domain => (
+              <DomainRow
+                key={domain.id}
+                domain={domain}
+                isBound={domain.workspaceId === workspace.id}
+                onVerify={() => onVerifyDomain(domain.id)}
+                onBind={() => onBindDomain(domain, true)}
+                onUnbind={() => onBindDomain(domain, false)}
+              />
+            ))
+          )}
+        </div>
+      </section>
+
+      <section className="mt-5 rounded-[32px] bg-white/85 p-8 shadow-sm shadow-emerald-950/5 ring-1 ring-black/[0.04] dark:bg-zinc-900/85">
+        <div className="flex flex-wrap items-start justify-between gap-6">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand">SSL</p>
+            <h2 className="mt-2 text-2xl font-semibold text-zinc-950 dark:text-white">Certificate management</h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-500">
+              Upload a PEM certificate for a verified domain. The private key is stored as a hash in the current backend model.
+            </p>
+          </div>
+          {message && <p className="rounded-full bg-brand/10 px-4 py-2 text-sm font-semibold text-brand">{message}</p>}
+        </div>
+
+        <div className="mt-6 grid gap-4 lg:grid-cols-[280px_minmax(0,1fr)]">
+          <div>
+            <label className="block">
+              <span className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-400">Verified domain</span>
+              <select
+                value={certDomainId}
+                onChange={e => onCertDomainChange(e.target.value)}
+                className="mt-2 h-12 w-full rounded-2xl border-0 bg-[#f7faf8] px-4 text-sm outline-none ring-1 ring-black/[0.04]"
+              >
+                <option value="">Select a domain</option>
+                {verifiedDomains.map(domain => (
+                  <option key={domain.id} value={domain.id}>{domain.domain}</option>
+                ))}
+              </select>
+            </label>
+            <button
+              className="mt-4 h-11 w-full rounded-xl bg-brand px-4 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-50"
+              onClick={onUploadCertificate}
+              disabled={!certDomainId || !certChainPem.trim() || !privateKeyPem.trim()}
+            >
+              Upload certificate
+            </button>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <textarea
+              value={certChainPem}
+              onChange={e => onCertChainChange(e.target.value)}
+              placeholder="-----BEGIN CERTIFICATE-----"
+              className="min-h-44 rounded-2xl border-0 bg-[#f7faf8] p-4 font-mono text-xs outline-none ring-1 ring-black/[0.04]"
+            />
+            <textarea
+              value={privateKeyPem}
+              onChange={e => onPrivateKeyChange(e.target.value)}
+              placeholder="-----BEGIN PRIVATE KEY-----"
+              className="min-h-44 rounded-2xl border-0 bg-[#f7faf8] p-4 font-mono text-xs outline-none ring-1 ring-black/[0.04]"
+            />
+          </div>
+        </div>
+      </section>
+    </div>
+  )
+}
+
+function DomainRow({
+  domain,
+  isBound,
+  onVerify,
+  onBind,
+  onUnbind,
+}: {
+  domain: DomainResponse
+  isBound: boolean
+  onVerify: () => void
+  onBind: () => void
+  onUnbind: () => void
+}) {
+  const verified = domain.status === 'verified'
+  return (
+    <article className="rounded-3xl bg-[#f7faf8] p-5 ring-1 ring-black/[0.04]">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h3 className="text-base font-semibold text-zinc-950">{domain.domain}</h3>
+          <div className="mt-2 flex flex-wrap gap-2 text-xs">
+            <Status label={verified ? 'DNS verified' : 'DNS pending'} tone={verified ? 'success' : 'pending'} />
+            <Status label={isBound ? 'Bound here' : domain.workspaceName ? `Bound to ${domain.workspaceName}` : 'Unbound'} tone={isBound ? 'success' : 'neutral'} />
+            <Status label={domain.sslStatus ? `SSL ${domain.sslStatus}` : 'SSL not configured'} tone={domain.sslStatus ? 'success' : 'neutral'} />
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {!verified && <button className="workspace-card-link" onClick={onVerify}>Verify DNS</button>}
+          {isBound ? (
+            <button className="workspace-card-link" onClick={onUnbind}>Unbind</button>
+          ) : (
+            <button className="workspace-card-link" onClick={onBind}>Bind here</button>
+          )}
+        </div>
+      </div>
+      {!verified && (
+        <div className="mt-4 rounded-2xl bg-white p-4 text-xs text-zinc-500">
+          Add TXT record <code className="rounded bg-[#eef3f1] px-1.5 py-1 font-mono text-zinc-800">{domain.dnsTxtRecord}</code>, then verify DNS.
+        </div>
+      )}
+      {domain.sslExpiresAt && <p className="mt-3 text-xs text-zinc-500">SSL expires at {domain.sslExpiresAt}</p>}
+    </article>
+  )
+}
+
+function WorkspaceField({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
+  return (
+    <label className="block">
+      <span className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-400">{label}</span>
+      <input
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        className="mt-2 h-12 w-full rounded-2xl border-0 bg-[#f7faf8] px-4 text-sm text-zinc-950 outline-none ring-1 ring-black/[0.04] focus:ring-2 focus:ring-brand/30 dark:bg-zinc-950 dark:text-white"
+      />
+    </label>
+  )
+}
+
+function ReadOnlyField({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <span className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-400">{label}</span>
+      <div className="mt-2 flex h-12 items-center rounded-2xl bg-[#f7faf8] px-4 text-sm font-semibold text-zinc-600 ring-1 ring-black/[0.04] dark:bg-zinc-950 dark:text-zinc-300">
+        {value}
+      </div>
+    </div>
+  )
+}
+
+function Status({ label, tone }: { label: string; tone: 'success' | 'pending' | 'neutral' }) {
+  const classes = tone === 'success'
+    ? 'bg-brand/10 text-brand'
+    : tone === 'pending'
+      ? 'bg-amber-100 text-amber-800'
+      : 'bg-white text-zinc-500'
+  return <span className={`rounded-full px-2.5 py-1 font-semibold ${classes}`}>{label}</span>
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`
+  return `${(bytes / 1024 / 1024 / 1024).toFixed(1)} GB`
 }
 
 function EditorToolbarButton({ title, onClick, children }: { title: string; onClick: () => void; children: React.ReactNode }) {
@@ -412,6 +927,13 @@ function WebLinksSection({ content }: { content: string }) {
     </section>
   )
 }
+
+function displayWorkspaceName(workspace: WorkspaceSummary | null): string {
+  if (!workspace) return 'Workspace'
+  if (workspace.name === '.jtype') return workspace.publishTitle || 'JType Vault'
+  return workspace.name
+}
+
 
 function getEditor(): HTMLTextAreaElement | null {
   return document.querySelector<HTMLTextAreaElement>('textarea[aria-label="Markdown editor"]')

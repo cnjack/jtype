@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS workspaces (
   owner_user_id CHAR(36) NULL,
   name VARCHAR(255) NOT NULL,
   slug VARCHAR(255) NULL,
+  publish_title VARCHAR(255) NULL,
   root_hint VARCHAR(1024) NULL,
   storage_budget_bytes BIGINT NOT NULL DEFAULT 1073741824,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -198,6 +199,7 @@ CREATE TABLE IF NOT EXISTS ai_chunks (
 CREATE TABLE IF NOT EXISTS custom_domains (
   id CHAR(36) PRIMARY KEY,
   user_id CHAR(36) NOT NULL,
+  workspace_id CHAR(36) NULL,
   domain VARCHAR(255) NOT NULL UNIQUE,
   verification_token VARCHAR(128) NOT NULL,
   status ENUM('pending', 'verified', 'failed') NOT NULL DEFAULT 'pending',
@@ -206,6 +208,9 @@ CREATE TABLE IF NOT EXISTS custom_domains (
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   CONSTRAINT custom_domains_user_id_fk
     FOREIGN KEY (user_id) REFERENCES users(id)
+    ON DELETE CASCADE,
+  CONSTRAINT custom_domains_workspace_id_fk
+    FOREIGN KEY (workspace_id) REFERENCES workspaces(id)
     ON DELETE CASCADE
 );
 

@@ -10,7 +10,9 @@ export function Header() {
     ? `${state.workspace?.name ?? "Vault"} / ${state.currentRelativePath}`
     : state.mode === "workspace"
       ? state.workspace?.name ?? "Vault"
-      : "";
+      : state.mode === "single-file"
+        ? "Markdown file"
+        : "";
 
   const isSingleFile = state.mode === "single-file";
   const hasDocument = Boolean(state.currentPath);
@@ -24,22 +26,22 @@ export function Header() {
   const userInitial = (state.syncUsername || "A").charAt(0).toUpperCase();
 
   return (
-    <header className="flex min-h-14 items-center justify-between gap-4 border-b border-stone-200 bg-stone-50 px-4">
+    <header className="flex min-h-16 items-center justify-between gap-4 border-b border-black/[0.04] bg-white/85 px-5 backdrop-blur-xl">
       <div className="flex min-w-0 items-center gap-4">
         <button
-          className="select-none rounded-md px-1 py-0.5 -mx-1 transition hover:bg-stone-200/60"
+          className="-mx-1 select-none rounded-lg px-1 py-0.5 transition hover:bg-emerald-50"
           type="button"
           onClick={handleLogoClick}
           title="Back to home"
-          style={{ fontFamily: "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, monospace", fontSize: 20, fontWeight: 700, letterSpacing: -0.5 }}
+          style={{ fontFamily: "'Arial Black', 'Segoe UI', Arial, sans-serif", fontSize: 18, fontWeight: 900, letterSpacing: 0 }}
         >
-          <span className="text-stone-400">[</span>
-          <span className="text-teal-700">J</span>
-          <span className="text-stone-900">TYPE</span>
-          <span className="text-stone-400">]</span>
+          <span className="text-[#8d939d]">[</span>
+          <span className="text-[#008884]">J</span>
+          <span className="text-[#0d0d0c]">TYPE</span>
+          <span className="text-[#8d939d]">]</span>
         </button>
-        <div className="hidden min-w-0 border-l border-stone-200 pl-4 md:block">
-          <p className="truncate text-xs text-stone-500">{breadcrumbs}</p>
+        <div className="hidden min-w-0 border-l border-emerald-900/10 pl-4 md:block">
+          <p id="app-context-title" className="truncate text-xs font-medium text-[#67736f]">{breadcrumbs}</p>
         </div>
       </div>
       <div className="flex flex-wrap items-center justify-end gap-2">
