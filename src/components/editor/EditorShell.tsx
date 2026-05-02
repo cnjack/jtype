@@ -83,6 +83,7 @@ export function EditorShell() {
   }, [contextMenu]);
 
   useEffect(() => {
+    if (!state.currentPath || state.currentKind !== "markdown") return;
     const editor = editorRef.current;
     const preview = previewRef.current;
     if (!editor || !preview) return;
@@ -90,8 +91,10 @@ export function EditorShell() {
     const syncScroll = (source: HTMLElement, target: HTMLElement) => {
       if (isSyncingScroll.current) return;
       isSyncingScroll.current = true;
-      const ratio = source.scrollTop / (source.scrollHeight - source.clientHeight || 1);
-      target.scrollTop = ratio * (target.scrollHeight - target.clientHeight || 1);
+      const sourceRange = Math.max(1, source.scrollHeight - source.clientHeight);
+      const targetRange = Math.max(1, target.scrollHeight - target.clientHeight);
+      const ratio = source.scrollTop / sourceRange;
+      target.scrollTop = ratio * targetRange;
       requestAnimationFrame(() => {
         isSyncingScroll.current = false;
       });
@@ -107,7 +110,7 @@ export function EditorShell() {
       editor.removeEventListener("scroll", onEditorScroll);
       preview.removeEventListener("scroll", onPreviewScroll);
     };
-  }, []);
+  }, [state.currentPath, state.currentKind, state.editorMode, state.documentPanelOpen]);
 
   return (
     <section className="flex min-h-0 flex-col bg-[#fbfdfb]">

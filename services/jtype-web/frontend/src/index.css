@@ -93,7 +93,8 @@
 .editor-preview-grid > article {
   position: relative;
   z-index: 1;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .editor-preview-grid.view-mode-write {
