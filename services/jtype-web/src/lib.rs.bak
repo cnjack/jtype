@@ -1,0 +1,3118 @@
+use argon2::{
+    password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
+    Argon2,
+};
+use axum::{
+    extract::{Path, State},
+    http::{header, HeaderMap, StatusCode},
+    response::{Html, IntoResponse, Response},
+    routing::{get, post, put},
+    Json, Router,
+};
+use pulldown_cmark::{html, Options, Parser};
+use rand_core::{OsRng, RngCore};
+use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
+use sqlx::{mysql::MySqlPoolOptions, MySql, Pool, Row, Transaction};
+use std::env;
+use thiserror::Error;
+use tower_http::cors::{Any, CorsLayer};
+use uuid::Uuid;
+
+#[derive(Clone)]
+pub struct AppState {
+    pool: Pool<MySql>,
+    public_base_url: String,
+}
+
+#[derive(Debug, Error)]
+pub enum AppError {
+    #[error("database error: {0}")]
+    Database(#[from] sqlx::Error),
+    #[error("password error")]
+    Password,
+    #[error("unauthorized")]
+    Unauthorized,
+    #[error("not found")]
+    NotFound,
+    #[error("{0}")]
+    BadRequest(String),
+    #[error("server error: {0}")]
+    Server(String),
+}
+
+impl IntoResponse for AppError {
+    fn into_response(self) -> Response {
+        let status = match self {
+            AppError::Unauthorized => StatusCode::UNAUTHORIZED,
+            AppError::NotFound => StatusCode::NOT_FOUND,
+            AppError::BadRequest(_) | AppError::Password => StatusCode::BAD_REQUEST,
+            AppError::Database(_) | AppError::Server(_) => StatusCode::INTERNAL_SERVER_ERROR,
+        };
+        let body = Json(ErrorResponse {
+            error: self.to_string(),
+        });
+        (status, body).into_response()
+    }
+}
+
+#[derive(Debug, Serialize)]
+struct ErrorResponse {
+    error: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RegisterRequest {
+    username: String,
+    password: String,
+    site_title: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct LoginRequest {
+    username: String,
+    password: String,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AuthResponse {
+    token: String,
+    username: String,
+    site_url: String,
+    role: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DeviceOAuthStartRequest {
+    device_id: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DeviceOAuthStartResponse {
+    device_code: String,
+    user_code: String,
+    verification_url: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DeviceOAuthPollRequest {
+    device_code: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DeviceOAuthApproveRequest {
+    user_code: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SyncWorkspaceRequest {
+    workspace_name: String,
+    documents: Vec<SyncDocument>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct SyncDocument {
+    relative_path: String,
+    title: String,
+    status: String,
+    content: String,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SyncWorkspaceResponse {
+    workspace_id: String,
+    workspace_name: String,
+    document_count: usize,
+    site_url: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateWorkspaceRequest {
+    name: String,
+    storage_budget_bytes: Option<i64>,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkspaceSummary {
+    id: String,
+    name: String,
+    slug: String,
+    role: String,
+    document_count: i64,
+    storage_budget_bytes: i64,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkspaceListResponse {
+    workspaces: Vec<WorkspaceSummary>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateInviteRequest {
+    email: Option<String>,
+    role: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct InviteResponse {
+    invite_id: String,
+    workspace_id: String,
+    role: String,
+    invite_token: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CloudSaveDocumentRequest {
+    relative_path: String,
+    title: Option<String>,
+    status: Option<String>,
+    content: String,
+    base_content_hash: Option<String>,
+    base_content: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SyncPullRequest {
+    since_clock: Option<i64>,
+    device_id: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SyncPushRequest {
+    device_id: Option<String>,
+    documents: Vec<CloudSaveDocumentRequest>,
+}
+
+#[derive(Debug, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct CloudDocument {
+    relative_path: String,
+    title: String,
+    status: String,
+    content: String,
+    content_hash: String,
+    version_id: String,
+    updated_clock: i64,
+}
+
+#[derive(Debug, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct SyncConflict {
+    conflict_id: String,
+    relative_path: String,
+    local_content: String,
+    cloud_content: String,
+    base_content: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SyncPullResponse {
+    workspace_id: String,
+    documents: Vec<CloudDocument>,
+    conflicts: Vec<SyncConflict>,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SyncPushResponse {
+    workspace_id: String,
+    accepted: usize,
+    documents: Vec<CloudDocument>,
+    conflicts: Vec<SyncConflict>,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ManifestDocument {
+    relative_path: String,
+    title: String,
+    status: String,
+    content_hash: String,
+    version_id: String,
+    updated_clock: i64,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkspaceManifestResponse {
+    workspace_id: String,
+    documents: Vec<ManifestDocument>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ResolveConflictRequest {
+    resolution: String,
+    content: Option<String>,
+}
+
+#[derive(Debug, Clone)]
+struct AuthUser {
+    id: String,
+    username: String,
+    role: String,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AdminUserResponse {
+    id: String,
+    username: String,
+    role: String,
+    site_title: String,
+    display_name: Option<String>,
+    email: Option<String>,
+    enabled: bool,
+    workspace_count: i64,
+    storage_used_bytes: i64,
+    storage_budget_bytes: i64,
+    created_at: String,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AdminWorkspaceResponse {
+    id: String,
+    name: String,
+    slug: String,
+    owner_username: Option<String>,
+    member_count: i64,
+    document_count: i64,
+    storage_budget_bytes: i64,
+    storage_used_bytes: i64,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AdminDomainResponse {
+    id: String,
+    domain: String,
+    username: String,
+    status: String,
+    ssl_status: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AdminStatsResponse {
+    total_users: i64,
+    total_workspaces: i64,
+    total_documents: i64,
+    total_storage_bytes: i64,
+    total_domains: i64,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AdminUpdateUserRequest {
+    role: Option<String>,
+    enabled: Option<bool>,
+    storage_budget_bytes: Option<i64>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateProfileRequest {
+    display_name: Option<String>,
+    email: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateSiteRequest {
+    site_title: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProfileResponse {
+    id: String,
+    username: String,
+    role: String,
+    display_name: Option<String>,
+    email: Option<String>,
+    site_title: String,
+    enabled: bool,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StorageUsageResponse {
+    total_budget_bytes: i64,
+    total_used_bytes: i64,
+    workspaces: Vec<WorkspaceStorageItem>,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkspaceStorageItem {
+    workspace_id: String,
+    workspace_name: String,
+    budget_bytes: i64,
+    used_bytes: i64,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DeviceInfo {
+    device_id: String,
+    workspace_id: String,
+    workspace_name: String,
+    last_seen_clock: i64,
+    updated_at: String,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DocumentListItem {
+    id: String,
+    relative_path: String,
+    title: String,
+    status: String,
+    content_hash: String,
+    updated_clock: i64,
+    version_id: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DocumentVersionResponse {
+    id: String,
+    parent_version_id: Option<String>,
+    source: String,
+    content_hash: String,
+    content: String,
+    created_at: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateDocumentStatusRequest {
+    status: String,
+}
+
+#[derive(Debug, Clone)]
+struct SiteDocument {
+    relative_path: String,
+    title: String,
+    content: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AddDomainRequest {
+    domain: String,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DomainResponse {
+    id: String,
+    domain: String,
+    verification_token: String,
+    dns_txt_record: String,
+    status: String,
+    verified_at: Option<String>,
+    ssl_status: Option<String>,
+    ssl_expires_at: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UploadCertificateRequest {
+    cert_chain_pem: String,
+    private_key_pem: String,
+}
+
+pub async fn run_from_env() -> Result<(), AppError> {
+    let database_url = env::var("JTYPED_DATABASE_URL")
+        .or_else(|_| env::var("DATABASE_URL"))
+        .unwrap_or_else(|_| "mysql://jtype:jtype-local@127.0.0.1:3306/jtype".to_string());
+    let bind_addr = env::var("JTYPED_BIND_ADDR").unwrap_or_else(|_| "127.0.0.1:13345".to_string());
+    let public_base_url =
+        env::var("JTYPED_PUBLIC_BASE_URL").unwrap_or_else(|_| "http://localhost:13345".to_string());
+
+    let pool = MySqlPoolOptions::new()
+        .max_connections(8)
+        .connect(&database_url)
+        .await?;
+    ensure_schema(&pool).await?;
+
+    let app = app(pool, public_base_url);
+    let listener = tokio::net::TcpListener::bind(&bind_addr)
+        .await
+        .map_err(|error| AppError::Server(error.to_string()))?;
+    println!("jtype-web listening on http://{}", bind_addr);
+    axum::serve(listener, app)
+        .await
+        .map_err(|error| AppError::Server(error.to_string()))
+}
+
+pub fn app(pool: Pool<MySql>, public_base_url: String) -> Router {
+    let state = AppState {
+        pool,
+        public_base_url,
+    };
+
+    Router::new()
+        .route("/", get(landing_page))
+        .route("/health", get(|| async { "ok" }))
+        .route("/login", get(login_page))
+        .route("/dashboard", get(dashboard_page))
+        .route("/workspaces/:workspace_id", get(workspace_page))
+        .route("/settings", get(settings_page))
+        .route("/admin", get(admin_page))
+        .route("/oauth/device", get(device_authorize_page))
+        .route("/api/register", post(register))
+        .route("/api/login", post(login))
+        .route("/api/me", get(me))
+        .route("/api/me/profile", put(update_profile))
+        .route("/api/me/site", put(update_site_settings))
+        .route("/api/me/storage", get(my_storage))
+        .route("/api/me/devices", get(my_devices))
+        .route("/api/admin/users", get(admin_users))
+        .route("/api/admin/users/:user_id", get(admin_user_detail).put(admin_update_user))
+        .route("/api/admin/workspaces", get(admin_workspaces))
+        .route("/api/admin/domains", get(admin_domains))
+        .route("/api/admin/stats", get(admin_stats))
+        .route("/api/oauth/device/start", post(start_device_oauth))
+        .route("/api/oauth/device/approve", post(approve_device_oauth))
+        .route("/api/oauth/device/poll", post(poll_device_oauth))
+        .route(
+            "/api/v1/workspaces",
+            get(list_workspaces).post(create_workspace),
+        )
+        .route("/api/v1/workspaces/:workspace_id", get(get_workspace))
+        .route(
+            "/api/v1/workspaces/:workspace_id/manifest",
+            get(get_workspace_manifest),
+        )
+        .route(
+            "/api/v1/workspaces/:workspace_id/invites",
+            post(create_workspace_invite),
+        )
+        .route(
+            "/api/v1/workspaces/:workspace_id/invites/:invite_id/revoke",
+            post(revoke_workspace_invite),
+        )
+        .route(
+            "/api/v1/workspace-invites/:invite_token/accept",
+            post(accept_workspace_invite),
+        )
+        .route(
+            "/api/v1/workspaces/:workspace_id/documents",
+            get(list_workspace_documents).put(save_cloud_document),
+        )
+        .route(
+            "/api/v1/workspaces/:workspace_id/documents/:document_id",
+            get(get_document_detail).delete(delete_document),
+        )
+        .route(
+            "/api/v1/workspaces/:workspace_id/documents/:document_id/status",
+            put(update_document_status),
+        )
+        .route(
+            "/api/v1/workspaces/:workspace_id/documents/:document_id/versions",
+            get(list_document_versions),
+        )
+        .route(
+            "/api/v1/workspaces/:workspace_id/sync/pull",
+            post(sync_pull_workspace),
+        )
+        .route(
+            "/api/v1/workspaces/:workspace_id/sync/push",
+            post(sync_push_workspace),
+        )
+        .route(
+            "/api/v1/workspaces/:workspace_id/conflicts/:conflict_id/resolve",
+            post(resolve_sync_conflict),
+        )
+        .route(
+            "/api/v1/domains",
+            get(list_domains).post(add_domain),
+        )
+        .route(
+            "/api/v1/domains/:domain_id",
+            get(get_domain),
+        )
+        .route(
+            "/api/v1/domains/:domain_id/verify",
+            post(verify_domain),
+        )
+        .route(
+            "/api/v1/domains/:domain_id/certificate",
+            post(upload_certificate),
+        )
+        .route("/api/sync/workspace", post(sync_workspace))
+        .route("/:site_user", get(public_site_index))
+        .route("/:site_user/*page_path", get(public_site_page))
+        .layer(
+            CorsLayer::new()
+                .allow_origin(Any)
+                .allow_methods(Any)
+                .allow_headers(Any),
+        )
+        .with_state(state)
+}
+
+pub async fn ensure_schema(pool: &Pool<MySql>) -> Result<(), AppError> {
+    for statement in include_str!("../../../infra/mysql/001_init.sql")
+        .split(';')
+        .map(str::trim)
+        .filter(|statement| !statement.is_empty())
+    {
+        sqlx::query(statement).execute(pool).await?;
+    }
+    run_compat_migrations(pool).await?;
+    Ok(())
+}
+
+async fn run_compat_migrations(pool: &Pool<MySql>) -> Result<(), AppError> {
+    if !column_exists(pool, "users", "role").await? {
+        sqlx::query("ALTER TABLE users ADD COLUMN role ENUM('admin', 'user') NOT NULL DEFAULT 'user' AFTER site_title")
+            .execute(pool)
+            .await?;
+        sqlx::query(
+            r#"UPDATE users
+               SET role = 'admin'
+               WHERE created_at = (SELECT created_at FROM (SELECT MIN(created_at) AS created_at FROM users) first_user)"#,
+        )
+        .execute(pool)
+        .await?;
+    }
+
+    if column_char_length(pool, "workspaces", "id").await? != Some(36) {
+        drop_foreign_key_if_exists(pool, "documents", "documents_workspace_id_fk").await?;
+        drop_foreign_key_if_exists(pool, "publish_targets", "publish_targets_workspace_id_fk")
+            .await?;
+        drop_foreign_key_if_exists(
+            pool,
+            "publish_revisions",
+            "publish_revisions_workspace_id_fk",
+        )
+        .await?;
+        sqlx::query("ALTER TABLE workspaces MODIFY COLUMN id CHAR(36) NOT NULL")
+            .execute(pool)
+            .await?;
+    }
+
+    if !column_exists(pool, "workspaces", "user_id").await? {
+        sqlx::query("ALTER TABLE workspaces ADD COLUMN user_id CHAR(36) NULL AFTER id")
+            .execute(pool)
+            .await?;
+    }
+
+    if !column_exists(pool, "workspaces", "owner_user_id").await? {
+        sqlx::query("ALTER TABLE workspaces ADD COLUMN owner_user_id CHAR(36) NULL AFTER user_id")
+            .execute(pool)
+            .await?;
+        sqlx::query("UPDATE workspaces SET owner_user_id = user_id WHERE owner_user_id IS NULL")
+            .execute(pool)
+            .await?;
+    }
+
+    if !column_exists(pool, "workspaces", "slug").await? {
+        sqlx::query("ALTER TABLE workspaces ADD COLUMN slug VARCHAR(255) NULL AFTER name")
+            .execute(pool)
+            .await?;
+        sqlx::query(
+            "UPDATE workspaces SET slug = LOWER(REPLACE(name, ' ', '-')) WHERE slug IS NULL",
+        )
+        .execute(pool)
+        .await?;
+    }
+
+    if !column_exists(pool, "workspaces", "storage_budget_bytes").await? {
+        sqlx::query(
+            "ALTER TABLE workspaces ADD COLUMN storage_budget_bytes BIGINT NOT NULL DEFAULT 1073741824 AFTER root_hint",
+        )
+        .execute(pool)
+        .await?;
+    }
+
+    if !index_exists(pool, "workspaces", "workspaces_user_name_unique").await? {
+        sqlx::query(
+            "CREATE UNIQUE INDEX workspaces_user_name_unique ON workspaces (user_id, name)",
+        )
+        .execute(pool)
+        .await?;
+    }
+
+    if !foreign_key_exists(pool, "workspaces", "workspaces_user_id_fk").await? {
+        sqlx::query(
+            r#"ALTER TABLE workspaces
+               ADD CONSTRAINT workspaces_user_id_fk
+               FOREIGN KEY (user_id) REFERENCES users(id)
+               ON DELETE CASCADE"#,
+        )
+        .execute(pool)
+        .await?;
+    }
+
+    if !foreign_key_exists(pool, "documents", "documents_workspace_id_fk").await? {
+        sqlx::query(
+            r#"ALTER TABLE documents
+               ADD CONSTRAINT documents_workspace_id_fk
+               FOREIGN KEY (workspace_id) REFERENCES workspaces(id)
+               ON DELETE CASCADE"#,
+        )
+        .execute(pool)
+        .await?;
+    }
+
+    if !foreign_key_exists(pool, "publish_targets", "publish_targets_workspace_id_fk").await? {
+        sqlx::query(
+            r#"ALTER TABLE publish_targets
+               ADD CONSTRAINT publish_targets_workspace_id_fk
+               FOREIGN KEY (workspace_id) REFERENCES workspaces(id)
+               ON DELETE CASCADE"#,
+        )
+        .execute(pool)
+        .await?;
+    }
+
+    if !foreign_key_exists(
+        pool,
+        "publish_revisions",
+        "publish_revisions_workspace_id_fk",
+    )
+    .await?
+    {
+        sqlx::query(
+            r#"ALTER TABLE publish_revisions
+               ADD CONSTRAINT publish_revisions_workspace_id_fk
+               FOREIGN KEY (workspace_id) REFERENCES workspaces(id)
+               ON DELETE CASCADE"#,
+        )
+        .execute(pool)
+        .await?;
+    }
+
+    if !column_exists(pool, "documents", "updated_clock").await? {
+        sqlx::query("ALTER TABLE documents ADD COLUMN updated_clock BIGINT NOT NULL DEFAULT 0 AFTER updated_at")
+            .execute(pool)
+            .await?;
+    }
+
+    if !column_exists(pool, "documents", "current_version_id").await? {
+        sqlx::query(
+            "ALTER TABLE documents ADD COLUMN current_version_id CHAR(36) NULL AFTER updated_clock",
+        )
+        .execute(pool)
+        .await?;
+    }
+
+    if !column_exists(pool, "users", "display_name").await? {
+        sqlx::query(
+            "ALTER TABLE users ADD COLUMN display_name VARCHAR(255) NULL AFTER site_title",
+        )
+        .execute(pool)
+        .await?;
+    }
+
+    if !column_exists(pool, "users", "email").await? {
+        sqlx::query("ALTER TABLE users ADD COLUMN email VARCHAR(255) NULL AFTER display_name")
+            .execute(pool)
+            .await?;
+    }
+
+    if !column_exists(pool, "users", "disabled_at").await? {
+        sqlx::query(
+            "ALTER TABLE users ADD COLUMN disabled_at TIMESTAMP NULL AFTER role",
+        )
+        .execute(pool)
+        .await?;
+    }
+
+    if !column_exists(pool, "users", "storage_budget_bytes").await? {
+        sqlx::query(
+            "ALTER TABLE users ADD COLUMN storage_budget_bytes BIGINT NOT NULL DEFAULT 1073741824 AFTER disabled_at",
+        )
+        .execute(pool)
+        .await?;
+    }
+
+    seed_workspace_members(pool).await?;
+
+    Ok(())
+}
+
+async fn seed_workspace_members(pool: &Pool<MySql>) -> Result<(), AppError> {
+    sqlx::query(
+        r#"INSERT IGNORE INTO workspace_members (workspace_id, user_id, role, status, joined_at)
+           SELECT id, COALESCE(owner_user_id, user_id), 'owner', 'active', CURRENT_TIMESTAMP
+           FROM workspaces
+           WHERE COALESCE(owner_user_id, user_id) IS NOT NULL"#,
+    )
+    .execute(pool)
+    .await?;
+    Ok(())
+}
+
+async fn column_exists(pool: &Pool<MySql>, table: &str, column: &str) -> Result<bool, AppError> {
+    let row = sqlx::query(
+        r#"SELECT COUNT(*) AS count
+           FROM information_schema.COLUMNS
+           WHERE TABLE_SCHEMA = DATABASE()
+             AND TABLE_NAME = ?
+             AND COLUMN_NAME = ?"#,
+    )
+    .bind(table)
+    .bind(column)
+    .fetch_one(pool)
+    .await?;
+    let count: i64 = row.try_get("count")?;
+    Ok(count > 0)
+}
+
+async fn column_char_length(
+    pool: &Pool<MySql>,
+    table: &str,
+    column: &str,
+) -> Result<Option<u64>, AppError> {
+    let row = sqlx::query(
+        r#"SELECT CHARACTER_MAXIMUM_LENGTH AS max_len
+           FROM information_schema.COLUMNS
+           WHERE TABLE_SCHEMA = DATABASE()
+             AND TABLE_NAME = ?
+             AND COLUMN_NAME = ?"#,
+    )
+    .bind(table)
+    .bind(column)
+    .fetch_optional(pool)
+    .await?;
+    let Some(row) = row else {
+        return Ok(None);
+    };
+    let max_len: i64 = row.try_get("max_len")?;
+    Ok(Some(max_len as u64))
+}
+
+async fn index_exists(pool: &Pool<MySql>, table: &str, index: &str) -> Result<bool, AppError> {
+    let row = sqlx::query(
+        r#"SELECT COUNT(*) AS count
+           FROM information_schema.STATISTICS
+           WHERE TABLE_SCHEMA = DATABASE()
+             AND TABLE_NAME = ?
+             AND INDEX_NAME = ?"#,
+    )
+    .bind(table)
+    .bind(index)
+    .fetch_one(pool)
+    .await?;
+    let count: i64 = row.try_get("count")?;
+    Ok(count > 0)
+}
+
+async fn foreign_key_exists(
+    pool: &Pool<MySql>,
+    table: &str,
+    constraint: &str,
+) -> Result<bool, AppError> {
+    let row = sqlx::query(
+        r#"SELECT COUNT(*) AS count
+           FROM information_schema.TABLE_CONSTRAINTS
+           WHERE TABLE_SCHEMA = DATABASE()
+             AND TABLE_NAME = ?
+             AND CONSTRAINT_NAME = ?
+             AND CONSTRAINT_TYPE = 'FOREIGN KEY'"#,
+    )
+    .bind(table)
+    .bind(constraint)
+    .fetch_one(pool)
+    .await?;
+    let count: i64 = row.try_get("count")?;
+    Ok(count > 0)
+}
+
+async fn drop_foreign_key_if_exists(
+    pool: &Pool<MySql>,
+    table: &str,
+    constraint: &str,
+) -> Result<(), AppError> {
+    if foreign_key_exists(pool, table, constraint).await? {
+        sqlx::query(&format!(
+            "ALTER TABLE `{}` DROP FOREIGN KEY `{}`",
+            table, constraint
+        ))
+        .execute(pool)
+        .await?;
+    }
+    Ok(())
+}
+
+async fn register(
+    State(state): State<AppState>,
+    Json(payload): Json<RegisterRequest>,
+) -> Result<Json<AuthResponse>, AppError> {
+    let username = normalize_username(&payload.username)?;
+    validate_password(&payload.password)?;
+    let password_hash = hash_password(&payload.password)?;
+    let user_id = Uuid::new_v4().to_string();
+    let site_title = payload
+        .site_title
+        .unwrap_or_else(|| format!("{} Docs", username));
+    let existing_users: i64 = sqlx::query("SELECT COUNT(*) AS count FROM users")
+        .fetch_one(&state.pool)
+        .await?
+        .try_get("count")?;
+    let role = if existing_users == 0 { "admin" } else { "user" };
+
+    sqlx::query(
+        r#"INSERT INTO users (id, username, password_hash, site_title, role)
+           VALUES (?, ?, ?, ?, ?)"#,
+    )
+    .bind(&user_id)
+    .bind(&username)
+    .bind(password_hash)
+    .bind(site_title)
+    .bind(role)
+    .execute(&state.pool)
+    .await
+    .map_err(|error| match error {
+        sqlx::Error::Database(db_error) if db_error.is_unique_violation() => {
+            AppError::BadRequest("username already exists".to_string())
+        }
+        other => AppError::Database(other),
+    })?;
+
+    let token = create_session(&state.pool, &user_id).await?;
+    Ok(Json(auth_response(
+        &state.public_base_url,
+        token,
+        username,
+        role.to_string(),
+    )))
+}
+
+async fn login(
+    State(state): State<AppState>,
+    Json(payload): Json<LoginRequest>,
+) -> Result<Json<AuthResponse>, AppError> {
+    let username = normalize_username(&payload.username)?;
+    let row = sqlx::query("SELECT id, password_hash, role FROM users WHERE username = ?")
+        .bind(&username)
+        .fetch_optional(&state.pool)
+        .await?
+        .ok_or(AppError::Unauthorized)?;
+    let user_id: String = row.try_get("id")?;
+    let password_hash: String = row.try_get("password_hash")?;
+    let role: String = row.try_get("role")?;
+    verify_password(&payload.password, &password_hash)?;
+    let token = create_session(&state.pool, &user_id).await?;
+    Ok(Json(auth_response(
+        &state.public_base_url,
+        token,
+        username,
+        role,
+    )))
+}
+
+async fn me(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+) -> Result<Json<AuthResponse>, AppError> {
+    let user = auth_user(&state.pool, &headers).await?;
+    Ok(Json(auth_response(
+        &state.public_base_url,
+        "".to_string(),
+        user.username,
+        user.role,
+    )))
+}
+
+async fn admin_users(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+) -> Result<Json<Vec<AdminUserResponse>>, AppError> {
+    let user = auth_user(&state.pool, &headers).await?;
+    require_admin(&user)?;
+    let rows = sqlx::query(
+        r#"SELECT u.id, u.username, u.role, u.site_title, COUNT(wm.workspace_id) AS workspace_count
+           FROM users u
+           LEFT JOIN workspace_members wm ON wm.user_id = u.id AND wm.status = 'active'
+           GROUP BY u.id, u.username, u.role, u.site_title
+           ORDER BY u.created_at ASC"#,
+    )
+    .fetch_all(&state.pool)
+    .await?;
+    let users = rows
+        .into_iter()
+        .map(|row| {
+            Ok(AdminUserResponse {
+                id: row.try_get("id")?,
+                username: row.try_get("username")?,
+                role: row.try_get("role")?,
+                site_title: row.try_get("site_title")?,
+                workspace_count: row.try_get("workspace_count")?,
+            })
+        })
+        .collect::<Result<Vec<_>, sqlx::Error>>()?;
+    Ok(Json(users))
+}
+
+async fn start_device_oauth(
+    State(state): State<AppState>,
+    Json(payload): Json<DeviceOAuthStartRequest>,
+) -> Result<Json<DeviceOAuthStartResponse>, AppError> {
+    let _device_id = payload.device_id.unwrap_or_else(|| "desktop".to_string());
+    let device_code = random_token();
+    let user_code = short_user_code();
+    let device_code_hash = sha256_hex(&device_code);
+    sqlx::query(
+        r#"INSERT INTO oauth_device_codes (device_code_hash, user_code, expires_at)
+           VALUES (?, ?, DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 10 MINUTE))"#,
+    )
+    .bind(device_code_hash)
+    .bind(&user_code)
+    .execute(&state.pool)
+    .await?;
+    Ok(Json(DeviceOAuthStartResponse {
+        device_code,
+        verification_url: format!(
+            "{}/oauth/device?code={}",
+            state.public_base_url.trim_end_matches('/'),
+            user_code
+        ),
+        user_code,
+    }))
+}
+
+async fn approve_device_oauth(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Json(payload): Json<DeviceOAuthApproveRequest>,
+) -> Result<StatusCode, AppError> {
+    let user = auth_user(&state.pool, &headers).await?;
+    let user_code = payload.user_code.trim().to_ascii_uppercase();
+    let result = sqlx::query(
+        r#"UPDATE oauth_device_codes
+           SET user_id = ?, approved_at = CURRENT_TIMESTAMP
+           WHERE user_code = ?
+             AND approved_at IS NULL
+             AND consumed_at IS NULL
+             AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP)"#,
+    )
+    .bind(&user.id)
+    .bind(user_code)
+    .execute(&state.pool)
+    .await?;
+    if result.rows_affected() == 0 {
+        return Err(AppError::NotFound);
+    }
+    Ok(StatusCode::NO_CONTENT)
+}
+
+async fn poll_device_oauth(
+    State(state): State<AppState>,
+    Json(payload): Json<DeviceOAuthPollRequest>,
+) -> Result<Json<AuthResponse>, AppError> {
+    let device_code_hash = sha256_hex(&payload.device_code);
+    let row = sqlx::query(
+        r#"SELECT d.user_id, u.username, u.role
+           FROM oauth_device_codes d
+           LEFT JOIN users u ON u.id = d.user_id
+           WHERE d.device_code_hash = ?
+             AND d.consumed_at IS NULL
+             AND (d.expires_at IS NULL OR d.expires_at > CURRENT_TIMESTAMP)"#,
+    )
+    .bind(&device_code_hash)
+    .fetch_optional(&state.pool)
+    .await?
+    .ok_or(AppError::NotFound)?;
+
+    let user_id: Option<String> = row.try_get("user_id")?;
+    let username: Option<String> = row.try_get("username")?;
+    let role: Option<String> = row.try_get("role")?;
+    let Some(user_id) = user_id else {
+        return Err(AppError::BadRequest("authorization pending".to_string()));
+    };
+    let username = username.ok_or(AppError::Unauthorized)?;
+    let role = role.ok_or(AppError::Unauthorized)?;
+    sqlx::query(
+        "UPDATE oauth_device_codes SET consumed_at = CURRENT_TIMESTAMP WHERE device_code_hash = ?",
+    )
+    .bind(device_code_hash)
+    .execute(&state.pool)
+    .await?;
+    let token = create_session(&state.pool, &user_id).await?;
+    Ok(Json(auth_response(
+        &state.public_base_url,
+        token,
+        username,
+        role,
+    )))
+}
+
+async fn list_workspaces(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+) -> Result<Json<WorkspaceListResponse>, AppError> {
+    let user = auth_user(&state.pool, &headers).await?;
+    let rows = sqlx::query(
+        r#"SELECT w.id,
+                  w.name,
+                  COALESCE(w.slug, LOWER(REPLACE(w.name, ' ', '-'))) AS slug,
+                  COALESCE(m.role, 'owner') AS role,
+                  COALESCE(w.storage_budget_bytes, 1073741824) AS storage_budget_bytes,
+                  COUNT(d.id) AS document_count
+           FROM workspaces w
+           LEFT JOIN workspace_members m
+             ON m.workspace_id = w.id
+            AND m.user_id = ?
+            AND m.status = 'active'
+           LEFT JOIN documents d ON d.workspace_id = w.id
+           WHERE m.user_id IS NOT NULL OR w.user_id = ? OR w.owner_user_id = ?
+           GROUP BY w.id, w.name, w.slug, m.role, w.storage_budget_bytes
+           ORDER BY w.updated_at DESC"#,
+    )
+    .bind(&user.id)
+    .bind(&user.id)
+    .bind(&user.id)
+    .fetch_all(&state.pool)
+    .await?;
+
+    let workspaces = rows
+        .into_iter()
+        .map(|row| {
+            Ok(WorkspaceSummary {
+                id: row.try_get("id")?,
+                name: row.try_get("name")?,
+                slug: row.try_get("slug")?,
+                role: row.try_get("role")?,
+                document_count: row.try_get("document_count")?,
+                storage_budget_bytes: row.try_get("storage_budget_bytes")?,
+            })
+        })
+        .collect::<Result<Vec<_>, AppError>>()?;
+
+    Ok(Json(WorkspaceListResponse { workspaces }))
+}
+
+async fn create_workspace(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Json(payload): Json<CreateWorkspaceRequest>,
+) -> Result<Json<WorkspaceSummary>, AppError> {
+    let user = auth_user(&state.pool, &headers).await?;
+    let name = normalize_workspace_name(&payload.name)?;
+    let mut tx = state.pool.begin().await?;
+    let workspace_id = upsert_workspace(&mut tx, &user.id, &name).await?;
+    let budget = payload.storage_budget_bytes.unwrap_or(1_073_741_824).max(0);
+    sqlx::query("UPDATE workspaces SET storage_budget_bytes = ? WHERE id = ?")
+        .bind(budget)
+        .bind(&workspace_id)
+        .execute(&mut *tx)
+        .await?;
+    tx.commit().await?;
+    let summary = load_workspace_summary(&state.pool, &user.id, &workspace_id).await?;
+    Ok(Json(summary))
+}
+
+async fn get_workspace(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Path(workspace_id): Path<String>,
+) -> Result<Json<WorkspaceSummary>, AppError> {
+    let user = auth_user(&state.pool, &headers).await?;
+    require_workspace_role(
+        &state.pool,
+        &workspace_id,
+        &user.id,
+        &["owner", "admin", "editor", "viewer"],
+    )
+    .await?;
+    Ok(Json(
+        load_workspace_summary(&state.pool, &user.id, &workspace_id).await?,
+    ))
+}
+
+async fn get_workspace_manifest(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Path(workspace_id): Path<String>,
+) -> Result<Json<WorkspaceManifestResponse>, AppError> {
+    let user = auth_user(&state.pool, &headers).await?;
+    require_workspace_role(
+        &state.pool,
+        &workspace_id,
+        &user.id,
+        &["owner", "admin", "editor", "viewer"],
+    )
+    .await?;
+    let rows = sqlx::query(
+        r#"SELECT relative_path, title, status, content_hash,
+                  COALESCE(current_version_id, id) AS version_id,
+                  updated_clock
+           FROM documents
+           WHERE workspace_id = ?
+           ORDER BY relative_path"#,
+    )
+    .bind(&workspace_id)
+    .fetch_all(&state.pool)
+    .await?;
+    let documents = rows
+        .into_iter()
+        .map(|row| {
+            Ok(ManifestDocument {
+                relative_path: row.try_get("relative_path")?,
+                title: row.try_get("title")?,
+                status: row.try_get("status")?,
+                content_hash: row.try_get("content_hash")?,
+                version_id: row.try_get("version_id")?,
+                updated_clock: row.try_get("updated_clock")?,
+            })
+        })
+        .collect::<Result<Vec<_>, sqlx::Error>>()?;
+    Ok(Json(WorkspaceManifestResponse {
+        workspace_id,
+        documents,
+    }))
+}
+
+async fn create_workspace_invite(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Path(workspace_id): Path<String>,
+    Json(payload): Json<CreateInviteRequest>,
+) -> Result<Json<InviteResponse>, AppError> {
+    let user = auth_user(&state.pool, &headers).await?;
+    require_workspace_role(&state.pool, &workspace_id, &user.id, &["owner", "admin"]).await?;
+    let role = normalize_invite_role(payload.role.as_deref())?;
+    let invite_id = Uuid::new_v4().to_string();
+    let invite_token = random_token();
+    let token_hash = sha256_hex(&invite_token);
+
+    sqlx::query(
+        r#"INSERT INTO workspace_invites
+           (id, workspace_id, invited_by_user_id, email, role, token_hash)
+           VALUES (?, ?, ?, ?, ?, ?)"#,
+    )
+    .bind(&invite_id)
+    .bind(&workspace_id)
+    .bind(&user.id)
+    .bind(payload.email.map(|value| value.trim().to_ascii_lowercase()))
+    .bind(role)
+    .bind(token_hash)
+    .execute(&state.pool)
+    .await?;
+
+    Ok(Json(InviteResponse {
+        invite_id,
+        workspace_id,
+        role: role.to_string(),
+        invite_token,
+    }))
+}
+
+async fn revoke_workspace_invite(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Path((workspace_id, invite_id)): Path<(String, String)>,
+) -> Result<StatusCode, AppError> {
+    let user = auth_user(&state.pool, &headers).await?;
+    require_workspace_role(&state.pool, &workspace_id, &user.id, &["owner", "admin"]).await?;
+    let result = sqlx::query(
+        r#"UPDATE workspace_invites
+           SET revoked_at = CURRENT_TIMESTAMP
+           WHERE id = ? AND workspace_id = ? AND accepted_at IS NULL AND revoked_at IS NULL"#,
+    )
+    .bind(invite_id)
+    .bind(workspace_id)
+    .execute(&state.pool)
+    .await?;
+    if result.rows_affected() == 0 {
+        return Err(AppError::NotFound);
+    }
+    Ok(StatusCode::NO_CONTENT)
+}
+
+async fn accept_workspace_invite(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Path(invite_token): Path<String>,
+) -> Result<Json<WorkspaceSummary>, AppError> {
+    let user = auth_user(&state.pool, &headers).await?;
+    let token_hash = sha256_hex(&invite_token);
+    let invite = sqlx::query(
+        r#"SELECT id, workspace_id, role
+           FROM workspace_invites
+           WHERE token_hash = ? AND accepted_at IS NULL AND revoked_at IS NULL"#,
+    )
+    .bind(token_hash)
+    .fetch_optional(&state.pool)
+    .await?
+    .ok_or(AppError::NotFound)?;
+
+    let invite_id: String = invite.try_get("id")?;
+    let workspace_id: String = invite.try_get("workspace_id")?;
+    let role: String = invite.try_get("role")?;
+
+    let mut tx = state.pool.begin().await?;
+    sqlx::query(
+        r#"INSERT INTO workspace_members (workspace_id, user_id, role, status, joined_at)
+           VALUES (?, ?, ?, 'active', CURRENT_TIMESTAMP)
+           ON DUPLICATE KEY UPDATE role = VALUES(role), status = 'active', joined_at = CURRENT_TIMESTAMP"#,
+    )
+    .bind(&workspace_id)
+    .bind(&user.id)
+    .bind(&role)
+    .execute(&mut *tx)
+    .await?;
+    sqlx::query("UPDATE workspace_invites SET accepted_at = CURRENT_TIMESTAMP WHERE id = ?")
+        .bind(invite_id)
+        .execute(&mut *tx)
+        .await?;
+    tx.commit().await?;
+
+    Ok(Json(
+        load_workspace_summary(&state.pool, &user.id, &workspace_id).await?,
+    ))
+}
+
+async fn sync_workspace(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Json(payload): Json<SyncWorkspaceRequest>,
+) -> Result<Json<SyncWorkspaceResponse>, AppError> {
+    let user = auth_user(&state.pool, &headers).await?;
+    if payload.workspace_name.trim().is_empty() {
+        return Err(AppError::BadRequest(
+            "workspaceName is required".to_string(),
+        ));
+    }
+
+    let mut tx = state.pool.begin().await?;
+    let workspace_id = upsert_workspace(&mut tx, &user.id, &payload.workspace_name).await?;
+    sqlx::query("DELETE FROM documents WHERE workspace_id = ?")
+        .bind(&workspace_id)
+        .execute(&mut *tx)
+        .await?;
+
+    for doc in &payload.documents {
+        if !is_markdown_path(&doc.relative_path) {
+            continue;
+        }
+        let document_id = Uuid::new_v4().to_string();
+        let title = if doc.title.trim().is_empty() {
+            extract_title(&doc.content).unwrap_or_else(|| doc.relative_path.clone())
+        } else {
+            doc.title.clone()
+        };
+        let status = normalize_status(&doc.status, &doc.content);
+        let content_hash = sha256_hex(&doc.content);
+        sqlx::query(
+            r#"INSERT INTO documents
+               (id, workspace_id, relative_path, title, status, content_hash, content)
+               VALUES (?, ?, ?, ?, ?, ?, ?)"#,
+        )
+        .bind(document_id)
+        .bind(&workspace_id)
+        .bind(&doc.relative_path)
+        .bind(title)
+        .bind(status)
+        .bind(content_hash)
+        .bind(&doc.content)
+        .execute(&mut *tx)
+        .await?;
+    }
+
+    tx.commit().await?;
+
+    Ok(Json(SyncWorkspaceResponse {
+        workspace_id,
+        workspace_name: payload.workspace_name,
+        document_count: payload.documents.len(),
+        site_url: site_url(&state.public_base_url, &user.username),
+    }))
+}
+
+async fn save_cloud_document(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Path(workspace_id): Path<String>,
+    Json(payload): Json<CloudSaveDocumentRequest>,
+) -> Result<Json<CloudDocument>, AppError> {
+    let user = auth_user(&state.pool, &headers).await?;
+    require_workspace_role(
+        &state.pool,
+        &workspace_id,
+        &user.id,
+        &["owner", "admin", "editor"],
+    )
+    .await?;
+    let saved = save_document_version(&state.pool, &workspace_id, &user, payload, "web").await?;
+    match saved {
+        SaveDocumentOutcome::Saved(document) => Ok(Json(document)),
+        SaveDocumentOutcome::Conflict(conflict) => Err(AppError::BadRequest(format!(
+            "document conflict: {}",
+            conflict.conflict_id
+        ))),
+    }
+}
+
+async fn sync_pull_workspace(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Path(workspace_id): Path<String>,
+    Json(payload): Json<SyncPullRequest>,
+) -> Result<Json<SyncPullResponse>, AppError> {
+    let user = auth_user(&state.pool, &headers).await?;
+    require_workspace_role(
+        &state.pool,
+        &workspace_id,
+        &user.id,
+        &["owner", "admin", "editor", "viewer"],
+    )
+    .await?;
+    let since_clock = payload.since_clock.unwrap_or(0);
+    let documents = load_workspace_documents_since(&state.pool, &workspace_id, since_clock).await?;
+    if let Some(device_id) = payload.device_id.as_deref() {
+        let next_clock = documents
+            .iter()
+            .map(|document| document.updated_clock)
+            .max()
+            .unwrap_or(since_clock);
+        upsert_sync_cursor(&state.pool, &workspace_id, device_id, next_clock).await?;
+    }
+    let conflicts = load_open_conflicts(&state.pool, &workspace_id).await?;
+    Ok(Json(SyncPullResponse {
+        workspace_id,
+        documents,
+        conflicts,
+    }))
+}
+
+async fn sync_push_workspace(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Path(workspace_id): Path<String>,
+    Json(payload): Json<SyncPushRequest>,
+) -> Result<Json<SyncPushResponse>, AppError> {
+    let user = auth_user(&state.pool, &headers).await?;
+    require_workspace_role(
+        &state.pool,
+        &workspace_id,
+        &user.id,
+        &["owner", "admin", "editor"],
+    )
+    .await?;
+    let mut accepted = 0;
+    let mut conflicts = Vec::new();
+    let device_id = payload.device_id.clone();
+
+    for document in payload.documents {
+        match save_document_version(&state.pool, &workspace_id, &user, document, "desktop").await? {
+            SaveDocumentOutcome::Saved(_) => accepted += 1,
+            SaveDocumentOutcome::Conflict(conflict) => conflicts.push(conflict),
+        }
+    }
+
+    let documents = load_workspace_documents_since(&state.pool, &workspace_id, 0).await?;
+    if let Some(device_id) = device_id.as_deref() {
+        let next_clock = documents
+            .iter()
+            .map(|document| document.updated_clock)
+            .max()
+            .unwrap_or(0);
+        upsert_sync_cursor(&state.pool, &workspace_id, device_id, next_clock).await?;
+    }
+    Ok(Json(SyncPushResponse {
+        workspace_id,
+        accepted,
+        documents,
+        conflicts,
+    }))
+}
+
+async fn resolve_sync_conflict(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Path((workspace_id, conflict_id)): Path<(String, String)>,
+    Json(payload): Json<ResolveConflictRequest>,
+) -> Result<Json<CloudDocument>, AppError> {
+    let user = auth_user(&state.pool, &headers).await?;
+    require_workspace_role(
+        &state.pool,
+        &workspace_id,
+        &user.id,
+        &["owner", "admin", "editor"],
+    )
+    .await?;
+    let row = sqlx::query(
+        r#"SELECT document_id, relative_path, base_content, local_content, cloud_content
+           FROM sync_conflicts
+           WHERE id = ? AND workspace_id = ? AND status = 'open'"#,
+    )
+    .bind(&conflict_id)
+    .bind(&workspace_id)
+    .fetch_optional(&state.pool)
+    .await?
+    .ok_or(AppError::NotFound)?;
+
+    let document_id: String = row.try_get("document_id")?;
+    let relative_path: String = row.try_get("relative_path")?;
+    let local_content: String = row.try_get("local_content")?;
+    let cloud_content: String = row.try_get("cloud_content")?;
+    let resolution = payload.resolution.trim().to_ascii_lowercase();
+    let content = match resolution.as_str() {
+        "accept_local" => local_content,
+        "accept_cloud" => cloud_content,
+        "manual_merge" => payload.content.ok_or_else(|| {
+            AppError::BadRequest("content is required for manual merge".to_string())
+        })?,
+        "keep_both" => {
+            let sibling_path = conflict_sibling_path(&relative_path);
+            let save = CloudSaveDocumentRequest {
+                relative_path: sibling_path,
+                title: None,
+                status: Some("draft".to_string()),
+                content: local_content,
+                base_content_hash: None,
+                base_content: None,
+            };
+            let outcome =
+                save_document_version(&state.pool, &workspace_id, &user, save, "system").await?;
+            sqlx::query(
+                "UPDATE sync_conflicts SET status = 'resolved', resolution = 'keep_both', resolved_at = CURRENT_TIMESTAMP WHERE id = ?",
+            )
+            .bind(conflict_id)
+            .execute(&state.pool)
+            .await?;
+            return match outcome {
+                SaveDocumentOutcome::Saved(document) => Ok(Json(document)),
+                SaveDocumentOutcome::Conflict(_) => Err(AppError::Server(
+                    "failed to keep both conflict versions".to_string(),
+                )),
+            };
+        }
+        _ => {
+            return Err(AppError::BadRequest(
+                "resolution must be accept_local, accept_cloud, keep_both, or manual_merge"
+                    .to_string(),
+            ))
+        }
+    };
+
+    let title = extract_title(&content).unwrap_or_else(|| relative_path.clone());
+    let saved = save_merged_document(
+        &state.pool,
+        &workspace_id,
+        &user,
+        &document_id,
+        &relative_path,
+        &title,
+        normalize_status("", &content),
+        &content,
+        None,
+        None,
+        "system",
+    )
+    .await?;
+    sqlx::query(
+        "UPDATE sync_conflicts SET status = 'resolved', resolution = ?, resolved_at = CURRENT_TIMESTAMP WHERE id = ?",
+    )
+    .bind(resolution)
+    .bind(conflict_id)
+    .execute(&state.pool)
+    .await?;
+    Ok(Json(saved))
+}
+
+async fn add_domain(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Json(payload): Json<AddDomainRequest>,
+) -> Result<Json<DomainResponse>, AppError> {
+    let user = auth_user(&state.pool, &headers).await?;
+    let domain = payload.domain.trim().to_ascii_lowercase();
+    if domain.is_empty() || domain.len() > 253 || !domain.contains('.') {
+        return Err(AppError::BadRequest("invalid domain name".to_string()));
+    }
+    let id = Uuid::new_v4().to_string();
+    let verification_token = random_token();
+    sqlx::query(
+        r#"INSERT INTO custom_domains (id, user_id, domain, verification_token)
+           VALUES (?, ?, ?, ?)"#,
+    )
+    .bind(&id)
+    .bind(&user.id)
+    .bind(&domain)
+    .bind(&verification_token)
+    .execute(&state.pool)
+    .await
+    .map_err(|error| match error {
+        sqlx::Error::Database(db_error) if db_error.is_unique_violation() => {
+            AppError::BadRequest("domain already registered".to_string())
+        }
+        other => AppError::Database(other),
+    })?;
+    Ok(Json(DomainResponse {
+        id,
+        domain: domain.clone(),
+        verification_token: verification_token.clone(),
+        dns_txt_record: format!("jtype-verify={}", verification_token),
+        status: "pending".to_string(),
+        verified_at: None,
+        ssl_status: None,
+        ssl_expires_at: None,
+    }))
+}
+
+async fn list_domains(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+) -> Result<Json<Vec<DomainResponse>>, AppError> {
+    let user = auth_user(&state.pool, &headers).await?;
+    let rows = sqlx::query(
+        r#"SELECT d.id, d.domain, d.verification_token, d.status, d.verified_at,
+                  c.status AS ssl_status, c.not_after AS ssl_expires_at
+           FROM custom_domains d
+           LEFT JOIN ssl_certificates c ON c.domain_id = d.id AND c.status = 'active'
+           WHERE d.user_id = ?
+           ORDER BY d.created_at ASC"#,
+    )
+    .bind(&user.id)
+    .fetch_all(&state.pool)
+    .await?;
+    let domains = rows
+        .into_iter()
+        .map(|row| {
+            let verification_token: String = row.try_get("verification_token").unwrap_or_default();
+            Ok(DomainResponse {
+                id: row.try_get("id")?,
+                domain: row.try_get("domain")?,
+                dns_txt_record: format!("jtype-verify={}", verification_token),
+                verification_token,
+                status: row.try_get("status")?,
+                verified_at: row
+                    .try_get::<Option<String>, _>("verified_at")
+                    .unwrap_or(None),
+                ssl_status: row
+                    .try_get::<Option<String>, _>("ssl_status")
+                    .unwrap_or(None),
+                ssl_expires_at: row
+                    .try_get::<Option<String>, _>("ssl_expires_at")
+                    .unwrap_or(None),
+            })
+        })
+        .collect::<Result<Vec<_>, sqlx::Error>>()?;
+    Ok(Json(domains))
+}
+
+async fn get_domain(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Path(domain_id): Path<String>,
+) -> Result<Json<DomainResponse>, AppError> {
+    let user = auth_user(&state.pool, &headers).await?;
+    let row = sqlx::query(
+        r#"SELECT d.id, d.domain, d.verification_token, d.status, d.verified_at,
+                  c.status AS ssl_status, c.not_after AS ssl_expires_at
+           FROM custom_domains d
+           LEFT JOIN ssl_certificates c ON c.domain_id = d.id AND c.status = 'active'
+           WHERE d.id = ? AND d.user_id = ?"#,
+    )
+    .bind(&domain_id)
+    .bind(&user.id)
+    .fetch_optional(&state.pool)
+    .await?
+    .ok_or(AppError::NotFound)?;
+    let verification_token: String = row.try_get("verification_token")?;
+    Ok(Json(DomainResponse {
+        id: row.try_get("id")?,
+        domain: row.try_get("domain")?,
+        dns_txt_record: format!("jtype-verify={}", verification_token),
+        verification_token,
+        status: row.try_get("status")?,
+        verified_at: row
+            .try_get::<Option<String>, _>("verified_at")
+            .unwrap_or(None),
+        ssl_status: row
+            .try_get::<Option<String>, _>("ssl_status")
+            .unwrap_or(None),
+        ssl_expires_at: row
+            .try_get::<Option<String>, _>("ssl_expires_at")
+            .unwrap_or(None),
+    }))
+}
+
+async fn verify_domain(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Path(domain_id): Path<String>,
+) -> Result<Json<DomainResponse>, AppError> {
+    let user = auth_user(&state.pool, &headers).await?;
+    let row = sqlx::query(
+        "SELECT id, domain, verification_token, status FROM custom_domains WHERE id = ? AND user_id = ?",
+    )
+    .bind(&domain_id)
+    .bind(&user.id)
+    .fetch_optional(&state.pool)
+    .await?
+    .ok_or(AppError::NotFound)?;
+    let status: String = row.try_get("status")?;
+    if status == "verified" {
+        return Err(AppError::BadRequest(
+            "domain is already verified".to_string(),
+        ));
+    }
+    // Mark domain as verified. In production this would perform a DNS TXT lookup
+    // to confirm the verification_token matches a TXT record on the domain.
+    // For self-hosted deployments the admin can verify directly.
+    sqlx::query(
+        "UPDATE custom_domains SET status = 'verified', verified_at = CURRENT_TIMESTAMP WHERE id = ?",
+    )
+    .bind(&domain_id)
+    .execute(&state.pool)
+    .await?;
+    let verification_token: String = row.try_get("verification_token")?;
+    Ok(Json(DomainResponse {
+        id: domain_id,
+        domain: row.try_get("domain")?,
+        dns_txt_record: format!("jtype-verify={}", verification_token),
+        verification_token,
+        status: "verified".to_string(),
+        verified_at: Some("now".to_string()),
+        ssl_status: None,
+        ssl_expires_at: None,
+    }))
+}
+
+async fn upload_certificate(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Path(domain_id): Path<String>,
+    Json(payload): Json<UploadCertificateRequest>,
+) -> Result<Json<DomainResponse>, AppError> {
+    let user = auth_user(&state.pool, &headers).await?;
+    let row = sqlx::query(
+        "SELECT id, domain, verification_token, status FROM custom_domains WHERE id = ? AND user_id = ?",
+    )
+    .bind(&domain_id)
+    .bind(&user.id)
+    .fetch_optional(&state.pool)
+    .await?
+    .ok_or(AppError::NotFound)?;
+    let domain_status: String = row.try_get("status")?;
+    if domain_status != "verified" {
+        return Err(AppError::BadRequest(
+            "domain must be verified before uploading a certificate".to_string(),
+        ));
+    }
+    let cert_pem = payload.cert_chain_pem.trim().to_string();
+    let key_pem = payload.private_key_pem.trim().to_string();
+    if !cert_pem.starts_with("-----BEGIN CERTIFICATE-----") {
+        return Err(AppError::BadRequest(
+            "cert_chain_pem must be a PEM-encoded certificate".to_string(),
+        ));
+    }
+    if !key_pem.starts_with("-----BEGIN") || !key_pem.contains("PRIVATE KEY") {
+        return Err(AppError::BadRequest(
+            "private_key_pem must be a PEM-encoded private key".to_string(),
+        ));
+    }
+    let private_key_hash = sha256_hex(&key_pem);
+    // Deactivate any existing active certificate for this domain
+    sqlx::query(
+        "UPDATE ssl_certificates SET status = 'revoked' WHERE domain_id = ? AND status = 'active'",
+    )
+    .bind(&domain_id)
+    .execute(&state.pool)
+    .await?;
+    let cert_id = Uuid::new_v4().to_string();
+    sqlx::query(
+        r#"INSERT INTO ssl_certificates (id, domain_id, cert_chain_pem, private_key_hash, status)
+           VALUES (?, ?, ?, ?, 'active')"#,
+    )
+    .bind(&cert_id)
+    .bind(&domain_id)
+    .bind(&cert_pem)
+    .bind(&private_key_hash)
+    .execute(&state.pool)
+    .await?;
+    let verification_token: String = row.try_get("verification_token")?;
+    Ok(Json(DomainResponse {
+        id: domain_id,
+        domain: row.try_get("domain")?,
+        dns_txt_record: format!("jtype-verify={}", verification_token),
+        verification_token,
+        status: "verified".to_string(),
+        verified_at: Some("".to_string()),
+        ssl_status: Some("active".to_string()),
+        ssl_expires_at: None,
+    }))
+}
+
+async fn public_site_index(
+    State(state): State<AppState>,
+    Path(site_user): Path<String>,
+) -> Result<Html<String>, AppError> {
+    render_public_site(state, site_user, None).await
+}
+
+async fn public_site_page(
+    State(state): State<AppState>,
+    Path((site_user, page_path)): Path<(String, String)>,
+) -> Result<Html<String>, AppError> {
+    render_public_site(state, site_user, Some(page_path)).await
+}
+
+async fn render_public_site(
+    state: AppState,
+    site_user: String,
+    page_path: Option<String>,
+) -> Result<Html<String>, AppError> {
+    let username = site_user
+        .strip_prefix('@')
+        .ok_or(AppError::NotFound)?
+        .to_string();
+    let user_row = sqlx::query("SELECT id, username, site_title FROM users WHERE username = ?")
+        .bind(&username)
+        .fetch_optional(&state.pool)
+        .await?
+        .ok_or(AppError::NotFound)?;
+    let user_id: String = user_row.try_get("id")?;
+    let site_title: String = user_row.try_get("site_title")?;
+    let docs = load_site_documents(&state.pool, &user_id).await?;
+    if docs.is_empty() {
+        return Ok(Html(site_shell(
+            &site_title,
+            &username,
+            &[],
+            "No published documents yet.",
+            "",
+        )));
+    }
+
+    let selected = select_document(&docs, page_path.as_deref()).ok_or(AppError::NotFound)?;
+    let body = markdown_to_html(&selected.content);
+    Ok(Html(site_shell(
+        &site_title,
+        &username,
+        &docs,
+        &body,
+        &selected.relative_path,
+    )))
+}
+
+async fn landing_page() -> Html<String> {
+    Html(
+        r#"<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>JType Cloud</title>
+    <style>
+      body{margin:0;background:#fbfaf7;color:#1c1917;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+      header{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e7e5e4;padding:18px 32px;background:#fff}
+      .brand{font-size:13px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#0f766e}
+      nav a{margin-left:18px;color:#44403c;text-decoration:none;font-size:14px}
+      main{max-width:1120px;margin:0 auto;padding:80px 32px}
+      h1{max-width:760px;margin:0;font-size:56px;line-height:1.02;letter-spacing:0;font-weight:760}
+      .lead{max-width:680px;margin:22px 0 0;color:#57534e;font-size:18px;line-height:1.7}
+      .actions{display:flex;gap:12px;margin-top:34px;flex-wrap:wrap}
+      .button{display:inline-flex;align-items:center;border-radius:8px;padding:11px 16px;text-decoration:none;font-weight:700;font-size:14px;border:1px solid #d6d3d1;color:#1c1917;background:#fff}
+      .button.primary{background:#0f766e;color:#fff;border-color:#0f766e}
+      .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:72px}
+      .card{border:1px solid #e7e5e4;background:#fff;border-radius:8px;padding:20px}
+      .card h2{font-size:16px;margin:0 0 8px}
+      .card p{font-size:14px;line-height:1.6;color:#57534e;margin:0}
+      @media(max-width:820px){h1{font-size:40px}.grid{grid-template-columns:1fr}header{padding:16px 20px}main{padding:56px 20px}}
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="brand">JType Cloud</div>
+      <nav><a href="/login">Login</a><a href="/health">Status</a></nav>
+    </header>
+    <main>
+      <h1>Local-first Markdown vaults with a self-hosted workspace cloud.</h1>
+      <p class="lead">JType keeps writing fast and local on desktop, then syncs selected vaults to cloud workspaces for publishing, team invites, budget control, and browser editing.</p>
+      <div class="actions">
+        <a class="button primary" href="/login">Open cloud login</a>
+        <a class="button" href="/health">Check server</a>
+      </div>
+      <section class="grid" aria-label="Highlights">
+        <article class="card"><h2>Vault on desktop</h2><p>Files remain ordinary Markdown on disk. Single-file mode stays simple and offline-friendly.</p></article>
+        <article class="card"><h2>Workspace in cloud</h2><p>Members, invites, quotas, versions, and published sites are isolated per workspace.</p></article>
+        <article class="card"><h2>Bidirectional sync</h2><p>Desktop and web edits flow through the same version model, with merge and conflict handling.</p></article>
+      </section>
+    </main>
+  </body>
+</html>"#
+            .to_string(),
+    )
+}
+
+async fn dashboard_page() -> Html<String> {
+    Html(app_page(
+        "JType Dashboard",
+        "Dashboard",
+        "Workspaces",
+        r#"
+        <div class="toolbar"><input id="workspace-name" placeholder="New workspace name"><button onclick="createWorkspace()">Create workspace</button></div>
+        <div id="workspaces" class="list"></div>
+        <script>
+          async function api(path, options = {}) {
+            const token = localStorage.getItem('jtype.token') || '';
+            const res = await fetch(path, { ...options, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, ...(options.headers || {}) } });
+            if (!res.ok) throw new Error(await res.text());
+            return res.json();
+          }
+          async function load() {
+            try {
+              const data = await api('/api/v1/workspaces');
+              document.querySelector('#workspaces').innerHTML = data.workspaces.map(w => `<a class="item" href="/workspaces/${w.id}"><strong>${w.name}</strong><span>${w.role} · ${w.documentCount} docs · ${(w.storageBudgetBytes/1024/1024).toFixed(0)} MB</span></a>`).join('') || '<p>No workspaces yet.</p>';
+            } catch (e) { document.querySelector('#workspaces').innerHTML = `<p>${e}</p><p><a href="/login">Login first</a></p>`; }
+          }
+          async function createWorkspace() {
+            const name = document.querySelector('#workspace-name').value || 'Untitled Workspace';
+            await api('/api/v1/workspaces', { method: 'POST', body: JSON.stringify({ name }) });
+            await load();
+          }
+          load();
+        </script>
+        "#,
+    ))
+}
+
+async fn settings_page() -> Html<String> {
+    Html(app_page(
+        "JType Settings",
+        "Settings",
+        "Personal settings",
+        r#"
+        <div class="item"><strong>Cloud service</strong><span>Use this page for profile, custom domain, title, certificates, and themes as the UI grows.</span></div>
+        <div class="item"><strong>Custom domain</strong><span id="domain-status">Loading...</span></div>
+        <div class="stack" style="margin-top:18px">
+          <input id="new-domain" placeholder="yourdomain.com">
+          <button onclick="addDomain()">Add domain</button>
+        </div>
+        <div id="domains" class="list" style="margin-top:18px"></div>
+        <div class="item" style="margin-top:18px"><strong>SSL Certificate</strong><span>Upload after domain is verified.</span></div>
+        <div class="stack" style="margin-top:10px">
+          <select id="cert-domain-id"><option value="">Select verified domain</option></select>
+          <textarea id="cert-pem" rows="4" placeholder="-----BEGIN CERTIFICATE-----&#10;..."></textarea>
+          <textarea id="key-pem" rows="4" placeholder="-----BEGIN PRIVATE KEY-----&#10;..."></textarea>
+          <button onclick="uploadCert()">Upload certificate</button>
+          <p id="cert-status"></p>
+        </div>
+        <script>
+          async function api(path, options = {}) {
+            const token = localStorage.getItem('jtype.token') || '';
+            const res = await fetch(path, { ...options, headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token, ...(options.headers || {}) } });
+            if (!res.ok) throw new Error(await res.text());
+            return res.json();
+          }
+          async function loadDomains() {
+            try {
+              const domains = await api('/api/v1/domains');
+              document.querySelector('#domain-status').textContent = domains.length + ' domain(s)';
+              document.querySelector('#domains').innerHTML = domains.map(d => '<div class="item"><strong>' + d.domain + '</strong><span>Status: ' + d.status + (d.sslStatus ? ' · SSL: ' + d.sslStatus : '') + ' · TXT: ' + d.dnsTxtRecord + '</span>' + (d.status === 'pending' ? '<button onclick="verifyDomain(\'' + d.id + '\')">Verify</button>' : '') + '</div>').join('') || '<p>No domains yet.</p>';
+              const sel = document.querySelector('#cert-domain-id');
+              sel.innerHTML = '<option value="">Select verified domain</option>' + domains.filter(d => d.status === 'verified').map(d => '<option value="' + d.id + '">' + d.domain + '</option>').join('');
+            } catch (e) { document.querySelector('#domain-status').textContent = String(e); }
+          }
+          async function addDomain() {
+            const domain = document.querySelector('#new-domain').value;
+            await api('/api/v1/domains', { method: 'POST', body: JSON.stringify({ domain }) });
+            await loadDomains();
+          }
+          async function verifyDomain(id) {
+            await api('/api/v1/domains/' + id + '/verify', { method: 'POST', body: '{}' });
+            await loadDomains();
+          }
+          async function uploadCert() {
+            const domainId = document.querySelector('#cert-domain-id').value;
+            if (!domainId) { document.querySelector('#cert-status').textContent = 'Select a domain first'; return; }
+            const body = { certChainPem: document.querySelector('#cert-pem').value, privateKeyPem: document.querySelector('#key-pem').value };
+            try { await api('/api/v1/domains/' + domainId + '/certificate', { method: 'POST', body: JSON.stringify(body) }); document.querySelector('#cert-status').textContent = 'Certificate uploaded'; await loadDomains(); }
+            catch (e) { document.querySelector('#cert-status').textContent = String(e); }
+          }
+          loadDomains();
+        </script>
+        "#,
+    ))
+}
+
+async fn workspace_page(Path(workspace_id): Path<String>) -> Html<String> {
+    Html(app_page(
+        "JType Workspace",
+        "Workspace",
+        "Cloud editor",
+        &format!(
+            r#"
+        <div class="toolbar"><input id="path" value="index.md"><button onclick="loadDoc()">Load</button><button onclick="saveDoc()">Save</button></div>
+        <textarea id="content" style="box-sizing:border-box;width:100%;height:420px;border:1px solid #d6d3d1;border-radius:8px;padding:14px;font:14px ui-monospace,SFMono-Regular,Consolas,monospace"></textarea>
+        <p id="status"></p>
+        <script>
+          const workspaceId = '{}';
+          async function api(path, options = {{}}) {{
+            const token = localStorage.getItem('jtype.token') || '';
+            const res = await fetch(path, {{ ...options, headers: {{ 'Content-Type':'application/json', Authorization:`Bearer ${{token}}`, ...(options.headers || {{}}) }} }});
+            if (!res.ok) throw new Error(await res.text());
+            return res.json();
+          }}
+          async function loadDoc() {{
+            const pull = await api(`/api/v1/workspaces/${{workspaceId}}/sync/pull`, {{ method:'POST', body: JSON.stringify({{ sinceClock: 0 }}) }});
+            const wanted = document.querySelector('#path').value;
+            const doc = pull.documents.find(d => d.relativePath === wanted) || pull.documents[0];
+            if (doc) {{ document.querySelector('#path').value = doc.relativePath; document.querySelector('#content').value = doc.content; }}
+            document.querySelector('#status').textContent = pull.conflicts.length ? `${{pull.conflicts.length}} conflict(s)` : 'Loaded';
+          }}
+          async function saveDoc() {{
+            const body = {{ relativePath: document.querySelector('#path').value, content: document.querySelector('#content').value }};
+            await api(`/api/v1/workspaces/${{workspaceId}}/documents`, {{ method:'PUT', body: JSON.stringify(body) }});
+            document.querySelector('#status').textContent = 'Saved';
+          }}
+          loadDoc().catch(e => document.querySelector('#status').textContent = e);
+        </script>
+        "#,
+            workspace_id
+        ),
+    ))
+}
+
+async fn admin_page() -> Html<String> {
+    Html(app_page(
+        "JType Admin",
+        "Admin",
+        "Server administration",
+        r#"
+        <div class="item"><strong>Users</strong><span id="admin-status">Loading users...</span></div>
+        <div id="users" class="stack"></div>
+        <div class="item"><strong>Storage</strong><span>Workspace storage budgets are enforced through workspace settings and sync quotas.</span></div>
+        <script>
+          async function loadUsers() {
+            const token = localStorage.getItem('jtype.token') || '';
+            const res = await fetch('/api/admin/users', { headers: { Authorization:`Bearer ${token}` } });
+            if (!res.ok) { document.querySelector('#admin-status').textContent = await res.text(); return; }
+            const users = await res.json();
+            document.querySelector('#admin-status').textContent = `${users.length} user(s)`;
+            document.querySelector('#users').innerHTML = users.map(user => `<div class="item"><strong>${user.username}</strong><span>${user.role} · ${user.workspaceCount} workspace(s) · ${user.siteTitle}</span></div>`).join('');
+          }
+          loadUsers();
+        </script>
+        "#,
+    ))
+}
+
+async fn device_authorize_page() -> Html<String> {
+    Html(app_page(
+        "Authorize Desktop",
+        "JType OAuth",
+        "Authorize desktop",
+        r#"
+        <div class="stack">
+          <input id="username" placeholder="Username">
+          <input id="password" placeholder="Password" type="password">
+          <input id="code" placeholder="Device code">
+          <button onclick="loginThenApprove('login')">Login and authorize</button>
+          <button onclick="loginThenApprove('register')">Register and authorize</button>
+          <p id="status"></p>
+        </div>
+        <script>
+          const qs = new URLSearchParams(location.search);
+          document.querySelector('#code').value = qs.get('code') || '';
+          async function loginThenApprove(mode) {
+            const username = document.querySelector('#username').value;
+            const password = document.querySelector('#password').value;
+            const code = document.querySelector('#code').value;
+            const auth = await fetch(`/api/${mode}`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ username, password, siteTitle: `${username} Docs` }) });
+            if (!auth.ok) { document.querySelector('#status').textContent = await auth.text(); return; }
+            const session = await auth.json();
+            localStorage.setItem('jtype.token', session.token);
+            localStorage.setItem('jtype.username', session.username);
+            const approve = await fetch('/api/oauth/device/approve', { method:'POST', headers:{'Content-Type':'application/json', Authorization:`Bearer ${session.token}`}, body: JSON.stringify({ userCode: code }) });
+            document.querySelector('#status').textContent = approve.ok ? 'Authorized. Return to JType desktop.' : await approve.text();
+          }
+        </script>
+        "#,
+    ))
+}
+
+fn app_page(title: &str, section: &str, heading: &str, body: &str) -> String {
+    format!(
+        r#"<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{}</title><style>{}</style></head><body><header><div class="brand">JType</div><nav><a href="/">Home</a><a href="/dashboard">Dashboard</a><a href="/settings">Settings</a><a href="/admin">Admin</a></nav></header><main><p class="eyebrow">{}</p><h1>{}</h1>{}</main></body></html>"#,
+        title,
+        app_css(),
+        section,
+        heading,
+        body
+    )
+}
+
+fn app_css() -> &'static str {
+    r#"body{margin:0;background:#fbfaf7;color:#1c1917;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}header{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e7e5e4;background:#fff;padding:16px 28px}.brand{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#0f766e}nav a{margin-left:16px;color:#57534e;text-decoration:none;font-size:14px}main{max-width:920px;margin:0 auto;padding:52px 28px}.eyebrow{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#0f766e}h1{font-size:36px;margin:8px 0 28px}.toolbar{display:flex;gap:8px;margin-bottom:18px}.stack{display:grid;gap:10px;max-width:420px}input,button{border:1px solid #d6d3d1;border-radius:8px;padding:10px;background:#fff}button{background:#0f766e;color:#fff;font-weight:700}.list{display:grid;gap:10px}.item{display:flex;justify-content:space-between;gap:16px;border:1px solid #e7e5e4;background:#fff;border-radius:8px;padding:14px;color:#1c1917;text-decoration:none}.item span{color:#78716c;font-size:13px}"#
+}
+
+async fn login_page() -> Html<String> {
+    Html(
+        r#"<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JType Login</title>
+<style>body{font-family:Inter,system-ui,sans-serif;background:#fafafa;color:#18181b;margin:0}.wrap{max-width:420px;margin:10vh auto;padding:32px;background:white;border:1px solid #e4e4e7;border-radius:12px}input,button{width:100%;box-sizing:border-box;margin-top:12px;padding:10px;border-radius:8px;border:1px solid #d4d4d8}button{background:#047857;color:white;font-weight:700}</style></head>
+<body><main class="wrap"><h1>JType</h1><p>Use the desktop app Sync panel for now. API endpoints are available at <code>/api/register</code> and <code>/api/login</code>.</p></main></body></html>"#
+            .to_string(),
+    )
+}
+
+async fn upsert_workspace(
+    tx: &mut Transaction<'_, MySql>,
+    user_id: &str,
+    workspace_name: &str,
+) -> Result<String, AppError> {
+    if let Some(row) = sqlx::query("SELECT id FROM workspaces WHERE user_id = ? AND name = ?")
+        .bind(user_id)
+        .bind(workspace_name)
+        .fetch_optional(&mut **tx)
+        .await?
+    {
+        return Ok(row.try_get("id")?);
+    }
+
+    let workspace_id = Uuid::new_v4().to_string();
+    let slug = slugify(workspace_name);
+    sqlx::query(
+        "INSERT INTO workspaces (id, user_id, owner_user_id, name, slug) VALUES (?, ?, ?, ?, ?)",
+    )
+    .bind(&workspace_id)
+    .bind(user_id)
+    .bind(user_id)
+    .bind(workspace_name)
+    .bind(slug)
+    .execute(&mut **tx)
+    .await?;
+    sqlx::query(
+        r#"INSERT INTO workspace_members (workspace_id, user_id, role, status, joined_at)
+           VALUES (?, ?, 'owner', 'active', CURRENT_TIMESTAMP)
+           ON DUPLICATE KEY UPDATE role = 'owner', status = 'active'"#,
+    )
+    .bind(&workspace_id)
+    .bind(user_id)
+    .execute(&mut **tx)
+    .await?;
+    Ok(workspace_id)
+}
+
+async fn load_workspace_summary(
+    pool: &Pool<MySql>,
+    user_id: &str,
+    workspace_id: &str,
+) -> Result<WorkspaceSummary, AppError> {
+    let row = sqlx::query(
+        r#"SELECT w.id,
+                  w.name,
+                  COALESCE(w.slug, LOWER(REPLACE(w.name, ' ', '-'))) AS slug,
+                  COALESCE(m.role, 'owner') AS role,
+                  COALESCE(w.storage_budget_bytes, 1073741824) AS storage_budget_bytes,
+                  COUNT(d.id) AS document_count
+           FROM workspaces w
+           LEFT JOIN workspace_members m
+             ON m.workspace_id = w.id
+            AND m.user_id = ?
+            AND m.status = 'active'
+           LEFT JOIN documents d ON d.workspace_id = w.id
+           WHERE w.id = ? AND (m.user_id IS NOT NULL OR w.user_id = ? OR w.owner_user_id = ?)
+           GROUP BY w.id, w.name, w.slug, m.role, w.storage_budget_bytes"#,
+    )
+    .bind(user_id)
+    .bind(workspace_id)
+    .bind(user_id)
+    .bind(user_id)
+    .fetch_optional(pool)
+    .await?
+    .ok_or(AppError::NotFound)?;
+
+    Ok(WorkspaceSummary {
+        id: row.try_get("id")?,
+        name: row.try_get("name")?,
+        slug: row.try_get("slug")?,
+        role: row.try_get("role")?,
+        document_count: row.try_get("document_count")?,
+        storage_budget_bytes: row.try_get("storage_budget_bytes")?,
+    })
+}
+
+async fn require_workspace_role(
+    pool: &Pool<MySql>,
+    workspace_id: &str,
+    user_id: &str,
+    allowed: &[&str],
+) -> Result<String, AppError> {
+    let row = sqlx::query(
+        r#"SELECT COALESCE(m.role, 'owner') AS role
+           FROM workspaces w
+           LEFT JOIN workspace_members m
+             ON m.workspace_id = w.id
+            AND m.user_id = ?
+            AND m.status = 'active'
+           WHERE w.id = ? AND (m.user_id IS NOT NULL OR w.user_id = ? OR w.owner_user_id = ?)"#,
+    )
+    .bind(user_id)
+    .bind(workspace_id)
+    .bind(user_id)
+    .bind(user_id)
+    .fetch_optional(pool)
+    .await?
+    .ok_or(AppError::NotFound)?;
+    let role: String = row.try_get("role")?;
+    if allowed.iter().any(|allowed_role| allowed_role == &role) {
+        Ok(role)
+    } else {
+        Err(AppError::Unauthorized)
+    }
+}
+
+enum SaveDocumentOutcome {
+    Saved(CloudDocument),
+    Conflict(SyncConflict),
+}
+
+async fn ensure_workspace_budget(
+    pool: &Pool<MySql>,
+    workspace_id: &str,
+    relative_path: &str,
+    next_content: &str,
+) -> Result<(), AppError> {
+    let row = sqlx::query(
+        r#"SELECT COALESCE(w.storage_budget_bytes, 1073741824) AS budget,
+                  COALESCE(SUM(CASE WHEN d.relative_path <> ? THEN OCTET_LENGTH(d.content) ELSE 0 END), 0) AS used_bytes
+           FROM workspaces w
+           LEFT JOIN documents d ON d.workspace_id = w.id
+           WHERE w.id = ?
+           GROUP BY w.id, w.storage_budget_bytes"#,
+    )
+    .bind(relative_path)
+    .bind(workspace_id)
+    .fetch_one(pool)
+    .await?;
+    let budget: i64 = row.try_get("budget")?;
+    let used_bytes: i64 = row.try_get("used_bytes")?;
+    let next_bytes = next_content.as_bytes().len() as i64;
+    if used_bytes + next_bytes > budget {
+        return Err(AppError::BadRequest(format!(
+            "workspace storage budget exceeded: {} of {} bytes",
+            used_bytes + next_bytes,
+            budget
+        )));
+    }
+    Ok(())
+}
+
+async fn save_document_version(
+    pool: &Pool<MySql>,
+    workspace_id: &str,
+    user: &AuthUser,
+    payload: CloudSaveDocumentRequest,
+    source: &str,
+) -> Result<SaveDocumentOutcome, AppError> {
+    let relative_path = normalize_relative_markdown_path(&payload.relative_path)?;
+    let content_hash = sha256_hex(&payload.content);
+    let title = payload
+        .title
+        .as_deref()
+        .filter(|value| !value.trim().is_empty())
+        .map(str::to_string)
+        .or_else(|| extract_title(&payload.content))
+        .unwrap_or_else(|| relative_path.clone());
+    let status = normalize_status(payload.status.as_deref().unwrap_or(""), &payload.content);
+
+    let current = sqlx::query(
+        r#"SELECT id, title, status, content, content_hash, current_version_id, updated_clock
+           FROM documents
+           WHERE workspace_id = ? AND relative_path = ?"#,
+    )
+    .bind(workspace_id)
+    .bind(&relative_path)
+    .fetch_optional(pool)
+    .await?;
+
+    if let Some(row) = current {
+        let document_id: String = row.try_get("id")?;
+        let cloud_content: String = row.try_get("content")?;
+        let cloud_hash: String = row.try_get("content_hash")?;
+        let parent_version_id: Option<String> = row.try_get("current_version_id")?;
+        let base_matches = payload
+            .base_content_hash
+            .as_deref()
+            .map(|base_hash| base_hash == cloud_hash)
+            .unwrap_or(true);
+
+        if !base_matches && cloud_hash != content_hash {
+            if let Some(base_content) = payload.base_content.as_deref() {
+                if let MergeResult::Merged(merged) =
+                    three_way_merge(base_content, &payload.content, &cloud_content)
+                {
+                    return save_merged_document(
+                        pool,
+                        workspace_id,
+                        user,
+                        &document_id,
+                        &relative_path,
+                        &title,
+                        status,
+                        &merged,
+                        parent_version_id.as_deref(),
+                        None,
+                        source,
+                    )
+                    .await
+                    .map(SaveDocumentOutcome::Saved);
+                }
+            }
+            let conflict = create_sync_conflict(
+                pool,
+                workspace_id,
+                &document_id,
+                &relative_path,
+                payload,
+                cloud_content,
+            )
+            .await?;
+            return Ok(SaveDocumentOutcome::Conflict(conflict));
+        }
+
+        let saved = save_merged_document(
+            pool,
+            workspace_id,
+            user,
+            &document_id,
+            &relative_path,
+            &title,
+            status,
+            &payload.content,
+            parent_version_id.as_deref(),
+            None,
+            source,
+        )
+        .await?;
+        return Ok(SaveDocumentOutcome::Saved(saved));
+    }
+
+    ensure_workspace_budget(pool, workspace_id, &relative_path, &payload.content).await?;
+    let mut tx = pool.begin().await?;
+    let document_id = Uuid::new_v4().to_string();
+    let version_id = Uuid::new_v4().to_string();
+    let next_clock = next_workspace_clock(&mut tx, workspace_id).await?;
+    sqlx::query(
+        r#"INSERT INTO documents
+           (id, workspace_id, relative_path, title, status, content_hash, content, updated_clock, current_version_id)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"#,
+    )
+    .bind(&document_id)
+    .bind(workspace_id)
+    .bind(&relative_path)
+    .bind(&title)
+    .bind(status)
+    .bind(&content_hash)
+    .bind(&payload.content)
+    .bind(next_clock)
+    .bind(&version_id)
+    .execute(&mut *tx)
+    .await?;
+    insert_document_version(
+        &mut tx,
+        &version_id,
+        workspace_id,
+        &document_id,
+        None,
+        None,
+        &user.id,
+        source,
+        &content_hash,
+        &payload.content,
+    )
+    .await?;
+    tx.commit().await?;
+
+    Ok(SaveDocumentOutcome::Saved(CloudDocument {
+        relative_path,
+        title,
+        status: status.to_string(),
+        content: payload.content,
+        content_hash,
+        version_id,
+        updated_clock: next_clock,
+    }))
+}
+
+async fn save_merged_document(
+    pool: &Pool<MySql>,
+    workspace_id: &str,
+    user: &AuthUser,
+    document_id: &str,
+    relative_path: &str,
+    title: &str,
+    status: &str,
+    content: &str,
+    parent_version_id: Option<&str>,
+    base_version_id: Option<&str>,
+    source: &str,
+) -> Result<CloudDocument, AppError> {
+    ensure_workspace_budget(pool, workspace_id, relative_path, content).await?;
+    let content_hash = sha256_hex(content);
+    let mut tx = pool.begin().await?;
+    let version_id = Uuid::new_v4().to_string();
+    let next_clock = next_workspace_clock(&mut tx, workspace_id).await?;
+    sqlx::query(
+        r#"UPDATE documents
+           SET title = ?, status = ?, content_hash = ?, content = ?, updated_clock = ?, current_version_id = ?
+           WHERE id = ? AND workspace_id = ?"#,
+    )
+    .bind(title)
+    .bind(status)
+    .bind(&content_hash)
+    .bind(content)
+    .bind(next_clock)
+    .bind(&version_id)
+    .bind(document_id)
+    .bind(workspace_id)
+    .execute(&mut *tx)
+    .await?;
+    insert_document_version(
+        &mut tx,
+        &version_id,
+        workspace_id,
+        document_id,
+        parent_version_id,
+        base_version_id,
+        &user.id,
+        source,
+        &content_hash,
+        content,
+    )
+    .await?;
+    tx.commit().await?;
+
+    Ok(CloudDocument {
+        relative_path: relative_path.to_string(),
+        title: title.to_string(),
+        status: status.to_string(),
+        content: content.to_string(),
+        content_hash,
+        version_id,
+        updated_clock: next_clock,
+    })
+}
+
+async fn insert_document_version(
+    tx: &mut Transaction<'_, MySql>,
+    version_id: &str,
+    workspace_id: &str,
+    document_id: &str,
+    parent_version_id: Option<&str>,
+    base_version_id: Option<&str>,
+    author_user_id: &str,
+    source: &str,
+    content_hash: &str,
+    content: &str,
+) -> Result<(), AppError> {
+    sqlx::query(
+        r#"INSERT INTO document_versions
+           (id, workspace_id, document_id, parent_version_id, base_version_id, author_user_id, source, content_hash, content)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"#,
+    )
+    .bind(version_id)
+    .bind(workspace_id)
+    .bind(document_id)
+    .bind(parent_version_id)
+    .bind(base_version_id)
+    .bind(author_user_id)
+    .bind(source)
+    .bind(content_hash)
+    .bind(content)
+    .execute(&mut **tx)
+    .await?;
+    Ok(())
+}
+
+async fn next_workspace_clock(
+    tx: &mut Transaction<'_, MySql>,
+    workspace_id: &str,
+) -> Result<i64, AppError> {
+    let row = sqlx::query("SELECT COALESCE(MAX(updated_clock), 0) + 1 AS next_clock FROM documents WHERE workspace_id = ?")
+        .bind(workspace_id)
+        .fetch_one(&mut **tx)
+        .await?;
+    Ok(row.try_get("next_clock")?)
+}
+
+async fn create_sync_conflict(
+    pool: &Pool<MySql>,
+    workspace_id: &str,
+    document_id: &str,
+    relative_path: &str,
+    payload: CloudSaveDocumentRequest,
+    cloud_content: String,
+) -> Result<SyncConflict, AppError> {
+    let conflict_id = Uuid::new_v4().to_string();
+    sqlx::query(
+        r#"INSERT INTO sync_conflicts
+           (id, workspace_id, document_id, relative_path, base_content, local_content, cloud_content)
+           VALUES (?, ?, ?, ?, ?, ?, ?)"#,
+    )
+    .bind(&conflict_id)
+    .bind(workspace_id)
+    .bind(document_id)
+    .bind(relative_path)
+    .bind(&payload.base_content)
+    .bind(&payload.content)
+    .bind(&cloud_content)
+    .execute(pool)
+    .await?;
+
+    Ok(SyncConflict {
+        conflict_id,
+        relative_path: relative_path.to_string(),
+        local_content: payload.content,
+        cloud_content,
+        base_content: payload.base_content,
+    })
+}
+
+async fn load_workspace_documents_since(
+    pool: &Pool<MySql>,
+    workspace_id: &str,
+    since_clock: i64,
+) -> Result<Vec<CloudDocument>, AppError> {
+    let rows = sqlx::query(
+        r#"SELECT relative_path, title, status, content, content_hash,
+                  COALESCE(current_version_id, id) AS version_id,
+                  updated_clock
+           FROM documents
+           WHERE workspace_id = ? AND updated_clock > ?
+           ORDER BY relative_path"#,
+    )
+    .bind(workspace_id)
+    .bind(since_clock)
+    .fetch_all(pool)
+    .await?;
+
+    rows.into_iter()
+        .map(|row| {
+            Ok(CloudDocument {
+                relative_path: row.try_get("relative_path")?,
+                title: row.try_get("title")?,
+                status: row.try_get("status")?,
+                content: row.try_get("content")?,
+                content_hash: row.try_get("content_hash")?,
+                version_id: row.try_get("version_id")?,
+                updated_clock: row.try_get("updated_clock")?,
+            })
+        })
+        .collect()
+}
+
+async fn upsert_sync_cursor(
+    pool: &Pool<MySql>,
+    workspace_id: &str,
+    device_id: &str,
+    last_seen_clock: i64,
+) -> Result<(), AppError> {
+    let device_id = device_id.trim();
+    if device_id.is_empty() {
+        return Ok(());
+    }
+    sqlx::query(
+        r#"INSERT INTO workspace_sync_cursors (workspace_id, device_id, last_seen_clock)
+           VALUES (?, ?, ?)
+           ON DUPLICATE KEY UPDATE
+             last_seen_clock = GREATEST(last_seen_clock, VALUES(last_seen_clock)),
+             updated_at = CURRENT_TIMESTAMP"#,
+    )
+    .bind(workspace_id)
+    .bind(device_id)
+    .bind(last_seen_clock)
+    .execute(pool)
+    .await?;
+    Ok(())
+}
+
+async fn load_open_conflicts(
+    pool: &Pool<MySql>,
+    workspace_id: &str,
+) -> Result<Vec<SyncConflict>, AppError> {
+    let rows = sqlx::query(
+        r#"SELECT id, relative_path, base_content, local_content, cloud_content
+           FROM sync_conflicts
+           WHERE workspace_id = ? AND status = 'open'
+           ORDER BY created_at DESC"#,
+    )
+    .bind(workspace_id)
+    .fetch_all(pool)
+    .await?;
+
+    rows.into_iter()
+        .map(|row| {
+            Ok(SyncConflict {
+                conflict_id: row.try_get("id")?,
+                relative_path: row.try_get("relative_path")?,
+                base_content: row.try_get("base_content")?,
+                local_content: row.try_get("local_content")?,
+                cloud_content: row.try_get("cloud_content")?,
+            })
+        })
+        .collect()
+}
+
+async fn load_site_documents(
+    pool: &Pool<MySql>,
+    user_id: &str,
+) -> Result<Vec<SiteDocument>, AppError> {
+    let rows = sqlx::query(
+        r#"SELECT d.relative_path, d.title, d.content
+           FROM documents d
+           JOIN workspaces w ON w.id = d.workspace_id
+           WHERE w.user_id = ? AND d.status <> 'draft'
+           ORDER BY d.relative_path"#,
+    )
+    .bind(user_id)
+    .fetch_all(pool)
+    .await?;
+
+    rows.into_iter()
+        .map(|row| {
+            Ok(SiteDocument {
+                relative_path: row.try_get("relative_path")?,
+                title: row.try_get("title")?,
+                content: row.try_get("content")?,
+            })
+        })
+        .collect()
+}
+
+fn select_document<'a>(
+    docs: &'a [SiteDocument],
+    page_path: Option<&str>,
+) -> Option<&'a SiteDocument> {
+    let Some(page_path) = page_path.filter(|value| !value.is_empty()) else {
+        return docs
+            .iter()
+            .find(|doc| doc.relative_path == "index.md")
+            .or_else(|| docs.first());
+    };
+    let normalized = page_path.trim_matches('/');
+    let candidates = [
+        normalized.to_string(),
+        format!("{}.md", normalized),
+        format!("{}/index.md", normalized),
+    ];
+    docs.iter().find(|doc| {
+        candidates
+            .iter()
+            .any(|candidate| candidate == &doc.relative_path)
+    })
+}
+
+async fn auth_user(pool: &Pool<MySql>, headers: &HeaderMap) -> Result<AuthUser, AppError> {
+    let token = bearer_token(headers)?;
+    let token_hash = sha256_hex(token);
+    let row = sqlx::query(
+        r#"SELECT u.id, u.username, u.role
+           FROM sessions s
+           JOIN users u ON u.id = s.user_id
+           WHERE s.token_hash = ?"#,
+    )
+    .bind(token_hash)
+    .fetch_optional(pool)
+    .await?
+    .ok_or(AppError::Unauthorized)?;
+
+    Ok(AuthUser {
+        id: row.try_get("id")?,
+        username: row.try_get("username")?,
+        role: row.try_get("role")?,
+    })
+}
+
+fn require_admin(user: &AuthUser) -> Result<(), AppError> {
+    if user.role == "admin" {
+        Ok(())
+    } else {
+        Err(AppError::Unauthorized)
+    }
+}
+
+fn bearer_token(headers: &HeaderMap) -> Result<&str, AppError> {
+    let value = headers
+        .get(header::AUTHORIZATION)
+        .and_then(|value| value.to_str().ok())
+        .ok_or(AppError::Unauthorized)?;
+    value
+        .strip_prefix("Bearer ")
+        .filter(|token| !token.trim().is_empty())
+        .ok_or(AppError::Unauthorized)
+}
+
+async fn create_session(pool: &Pool<MySql>, user_id: &str) -> Result<String, AppError> {
+    let token = random_token();
+    let token_hash = sha256_hex(&token);
+    sqlx::query("INSERT INTO sessions (token_hash, user_id) VALUES (?, ?)")
+        .bind(token_hash)
+        .bind(user_id)
+        .execute(pool)
+        .await?;
+    Ok(token)
+}
+
+fn auth_response(
+    public_base_url: &str,
+    token: String,
+    username: String,
+    role: String,
+) -> AuthResponse {
+    AuthResponse {
+        role,
+        site_url: site_url(public_base_url, &username),
+        token,
+        username,
+    }
+}
+
+fn site_url(public_base_url: &str, username: &str) -> String {
+    format!("{}/@{}", public_base_url.trim_end_matches('/'), username)
+}
+
+fn normalize_workspace_name(name: &str) -> Result<String, AppError> {
+    let name = name.trim();
+    if name.is_empty() || name.len() > 160 {
+        return Err(AppError::BadRequest(
+            "workspace name must be 1-160 characters".to_string(),
+        ));
+    }
+    Ok(name.to_string())
+}
+
+fn normalize_invite_role(role: Option<&str>) -> Result<&'static str, AppError> {
+    match role
+        .unwrap_or("editor")
+        .trim()
+        .to_ascii_lowercase()
+        .as_str()
+    {
+        "admin" => Ok("admin"),
+        "editor" => Ok("editor"),
+        "viewer" => Ok("viewer"),
+        _ => Err(AppError::BadRequest(
+            "invite role must be admin, editor, or viewer".to_string(),
+        )),
+    }
+}
+
+fn normalize_relative_markdown_path(path: &str) -> Result<String, AppError> {
+    let normalized = path.trim().replace('\\', "/");
+    if normalized.is_empty()
+        || normalized.starts_with('/')
+        || normalized.contains("../")
+        || normalized == ".."
+        || !is_markdown_path(&normalized)
+    {
+        return Err(AppError::BadRequest(
+            "relative Markdown path is required".to_string(),
+        ));
+    }
+    Ok(normalized)
+}
+
+fn slugify(value: &str) -> String {
+    let mut slug = String::new();
+    let mut previous_dash = false;
+    for ch in value.trim().to_ascii_lowercase().chars() {
+        if ch.is_ascii_alphanumeric() {
+            slug.push(ch);
+            previous_dash = false;
+        } else if !previous_dash {
+            slug.push('-');
+            previous_dash = true;
+        }
+    }
+    let slug = slug.trim_matches('-').to_string();
+    if slug.is_empty() {
+        "workspace".to_string()
+    } else {
+        slug
+    }
+}
+
+fn conflict_sibling_path(relative_path: &str) -> String {
+    if let Some(stem) = relative_path.strip_suffix(".md") {
+        format!("{} local conflict.md", stem)
+    } else {
+        format!("{} local conflict", relative_path)
+    }
+}
+
+enum MergeResult {
+    Merged(String),
+    Conflict,
+}
+
+fn three_way_merge(base: &str, local: &str, cloud: &str) -> MergeResult {
+    if local == cloud {
+        return MergeResult::Merged(local.to_string());
+    }
+    if base == cloud {
+        return MergeResult::Merged(local.to_string());
+    }
+    if base == local {
+        return MergeResult::Merged(cloud.to_string());
+    }
+
+    let base_lines: Vec<_> = base.lines().collect();
+    let local_lines: Vec<_> = local.lines().collect();
+    let cloud_lines: Vec<_> = cloud.lines().collect();
+    if base_lines.len() != local_lines.len() || base_lines.len() != cloud_lines.len() {
+        return MergeResult::Conflict;
+    }
+
+    let mut merged = Vec::with_capacity(base_lines.len());
+    for index in 0..base_lines.len() {
+        let base_line = base_lines[index];
+        let local_line = local_lines[index];
+        let cloud_line = cloud_lines[index];
+        if local_line == cloud_line {
+            merged.push(local_line);
+        } else if base_line == cloud_line {
+            merged.push(local_line);
+        } else if base_line == local_line {
+            merged.push(cloud_line);
+        } else {
+            return MergeResult::Conflict;
+        }
+    }
+    MergeResult::Merged(merged.join("\n"))
+}
+
+fn normalize_username(username: &str) -> Result<String, AppError> {
+    let username = username.trim().to_ascii_lowercase();
+    if username.len() < 3
+        || username.len() > 80
+        || !username
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+    {
+        return Err(AppError::BadRequest(
+            "username must be 3-80 chars: a-z, 0-9, - or _".to_string(),
+        ));
+    }
+    Ok(username)
+}
+
+fn validate_password(password: &str) -> Result<(), AppError> {
+    if password.len() < 6 {
+        return Err(AppError::BadRequest(
+            "password must be at least 6 characters".to_string(),
+        ));
+    }
+    Ok(())
+}
+
+fn hash_password(password: &str) -> Result<String, AppError> {
+    let salt = SaltString::generate(&mut OsRng);
+    Argon2::default()
+        .hash_password(password.as_bytes(), &salt)
+        .map(|hash| hash.to_string())
+        .map_err(|_| AppError::Password)
+}
+
+fn verify_password(password: &str, password_hash: &str) -> Result<(), AppError> {
+    let parsed = PasswordHash::new(password_hash).map_err(|_| AppError::Password)?;
+    Argon2::default()
+        .verify_password(password.as_bytes(), &parsed)
+        .map_err(|_| AppError::Unauthorized)
+}
+
+fn random_token() -> String {
+    let mut bytes = [0_u8; 32];
+    OsRng.fill_bytes(&mut bytes);
+    hex::encode(bytes)
+}
+
+fn short_user_code() -> String {
+    let mut bytes = [0_u8; 4];
+    OsRng.fill_bytes(&mut bytes);
+    let value = u32::from_le_bytes(bytes) % 1_000_000;
+    format!("{:06}", value)
+}
+
+fn sha256_hex(value: &str) -> String {
+    hex::encode(Sha256::digest(value.as_bytes()))
+}
+
+fn normalize_status(status: &str, content: &str) -> &'static str {
+    let frontmatter = parse_frontmatter(content);
+    if status.eq_ignore_ascii_case("draft")
+        || frontmatter
+            .get("status")
+            .map(|value| value.eq_ignore_ascii_case("draft"))
+            .unwrap_or(false)
+        || frontmatter
+            .get("publish")
+            .map(|value| value.eq_ignore_ascii_case("false"))
+            .unwrap_or(false)
+    {
+        "draft"
+    } else {
+        "published"
+    }
+}
+
+fn is_markdown_path(path: &str) -> bool {
+    path.to_ascii_lowercase().ends_with(".md")
+        || path.to_ascii_lowercase().ends_with(".markdown")
+        || path.to_ascii_lowercase().ends_with(".mdown")
+        || path.to_ascii_lowercase().ends_with(".mkd")
+}
+
+fn extract_title(content: &str) -> Option<String> {
+    parse_frontmatter(content)
+        .get("title")
+        .cloned()
+        .or_else(|| {
+            content.lines().find_map(|line| {
+                line.strip_prefix("# ")
+                    .map(str::trim)
+                    .filter(|value| !value.is_empty())
+                    .map(str::to_string)
+            })
+        })
+}
+
+fn parse_frontmatter(content: &str) -> std::collections::HashMap<String, String> {
+    let mut frontmatter = std::collections::HashMap::new();
+    let mut lines = content.lines();
+    if lines.next() != Some("---") {
+        return frontmatter;
+    }
+    for line in lines {
+        if line == "---" {
+            break;
+        }
+        if let Some((key, value)) = line.split_once(':') {
+            frontmatter.insert(
+                key.trim().to_string(),
+                value
+                    .trim()
+                    .trim_matches('"')
+                    .trim_matches('\'')
+                    .to_string(),
+            );
+        }
+    }
+    frontmatter
+}
+
+fn markdown_to_html(content: &str) -> String {
+    let parser = Parser::new_ext(content, Options::all());
+    let mut output = String::new();
+    html::push_html(&mut output, parser);
+    output
+}
+
+fn page_href(username: &str, relative_path: &str) -> String {
+    let path = relative_path
+        .trim_end_matches(".md")
+        .trim_end_matches("/index")
+        .trim_matches('/');
+    if path == "index" || path.is_empty() {
+        format!("/@{}", username)
+    } else {
+        format!("/@{}/{}", username, path)
+    }
+}
+
+fn site_shell(
+    site_title: &str,
+    username: &str,
+    docs: &[SiteDocument],
+    body: &str,
+    active_path: &str,
+) -> String {
+    let nav = docs
+        .iter()
+        .map(|doc| {
+            let active = if doc.relative_path == active_path {
+                " active"
+            } else {
+                ""
+            };
+            format!(
+                r#"<li><a class="nav-link{}" href="{}">{}</a></li>"#,
+                active,
+                page_href(username, &doc.relative_path),
+                escape_html(&doc.title)
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("");
+
+    format!(
+        r#"<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{}</title>
+    <style>{}</style>
+  </head>
+  <body>
+    <aside>
+      <div class="brand">JType</div>
+      <div class="site-title">{}</div>
+      <nav><ul>{}</ul></nav>
+    </aside>
+    <main>
+      <article class="prose">{}</article>
+    </main>
+  </body>
+</html>"#,
+        escape_html(site_title),
+        protocol_css(),
+        escape_html(site_title),
+        nav,
+        body
+    )
+}
+
+fn protocol_css() -> &'static str {
+    r#"
+body{margin:0;background:#fafafa;color:#18181b;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+aside{position:fixed;inset:0 auto 0 0;width:288px;overflow:auto;border-right:1px solid #e4e4e7;background:#fff;padding:24px}
+.brand{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#047857}
+.site-title{margin-top:8px;font-weight:700;color:#18181b}
+nav{margin-top:32px}ul{list-style:none;margin:0;padding:0}.nav-link{display:block;border-radius:8px;padding:7px 10px;color:#52525b;text-decoration:none;font-size:14px}.nav-link:hover{background:#f4f4f5;color:#18181b}.nav-link.active{background:#ecfdf5;color:#047857;font-weight:700;box-shadow:inset 3px 0 0 #10b981}
+main{margin-left:336px;max-width:840px;padding:56px 40px}.prose{font-size:16px;line-height:1.75}.prose h1{font-size:40px;line-height:1.1;margin:0 0 28px}.prose h2{font-size:24px;margin:36px 0 12px}.prose h3{font-size:20px;margin:28px 0 10px}.prose p,.prose li{color:#3f3f46}.prose a{color:#047857}.prose pre{overflow:auto;border-radius:10px;background:#18181b;color:#f8fafc;padding:18px}.prose code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}.prose :not(pre)>code{border-radius:5px;background:#f4f4f5;padding:2px 5px;color:#18181b}.prose blockquote{border-left:4px solid #10b981;margin-left:0;padding-left:16px;color:#52525b}.prose table{border-collapse:collapse;width:100%}.prose th,.prose td{border:1px solid #e4e4e7;padding:8px 10px;text-align:left}
+@media(max-width:800px){aside{position:static;width:auto;border-right:0;border-bottom:1px solid #e4e4e7}main{margin-left:0;padding:32px 20px}.prose h1{font-size:32px}}
+"#
+}
+
+fn escape_html(value: &str) -> String {
+    value
+        .replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+        .replace('"', "&quot;")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn normalizes_username() {
+        assert_eq!(normalize_username(" Jack_01 ").unwrap(), "jack_01");
+        assert!(normalize_username("no").is_err());
+        assert!(normalize_username("bad name").is_err());
+    }
+
+    #[test]
+    fn extracts_frontmatter_title() {
+        let title = extract_title("---\ntitle: Hello\n---\n# Fallback").unwrap();
+        assert_eq!(title, "Hello");
+    }
+
+    #[test]
+    fn hides_drafts() {
+        assert_eq!(
+            normalize_status("published", "---\nstatus: draft\n---\n# A"),
+            "draft"
+        );
+        assert_eq!(normalize_status("", "# A"), "published");
+    }
+
+    #[test]
+    fn selects_site_documents() {
+        let docs = vec![
+            SiteDocument {
+                relative_path: "index.md".to_string(),
+                title: "Home".to_string(),
+                content: "# Home".to_string(),
+            },
+            SiteDocument {
+                relative_path: "guide/setup.md".to_string(),
+                title: "Setup".to_string(),
+                content: "# Setup".to_string(),
+            },
+        ];
+        assert_eq!(
+            select_document(&docs, None).unwrap().relative_path,
+            "index.md"
+        );
+        assert_eq!(
+            select_document(&docs, Some("guide/setup"))
+                .unwrap()
+                .relative_path,
+            "guide/setup.md"
+        );
+    }
+
+    #[test]
+    fn renders_protocol_style_shell() {
+        let docs = vec![SiteDocument {
+            relative_path: "index.md".to_string(),
+            title: "Home".to_string(),
+            content: "# Home".to_string(),
+        }];
+        let html = site_shell("Jack Docs", "jack", &docs, "<h1>Home</h1>", "index.md");
+        assert!(html.contains("JType"));
+        assert!(html.contains("/@jack"));
+        assert!(html.contains("nav-link active"));
+    }
+
+    #[test]
+    fn slugifies_workspace_names() {
+        assert_eq!(slugify("Research Notes"), "research-notes");
+        assert_eq!(slugify("  !!!  "), "workspace");
+        assert_eq!(slugify("Team / Docs"), "team-docs");
+    }
+
+    #[test]
+    fn validates_workspace_roles() {
+        assert_eq!(normalize_invite_role(None).unwrap(), "editor");
+        assert_eq!(normalize_invite_role(Some("viewer")).unwrap(), "viewer");
+        assert!(normalize_invite_role(Some("owner")).is_err());
+    }
+
+    #[test]
+    fn merges_non_overlapping_line_edits() {
+        let base = "one\ntwo\nthree";
+        let local = "ONE\ntwo\nthree";
+        let cloud = "one\ntwo\nTHREE";
+        match three_way_merge(base, local, cloud) {
+            MergeResult::Merged(value) => assert_eq!(value, "ONE\ntwo\nTHREE"),
+            MergeResult::Conflict => panic!("expected clean merge"),
+        }
+    }
+
+    #[test]
+    fn detects_overlapping_line_conflicts() {
+        let base = "one\ntwo";
+        let local = "ONE\ntwo";
+        let cloud = "uno\ntwo";
+        assert!(matches!(
+            three_way_merge(base, local, cloud),
+            MergeResult::Conflict
+        ));
+    }
+}

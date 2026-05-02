@@ -1,10 +1,49 @@
 mod workspace;
 
-use std::{env, path::PathBuf};
+use serde::{Deserialize, Serialize};
+use std::{
+    collections::hash_map::DefaultHasher,
+    env, fs,
+    hash::{Hash, Hasher},
+    path::{Path, PathBuf},
+};
 
 use workspace::{
     AiIndexResult, EntryKind, PublishResult, SyncDocument, ValidationResult, WorkspaceSnapshot,
 };
+
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[serde(rename_all = "camelCase")]
+struct CloudProfile {
+    server_url: String,
+    username: String,
+    site_url: String,
+    token: String,
+    device_id: String,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+struct VaultBinding {
+    workspace_id: String,
+    workspace_name: String,
+    workspace_slug: String,
+    local_vault_path: String,
+    last_pulled_clock: i64,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[serde(rename_all = "camelCase")]
+struct VaultBindingStore {
+    bindings: Vec<VaultBinding>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct CloudSyncDocument {
+    relative_path: String,
+    content: String,
+}
 
 #[tauri::command]
 fn initial_open_paths() -> Vec<String> {
@@ -12,6 +51,18 @@ fn initial_open_paths() -> Vec<String> {
         .skip(1)
         .filter(|arg| workspace::is_markdown_path(&PathBuf::from(arg)))
         .collect()
+}
+
+#[tauri::command]
+fn default_vault_path() -> Result<String, String> {
+    Ok(path_to_string(&default_vault_dir()?))
+}
+
+#[tauri::command]
+fn open_default_vault() -> Result<WorkspaceSnapshot, String> {
+    let path = default_vault_dir()?;
+    fs::create_dir_all(&path).map_err(|error| error.to_string())?;
+    workspace::open_workspace(&path)
 }
 
 #[tauri::command]
@@ -27,6 +78,11 @@ fn write_markdown_file(path: String, content: String) -> Result<(), String> {
 #[tauri::command]
 fn open_workspace(path: String) -> Result<WorkspaceSnapshot, String> {
     workspace::open_workspace(&PathBuf::from(path))
+}
+
+#[tauri::command]
+fn detect_vault_root(path: String) -> Option<String> {
+    workspace::detect_vault_root(&PathBuf::from(path)).map(|p| path_to_string(&p))
 }
 
 #[tauri::command]
@@ -84,6 +140,164 @@ fn collect_sync_documents(root_path: String) -> Result<Vec<SyncDocument>, String
     workspace::collect_sync_documents(&PathBuf::from(root_path))
 }
 
+#[tauri::command]
+fn load_cloud_profile() -> Result<CloudProfile, String> {
+    let file = cloud_profile_file()?;
+    if !file.exists() {
+        return Ok(CloudProfile {
+            server_url: "http://localhost:13345".to_string(),
+            device_id: device_id(),
+            ..CloudProfile::default()
+        });
+    }
+    let content = fs::read_to_string(file).map_err(|error| error.to_string())?;
+    let mut profile: CloudProfile =
+        serde_json::from_str(&content).map_err(|error| error.to_string())?;
+    if profile.server_url.trim().is_empty() {
+        profile.server_url = "http://localhost:13345".to_string();
+    }
+    if profile.device_id.trim().is_empty() {
+        profile.device_id = device_id();
+    }
+    Ok(profile)
+}
+
+#[tauri::command]
+fn save_cloud_profile(profile: CloudProfile) -> Result<CloudProfile, String> {
+    let mut next = profile;
+    if next.server_url.trim().is_empty() {
+        next.server_url = "http://localhost:13345".to_string();
+    }
+    if next.device_id.trim().is_empty() {
+        next.device_id = device_id();
+    }
+    write_json(&cloud_profile_file()?, &next)?;
+    Ok(next)
+}
+
+#[tauri::command]
+fn list_vault_bindings() -> Result<Vec<VaultBinding>, String> {
+    Ok(read_binding_store()?.bindings)
+}
+
+#[tauri::command]
+fn bind_cloud_workspace(binding: VaultBinding) -> Result<Vec<VaultBinding>, String> {
+    if binding.workspace_id.trim().is_empty() {
+        return Err("Cloud workspace id is required.".to_string());
+    }
+    if binding.local_vault_path.trim().is_empty() {
+        return Err("Local vault path is required.".to_string());
+    }
+    let mut store = read_binding_store()?;
+    store
+        .bindings
+        .retain(|item| item.workspace_id != binding.workspace_id);
+    store.bindings.push(binding);
+    store
+        .bindings
+        .sort_by(|left, right| left.workspace_name.cmp(&right.workspace_name));
+    write_json(&vault_bindings_file()?, &store)?;
+    Ok(store.bindings)
+}
+
+#[tauri::command]
+fn apply_cloud_documents(
+    root_path: String,
+    documents: Vec<CloudSyncDocument>,
+) -> Result<WorkspaceSnapshot, String> {
+    let root = PathBuf::from(root_path);
+    for document in documents {
+        if !workspace::is_markdown_path(&PathBuf::from(&document.relative_path)) {
+            continue;
+        }
+        let target = safe_join(&root, &document.relative_path)?;
+        if let Some(parent) = target.parent() {
+            fs::create_dir_all(parent).map_err(|error| error.to_string())?;
+        }
+        fs::write(target, document.content).map_err(|error| error.to_string())?;
+    }
+    workspace::open_workspace(&root)
+}
+
+fn safe_join(root: &Path, relative_path: &str) -> Result<PathBuf, String> {
+    let relative = PathBuf::from(relative_path);
+    if relative.is_absolute() {
+        return Err("Cloud document path must be relative.".to_string());
+    }
+    let mut target = root.to_path_buf();
+    for component in relative.components() {
+        match component {
+            std::path::Component::Normal(value) => target.push(value),
+            _ => return Err("Cloud document path cannot escape the vault.".to_string()),
+        }
+    }
+    Ok(target)
+}
+
+fn default_vault_dir() -> Result<PathBuf, String> {
+    let home = env::var_os("USERPROFILE")
+        .or_else(|| env::var_os("HOME"))
+        .map(PathBuf::from)
+        .ok_or_else(|| "Could not find the user home directory.".to_string())?;
+    Ok(home.join("Documents").join(".jtype"))
+}
+
+fn config_dir() -> Result<PathBuf, String> {
+    let base = env::var_os("APPDATA")
+        .or_else(|| env::var_os("XDG_CONFIG_HOME"))
+        .map(PathBuf::from)
+        .or_else(|| env::var_os("HOME").map(|home| PathBuf::from(home).join(".config")))
+        .ok_or_else(|| "Could not find the app config directory.".to_string())?;
+    let dir = base.join("JType");
+    fs::create_dir_all(&dir).map_err(|error| error.to_string())?;
+    Ok(dir)
+}
+
+fn cloud_profile_file() -> Result<PathBuf, String> {
+    Ok(config_dir()?.join("cloud-profile.json"))
+}
+
+fn vault_bindings_file() -> Result<PathBuf, String> {
+    Ok(config_dir()?.join("vault-bindings.json"))
+}
+
+fn read_binding_store() -> Result<VaultBindingStore, String> {
+    let file = vault_bindings_file()?;
+    if !file.exists() {
+        return Ok(VaultBindingStore::default());
+    }
+    let content = fs::read_to_string(file).map_err(|error| error.to_string())?;
+    serde_json::from_str(&content).map_err(|error| error.to_string())
+}
+
+fn write_json<T: Serialize>(path: &Path, value: &T) -> Result<(), String> {
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent).map_err(|error| error.to_string())?;
+    }
+    let json = serde_json::to_string_pretty(value).map_err(|error| error.to_string())?;
+    fs::write(path, json).map_err(|error| error.to_string())
+}
+
+fn device_id() -> String {
+    let user = env::var("USERNAME")
+        .or_else(|_| env::var("USER"))
+        .unwrap_or_else(|_| "user".to_string());
+    let machine = env::var("COMPUTERNAME")
+        .or_else(|_| env::var("HOSTNAME"))
+        .unwrap_or_else(|_| "device".to_string());
+    stable_id(&format!("{user}@{machine}"))
+}
+
+fn stable_id(value: &str) -> String {
+    let mut hasher = DefaultHasher::new();
+    value.hash(&mut hasher);
+    format!("dev_{:x}", hasher.finish())
+}
+
+fn path_to_string(path: &Path) -> String {
+    path.to_string_lossy().replace('\\', "/")
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -92,16 +306,24 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             initial_open_paths,
+            default_vault_path,
+            open_default_vault,
             read_markdown_file,
             write_markdown_file,
             open_workspace,
+            detect_vault_root,
             create_workspace_entry,
             rename_workspace_entry,
             delete_workspace_entry,
             export_static_site,
             validate_workspace,
             build_ai_index,
-            collect_sync_documents
+            collect_sync_documents,
+            load_cloud_profile,
+            save_cloud_profile,
+            list_vault_bindings,
+            bind_cloud_workspace,
+            apply_cloud_documents
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

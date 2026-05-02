@@ -1,5 +1,7 @@
 # JType Product Interaction Analysis
 
+> Status note: this analysis is historical input for the current UX. The implemented product model is now local vault + cloud workspace + published site; use `suggestion.md` for the latest screenshot-driven UX findings.
+
 ## 1. Objective
 
 This document reviews how JType can improve its core management, editing, and menu interactions by learning from Notion and Obsidian while keeping JType's own position: a local-first Markdown workspace that can sync to a per-user website and stay AI-ready.

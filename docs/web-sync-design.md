@@ -1,15 +1,17 @@
 # JType Web Sync Design
 
+> Status note: this is the first web-sync design and is kept for historical context. Current runtime uses the web service at `http://localhost:13345`, browser OAuth, cloud workspaces, vault bindings, bidirectional sync, and public site routes under `/u/:username`.
+
 ## Goal
 
-Build a companion website for this project so the desktop app can sync local Markdown workspaces to a user-owned web site.
+Build a companion website for this project so the desktop app can sync local Markdown vaults to cloud workspaces and publish user-owned documentation sites.
 
 Each user has:
 
 - username/password account
 - an authenticated sync API
-- one or more synced workspaces
-- a public site at `http://localhost:8080/@username`
+- one or more cloud workspaces
+- a public site at `http://localhost:13345/u/username`
 - published Markdown pages rendered with a Protocol-inspired documentation layout
 
 ## Runtime Shape
@@ -17,7 +19,7 @@ Each user has:
 ```text
 Desktop App
   - local Markdown editing
-  - local workspace management
+  - local vault management
   - Tauri Rust commands for filesystem access
   - HTTPS/HTTP API client for sync
 
@@ -59,7 +61,7 @@ Response:
 {
   "token": "...",
   "username": "jack",
-  "siteUrl": "http://localhost:8080/@jack"
+  "siteUrl": "http://localhost:13345/u/jack"
 }
 ```
 
@@ -102,7 +104,7 @@ Response:
 {
   "workspaceName": "docs",
   "documentCount": 1,
-  "siteUrl": "http://localhost:8080/@jack"
+  "siteUrl": "http://localhost:13345/u/jack"
 }
 ```
 
@@ -110,8 +112,8 @@ Response:
 
 Public pages:
 
-- `GET /@username`
-- `GET /@username/path/to/page`
+- `GET /u/:username`
+- `GET /u/:username/path/to/page`
 
 The site renders all non-draft Markdown documents for that user. Navigation is generated from synced document paths.
 
@@ -122,7 +124,7 @@ The site renders all non-draft Markdown documents for that user. Navigation is g
 3. Desktop stores service URL and token in localStorage.
 4. User edits and saves Markdown locally.
 5. If logged in, Desktop collects Markdown documents through Tauri and posts them to `/api/sync/workspace`.
-6. User can open `http://localhost:8080/@username` to see the published site.
+6. User can open `http://localhost:13345/u/username` to see the published site.
 
 ## Protocol Reference Adaptation
 

@@ -17,6 +17,14 @@
     @apply inline-flex h-8 items-center justify-center rounded-md border border-stone-300 bg-stone-50 px-2 text-xs font-semibold text-stone-700 transition hover:border-stone-400 hover:bg-white disabled:cursor-not-allowed disabled:opacity-50;
   }
 
+  .workspace-row {
+    @apply flex w-full items-center justify-between gap-3 rounded-md border border-stone-200 bg-white px-3 py-2 text-left text-sm text-stone-800 transition hover:border-teal-300 hover:bg-teal-50;
+  }
+
+  .workspace-row-bound {
+    @apply border-teal-300 bg-teal-50 ring-1 ring-teal-100;
+  }
+
   .sync-input {
     @apply h-8 w-full rounded-md border border-stone-300 bg-white px-2 text-xs text-stone-800 outline-none transition placeholder:text-stone-400 focus:border-teal-500 focus:ring-2 focus:ring-teal-100;
   }
@@ -109,6 +117,10 @@
     @apply flex w-full items-center justify-between gap-3 rounded-md px-3 py-2 text-left text-sm transition hover:bg-stone-200/70 disabled:cursor-not-allowed disabled:opacity-50;
   }
 
+  .user-avatar {
+    @apply flex h-8 w-8 items-center justify-center rounded-full bg-teal-700 text-sm font-semibold text-white transition hover:bg-teal-800;
+  }
+
   .context-menu {
     @apply fixed z-50 min-w-52 rounded-md border border-stone-200 bg-stone-50 p-1 shadow-xl;
   }
@@ -140,23 +152,12 @@
 
 .app-empty #workspace-sidebar,
 .single-file-mode #workspace-sidebar,
-.app-empty #editor-shell,
 .workspace-mode #welcome-screen,
 .single-file-mode #welcome-screen,
-.workspace-mode #open-folder,
 .app-empty #sync-panel-button,
 .single-file-mode #sync-panel-button,
-.app-empty #open-folder,
-.single-file-mode #open-folder,
-.single-file-mode #document-panel,
-.single-file-mode #document-info-toggle,
-.single-file-mode #favorite-current-top {
+.single-file-mode #document-panel {
   display: none;
-}
-
-.app-empty #app-shell,
-.single-file-mode #app-shell {
-  grid-template-columns: minmax(0, 1fr) !important;
 }
 
 .single-file-mode #workbench-body {
@@ -183,6 +184,19 @@
 .editor-preview-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(320px, 46%);
+  overflow: hidden;
+  position: relative;
+}
+
+.editor-preview-grid > textarea {
+  position: relative;
+  z-index: 2;
+}
+
+.editor-preview-grid > article {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
 }
 
 .editor-preview-grid.view-mode-write {
@@ -195,14 +209,6 @@
 
 .editor-preview-grid.view-mode-write #preview,
 .editor-preview-grid.view-mode-preview #editor {
-  display: none;
-}
-
-.document-panel-collapsed #workbench-body {
-  grid-template-columns: minmax(0, 1fr) !important;
-}
-
-.document-panel-collapsed #document-panel {
   display: none;
 }
 
@@ -322,4 +328,21 @@
   border: 1px solid #e7e5e4;
   border-radius: 8px;
   background: #ffffff;
+}
+
+@media (max-width: 980px) {
+  .workbench-body {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .workbench-body #document-panel {
+    position: absolute;
+    top: 104px;
+    right: 0;
+    bottom: 40px;
+    width: min(360px, 92vw);
+    border-left: 1px solid #e7e5e4;
+    box-shadow: -18px 0 40px rgb(28 25 23 / 0.12);
+    z-index: 20;
+  }
 }

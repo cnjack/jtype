@@ -41,10 +41,10 @@ services:
     restart: unless-stopped
     environment:
       JTYPED_DATABASE_URL: mysql://jtype:${MYSQL_PASSWORD:-jtype-local}@mysql:3306/${MYSQL_DATABASE:-jtype}
-      JTYPED_BIND_ADDR: 0.0.0.0:8080
-      JTYPED_PUBLIC_BASE_URL: http://localhost:8080
+      JTYPED_BIND_ADDR: 0.0.0.0:13345
+      JTYPED_PUBLIC_BASE_URL: http://localhost:13345
     ports:
-      - "8080:8080"
+      - "13345:13345"
     depends_on:
       mysql:
         condition: service_healthy

@@ -1,7 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { open } from "@tauri-apps/plugin-dialog";
-import { openPath } from "@tauri-apps/plugin-opener";
+import { openPath, openUrl } from "@tauri-apps/plugin-opener";
 import DOMPurify from "dompurify";
 import katex from "katex";
 import "katex/dist/katex.min.css";
@@ -69,9 +69,70 @@ type AuthResponse = {
 };
 
 type SyncResponse = {
+  workspaceId?: string;
   workspaceName: string;
   documentCount: number;
   siteUrl: string;
+};
+
+type CloudProfile = {
+  serverUrl: string;
+  username: string;
+  siteUrl: string;
+  token: string;
+  deviceId: string;
+};
+
+type VaultBinding = {
+  workspaceId: string;
+  workspaceName: string;
+  workspaceSlug: string;
+  localVaultPath: string;
+  lastPulledClock: number;
+};
+
+type CloudWorkspace = {
+  id: string;
+  name: string;
+  slug: string;
+  role: string;
+  documentCount: number;
+  storageBudgetBytes: number;
+};
+
+type CloudWorkspaceListResponse = {
+  workspaces: CloudWorkspace[];
+};
+
+type OAuthDeviceStartResponse = {
+  deviceCode: string;
+  userCode: string;
+  verificationUrl: string;
+};
+
+type CloudDocument = {
+  relativePath: string;
+  title: string;
+  status: string;
+  content: string;
+  contentHash: string;
+  versionId: string;
+  updatedClock: number;
+};
+
+type SyncConflict = {
+  conflictId: string;
+  relativePath: string;
+  localContent: string;
+  cloudContent: string;
+  baseContent?: string;
+};
+
+type SyncPushResponse = {
+  workspaceId: string;
+  accepted: number;
+  documents: CloudDocument[];
+  conflicts: SyncConflict[];
 };
 
 type AppState = {
@@ -89,6 +150,12 @@ type AppState = {
   syncUsername: string;
   syncSiteUrl: string;
   lastSyncSnapshot: string;
+  cloudProfile: CloudProfile | null;
+  vaultBindings: VaultBinding[];
+  cloudWorkspaces: CloudWorkspace[];
+  oauthDeviceCode: string;
+  oauthUserCode: string;
+  activeConflicts: SyncConflict[];
   contextNode: FileTreeNode | null;
   pendingAiProposal: AICommandProposal | null;
 };
@@ -151,9 +218,7 @@ const welcomeRecentList = document.querySelector<HTMLElement>("#welcome-recent-l
 const operationLog = document.querySelector<HTMLElement>("#operation-log");
 const syncServiceUrlInput = document.querySelector<HTMLInputElement>("#sync-service-url");
 const syncUsernameInput = document.querySelector<HTMLInputElement>("#sync-username");
-const syncPasswordInput = document.querySelector<HTMLInputElement>("#sync-password");
 const syncRegisterButton = document.querySelector<HTMLButtonElement>("#sync-register");
-const syncLoginButton = document.querySelector<HTMLButtonElement>("#sync-login");
 const syncNowButton = document.querySelector<HTMLButtonElement>("#sync-now");
 const syncSiteLink = document.querySelector<HTMLAnchorElement>("#sync-site-link");
 const commandPaletteButton = document.querySelector<HTMLButtonElement>("#command-palette-button");
@@ -183,14 +248,16 @@ const documentInfoClose = document.querySelector<HTMLButtonElement>("#document-i
 const accountDialog = document.querySelector<HTMLElement>("#account-dialog");
 const accountStatus = document.querySelector<HTMLElement>("#account-status");
 const accountServiceUrlInput = document.querySelector<HTMLInputElement>("#account-service-url");
-const accountUsernameInput = document.querySelector<HTMLInputElement>("#account-username");
-const accountPasswordInput = document.querySelector<HTMLInputElement>("#account-password");
-const accountRegisterButton = document.querySelector<HTMLButtonElement>("#account-register");
-const accountLoginButton = document.querySelector<HTMLButtonElement>("#account-login");
+const accountConnectButton = document.querySelector<HTMLButtonElement>("#account-connect");
+const accountDisconnectButton = document.querySelector<HTMLButtonElement>("#account-disconnect");
+let devicePollTimer: number | null = null;
 const accountSyncButton = document.querySelector<HTMLButtonElement>("#account-sync");
 const accountSiteLink = document.querySelector<HTMLAnchorElement>("#account-site-link");
+const accountWorkspaceList = document.querySelector<HTMLElement>("#account-workspace-list");
+const accountConflictList = document.querySelector<HTMLElement>("#account-conflict-list");
 const welcomeOpenFolderButton = document.querySelector<HTMLButtonElement>("#welcome-open-folder");
 const welcomeOpenFileButton = document.querySelector<HTMLButtonElement>("#welcome-open-file");
+const welcomeDefaultVaultButton = document.querySelector<HTMLButtonElement>("#welcome-default-vault");
 const welcomeCommandPaletteButton = document.querySelector<HTMLButtonElement>("#welcome-command-palette");
 
 const commands = new Map<string, AppCommand>();
@@ -212,6 +279,12 @@ const state: AppState = {
   syncUsername: window.localStorage.getItem("jtype.sync.username") ?? "",
   syncSiteUrl: window.localStorage.getItem("jtype.sync.siteUrl") ?? "",
   lastSyncSnapshot: window.localStorage.getItem("jtype.sync.snapshot") ?? "",
+  cloudProfile: null,
+  vaultBindings: [],
+  cloudWorkspaces: [],
+  oauthDeviceCode: "",
+  oauthUserCode: "",
+  activeConflicts: [],
   contextNode: null,
   pendingAiProposal: null,
 };
@@ -238,12 +311,20 @@ function registerCommands() {
     },
     {
       id: "workspace.open",
-      title: "Open workspace folder",
-      aliases: ["open folder", "vault"],
+      title: "Open vault folder",
+      aliases: ["open folder", "workspace"],
       shortcut: "Ctrl+Shift+O",
       scope: ["global"],
       isEnabled: () => !state.isLoading,
       run: chooseWorkspaceFolder,
+    },
+    {
+      id: "vault.openDefault",
+      title: "Open default vault",
+      aliases: ["documents .jtype", "vault"],
+      scope: ["global"],
+      isEnabled: () => !state.isLoading,
+      run: openDefaultVault,
     },
     {
       id: "file.save",
@@ -261,7 +342,7 @@ function registerCommands() {
       aliases: ["new document", "create"],
       scope: ["workspace"],
       isEnabled: () => Boolean(state.workspace) && !state.isLoading,
-      disabledReason: () => "Open a workspace first",
+      disabledReason: () => "Open a vault first",
       run: createDocument,
     },
     {
@@ -271,7 +352,7 @@ function registerCommands() {
       shortcut: "F2",
       scope: ["file", "folder"],
       isEnabled: () => Boolean(state.workspace && state.currentRelativePath) && !state.isLoading,
-      disabledReason: () => "Select a workspace item first",
+      disabledReason: () => "Select a vault item first",
       run: renameCurrentEntryWithImpact,
     },
     {
@@ -280,7 +361,7 @@ function registerCommands() {
       aliases: ["trash"],
       scope: ["file", "folder"],
       isEnabled: () => Boolean(state.workspace && state.currentRelativePath) && !state.isLoading,
-      disabledReason: () => "Select a workspace item first",
+      disabledReason: () => "Select a vault item first",
       run: deleteCurrentEntry,
     },
     {
@@ -298,7 +379,7 @@ function registerCommands() {
       aliases: ["publish preview"],
       scope: ["publish", "workspace"],
       isEnabled: () => Boolean(state.workspace) && !state.isLoading,
-      disabledReason: () => "Open a workspace first",
+      disabledReason: () => "Open a vault first",
       run: exportSite,
     },
     {
@@ -307,16 +388,16 @@ function registerCommands() {
       aliases: ["validate", "issues"],
       scope: ["publish", "workspace"],
       isEnabled: () => Boolean(state.workspace) && !state.isLoading,
-      disabledReason: () => "Open a workspace first",
+      disabledReason: () => "Open a vault first",
       run: runPublishChecks,
     },
     {
       id: "sync.workspace",
-      title: "Sync workspace to web",
+      title: "Sync vault to cloud workspace",
       aliases: ["upload", "site"],
       scope: ["publish", "workspace"],
       isEnabled: () => Boolean(state.workspace && state.syncToken) && !state.isLoading,
-      disabledReason: () => (state.workspace ? "Login or register before syncing" : "Open a workspace first"),
+      disabledReason: () => (state.workspace ? "Login or register before syncing" : "Open a vault first"),
       run: () => syncWorkspaceToWeb(),
     },
     {
@@ -325,7 +406,7 @@ function registerCommands() {
       aliases: ["context"],
       scope: ["ai", "workspace"],
       isEnabled: () => Boolean(state.workspace) && !state.isLoading,
-      disabledReason: () => "Open a workspace first",
+      disabledReason: () => "Open a vault first",
       run: buildAiIndex,
     },
     {
@@ -460,14 +541,14 @@ function setStatus(name: string, path = "") {
   if (filePath) filePath.textContent = path;
   if (documentBreadcrumbs) {
     documentBreadcrumbs.textContent = state.currentRelativePath
-      ? `${state.workspace?.name ?? "Workspace"} / ${state.currentRelativePath}`
+      ? `${state.workspace?.name ?? "Vault"} / ${state.currentRelativePath}`
       : path || "No document selected";
   }
 }
 
 function setWorkspaceStatus(workspace: WorkspaceSnapshot | null) {
-  if (workspaceName) workspaceName.textContent = workspace?.name ?? "No workspace";
-  if (workspacePath) workspacePath.textContent = workspace?.rootPath ?? "Open a folder or Markdown file.";
+  if (workspaceName) workspaceName.textContent = workspace?.name ?? "No vault";
+  if (workspacePath) workspacePath.textContent = workspace?.rootPath ?? "Open a vault or Markdown file.";
   updateAppMode();
 }
 
@@ -478,10 +559,10 @@ function updateAppMode() {
   document.body.classList.toggle("single-file-mode", isSingleFile);
   document.body.classList.toggle("app-empty", !isWorkspace && !isSingleFile);
   if (appContextTitle) {
-    appContextTitle.textContent = isWorkspace ? "Workspace" : isSingleFile ? "Markdown file" : "Markdown editor";
+    appContextTitle.textContent = isWorkspace ? "Vault" : isSingleFile ? "Markdown file" : "Markdown editor";
   }
   if (documentBreadcrumbs && !state.currentPath) {
-    documentBreadcrumbs.textContent = isWorkspace ? state.workspace?.name ?? "Workspace" : "No document selected";
+    documentBreadcrumbs.textContent = isWorkspace ? state.workspace?.name ?? "Vault" : "No document selected";
   }
 }
 
@@ -634,7 +715,8 @@ function openAccountDialog() {
   if (!accountDialog) return;
   renderSyncSession();
   accountDialog.classList.remove("hidden");
-  setTimeout(() => (state.syncToken ? accountSyncButton : accountUsernameInput)?.focus(), 0);
+  setTimeout(() => (state.syncToken ? accountSyncButton : accountConnectButton)?.focus(), 0);
+  if (state.syncToken) void refreshCloudWorkspaces();
 }
 
 function closeAccountDialog() {
@@ -711,33 +793,52 @@ async function chooseWorkspaceFolder() {
   }
 }
 
-async function openWorkspace(path: string) {
+async function openDefaultVault() {
   try {
     setLoading(true);
     setFileState("Opening");
-    const workspace = await invoke<WorkspaceSnapshot>("open_workspace", { path });
-    state.workspace = workspace;
-    state.currentPath = "";
-    state.currentRelativePath = "";
-    state.currentKind = "";
-    state.originalContent = "";
-    state.pendingAiProposal = null;
-    if (editor) {
-      editor.value = "";
-      editor.disabled = true;
-    }
-    await renderMarkdown("");
-    setStatus("No file selected", "");
-    setWorkspaceStatus(workspace);
-    renderAllWorkspaceSurfaces();
+    const workspace = await invoke<WorkspaceSnapshot>("open_default_vault");
+    await applyOpenedWorkspace(workspace);
     addRecent({ kind: "workspace", name: workspace.name, path: workspace.rootPath });
-    updateActionButtons();
-    logOperation(workspace.metadataCreated ? "Workspace opened and .jtype metadata created." : "Workspace opened.");
+    logOperation(workspace.metadataCreated ? "Default vault created." : "Default vault opened.");
   } catch (error) {
     showError(String(error));
   } finally {
     setLoading(false);
   }
+}
+
+async function openWorkspace(path: string) {
+  try {
+    setLoading(true);
+    setFileState("Opening");
+    const workspace = await invoke<WorkspaceSnapshot>("open_workspace", { path });
+    await applyOpenedWorkspace(workspace);
+    addRecent({ kind: "workspace", name: workspace.name, path: workspace.rootPath });
+    logOperation(workspace.metadataCreated ? "Vault opened and .jtype metadata created." : "Vault opened.");
+  } catch (error) {
+    showError(String(error));
+  } finally {
+    setLoading(false);
+  }
+}
+
+async function applyOpenedWorkspace(workspace: WorkspaceSnapshot) {
+  state.workspace = workspace;
+  state.currentPath = "";
+  state.currentRelativePath = "";
+  state.currentKind = "";
+  state.originalContent = "";
+  state.pendingAiProposal = null;
+  if (editor) {
+    editor.value = "";
+    editor.disabled = true;
+  }
+  await renderMarkdown("");
+  setStatus("No file selected", "");
+  setWorkspaceStatus(workspace);
+  renderAllWorkspaceSurfaces();
+  updateActionButtons();
 }
 
 async function saveCurrentFile() {
@@ -764,63 +865,232 @@ async function saveCurrentFile() {
 }
 
 function syncServiceUrl() {
-  return (accountServiceUrlInput?.value || syncServiceUrlInput?.value || "http://localhost:8080").trim().replace(/\/$/, "");
+  return (
+    accountServiceUrlInput?.value ||
+    syncServiceUrlInput?.value ||
+    state.cloudProfile?.serverUrl ||
+    "http://localhost:13345"
+  )
+    .trim()
+    .replace(/\/$/, "");
 }
 
 function setSyncSession(response: AuthResponse) {
+  stopDevicePolling();
+  state.oauthDeviceCode = "";
+  state.oauthUserCode = "";
   state.syncToken = response.token || state.syncToken;
   state.syncUsername = response.username;
   state.syncSiteUrl = response.siteUrl;
+  const profile: CloudProfile = {
+    serverUrl: syncServiceUrl(),
+    username: response.username,
+    siteUrl: response.siteUrl,
+    token: state.syncToken,
+    deviceId: state.cloudProfile?.deviceId ?? "",
+  };
+  state.cloudProfile = profile;
   window.localStorage.setItem("jtype.sync.token", state.syncToken);
   window.localStorage.setItem("jtype.sync.username", response.username);
   window.localStorage.setItem("jtype.sync.siteUrl", response.siteUrl);
+  void saveCloudProfile(profile);
   renderSyncSession();
   updateActionButtons();
 }
 
+async function loadCloudProfile() {
+  if (!isTauriRuntime()) return;
+  try {
+    const profile = await invoke<CloudProfile>("load_cloud_profile");
+    state.cloudProfile = profile;
+    if (profile.token) state.syncToken = profile.token;
+    if (profile.username) state.syncUsername = profile.username;
+    if (profile.siteUrl) state.syncSiteUrl = profile.siteUrl;
+    if (accountServiceUrlInput) accountServiceUrlInput.value = profile.serverUrl || "http://localhost:13345";
+    if (syncServiceUrlInput) syncServiceUrlInput.value = profile.serverUrl || "http://localhost:13345";
+    window.localStorage.setItem("jtype.sync.token", state.syncToken);
+    window.localStorage.setItem("jtype.sync.username", state.syncUsername);
+    window.localStorage.setItem("jtype.sync.siteUrl", state.syncSiteUrl);
+    renderSyncSession();
+  } catch (error) {
+    logOperation(`Cloud profile unavailable: ${String(error)}`);
+  }
+}
+
+async function saveCloudProfile(profile: CloudProfile) {
+  if (!isTauriRuntime()) return;
+  try {
+    state.cloudProfile = await invoke<CloudProfile>("save_cloud_profile", { profile });
+  } catch (error) {
+    logOperation(`Cloud profile was not saved: ${String(error)}`);
+  }
+}
+
+async function loadVaultBindings() {
+  if (!isTauriRuntime()) return;
+  try {
+    state.vaultBindings = await invoke<VaultBinding[]>("list_vault_bindings");
+    renderCloudWorkspaces();
+  } catch (error) {
+    logOperation(`Vault bindings unavailable: ${String(error)}`);
+  }
+}
+
+async function refreshCloudWorkspaces() {
+  if (!state.syncToken) return;
+  try {
+    const response = await fetch(`${syncServiceUrl()}/api/v1/workspaces`, {
+      headers: { Authorization: `Bearer ${state.syncToken}` },
+    });
+    if (!response.ok) throw new Error(await response.text());
+    const result = (await response.json()) as CloudWorkspaceListResponse;
+    state.cloudWorkspaces = result.workspaces;
+    renderCloudWorkspaces();
+  } catch (error) {
+    logOperation(`Cloud workspaces unavailable: ${String(error)}`);
+  }
+}
+
+function renderCloudWorkspaces() {
+  if (!accountWorkspaceList) return;
+  if (!state.syncToken) {
+    accountWorkspaceList.innerHTML = `<p class="text-xs text-stone-500">Connect to load workspaces.</p>`;
+    return;
+  }
+  if (!state.cloudWorkspaces.length) {
+    accountWorkspaceList.innerHTML = `<p class="text-xs text-stone-500">No cloud workspaces yet. Sync this vault to create one.</p>`;
+    return;
+  }
+  accountWorkspaceList.innerHTML = state.cloudWorkspaces
+    .map((workspace) => {
+      const binding = state.vaultBindings.find((item) => item.workspaceId === workspace.id);
+      const action = binding ? "Open" : "Bind";
+      const path = binding ? `<span class="block truncate text-[11px] text-stone-500">${escapeHtml(binding.localVaultPath)}</span>` : "";
+      return `<button class="sidebar-action w-full text-left" data-cloud-workspace="${escapeHtml(workspace.id)}" type="button"><span class="font-semibold">${escapeHtml(workspace.name)}</span><span class="ml-2 text-xs text-stone-500">${escapeHtml(workspace.role)} · ${action}</span>${path}</button>`;
+    })
+    .join("");
+  accountWorkspaceList.querySelectorAll<HTMLButtonElement>("[data-cloud-workspace]").forEach((button) => {
+    button.addEventListener("click", () => void openOrBindCloudWorkspace(button.dataset.cloudWorkspace ?? ""));
+  });
+}
+
+async function openOrBindCloudWorkspace(workspaceId: string) {
+  const workspace = state.cloudWorkspaces.find((item) => item.id === workspaceId);
+  if (!workspace) return;
+  const existing = state.vaultBindings.find((item) => item.workspaceId === workspaceId);
+  if (existing) {
+    await openWorkspace(existing.localVaultPath);
+    return;
+  }
+  const selected = await open({ multiple: false, directory: true });
+  const selectedPath = Array.isArray(selected) ? selected[0] : selected;
+  if (!selectedPath) return;
+  const binding: VaultBinding = {
+    workspaceId: workspace.id,
+    workspaceName: workspace.name,
+    workspaceSlug: workspace.slug,
+    localVaultPath: selectedPath,
+    lastPulledClock: 0,
+  };
+  await saveVaultBinding(binding);
+  await openWorkspace(selectedPath);
+  await pullCloudWorkspace(binding);
+}
+
 function renderSyncSession() {
   if (syncUsernameInput && state.syncUsername) syncUsernameInput.value = state.syncUsername;
-  if (accountUsernameInput && state.syncUsername) accountUsernameInput.value = state.syncUsername;
   if (syncServiceUrlInput && accountServiceUrlInput) syncServiceUrlInput.value = accountServiceUrlInput.value;
   if (accountStatus) {
     accountStatus.textContent = state.syncToken
-      ? `Signed in as ${state.syncUsername}. Sync this workspace to your web site.`
-      : "Sign in to sync this workspace to your web site.";
+      ? `Connected as ${state.syncUsername}. Sync vaults with cloud workspaces.`
+      : state.oauthUserCode
+        ? `Waiting for browser authorization (code ${state.oauthUserCode})...`
+        : "Connect in the browser. Desktop never asks for your password.";
   }
 
   if (state.syncSiteUrl) {
+    const displaySiteUrl = state.syncSiteUrl.replace("/@", "/u");
     for (const link of [syncSiteLink, accountSiteLink]) {
       if (!link) continue;
-      link.href = state.syncSiteUrl;
-      link.textContent = `Open site: ${state.syncSiteUrl}`;
+      link.href = displaySiteUrl;
+      link.textContent = `Open site: ${displaySiteUrl}`;
       link.classList.remove("hidden");
     }
   } else {
     syncSiteLink?.classList.add("hidden");
     accountSiteLink?.classList.add("hidden");
   }
+  if (state.syncToken) {
+    accountConnectButton?.classList.add("hidden");
+    accountDisconnectButton?.classList.remove("hidden");
+  } else {
+    accountConnectButton?.classList.remove("hidden");
+    accountDisconnectButton?.classList.add("hidden");
+  }
+  renderCloudWorkspaces();
+  renderConflictList();
   updateActionButtons();
 }
 
-async function authenticate(mode: "login" | "register") {
-  const username = (accountUsernameInput?.value || syncUsernameInput?.value || "").trim();
-  const password = accountPasswordInput?.value || syncPasswordInput?.value || "";
-  if (!username || !password) {
-    showError("Username and password are required for sync.");
-    return;
+function stopDevicePolling() {
+  if (devicePollTimer !== null) {
+    clearInterval(devicePollTimer);
+    devicePollTimer = null;
   }
+}
 
+async function startBrowserOAuth() {
   try {
     setLoading(true);
-    const response = await fetch(`${syncServiceUrl()}/api/${mode}`, {
+    const response = await fetch(`${syncServiceUrl()}/api/oauth/device/start`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password, siteTitle: `${username} Docs` }),
+      body: JSON.stringify({ deviceId: state.cloudProfile?.deviceId ?? "desktop" }),
     });
     if (!response.ok) throw new Error(await response.text());
-    const auth = (await response.json()) as AuthResponse;
-    setSyncSession(auth);
-    logOperation(`${mode === "login" ? "Logged in" : "Registered"} as ${auth.username}.`);
+    const start = (await response.json()) as OAuthDeviceStartResponse;
+    state.oauthDeviceCode = start.deviceCode;
+    state.oauthUserCode = start.userCode;
+    renderSyncSession();
+    await openUrl(start.verificationUrl);
+    logOperation(`Browser authorization opened. Use code ${start.userCode}.`);
+
+    stopDevicePolling();
+    devicePollTimer = window.setInterval(async () => {
+      try {
+        const pollResponse = await fetch(`${syncServiceUrl()}/api/oauth/device/poll`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ deviceCode: state.oauthDeviceCode }),
+        });
+        if (pollResponse.ok) {
+          const auth = (await pollResponse.json()) as AuthResponse;
+          stopDevicePolling();
+          state.oauthDeviceCode = "";
+          state.oauthUserCode = "";
+          setSyncSession(auth);
+          await refreshCloudWorkspaces();
+          logOperation(`Connected as ${auth.username}.`);
+          renderSyncSession();
+          return;
+        }
+        const errText = await pollResponse.text();
+        if (errText.includes("authorization pending")) {
+          return;
+        }
+        stopDevicePolling();
+        state.oauthDeviceCode = "";
+        state.oauthUserCode = "";
+        showError(`Authorization failed: ${errText}`);
+        renderSyncSession();
+      } catch (error) {
+        stopDevicePolling();
+        state.oauthDeviceCode = "";
+        state.oauthUserCode = "";
+        showError(String(error));
+        renderSyncSession();
+      }
+    }, 1000);
   } catch (error) {
     showError(String(error));
   } finally {
@@ -828,9 +1098,28 @@ async function authenticate(mode: "login" | "register") {
   }
 }
 
+async function disconnectAccount() {
+  stopDevicePolling();
+  state.syncToken = "";
+  state.syncUsername = "";
+  state.syncSiteUrl = "";
+  state.cloudProfile = null;
+  state.vaultBindings = [];
+  state.cloudWorkspaces = [];
+  state.oauthDeviceCode = "";
+  state.oauthUserCode = "";
+  window.localStorage.removeItem("jtype.sync.token");
+  window.localStorage.removeItem("jtype.sync.username");
+  window.localStorage.removeItem("jtype.sync.siteUrl");
+  window.localStorage.removeItem("jtype.sync.snapshot");
+  renderSyncSession();
+  updateActionButtons();
+  logOperation("Disconnected from cloud account.");
+}
+
 async function syncWorkspaceToWeb(options: { silent?: boolean } = {}) {
   if (!state.workspace) {
-    showError("Open a workspace before syncing.");
+    showError("Open a vault before syncing.");
     return;
   }
   if (!state.syncToken) {
@@ -840,10 +1129,41 @@ async function syncWorkspaceToWeb(options: { silent?: boolean } = {}) {
 
   try {
     setLoading(true);
-    if (!options.silent) logOperation("Syncing workspace...");
+    if (!options.silent) logOperation("Syncing vault...");
     const documents = await invoke<SyncDocument[]>("collect_sync_documents", {
       rootPath: state.workspace.rootPath,
     });
+    const binding = currentVaultBinding();
+    if (binding) {
+      await pullCloudWorkspace(binding);
+      const push = await fetch(`${syncServiceUrl()}/api/v1/workspaces/${binding.workspaceId}/sync/push`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${state.syncToken}`,
+        },
+        body: JSON.stringify({
+          deviceId: state.cloudProfile?.deviceId ?? "desktop",
+          documents: documents.map((document) => ({
+            relativePath: document.relativePath,
+            title: document.title,
+            status: document.status,
+            content: document.content,
+          })),
+        }),
+      });
+      if (!push.ok) throw new Error(await push.text());
+      const result = (await push.json()) as SyncPushResponse;
+      state.activeConflicts = result.conflicts ?? [];
+      state.lastSyncSnapshot = `${Date.now()}:${documents.map((document) => `${document.relativePath}:${document.content.length}`).join("|")}`;
+      window.localStorage.setItem("jtype.sync.snapshot", state.lastSyncSnapshot);
+      await applyCloudDocuments(result.documents);
+      renderSyncSession();
+      renderAllWorkspaceSurfaces();
+      logOperation(`Synced ${result.accepted} document(s) with cloud workspace ${binding.workspaceName}.`);
+      return;
+    }
+
     const response = await fetch(`${syncServiceUrl()}/api/sync/workspace`, {
       method: "POST",
       headers: {
@@ -858,6 +1178,18 @@ async function syncWorkspaceToWeb(options: { silent?: boolean } = {}) {
     state.lastSyncSnapshot = `${Date.now()}:${documents.map((document) => `${document.relativePath}:${document.content.length}`).join("|")}`;
     window.localStorage.setItem("jtype.sync.siteUrl", result.siteUrl);
     window.localStorage.setItem("jtype.sync.snapshot", state.lastSyncSnapshot);
+    if (result.workspaceId && state.workspace) {
+      window.localStorage.setItem(`jtype.workspaceBinding:${state.workspace.rootPath}`, result.workspaceId);
+      const binding: VaultBinding = {
+        workspaceId: result.workspaceId,
+        workspaceName: result.workspaceName,
+        workspaceSlug: slugify(result.workspaceName),
+        localVaultPath: state.workspace.rootPath,
+        lastPulledClock: 0,
+      };
+      await saveVaultBinding(binding);
+      await refreshCloudWorkspaces();
+    }
     renderSyncSession();
     renderAllWorkspaceSurfaces();
     logOperation(`Synced ${result.documentCount} document(s) to ${result.siteUrl}.`);
@@ -1112,7 +1444,7 @@ function renderFileTree() {
   if (!state.workspace) {
     const empty = document.createElement("p");
     empty.className = "rounded-md border border-dashed border-stone-300 p-3 text-sm text-stone-500";
-    empty.textContent = "Drop a folder here to start a workspace.";
+    empty.textContent = "Drop a folder here to open it as a vault.";
     fileTree.append(empty);
     return;
   }
@@ -1266,7 +1598,7 @@ function renderRecentHost(host: HTMLElement | null, items: RecentItem[], textCla
   if (items.length === 0) {
     const empty = document.createElement("p");
     empty.className = `${textClass} text-stone-500`;
-    empty.textContent = "No recent workspaces or Markdown files yet.";
+    empty.textContent = "No recent vaults or Markdown files yet.";
     host.append(empty);
     return;
   }
@@ -1282,6 +1614,104 @@ function renderRecentHost(host: HTMLElement | null, items: RecentItem[], textCla
     });
     host.append(button);
   }
+}
+
+function currentVaultBinding() {
+  if (!state.workspace) return null;
+  return state.vaultBindings.find((binding) => binding.localVaultPath === state.workspace?.rootPath) ?? null;
+}
+
+async function pullCloudWorkspace(binding: VaultBinding) {
+  if (!state.workspace || !state.syncToken) return;
+  const response = await fetch(`${syncServiceUrl()}/api/v1/workspaces/${binding.workspaceId}/sync/pull`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${state.syncToken}`,
+    },
+    body: JSON.stringify({
+      sinceClock: binding.lastPulledClock,
+      deviceId: state.cloudProfile?.deviceId ?? "desktop",
+    }),
+  });
+  if (!response.ok) throw new Error(await response.text());
+  const result = (await response.json()) as { documents: CloudDocument[]; conflicts: SyncConflict[] };
+  state.activeConflicts = result.conflicts ?? [];
+  await applyCloudDocuments(result.documents);
+  const nextClock = Math.max(binding.lastPulledClock, ...result.documents.map((doc) => doc.updatedClock));
+  await saveVaultBinding({ ...binding, lastPulledClock: Number.isFinite(nextClock) ? nextClock : binding.lastPulledClock });
+}
+
+async function applyCloudDocuments(documents: CloudDocument[]) {
+  if (!state.workspace || documents.length === 0) return;
+  const workspace = await invoke<WorkspaceSnapshot>("apply_cloud_documents", {
+    rootPath: state.workspace.rootPath,
+    documents: documents.map((document) => ({
+      relativePath: document.relativePath,
+      content: document.content,
+    })),
+  });
+  state.workspace = workspace;
+  setWorkspaceStatus(workspace);
+  renderAllWorkspaceSurfaces();
+}
+
+function renderConflictList() {
+  if (!accountConflictList) return;
+  if (!state.activeConflicts.length) {
+    accountConflictList.innerHTML = `<p class="text-xs text-stone-500">No conflicts.</p>`;
+    return;
+  }
+  accountConflictList.innerHTML = state.activeConflicts
+    .map((conflict) => `<div class="rounded-md border border-amber-200 bg-amber-50 p-2 text-xs"><p class="font-semibold text-amber-900">${escapeHtml(conflict.relativePath)}</p><div class="mt-2 grid grid-cols-2 gap-2"><button class="sidebar-action" data-conflict-local="${escapeHtml(conflict.conflictId)}" type="button">Accept local</button><button class="sidebar-action" data-conflict-cloud="${escapeHtml(conflict.conflictId)}" type="button">Accept cloud</button></div></div>`)
+    .join("");
+  accountConflictList.querySelectorAll<HTMLButtonElement>("[data-conflict-local]").forEach((button) => {
+    button.addEventListener("click", () => void resolveConflict(button.dataset.conflictLocal ?? "", "accept_local"));
+  });
+  accountConflictList.querySelectorAll<HTMLButtonElement>("[data-conflict-cloud]").forEach((button) => {
+    button.addEventListener("click", () => void resolveConflict(button.dataset.conflictCloud ?? "", "accept_cloud"));
+  });
+}
+
+async function resolveConflict(conflictId: string, resolution: "accept_local" | "accept_cloud") {
+  const binding = currentVaultBinding();
+  if (!binding || !state.syncToken) return;
+  try {
+    const response = await fetch(`${syncServiceUrl()}/api/v1/workspaces/${binding.workspaceId}/conflicts/${conflictId}/resolve`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${state.syncToken}`,
+      },
+      body: JSON.stringify({ resolution }),
+    });
+    if (!response.ok) throw new Error(await response.text());
+    const document = (await response.json()) as CloudDocument;
+    state.activeConflicts = state.activeConflicts.filter((conflict) => conflict.conflictId !== conflictId);
+    await applyCloudDocuments([document]);
+    renderSyncSession();
+    logOperation(`Resolved conflict in ${document.relativePath}.`);
+  } catch (error) {
+    showError(String(error));
+  }
+}
+
+async function saveVaultBinding(binding: VaultBinding) {
+  if (!isTauriRuntime()) return;
+  try {
+    state.vaultBindings = await invoke<VaultBinding[]>("bind_cloud_workspace", { binding });
+  } catch (error) {
+    logOperation(`Vault binding was not saved: ${String(error)}`);
+  }
+}
+
+function slugify(value: string) {
+  const slug = value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return slug || "workspace";
 }
 
 function favoriteKey() {
@@ -1618,7 +2048,7 @@ function renderPublishPanel(validation?: ValidationResult) {
     ["Title exists", Boolean(parsed.title || (editor && titleFromMarkdown(editor.value, "")))],
     ["Slug is set", Boolean(parsed.slug)],
     ["Publishable status", (parsed.status ?? "draft") !== "archived"],
-    ["Workspace synced", Boolean(state.syncSiteUrl)],
+    ["Vault synced", Boolean(state.syncSiteUrl)],
   ];
   const issues = validation ? [...validation.errors, ...validation.warnings] : [];
   publishPanel.innerHTML = `
@@ -1639,12 +2069,12 @@ function renderPublishPanel(validation?: ValidationResult) {
         </div>
       </section>
       <section class="panel-card">
-        <p class="text-sm font-semibold text-stone-950">Workspace checks</p>
-        <div class="mt-2 space-y-1">${issues.length ? issues.map((issue) => `<p class="text-xs text-amber-700">${escapeHtml(issue)}</p>`).join("") : `<p class="text-xs text-stone-500">Run checks to refresh workspace issues.</p>`}</div>
+        <p class="text-sm font-semibold text-stone-950">Vault checks</p>
+        <div class="mt-2 space-y-1">${issues.length ? issues.map((issue) => `<p class="text-xs text-amber-700">${escapeHtml(issue)}</p>`).join("") : `<p class="text-xs text-stone-500">Run checks to refresh vault issues.</p>`}</div>
       </section>
       <section class="panel-card">
         <p class="text-sm font-semibold text-stone-950">Public URL</p>
-        <p class="mt-2 break-all text-xs text-stone-600">${state.currentRelativePath && state.syncSiteUrl ? publicUrlFor(state.currentRelativePath) : "Sync workspace to generate public URLs."}</p>
+        <p class="mt-2 break-all text-xs text-stone-600">${state.currentRelativePath && state.syncSiteUrl ? publicUrlFor(state.currentRelativePath) : "Sync vault to generate public URLs."}</p>
       </section>
     </div>
   `;
@@ -2186,6 +2616,7 @@ function bindEvents() {
   openButton?.addEventListener("click", () => void commands.get("file.open")?.run());
   openFolderButton?.addEventListener("click", () => void commands.get("workspace.open")?.run());
   welcomeOpenFolderButton?.addEventListener("click", () => void commands.get("workspace.open")?.run());
+  welcomeDefaultVaultButton?.addEventListener("click", () => void commands.get("vault.openDefault")?.run());
   welcomeOpenFileButton?.addEventListener("click", () => void commands.get("file.open")?.run());
   welcomeCommandPaletteButton?.addEventListener("click", () => openCommandPalette());
   saveButton?.addEventListener("click", () => void commands.get("file.save")?.run());
@@ -2195,11 +2626,9 @@ function bindEvents() {
   publishButton?.addEventListener("click", () => void commands.get("publish.export")?.run());
   aiIndexButton?.addEventListener("click", () => void commands.get("ai.index")?.run());
   aiProposeTitleButton?.addEventListener("click", () => void commands.get("ai.proposeTitle")?.run());
-  syncRegisterButton?.addEventListener("click", () => void authenticate("register"));
-  syncLoginButton?.addEventListener("click", () => void authenticate("login"));
-  syncNowButton?.addEventListener("click", () => void commands.get("sync.workspace")?.run());
-  accountRegisterButton?.addEventListener("click", () => void authenticate("register"));
-  accountLoginButton?.addEventListener("click", () => void authenticate("login"));
+  syncRegisterButton?.addEventListener("click", () => void startBrowserOAuth());
+  accountConnectButton?.addEventListener("click", () => void startBrowserOAuth());
+  accountDisconnectButton?.addEventListener("click", () => void disconnectAccount());
   accountSyncButton?.addEventListener("click", () => void commands.get("sync.workspace")?.run());
   syncPanelButton?.addEventListener("click", openAccountDialog);
   publishChecksButton?.addEventListener("click", () => void commands.get("publish.check")?.run());
@@ -2334,6 +2763,8 @@ renderRecentItems();
 renderFavoriteItems();
 renderSyncSession();
 if (isTauriRuntime()) {
+  void loadCloudProfile();
+  void loadVaultBindings();
   void registerDragDrop();
   void openInitialPath();
 } else {

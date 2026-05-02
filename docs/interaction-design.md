@@ -1,5 +1,7 @@
 # JType Interaction Design
 
+> Status note: this document describes the broader interaction design direction. The implemented desktop app is now vault-first: no-document vault state uses `VaultHome`, single-file mode hides sync/publish/account surfaces, and AI surfaces stay hidden until real AI functionality is ready.
+
 ## 1. Design Direction
 
 JType should feel like a focused writing and publishing workspace, not a generic IDE and not a heavy CMS. The interface should be quiet, dense, and fast:

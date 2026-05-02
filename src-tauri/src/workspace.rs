@@ -153,6 +153,24 @@ pub fn write_markdown(path: &Path, content: &str) -> Result<(), String> {
     fs::write(path, content).map_err(|error| error.to_string())
 }
 
+/// Walk up from a file path to find the nearest ancestor directory containing `.jtype`.
+/// Returns `None` if no vault root is found.
+pub fn detect_vault_root(file_path: &Path) -> Option<PathBuf> {
+    let mut current = if file_path.is_file() {
+        file_path.parent()?.to_path_buf()
+    } else {
+        file_path.to_path_buf()
+    };
+    loop {
+        if current.join(".jtype").is_dir() {
+            return Some(current);
+        }
+        if !current.pop() {
+            return None;
+        }
+    }
+}
+
 pub fn open_workspace(root: &Path) -> Result<WorkspaceSnapshot, String> {
     if !root.is_dir() {
         return Err("Workspace path must be a directory.".to_string());
@@ -162,13 +180,18 @@ pub fn open_workspace(root: &Path) -> Result<WorkspaceSnapshot, String> {
     let mut entries = read_children(root, root)?;
     sort_nodes(&mut entries);
 
-    Ok(WorkspaceSnapshot {
-        root_path: path_to_string(root),
-        name: root
-            .file_name()
+    let name = if root.file_name().map_or(false, |n| n == ".jtype") {
+        "Vault".to_string()
+    } else {
+        root.file_name()
             .and_then(|value| value.to_str())
             .unwrap_or("Workspace")
-            .to_string(),
+            .to_string()
+    };
+
+    Ok(WorkspaceSnapshot {
+        root_path: path_to_string(root),
+        name,
         entries,
         metadata_created,
     })

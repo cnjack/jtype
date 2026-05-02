@@ -1,0 +1,204 @@
+use axum::{
+    extract::{Path, State},
+    http::HeaderMap,
+    Json,
+};
+use sqlx::Row;
+use uuid::Uuid;
+
+use crate::db::models::*;
+use crate::error::AppError;
+use crate::middleware::auth::extract_user;
+use crate::util::*;
+use crate::AppState;
+
+pub async fn add(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Json(payload): Json<AddDomainRequest>,
+) -> Result<Json<DomainResponse>, AppError> {
+    let user = extract_user(&state.pool, &headers).await?;
+    let domain = payload.domain.trim().to_ascii_lowercase();
+    if domain.is_empty() || domain.len() > 253 || !domain.contains('.') {
+        return Err(AppError::BadRequest("invalid domain name".to_string()));
+    }
+    let id = Uuid::new_v4().to_string();
+    let verification_token = random_token();
+    sqlx::query(
+        r#"INSERT INTO custom_domains (id, user_id, domain, verification_token) VALUES (?, ?, ?, ?)"#,
+    )
+    .bind(&id)
+    .bind(&user.id)
+    .bind(&domain)
+    .bind(&verification_token)
+    .execute(&state.pool)
+    .await
+    .map_err(|e| match e {
+        sqlx::Error::Database(db) if db.is_unique_violation() => {
+            AppError::BadRequest("domain already registered".to_string())
+        }
+        other => AppError::Database(other),
+    })?;
+    Ok(Json(DomainResponse {
+        id,
+        domain: domain.clone(),
+        verification_token: verification_token.clone(),
+        dns_txt_record: format!("jtype-verify={}", verification_token),
+        status: "pending".to_string(),
+        verified_at: None,
+        ssl_status: None,
+        ssl_expires_at: None,
+    }))
+}
+
+pub async fn list(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+) -> Result<Json<Vec<DomainResponse>>, AppError> {
+    let user = extract_user(&state.pool, &headers).await?;
+    let rows = sqlx::query(
+        r#"SELECT d.id, d.domain, d.verification_token, d.status, d.verified_at,
+                  c.status AS ssl_status, c.not_after AS ssl_expires_at
+           FROM custom_domains d
+           LEFT JOIN ssl_certificates c ON c.domain_id = d.id AND c.status = 'active'
+           WHERE d.user_id = ?
+           ORDER BY d.created_at ASC"#,
+    )
+    .bind(&user.id)
+    .fetch_all(&state.pool)
+    .await?;
+    let domains = rows
+        .into_iter()
+        .map(|row| {
+            let vt: String = row.try_get("verification_token").unwrap_or_default();
+            DomainResponse {
+                id: row.try_get("id").unwrap_or_default(),
+                domain: row.try_get("domain").unwrap_or_default(),
+                dns_txt_record: format!("jtype-verify={}", vt),
+                verification_token: vt,
+                status: row.try_get("status").unwrap_or_default(),
+                verified_at: row.try_get::<Option<String>, _>("verified_at").unwrap_or(None),
+                ssl_status: row.try_get::<Option<String>, _>("ssl_status").unwrap_or(None),
+                ssl_expires_at: row.try_get::<Option<String>, _>("ssl_expires_at").unwrap_or(None),
+            }
+        })
+        .collect();
+    Ok(Json(domains))
+}
+
+pub async fn get(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Path(domain_id): Path<String>,
+) -> Result<Json<DomainResponse>, AppError> {
+    let user = extract_user(&state.pool, &headers).await?;
+    let row = sqlx::query(
+        r#"SELECT d.id, d.domain, d.verification_token, d.status, d.verified_at,
+                  c.status AS ssl_status, c.not_after AS ssl_expires_at
+           FROM custom_domains d
+           LEFT JOIN ssl_certificates c ON c.domain_id = d.id AND c.status = 'active'
+           WHERE d.id = ? AND d.user_id = ?"#,
+    )
+    .bind(&domain_id)
+    .bind(&user.id)
+    .fetch_optional(&state.pool)
+    .await?
+    .ok_or(AppError::NotFound)?;
+    let vt: String = row.try_get("verification_token")?;
+    Ok(Json(DomainResponse {
+        id: row.try_get("id")?,
+        domain: row.try_get("domain")?,
+        dns_txt_record: format!("jtype-verify={}", vt),
+        verification_token: vt,
+        status: row.try_get("status")?,
+        verified_at: row.try_get::<Option<String>, _>("verified_at").unwrap_or(None),
+        ssl_status: row.try_get::<Option<String>, _>("ssl_status").unwrap_or(None),
+        ssl_expires_at: row.try_get::<Option<String>, _>("ssl_expires_at").unwrap_or(None),
+    }))
+}
+
+pub async fn verify(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Path(domain_id): Path<String>,
+) -> Result<Json<DomainResponse>, AppError> {
+    let user = extract_user(&state.pool, &headers).await?;
+    let row = sqlx::query("SELECT id, domain, verification_token, status FROM custom_domains WHERE id = ? AND user_id = ?")
+        .bind(&domain_id)
+        .bind(&user.id)
+        .fetch_optional(&state.pool)
+        .await?
+        .ok_or(AppError::NotFound)?;
+    let status: String = row.try_get("status")?;
+    if status == "verified" {
+        return Err(AppError::BadRequest("domain is already verified".to_string()));
+    }
+    sqlx::query("UPDATE custom_domains SET status = 'verified', verified_at = CURRENT_TIMESTAMP WHERE id = ?")
+        .bind(&domain_id)
+        .execute(&state.pool)
+        .await?;
+    let vt: String = row.try_get("verification_token")?;
+    Ok(Json(DomainResponse {
+        id: domain_id,
+        domain: row.try_get("domain")?,
+        dns_txt_record: format!("jtype-verify={}", vt),
+        verification_token: vt,
+        status: "verified".to_string(),
+        verified_at: Some("now".to_string()),
+        ssl_status: None,
+        ssl_expires_at: None,
+    }))
+}
+
+pub async fn upload_certificate(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Path(domain_id): Path<String>,
+    Json(payload): Json<UploadCertificateRequest>,
+) -> Result<Json<DomainResponse>, AppError> {
+    let user = extract_user(&state.pool, &headers).await?;
+    let row = sqlx::query("SELECT id, domain, verification_token, status FROM custom_domains WHERE id = ? AND user_id = ?")
+        .bind(&domain_id)
+        .bind(&user.id)
+        .fetch_optional(&state.pool)
+        .await?
+        .ok_or(AppError::NotFound)?;
+    let domain_status: String = row.try_get("status")?;
+    if domain_status != "verified" {
+        return Err(AppError::BadRequest("domain must be verified before uploading a certificate".to_string()));
+    }
+    let cert_pem = payload.cert_chain_pem.trim().to_string();
+    let key_pem = payload.private_key_pem.trim().to_string();
+    if !cert_pem.starts_with("-----BEGIN CERTIFICATE-----") {
+        return Err(AppError::BadRequest("cert_chain_pem must be a PEM-encoded certificate".to_string()));
+    }
+    if !key_pem.starts_with("-----BEGIN") || !key_pem.contains("PRIVATE KEY") {
+        return Err(AppError::BadRequest("private_key_pem must be a PEM-encoded private key".to_string()));
+    }
+    let private_key_hash = sha256_hex(&key_pem);
+    sqlx::query("UPDATE ssl_certificates SET status = 'revoked' WHERE domain_id = ? AND status = 'active'")
+        .bind(&domain_id)
+        .execute(&state.pool)
+        .await?;
+    let cert_id = Uuid::new_v4().to_string();
+    sqlx::query(
+        r#"INSERT INTO ssl_certificates (id, domain_id, cert_chain_pem, private_key_hash, status) VALUES (?, ?, ?, ?, 'active')"#,
+    )
+    .bind(&cert_id)
+    .bind(&domain_id)
+    .bind(&cert_pem)
+    .bind(&private_key_hash)
+    .execute(&state.pool)
+    .await?;
+    let vt: String = row.try_get("verification_token")?;
+    Ok(Json(DomainResponse {
+        id: domain_id,
+        domain: row.try_get("domain")?,
+        dns_txt_record: format!("jtype-verify={}", vt),
+        verification_token: vt,
+        status: "verified".to_string(),
+        verified_at: Some(String::new()),
+        ssl_status: Some("active".to_string()),
+        ssl_expires_at: None,
+    }))
+}

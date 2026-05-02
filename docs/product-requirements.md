@@ -1,5 +1,7 @@
 # JType Markdown Service PRD
 
+> Status note: this is an early workspace-era PRD and is kept for historical context. The current product direction is vault-first desktop plus cloud workspace sync. For current requirements, use `docs/vault-cloud-prd.md`, `docs/vault-cloud-architecture.md`, `suggestion.md`, and `docs/plans.md`.
+
 ## 1. 背景
 
 当前 JType 是一个 Tauri 桌面 Markdown Viewer，核心能力是选择一个本地 Markdown 文件、渲染预览并显示源码。下一阶段希望它不再只是“单文件查看器”，而是升级为一个面向个人知识库、文档站点和轻量内容发布的 Markdown 工作台。

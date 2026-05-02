@@ -1,5 +1,7 @@
 # JType High-Level Design
 
+> Status note: this is an early high-level design from the workspace-first phase. The current implementation uses React in `src/`, a vault-first desktop model, browser OAuth, and cloud workspaces. For current architecture, use `docs/vault-cloud-architecture.md`, `docs/runtime.md`, and `AGENTS.md`.
+
 ## 1. 设计目标
 
 JType 的架构应从“单文件 Markdown Viewer”演进为“local-first Markdown workspace + 发布服务 + AI-ready 内容平台”。

@@ -71,7 +71,7 @@ Goal: complete a local-first vertical slice with Markdown workspace management, 
 ### Phase 6: Website Style
 
 - [x] Use Protocol reference layout: fixed left navigation, content column, quiet zinc/emerald styling.
-- [x] Render each user's synced Markdown as `http://localhost:8080/@username/...`.
+- [x] Render each user's synced Markdown as `http://localhost:13345/u/:username/...`.
 - [x] Add generated navigation from synced document paths.
 - [x] Add login/register page for web users.
 
@@ -113,12 +113,70 @@ Goal: complete a local-first vertical slice with Markdown workspace management, 
 ### Phase 10: Mode-Specific Shell Cleanup
 
 - [x] Remove the left activity rail and keep navigation centered on workspace files plus top search.
-- [x] Hide the top Open Workspace action once a workspace is open.
+- [x] Hide the top Open Vault action once a vault is open.
 - [x] Add a dedicated welcome state for opening a workspace, opening a single Markdown file, and recent items.
 - [x] Treat standalone Markdown files as a pure editor mode without workspace sidebar, sync, account, or publish surfaces.
 - [x] Add a JType product icon to the app header.
 - [x] Generate and wire Tauri desktop icon assets.
 - [x] Add E2E coverage for welcome, workspace mode, and standalone file mode button states.
+
+### Phase 11: Vault + Cloud Product Reset
+
+- [x] Add competitive analysis for Obsidian, MWeb, Notion, GitBook, Outline, and Docusaurus.
+- [x] Add PRD for vault-first desktop, self-hostable Web cloud, OAuth login, admin, budget, and custom domains.
+- [x] Add architecture design for vault metadata, OAuth, sync protocol, Web admin, custom domain, and SSL certificate handling.
+- [x] Add cloud workspace model for isolation, invites, member roles, publishing, and workspace budget.
+- [x] Add local vault binding model so each cloud workspace maps to a chosen local vault per device.
+- [x] Add bidirectional desktop/web sync and conflict resolution product rules.
+- [x] Replace workspace product language with vault product language.
+- [x] Add first-run vault setup using `~/Documents/.jtype` as the default location.
+- [x] Add desktop default vault opener using `~/Documents/.jtype`.
+- [x] Remove desktop login/register forms and replace them with browser-based Web OAuth.
+- [x] Change default cloud service URL to `http://localhost:13345`.
+- [x] Add Web landing page at `/`.
+- [x] Add Web device OAuth start, approve, and poll endpoints.
+- [x] Add first-user-admin bootstrap rule.
+- [x] Add Web admin console shell and admin users API.
+- [x] Add user dashboard and personal settings shells.
+- [x] Add custom domain ownership verification.
+- [x] Add certificate upload, validation, encrypted storage, and SSL status.
+- [x] Add remote vault manifest sync API.
+- [x] Add remote document version history.
+- [x] Enforce workspace cloud volume budget during document saves and sync.
+- [x] Rename server remote vault model to cloud workspace model.
+- [x] Add workspace list/create APIs with membership-aware access.
+- [x] Add workspace invite and accept APIs with owner/admin role checks.
+- [x] Add workspace invite revoke API.
+- [x] Add desktop global profile storage for server URL, user, site URL, token, and device id.
+- [x] Add desktop cloud workspace list with local vault binding.
+- [x] Add desktop local vault binding persistence after cloud sync.
+- [x] Add workspace-scoped sync cursors per device.
+- [x] Add web cloud editor save API as normal workspace document versions.
+- [x] Add backend bidirectional sync pull/push with base hashes and three-way Markdown auto-merge.
+- [x] Add backend conflict records for failed auto-merge.
+- [x] Add conflict UI actions for accept local and accept cloud.
+- [x] Update E2E coverage for default vault entry and browser OAuth login.
+- [x] Add E2E coverage for default vault entry and persisted local vault binding.
+- [x] Update E2E coverage for workspace invite, local vault binding, cloud edit pull, desktop edit push, and conflict resolution.
+
+### Phase 12: Screenshot-Driven App UX Cleanup
+
+- [x] Add screenshot and frontend-code UX analysis to `suggestion.md`.
+- [x] Add a vault home state for an opened vault with no selected document.
+- [x] Hide no-document editor, preview, document info, and publish surfaces behind the vault home.
+- [x] Make header actions mode-aware for empty, vault, document, and single-file states.
+- [x] Replace user-facing `MD` and `WS` prefixes with readable file/vault labels.
+- [x] Reduce persistent sidebar actions to a focused New note entry.
+- [x] Rename sidebar Settings entry to Account when it opens account/cloud state.
+- [x] Convert cloud workspace rows from centered buttons to explicit bindable workspace rows.
+- [x] Show current local vault binding state in the Account and Cloud dialog.
+- [x] Keep Document Info as a right-side inspector and add drawer behavior for narrow widths.
+- [x] Group advanced frontmatter fields behind an Advanced disclosure.
+- [x] Fix command palette and quick switcher selectors/behavior after introducing vault home.
+- [x] Make Markdown block insertions safe around fenced code and Mermaid blocks.
+- [x] Make table row/column context actions operate on the nearest table instead of inserting duplicate tables.
+- [x] Update README, AGENTS, runtime, service, and agent docs to match the React/vault/cloud workspace implementation.
+- [x] Add status notes to older workspace-era PRD/design docs so future readers use the current vault/cloud docs.
 
 ### Testing
 
@@ -133,6 +191,18 @@ Goal: complete a local-first vertical slice with Markdown workspace management, 
 - [x] Add E2E coverage for command palette, quick switcher, properties, favorites, publish queue, and AI patch review.
 - [x] Re-verify `npm run test:e2e` after the MWeb-inspired editor UX pass.
 - [x] Re-verify `npm run build` and `npm run test:e2e` after mode-specific shell cleanup.
+- [x] Verify backend workspace unit tests with `cargo test --manifest-path services/jtype-web/Cargo.toml --lib`.
+- [x] Verify backend binary compilation with `cargo check --manifest-path services/jtype-web/Cargo.toml`.
+- [x] Re-verify `npm run build` and `npm run test:e2e` after backend workspace API and default cloud URL changes.
+- [x] Re-verify `cargo test --manifest-path src-tauri/Cargo.toml` after desktop global profile and default vault commands.
+- [x] Re-verify `npm run test:e2e` after default vault and local binding coverage.
+- [x] Re-verify `npm run build` after browser OAuth and cloud workspace UI changes.
+- [x] Re-verify `cargo test --manifest-path services/jtype-web/Cargo.toml` after Web OAuth/admin changes.
+- [x] Re-verify `cargo test --manifest-path src-tauri/Cargo.toml` after desktop OAuth/binding changes.
+- [x] Re-verify `npm run test:e2e` after browser OAuth and vault binding changes.
+- [x] Re-verify `docker compose config` after service port and schema updates.
+- [x] Verify `npm run build` after screenshot-driven app UX cleanup.
+- [x] Verify `npx playwright test tests/e2e/app.spec.ts` after screenshot-driven app UX cleanup.
 
 ## Decisions
 

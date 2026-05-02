@@ -1,10 +1,10 @@
 # JType Service Infrastructure
 
-JType is local-first, but the service layer is prepared for sync, publishing, and AI indexing.
+JType is local-first on desktop, but the service layer supports identity, cloud workspaces, bidirectional sync, publishing, admin, custom domains, storage budgets, and future asset storage.
 
 ## Local Services
 
-Start services, including MySQL, RustFS, and the JType web service:
+Start services:
 
 ```bash
 docker compose up -d
@@ -16,15 +16,25 @@ Stop services:
 docker compose down
 ```
 
+Check status:
+
+```bash
+docker compose ps
+```
+
 ## MySQL
 
 MySQL stores service-side metadata:
 
-- workspaces
-- documents
-- publish targets
-- publish revisions
-- AI chunks
+- users and sessions
+- OAuth device codes
+- cloud workspaces
+- workspace members and invites
+- documents and document versions
+- sync cursors and conflicts
+- publish targets and revisions
+- custom domain/certificate state
+- AI-ready chunks
 
 The initial schema lives in `infra/mysql/001_init.sql`.
 
@@ -34,22 +44,22 @@ Default local URL:
 mysql://jtype:jtype-local@127.0.0.1:3306/jtype
 ```
 
-## RustFS
-
 ## JType Web
 
-The companion website runs at:
+The companion web service runs at:
 
 ```text
-http://localhost:8080
+http://localhost:13345
 ```
 
 Useful URLs:
 
 ```text
-Health: http://localhost:8080/health
-Login helper page: http://localhost:8080/login
-User site: http://localhost:8080/@username
+Health: http://localhost:13345/health
+Landing: http://localhost:13345/
+Login: http://localhost:13345/login
+Dashboard: http://localhost:13345/dashboard
+Published site: http://localhost:13345/u/:username
 ```
 
 Run only the web service locally against a running MySQL:
@@ -64,13 +74,20 @@ Run web service tests:
 npm run web:test
 ```
 
+Run web frontend/browser tests:
+
+```bash
+npm run test:web
+```
+
 ## RustFS
 
 RustFS is reserved for object storage:
 
-- exported static site assets
-- publish revision bundles
-- future AI embedding artifacts
+- image and attachment assets
+- published static site bundles
+- publish revision artifacts
+- future AI embedding/index artifacts
 
 Default local endpoints:
 
@@ -79,4 +96,15 @@ S3 API: http://127.0.0.1:9000
 Console: http://127.0.0.1:9001
 ```
 
-The desktop app still writes local workspace data to disk. MySQL becomes active when a user logs in and syncs a workspace. RustFS is reserved for future image and attachment asset publishing.
+## Desktop Relationship To Services
+
+The desktop app still writes local vault data to disk. It can work without Docker services for local editing.
+
+When connected to cloud:
+
+- Desktop uses browser-based OAuth through the web service.
+- Desktop stores a cloud profile and vault bindings locally.
+- Desktop syncs Markdown documents through Axum HTTP APIs.
+- The web service enforces membership, budget, versioning, conflict handling, and publishing permissions.
+
+Desktop should not connect directly to MySQL or RustFS.

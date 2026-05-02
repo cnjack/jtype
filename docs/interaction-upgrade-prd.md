@@ -1,5 +1,7 @@
 # JType Interaction Upgrade PRD
 
+> Status note: this PRD informed the command palette, quick switcher, inspector, and editor workbench. Current product language is vault-first for local folders and cloud workspace for server-side collaboration. AI UI remains hidden until implemented.
+
 ## 1. Background
 
 JType has completed a local-first Markdown workspace and a companion web sync/publish slice. The next product problem is interaction maturity: as JType grows from one document to many workspaces, publishing states, sync states, metadata, and AI commands, the current button-driven UI will become hard to scale.

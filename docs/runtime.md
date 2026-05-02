@@ -2,18 +2,22 @@
 
 ## 1. What Runs Today
 
-JType currently has three backend-facing layers. If you are looking for "the backend", there are two Rust code locations:
+JType has two Rust backends plus one web frontend:
 
-- Desktop backend: `src-tauri/src/lib.rs` registers Tauri commands, and `src-tauri/src/workspace.rs` implements local file/workspace behavior.
-- Web backend: `services/jtype-web/src/main.rs` and `services/jtype-web/src/lib.rs` implement the Axum HTTP service for login, sync, and public sites.
+- **Desktop backend**: `src-tauri/src/lib.rs` registers Tauri commands, and `src-tauri/src/workspace.rs` implements local vault behavior.
+- **Web backend**: `services/jtype-web/src/main.rs` and `services/jtype-web/src/lib.rs` run the Axum HTTP service for auth, OAuth, cloud workspaces, sync, publishing, admin, and public sites.
+- **Web frontend**: `services/jtype-web/frontend/` provides the browser UI for landing, login, dashboard, online editing, settings, and admin.
 
 Runtime layers:
 
 - Embedded desktop backend: Rust commands inside the Tauri app.
-- JType web service: Rust Axum server in `services/jtype-web` for users, sync, and public websites.
+- Desktop frontend: React/Vite UI in `src/`.
+- JType web service: Axum server in `services/jtype-web`.
 - Service infrastructure: Docker MySQL + RustFS.
 
-The desktop app does not need MySQL or RustFS for local editing. It can open folders, edit Markdown, export static HTML, and build AI indexes through the embedded Rust backend. MySQL is used when syncing a workspace to the companion website.
+The desktop app does not need MySQL or RustFS for local editing. It can open a vault, open a single Markdown file, edit, preview, export static HTML, and build AI indexes through the embedded Rust backend.
+
+MySQL and RustFS become relevant when the user connects cloud sync, web editing, publishing, domains, storage budgets, and admin.
 
 ## 2. Start The Desktop App
 
@@ -21,6 +25,12 @@ Development mode:
 
 ```bash
 npm run tauri dev
+```
+
+Frontend-only preview:
+
+```bash
+npm run dev
 ```
 
 Build installer:
@@ -61,13 +71,13 @@ Stop services:
 docker compose down
 ```
 
-MySQL is available at:
+MySQL:
 
 ```text
 mysql://jtype:jtype-local@127.0.0.1:3306/jtype
 ```
 
-RustFS endpoints:
+RustFS:
 
 ```text
 S3 API: http://127.0.0.1:9000
@@ -77,12 +87,12 @@ Console: http://127.0.0.1:9001
 JType web:
 
 ```text
-http://127.0.0.1:8080
+http://127.0.0.1:13345
 ```
 
-## 4. How Desktop Talks To Backend
+## 4. How Desktop Talks To Local Files
 
-The frontend calls Tauri commands:
+The React frontend calls Tauri commands:
 
 ```ts
 import { invoke } from "@tauri-apps/api/core";
@@ -90,69 +100,73 @@ import { invoke } from "@tauri-apps/api/core";
 const workspace = await invoke("open_workspace", { path });
 ```
 
-Those commands are registered in `src-tauri/src/lib.rs`:
+Command names still use `workspace` internally for compatibility, but UI copy should say **vault** for local folders.
 
-```rust
-.invoke_handler(tauri::generate_handler![
-    open_workspace,
-    read_markdown_file,
-    write_markdown_file,
-    export_static_site,
-    validate_workspace,
-    build_ai_index
-])
-```
+Commands are registered in `src-tauri/src/lib.rs` and implemented in `src-tauri/src/workspace.rs`.
 
-The command implementation delegates to `src-tauri/src/workspace.rs`, which owns the local filesystem behavior:
+Local commands handle:
 
-- open workspace
-- build file tree
-- create/rename/delete entries
-- read/write Markdown
-- write `.jtype/workspace.json`
-- write `.jtype/publish.json`
-- export `.jtype/dist`
-- write `.jtype/ai-context.jsonl`
+- opening the default vault at `~/Documents/.jtype`
+- opening a selected vault folder
+- opening a single Markdown file
+- building the file tree
+- creating/renaming/deleting entries
+- reading/writing Markdown
+- writing `.jtype/workspace.json`
+- writing `.jtype/publish.json`
+- exporting `.jtype/dist`
+- writing `.jtype/ai-context.jsonl`
 
-## 5. How Services Will Fit
+## 5. How Desktop Talks To Cloud
 
-The Docker services and the hosted sync API are implemented for the current vertical slice.
+Desktop never talks directly to MySQL or RustFS.
 
-Recommended next runtime shape:
+Desktop cloud flow:
 
 ```text
-Desktop UI
-  -> Tauri invoke
-    -> Rust desktop command
-      -> Local filesystem for local-first editing
-      -> HTTP client to JType web service for sync/publish
-
-JType web service
-  -> MySQL for users, sessions, workspaces, and documents
-  -> rendered public user sites at /@username
-  -> RustFS for future published assets and bundles
+Desktop React UI
+  -> Tauri commands for local files/profile/bindings
+  -> HTTP fetch to JType web service
+  -> Axum validates auth, workspace membership, budget, versions, and conflicts
+  -> MySQL/RustFS behind the web service
 ```
 
-Do not connect the desktop app directly to MySQL for normal product flows. Keep MySQL behind the Rust web service API so auth, sync conflicts, and publishing permissions can be enforced consistently.
+Important local state:
+
+- Cloud profile: server URL, user, site URL, token, device ID.
+- Vault bindings: cloud workspace ID to local vault path.
 
 ## 6. Sync Flow
 
-1. Start `docker compose up -d`.
+1. Start services with `docker compose up -d`.
 2. Start desktop with `npm run tauri dev`.
-3. Open a local workspace.
-4. In the Web Sync panel, register or login.
-5. Click Sync, or save a Markdown file after login.
-6. Visit `http://localhost:8080/@username`.
+3. Open or create a local vault.
+4. Click account/cloud entry in the top right.
+5. Click "Connect in browser".
+6. Complete OAuth on the web service.
+7. Return to desktop and sync the current vault with a cloud workspace.
+8. Visit the public site at `/u/:username` once documents are published.
 
-## 7. Current ACL Notes
+## 7. Public Site Routes
+
+Published sites use:
+
+```text
+/u/:username
+/u/:username/:page_path
+```
+
+Do not use bare `/:username`, because web SPA routes like `/workspaces/:id` need the root namespace.
+
+## 8. ACL Notes
 
 Tauri plugin commands must be allowed in `src-tauri/capabilities/default.json`.
 
-The app currently allows:
+The app needs permissions for:
 
-- `dialog:allow-open` for file/folder picker.
-- `fs:allow-read-text-file` for plugin file reads.
-- custom Tauri commands for local workspace operations.
-- `opener:allow-open-path` for opening exported HTML preview files.
+- dialog open for file/folder picker
+- filesystem read/write for selected Markdown files and vaults
+- opener URL/path actions for OAuth and exported preview
+- custom Tauri commands for local vault operations
 
 After changing ACL permissions, restart `npm run tauri dev` or rebuild the packaged app.
