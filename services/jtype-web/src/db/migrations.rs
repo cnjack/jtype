@@ -215,5 +215,15 @@ async fn apply_conflict_ranges_and_trash_migration(pool: &Pool<MySql>) -> Result
         .await?;
     }
 
+    sqlx::query("CREATE INDEX IF NOT EXISTS idx_document_trash_workspace_id ON document_trash (workspace_id)")
+        .execute(pool)
+        .await?;
+    sqlx::query("CREATE INDEX IF NOT EXISTS idx_document_trash_ws_clock ON document_trash (workspace_id, deleted_clock)")
+        .execute(pool)
+        .await?;
+    sqlx::query("CREATE INDEX IF NOT EXISTS idx_document_trash_expires_at ON document_trash (expires_at)")
+        .execute(pool)
+        .await?;
+
     Ok(())
 }

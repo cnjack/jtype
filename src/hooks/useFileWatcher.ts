@@ -9,6 +9,21 @@ export function useFileWatcher() {
   const unlistenRef = useRef<UnlistenFn | null>(null);
   const debounceRef = useRef<number | null>(null);
   const lastSaveTimeRef = useRef<number>(0);
+  const latestStateRef = useRef({
+    currentPath: "",
+    currentRelativePath: "",
+    isDirty: false,
+    rootPath: "",
+  });
+
+  useEffect(() => {
+    latestStateRef.current = {
+      currentPath: state.currentPath,
+      currentRelativePath: state.currentRelativePath,
+      isDirty: state.isDirty,
+      rootPath: state.workspace?.rootPath ?? "",
+    };
+  }, [state.currentPath, state.currentRelativePath, state.isDirty, state.workspace?.rootPath]);
 
   useEffect(() => {
     if (!tauri.isAvailable || !state.workspace) return;
@@ -30,18 +45,17 @@ export function useFileWatcher() {
         if (now - lastSaveTimeRef.current < 1000) return;
         try {
           const { tauri: t } = await import("../lib/tauri");
-          const currentRootPath = state.workspace?.rootPath;
+          const { currentPath, currentRelativePath, isDirty, rootPath: currentRootPath } = latestStateRef.current;
           if (!currentRootPath) return;
 
           const workspace = await t.openWorkspace(currentRootPath);
           dispatch({ type: "UPDATE_WORKSPACE", workspace });
 
           const changedPaths = event.payload;
-          const currentPath = state.currentPath;
-          if (currentPath && changedPaths.some((p) => p === currentPath) && !state.isDirty) {
+          if (currentPath && changedPaths.some((p) => p === currentPath) && !isDirty) {
             try {
               const content = await t.readFile(currentPath);
-              dispatch({ type: "OPEN_FILE", path: currentPath, relativePath: state.currentRelativePath, content, kind: "markdown" });
+              dispatch({ type: "OPEN_FILE", path: currentPath, relativePath: currentRelativePath, content, kind: "markdown" });
             } catch {
               // file may have been deleted
             }
@@ -70,7 +84,7 @@ export function useFileWatcher() {
       }
       tauri.stopFileWatcher().catch(() => {});
     };
-  }, [state.workspace?.rootPath, dispatch, state.currentPath, state.currentRelativePath, state.isDirty]);
+  }, [state.workspace?.rootPath, dispatch]);
 
   useEffect(() => {
     if (!state.isDirty) {

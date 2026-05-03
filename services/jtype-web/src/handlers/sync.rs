@@ -84,12 +84,17 @@ pub async fn pull(
     require_workspace_role(&state.pool, &workspace_id, &user.id, &["owner", "admin", "editor", "viewer"]).await?;
     let since_clock = payload.since_clock.unwrap_or(0);
     let documents = load_documents_since(&state.pool, &workspace_id, since_clock).await?;
+    let deleted_paths = load_deleted_paths_since(&state.pool, &workspace_id, since_clock).await?;
     if let Some(device_id) = payload.device_id.as_deref() {
-        let next_clock = documents.iter().map(|d| d.updated_clock).max().unwrap_or(since_clock);
+        let next_clock = documents
+            .iter()
+            .map(|d| d.updated_clock)
+            .chain(deleted_paths.iter().map(|d| d.deleted_clock))
+            .max()
+            .unwrap_or(since_clock);
         upsert_sync_cursor(&state.pool, &workspace_id, device_id, next_clock).await?;
     }
     let conflicts = load_open_conflicts(&state.pool, &workspace_id).await?;
-    let deleted_paths = load_deleted_paths_since(&state.pool, &workspace_id, since_clock).await?;
     Ok(Json(SyncPullResponse {
         workspace_id,
         documents,

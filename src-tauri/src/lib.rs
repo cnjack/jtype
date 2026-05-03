@@ -283,8 +283,12 @@ fn start_file_watcher(
     let (tx, rx) = std::sync::mpsc::channel();
 
     let mut watcher: notify::RecommendedWatcher =
-        notify::Watcher::new(tx, std::time::Duration::from_millis(300))
-            .map_err(|e| e.to_string())?;
+        notify::recommended_watcher(move |res: Result<notify::Event, notify::Error>| {
+            if let Ok(e) = res {
+                let _ = tx.send(Ok(e));
+            }
+        })
+        .map_err(|e| e.to_string())?;
 
     watcher
         .watch(&root, notify::RecursiveMode::Recursive)
@@ -304,12 +308,7 @@ fn start_file_watcher(
                         .iter()
                         .filter(|p| {
                             let s = p.to_string_lossy();
-                            let lower = s.to_lowercase();
-                            (lower.ends_with(".md")
-                                || lower.ends_with(".markdown")
-                                || lower.ends_with(".mdown")
-                                || lower.ends_with(".mkd"))
-                                && !s.contains(".jtype/")
+                            !s.contains(".jtype/")
                                 && !s.contains(".git/")
                                 && !s.contains("node_modules/")
                                 && !s.contains("/target/")

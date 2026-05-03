@@ -123,11 +123,11 @@ export function useCloudSync() {
       dispatch({ type: "SET_SYNC_STATUS", status: "syncing" });
       if (!options.silent) dispatch({ type: "SET_STATUS", message: "Syncing vault..." });
 
-      const documents = await tauri.collectSyncDocuments(state.workspace.rootPath);
       const binding = currentVaultBinding(state.vaultBindings, state.workspace.rootPath);
 
       if (binding) {
         await pullCloudWorkspace(binding);
+        const documents = await tauri.collectSyncDocuments(state.workspace.rootPath);
         const push = await fetch(`${getServiceUrl()}/api/v1/workspaces/${binding.workspaceId}/sync/push`, {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${state.syncToken}` },
@@ -143,8 +143,11 @@ export function useCloudSync() {
         dispatch({ type: "SET_SYNC_SNAPSHOT", snapshot });
         await applyCloudDocuments(pushData.documents);
         dispatch({ type: "SET_STATUS", message: `Synced ${pushData.accepted} document(s) with cloud workspace ${binding.workspaceName}.` });
+        dispatch({ type: "SET_SYNC_STATUS", status: "idle", success: true });
         return;
       }
+
+      const documents = await tauri.collectSyncDocuments(state.workspace.rootPath);
 
       const response = await fetch(`${getServiceUrl()}/api/sync/workspace`, {
         method: "POST",
@@ -178,11 +181,11 @@ export function useCloudSync() {
         await refreshCloudWorkspaces();
       }
       dispatch({ type: "SET_STATUS", message: `Synced ${result.documentCount} document(s) to ${result.siteUrl}.` });
+      dispatch({ type: "SET_SYNC_STATUS", status: "idle", success: true });
     } catch (error) {
       dispatch({ type: "SET_SYNC_STATUS", status: "offline" });
       dispatch({ type: "SET_STATUS", message: String(error) });
     } finally {
-      dispatch({ type: "SET_SYNC_STATUS", status: state.activeConflicts.length > 0 ? "conflict" : "idle" });
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
   }, [dispatch, state.workspace, state.syncToken, state.syncUsername, state.cloudProfile, state.vaultBindings, getServiceUrl, refreshCloudWorkspaces]);
@@ -209,7 +212,11 @@ export function useCloudSync() {
       const workspace = await tauri.openWorkspace(state.workspace.rootPath);
       dispatch({ type: "UPDATE_WORKSPACE", workspace });
     }
-    const nextClock = Math.max(binding.lastPulledClock, ...pullData.documents.map((d) => d.updatedClock));
+    const nextClock = Math.max(
+      binding.lastPulledClock,
+      ...pullData.documents.map((d) => d.updatedClock),
+      ...(pullData.deletedPaths ?? []).map((d) => d.deletedClock),
+    );
     const updatedBinding: VaultBinding = { ...binding, lastPulledClock: Number.isFinite(nextClock) ? nextClock : binding.lastPulledClock };
     if (tauri.isAvailable) {
       const bindings = await tauri.bindCloudWorkspace(updatedBinding);

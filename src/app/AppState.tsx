@@ -93,7 +93,7 @@ export type AppAction =
   | { type: "APPLY_AI_PATCH" }
   | { type: "TOGGLE_FAVORITE" }
   | { type: "SET_LAST_PATHS"; workspacePath: string; filePath: string }
-  | { type: "SET_SYNC_STATUS"; status: SyncStatus }
+  | { type: "SET_SYNC_STATUS"; status: SyncStatus; success?: boolean }
   | { type: "CLOSE_WORKSPACE" };
 
 function getMode(state: Pick<AppState, "workspace" | "currentPath">): AppMode {
@@ -306,7 +306,7 @@ export function appReducer(state: AppState, action: AppAction): AppState {
       appStorage.set("lastFilePath", action.filePath);
       return { ...state, lastWorkspacePath: action.workspacePath, lastFilePath: action.filePath };
     case "SET_SYNC_STATUS":
-      return { ...state, syncStatus: action.status, lastSyncAt: action.status === "idle" ? Date.now() : state.lastSyncAt };
+      return { ...state, syncStatus: action.status, lastSyncAt: action.status === "idle" && action.success ? Date.now() : state.lastSyncAt };
     case "CLOSE_WORKSPACE": {
       appStorage.set("lastWorkspacePath", "");
       appStorage.set("lastFilePath", "");

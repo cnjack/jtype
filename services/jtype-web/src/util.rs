@@ -283,7 +283,8 @@ pub fn smart_three_way_merge(base: &str, local: &str, cloud: &str) -> MergeResul
                 ci += 1;
             }
             (Some(l), Some(c)) => {
-                let overlap = l.base_start < c.base_end && c.base_start < l.base_end;
+                let overlap = l.base_start < c.base_end && c.base_start < l.base_end
+                    || (l.base_start == l.base_end && c.base_start == c.base_end && l.base_start == c.base_start);
                 if !overlap {
                     if l.base_start <= c.base_start {
                         merged_hunks.push((l.base_start, l.base_end, l.replacement.clone()));

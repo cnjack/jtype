@@ -120,6 +120,9 @@ pub async fn restore_from_trash(
     let document_id = Uuid::new_v4().to_string();
     let version_id = Uuid::new_v4().to_string();
 
+    super::document::ensure_workspace_budget(&state.pool, &workspace_id, &final_relative_path, &content)
+        .await?;
+
     let mut tx = state.pool.begin().await?;
 
     let next_clock_row = sqlx::query(

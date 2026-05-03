@@ -176,9 +176,9 @@ conflictRanges?: Array<{
 
 ```sql
 -- 新增：查询 since_clock 之后被删除的文档
-SELECT dt.relative_path, dt.deleted_at
+SELECT dt.relative_path, dt.deleted_clock
 FROM document_trash dt
-WHERE dt.workspace_id = ? AND dt.deleted_at > ? AND dt.restored_at IS NULL
+WHERE dt.workspace_id = ? AND dt.deleted_clock > ? AND dt.restored_at IS NULL
 ```
 
 pull response 增加字段：
@@ -193,7 +193,7 @@ pub struct SyncPullResponse {
 
 pub struct DeletedPath {
     pub relative_path: String,
-    pub deleted_at: String,
+    pub deleted_clock: String,
 }
 ```
 
@@ -371,7 +371,7 @@ export function useFileWatcher(rootPath: string | null, onChange: (paths: string
 
 ## 6. 数据库迁移
 
-新增 `infra/mysql/002_trash_and_merge.sql`：
+新增 `infra/mysql/005_conflict_ranges_and_trash.sql`：
 
 ```sql
 -- 回收站表
@@ -380,7 +380,7 @@ CREATE TABLE IF NOT EXISTS document_trash (...);
 -- sync_conflicts 增加冲突区域
 ALTER TABLE sync_conflicts ADD COLUMN conflict_ranges JSON NULL;
 
--- pull 感知删除：document_trash 的 deleted_at 需要 timezone 一致的比较
+-- pull 感知删除：document_trash 的 deleted_clock 需要 clock 一致的比较
 -- 使用 workspace_sync_cursors.last_seen_clock 不够（删除不产生 clock）
 -- 方案：软删除时也在 documents 被删前记录 clock 到 trash 表
 ALTER TABLE document_trash ADD COLUMN deleted_clock BIGINT NOT NULL DEFAULT 0;
@@ -419,7 +419,7 @@ export type TrashItem = {
 
 export type DeletedPath = {
   relativePath: string;
-  deletedAt: string;
+  deletedClock: string;
 };
 
 export type SyncStatus = "idle" | "syncing" | "conflict" | "offline";

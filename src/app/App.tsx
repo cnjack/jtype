@@ -64,12 +64,13 @@ function AppContent() {
     (b) => b.localVaultPath === state.workspace?.rootPath
   );
   const isSyncEnabled = !!(state.workspace && state.syncToken && currentBinding);
-  const startupPullDoneRef = useRef(false);
+  const startupPullDoneRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (startupPullDoneRef.current) return;
+    const bindingId = currentBinding?.workspaceId ?? null;
+    if (startupPullDoneRef.current === bindingId) return;
     if (!state.workspace || !state.syncToken || !currentBinding) return;
-    startupPullDoneRef.current = true;
+    startupPullDoneRef.current = bindingId;
     sync.pullOnly();
   }, [state.workspace, state.syncToken, currentBinding, sync]);
 

@@ -4,7 +4,7 @@ use std::{
     collections::{hash_map::DefaultHasher, HashMap, HashSet},
     fs,
     hash::{Hash, Hasher},
-    path::{Path, PathBuf},
+    path::{Component, Path, PathBuf},
     time::{SystemTime, UNIX_EPOCH},
 };
 
@@ -908,7 +908,7 @@ fn trash_dir(root: &Path) -> PathBuf {
 }
 
 pub fn trash_entry(root: &Path, relative_path: &str) -> Result<(), String> {
-    let src = root.join(relative_path);
+    let src = safe_join(root, relative_path)?;
     if !src.exists() {
         return Err(format!("File not found: {}", relative_path));
     }
@@ -921,8 +921,7 @@ pub fn trash_entry(root: &Path, relative_path: &str) -> Result<(), String> {
     if let Some(parent) = dest.parent() {
         fs::create_dir_all(parent).map_err(|e| e.to_string())?;
     }
-    fs::rename(&src, &dest).map_err(|e| e.to_string())
-    ;
+    fs::rename(&src, &dest).map_err(|e| e.to_string())?;
     Ok(())
 }
 
@@ -946,15 +945,16 @@ pub fn list_trash(root: &Path) -> Result<Vec<TrashItemInfo>, String> {
         let entry = entry.map_err(|e| e.to_string())?;
         let ts_str = entry.file_name().to_string_lossy().to_string();
         let ts: u64 = ts_str.parse().unwrap_or(0);
-        collect_trash_items(&entry.path(), &ts_str, &mut items, ts);
+        let base = entry.path();
+        collect_trash_items(&base, &base, trash_id_prefix, &mut items, ts);
     }
     items.sort_by(|a, b| b.trashed_at.cmp(&a.trashed_at));
     Ok(items)
 }
 
-fn collect_trash_items(dir: &Path, trash_id_prefix: &str, items: &mut Vec<TrashItemInfo>, ts: u64) {
-    if !dir.is_dir() { return; }
-    let entries = match fs::read_dir(dir) {
+fn collect_trash_items(cur_dir: &Path, root_dir: &Path, trash_id_prefix: &str, items: &mut Vec<TrashItemInfo>, ts: u64) {
+    if !cur_dir.is_dir() { return; }
+    let entries = match fs::read_dir(cur_dir) {
         Ok(e) => e,
         Err(_) => return,
     };
@@ -966,9 +966,9 @@ fn collect_trash_items(dir: &Path, trash_id_prefix: &str, items: &mut Vec<TrashI
         let path = entry.path();
         let name = entry.file_name().to_string_lossy().to_string();
         if path.is_dir() {
-            collect_trash_items(&path, trash_id_prefix, items, ts);
+            collect_trash_items(&path, root_dir, trash_id_prefix, items, ts);
         } else {
-            let relative = path.strip_prefix(dir).unwrap_or(&path);
+            let relative = path.strip_prefix(root_dir).unwrap_or(&path);
             let relative_str = relative.to_string_lossy().replace('\\', "/");
             let relative_within_trash = format!("{}/{}", trash_id_prefix, relative_str);
             items.push(TrashItemInfo {
@@ -981,6 +981,18 @@ fn collect_trash_items(dir: &Path, trash_id_prefix: &str, items: &mut Vec<TrashI
     }
 }
 
+fn validate_no_path_traversal(relative: &str) -> Result<(), String> {
+    let path = Path::new(relative);
+    for comp in path.components() {
+        match comp {
+            Component::ParentDir => return Err("Path traversal not allowed.".to_string()),
+            Component::Prefix(_) | Component::RootDir => return Err("Absolute path not allowed.".to_string()),
+            _ => {}
+        }
+    }
+    Ok(())
+}
+
 pub fn restore_from_trash(root: &Path, trash_id: &str) -> Result<String, String> {
     let parts: Vec<&str> = trash_id.splitn(2, '/').collect();
     if parts.len() < 2 {
@@ -988,6 +1000,8 @@ pub fn restore_from_trash(root: &Path, trash_id: &str) -> Result<String, String>
     }
     let ts_dir = parts[0];
     let relative = parts[1];
+    validate_no_path_traversal(ts_dir)?;
+    validate_no_path_traversal(relative)?;
     let src = trash_dir(root).join(ts_dir).join(relative);
     if !src.exists() {
         return Err(format!("Trash item not found: {}", trash_id));
@@ -1008,6 +1022,8 @@ pub fn permanent_delete_from_trash(root: &Path, trash_id: &str) -> Result<(), St
     if parts.len() < 2 {
         return Err("Invalid trash id format.".to_string());
     }
+    validate_no_path_traversal(parts[0])?;
+    validate_no_path_traversal(parts[1])?;
     let path = trash_dir(root).join(parts[0]).join(parts[1]);
     if path.exists() {
         fs::remove_file(&path).map_err(|e| e.to_string())?;

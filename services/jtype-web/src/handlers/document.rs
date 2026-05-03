@@ -146,13 +146,15 @@ pub async fn delete_document(
     require_workspace_role(&state.pool, &workspace_id, &user.id, &["owner", "admin", "editor"]).await?;
     let device_id = headers.get("x-device-id").and_then(|v| v.to_str().ok()).map(|s| s.to_string());
 
+    let mut tx = state.pool.begin().await?;
+
     let row = sqlx::query(
         r#"SELECT relative_path, title, content, content_hash, COALESCE(current_version_id, id) AS version_id
-           FROM documents WHERE id = ? AND workspace_id = ?"#,
+           FROM documents WHERE id = ? AND workspace_id = ? FOR UPDATE"#,
     )
     .bind(&document_id)
     .bind(&workspace_id)
-    .fetch_optional(&state.pool)
+    .fetch_optional(&mut *tx)
     .await?
     .ok_or(AppError::NotFound)?;
 
@@ -168,7 +170,7 @@ pub async fn delete_document(
             "SELECT COALESCE(MAX(updated_clock), 0) + 1 AS next_clock FROM documents WHERE workspace_id = ?",
         )
         .bind(&workspace_id)
-        .fetch_one(&state.pool)
+        .fetch_one(&mut *tx)
         .await?;
         clock_row.try_get::<i64, _>("next_clock")?
     };
@@ -188,14 +190,16 @@ pub async fn delete_document(
     .bind(&user.id)
     .bind(&device_id)
     .bind(next_clock)
-    .execute(&state.pool)
+    .execute(&mut *tx)
     .await?;
 
     sqlx::query("DELETE FROM documents WHERE id = ? AND workspace_id = ?")
         .bind(&document_id)
         .bind(&workspace_id)
-        .execute(&state.pool)
+        .execute(&mut *tx)
         .await?;
+
+    tx.commit().await?;
 
     Ok(StatusCode::NO_CONTENT)
 }
@@ -433,7 +437,7 @@ async fn next_workspace_clock(
     Ok(row.try_get("next_clock")?)
 }
 
-async fn ensure_workspace_budget(
+pub async fn ensure_workspace_budget(
     pool: &sqlx::Pool<sqlx::MySql>,
     workspace_id: &str,
     relative_path: &str,

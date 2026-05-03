@@ -92,7 +92,8 @@ pub fn build_router(pool: Pool<MySql>, public_base_url: String) -> Router {
         .route("/api/sync/workspace", post(handlers::sync::sync_legacy))
         // Trash API
         .route("/api/v1/workspaces/:workspace_id/trash", get(handlers::trash::list_trash).delete(handlers::trash::empty_trash))
-        .route("/api/v1/workspaces/:workspace_id/trash/:trash_id", post(handlers::trash::restore_from_trash).delete(handlers::trash::permanent_delete))
+        .route("/api/v1/workspaces/:workspace_id/trash/:trash_id/restore", post(handlers::trash::restore_from_trash))
+        .route("/api/v1/workspaces/:workspace_id/trash/:trash_id", delete(handlers::trash::permanent_delete))
         // Domains API
         .route("/api/v1/domains", get(handlers::domain::list).post(handlers::domain::add))
         .route("/api/v1/domains/:domain_id", get(handlers::domain::get))

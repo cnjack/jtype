@@ -12,7 +12,7 @@
 |------|------|------|
 | 1.1 | `services/jtype-web/Cargo.toml` | 添加 `similar = "2"` |
 | 1.2 | `services/jtype-web/src/util.rs` | 替换 `three_way_merge` 为 `smart_three_way_merge`；保留旧函数（标记 deprecated）用于测试兼容 |
-| 1.3 | `infra/mysql/002_trash_and_merge.sql` | 新增 migration：`sync_conflicts` 加 `conflict_ranges JSON NULL` |
+| 1.3 | `infra/mysql/005_conflict_ranges_and_trash.sql` | 新增 migration：`sync_conflicts` 加 `conflict_ranges JSON NULL` |
 | 1.4 | `services/jtype-web/src/db/models.rs` | `SyncConflict` 增加 `conflict_ranges` 字段 |
 | 1.5 | `services/jtype-web/src/handlers/document.rs` | `save_document_version` 中调用新合并函数；`create_sync_conflict` 写入 conflict_ranges |
 | 1.6 | `services/jtype-web/src/handlers/sync.rs` | `resolve_conflict` 和 `load_open_conflicts` 读取 conflict_ranges；pull/push 返回 conflict_ranges |
@@ -29,7 +29,7 @@
 
 | 步骤 | 文件 | 动作 |
 |------|------|------|
-| 2.1 | `infra/mysql/002_trash_and_merge.sql` | 新增 `document_trash` 表 |
+| 2.1 | `infra/mysql/005_conflict_ranges_and_trash.sql` | 新增 `document_trash` 表 |
 | 2.2 | `services/jtype-web/src/db/models.rs` | 新增 `TrashItem`、`DeletedPath`、`RestoreRequest` types；`SyncPullResponse` 增加 `deleted_paths` |
 | 2.3 | `services/jtype-web/src/handlers/document.rs` | `delete_document` 改为软删除（INSERT INTO document_trash + DELETE FROM documents） |
 | 2.4 | 新建 `services/jtype-web/src/handlers/trash.rs` | `list_trash`、`restore_from_trash`、`permanent_delete`、`empty_trash` 四个 handler |

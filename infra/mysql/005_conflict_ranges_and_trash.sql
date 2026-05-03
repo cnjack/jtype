@@ -23,3 +23,7 @@ CREATE TABLE IF NOT EXISTS document_trash (
   CONSTRAINT document_trash_workspace_id_fk
     FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
 );
+
+CREATE INDEX IF NOT EXISTS idx_document_trash_workspace_id ON document_trash (workspace_id);
+CREATE INDEX IF NOT EXISTS idx_document_trash_ws_clock ON document_trash (workspace_id, deleted_clock);
+CREATE INDEX IF NOT EXISTS idx_document_trash_expires_at ON document_trash (expires_at);
