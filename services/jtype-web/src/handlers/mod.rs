@@ -5,5 +5,6 @@ pub mod domain;
 pub mod oauth;
 pub mod site;
 pub mod sync;
+pub mod trash;
 pub mod user;
 pub mod workspace;

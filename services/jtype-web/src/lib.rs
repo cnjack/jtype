@@ -90,6 +90,9 @@ pub fn build_router(pool: Pool<MySql>, public_base_url: String) -> Router {
         .route("/api/v1/workspaces/:workspace_id/sync/push", post(handlers::sync::push))
         .route("/api/v1/workspaces/:workspace_id/conflicts/:conflict_id/resolve", post(handlers::sync::resolve_conflict))
         .route("/api/sync/workspace", post(handlers::sync::sync_legacy))
+        // Trash API
+        .route("/api/v1/workspaces/:workspace_id/trash", get(handlers::trash::list_trash).delete(handlers::trash::empty_trash))
+        .route("/api/v1/workspaces/:workspace_id/trash/:trash_id", post(handlers::trash::restore_from_trash).delete(handlers::trash::permanent_delete))
         // Domains API
         .route("/api/v1/domains", get(handlers::domain::list).post(handlers::domain::add))
         .route("/api/v1/domains/:domain_id", get(handlers::domain::get))
@@ -175,9 +178,9 @@ mod tests {
         let base = "one\ntwo\nthree";
         let local = "ONE\ntwo\nthree";
         let cloud = "one\ntwo\nTHREE";
-        match three_way_merge(base, local, cloud) {
+        match smart_three_way_merge(base, local, cloud) {
             MergeResult::Merged(v) => assert_eq!(v, "ONE\ntwo\nTHREE"),
-            MergeResult::Conflict => panic!("expected clean merge"),
+            MergeResult::Conflict { .. } => panic!("expected clean merge"),
         }
     }
 
@@ -186,6 +189,35 @@ mod tests {
         let base = "one\ntwo";
         let local = "ONE\ntwo";
         let cloud = "uno\ntwo";
-        assert!(matches!(three_way_merge(base, local, cloud), MergeResult::Conflict));
+        assert!(matches!(smart_three_way_merge(base, local, cloud), MergeResult::Conflict { .. }));
+    }
+
+    #[test]
+    fn merges_inserts_in_different_areas() {
+        let base = "one\ntwo\nthree";
+        let local = "one\ninsert-local\ntwo\nthree";
+        let cloud = "one\ntwo\nthree\ninsert-cloud";
+        match smart_three_way_merge(base, local, cloud) {
+            MergeResult::Merged(v) => {
+                assert!(v.contains("insert-local"));
+                assert!(v.contains("insert-cloud"));
+            }
+            MergeResult::Conflict { .. } => panic!("expected clean merge for non-overlapping inserts"),
+        }
+    }
+
+    #[test]
+    fn merges_different_region_edits_with_line_count_change() {
+        let base = "a\nb\nc\nd";
+        let local = "A\nb\nc\nd";
+        let cloud = "a\nb\nC\nD\nd";
+        match smart_three_way_merge(base, local, cloud) {
+            MergeResult::Merged(v) => {
+                assert!(v.contains("A"));
+                assert!(v.contains("C"));
+                assert!(v.contains("D"));
+            }
+            MergeResult::Conflict { .. } => panic!("expected clean merge for non-overlapping edits"),
+        }
     }
 }

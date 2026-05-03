@@ -334,6 +334,7 @@ pub struct SyncConflict {
     pub local_content: String,
     pub cloud_content: String,
     pub base_content: Option<String>,
+    pub conflict_ranges: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -341,7 +342,15 @@ pub struct SyncConflict {
 pub struct SyncPullResponse {
     pub workspace_id: String,
     pub documents: Vec<CloudDocument>,
+    pub deleted_paths: Vec<DeletedPath>,
     pub conflicts: Vec<SyncConflict>,
+}
+
+#[derive(Debug, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct DeletedPath {
+    pub relative_path: String,
+    pub deleted_clock: i64,
 }
 
 #[derive(Debug, Serialize)]

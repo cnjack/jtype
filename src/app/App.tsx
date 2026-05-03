@@ -1,6 +1,8 @@
-import React, { useReducer, useCallback, useEffect, createContext, useContext } from "react";
+import React, { useReducer, useCallback, useEffect, useRef, createContext, useContext } from "react";
 import { appReducer, initialState, AppStateContext, AppDispatchContext } from "./AppState";
 import { useFileSystem, useCloudSync, useKeyboardShortcuts, useCommands } from "../hooks";
+import { usePeriodicSync } from "../hooks/usePeriodicSync";
+import { useFileWatcher } from "../hooks/useFileWatcher";
 import type { CommandDef } from "../hooks/useCommands";
 import { Header } from "../components/layout/Header";
 import { WelcomeScreen } from "../components/layout/WelcomeScreen";
@@ -41,6 +43,7 @@ function AppContent() {
   }, [state.workspace, state.syncToken, state.vaultBindings, sync]);
   const fs = useFileSystem(autoSync);
   const { commands, findCommand } = useCommands(fs, sync);
+  useFileWatcher();
 
   const handleAction = useCallback((action: string) => {
     if (action === "quickSwitcher.create") {
@@ -57,6 +60,34 @@ function AppContent() {
 
   useKeyboardShortcuts(handleAction);
 
+  const currentBinding = state.vaultBindings.find(
+    (b) => b.localVaultPath === state.workspace?.rootPath
+  );
+  const isSyncEnabled = !!(state.workspace && state.syncToken && currentBinding);
+  const startupPullDoneRef = useRef(false);
+
+  useEffect(() => {
+    if (startupPullDoneRef.current) return;
+    if (!state.workspace || !state.syncToken || !currentBinding) return;
+    startupPullDoneRef.current = true;
+    sync.pullOnly();
+  }, [state.workspace, state.syncToken, currentBinding, sync]);
+
+  usePeriodicSync(
+    useCallback(async () => {
+      if (state.workspace && state.syncToken && currentBinding) {
+        await sync.syncWorkspaceToWeb({ silent: true });
+      }
+    }, [state.workspace, state.syncToken, currentBinding, sync]),
+    useCallback(async () => {
+      if (state.workspace && state.syncToken && currentBinding) {
+        await sync.pullOnly();
+      }
+    }, [state.workspace, state.syncToken, currentBinding, sync]),
+    30_000,
+    isSyncEnabled,
+  );
+
   useEffect(() => {
     if (isTauriRuntime()) {
       (async () => {
@@ -72,10 +103,8 @@ function AppContent() {
         } catch { /* no initial paths */ }
 
         if (targetFile) {
-          // Opened via double-click / file association — single-file mode
           fs.openMarkdownFile(targetFile);
         } else if (state.lastWorkspacePath) {
-          // Restore previous vault session
           await fs.openWorkspace(state.lastWorkspacePath);
           if (state.lastFilePath) {
             const relPath = relativePathFromWorkspace(state.lastFilePath, state.lastWorkspacePath);

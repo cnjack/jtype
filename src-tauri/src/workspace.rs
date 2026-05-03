@@ -903,6 +903,126 @@ fn path_to_string(path: &Path) -> String {
     path.to_string_lossy().replace('\\', "/")
 }
 
+fn trash_dir(root: &Path) -> PathBuf {
+    root.join(".jtype").join("trash")
+}
+
+pub fn trash_entry(root: &Path, relative_path: &str) -> Result<(), String> {
+    let src = root.join(relative_path);
+    if !src.exists() {
+        return Err(format!("File not found: {}", relative_path));
+    }
+    let ts = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_err(|e| e.to_string())?
+        .as_secs();
+    let dest_dir = trash_dir(root).join(ts.to_string());
+    let dest = dest_dir.join(relative_path);
+    if let Some(parent) = dest.parent() {
+        fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+    }
+    fs::rename(&src, &dest).map_err(|e| e.to_string())
+    ;
+    Ok(())
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TrashItemInfo {
+    pub trash_id: String,
+    pub relative_path: String,
+    pub name: String,
+    pub trashed_at: u64,
+}
+
+pub fn list_trash(root: &Path) -> Result<Vec<TrashItemInfo>, String> {
+    let trash = trash_dir(root);
+    if !trash.exists() {
+        return Ok(Vec::new());
+    }
+    let mut items = Vec::new();
+    let entries = fs::read_dir(&trash).map_err(|e| e.to_string())?;
+    for entry in entries {
+        let entry = entry.map_err(|e| e.to_string())?;
+        let ts_str = entry.file_name().to_string_lossy().to_string();
+        let ts: u64 = ts_str.parse().unwrap_or(0);
+        collect_trash_items(&entry.path(), &ts_str, &mut items, ts);
+    }
+    items.sort_by(|a, b| b.trashed_at.cmp(&a.trashed_at));
+    Ok(items)
+}
+
+fn collect_trash_items(dir: &Path, trash_id_prefix: &str, items: &mut Vec<TrashItemInfo>, ts: u64) {
+    if !dir.is_dir() { return; }
+    let entries = match fs::read_dir(dir) {
+        Ok(e) => e,
+        Err(_) => return,
+    };
+    for entry in entries {
+        let entry = match entry {
+            Ok(e) => e,
+            Err(_) => continue,
+        };
+        let path = entry.path();
+        let name = entry.file_name().to_string_lossy().to_string();
+        if path.is_dir() {
+            collect_trash_items(&path, trash_id_prefix, items, ts);
+        } else {
+            let relative = path.strip_prefix(dir).unwrap_or(&path);
+            let relative_str = relative.to_string_lossy().replace('\\', "/");
+            let relative_within_trash = format!("{}/{}", trash_id_prefix, relative_str);
+            items.push(TrashItemInfo {
+                trash_id: relative_within_trash.clone(),
+                relative_path: relative_str,
+                name,
+                trashed_at: ts,
+            });
+        }
+    }
+}
+
+pub fn restore_from_trash(root: &Path, trash_id: &str) -> Result<String, String> {
+    let parts: Vec<&str> = trash_id.splitn(2, '/').collect();
+    if parts.len() < 2 {
+        return Err("Invalid trash id format.".to_string());
+    }
+    let ts_dir = parts[0];
+    let relative = parts[1];
+    let src = trash_dir(root).join(ts_dir).join(relative);
+    if !src.exists() {
+        return Err(format!("Trash item not found: {}", trash_id));
+    }
+    let dest = root.join(relative);
+    if dest.exists() {
+        return Err(format!("A file already exists at: {}. Remove it first.", relative));
+    }
+    if let Some(parent) = dest.parent() {
+        fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+    }
+    fs::rename(&src, &dest).map_err(|e| e.to_string())?;
+    Ok(relative.to_string())
+}
+
+pub fn permanent_delete_from_trash(root: &Path, trash_id: &str) -> Result<(), String> {
+    let parts: Vec<&str> = trash_id.splitn(2, '/').collect();
+    if parts.len() < 2 {
+        return Err("Invalid trash id format.".to_string());
+    }
+    let path = trash_dir(root).join(parts[0]).join(parts[1]);
+    if path.exists() {
+        fs::remove_file(&path).map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
+pub fn empty_trash(root: &Path) -> Result<(), String> {
+    let trash = trash_dir(root);
+    if trash.exists() {
+        fs::remove_dir_all(&trash).map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
 fn escape_html(value: &str) -> String {
     value
         .replace('&', "&amp;")

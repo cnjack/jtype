@@ -13,6 +13,7 @@ pub async fn run_all(pool: &Pool<MySql>) -> Result<(), AppError> {
         ("002_user_columns", M002_USER_COLUMNS),
         ("003_compat_workspaces", M003_COMPAT_WORKSPACES),
         ("004_workspace_publish_settings", M004_WORKSPACE_PUBLISH_SETTINGS),
+        ("005_conflict_ranges_and_trash", M005_CONFLICT_RANGES_AND_TRASH),
     ];
 
     for (name, sql) in migrations {
@@ -32,6 +33,11 @@ pub async fn run_all(pool: &Pool<MySql>) -> Result<(), AppError> {
         }
         if *name == "004_workspace_publish_settings" {
             apply_workspace_publish_settings_migration(pool).await?;
+            record_migration(pool, name).await?;
+            continue;
+        }
+        if *name == "005_conflict_ranges_and_trash" {
+            apply_conflict_ranges_and_trash_migration(pool).await?;
             record_migration(pool, name).await?;
             continue;
         }
@@ -169,3 +175,45 @@ UPDATE workspaces SET publish_title = name WHERE publish_title IS NULL;
 ALTER TABLE custom_domains ADD COLUMN workspace_id CHAR(36) NULL AFTER user_id;
 ALTER TABLE custom_domains ADD CONSTRAINT custom_domains_workspace_id_fk FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE SET NULL
 "#;
+
+const M005_CONFLICT_RANGES_AND_TRASH: &str = "-- applied programmatically in apply_conflict_ranges_and_trash_migration";
+
+async fn apply_conflict_ranges_and_trash_migration(pool: &Pool<MySql>) -> Result<(), AppError> {
+    if !column_exists(pool, "sync_conflicts", "conflict_ranges").await? {
+        sqlx::query("ALTER TABLE sync_conflicts ADD COLUMN conflict_ranges JSON NULL AFTER cloud_content")
+            .execute(pool)
+            .await?;
+    }
+
+    let table_count: i64 = sqlx::query_scalar(
+        "SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'document_trash'",
+    )
+    .fetch_one(pool)
+    .await?;
+    if table_count == 0 {
+        sqlx::query(
+            r#"CREATE TABLE IF NOT EXISTS document_trash (
+                id CHAR(36) PRIMARY KEY,
+                workspace_id CHAR(36) NOT NULL,
+                document_id CHAR(36) NOT NULL,
+                relative_path VARCHAR(512) NOT NULL,
+                title VARCHAR(512) NOT NULL,
+                content MEDIUMTEXT NOT NULL,
+                content_hash CHAR(64) NOT NULL,
+                version_id CHAR(36) NULL,
+                deleted_by_user_id CHAR(36) NOT NULL,
+                deleted_by_device_id VARCHAR(128) NULL,
+                deleted_clock BIGINT NOT NULL DEFAULT 0,
+                deleted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                expires_at TIMESTAMP NOT NULL,
+                restored_at TIMESTAMP NULL,
+                CONSTRAINT document_trash_workspace_id_fk
+                    FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
+            )"#,
+        )
+        .execute(pool)
+        .await?;
+    }
+
+    Ok(())
+}

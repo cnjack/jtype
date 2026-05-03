@@ -3,7 +3,8 @@ import { openUrl } from "@tauri-apps/plugin-opener";
 import { useAppDispatch, useAppState } from "../app/AppState";
 import { tauri } from "../lib/tauri";
 import { slugify } from "../lib/utils";
-import type { AuthResponse, CloudProfile, VaultBinding, SyncConflict, CloudDocument, CloudWorkspace } from "../lib/types";
+import type { AuthResponse, CloudProfile, VaultBinding, CloudDocument, CloudWorkspace, DeletedPath } from "../lib/types";
+import { parseSyncConflicts } from "../lib/types";
 
 export function useCloudSync() {
   const dispatch = useAppDispatch();
@@ -119,6 +120,7 @@ export function useCloudSync() {
     }
     try {
       dispatch({ type: "SET_LOADING", isLoading: true });
+      dispatch({ type: "SET_SYNC_STATUS", status: "syncing" });
       if (!options.silent) dispatch({ type: "SET_STATUS", message: "Syncing vault..." });
 
       const documents = await tauri.collectSyncDocuments(state.workspace.rootPath);
@@ -135,12 +137,12 @@ export function useCloudSync() {
           }),
         });
         if (!push.ok) throw new Error(await push.text());
-        const result = (await push.json()) as { accepted: number; documents: CloudDocument[]; conflicts: SyncConflict[] };
-        dispatch({ type: "SET_CONFLICTS", conflicts: result.conflicts ?? [] });
+        const pushData = (await push.json()) as { accepted: number; documents: CloudDocument[]; conflicts: Array<Record<string, unknown>> };
+        dispatch({ type: "SET_CONFLICTS", conflicts: parseSyncConflicts(pushData.conflicts ?? []) });
         const snapshot = `${Date.now()}:${documents.map((d) => `${d.relativePath}:${d.content.length}`).join("|")}`;
         dispatch({ type: "SET_SYNC_SNAPSHOT", snapshot });
-        await applyCloudDocuments(result.documents);
-        dispatch({ type: "SET_STATUS", message: `Synced ${result.accepted} document(s) with cloud workspace ${binding.workspaceName}.` });
+        await applyCloudDocuments(pushData.documents);
+        dispatch({ type: "SET_STATUS", message: `Synced ${pushData.accepted} document(s) with cloud workspace ${binding.workspaceName}.` });
         return;
       }
 
@@ -177,8 +179,10 @@ export function useCloudSync() {
       }
       dispatch({ type: "SET_STATUS", message: `Synced ${result.documentCount} document(s) to ${result.siteUrl}.` });
     } catch (error) {
+      dispatch({ type: "SET_SYNC_STATUS", status: "offline" });
       dispatch({ type: "SET_STATUS", message: String(error) });
     } finally {
+      dispatch({ type: "SET_SYNC_STATUS", status: state.activeConflicts.length > 0 ? "conflict" : "idle" });
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
   }, [dispatch, state.workspace, state.syncToken, state.syncUsername, state.cloudProfile, state.vaultBindings, getServiceUrl, refreshCloudWorkspaces]);
@@ -191,10 +195,21 @@ export function useCloudSync() {
       body: JSON.stringify({ sinceClock: binding.lastPulledClock, deviceId: state.cloudProfile?.deviceId ?? "desktop" }),
     });
     if (!response.ok) throw new Error(await response.text());
-    const result = (await response.json()) as { documents: CloudDocument[]; conflicts: SyncConflict[] };
-    dispatch({ type: "SET_CONFLICTS", conflicts: result.conflicts ?? [] });
-    await applyCloudDocuments(result.documents);
-    const nextClock = Math.max(binding.lastPulledClock, ...result.documents.map((d) => d.updatedClock));
+    const pullData = (await response.json()) as { documents: CloudDocument[]; deletedPaths?: DeletedPath[]; conflicts: Array<Record<string, unknown>> };
+    dispatch({ type: "SET_CONFLICTS", conflicts: parseSyncConflicts(pullData.conflicts ?? []) });
+    await applyCloudDocuments(pullData.documents);
+    if (pullData.deletedPaths && pullData.deletedPaths.length > 0 && tauri.isAvailable) {
+      for (const dp of pullData.deletedPaths) {
+        try {
+          await tauri.trashEntry(state.workspace.rootPath, dp.relativePath);
+        } catch {
+          // file may not exist locally — ignore
+        }
+      }
+      const workspace = await tauri.openWorkspace(state.workspace.rootPath);
+      dispatch({ type: "UPDATE_WORKSPACE", workspace });
+    }
+    const nextClock = Math.max(binding.lastPulledClock, ...pullData.documents.map((d) => d.updatedClock));
     const updatedBinding: VaultBinding = { ...binding, lastPulledClock: Number.isFinite(nextClock) ? nextClock : binding.lastPulledClock };
     if (tauri.isAvailable) {
       const bindings = await tauri.bindCloudWorkspace(updatedBinding);
@@ -204,12 +219,16 @@ export function useCloudSync() {
 
   const applyCloudDocuments = useCallback(async (documents: CloudDocument[]) => {
     if (!state.workspace || documents.length === 0) return;
+    const filtered = state.isDirty && state.currentRelativePath
+      ? documents.filter((d) => d.relativePath !== state.currentRelativePath)
+      : documents;
+    if (filtered.length === 0) return;
     const workspace = await tauri.applyCloudDocuments(
       state.workspace.rootPath,
-      documents.map((d) => ({ relativePath: d.relativePath, content: d.content }))
+      filtered.map((d) => ({ relativePath: d.relativePath, content: d.content }))
     );
     dispatch({ type: "UPDATE_WORKSPACE", workspace });
-  }, [dispatch, state.workspace]);
+  }, [dispatch, state.workspace, state.isDirty, state.currentRelativePath]);
 
   const resolveConflict = useCallback(async (conflictId: string, resolution: "accept_local" | "accept_cloud") => {
     const binding = currentVaultBinding(state.vaultBindings, state.workspace?.rootPath ?? "");
@@ -279,12 +298,20 @@ export function useCloudSync() {
     return selectedPath;
   }, [dispatch, state.cloudWorkspaces, state.vaultBindings]);
 
+  const pullOnly = useCallback(async () => {
+    if (!state.workspace || !state.syncToken) return;
+    const binding = currentVaultBinding(state.vaultBindings, state.workspace.rootPath);
+    if (!binding) return;
+    await pullCloudWorkspace(binding);
+  }, [state.workspace, state.syncToken, state.vaultBindings, pullCloudWorkspace]);
+
   return {
     getServiceUrl,
     startBrowserOAuth,
     disconnectAccount,
     refreshCloudWorkspaces,
     syncWorkspaceToWeb,
+    pullOnly,
     resolveConflict,
     loadCloudProfile,
     loadVaultBindings,

@@ -6,11 +6,21 @@ use std::{
     env, fs,
     hash::{Hash, Hasher},
     path::{Path, PathBuf},
+    sync::Mutex,
 };
 
 use workspace::{
-    AiIndexResult, EntryKind, PublishResult, SyncDocument, ValidationResult, WorkspaceSnapshot,
+    AiIndexResult, EntryKind, PublishResult, SyncDocument, TrashItemInfo, ValidationResult,
+    WorkspaceSnapshot,
 };
+
+struct WatcherState {
+    watcher: Option<notify::RecommendedWatcher>,
+}
+
+struct AppState {
+    watcher_state: Mutex<WatcherState>,
+}
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 #[serde(rename_all = "camelCase")]
@@ -219,6 +229,112 @@ fn apply_cloud_documents(
     workspace::open_workspace(&root)
 }
 
+#[tauri::command]
+fn trash_workspace_entry(
+    root_path: String,
+    relative_path: String,
+) -> Result<WorkspaceSnapshot, String> {
+    let root = PathBuf::from(root_path);
+    workspace::trash_entry(&root, &relative_path)?;
+    workspace::open_workspace(&root)
+}
+
+#[tauri::command]
+fn list_workspace_trash(root_path: String) -> Result<Vec<TrashItemInfo>, String> {
+    workspace::list_trash(&PathBuf::from(root_path))
+}
+
+#[tauri::command]
+fn restore_workspace_trash(
+    root_path: String,
+    trash_id: String,
+) -> Result<WorkspaceSnapshot, String> {
+    let root = PathBuf::from(root_path);
+    workspace::restore_from_trash(&root, &trash_id)?;
+    workspace::open_workspace(&root)
+}
+
+#[tauri::command]
+fn permanent_delete_trash(root_path: String, trash_id: String) -> Result<(), String> {
+    workspace::permanent_delete_from_trash(&PathBuf::from(root_path), &trash_id)
+}
+
+#[tauri::command]
+fn empty_workspace_trash(root_path: String) -> Result<(), String> {
+    workspace::empty_trash(&PathBuf::from(root_path))
+}
+
+#[tauri::command]
+fn start_file_watcher(
+    app: tauri::AppHandle,
+    state: tauri::State<'_, AppState>,
+    root_path: String,
+) -> Result<(), String> {
+    let root = PathBuf::from(&root_path);
+    if !root.exists() {
+        return Err("Vault path does not exist.".to_string());
+    }
+
+    {
+        let mut ws = state.watcher_state.lock().map_err(|e| e.to_string())?;
+        ws.watcher = None;
+    }
+
+    let (tx, rx) = std::sync::mpsc::channel();
+
+    let mut watcher: notify::RecommendedWatcher =
+        notify::Watcher::new(tx, std::time::Duration::from_millis(300))
+            .map_err(|e| e.to_string())?;
+
+    watcher
+        .watch(&root, notify::RecursiveMode::Recursive)
+        .map_err(|e| e.to_string())?;
+
+    {
+        let mut ws = state.watcher_state.lock().map_err(|e| e.to_string())?;
+        ws.watcher = Some(watcher);
+    }
+
+    std::thread::spawn(move || {
+        while let Ok(event) = rx.recv() {
+            match event {
+                Ok(e) => {
+                    let paths: Vec<String> = e
+                        .paths
+                        .iter()
+                        .filter(|p| {
+                            let s = p.to_string_lossy();
+                            let lower = s.to_lowercase();
+                            (lower.ends_with(".md")
+                                || lower.ends_with(".markdown")
+                                || lower.ends_with(".mdown")
+                                || lower.ends_with(".mkd"))
+                                && !s.contains(".jtype/")
+                                && !s.contains(".git/")
+                                && !s.contains("node_modules/")
+                                && !s.contains("/target/")
+                        })
+                        .map(|p| p.to_string_lossy().replace('\\', "/"))
+                        .collect();
+                    if !paths.is_empty() {
+                        let _ = app.emit("vault-file-changed", paths);
+                    }
+                }
+                Err(_) => break,
+            }
+        }
+    });
+
+    Ok(())
+}
+
+#[tauri::command]
+fn stop_file_watcher(state: tauri::State<'_, AppState>) -> Result<(), String> {
+    let mut ws = state.watcher_state.lock().map_err(|e| e.to_string())?;
+    ws.watcher = None;
+    Ok(())
+}
+
 fn safe_join(root: &Path, relative_path: &str) -> Result<PathBuf, String> {
     let relative = PathBuf::from(relative_path);
     if relative.is_absolute() {
@@ -323,8 +439,18 @@ pub fn run() {
             save_cloud_profile,
             list_vault_bindings,
             bind_cloud_workspace,
-            apply_cloud_documents
+            apply_cloud_documents,
+            trash_workspace_entry,
+            list_workspace_trash,
+            restore_workspace_trash,
+            permanent_delete_trash,
+            empty_workspace_trash,
+            start_file_watcher,
+            stop_file_watcher
         ])
+        .manage(AppState {
+            watcher_state: Mutex::new(WatcherState { watcher: None }),
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

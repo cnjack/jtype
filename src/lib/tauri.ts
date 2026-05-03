@@ -65,6 +65,27 @@ export const tauri = {
   detectVaultRoot(path: string) {
     return invoke<string | null>("detect_vault_root", { path });
   },
+  trashEntry(rootPath: string, relativePath: string) {
+    return invoke<WorkspaceSnapshot>("trash_workspace_entry", { rootPath, relativePath });
+  },
+  listTrash(rootPath: string) {
+    return invoke<Array<{ trashId: string; relativePath: string; name: string; trashedAt: number }>>("list_workspace_trash", { rootPath });
+  },
+  restoreFromTrash(rootPath: string, trashId: string) {
+    return invoke<WorkspaceSnapshot>("restore_workspace_trash", { rootPath, trashId });
+  },
+  permanentDeleteTrash(rootPath: string, trashId: string) {
+    return invoke<void>("permanent_delete_trash", { rootPath, trashId });
+  },
+  emptyTrash(rootPath: string) {
+    return invoke<void>("empty_workspace_trash", { rootPath });
+  },
+  startFileWatcher(rootPath: string) {
+    return invoke<void>("start_file_watcher", { rootPath });
+  },
+  stopFileWatcher() {
+    return invoke<void>("stop_file_watcher");
+  },
   get isAvailable() {
     return isTauriRuntime();
   },

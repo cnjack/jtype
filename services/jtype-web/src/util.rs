@@ -235,12 +235,21 @@ fn parse_frontmatter(content: &str) -> std::collections::HashMap<String, String>
     frontmatter
 }
 
-pub enum MergeResult {
-    Merged(String),
-    Conflict,
+#[derive(Debug, Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ConflictRange {
+    pub base_start: usize,
+    pub base_end: usize,
+    pub local_lines: Vec<String>,
+    pub cloud_lines: Vec<String>,
 }
 
-pub fn three_way_merge(base: &str, local: &str, cloud: &str) -> MergeResult {
+pub enum MergeResult {
+    Merged(String),
+    Conflict { conflict_ranges: Vec<ConflictRange> },
+}
+
+pub fn smart_three_way_merge(base: &str, local: &str, cloud: &str) -> MergeResult {
     if local == cloud {
         return MergeResult::Merged(local.to_string());
     }
@@ -251,27 +260,153 @@ pub fn three_way_merge(base: &str, local: &str, cloud: &str) -> MergeResult {
         return MergeResult::Merged(cloud.to_string());
     }
 
-    let base_lines: Vec<_> = base.lines().collect();
-    let local_lines: Vec<_> = local.lines().collect();
-    let cloud_lines: Vec<_> = cloud.lines().collect();
-    if base_lines.len() != local_lines.len() || base_lines.len() != cloud_lines.len() {
-        return MergeResult::Conflict;
-    }
+    let base_lines: Vec<&str> = if base.is_empty() { vec![] } else { base.lines().collect() };
+    let local_hunks = compute_hunks(base, local);
+    let cloud_hunks = compute_hunks(base, cloud);
 
-    let mut merged = Vec::with_capacity(base_lines.len());
-    for i in 0..base_lines.len() {
-        let b = base_lines[i];
-        let l = local_lines[i];
-        let c = cloud_lines[i];
-        if l == c {
-            merged.push(l);
-        } else if b == c {
-            merged.push(l);
-        } else if b == l {
-            merged.push(c);
-        } else {
-            return MergeResult::Conflict;
+    let mut conflict_ranges: Vec<ConflictRange> = Vec::new();
+    let mut merged_hunks: Vec<(usize, usize, Vec<String>)> = Vec::new();
+
+    let mut li = 0;
+    let mut ci = 0;
+    while li < local_hunks.len() || ci < cloud_hunks.len() {
+        let lh = if li < local_hunks.len() { Some(&local_hunks[li]) } else { None };
+        let ch = if ci < cloud_hunks.len() { Some(&cloud_hunks[ci]) } else { None };
+
+        match (lh, ch) {
+            (Some(l), None) => {
+                merged_hunks.push((l.base_start, l.base_end, l.replacement.clone()));
+                li += 1;
+            }
+            (None, Some(c)) => {
+                merged_hunks.push((c.base_start, c.base_end, c.replacement.clone()));
+                ci += 1;
+            }
+            (Some(l), Some(c)) => {
+                let overlap = l.base_start < c.base_end && c.base_start < l.base_end;
+                if !overlap {
+                    if l.base_start <= c.base_start {
+                        merged_hunks.push((l.base_start, l.base_end, l.replacement.clone()));
+                        li += 1;
+                    } else {
+                        merged_hunks.push((c.base_start, c.base_end, c.replacement.clone()));
+                        ci += 1;
+                    }
+                } else if l.replacement == c.replacement {
+                    merged_hunks.push((l.base_start.min(c.base_start), l.base_end.max(c.base_end), l.replacement.clone()));
+                    li += 1;
+                    ci += 1;
+                } else {
+                    let base_start = l.base_start.min(c.base_start);
+                    let base_end = l.base_end.max(c.base_end);
+                    conflict_ranges.push(ConflictRange {
+                        base_start,
+                        base_end,
+                        local_lines: l.replacement.clone(),
+                        cloud_lines: c.replacement.clone(),
+                    });
+                    merged_hunks.push((base_start, base_end, c.replacement.clone()));
+                    li += 1;
+                    ci += 1;
+                }
+            }
+            _ => unreachable!(),
         }
     }
-    MergeResult::Merged(merged.join("\n"))
+
+    if conflict_ranges.is_empty() {
+        let result = apply_hunks(&base_lines, &merged_hunks);
+        MergeResult::Merged(result)
+    } else {
+        MergeResult::Conflict { conflict_ranges }
+    }
+}
+
+#[derive(Debug)]
+struct Hunk {
+    base_start: usize,
+    base_end: usize,
+    replacement: Vec<String>,
+}
+
+fn compute_hunks(base: &str, revised: &str) -> Vec<Hunk> {
+    use similar::TextDiff;
+
+    let diff = TextDiff::from_lines(base, revised);
+    let mut hunks: Vec<Hunk> = Vec::new();
+    let mut cur_start: Option<usize> = None;
+    let mut cur_end: usize = 0;
+    let mut cur_repl: Vec<String> = Vec::new();
+
+    for change in diff.iter_all_changes() {
+        use similar::ChangeTag;
+        match change.tag() {
+            ChangeTag::Equal => {
+                if cur_start.is_some() {
+                    hunks.push(Hunk {
+                        base_start: cur_start.unwrap(),
+                        base_end: cur_end,
+                        replacement: cur_repl.clone(),
+                    });
+                    cur_start = None;
+                    cur_repl.clear();
+                }
+                cur_end += 1;
+            }
+            ChangeTag::Delete => {
+                if cur_start.is_none() {
+                    cur_start = Some(cur_end);
+                }
+                cur_end += 1;
+            }
+            ChangeTag::Insert => {
+                if cur_start.is_none() {
+                    cur_start = Some(cur_end);
+                }
+                cur_repl.push(change.to_string_lossy().trim_end_matches('\n').to_string());
+            }
+        }
+    }
+    if cur_start.is_some() {
+        hunks.push(Hunk {
+            base_start: cur_start.unwrap(),
+            base_end: cur_end,
+            replacement: cur_repl,
+        });
+    }
+    hunks
+}
+
+fn apply_hunks(base_lines: &[&str], hunks: &[(usize, usize, Vec<String>)]) -> String {
+    let mut result: Vec<String> = Vec::new();
+    let mut pos = 0;
+    for &(start, end, ref repl) in hunks {
+        while pos < start && pos < base_lines.len() {
+            result.push(base_lines[pos].to_string());
+            pos += 1;
+        }
+        if pos < end {
+            pos = end;
+        }
+        result.extend(repl.iter().cloned());
+    }
+    while pos < base_lines.len() {
+        result.push(base_lines[pos].to_string());
+        pos += 1;
+    }
+    result.join("\n")
+}
+
+#[allow(dead_code)]
+pub fn three_way_merge_legacy(base: &str, local: &str, cloud: &str) -> Result<String, ()> {
+    if local == cloud {
+        return Ok(local.to_string());
+    }
+    if base == cloud {
+        return Ok(local.to_string());
+    }
+    if base == local {
+        return Ok(cloud.to_string());
+    }
+    Err(())
 }

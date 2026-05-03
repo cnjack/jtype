@@ -89,9 +89,11 @@ pub async fn pull(
         upsert_sync_cursor(&state.pool, &workspace_id, device_id, next_clock).await?;
     }
     let conflicts = load_open_conflicts(&state.pool, &workspace_id).await?;
+    let deleted_paths = load_deleted_paths_since(&state.pool, &workspace_id, since_clock).await?;
     Ok(Json(SyncPullResponse {
         workspace_id,
         documents,
+        deleted_paths,
         conflicts,
     }))
 }
@@ -255,7 +257,7 @@ async fn load_open_conflicts(
     workspace_id: &str,
 ) -> Result<Vec<SyncConflict>, AppError> {
     let rows = sqlx::query(
-        r#"SELECT id, relative_path, base_content, local_content, cloud_content
+        r#"SELECT id, relative_path, base_content, local_content, cloud_content, conflict_ranges
            FROM sync_conflicts WHERE workspace_id = ? AND status = 'open'
            ORDER BY created_at DESC"#,
     )
@@ -270,6 +272,35 @@ async fn load_open_conflicts(
                 base_content: row.try_get("base_content")?,
                 local_content: row.try_get("local_content")?,
                 cloud_content: row.try_get("cloud_content")?,
+                conflict_ranges: row.try_get("conflict_ranges")?,
+            })
+        })
+        .collect()
+}
+
+async fn load_deleted_paths_since(
+    pool: &sqlx::Pool<sqlx::MySql>,
+    workspace_id: &str,
+    since_clock: i64,
+) -> Result<Vec<DeletedPath>, AppError> {
+    if since_clock == 0 {
+        return Ok(Vec::new());
+    }
+    let rows = sqlx::query(
+        r#"SELECT relative_path, deleted_clock
+           FROM document_trash
+           WHERE workspace_id = ? AND deleted_clock > ? AND restored_at IS NULL
+           ORDER BY deleted_clock"#,
+    )
+    .bind(workspace_id)
+    .bind(since_clock)
+    .fetch_all(pool)
+    .await?;
+    rows.into_iter()
+        .map(|row| {
+            Ok(DeletedPath {
+                relative_path: row.try_get("relative_path")?,
+                deleted_clock: row.try_get("deleted_clock")?,
             })
         })
         .collect()

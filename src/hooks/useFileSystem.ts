@@ -168,14 +168,14 @@ export function useFileSystem(onAfterSave?: () => void) {
 
   const deleteCurrentEntry = useCallback(async () => {
     if (!state.workspace || !state.currentRelativePath) return;
-    const confirmed = window.confirm(`Delete ${state.currentRelativePath}? This removes it from disk.`);
+    const confirmed = window.confirm(`Move ${state.currentRelativePath} to trash?`);
     if (!confirmed) return;
     try {
       dispatch({ type: "SET_LOADING", isLoading: true });
-      const workspace = await tauri.deleteEntry(state.workspace.rootPath, state.currentRelativePath);
+      const workspace = await tauri.trashEntry(state.workspace.rootPath, state.currentRelativePath);
       dispatch({ type: "UPDATE_WORKSPACE", workspace });
       dispatch({ type: "CLEAR_DOCUMENT" });
-      dispatch({ type: "SET_STATUS", message: "Entry deleted." });
+      dispatch({ type: "SET_STATUS", message: "Moved to trash." });
     } catch (error) {
       dispatch({ type: "SET_STATUS", message: String(error) });
     } finally {

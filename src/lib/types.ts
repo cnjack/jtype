@@ -1,5 +1,5 @@
 export type EntryKind = "folder" | "markdown" | "asset";
-export type Activity = "explorer" | "settings";
+export type Activity = "explorer" | "trash" | "settings";
 export type InspectorTab = "preview" | "properties" | "outline" | "links" | "publish" | "ai";
 export type EditorMode = "write" | "split" | "preview";
 export type CommandScope = "global" | "workspace" | "file" | "folder" | "editor" | "selection" | "publish" | "ai";
@@ -102,13 +102,34 @@ export type CloudDocument = {
   updatedClock: number;
 };
 
+export type ConflictRange = {
+  baseStart: number;
+  baseEnd: number;
+  localLines: string[];
+  cloudLines: string[];
+};
+
 export type SyncConflict = {
   conflictId: string;
   relativePath: string;
   localContent: string;
   cloudContent: string;
   baseContent?: string;
+  conflictRanges?: ConflictRange[];
 };
+
+export function parseSyncConflicts(raw: Array<Record<string, unknown>>): SyncConflict[] {
+  return raw.map((c) => ({
+    conflictId: c.conflictId as string,
+    relativePath: c.relativePath as string,
+    localContent: c.localContent as string,
+    cloudContent: c.cloudContent as string,
+    baseContent: c.baseContent as string | undefined,
+    conflictRanges: typeof c.conflictRanges === "string"
+      ? JSON.parse(c.conflictRanges)
+      : Array.isArray(c.conflictRanges) ? c.conflictRanges : undefined,
+  }));
+}
 
 export type SyncPushResponse = {
   workspaceId: string;
@@ -116,6 +137,24 @@ export type SyncPushResponse = {
   documents: CloudDocument[];
   conflicts: SyncConflict[];
 };
+
+export type DeletedPath = {
+  relativePath: string;
+  deletedClock: number;
+};
+
+export type TrashItem = {
+  id: string;
+  documentId: string;
+  relativePath: string;
+  title: string;
+  contentHash: string;
+  deletedByUserId: string;
+  deletedAt: string;
+  expiresAt: string;
+};
+
+export type SyncStatus = "idle" | "syncing" | "conflict" | "offline";
 
 export type RecentItem = {
   kind: "file" | "workspace";

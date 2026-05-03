@@ -1,0 +1,25 @@
+-- Migration 005: Conflict ranges and document trash
+-- Applied programmatically by the Rust migration runner.
+
+-- Add conflict_ranges JSON column to sync_conflicts
+ALTER TABLE sync_conflicts ADD COLUMN conflict_ranges JSON NULL AFTER cloud_content;
+
+-- Create document_trash table for soft delete / recycle bin
+CREATE TABLE IF NOT EXISTS document_trash (
+  id CHAR(36) PRIMARY KEY,
+  workspace_id CHAR(36) NOT NULL,
+  document_id CHAR(36) NOT NULL,
+  relative_path VARCHAR(512) NOT NULL,
+  title VARCHAR(512) NOT NULL,
+  content MEDIUMTEXT NOT NULL,
+  content_hash CHAR(64) NOT NULL,
+  version_id CHAR(36) NULL,
+  deleted_by_user_id CHAR(36) NOT NULL,
+  deleted_by_device_id VARCHAR(128) NULL,
+  deleted_clock BIGINT NOT NULL DEFAULT 0,
+  deleted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  expires_at TIMESTAMP NOT NULL,
+  restored_at TIMESTAMP NULL,
+  CONSTRAINT document_trash_workspace_id_fk
+    FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
+);

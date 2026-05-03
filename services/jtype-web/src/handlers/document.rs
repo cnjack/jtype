@@ -144,16 +144,59 @@ pub async fn delete_document(
 ) -> Result<StatusCode, AppError> {
     let user = extract_user(&state.pool, &headers).await?;
     require_workspace_role(&state.pool, &workspace_id, &user.id, &["owner", "admin", "editor"]).await?;
+    let device_id = headers.get("x-device-id").and_then(|v| v.to_str().ok()).map(|s| s.to_string());
 
-    let result = sqlx::query("DELETE FROM documents WHERE id = ? AND workspace_id = ?")
+    let row = sqlx::query(
+        r#"SELECT relative_path, title, content, content_hash, COALESCE(current_version_id, id) AS version_id
+           FROM documents WHERE id = ? AND workspace_id = ?"#,
+    )
+    .bind(&document_id)
+    .bind(&workspace_id)
+    .fetch_optional(&state.pool)
+    .await?
+    .ok_or(AppError::NotFound)?;
+
+    let relative_path: String = row.try_get("relative_path")?;
+    let title: String = row.try_get("title")?;
+    let content: String = row.try_get("content")?;
+    let content_hash: String = row.try_get("content_hash")?;
+    let version_id: String = row.try_get("version_id")?;
+
+    let trash_id = Uuid::new_v4().to_string();
+    let next_clock = {
+        let clock_row = sqlx::query(
+            "SELECT COALESCE(MAX(updated_clock), 0) + 1 AS next_clock FROM documents WHERE workspace_id = ?",
+        )
+        .bind(&workspace_id)
+        .fetch_one(&state.pool)
+        .await?;
+        clock_row.try_get::<i64, _>("next_clock")?
+    };
+
+    sqlx::query(
+        r#"INSERT INTO document_trash (id, workspace_id, document_id, relative_path, title, content, content_hash, version_id, deleted_by_user_id, deleted_by_device_id, deleted_clock, expires_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 30 DAY))"#,
+    )
+    .bind(&trash_id)
+    .bind(&workspace_id)
+    .bind(&document_id)
+    .bind(&relative_path)
+    .bind(&title)
+    .bind(&content)
+    .bind(&content_hash)
+    .bind(&version_id)
+    .bind(&user.id)
+    .bind(&device_id)
+    .bind(next_clock)
+    .execute(&state.pool)
+    .await?;
+
+    sqlx::query("DELETE FROM documents WHERE id = ? AND workspace_id = ?")
         .bind(&document_id)
         .bind(&workspace_id)
         .execute(&state.pool)
         .await?;
 
-    if result.rows_affected() == 0 {
-        return Err(AppError::NotFound);
-    }
     Ok(StatusCode::NO_CONTENT)
 }
 
@@ -239,13 +282,22 @@ pub async fn save_document_version(
 
         if !base_matches && cloud_hash != content_hash {
             if let Some(base_content) = payload.base_content.as_deref() {
-                if let MergeResult::Merged(merged) = three_way_merge(base_content, &payload.content, &cloud_content) {
-                    return save_merged_document(
-                        pool, workspace_id, user, &document_id, &relative_path,
-                        &title, status, &merged, parent_version_id.as_deref(), None, source,
-                    )
-                    .await
-                    .map(SaveDocumentOutcome::Saved);
+                match smart_three_way_merge(base_content, &payload.content, &cloud_content) {
+                    MergeResult::Merged(merged) => {
+                        return save_merged_document(
+                            pool, workspace_id, user, &document_id, &relative_path,
+                            &title, status, &merged, parent_version_id.as_deref(), None, source,
+                        )
+                        .await
+                        .map(SaveDocumentOutcome::Saved);
+                    }
+                    MergeResult::Conflict { conflict_ranges } => {
+                        let conflict = create_sync_conflict_with_ranges(
+                            pool, workspace_id, &document_id, &relative_path,
+                            payload, cloud_content, Some(&conflict_ranges),
+                        ).await?;
+                        return Ok(SaveDocumentOutcome::Conflict(conflict));
+                    }
                 }
             }
             let conflict = create_sync_conflict(pool, workspace_id, &document_id, &relative_path, payload, cloud_content).await?;
@@ -420,10 +472,25 @@ async fn create_sync_conflict(
     payload: CloudSaveDocumentRequest,
     cloud_content: String,
 ) -> Result<SyncConflict, AppError> {
+    create_sync_conflict_with_ranges(pool, workspace_id, document_id, relative_path, payload, cloud_content, None).await
+}
+
+async fn create_sync_conflict_with_ranges(
+    pool: &sqlx::Pool<sqlx::MySql>,
+    workspace_id: &str,
+    document_id: &str,
+    relative_path: &str,
+    payload: CloudSaveDocumentRequest,
+    cloud_content: String,
+    conflict_ranges: Option<&Vec<crate::util::ConflictRange>>,
+) -> Result<SyncConflict, AppError> {
     let conflict_id = Uuid::new_v4().to_string();
+    let ranges_json = conflict_ranges.and_then(|ranges| {
+        if ranges.is_empty() { None } else { Some(serde_json::to_string(ranges).unwrap_or_default()) }
+    });
     sqlx::query(
-        r#"INSERT INTO sync_conflicts (id, workspace_id, document_id, relative_path, base_content, local_content, cloud_content)
-           VALUES (?, ?, ?, ?, ?, ?, ?)"#,
+        r#"INSERT INTO sync_conflicts (id, workspace_id, document_id, relative_path, base_content, local_content, cloud_content, conflict_ranges)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)"#,
     )
     .bind(&conflict_id)
     .bind(workspace_id)
@@ -432,6 +499,7 @@ async fn create_sync_conflict(
     .bind(&payload.base_content)
     .bind(&payload.content)
     .bind(&cloud_content)
+    .bind(&ranges_json)
     .execute(pool)
     .await?;
     Ok(SyncConflict {
@@ -440,5 +508,6 @@ async fn create_sync_conflict(
         local_content: payload.content,
         cloud_content,
         base_content: payload.base_content,
+        conflict_ranges: ranges_json,
     })
 }
