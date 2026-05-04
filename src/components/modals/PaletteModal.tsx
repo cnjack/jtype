@@ -1,4 +1,5 @@
 import { useState, useEffect, type ReactNode, type KeyboardEvent } from "react";
+import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
 
 interface PaletteModalProps {
   open: boolean;
@@ -18,13 +19,10 @@ export function PaletteModal({ open, onClose, ariaLabel, inputPlaceholder, input
     if (!open) setQuery("");
   }, [open]);
 
-  if (!open) return null;
-
   return (
-    <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label={ariaLabel} onClick={(e) => {
-      if (e.target === e.currentTarget) onClose();
-    }}>
-      <div className="command-modal">
+    <Dialog open={open} onClose={onClose} className="modal-backdrop">
+      <DialogPanel className="command-modal">
+        <DialogTitle className="sr-only">{ariaLabel}</DialogTitle>
         <input
           className="command-input"
           placeholder={inputPlaceholder}
@@ -37,7 +35,7 @@ export function PaletteModal({ open, onClose, ariaLabel, inputPlaceholder, input
         <div id={resultsId} className="max-h-[420px] overflow-auto p-2">
           {children(query)}
         </div>
-      </div>
-    </div>
+      </DialogPanel>
+    </Dialog>
   );
 }

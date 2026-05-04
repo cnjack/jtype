@@ -100,6 +100,22 @@
   .context-menu-button {
     @apply flex w-full items-center rounded px-3 py-2 text-left text-sm text-stone-700 hover:bg-stone-200 disabled:cursor-not-allowed disabled:opacity-50;
   }
+
+  .toolbar-button {
+    @apply inline-flex h-9 items-center justify-center rounded-lg border border-black/[0.06] bg-white/80 px-3.5 text-sm font-semibold text-stone-800 shadow-sm shadow-emerald-950/5 transition hover:border-emerald-700/20 hover:bg-white hover:text-stone-950 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .toolbar-button-primary {
+    @apply border-brand bg-brand text-white shadow-brand/15 hover:border-brand-dark hover:bg-brand-dark;
+  }
+
+  .panel-card {
+    @apply rounded-2xl border border-white/80 bg-white/80 p-3 shadow-sm shadow-emerald-950/5 ring-1 ring-black/[0.03];
+  }
+
+  .command-row {
+    @apply flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition hover:bg-[#e8f6f2] disabled:cursor-not-allowed disabled:opacity-50;
+  }
 }
 
 .editor-preview-grid {

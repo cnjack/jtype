@@ -1,5 +1,6 @@
 import { useRef, useEffect, useCallback, useState } from "react";
 import { useAppDispatch, useAppState } from "../../app/AppState";
+import { useFileSystem } from "../../hooks";
 import { renderToContainer } from "../../lib/markdown";
 import { parseFrontmatter, writeFrontmatter } from "../../lib/frontmatter";
 import { basename, normalizePath } from "../../lib/utils";
@@ -7,10 +8,32 @@ import { useCommandsList } from "../../app/App";
 import { addMarkdownTableColumn, addMarkdownTableRow, formatMarkdownTable, insertBlockAtSafeCursor, insertOrEditTable } from "../../hooks/useCommands";
 import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/react";
 import type { EditorMode } from "../../lib/types";
+import {
+  BoldIcon,
+  ItalicIcon,
+  LinkIcon,
+  CodeBracketIcon,
+  TableCellsIcon,
+  VariableIcon,
+  ArrowPathIcon,
+  ClipboardDocumentCheckIcon,
+  PencilSquareIcon,
+  ViewColumnsIcon,
+  EyeIcon,
+  InformationCircleIcon,
+  ArrowsPointingOutIcon,
+  XMarkIcon,
+  ShieldCheckIcon,
+  CheckCircleIcon,
+  StarIcon,
+  TrashIcon,
+  ExclamationTriangleIcon,
+} from "@heroicons/react/24/outline";
 
 export function EditorShell() {
   const state = useAppState();
   const dispatch = useAppDispatch();
+  const fs = useFileSystem();
   const commands = useCommandsList();
   const editorRef = useRef<HTMLTextAreaElement>(null);
   const previewRef = useRef<HTMLElement>(null);
@@ -152,7 +175,7 @@ export function EditorShell() {
                 title={isFavorite ? "Remove from favorites" : "Add to favorites"}
                 onClick={toggleFavorite}
               >
-                <StarIcon filled={isFavorite} />
+                <StarIcon className="h-4 w-4" fill={isFavorite ? "currentColor" : "none"} />
               </button>
             )}
             {state.workspace && state.currentRelativePath && (
@@ -163,7 +186,7 @@ export function EditorShell() {
                 title="Move to trash"
                 onClick={() => runCommand("file.delete")}
               >
-                <TrashIcon />
+                <TrashIcon className="h-4 w-4" />
               </button>
             )}
           </div>
@@ -182,32 +205,77 @@ export function EditorShell() {
               {state.activeConflicts.length} conflict{state.activeConflicts.length > 1 ? "s" : ""}
             </button>
           )}
+          {state.currentPath && (
+            <button
+              className="sidebar-action bg-[#008884] px-3 text-white hover:bg-[#006f6b] hover:text-white disabled:opacity-50"
+              type="button"
+              title="Save"
+              disabled={state.currentKind !== "markdown" || !state.isDirty}
+              onClick={() => fs.saveCurrentFile()}
+            >
+              <CheckCircleIcon className="h-4 w-4" />
+            </button>
+          )}
         </div>
       </div>
 
       <div className="flex min-h-12 items-center gap-1 border-b border-black/[0.04] bg-[#fbfdfb] px-5">
-        <EditorToolbarButton command="editor.bold" title="Bold - Ctrl+B" disabled={!isMarkdown} runCommand={runCommand}>B</EditorToolbarButton>
-        <EditorToolbarButton command="editor.italic" title="Italic - Ctrl+I" disabled={!isMarkdown} runCommand={runCommand}>I</EditorToolbarButton>
-        <EditorToolbarButton command="editor.link" title="Link - Ctrl+K" disabled={!isMarkdown} runCommand={runCommand}>Link</EditorToolbarButton>
-        <EditorToolbarButton command="editor.code" title="Inline code" disabled={!isMarkdown} runCommand={runCommand}>Code</EditorToolbarButton>
-        <EditorToolbarButton command="insert.table" title="Insert or edit table - Ctrl+Shift+T" disabled={!isMarkdown} runCommand={runCommand}>Table</EditorToolbarButton>
-        <EditorToolbarButton command="insert.math" title="Insert formula block" disabled={!isMarkdown} runCommand={runCommand}>Math</EditorToolbarButton>
-        <EditorToolbarButton command="insert.mermaid" title="Insert Mermaid diagram" disabled={!isMarkdown} runCommand={runCommand}>Mermaid</EditorToolbarButton>
-        <EditorToolbarButton command="insert.task" title="Task list" disabled={!isMarkdown} runCommand={runCommand}>Task</EditorToolbarButton>
+        <EditorToolbarButton command="editor.bold" title="Bold - Ctrl+B" disabled={!isMarkdown} runCommand={runCommand}>
+          <BoldIcon className="h-4 w-4" />
+        </EditorToolbarButton>
+        <EditorToolbarButton command="editor.italic" title="Italic - Ctrl+I" disabled={!isMarkdown} runCommand={runCommand}>
+          <ItalicIcon className="h-4 w-4" />
+        </EditorToolbarButton>
+        <EditorToolbarButton command="editor.link" title="Link - Ctrl+K" disabled={!isMarkdown} runCommand={runCommand}>
+          <LinkIcon className="h-4 w-4" />
+        </EditorToolbarButton>
+        <EditorToolbarButton command="editor.code" title="Inline code" disabled={!isMarkdown} runCommand={runCommand}>
+          <CodeBracketIcon className="h-4 w-4" />
+        </EditorToolbarButton>
+        <EditorToolbarButton command="insert.table" title="Insert or edit table - Ctrl+Shift+T" disabled={!isMarkdown} runCommand={runCommand}>
+          <TableCellsIcon className="h-4 w-4" />
+        </EditorToolbarButton>
+        <EditorToolbarButton command="insert.math" title="Insert formula block" disabled={!isMarkdown} runCommand={runCommand}>
+          <VariableIcon className="h-4 w-4" />
+        </EditorToolbarButton>
+        <EditorToolbarButton command="insert.mermaid" title="Insert Mermaid diagram" disabled={!isMarkdown} runCommand={runCommand}>
+          <ArrowPathIcon className="h-4 w-4" />
+        </EditorToolbarButton>
+        <EditorToolbarButton command="insert.task" title="Task list" disabled={!isMarkdown} runCommand={runCommand}>
+          <ClipboardDocumentCheckIcon className="h-4 w-4" />
+        </EditorToolbarButton>
         <div className="ml-auto flex items-center gap-1 rounded-full bg-[#eef5f1] p-1">
-          {(["write", "split", "preview"] as EditorMode[]).map((mode) => (
-            <button
-              key={mode}
-              type="button"
-              className={`view-mode-button ${state.editorMode === mode ? "view-mode-button-active" : ""}`}
-              onClick={() => dispatch({ type: "SET_EDITOR_MODE", mode })}
-            >
-              {mode.charAt(0).toUpperCase() + mode.slice(1)}
-            </button>
-          ))}
+          <button
+            type="button"
+            className={`view-mode-button ${state.editorMode === "write" ? "view-mode-button-active" : ""}`}
+            title="Write"
+            onClick={() => dispatch({ type: "SET_EDITOR_MODE", mode: "write" })}
+          >
+            <PencilSquareIcon className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            className={`view-mode-button ${state.editorMode === "split" ? "view-mode-button-active" : ""}`}
+            title="Split"
+            onClick={() => dispatch({ type: "SET_EDITOR_MODE", mode: "split" })}
+          >
+            <ViewColumnsIcon className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            className={`view-mode-button ${state.editorMode === "preview" ? "view-mode-button-active" : ""}`}
+            title="Preview"
+            onClick={() => dispatch({ type: "SET_EDITOR_MODE", mode: "preview" })}
+          >
+            <EyeIcon className="h-4 w-4" />
+          </button>
         </div>
-        <button className={`editor-tool ${state.documentPanelOpen ? "bg-[#e8f6f2] text-[#006f6b] ring-1 ring-[#008884]/15 hover:bg-[#e8f6f2] hover:text-[#006f6b]" : ""}`} type="button" title="Document info" onClick={() => dispatch({ type: "TOGGLE_DOCUMENT_PANEL" })}>Info</button>
-        <button className="editor-tool" type="button" title="Focus mode" onClick={() => dispatch({ type: "TOGGLE_FOCUS_MODE" })}>Focus</button>
+        <button className={`editor-tool ${state.documentPanelOpen ? "bg-[#e8f6f2] text-[#006f6b] ring-1 ring-[#008884]/15 hover:bg-[#e8f6f2] hover:text-[#006f6b]" : ""}`} type="button" title="Document info" onClick={() => dispatch({ type: "TOGGLE_DOCUMENT_PANEL" })}>
+          <InformationCircleIcon className="h-4 w-4" />
+        </button>
+        <button className="editor-tool" type="button" title="Focus mode" onClick={() => dispatch({ type: "TOGGLE_FOCUS_MODE" })}>
+          <ArrowsPointingOutIcon className="h-4 w-4" />
+        </button>
       </div>
 
       <div id="workbench-body" className={`workbench-body grid min-h-0 flex-1 bg-[#fbfdfb] ${state.documentPanelOpen ? "grid-cols-[minmax(0,1fr)_340px]" : "grid-cols-[minmax(0,1fr)]"}`}>
@@ -242,7 +310,9 @@ export function EditorShell() {
                 <p className="text-sm font-semibold text-stone-950">Document Info</p>
                 <p className="text-xs text-[#6b7773]">Properties, outline, links, and publish.</p>
               </div>
-              <button className="subtle-button" type="button" onClick={() => dispatch({ type: "TOGGLE_DOCUMENT_PANEL" })}>Hide</button>
+              <button className="subtle-button aspect-square px-0" type="button" title="Hide" onClick={() => dispatch({ type: "TOGGLE_DOCUMENT_PANEL" })}>
+                <XMarkIcon className="h-4 w-4" />
+              </button>
             </div>
             <PropertiesSection />
             <OutlineSection />
@@ -255,16 +325,14 @@ export function EditorShell() {
       <div id="operation-log" className="flex items-center justify-between border-t border-black/[0.04] bg-white/70 px-5 py-3 text-xs text-[#6b7773]">
         <span>{state.statusMessage}</span>
         {state.activeConflicts.length > 0 && (
-          <button
-            type="button"
-            className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-semibold text-amber-800 transition hover:bg-amber-200"
-            onClick={() => dispatch({ type: "SET_STATUS", message: `${state.activeConflicts.length} conflict${state.activeConflicts.length > 1 ? "s" : ""} need resolution` })}
-          >
-            <svg className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-            </svg>
-            {state.activeConflicts.length} conflict{state.activeConflicts.length > 1 ? "s" : ""}
-          </button>
+            <button
+              type="button"
+              className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-semibold text-amber-800 transition hover:bg-amber-200"
+              onClick={() => dispatch({ type: "SET_STATUS", message: `${state.activeConflicts.length} conflict${state.activeConflicts.length > 1 ? "s" : ""} need resolution` })}
+            >
+              <ExclamationTriangleIcon className="h-3 w-3" />
+              {state.activeConflicts.length} conflict{state.activeConflicts.length > 1 ? "s" : ""}
+            </button>
         )}
       </div>
 
@@ -274,55 +342,17 @@ export function EditorShell() {
           className="context-menu"
           style={{ left: contextMenu.x, top: contextMenu.y }}
         >
-          <button type="button" className="context-menu-button" disabled={!isMarkdown} onClick={() => { runCommand("editor.bold"); setContextMenu(null); }}>Bold</button>
-          <button type="button" className="context-menu-button" disabled={!isMarkdown} onClick={() => { runCommand("editor.link"); setContextMenu(null); }}>Insert link</button>
-          <button type="button" className="context-menu-button" disabled={!isMarkdown} onClick={() => { insertOrEditTable(); setContextMenu(null); }}>Insert or format table</button>
-          <button type="button" className="context-menu-button" disabled={!isMarkdown} onClick={() => { addMarkdownTableRow(); setContextMenu(null); }}>Add table row below</button>
-          <button type="button" className="context-menu-button" disabled={!isMarkdown} onClick={() => { addMarkdownTableColumn(); setContextMenu(null); }}>Add table column right</button>
-          <button type="button" className="context-menu-button" disabled={!isMarkdown} onClick={() => { formatMarkdownTable(); setContextMenu(null); }}>Format table</button>
-          <button type="button" className="context-menu-button" disabled={!isMarkdown} onClick={() => { insertBlockAtSafeCursor("\n$$\nE = mc^2\n$$\n"); setContextMenu(null); }}>Insert formula</button>
-          <button type="button" className="context-menu-button" disabled={!isMarkdown} onClick={() => { insertBlockAtSafeCursor("\n```mermaid\nflowchart TD\n  A --> B\n```\n"); setContextMenu(null); }}>Insert Mermaid diagram</button>
+          <button type="button" className="context-menu-button" disabled={!isMarkdown} onClick={() => { runCommand("editor.bold"); setContextMenu(null); }}><BoldIcon className="mr-2 h-3.5 w-3.5" />Bold</button>
+          <button type="button" className="context-menu-button" disabled={!isMarkdown} onClick={() => { runCommand("editor.link"); setContextMenu(null); }}><LinkIcon className="mr-2 h-3.5 w-3.5" />Insert link</button>
+          <button type="button" className="context-menu-button" disabled={!isMarkdown} onClick={() => { insertOrEditTable(); setContextMenu(null); }}><TableCellsIcon className="mr-2 h-3.5 w-3.5" />Insert or format table</button>
+          <button type="button" className="context-menu-button" disabled={!isMarkdown} onClick={() => { addMarkdownTableRow(); setContextMenu(null); }}><TableCellsIcon className="mr-2 h-3.5 w-3.5" />Add table row below</button>
+          <button type="button" className="context-menu-button" disabled={!isMarkdown} onClick={() => { addMarkdownTableColumn(); setContextMenu(null); }}><TableCellsIcon className="mr-2 h-3.5 w-3.5" />Add table column right</button>
+          <button type="button" className="context-menu-button" disabled={!isMarkdown} onClick={() => { formatMarkdownTable(); setContextMenu(null); }}><TableCellsIcon className="mr-2 h-3.5 w-3.5" />Format table</button>
+          <button type="button" className="context-menu-button" disabled={!isMarkdown} onClick={() => { insertBlockAtSafeCursor("\n$$\nE = mc^2\n$$\n"); setContextMenu(null); }}><VariableIcon className="mr-2 h-3.5 w-3.5" />Insert formula</button>
+          <button type="button" className="context-menu-button" disabled={!isMarkdown} onClick={() => { insertBlockAtSafeCursor("\n```mermaid\nflowchart TD\n  A --> B\n```\n"); setContextMenu(null); }}><ArrowPathIcon className="mr-2 h-3.5 w-3.5" />Insert Mermaid diagram</button>
         </div>
       )}
     </section>
-  );
-}
-
-function StarIcon({ filled }: { filled: boolean }) {
-  return (
-    <svg
-      aria-hidden="true"
-      className="h-4 w-4"
-      viewBox="0 0 24 24"
-      fill={filled ? "currentColor" : "none"}
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="2"
-    >
-      <path d="M11.5 3.1a.6.6 0 0 1 1 0l2.6 5.3 5.8.8a.6.6 0 0 1 .3 1l-4.2 4.1 1 5.8a.6.6 0 0 1-.9.6L12 18l-5.1 2.7a.6.6 0 0 1-.9-.6l1-5.8-4.2-4.1a.6.6 0 0 1 .3-1l5.8-.8 2.6-5.3Z" />
-    </svg>
-  );
-}
-
-function TrashIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      className="h-4 w-4"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="2"
-    >
-      <path d="M3 6h18" />
-      <path d="M8 6V4h8v2" />
-      <path d="M19 6l-1 14H6L5 6" />
-      <path d="M10 11v5" />
-      <path d="M14 11v5" />
-    </svg>
   );
 }
 
@@ -451,14 +481,18 @@ function PublishSection() {
       <p className="mt-1 text-xs text-stone-500">Status: {status}</p>
       {slug && <p className="text-xs text-stone-500">Slug: {slug}</p>}
       <div className="mt-3 grid grid-cols-2 gap-2">
-        <button className="sidebar-action" type="button" onClick={() => {
+        <button className="sidebar-action" type="button" title="Run checks" onClick={() => {
           const cmd = commands.find((c) => c.id === "publish.check");
           if (cmd) cmd.run();
-        }}>Run checks</button>
-        <button className="sidebar-action" type="button" onClick={() => {
+        }}>
+          <ShieldCheckIcon className="h-4 w-4" />
+        </button>
+        <button className="sidebar-action" type="button" title="Export preview" onClick={() => {
           const cmd = commands.find((c) => c.id === "publish.export");
           if (cmd) cmd.run();
-        }}>Export preview</button>
+        }}>
+          <EyeIcon className="h-4 w-4" />
+        </button>
       </div>
       {publishedUrl && (
         <a

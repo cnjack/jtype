@@ -2,14 +2,13 @@ import { useAppDispatch, useAppState } from "../../app/AppState";
 import { useCloudSync } from "../../hooks";
 import type { CloudWorkspace } from "../../lib/types";
 import { useState } from "react";
+import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
 
 export function AccountDialog() {
   const state = useAppState();
   const dispatch = useAppDispatch();
   const sync = useCloudSync();
   const [activeSection, setActiveSection] = useState<"account" | "workspace">(state.accountDialogSection);
-
-  if (!state.accountDialogOpen) return null;
 
   const displaySiteUrl = state.syncSiteUrl.replace("/@", "/u/");
   const currentVaultBinding = state.workspace
@@ -36,19 +35,11 @@ export function AccountDialog() {
   };
 
   return (
-    <div
-      className="modal-backdrop"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Account and sync"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) dispatch({ type: "SET_ACCOUNT_DIALOG", open: false });
-      }}
-    >
-      <div className="command-modal flex h-[min(720px,92vh)] max-w-5xl flex-col">
+    <Dialog open={state.accountDialogOpen} onClose={() => dispatch({ type: "SET_ACCOUNT_DIALOG", open: false })} className="modal-backdrop">
+      <DialogPanel className="command-modal flex h-[min(720px,92vh)] max-w-5xl flex-col">
         <div className="flex items-start justify-between gap-3 border-b border-black/[0.06] bg-white/70 px-5 py-4">
           <div>
-            <p className="text-2xl font-semibold text-stone-950">Settings</p>
+            <DialogTitle className="text-2xl font-semibold text-stone-950">Settings</DialogTitle>
             <p className="mt-1 text-xs text-[#6b7773]">
               {state.syncToken
                 ? `Connected as ${state.syncUsername || "your account"}. Sync vaults with cloud workspaces.`
@@ -151,8 +142,8 @@ export function AccountDialog() {
 
           </main>
         </div>
-      </div>
-    </div>
+      </DialogPanel>
+    </Dialog>
   );
 }
 

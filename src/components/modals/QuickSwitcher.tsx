@@ -19,8 +19,8 @@ export function QuickSwitcher() {
       open={state.quickSwitcherOpen}
       onClose={() => dispatch({ type: "SET_QUICK_SWITCHER", open: false })}
       ariaLabel="Quick switcher"
-      inputPlaceholder="Open or create note..."
-      inputAriaLabel="Open or create note"
+      inputPlaceholder="Open or create Document..."
+      inputAriaLabel="Open or create Document"
       resultsId="quick-results"
     >
       {(query) => {

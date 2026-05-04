@@ -4,13 +4,23 @@ import { markdownNodes } from "../../lib/utils";
 import { appStorage } from "../../lib/storage";
 import type { EntryKind, FileTreeNode, LocalTrashItem } from "../../lib/types";
 import { useCallback, useEffect, useState, useMemo } from "react";
+import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/react";
+import {
+  DocumentPlusIcon,
+  Cog6ToothIcon,
+  XMarkIcon,
+  StarIcon,
+  TrashIcon,
+  ArrowUturnLeftIcon,
+  FolderOpenIcon,
+  ChevronDownIcon,
+  CheckIcon,
+} from "@heroicons/react/24/outline";
 
 export function Sidebar() {
   const state = useAppState();
   const dispatch = useAppDispatch();
   const fs = useFileSystem();
-  const [switcherOpen, setSwitcherOpen] = useState(false);
-
   if (state.mode === "empty" && !state.workspace) return null;
   if (state.focusMode) return null;
 
@@ -18,73 +28,119 @@ export function Sidebar() {
     ? state.vaultBindings.find((binding) => binding.localVaultPath === state.workspace?.rootPath)
     : null;
   const workspaceName = currentBinding?.workspaceName || state.workspace?.name || "No vault";
+  const docCount = state.workspace ? markdownNodes(state.workspace.entries).length : 0;
 
   return (
     <aside id="workspace-sidebar" className="flex min-h-0 flex-col border-r border-black/[0.04] bg-[#f7faf8]">
       <div className="p-5 pb-4">
-        <div className="relative">
-          <button
+        <Menu as="div" className="relative">
+          <MenuButton
             type="button"
             className="flex w-full items-center gap-2 rounded-xl bg-white/75 px-2.5 py-2 text-left shadow-sm shadow-emerald-950/5 ring-1 ring-black/[0.04] transition hover:bg-white hover:ring-[#008884]/20"
-            onClick={() => setSwitcherOpen(open => !open)}
           >
             <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-[#eef7f4] text-sm font-semibold text-[#006f6b]">
               {workspaceName.charAt(0).toUpperCase()}
             </span>
             <span className="min-w-0 flex-1">
               <span id="workspace-name" className="block truncate text-sm font-semibold text-stone-950">{workspaceName}</span>
-              <span id="workspace-path" className="block truncate text-xs text-[#6b7773]">{state.workspace?.rootPath ?? "Open a vault or Markdown file."}</span>
+              <span id="workspace-path" className="block truncate text-xs text-[#6b7773]">
+                {state.workspace ? `${docCount} documents` : "Open a vault or Markdown file."}
+              </span>
             </span>
-            <span className="text-xs font-semibold text-[#8a9691]">v</span>
-          </button>
-          {switcherOpen && (
-            <div className="absolute left-0 top-12 z-50 w-[288px] overflow-hidden rounded-xl border border-black/[0.06] bg-[#fbfdfb] shadow-2xl shadow-stone-900/15">
-              <div className="border-b border-black/[0.06] p-3">
-                <div className="flex items-center gap-2">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#eef7f4] text-sm font-semibold text-[#006f6b]">
+            <ChevronDownIcon className="h-4 w-4 shrink-0 text-[#8a9691]" />
+          </MenuButton>
+          <MenuItems
+            as="div"
+            className="absolute left-0 top-12 z-50 w-[320px] overflow-hidden rounded-xl border border-black/[0.06] bg-[#fbfdfb] shadow-2xl shadow-stone-900/15"
+          >
+            <div className="max-h-64 overflow-y-auto p-2">
+              {state.workspace && (
+                <div className="flex items-center gap-2 rounded-lg bg-[#e8f6f2] px-2.5 py-2 text-sm font-semibold text-[#006f6b]">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-white text-xs font-semibold text-[#006f6b] ring-1 ring-black/[0.04]">
                     {workspaceName.charAt(0).toUpperCase()}
                   </span>
-                  <span className="min-w-0">
-                    <span className="block truncate text-sm font-semibold text-stone-950">{workspaceName}</span>
-                    <span className="block truncate text-xs text-[#6b7773]">
-                      {currentBinding ? "Bound cloud workspace" : "Local vault"}
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate">{workspaceName}</span>
+                    <span className="block truncate text-xs font-normal text-[#6b7773]">
+                      {docCount} documents
                     </span>
                   </span>
+                  <CheckIcon className="h-4 w-4 shrink-0 text-[#006f6b]" />
                 </div>
-                <div className="mt-3 grid grid-cols-2 gap-2">
-                  <button className="sidebar-action" type="button" onClick={() => { dispatch({ type: "SET_ACCOUNT_DIALOG", open: true }); setSwitcherOpen(false); }}>
-                    Settings
-                  </button>
-                  <button className="sidebar-action" type="button" onClick={() => { dispatch({ type: "CLOSE_WORKSPACE" }); setSwitcherOpen(false); }}>
-                    Close
-                  </button>
+              )}
+              {recentVaults(state.workspace?.rootPath).length > 0 && (
+                <div className="mt-1 space-y-0.5">
+                  {recentVaults(state.workspace?.rootPath).map((vault) => (
+                    <MenuItem
+                      key={vault.path}
+                      as="button"
+                      type="button"
+                      className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-zinc-700 transition hover:bg-[#e8f6f2]"
+                      onClick={() => { void fs.openWorkspace(vault.path); }}
+                    >
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-white text-xs font-semibold text-zinc-500 ring-1 ring-black/[0.04]">
+                        {vault.name.charAt(0).toUpperCase()}
+                      </span>
+                      <span className="min-w-0 flex-1 text-left">
+                        <span className="block truncate font-semibold">{vault.name}</span>
+                        <span className="block truncate text-xs text-zinc-500">{vault.path}</span>
+                      </span>
+                    </MenuItem>
+                  ))}
                 </div>
-              </div>
-              <div className="p-2">
-                <button className="workspace-row" type="button" onClick={() => { void fs.chooseWorkspaceFolder(); setSwitcherOpen(false); }}>
-                  <span className="min-w-0">
-                    <span className="block truncate font-semibold">Open another vault</span>
-                    <span className="block truncate text-xs text-stone-500">Choose a local folder</span>
-                  </span>
-                  <span className="shrink-0 rounded-full bg-[#edf1ef] px-2 py-1 text-xs font-semibold text-[#5f6d68]">Local</span>
-                </button>
-                {currentBinding && (
-                  <div className="mt-2 rounded-lg bg-[#e8f6f2] px-3 py-2 text-xs text-[#006f6b] ring-1 ring-[#008884]/10">
-                    Syncing with {currentBinding.workspaceName}.
-                  </div>
-                )}
-              </div>
+              )}
             </div>
-          )}
-        </div>
+            <div className="border-t border-black/[0.06] p-2 space-y-1">
+              <MenuItem
+                as="button"
+                type="button"
+                className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-zinc-700 transition hover:bg-[#e8f6f2]"
+                onClick={() => { void fs.chooseWorkspaceFolder(); }}
+              >
+                <FolderOpenIcon className="h-4 w-4 shrink-0 text-zinc-500" />
+                <span className="min-w-0 text-left">
+                  <span className="block truncate font-semibold">Open another vault</span>
+                  <span className="block truncate text-xs text-zinc-500">Choose a local folder</span>
+                </span>
+              </MenuItem>
+              <MenuItem
+                as="button"
+                type="button"
+                className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-zinc-700 transition hover:bg-[#e8f6f2]"
+                onClick={() => { dispatch({ type: "SET_ACCOUNT_DIALOG", open: true }); }}
+              >
+                <Cog6ToothIcon className="h-4 w-4 shrink-0 text-zinc-500" />
+                <span className="font-semibold">Settings</span>
+              </MenuItem>
+              {state.workspace && (
+                <MenuItem
+                  as="button"
+                  type="button"
+                  className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-zinc-700 transition hover:bg-[#e8f6f2]"
+                  onClick={() => { dispatch({ type: "CLOSE_WORKSPACE" }); }}
+                >
+                  <XMarkIcon className="h-4 w-4 shrink-0 text-zinc-500" />
+                  <span className="font-semibold">Close vault</span>
+                </MenuItem>
+              )}
+              {currentBinding && (
+                <div className="mt-1 rounded-lg bg-[#e8f6f2] px-3 py-2 text-xs text-[#006f6b] ring-1 ring-[#008884]/10">
+                  Syncing with {currentBinding.workspaceName}.
+                </div>
+              )}
+            </div>
+          </MenuItems>
+        </Menu>
         <div className="mt-3">
           <button
             className="sidebar-action w-full"
             type="button"
+            title="New Document"
             disabled={!state.workspace || state.isLoading}
             onClick={() => dispatch({ type: "SET_CREATE_NOTE_DIALOG", open: true })}
           >
-            New note
+            <DocumentPlusIcon className="h-4 w-4" />
+            <span className="ml-1.5">New Document</span>
           </button>
         </div>
       </div>
@@ -104,7 +160,6 @@ function ExplorerPanel() {
   const [contextMenu, setContextMenu] = useState<{ node: FileTreeNode; x: number; y: number } | null>(null);
   const [trashItems, setTrashItems] = useState<LocalTrashItem[]>([]);
   const favorites = useMemo(() => readFavorites(state.workspace?.rootPath), [state.workspace?.rootPath, state.currentPath, state.favoriteVersion]);
-  const recentItems = useMemo(() => readRecentItems(), [state.currentPath, state.workspace]);
 
   const filteredResults = useMemo(() => {
     if (!query) return null;
@@ -158,11 +213,11 @@ function ExplorerPanel() {
             <>
               <div className="mb-2 mt-4 flex items-center justify-between">
                 <p className="text-xs font-semibold uppercase text-stone-500">Favorites</p>
-                <button className="subtle-button" type="button" disabled={!state.currentPath} onClick={() => {
+                <button className="subtle-button aspect-square px-0" type="button" title="Toggle favorite" disabled={!state.currentPath} onClick={() => {
                   toggleFavorite(state.currentPath, state.workspace?.rootPath);
                   dispatch({ type: "TOGGLE_FAVORITE" });
                 }}>
-                  Toggle
+                  <StarIcon className="h-4 w-4" />
                 </button>
               </div>
               <div id="favorite-list" className="space-y-1">
@@ -196,34 +251,11 @@ function ExplorerPanel() {
           </nav>
 
           <section className="mt-5 border-t border-emerald-900/10 pt-4">
-            <p className="mb-2 text-xs font-semibold uppercase text-stone-500">Recent</p>
-            <div className="space-y-1">
-              {recentItems.length === 0 ? (
-                <p className="text-xs text-stone-500">No recent items yet.</p>
-              ) : (
-                recentItems.map((item) => (
-                  <button
-                    key={item.path}
-                    type="button"
-                    className="tree-button text-xs"
-                    onClick={() => {
-                      if (item.kind === "workspace") fs.openWorkspace(item.path);
-                      else fs.openMarkdownFile(item.path);
-                    }}
-                  >
-                    <span className="truncate font-semibold">{item.name}</span>
-                  </button>
-                ))
-              )}
-            </div>
-          </section>
-
-          <section className="mt-5 border-t border-emerald-900/10 pt-4">
             <div className="mb-2 flex items-center justify-between gap-2">
               <p className="text-xs font-semibold uppercase text-stone-500">Trash</p>
               {trashItems.length > 0 && (
-                <button className="subtle-button" type="button" onClick={() => { void fs.emptyTrash().then(loadTrash); }}>
-                  Empty
+                <button className="subtle-button aspect-square px-0" type="button" title="Empty trash" onClick={() => { void fs.emptyTrash().then(loadTrash); }}>
+                  <TrashIcon className="h-4 w-4" />
                 </button>
               )}
             </div>
@@ -237,11 +269,12 @@ function ExplorerPanel() {
                     <div className="mt-1 flex items-center justify-between gap-2">
                       <span className="truncate text-stone-500">{formatTrashTime(item.trashedAt)}</span>
                       <button
-                        className="subtle-button"
+                        className="subtle-button aspect-square px-0"
                         type="button"
+                        title="Restore"
                         onClick={() => { void fs.restoreTrashItem(item.trashId).then(loadTrash); }}
                       >
-                        Restore
+                        <ArrowUturnLeftIcon className="h-4 w-4" />
                       </button>
                     </div>
                   </div>
@@ -267,7 +300,7 @@ function ExplorerPanel() {
                 setContextMenu(null);
               }}
             >
-              Open
+              <FolderOpenIcon className="mr-2 h-3.5 w-3.5" />Open
             </button>
           )}
           <button
@@ -278,7 +311,7 @@ function ExplorerPanel() {
               setContextMenu(null);
             }}
           >
-            Move to trash
+            <TrashIcon className="mr-2 h-3.5 w-3.5" />Move to trash
           </button>
         </div>
       )}
@@ -356,8 +389,11 @@ function toggleFavorite(path: string, rootPath?: string) {
 }
 
 type RecentItem = { kind: "file" | "workspace"; name: string; path: string };
-function readRecentItems(): RecentItem[] {
-  return appStorage.get("recent", []);
+function recentVaults(currentPath?: string): RecentItem[] {
+  const recent: RecentItem[] = appStorage.get("recent", []);
+  return recent
+    .filter((item) => item.kind === "workspace" && item.path !== currentPath)
+    .slice(0, 5);
 }
 
 function formatTrashTime(value: number) {

@@ -1,6 +1,14 @@
 import { useAppDispatch, useAppState } from "../../app/AppState";
 import { useFileSystem, useCloudSync } from "../../hooks";
 import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/react";
+import {
+  MagnifyingGlassIcon,
+  FolderOpenIcon,
+  UserCircleIcon,
+  CloudIcon,
+  ArrowRightOnRectangleIcon,
+  ArrowLeftOnRectangleIcon,
+} from "@heroicons/react/24/outline";
 
 export function Header() {
   const state = useAppState();
@@ -45,27 +53,21 @@ export function Header() {
       <div className="flex flex-wrap items-center justify-end gap-2">
         {state.mode === "workspace" && (
           <button
-            className="toolbar-button"
+            className="toolbar-button aspect-square px-0"
             type="button"
+            title="Quick open"
             onClick={() => dispatch({ type: "SET_QUICK_SWITCHER", open: true })}
           >
-            Quick open
+            <MagnifyingGlassIcon className="h-4 w-4" />
           </button>
         )}
         {isSingleFile && (
-          <button className="toolbar-button" type="button" onClick={() => fs.chooseMarkdownFile()}>
-            Open file
+          <button className="toolbar-button aspect-square px-0" type="button" title="Open file" onClick={() => fs.chooseMarkdownFile()}>
+            <FolderOpenIcon className="h-4 w-4" />
           </button>
         )}
-        {hasDocument && (
-          <button
-            className="toolbar-button toolbar-button-primary"
-            type="button"
-            disabled={state.currentKind !== "markdown" || !state.isDirty}
-            onClick={() => fs.saveCurrentFile()}
-          >
-            Save
-          </button>
+        {hasDocument && state.isDirty && (
+          <span className="status-chip status-chip-warning">Unsaved</span>
         )}
         {!isSingleFile && (
           <Menu as="div" className="relative inline-block text-left">
@@ -83,9 +85,10 @@ export function Header() {
               <MenuItem>
                 {({ focus }) => (
                   <button
-                    className={`flex w-full items-center rounded-md px-3 py-2 text-sm text-stone-700 transition ${focus ? "bg-[#e8f6f2] text-[#006f6b]" : ""}`}
+                    className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-stone-700 transition ${focus ? "bg-[#e8f6f2] text-[#006f6b]" : ""}`}
                     onClick={() => dispatch({ type: "SET_ACCOUNT_DIALOG", open: true, section: "account" })}
                   >
+                    <UserCircleIcon className="h-4 w-4" />
                     Profile
                   </button>
                 )}
@@ -93,9 +96,10 @@ export function Header() {
               <MenuItem>
                 {({ focus }) => (
                   <button
-                    className={`flex w-full items-center rounded-md px-3 py-2 text-sm text-stone-700 transition ${focus ? "bg-[#e8f6f2] text-[#006f6b]" : ""}`}
+                    className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-stone-700 transition ${focus ? "bg-[#e8f6f2] text-[#006f6b]" : ""}`}
                     onClick={() => dispatch({ type: "SET_ACCOUNT_DIALOG", open: true, section: "workspace" })}
                   >
+                    <CloudIcon className="h-4 w-4" />
                     Cloud workspace
                   </button>
                 )}
@@ -104,7 +108,7 @@ export function Header() {
               <MenuItem>
                 {({ focus }) => (
                   <button
-                    className={`flex w-full items-center rounded-md px-3 py-2 text-sm text-stone-700 transition ${focus ? "bg-[#e8f6f2] text-[#006f6b]" : ""}`}
+                    className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-stone-700 transition ${focus ? "bg-[#e8f6f2] text-[#006f6b]" : ""}`}
                     onClick={() => {
                       if (state.syncToken) {
                         sync.disconnectAccount();
@@ -113,6 +117,7 @@ export function Header() {
                       }
                     }}
                   >
+                    {state.syncToken ? <ArrowLeftOnRectangleIcon className="h-4 w-4" /> : <ArrowRightOnRectangleIcon className="h-4 w-4" />}
                     {state.syncToken ? "Log out" : "Sign in"}
                   </button>
                 )}

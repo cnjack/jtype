@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Dialog, DialogPanel } from '@headlessui/react'
 import { api, type AdminUser, type AdminWorkspace, type AdminDomain, type AdminStats } from '../api'
 
 type AdminTab = 'users' | 'workspaces' | 'domains'
@@ -40,14 +41,10 @@ export function AdminDialog({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-stone-950/35 px-5 py-6 backdrop-blur-sm"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Admin"
-      onClick={e => e.target === e.currentTarget && onClose()}
-    >
-      <div className="grid h-[min(720px,92vh)] w-full max-w-5xl overflow-hidden rounded-2xl border border-white/70 bg-[#fbfdfb] shadow-2xl shadow-stone-900/25 md:grid-cols-[220px_minmax(0,1fr)]">
+    <Dialog open onClose={onClose} className="relative z-50" aria-label="Admin">
+      <div className="fixed inset-0 bg-stone-950/35 backdrop-blur-sm" aria-hidden="true" />
+      <div className="fixed inset-0 z-50 flex items-center justify-center px-5 py-6">
+        <DialogPanel className="grid h-[min(720px,92vh)] w-full max-w-5xl overflow-hidden rounded-2xl border border-white/70 bg-[#fbfdfb] shadow-2xl shadow-stone-900/25 md:grid-cols-[220px_minmax(0,1fr)]">
         <aside className="border-r border-black/[0.04] bg-[#f7faf8] p-4">
           <p className="mb-2 text-xs font-semibold uppercase text-stone-500">Admin</p>
           <AdminNavButton active={tab === 'users'} onClick={() => setTab('users')} label="Users" />
@@ -89,8 +86,9 @@ export function AdminDialog({ onClose }: { onClose: () => void }) {
             </section>
           </div>
         </main>
-      </div>
+      </DialogPanel>
     </div>
+  </Dialog>
   )
 }
 

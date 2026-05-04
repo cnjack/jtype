@@ -338,7 +338,7 @@ function registerCommands() {
     },
     {
       id: "file.new",
-      title: "New note or folder",
+      title: "New Document or folder",
       aliases: ["new document", "create"],
       scope: ["workspace"],
       isEnabled: () => Boolean(state.workspace) && !state.isLoading,

@@ -53,7 +53,7 @@ function AppContent() {
 
   const handleAction = useCallback((action: string) => {
     if (action === "quickSwitcher.create") {
-      const input = document.querySelector<HTMLInputElement>('input[aria-label="Open or create note"]');
+      const input = document.querySelector<HTMLInputElement>('input[aria-label="Open or create Document"]');
       if (input) fs.createDocument(`${input.value || "untitled"}.md`);
       dispatch({ type: "SET_QUICK_SWITCHER", open: false });
       return;

@@ -1,9 +1,37 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
+import { Menu, MenuButton, MenuItems, MenuItem, Dialog, DialogPanel } from '@headlessui/react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { api, getStoredUsername, type WorkspaceSummary, type DocumentListItem, type DomainResponse, type TrashItem } from '../api'
 import { renderToContainer } from '../lib/markdown'
 import { parseFrontmatter, writeFrontmatter } from '../lib/frontmatter'
 import type { EditorMode } from '../lib/utils'
+import {
+  BoldIcon,
+  ItalicIcon,
+  LinkIcon,
+  CodeBracketIcon,
+  TableCellsIcon,
+  VariableIcon,
+  ArrowPathIcon,
+  ClipboardDocumentCheckIcon,
+  PencilSquareIcon,
+  ViewColumnsIcon,
+  EyeIcon,
+  InformationCircleIcon,
+  GlobeAltIcon,
+  EyeSlashIcon,
+  ArchiveBoxIcon,
+  XMarkIcon,
+  TrashIcon,
+  ArrowUturnLeftIcon,
+  CheckCircleIcon,
+  LinkSlashIcon,
+  ArrowUpTrayIcon,
+  PlusIcon,
+  DocumentPlusIcon,
+  ChevronDownIcon,
+  CheckIcon,
+} from '@heroicons/react/24/outline'
 
 type WorkspaceSection = 'documents' | 'trash' | 'publishing' | 'domains'
 type WorkspaceSettingsSection = 'general' | 'trash' | 'domains'
@@ -41,7 +69,6 @@ export function Workspace() {
   const sidebarCollapsed = false
   const [loadedContentHash, setLoadedContentHash] = useState<string | null>(null)
   const [loadedContent, setLoadedContent] = useState<string | null>(null)
-  const [workspaceSwitcherOpen, setWorkspaceSwitcherOpen] = useState(false)
   const [newWorkspaceName, setNewWorkspaceName] = useState('')
 
   const editorRef = useRef<HTMLTextAreaElement>(null)
@@ -166,7 +193,6 @@ export function Workspace() {
     if (!newWorkspaceName.trim()) return
     const ws = await api.createWorkspace(newWorkspaceName.trim())
     setNewWorkspaceName('')
-    setWorkspaceSwitcherOpen(false)
     navigate(`/workspaces/${ws.id}`)
   }
 
@@ -343,8 +369,9 @@ export function Workspace() {
 
   return (
     <div className="grid h-[calc(100vh-4rem)] grid-cols-[272px_minmax(0,1fr)] overflow-hidden bg-[#fbfdfb]">
-      {settingsOpen && workspace && (
+      {workspace && (
         <WorkspaceSettingsDialog
+          open={settingsOpen}
           workspace={workspace}
           active={settingsSection}
           workspaceName={workspaceName}
@@ -390,27 +417,27 @@ export function Workspace() {
                   workspace={workspace}
                   workspaces={workspaces}
                   activeWorkspaceId={workspaceId || ''}
-                  open={workspaceSwitcherOpen}
                   newWorkspaceName={newWorkspaceName}
-                  onToggle={() => setWorkspaceSwitcherOpen(open => !open)}
-                  onClose={() => setWorkspaceSwitcherOpen(false)}
                   onNewWorkspaceNameChange={setNewWorkspaceName}
                   onCreateWorkspace={createCloudWorkspace}
                 />
-                <div className="mt-3 flex gap-1.5">
+                <div className="mt-3 space-y-1.5">
                 <input
                   type="text"
                   value={newPath}
                   onChange={e => setNewPath(e.target.value)}
                   placeholder="path/to/doc.md"
-                  className="sync-input flex-1"
+                  className="sync-input w-full"
                   onKeyDown={e => e.key === 'Enter' && createDocument()}
                 />
                 <button
                   onClick={createDocument}
-                  className="sidebar-action px-3"
+                  className="sidebar-action w-full"
+                  type="button"
+                  title="New Document"
                 >
-                  New
+                  <DocumentPlusIcon className="h-4 w-4" />
+                  <span className="ml-1.5">New Document</span>
                 </button>
               </div>
               </div>
@@ -430,7 +457,7 @@ export function Workspace() {
                     aria-label={`Move ${doc.relativePath} to trash`}
                     title="Move to trash"
                   >
-                    &times;
+                    <XMarkIcon className="h-4 w-4" />
                   </button>
                 </div>
               ))}
@@ -478,47 +505,82 @@ export function Workspace() {
                     onClick={() => setDocumentPublishStatus(publishStatus === 'published' ? 'draft' : 'published')}
                     disabled={saving}
                     className="editor-tool"
+                    title={publishStatus === 'published' ? 'Unpublish' : 'Publish'}
                   >
-                    {publishStatus === 'published' ? 'Unpublish' : 'Publish'}
+                    {publishStatus === 'published' ? <ArrowUturnLeftIcon className="h-4 w-4" /> : <GlobeAltIcon className="h-4 w-4" />}
                   </button>
                   <button
                     onClick={() => setDocumentPublishStatus('archived')}
                     disabled={saving}
                     className="editor-tool"
+                    title="Archive"
                   >
-                    Archive
+                    <ArchiveBoxIcon className="h-4 w-4" />
                   </button>
                   <button
                     onClick={saveDocument}
                     disabled={saving || !dirty}
-                    className="sidebar-action bg-brand px-4 text-white hover:bg-brand-dark hover:text-white"
+                    className="sidebar-action bg-brand px-3 text-white hover:bg-brand-dark hover:text-white"
+                    title={saving ? 'Saving...' : 'Save'}
                   >
-                    {saving ? 'Saving...' : 'Save'}
+                    <CheckCircleIcon className="h-4 w-4" />
                   </button>
                 </div>
               </div>
               <div className="flex min-h-12 items-center gap-1 border-b border-black/[0.04] bg-[#fbfdfb] px-5">
-                <EditorToolbarButton title="Bold (Ctrl+B)" onClick={() => wrapSelection('**', '**', 'bold text')}>B</EditorToolbarButton>
-                <EditorToolbarButton title="Italic (Ctrl+I)" onClick={() => wrapSelection('_', '_', 'italic text')}>I</EditorToolbarButton>
-                <EditorToolbarButton title="Link (Ctrl+K)" onClick={() => wrapSelection('[', '](url)', 'link text')}>Link</EditorToolbarButton>
-                <EditorToolbarButton title="Inline code" onClick={() => wrapSelection('`', '`', 'code')}>Code</EditorToolbarButton>
-                <EditorToolbarButton title="Insert table (Ctrl+Shift+T)" onClick={() => insertOrEditTable()}>Table</EditorToolbarButton>
-                <EditorToolbarButton title="Insert formula" onClick={() => insertAtCursor('\n$$\nE = mc^2\n$$\n')}>Math</EditorToolbarButton>
-                <EditorToolbarButton title="Insert Mermaid diagram" onClick={() => insertAtCursor('\n```mermaid\nflowchart TD\n  A --> B\n```\n')}>Mermaid</EditorToolbarButton>
-                <EditorToolbarButton title="Task list" onClick={() => insertAtCursor('\n- [ ] Task\n')}>Task</EditorToolbarButton>
+                <EditorToolbarButton title="Bold (Ctrl+B)" onClick={() => wrapSelection('**', '**', 'bold text')}>
+                  <BoldIcon className="h-4 w-4" />
+                </EditorToolbarButton>
+                <EditorToolbarButton title="Italic (Ctrl+I)" onClick={() => wrapSelection('_', '_', 'italic text')}>
+                  <ItalicIcon className="h-4 w-4" />
+                </EditorToolbarButton>
+                <EditorToolbarButton title="Link (Ctrl+K)" onClick={() => wrapSelection('[', '](url)', 'link text')}>
+                  <LinkIcon className="h-4 w-4" />
+                </EditorToolbarButton>
+                <EditorToolbarButton title="Inline code" onClick={() => wrapSelection('`', '`', 'code')}>
+                  <CodeBracketIcon className="h-4 w-4" />
+                </EditorToolbarButton>
+                <EditorToolbarButton title="Insert table (Ctrl+Shift+T)" onClick={() => insertOrEditTable()}>
+                  <TableCellsIcon className="h-4 w-4" />
+                </EditorToolbarButton>
+                <EditorToolbarButton title="Insert formula" onClick={() => insertAtCursor('\n$$\nE = mc^2\n$$\n')}>
+                  <VariableIcon className="h-4 w-4" />
+                </EditorToolbarButton>
+                <EditorToolbarButton title="Insert Mermaid diagram" onClick={() => insertAtCursor('\n```mermaid\nflowchart TD\n  A --> B\n```\n')}>
+                  <ArrowPathIcon className="h-4 w-4" />
+                </EditorToolbarButton>
+                <EditorToolbarButton title="Task list" onClick={() => insertAtCursor('\n- [ ] Task\n')}>
+                  <ClipboardDocumentCheckIcon className="h-4 w-4" />
+                </EditorToolbarButton>
                 <div className="ml-auto flex items-center gap-1 rounded-full bg-[#eef5f1] p-1">
-                  {(['write', 'split', 'preview'] as EditorMode[]).map((mode) => (
-                    <button
-                      key={mode}
-                      type="button"
-                      className={`view-mode-button ${editorMode === mode ? 'view-mode-button-active' : ''}`}
-                      onClick={() => setEditorMode(mode)}
-                    >
-                      {mode.charAt(0).toUpperCase() + mode.slice(1)}
-                    </button>
-                  ))}
+                  <button
+                    type="button"
+                    className={`view-mode-button ${editorMode === 'write' ? 'view-mode-button-active' : ''}`}
+                    title="Write"
+                    onClick={() => setEditorMode('write')}
+                  >
+                    <PencilSquareIcon className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    className={`view-mode-button ${editorMode === 'split' ? 'view-mode-button-active' : ''}`}
+                    title="Split"
+                    onClick={() => setEditorMode('split')}
+                  >
+                    <ViewColumnsIcon className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    className={`view-mode-button ${editorMode === 'preview' ? 'view-mode-button-active' : ''}`}
+                    title="Preview"
+                    onClick={() => setEditorMode('preview')}
+                  >
+                    <EyeIcon className="h-4 w-4" />
+                  </button>
                 </div>
-                <button className="editor-tool" type="button" title="Document info" onClick={() => setInfoPanel(p => !p)}>Info</button>
+                <button className="editor-tool" type="button" title="Document info" onClick={() => setInfoPanel(p => !p)}>
+                  <InformationCircleIcon className="h-4 w-4" />
+                </button>
               </div>
 
               <div className={`grid min-h-0 flex-1 ${infoPanel ? 'grid-cols-[minmax(0,1fr)_340px]' : 'grid-cols-[minmax(0,1fr)]'}`}>
@@ -549,15 +611,19 @@ export function Workspace() {
                   <aside className="min-h-0 overflow-y-auto border-l border-black/[0.04] bg-[#f6faf7] p-5">
                     <div className="mb-4 flex items-center justify-between">
                       <p className="text-sm font-semibold text-stone-950">Document Info</p>
-                      <button className="subtle-button" type="button" onClick={() => setInfoPanel(false)}>Hide</button>
+                      <button className="subtle-button aspect-square px-0" type="button" title="Hide" onClick={() => setInfoPanel(false)}><XMarkIcon className="h-4 w-4" /></button>
                     </div>
                     {selectedDocument && (
                       <section className="document-info-section">
                         <p className="text-sm font-semibold text-stone-950">Publish</p>
                         <p className="mt-1 text-xs text-stone-500">Current status: {publishStatus}</p>
                         <div className="mt-3 grid grid-cols-2 gap-2">
-                          <button className="sidebar-action" type="button" onClick={() => setDocumentPublishStatus('published')}>Publish</button>
-                          <button className="sidebar-action" type="button" onClick={() => setDocumentPublishStatus('draft')}>Unpublish</button>
+                          <button className="sidebar-action" type="button" title="Publish" onClick={() => setDocumentPublishStatus('published')}>
+                            <GlobeAltIcon className="h-4 w-4" />
+                          </button>
+                          <button className="sidebar-action" type="button" title="Unpublish" onClick={() => setDocumentPublishStatus('draft')}>
+                            <EyeSlashIcon className="h-4 w-4" />
+                          </button>
                         </div>
                       </section>
                     )}
@@ -572,8 +638,67 @@ export function Workspace() {
               </div>
             </>
           ) : (
-            <div className="flex flex-1 items-center justify-center text-sm text-zinc-400">
-              Select a document to edit
+            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+              <div className="mx-auto w-full max-w-6xl px-10 py-12">
+                <div className="max-w-3xl">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand">Vault ready</p>
+                  <h2 className="mt-4 text-4xl font-semibold tracking-[-0.035em] text-stone-950">{displayWorkspaceName(workspace)}</h2>
+                  <p className="mt-3 max-w-2xl text-sm leading-7 text-[#5f6d68]">
+                    Choose a note or create a new one.
+                  </p>
+                  <div className="mt-6 flex flex-wrap gap-2">
+                    <button
+                      className="toolbar-button toolbar-button-primary"
+                      type="button"
+                      onClick={() => {
+                        const input = document.querySelector<HTMLInputElement>('input[placeholder="path/to/doc.md"]')
+                        input?.focus()
+                      }}
+                    >
+                      New Document
+                    </button>
+                    <button
+                      className="toolbar-button"
+                      type="button"
+                      onClick={() => {
+                        const first = documents[0]
+                        if (first) openDocument(first.id)
+                      }}
+                    >
+                      Quick open
+                    </button>
+                  </div>
+                </div>
+
+                <div className="mt-10 grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
+                  <section className="panel-card p-5">
+                    <div className="mb-3 flex items-center justify-between">
+                      <p className="text-sm font-semibold text-stone-950">Documents</p>
+                      <span className="text-xs text-[#6b7773]">{documents.length} Markdown file{documents.length === 1 ? '' : 's'}</span>
+                    </div>
+                    <div className="space-y-1">
+                      {documents.length === 0 ? (
+                        <div className="rounded-md border border-dashed border-stone-300 p-4">
+                          <p className="text-sm font-semibold text-stone-800">No notes yet.</p>
+                          <p className="mt-1 text-sm text-stone-500">Create your first Markdown note.</p>
+                        </div>
+                      ) : (
+                        documents.slice(0, 12).map(doc => (
+                          <button key={doc.id} type="button" className="command-row" onClick={() => openDocument(doc.id)}>
+                            <span className="min-w-0">
+                              <span className="block truncate font-semibold">{doc.relativePath.replace(/\.(md|markdown|mdown|mkd)$/i, '')}</span>
+                              <span className="block truncate text-xs text-stone-500">{doc.relativePath}</span>
+                            </span>
+                            <span className="shrink-0 text-xs text-stone-500">Markdown</span>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </section>
+
+
+                </div>
+              </div>
             </div>
           )}
           <div id="operation-log" className="border-t border-black/[0.04] bg-white/70 px-5 py-3 text-xs text-[#6b7773]">
@@ -589,13 +714,13 @@ export function Workspace() {
           className="context-menu"
           style={{ left: contextMenu.x, top: contextMenu.y }}
         >
-          <button type="button" className="context-menu-button" onClick={() => { wrapSelection('**', '**', 'bold text'); setContextMenu(null) }}>Bold</button>
-          <button type="button" className="context-menu-button" onClick={() => { wrapSelection('_', '_', 'italic text'); setContextMenu(null) }}>Italic</button>
-          <button type="button" className="context-menu-button" onClick={() => { wrapSelection('[', '](url)', 'link text'); setContextMenu(null) }}>Insert link</button>
-          <button type="button" className="context-menu-button" onClick={() => { insertOrEditTable(); setContextMenu(null) }}>Insert table</button>
-          <button type="button" className="context-menu-button" onClick={() => { addMarkdownTableRow(); setContextMenu(null) }}>Add table row below</button>
-          <button type="button" className="context-menu-button" onClick={() => { insertAtCursor('\n$$\nE = mc^2\n$$\n'); setContextMenu(null) }}>Insert formula</button>
-          <button type="button" className="context-menu-button" onClick={() => { insertAtCursor('\n```mermaid\nflowchart TD\n  A --> B\n```\n'); setContextMenu(null) }}>Insert Mermaid diagram</button>
+          <button type="button" className="context-menu-button" onClick={() => { wrapSelection('**', '**', 'bold text'); setContextMenu(null) }}><BoldIcon className="mr-2 h-3.5 w-3.5" />Bold</button>
+          <button type="button" className="context-menu-button" onClick={() => { wrapSelection('_', '_', 'italic text'); setContextMenu(null) }}><ItalicIcon className="mr-2 h-3.5 w-3.5" />Italic</button>
+          <button type="button" className="context-menu-button" onClick={() => { wrapSelection('[', '](url)', 'link text'); setContextMenu(null) }}><LinkIcon className="mr-2 h-3.5 w-3.5" />Insert link</button>
+          <button type="button" className="context-menu-button" onClick={() => { insertOrEditTable(); setContextMenu(null) }}><TableCellsIcon className="mr-2 h-3.5 w-3.5" />Insert table</button>
+          <button type="button" className="context-menu-button" onClick={() => { addMarkdownTableRow(); setContextMenu(null) }}><TableCellsIcon className="mr-2 h-3.5 w-3.5" />Add table row below</button>
+          <button type="button" className="context-menu-button" onClick={() => { insertAtCursor('\n$$\nE = mc^2\n$$\n'); setContextMenu(null) }}><VariableIcon className="mr-2 h-3.5 w-3.5" />Insert formula</button>
+          <button type="button" className="context-menu-button" onClick={() => { insertAtCursor('\n```mermaid\nflowchart TD\n  A --> B\n```\n'); setContextMenu(null) }}><ArrowPathIcon className="mr-2 h-3.5 w-3.5" />Insert Mermaid diagram</button>
         </div>
       )}
     </div>
@@ -606,29 +731,22 @@ function CloudWorkspaceSwitcher({
   workspace,
   workspaces,
   activeWorkspaceId,
-  open,
   newWorkspaceName,
-  onToggle,
-  onClose,
   onNewWorkspaceNameChange,
   onCreateWorkspace,
 }: {
   workspace: WorkspaceSummary | null
   workspaces: WorkspaceSummary[]
   activeWorkspaceId: string
-  open: boolean
   newWorkspaceName: string
-  onToggle: () => void
-  onClose: () => void
   onNewWorkspaceNameChange: (value: string) => void
   onCreateWorkspace: () => void
 }) {
   return (
-    <div className="relative">
-      <button
+    <Menu as="div" className="relative">
+      <MenuButton
         type="button"
         className="flex w-full items-center gap-2 rounded-xl bg-white/75 px-2.5 py-2 text-left shadow-sm shadow-emerald-950/5 ring-1 ring-black/[0.04] transition hover:bg-white hover:ring-brand/20"
-        onClick={onToggle}
       >
         <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-[#eef7f4] text-sm font-semibold text-brand">
           {displayWorkspaceName(workspace).charAt(0).toUpperCase()}
@@ -639,21 +757,19 @@ function CloudWorkspaceSwitcher({
             {workspace ? `${workspace.documentCount} documents` : 'Choose a cloud workspace'}
           </span>
         </span>
-        <ChevronDownIcon />
-      </button>
+        <ChevronDownIcon className="h-4 w-4 shrink-0 text-zinc-400" />
+      </MenuButton>
 
-      {open && (
-        <div className="absolute left-0 top-12 z-[100] w-[320px] overflow-hidden rounded-xl border border-black/[0.06] bg-[#fbfdfb] shadow-2xl shadow-stone-900/15">
-          <div className="max-h-64 overflow-y-auto p-2">
-            {workspaces.length === 0 ? (
-              <p className="px-3 py-2 text-xs text-zinc-500">No cloud workspaces yet.</p>
-            ) : (
-              workspaces.map(ws => (
+      <MenuItems className="absolute left-0 top-12 z-[100] w-[320px] overflow-hidden rounded-xl border border-black/[0.06] bg-[#fbfdfb] shadow-2xl shadow-stone-900/15">
+        <div className="max-h-64 overflow-y-auto p-2">
+          {workspaces.length === 0 ? (
+            <p className="px-3 py-2 text-xs text-zinc-500">No cloud workspaces yet.</p>
+          ) : (
+            workspaces.map(ws => (
+              <MenuItem key={ws.id}>
                 <Link
-                  key={ws.id}
                   to={`/workspaces/${ws.id}`}
-                  className={`flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm transition hover:bg-[#e8f6f2] ${ws.id === activeWorkspaceId ? 'bg-[#e8f6f2] font-semibold text-brand' : 'text-zinc-700'}`}
-                  onClick={onClose}
+                  className={`flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm transition data-[focus]:bg-[#e8f6f2] ${ws.id === activeWorkspaceId ? 'bg-[#e8f6f2] font-semibold text-brand' : 'text-zinc-700'}`}
                 >
                   <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-white text-xs font-semibold text-zinc-500 ring-1 ring-black/[0.04]">
                     {displayWorkspaceName(ws).charAt(0).toUpperCase()}
@@ -662,29 +778,29 @@ function CloudWorkspaceSwitcher({
                     <span className="block truncate">{displayWorkspaceName(ws)}</span>
                     <span className="block truncate text-xs font-normal text-zinc-500">{ws.documentCount} documents</span>
                   </span>
-                  {ws.id === activeWorkspaceId && <CheckIcon />}
+                  {ws.id === activeWorkspaceId && <CheckIcon className="h-4 w-4 shrink-0 text-brand" />}
                 </Link>
-              ))
-            )}
-          </div>
-          <div className="border-t border-black/[0.06] p-2">
-            <div className="flex gap-1.5">
-              <input
-                className="sync-input"
-                value={newWorkspaceName}
-                onChange={e => onNewWorkspaceNameChange(e.target.value)}
-                placeholder="New cloud workspace"
-                onKeyDown={e => e.key === 'Enter' && onCreateWorkspace()}
-              />
-              <button className="sidebar-action gap-1" type="button" onClick={onCreateWorkspace}>
-                <PlusIcon />
-                New
-              </button>
-            </div>
+              </MenuItem>
+            ))
+          )}
+        </div>
+        <div className="border-t border-black/[0.06] p-2">
+          <div className="flex gap-1.5">
+            <input
+              className="sync-input"
+              value={newWorkspaceName}
+              onChange={e => onNewWorkspaceNameChange(e.target.value)}
+              placeholder="New cloud workspace"
+              onKeyDown={e => e.key === 'Enter' && onCreateWorkspace()}
+            />
+            <button className="sidebar-action gap-1" type="button" onClick={onCreateWorkspace}>
+              <PlusIcon className="h-3.5 w-3.5" />
+              New
+            </button>
           </div>
         </div>
-      )}
-    </div>
+      </MenuItems>
+    </Menu>
   )
 }
 
@@ -705,6 +821,7 @@ function WorkspaceSettingsDialog({
   certChainPem,
   privateKeyPem,
   domainMessage,
+  open,
   onChange,
   onClose,
   onNameChange,
@@ -739,6 +856,7 @@ function WorkspaceSettingsDialog({
   certChainPem: string
   privateKeyPem: string
   domainMessage: string
+  open: boolean
   onChange: (section: WorkspaceSettingsSection) => void
   onClose: () => void
   onNameChange: (value: string) => void
@@ -763,93 +881,96 @@ function WorkspaceSettingsDialog({
     { id: 'trash', label: 'Trash', description: 'Restore or delete cloud documents' },
   ]
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-950/35 px-5 py-6 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Cloud workspace settings" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="grid h-[min(760px,92vh)] w-full max-w-6xl overflow-hidden rounded-2xl border border-white/70 bg-[#fbfdfb] shadow-2xl shadow-stone-900/25 md:grid-cols-[240px_minmax(0,1fr)]">
-        <aside className="border-r border-black/[0.04] bg-[#f7faf8] p-4">
-          <div className="mb-5 flex items-center gap-2">
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-white text-sm font-semibold text-brand ring-1 ring-black/[0.04]">
-              {displayWorkspaceName(workspace).charAt(0).toUpperCase()}
-            </span>
-            <span className="min-w-0">
-              <span className="block truncate text-sm font-semibold text-zinc-950">{displayWorkspaceName(workspace)}</span>
-              <span className="block truncate text-xs text-zinc-500">Cloud workspace</span>
-            </span>
-          </div>
-          <nav className="space-y-1">
-            {items.map(item => (
-              <button
-                key={item.id}
-                type="button"
-                className={`w-full rounded-lg px-3 py-2 text-left transition ${active === item.id ? 'bg-white font-semibold text-brand shadow-sm shadow-emerald-950/5 ring-1 ring-brand/10' : 'text-zinc-600 hover:bg-white/80 hover:text-zinc-950'}`}
-                onClick={() => onChange(item.id)}
-              >
-                <span className="block text-sm">{item.label}</span>
-                <span className="block text-xs font-normal text-zinc-500">{item.description}</span>
-              </button>
-            ))}
-          </nav>
-        </aside>
-        <main className="min-h-0 overflow-y-auto p-8">
-          <div className="mb-7 flex items-start justify-between gap-4">
-            <div>
-              <h2 className="text-3xl font-semibold text-zinc-950">
-                {active === 'general' ? 'General' : active === 'domains' ? 'Domains' : 'Trash'}
-              </h2>
-              <p className="mt-1 text-sm text-zinc-500">
-                {active === 'general' ? 'Manage cloud workspace name, publishing title, and storage.' : active === 'domains' ? 'Bind custom domains and manage certificates.' : 'Restore deleted documents or remove them permanently.'}
-              </p>
+    <Dialog open={open} onClose={onClose} className="relative z-50">
+      <div className="fixed inset-0 bg-stone-950/35 px-5 py-6 backdrop-blur-sm" aria-hidden="true" />
+      <div className="fixed inset-0 flex items-center justify-center px-5 py-6">
+        <DialogPanel className="grid h-[min(760px,92vh)] w-full max-w-6xl overflow-hidden rounded-2xl border border-white/70 bg-[#fbfdfb] shadow-2xl shadow-stone-900/25 md:grid-cols-[240px_minmax(0,1fr)]" aria-label="Cloud workspace settings">
+          <aside className="border-r border-black/[0.04] bg-[#f7faf8] p-4">
+            <div className="mb-5 flex items-center gap-2">
+              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-white text-sm font-semibold text-brand ring-1 ring-black/[0.04]">
+                {displayWorkspaceName(workspace).charAt(0).toUpperCase()}
+              </span>
+              <span className="min-w-0">
+                <span className="block truncate text-sm font-semibold text-zinc-950">{displayWorkspaceName(workspace)}</span>
+                <span className="block truncate text-xs text-zinc-500">Cloud workspace</span>
+              </span>
             </div>
-            <button className="subtle-button" type="button" onClick={onClose}>Close</button>
-          </div>
-          {active === 'general' && (
-            <WorkspacePublishingPanel
-              workspace={workspace}
-              workspaceName={workspaceName}
-              publishTitle={publishTitle}
-              publicUrl={publicUrl}
-              message={message}
-              saving={saving}
-              embedded
-              onNameChange={onNameChange}
-              onTitleChange={onTitleChange}
-              onSave={onSave}
-              onOpenDomains={onOpenDomains}
-            />
-          )}
-          {active === 'domains' && (
-            <WorkspaceDomainsPanel
-              workspace={workspace}
-              domains={domains}
-              boundDomains={boundDomains}
-              verifiedDomains={verifiedDomains}
-              newDomain={newDomain}
-              certDomainId={certDomainId}
-              certChainPem={certChainPem}
-              privateKeyPem={privateKeyPem}
-              message={domainMessage}
-              embedded
-              onNewDomainChange={onNewDomainChange}
-              onCertDomainChange={onCertDomainChange}
-              onCertChainChange={onCertChainChange}
-              onPrivateKeyChange={onPrivateKeyChange}
-              onAddDomain={onAddDomain}
-              onVerifyDomain={onVerifyDomain}
-              onBindDomain={onBindDomain}
-              onUploadCertificate={onUploadCertificate}
-            />
-          )}
-          {active === 'trash' && (
-            <WorkspaceTrashPanel
-              items={trashItems}
-              embedded
-              onRestore={onRestore}
-              onDeleteForever={onDeleteForever}
-              onEmpty={onEmpty}
-            />
-          )}
-        </main>
+            <nav className="space-y-1">
+              {items.map(item => (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={`w-full rounded-lg px-3 py-2 text-left transition ${active === item.id ? 'bg-white font-semibold text-brand shadow-sm shadow-emerald-950/5 ring-1 ring-brand/10' : 'text-zinc-600 hover:bg-white/80 hover:text-zinc-950'}`}
+                  onClick={() => onChange(item.id)}
+                >
+                  <span className="block text-sm">{item.label}</span>
+                  <span className="block text-xs font-normal text-zinc-500">{item.description}</span>
+                </button>
+              ))}
+            </nav>
+          </aside>
+          <main className="min-h-0 overflow-y-auto p-8">
+            <div className="mb-7 flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-3xl font-semibold text-zinc-950">
+                  {active === 'general' ? 'General' : active === 'domains' ? 'Domains' : 'Trash'}
+                </h2>
+                <p className="mt-1 text-sm text-zinc-500">
+                  {active === 'general' ? 'Manage cloud workspace name, publishing title, and storage.' : active === 'domains' ? 'Bind custom domains and manage certificates.' : 'Restore deleted documents or remove them permanently.'}
+                </p>
+              </div>
+              <button className="subtle-button aspect-square px-0" type="button" title="Close" onClick={onClose}><XMarkIcon className="h-4 w-4" /></button>
+            </div>
+            {active === 'general' && (
+              <WorkspacePublishingPanel
+                workspace={workspace}
+                workspaceName={workspaceName}
+                publishTitle={publishTitle}
+                publicUrl={publicUrl}
+                message={message}
+                saving={saving}
+                embedded
+                onNameChange={onNameChange}
+                onTitleChange={onTitleChange}
+                onSave={onSave}
+                onOpenDomains={onOpenDomains}
+              />
+            )}
+            {active === 'domains' && (
+              <WorkspaceDomainsPanel
+                workspace={workspace}
+                domains={domains}
+                boundDomains={boundDomains}
+                verifiedDomains={verifiedDomains}
+                newDomain={newDomain}
+                certDomainId={certDomainId}
+                certChainPem={certChainPem}
+                privateKeyPem={privateKeyPem}
+                message={domainMessage}
+                embedded
+                onNewDomainChange={onNewDomainChange}
+                onCertDomainChange={onCertDomainChange}
+                onCertChainChange={onCertChainChange}
+                onPrivateKeyChange={onPrivateKeyChange}
+                onAddDomain={onAddDomain}
+                onVerifyDomain={onVerifyDomain}
+                onBindDomain={onBindDomain}
+                onUploadCertificate={onUploadCertificate}
+              />
+            )}
+            {active === 'trash' && (
+              <WorkspaceTrashPanel
+                items={trashItems}
+                embedded
+                onRestore={onRestore}
+                onDeleteForever={onDeleteForever}
+                onEmpty={onEmpty}
+              />
+            )}
+          </main>
+        </DialogPanel>
       </div>
-    </div>
+    </Dialog>
   )
 }
 
@@ -877,8 +998,8 @@ function WorkspaceTrashPanel({
           </p>
         </div>
         {items.length > 0 && (
-          <button className="workspace-card-link text-red-700 hover:text-red-800" type="button" onClick={onEmpty}>
-            Empty trash
+          <button className="workspace-card-link text-red-700 hover:text-red-800" type="button" title="Empty trash" onClick={onEmpty}>
+            <TrashIcon className="h-4 w-4" />
           </button>
         )}
       </div>
@@ -896,8 +1017,12 @@ function WorkspaceTrashPanel({
                   <p className="mt-2 text-xs text-zinc-400">Deleted {formatDateTime(item.deletedAt)} / Expires {formatDateTime(item.expiresAt)}</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <button className="workspace-card-link" type="button" onClick={() => onRestore(item.id)}>Restore</button>
-                  <button className="workspace-card-link text-red-700 hover:text-red-800" type="button" onClick={() => onDeleteForever(item.id)}>Delete forever</button>
+                  <button className="workspace-card-link" type="button" title="Restore" onClick={() => onRestore(item.id)}>
+                    <ArrowUturnLeftIcon className="h-4 w-4" />
+                  </button>
+                  <button className="workspace-card-link text-red-700 hover:text-red-800" type="button" title="Delete forever" onClick={() => onDeleteForever(item.id)}>
+                    <TrashIcon className="h-4 w-4" />
+                  </button>
                 </div>
               </div>
             </article>
@@ -1043,7 +1168,9 @@ function WorkspaceDomainsPanel({
             className="h-11 flex-1 border-0 bg-transparent px-3 text-sm outline-none placeholder:text-zinc-400"
             onKeyDown={e => e.key === 'Enter' && onAddDomain()}
           />
-          <button onClick={onAddDomain} className="h-11 rounded-xl bg-brand px-4 text-sm font-semibold text-white hover:bg-brand-dark">Add domain</button>
+          <button onClick={onAddDomain} className="h-11 rounded-xl bg-brand px-4 text-sm font-semibold text-white hover:bg-brand-dark" title="Add domain">
+            <PlusIcon className="h-4 w-4" />
+          </button>
         </div>
 
         <div className="mt-8 grid gap-4">
@@ -1096,7 +1223,7 @@ function WorkspaceDomainsPanel({
               onClick={onUploadCertificate}
               disabled={!certDomainId || !certChainPem.trim() || !privateKeyPem.trim()}
             >
-              Upload certificate
+              <ArrowUpTrayIcon className="h-4 w-4" />
             </button>
           </div>
           <div className="grid gap-4 md:grid-cols-2">
@@ -1145,11 +1272,11 @@ function DomainRow({
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          {!verified && <button className="workspace-card-link" onClick={onVerify}>Verify DNS</button>}
+          {!verified && <button className="workspace-card-link" title="Verify DNS" onClick={onVerify}><CheckCircleIcon className="h-4 w-4" /></button>}
           {isBound ? (
-            <button className="workspace-card-link" onClick={onUnbind}>Unbind</button>
+            <button className="workspace-card-link" title="Unbind" onClick={onUnbind}><LinkSlashIcon className="h-4 w-4" /></button>
           ) : (
-            <button className="workspace-card-link" onClick={onBind}>Bind here</button>
+            <button className="workspace-card-link" title="Bind here" onClick={onBind}><LinkIcon className="h-4 w-4" /></button>
           )}
         </div>
       </div>
@@ -1320,31 +1447,6 @@ function displayWorkspaceName(workspace: WorkspaceSummary | null): string {
   if (workspace.name === '.jtype') return workspace.publishTitle || 'JType Vault'
   return workspace.name
 }
-
-function ChevronDownIcon() {
-  return (
-    <svg aria-hidden="true" className="h-4 w-4 shrink-0 text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="m6 9 6 6 6-6" />
-    </svg>
-  )
-}
-
-function CheckIcon() {
-  return (
-    <svg aria-hidden="true" className="h-4 w-4 shrink-0 text-brand" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="m5 12 4 4L19 6" />
-    </svg>
-  )
-}
-
-function PlusIcon() {
-  return (
-    <svg aria-hidden="true" className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M12 5v14M5 12h14" />
-    </svg>
-  )
-}
-
 
 function getEditor(): HTMLTextAreaElement | null {
   return document.querySelector<HTMLTextAreaElement>('textarea[aria-label="Markdown editor"]')

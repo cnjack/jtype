@@ -28,7 +28,7 @@ export function CreateNoteDialog() {
     <PaletteModal
       open={state.createNoteDialogOpen}
       onClose={() => dispatch({ type: "SET_CREATE_NOTE_DIALOG", open: false })}
-      ariaLabel="Create new note"
+      ariaLabel="Create new Document"
       inputPlaceholder="Note name..."
       inputAriaLabel="Note name"
       onKeyDown={handleKeyDown}

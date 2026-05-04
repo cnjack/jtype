@@ -93,6 +93,20 @@ Public published sites use the `/u/:username` prefix:
 
 The SPA frontend handles dashboard, workspace, settings, admin, and OAuth routes. Do not use bare `/:username` for published sites because it conflicts with SPA routes like `/workspaces/:id`.
 
+## Iconography
+
+- **All UI icons must use Heroicons** (`@heroicons/react`).
+- Replace any existing custom SVG icons with Heroicons equivalents.
+- Action buttons should display an **icon + tooltip** (hide text label, use `title` attribute for tooltip).
+- This rule applies to both the desktop app frontend and the web service frontend.
+
+## UI Components
+
+- **All Disclosure, Dialog, Dropdown Menu, and Popover components must use `@headlessui/react`**.
+- Do not implement custom modal backdrops, dropdown toggles, or focus traps by hand.
+- Use `Dialog` + `DialogPanel` for modals, `Menu` + `MenuButton` + `MenuItems` for dropdowns.
+- This rule applies to both the desktop app frontend and the web service frontend.
+
 ## API Contract Sync Reminder
 
 The desktop app frontend and web service share a hardcoded HTTP API contract. When modifying either side, update the other:

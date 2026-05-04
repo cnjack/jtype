@@ -63,8 +63,10 @@ export function isTauriRuntime() {
 export function flattenNodes(entries: import("./types").FileTreeNode[] = []): import("./types").FileTreeNode[] {
   const flattened: import("./types").FileTreeNode[] = [];
   for (const node of entries) {
-    if (node.relativePath !== ".jtype") flattened.push(node);
-    flattened.push(...flattenNodes(node.children));
+    if (!node.relativePath.startsWith(".jtype")) {
+      flattened.push(node);
+      flattened.push(...flattenNodes(node.children));
+    }
   }
   return flattened;
 }

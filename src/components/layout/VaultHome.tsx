@@ -26,7 +26,7 @@ export function VaultHome() {
             </p>
             <div className="mt-6 flex flex-wrap gap-2">
               <button className="toolbar-button toolbar-button-primary" type="button" onClick={() => dispatch({ type: "SET_CREATE_NOTE_DIALOG", open: true })}>
-                New note
+                New Document
               </button>
               <button className="toolbar-button" type="button" onClick={() => dispatch({ type: "SET_QUICK_SWITCHER", open: true })}>
                 Quick open

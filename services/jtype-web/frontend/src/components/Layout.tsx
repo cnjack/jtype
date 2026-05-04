@@ -1,6 +1,14 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, Outlet, useNavigate } from 'react-router-dom'
 import {
+  Menu,
+  MenuButton,
+  MenuItems,
+  MenuItem,
+  Dialog,
+  DialogPanel,
+} from '@headlessui/react'
+import {
   api,
   type DeviceInfo,
   type ProfileResponse,
@@ -8,11 +16,16 @@ import {
 } from '../api'
 import { useAuth } from './AuthContext'
 import { AdminDialog } from '../pages/Admin'
+import {
+  Cog6ToothIcon,
+  ShieldCheckIcon,
+  ArrowLeftOnRectangleIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline'
 
 export function Layout() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
-  const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [adminOpen, setAdminOpen] = useState(false)
 
@@ -48,52 +61,49 @@ export function Layout() {
           </Link>
         </div>
 
-        <div className="relative">
-          <button
+        <Menu as="div" className="relative">
+          <MenuButton
             type="button"
             className="flex h-10 w-10 items-center justify-center rounded-full bg-brand text-sm font-semibold text-white shadow-sm shadow-brand/20 transition hover:bg-brand-dark"
-            onClick={() => setUserMenuOpen(open => !open)}
             aria-label="User menu"
           >
             {userInitial}
-          </button>
-          {userMenuOpen && (
-            <div className="absolute right-0 top-12 z-[100] w-56 overflow-hidden rounded-xl border border-black/[0.06] bg-[#fbfdfb] p-1 shadow-2xl shadow-stone-900/15">
-              <div className="px-3 py-2">
-                <p className="truncate text-sm font-semibold text-zinc-950">{user?.username}</p>
-                <p className="text-xs text-zinc-500">{user?.role}</p>
-              </div>
+          </MenuButton>
+          <MenuItems className="absolute right-0 top-12 z-[100] w-56 overflow-hidden rounded-xl border border-black/[0.06] bg-[#fbfdfb] p-1 shadow-2xl shadow-stone-900/15 focus:outline-none">
+            <div className="px-3 py-2">
+              <p className="truncate text-sm font-semibold text-zinc-950">{user?.username}</p>
+              <p className="text-xs text-zinc-500">{user?.role}</p>
+            </div>
+            <MenuItem>
               <button
                 className="menu-row"
                 type="button"
-                onClick={() => {
-                  setSettingsOpen(true)
-                  setUserMenuOpen(false)
-                }}
+                onClick={() => setSettingsOpen(true)}
               >
-                <SettingsIcon />
+                <Cog6ToothIcon className="h-4 w-4" />
                 Settings
               </button>
-              {user?.role === 'admin' && (
+            </MenuItem>
+            {user?.role === 'admin' && (
+              <MenuItem>
                 <button
                   className="menu-row"
                   type="button"
-                  onClick={() => {
-                    setAdminOpen(true)
-                    setUserMenuOpen(false)
-                  }}
+                  onClick={() => setAdminOpen(true)}
                 >
-                  <ShieldIcon />
+                  <ShieldCheckIcon className="h-4 w-4" />
                   Admin
                 </button>
-              )}
+              </MenuItem>
+            )}
+            <MenuItem>
               <button className="menu-row text-red-700 hover:text-red-800" type="button" onClick={handleLogout}>
-                <LogoutIcon />
+                <ArrowLeftOnRectangleIcon className="h-4 w-4" />
                 Sign out
               </button>
-            </div>
-          )}
-        </div>
+            </MenuItem>
+          </MenuItems>
+        </Menu>
       </header>
 
       <main className="relative z-0 min-h-0 overflow-hidden">
@@ -132,8 +142,10 @@ function UserSettingsDialog({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-950/35 px-5 py-6 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Settings" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="grid h-[min(720px,92vh)] w-full max-w-5xl overflow-hidden rounded-2xl border border-white/70 bg-[#fbfdfb] shadow-2xl shadow-stone-900/25 md:grid-cols-[220px_minmax(0,1fr)]">
+    <Dialog open onClose={onClose} className="relative z-50" aria-label="Settings">
+      <div className="fixed inset-0 bg-stone-950/35 backdrop-blur-sm" aria-hidden="true" />
+      <div className="fixed inset-0 z-50 flex items-center justify-center px-5 py-6">
+        <DialogPanel className="grid h-[min(720px,92vh)] w-full max-w-5xl overflow-hidden rounded-2xl border border-white/70 bg-[#fbfdfb] shadow-2xl shadow-stone-900/25 md:grid-cols-[220px_minmax(0,1fr)]">
         <aside className="border-r border-black/[0.04] bg-[#f7faf8] p-4">
           <p className="mb-2 text-xs font-semibold uppercase text-stone-500">Account</p>
           <div className="rounded-lg bg-white px-3 py-2 text-sm font-semibold text-brand shadow-sm shadow-emerald-950/5 ring-1 ring-brand/10">Profile</div>
@@ -144,7 +156,7 @@ function UserSettingsDialog({ onClose }: { onClose: () => void }) {
               <h2 className="text-3xl font-semibold text-zinc-950">Settings</h2>
               <p className="mt-1 text-sm text-zinc-500">Manage your JType Cloud account and connected devices.</p>
             </div>
-            <button className="subtle-button" type="button" onClick={onClose}>Close</button>
+            <button className="subtle-button aspect-square px-0" type="button" title="Close" onClick={onClose}><XMarkIcon className="h-4 w-4" /></button>
           </div>
 
           {!profile ? (
@@ -193,8 +205,9 @@ function UserSettingsDialog({ onClose }: { onClose: () => void }) {
             </div>
           )}
         </main>
-      </div>
+      </DialogPanel>
     </div>
+  </Dialog>
   )
 }
 
@@ -226,29 +239,4 @@ function formatBytes(bytes: number): string {
   return `${(bytes / 1024 / 1024 / 1024).toFixed(1)} GB`
 }
 
-function SettingsIcon() {
-  return (
-    <svg aria-hidden="true" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
-      <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6V21a2 2 0 1 1-4 0v-.2a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.6-1H3a2 2 0 1 1 0-4h.2a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.6V3a2 2 0 1 1 4 0v.2a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2a2 2 0 1 1 0 4H21a1.7 1.7 0 0 0-1.6 1Z" />
-    </svg>
-  )
-}
 
-function ShieldIcon() {
-  return (
-    <svg aria-hidden="true" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />
-    </svg>
-  )
-}
-
-function LogoutIcon() {
-  return (
-    <svg aria-hidden="true" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-      <path d="m16 17 5-5-5-5" />
-      <path d="M21 12H9" />
-    </svg>
-  )
-}
