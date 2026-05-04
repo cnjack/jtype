@@ -1,0 +1,15 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="116" y="140" width="792" height="792" rx="176" fill="#0D0D0C" opacity="0.08"/>
+  <rect x="124" y="132" width="776" height="776" rx="168" fill="#0D0D0C" opacity="0.04"/>
+  <rect x="128" y="120" width="768" height="768" rx="164" fill="#FEFEFE"/>
+
+  <text
+    x="512"
+    y="584"
+    text-anchor="middle"
+    font-family="Arial Black, Segoe UI, Arial, sans-serif"
+    font-size="180"
+    font-weight="900"
+    letter-spacing="0"
+  ><tspan fill="#8D939D">[</tspan><tspan fill="#008884">J</tspan><tspan fill="#0D0D0C">TYPE</tspan><tspan fill="#8D939D">]</tspan></text>
+</svg>

@@ -1,0 +1,1367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JType Design System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --jtype-primary: #008884;
+      --jtype-primary-hover: #006f6b;
+      --jtype-primary-soft: #e8f6f2;
+      --jtype-primary-light: #d9f2ed;
+      --jtype-on-primary: #ffffff;
+      --jtype-app-bg: #f5f8f6;
+      --jtype-surface: #fbfdfb;
+      --jtype-surface-welcome: #fbfaf7;
+      --jtype-surface-sidebar: #f7faf8;
+      --jtype-surface-preview: #f8fbf9;
+      --jtype-surface-panel: #f6faf7;
+      --jtype-canvas: #ffffff;
+      --jtype-ink-deep: #0d0d0c;
+      --jtype-ink: #111827;
+      --jtype-charcoal: #4b5753;
+      --jtype-slate: #5f6d68;
+      --jtype-steel: #6b7773;
+      --jtype-stone: #8a9691;
+      --jtype-muted: #9aa6a1;
+      --jtype-on-dark: #ffffff;
+      --jtype-hairline: rgb(13 13 12 / 0.06);
+      --jtype-hairline-soft: rgb(13 13 12 / 0.04);
+      --jtype-hairline-strong: rgb(13 13 12 / 0.08);
+      --jtype-brand-bracket: #8d939d;
+      --jtype-brand-j: #008884;
+      --jtype-brand-type: #0d0d0c;
+      --jtype-amber-warning: #fbbf24;
+      --jtype-amber-warning-deep: #451a03;
+      --jtype-amber-bg: #fffbeb;
+      --jtype-red-error: #fca5a5;
+      --jtype-red-error-deep: #450a0a;
+      --jtype-red-destructive: #b91c1c;
+      --jtype-code-bg: #101816;
+      --jtype-code-fg: #f8fafc;
+      --jtype-code-inline-bg: #e8f6f2;
+      --jtype-link: #008884;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, Segoe UI, Helvetica, Arial, sans-serif;
+      background: var(--jtype-app-bg);
+      color: var(--jtype-ink-deep);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Navigation */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(24px);
+      border-bottom: 1px solid rgb(13 13 12 / 0.04);
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 40px;
+    }
+
+    .nav-logo {
+      font-family: 'Arial Black', 'Segoe UI', Arial, sans-serif;
+      font-size: 18px;
+      font-weight: 900;
+      color: var(--jtype-brand-type);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .nav-logo .bracket {
+      color: var(--jtype-brand-bracket);
+    }
+
+    .nav-logo .j {
+      color: var(--jtype-brand-j);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 32px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--jtype-charcoal);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+      transition: color 150ms ease;
+    }
+
+    .nav-links a:hover {
+      color: var(--jtype-primary);
+    }
+
+    .nav-links a.active {
+      color: var(--jtype-primary);
+      border-bottom: 2px solid var(--jtype-primary);
+      padding-bottom: 2px;
+    }
+
+    /* Hero */
+    .hero {
+      padding: 80px 40px 60px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--jtype-primary);
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 24px;
+    }
+
+    .hero-badge::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      background: var(--jtype-primary);
+      border-radius: 50%;
+    }
+
+    .hero h1 {
+      font-size: 48px;
+      font-weight: 600;
+      line-height: 1.1;
+      letter-spacing: -0.035em;
+      color: var(--jtype-ink-deep);
+      margin-bottom: 20px;
+    }
+
+    .hero h1 span {
+      color: var(--jtype-primary);
+    }
+
+    .hero p {
+      font-size: 16px;
+      color: var(--jtype-slate);
+      max-width: 560px;
+      line-height: 1.6;
+    }
+
+    /* Section */
+    .section {
+      padding: 60px 40px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+
+    .section-number {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--jtype-stone);
+    }
+
+    .section h2 {
+      font-size: 32px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--jtype-ink-deep);
+    }
+
+    .section-description {
+      font-size: 14px;
+      color: var(--jtype-slate);
+      margin-top: -24px;
+      margin-bottom: 40px;
+      max-width: 600px;
+    }
+
+    /* Color Grid */
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .color-swatch {
+      background: var(--jtype-canvas);
+      border-radius: 12px;
+      border: 1px solid rgb(13 13 12 / 0.06);
+      overflow: hidden;
+      transition: transform 150ms ease, box-shadow 150ms ease;
+    }
+
+    .color-swatch:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgb(2 44 34 / 0.08);
+    }
+
+    .color-swatch-preview {
+      height: 96px;
+      width: 100%;
+    }
+
+    .color-swatch-info {
+      padding: 16px;
+    }
+
+    .color-swatch-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--jtype-ink-deep);
+      margin-bottom: 4px;
+    }
+
+    .color-swatch-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--jtype-steel);
+    }
+
+    /* Typography */
+    .type-specimen {
+      background: var(--jtype-canvas);
+      border-radius: 16px;
+      border: 1px solid rgb(13 13 12 / 0.06);
+      padding: 32px;
+      margin-bottom: 16px;
+    }
+
+    .type-specimen-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgb(13 13 12 / 0.06);
+    }
+
+    .type-specimen-name {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--jtype-stone);
+    }
+
+    .type-specimen-meta {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--jtype-muted);
+    }
+
+    /* Spacing & Shape */
+    .token-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 12px;
+    }
+
+    .token-card {
+      background: var(--jtype-canvas);
+      border-radius: 12px;
+      border: 1px solid rgb(13 13 12 / 0.06);
+      padding: 20px;
+      text-align: center;
+    }
+
+    .token-card-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--jtype-primary);
+      margin-bottom: 8px;
+    }
+
+    .token-card-name {
+      font-size: 12px;
+      color: var(--jtype-steel);
+      font-weight: 500;
+    }
+
+    /* Shape preview */
+    .shape-preview {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--jtype-primary);
+      color: white;
+      width: 64px;
+      height: 64px;
+      font-size: 11px;
+      font-weight: 600;
+      margin: 0 auto 12px;
+    }
+
+    /* Component Showcase */
+    .component-showcase {
+      background: var(--jtype-canvas);
+      border-radius: 16px;
+      border: 1px solid rgb(13 13 12 / 0.06);
+      padding: 32px;
+      margin-bottom: 24px;
+    }
+
+    .component-showcase-header {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--jtype-stone);
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgb(13 13 12 / 0.06);
+    }
+
+    .component-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .component-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .component-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--jtype-stone);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      min-width: 100px;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 36px;
+      padding: 0 14px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 150ms ease;
+      border: 1px solid transparent;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: var(--jtype-primary);
+      color: var(--jtype-on-primary);
+      border-color: var(--jtype-primary);
+      box-shadow: 0 1px 2px 0 rgb(2 44 34 / 0.05);
+    }
+
+    .btn-primary:hover {
+      background: var(--jtype-primary-hover);
+      border-color: var(--jtype-primary-hover);
+    }
+
+    .btn-toolbar {
+      background: rgba(255, 255, 255, 0.8);
+      color: var(--jtype-ink-deep);
+      border: 1px solid rgb(13 13 12 / 0.06);
+      box-shadow: 0 1px 2px 0 rgb(2 44 34 / 0.05);
+    }
+
+    .btn-toolbar:hover {
+      background: var(--jtype-canvas);
+      border-color: rgb(4 120 87 / 0.2);
+      color: var(--jtype-ink);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--jtype-slate);
+      border: none;
+      padding: 0 8px;
+    }
+
+    .btn-ghost:hover {
+      background: var(--jtype-primary-soft);
+      color: var(--jtype-primary-hover);
+    }
+
+    .btn-icon {
+      background: transparent;
+      color: var(--jtype-steel);
+      border: none;
+      padding: 0;
+      width: 32px;
+      height: 32px;
+    }
+
+    .btn-icon:hover {
+      background: var(--jtype-primary-soft);
+      color: var(--jtype-primary-hover);
+    }
+
+    .btn-account {
+      background: var(--jtype-canvas);
+      color: var(--jtype-charcoal);
+      border: 1px solid rgb(13 13 12 / 0.06);
+      border-radius: 9999px;
+      box-shadow: 0 1px 2px 0 rgb(2 44 34 / 0.05);
+    }
+
+    .btn-account:hover {
+      background: var(--jtype-primary-soft);
+      color: var(--jtype-primary-hover);
+      border-color: rgb(0 136 132 / 0.3);
+    }
+
+    .btn-pill {
+      border-radius: 9999px;
+      height: 28px;
+      padding: 0 12px;
+      font-size: 11px;
+      font-weight: 600;
+      background: transparent;
+      color: var(--jtype-slate);
+    }
+
+    .btn-pill.active {
+      background: var(--jtype-canvas);
+      color: var(--jtype-primary-hover);
+      box-shadow: 0 1px 2px 0 rgb(2 44 34 / 0.05);
+    }
+
+    .view-mode-group {
+      display: inline-flex;
+      background: #eef5f1;
+      border-radius: 9999px;
+      padding: 4px;
+      gap: 4px;
+    }
+
+    /* Inputs */
+    .input-field {
+      height: 36px;
+      width: 100%;
+      max-width: 320px;
+      padding: 0 12px;
+      border-radius: 8px;
+      border: 1px solid rgb(13 13 12 / 0.06);
+      background: rgba(255, 255, 255, 0.8);
+      color: var(--jtype-ink-deep);
+      font-family: inherit;
+      font-size: 13px;
+      outline: none;
+      transition: all 150ms ease;
+    }
+
+    .input-field::placeholder {
+      color: var(--jtype-muted);
+    }
+
+    .input-field:focus {
+      background: var(--jtype-canvas);
+      border-color: rgb(0 136 132 / 0.45);
+      box-shadow: 0 0 0 4px rgb(0 136 132 / 0.1);
+    }
+
+    /* Cards */
+    .panel-card {
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 16px;
+      padding: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      box-shadow: 0 1px 2px 0 rgb(2 44 34 / 0.05), 0 0 0 1px rgb(13 13 12 / 0.03);
+    }
+
+    .welcome-card {
+      background: var(--jtype-canvas);
+      border-radius: 12px;
+      padding: 20px;
+      border: 1px solid #e7e5e4;
+    }
+
+    /* Status Chips */
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      height: 24px;
+      padding: 0 10px;
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .status-chip-neutral {
+      background: #edf1ef;
+      color: var(--jtype-slate);
+    }
+
+    .status-chip-warning {
+      background: var(--jtype-amber-warning);
+      color: var(--jtype-amber-warning-deep);
+    }
+
+    .status-chip-success {
+      background: var(--jtype-primary-light);
+      color: var(--jtype-primary-hover);
+    }
+
+    .status-chip-error {
+      background: var(--jtype-red-error);
+      color: var(--jtype-red-error-deep);
+    }
+
+    /* Tree Item */
+    .tree-item {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 13px;
+      color: var(--jtype-charcoal);
+      cursor: pointer;
+      transition: all 150ms ease;
+      border: none;
+      background: transparent;
+      text-align: left;
+      font-family: inherit;
+    }
+
+    .tree-item:hover {
+      background: rgba(255, 255, 255, 0.8);
+      color: var(--jtype-ink);
+    }
+
+    .tree-item.active {
+      background: var(--jtype-primary-soft);
+      color: var(--jtype-primary-hover);
+      font-weight: 600;
+      box-shadow: 0 0 0 1px rgb(0 136 132 / 0.15);
+    }
+
+    /* Context Menu */
+    .context-menu {
+      background: #fafaf9;
+      border-radius: 8px;
+      padding: 4px;
+      border: 1px solid #e7e5e4;
+      box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+      min-width: 200px;
+    }
+
+    .context-menu-item {
+      display: flex;
+      width: 100%;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 13px;
+      color: var(--jtype-charcoal);
+      cursor: pointer;
+      transition: all 150ms ease;
+      border: none;
+      background: transparent;
+      text-align: left;
+      font-family: inherit;
+    }
+
+    .context-menu-item:hover {
+      background: #e7e5e4;
+    }
+
+    /* User Avatar */
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--jtype-primary);
+      color: var(--jtype-on-primary);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 600;
+      box-shadow: 0 1px 2px 0 rgb(0 136 132 / 0.2);
+      cursor: pointer;
+      transition: background 150ms ease;
+    }
+
+    .user-avatar:hover {
+      background: var(--jtype-primary-hover);
+    }
+
+    /* Code Block */
+    .code-block {
+      background: var(--jtype-code-bg);
+      color: var(--jtype-code-fg);
+      border-radius: 14px;
+      padding: 20px;
+      font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      overflow-x: auto;
+    }
+
+    .inline-code {
+      background: var(--jtype-code-inline-bg);
+      color: var(--jtype-ink-deep);
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+    }
+
+    /* Blockquote */
+    .blockquote {
+      border-left: 4px solid var(--jtype-primary);
+      padding-left: 18px;
+      color: var(--jtype-slate);
+      font-style: italic;
+    }
+
+    /* Modal */
+    .modal-demo {
+      background: var(--jtype-surface);
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      box-shadow: 0 25px 50px -12px rgb(28 25 23 / 0.2);
+      max-width: 480px;
+      padding: 24px;
+    }
+
+    /* Logo variants */
+    .logo-header {
+      font-family: 'Arial Black', 'Segoe UI', Arial, sans-serif;
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .logo-welcome {
+      font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    /* Two column layout for components */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 768px) {
+      .two-col {
+        grid-template-columns: 1fr;
+      }
+      
+      .nav {
+        padding: 0 20px;
+      }
+      
+      .nav-links {
+        display: none;
+      }
+      
+      .hero h1 {
+        font-size: 36px;
+      }
+      
+      .section {
+        padding: 40px 20px;
+      }
+      
+      .color-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgb(13 13 12 / 0.15);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgb(13 13 12 / 0.25);
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="nav">
+    <a href="#" class="nav-logo">
+      <span class="bracket">[</span><span class="j">J</span><span class="bracket">]</span><span>TYPE</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#colors">Colors</a></li>
+      <li><a href="#typography">Typography</a></li>
+      <li><a href="#spacing">Tokens</a></li>
+      <li><a href="#components" class="active">Components</a></li>
+      <li><a href="#screens">Screens</a></li>
+    </ul>
+    <button class="btn btn-primary" style="height: 32px; padding: 0 16px; font-size: 13px;">
+      Get JType
+    </button>
+  </nav>
+
+  <!-- Hero -->
+  <header class="hero">
+    <div class="hero-badge">design.md</div>
+    <h1>The design system behind <span>JType</span>.</h1>
+    <p>A living design system document rendered in HTML. Every swatch uses the real CSS variable. Every component is the real component.</p>
+  </header>
+
+  <!-- Colors Section -->
+  <section class="section" id="colors">
+    <div class="section-header">
+      <span class="section-number">01</span>
+      <h2>Colors</h2>
+    </div>
+    <p class="section-description">A calm teal-and-stone palette with layered transparency. The primary teal (#008884) is the sole accent color, used consistently for CTAs, active states, and links.</p>
+    
+    <div class="color-grid">
+      <div class="color-swatch">
+        <div class="color-swatch-preview" style="background: var(--jtype-primary)"></div>
+        <div class="color-swatch-info">
+          <div class="color-swatch-name">Primary</div>
+          <div class="color-swatch-value">#008884</div>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-swatch-preview" style="background: var(--jtype-primary-hover)"></div>
+        <div class="color-swatch-info">
+          <div class="color-swatch-name">Primary Hover</div>
+          <div class="color-swatch-value">#006f6b</div>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-swatch-preview" style="background: var(--jtype-primary-soft)"></div>
+        <div class="color-swatch-info">
+          <div class="color-swatch-name">Primary Soft</div>
+          <div class="color-swatch-value">#e8f6f2</div>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-swatch-preview" style="background: var(--jtype-primary-light)"></div>
+        <div class="color-swatch-info">
+          <div class="color-swatch-name">Primary Light</div>
+          <div class="color-swatch-value">#d9f2ed</div>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-swatch-preview" style="background: var(--jtype-app-bg)"></div>
+        <div class="color-swatch-info">
+          <div class="color-swatch-name">App Background</div>
+          <div class="color-swatch-value">#f5f8f6</div>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-swatch-preview" style="background: var(--jtype-surface)"></div>
+        <div class="color-swatch-info">
+          <div class="color-swatch-name">Surface</div>
+          <div class="color-swatch-value">#fbfdfb</div>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-swatch-preview" style="background: var(--jtype-surface-sidebar)"></div>
+        <div class="color-swatch-info">
+          <div class="color-swatch-name">Surface Sidebar</div>
+          <div class="color-swatch-value">#f7faf8</div>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-swatch-preview" style="background: var(--jtype-canvas)"></div>
+        <div class="color-swatch-info">
+          <div class="color-swatch-name">Canvas</div>
+          <div class="color-swatch-value">#ffffff</div>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-swatch-preview" style="background: var(--jtype-ink-deep)"></div>
+        <div class="color-swatch-info">
+          <div class="color-swatch-name">Ink Deep</div>
+          <div class="color-swatch-value">#0d0d0c</div>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-swatch-preview" style="background: var(--jtype-ink)"></div>
+        <div class="color-swatch-info">
+          <div class="color-swatch-name">Ink</div>
+          <div class="color-swatch-value">#111827</div>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-swatch-preview" style="background: var(--jtype-charcoal)"></div>
+        <div class="color-swatch-info">
+          <div class="color-swatch-name">Charcoal</div>
+          <div class="color-swatch-value">#4b5753</div>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-swatch-preview" style="background: var(--jtype-slate)"></div>
+        <div class="color-swatch-info">
+          <div class="color-swatch-name">Slate</div>
+          <div class="color-swatch-value">#5f6d68</div>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-swatch-preview" style="background: var(--jtype-steel)"></div>
+        <div class="color-swatch-info">
+          <div class="color-swatch-name">Steel</div>
+          <div class="color-swatch-value">#6b7773</div>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-swatch-preview" style="background: var(--jtype-muted)"></div>
+        <div class="color-swatch-info">
+          <div class="color-swatch-name">Muted</div>
+          <div class="color-swatch-value">#9aa6a1</div>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-swatch-preview" style="background: var(--jtype-amber-warning)"></div>
+        <div class="color-swatch-info">
+          <div class="color-swatch-name">Amber Warning</div>
+          <div class="color-swatch-value">#fbbf24</div>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-swatch-preview" style="background: var(--jtype-red-error)"></div>
+        <div class="color-swatch-info">
+          <div class="color-swatch-name">Red Error</div>
+          <div class="color-swatch-value">#fca5a5</div>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-swatch-preview" style="background: var(--jtype-code-bg)"></div>
+        <div class="color-swatch-info">
+          <div class="color-swatch-name">Code Background</div>
+          <div class="color-swatch-value">#101816</div>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-swatch-preview" style="background: var(--jtype-brand-bracket)"></div>
+        <div class="color-swatch-info">
+          <div class="color-swatch-name">Brand Bracket</div>
+          <div class="color-swatch-value">#8d939d</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Typography Section -->
+  <section class="section" id="typography">
+    <div class="section-header">
+      <span class="section-number">02</span>
+      <h2>Typography</h2>
+    </div>
+    <p class="section-description">System font stack for UI, JetBrains Mono for the logo, and monospace for the editor. Five-level gray hierarchy with negative tracking on large headings.</p>
+
+    <div class="type-specimen">
+      <div class="type-specimen-header">
+        <span class="type-specimen-name">Hero Display</span>
+        <span class="type-specimen-meta">28px / 700 / -0.5px</span>
+      </div>
+      <div class="logo-welcome">
+        <span style="color: var(--jtype-brand-bracket)">[</span><span style="color: var(--jtype-brand-j)">J</span><span style="color: var(--jtype-brand-bracket)">]</span><span style="color: var(--jtype-brand-type)">TYPE</span>
+      </div>
+    </div>
+
+    <div class="type-specimen">
+      <div class="type-specimen-header">
+        <span class="type-specimen-name">Heading 1</span>
+        <span class="type-specimen-meta">48px / 600 / -0.035em</span>
+      </div>
+      <div style="font-size: 48px; font-weight: 600; line-height: 1.1; letter-spacing: -0.035em; color: var(--jtype-ink-deep)">
+        Vault ready
+      </div>
+    </div>
+
+    <div class="type-specimen">
+      <div class="type-specimen-header">
+        <span class="type-specimen-name">Heading 2</span>
+        <span class="type-specimen-meta">36px / 600 / -0.02em</span>
+      </div>
+      <div style="font-size: 36px; font-weight: 600; line-height: 1.2; letter-spacing: -0.02em; color: var(--jtype-ink-deep)">
+        Create a vault or edit one Markdown file
+      </div>
+    </div>
+
+    <div class="type-specimen">
+      <div class="type-specimen-header">
+        <span class="type-specimen-name">Heading 3</span>
+        <span class="type-specimen-meta">24px / 600</span>
+      </div>
+      <div style="font-size: 24px; font-weight: 600; line-height: 1.3; color: var(--jtype-ink-deep)">
+        Document Properties
+      </div>
+    </div>
+
+    <div class="type-specimen">
+      <div class="type-specimen-header">
+        <span class="type-specimen-name">Body Medium</span>
+        <span class="type-specimen-meta">14px / 400 / 1.6</span>
+      </div>
+      <div style="font-size: 14px; line-height: 1.6; color: var(--jtype-charcoal)">
+        JType is a local-first Markdown vault with a calm, nature-inspired teal-and-stone interface. 
+        The app opens in three distinct modes — empty, workspace, or single-file.
+      </div>
+    </div>
+
+    <div class="type-specimen">
+      <div class="type-specimen-header">
+        <span class="type-specimen-name">Body Small</span>
+        <span class="type-specimen-meta">13px / 400 / 1.5</span>
+      </div>
+      <div style="font-size: 13px; line-height: 1.5; color: var(--jtype-slate)">
+        Secondary text for tree items, breadcrumbs, and metadata labels throughout the interface.
+      </div>
+    </div>
+
+    <div class="type-specimen">
+      <div class="type-specimen-header">
+        <span class="type-specimen-name">Caption Bold</span>
+        <span class="type-specimen-meta">12px / 600 / uppercase</span>
+      </div>
+      <div style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--jtype-stone)">
+        Status Labels · Section Headers · Metadata
+      </div>
+    </div>
+
+    <div class="type-specimen">
+      <div class="type-specimen-header">
+        <span class="type-specimen-name">Editor Mono</span>
+        <span class="type-specimen-meta">13px / 400 / 1.75</span>
+      </div>
+      <div style="font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.75; color: var(--jtype-ink-deep); background: rgba(255,255,255,0.4); padding: 16px; border-radius: 8px;">
+        function hello() {<br>
+        &nbsp;&nbsp;console.log("Hello, JType!");<br>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- Spacing & Shape Tokens -->
+  <section class="section" id="spacing">
+    <div class="section-header">
+      <span class="section-number">03</span>
+      <h2>Tokens</h2>
+    </div>
+    <p class="section-description">Spacing, border radius, and layout dimensions. The base unit is 4px, with increments building up to section-level spacing.</p>
+
+    <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 20px; color: var(--jtype-ink)">Spacing Scale</h3>
+    <div class="token-grid" style="margin-bottom: 48px;">
+      <div class="token-card">
+        <div class="token-card-value">4px</div>
+        <div class="token-card-name">xxs</div>
+      </div>
+      <div class="token-card">
+        <div class="token-card-value">6px</div>
+        <div class="token-card-name">xs</div>
+      </div>
+      <div class="token-card">
+        <div class="token-card-value">8px</div>
+        <div class="token-card-name">sm</div>
+      </div>
+      <div class="token-card">
+        <div class="token-card-value">12px</div>
+        <div class="token-card-name">md</div>
+      </div>
+      <div class="token-card">
+        <div class="token-card-value">16px</div>
+        <div class="token-card-name">lg</div>
+      </div>
+      <div class="token-card">
+        <div class="token-card-value">20px</div>
+        <div class="token-card-name">xl</div>
+      </div>
+      <div class="token-card">
+        <div class="token-card-value">24px</div>
+        <div class="token-card-name">xxl</div>
+      </div>
+      <div class="token-card">
+        <div class="token-card-value">32px</div>
+        <div class="token-card-name">xxxl</div>
+      </div>
+    </div>
+
+    <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 20px; color: var(--jtype-ink)">Border Radius</h3>
+    <div class="token-grid">
+      <div class="token-card">
+        <div class="shape-preview" style="border-radius: 4px;">4</div>
+        <div class="token-card-name">xs</div>
+      </div>
+      <div class="token-card">
+        <div class="shape-preview" style="border-radius: 6px;">6</div>
+        <div class="token-card-name">sm</div>
+      </div>
+      <div class="token-card">
+        <div class="shape-preview" style="border-radius: 8px;">8</div>
+        <div class="token-card-name">md</div>
+      </div>
+      <div class="token-card">
+        <div class="shape-preview" style="border-radius: 12px;">12</div>
+        <div class="token-card-name">lg</div>
+      </div>
+      <div class="token-card">
+        <div class="shape-preview" style="border-radius: 16px;">16</div>
+        <div class="token-card-name">xl</div>
+      </div>
+      <div class="token-card">
+        <div class="shape-preview" style="border-radius: 9999px;">∞</div>
+        <div class="token-card-name">full</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Components Section -->
+  <section class="section" id="components">
+    <div class="section-header">
+      <span class="section-number">04</span>
+      <h2>Components</h2>
+    </div>
+    <p class="section-description">All interactive components use the same 150ms ease transition. Primary actions use teal fill, secondary actions use subtle borders, and ghost buttons fade into soft mint on hover.</p>
+
+    <!-- Buttons -->
+    <div class="component-showcase">
+      <div class="component-showcase-header">Buttons</div>
+      
+      <div class="component-row">
+        <span class="component-label">Primary</span>
+        <button class="btn btn-primary">Save document</button>
+        <button class="btn btn-primary">Create note</button>
+        <button class="btn btn-primary" style="opacity: 0.5; cursor: not-allowed;">Disabled</button>
+      </div>
+      
+      <div class="component-row">
+        <span class="component-label">Toolbar</span>
+        <button class="btn btn-toolbar">Open vault</button>
+        <button class="btn btn-toolbar">Quick open</button>
+        <button class="btn btn-toolbar" style="opacity: 0.5; cursor: not-allowed;">Disabled</button>
+      </div>
+      
+      <div class="component-row">
+        <span class="component-label">Ghost</span>
+        <button class="btn btn-ghost">Cancel</button>
+        <button class="btn btn-ghost">Restore</button>
+        <button class="btn btn-ghost">Empty trash</button>
+      </div>
+      
+      <div class="component-row">
+        <span class="component-label">Icon</span>
+        <button class="btn btn-icon">★</button>
+        <button class="btn btn-icon">🗑</button>
+        <button class="btn btn-icon">ⓘ</button>
+        <button class="btn btn-icon">⊘</button>
+      </div>
+      
+      <div class="component-row">
+        <span class="component-label">Account</span>
+        <button class="btn btn-account">A</button>
+        <button class="btn btn-account" style="padding: 0 16px;">Account</button>
+      </div>
+      
+      <div class="component-row">
+        <span class="component-label">View Mode</span>
+        <div class="view-mode-group">
+          <button class="btn btn-pill active">Write</button>
+          <button class="btn btn-pill">Split</button>
+          <button class="btn btn-pill">Preview</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Inputs -->
+    <div class="component-showcase">
+      <div class="component-showcase-header">Inputs</div>
+      
+      <div class="component-row">
+        <span class="component-label">Default</span>
+        <input type="text" class="input-field" placeholder="Search files...">
+      </div>
+      
+      <div class="component-row">
+        <span class="component-label">Focused</span>
+        <input type="text" class="input-field" value="README.md" style="border-color: rgb(0 136 132 / 0.45); box-shadow: 0 0 0 4px rgb(0 136 132 / 0.1); background: white;">
+      </div>
+      
+      <div class="component-row">
+        <span class="component-label">Textarea</span>
+        <textarea class="input-field" style="height: 80px; padding: 12px; resize: vertical;" placeholder="Document description..."></textarea>
+      </div>
+    </div>
+
+    <!-- Status Chips -->
+    <div class="component-showcase">
+      <div class="component-showcase-header">Status Chips</div>
+      
+      <div class="component-row">
+        <span class="component-label">Variants</span>
+        <span class="status-chip status-chip-neutral">Saved</span>
+        <span class="status-chip status-chip-warning">Unsaved</span>
+        <span class="status-chip status-chip-success">Synced</span>
+        <span class="status-chip status-chip-error">Error</span>
+      </div>
+    </div>
+
+    <!-- Cards -->
+    <div class="component-showcase">
+      <div class="component-showcase-header">Cards</div>
+      
+      <div class="component-row" style="align-items: stretch;">
+        <div style="flex: 1;">
+          <div style="font-size: 11px; font-weight: 500; color: var(--jtype-stone); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 12px;">Panel Card</div>
+          <div class="panel-card">
+            <div style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: var(--jtype-ink-deep)">Recent Files</div>
+            <div style="font-size: 13px; color: var(--jtype-slate)">Document content goes here with layered glass effect.</div>
+          </div>
+        </div>
+        <div style="flex: 1;">
+          <div style="font-size: 11px; font-weight: 500; color: var(--jtype-stone); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 12px;">Welcome Card</div>
+          <div class="welcome-card">
+            <div style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: var(--jtype-ink-deep)">Recent</div>
+            <div style="font-size: 13px; color: var(--jtype-slate)">Welcome screen card with solid white background.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="component-showcase">
+      <div class="component-showcase-header">Navigation</div>
+      
+      <div class="component-row" style="flex-direction: column; align-items: stretch; gap: 16px;">
+        <div>
+          <div style="font-size: 11px; font-weight: 500; color: var(--jtype-stone); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 12px;">Tree Items</div>
+          <div style="background: var(--jtype-surface-sidebar); padding: 12px; border-radius: 12px;">
+            <button class="tree-item">
+              <span style="margin-right: 8px;">▸</span> docs
+            </button>
+            <button class="tree-item active">
+              <span style="margin-right: 8px;"></span> README.md
+            </button>
+            <button class="tree-item">
+              <span style="margin-right: 8px;"></span> DESIGN.md
+            </button>
+          </div>
+        </div>
+        
+        <div>
+          <div style="font-size: 11px; font-weight: 500; color: var(--jtype-stone); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 12px;">Context Menu</div>
+          <div class="context-menu" style="position: relative;">
+            <button class="context-menu-item">Open</button>
+            <button class="context-menu-item">Rename</button>
+            <button class="context-menu-item" style="color: var(--jtype-red-destructive);">Move to trash</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- User Avatar -->
+    <div class="component-showcase">
+      <div class="component-showcase-header">User Identity</div>
+      
+      <div class="component-row">
+        <span class="component-label">Avatar</span>
+        <div class="user-avatar">J</div>
+        <div class="user-avatar">A</div>
+        <div class="user-avatar">M</div>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="component-showcase">
+      <div class="component-showcase-header">Content</div>
+      
+      <div class="component-row" style="flex-direction: column; align-items: stretch; gap: 20px;">
+        <div>
+          <div style="font-size: 11px; font-weight: 500; color: var(--jtype-stone); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 12px;">Code Block</div>
+          <div class="code-block">
+const jtype = {<br>
+&nbsp;&nbsp;mode: 'workspace',<br>
+&nbsp;&nbsp;vault: '/home/user/notes',<br>
+&nbsp;&nbsp;sync: true<br>
+};
+          </div>
+        </div>
+        
+        <div>
+          <div style="font-size: 11px; font-weight: 500; color: var(--jtype-stone); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 12px;">Inline Code</div>
+          <div style="font-size: 14px; color: var(--jtype-charcoal);">
+            Use <span class="inline-code">npm run tauri dev</span> to start the desktop app.
+          </div>
+        </div>
+        
+        <div>
+          <div style="font-size: 11px; font-weight: 500; color: var(--jtype-stone); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 12px;">Blockquote</div>
+          <div class="blockquote" style="font-size: 14px;">
+            A local-first Markdown vault with a calm, nature-inspired interface.
+          </div>
+        </div>
+        
+        <div>
+          <div style="font-size: 11px; font-weight: 500; color: var(--jtype-stone); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 12px;">Link</div>
+          <div style="font-size: 14px;">
+            <a href="#" style="color: var(--jtype-link); text-decoration: underline;">Open in JType</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="component-showcase">
+      <div class="component-showcase-header">Modal</div>
+      
+      <div class="component-row">
+        <div class="modal-demo">
+          <div style="font-size: 16px; font-weight: 600; margin-bottom: 12px; color: var(--jtype-ink-deep)">Command Palette</div>
+          <input type="text" class="input-field" placeholder="Type a command..." style="margin-bottom: 16px;">
+          <div style="display: flex; flex-direction: gap: 8px;">
+            <button class="tree-item" style="border-radius: 12px;">
+              <span style="font-weight: 600; color: var(--jtype-ink-deep)">Open file</span>
+              <span style="margin-left: auto; color: var(--jtype-muted); font-size: 12px;">⌘O</span>
+            </button>
+            <button class="tree-item" style="border-radius: 12px;">
+              <span style="font-weight: 600; color: var(--jtype-ink-deep)">Save</span>
+              <span style="margin-left: auto; color: var(--jtype-muted); font-size: 12px;">⌘S</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Screens Section -->
+  <section class="section" id="screens">
+    <div class="section-header">
+      <span class="section-number">05</span>
+      <h2>Screens</h2>
+    </div>
+    <p class="section-description">Three distinct layout modes, each with purpose-built surfaces. The app uses CSS classes on the root element to toggle between modes.</p>
+
+    <div class="two-col">
+      <div class="component-showcase">
+        <div class="component-showcase-header">Empty Mode</div>
+        <div style="background: var(--jtype-surface-welcome); border-radius: 12px; padding: 40px; text-align: center;">
+          <div class="logo-welcome" style="margin-bottom: 24px;">
+            <span style="color: var(--jtype-brand-bracket)">[</span><span style="color: var(--jtype-brand-j)">J</span><span style="color: var(--jtype-brand-bracket)">]</span><span style="color: var(--jtype-brand-type)">TYPE</span>
+          </div>
+          <div style="font-size: 24px; font-weight: 600; color: var(--jtype-ink-deep); margin-bottom: 12px;">Create a vault or edit one Markdown file.</div>
+          <div style="font-size: 14px; color: var(--jtype-slate); margin-bottom: 24px;">A local-first Markdown vault for focused writing.</div>
+          <div style="display: flex; gap: 8px; justify-content: center;">
+            <button class="btn btn-primary">Use default vault</button>
+            <button class="btn btn-toolbar">Open vault</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="component-showcase">
+        <div class="component-showcase-header">Workspace Mode</div>
+        <div style="display: grid; grid-template-columns: 120px 1fr; gap: 1px; background: var(--jtype-hairline); border-radius: 12px; overflow: hidden;">
+          <div style="background: var(--jtype-surface-sidebar); padding: 16px;">
+            <div style="font-size: 12px; font-weight: 600; color: var(--jtype-ink-deep); margin-bottom: 12px;">My Vault</div>
+            <button class="tree-item" style="font-size: 11px; padding: 6px 8px;">
+              <span style="margin-right: 4px;">▸</span> docs
+            </button>
+            <button class="tree-item active" style="font-size: 11px; padding: 6px 8px;">
+              <span style="margin-right: 4px;"></span> note.md
+            </button>
+          </div>
+          <div style="background: var(--jtype-surface); padding: 20px;">
+            <div style="font-size: 13px; font-weight: 600; color: var(--jtype-ink-deep); margin-bottom: 8px;">README.md</div>
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.6; color: var(--jtype-charcoal); background: rgba(255,255,255,0.4); padding: 12px; border-radius: 8px;">
+              # Hello World<br><br>
+              This is a **Markdown** file.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer style="border-top: 1px solid rgb(13 13 12 / 0.06); background: rgba(255,255,255,0.8); padding: 40px;">
+    <div style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;">
+      <div class="logo-header">
+        <span style="color: var(--jtype-brand-bracket)">[</span><span style="color: var(--jtype-brand-j)">J</span><span style="color: var(--jtype-brand-bracket)">]</span><span style="color: var(--jtype-brand-type)">TYPE</span>
+      </div>
+      <div style="font-size: 13px; color: var(--jtype-steel);">
+        JType Design System · Generated from DESIGN.md
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Simple smooth scroll for nav links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+
+    // Active nav link highlighting
+    const sections = document.querySelectorAll('section[id]');
+    const navLinks = document.querySelectorAll('.nav-links a');
+
+    window.addEventListener('scroll', () => {
+      let current = '';
+      sections.forEach(section => {
+        const sectionTop = section.offsetTop;
+        if (scrollY >= sectionTop - 100) {
+          current = section.getAttribute('id');
+        }
+      });
+
+      navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === '#' + current) {
+          link.classList.add('active');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

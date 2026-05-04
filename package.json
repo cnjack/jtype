@@ -1,0 +1,44 @@
+{
+  "name": "markdown-viewer",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "test": "npm run build && npm run test:e2e",
+    "test:e2e": "playwright test",
+    "test:web": "playwright test --config playwright.web.config.ts",
+    "web:dev": "cargo run --manifest-path services/jtype-web/Cargo.toml",
+    "web:test": "cargo test --manifest-path services/jtype-web/Cargo.toml",
+    "preview": "vite preview",
+    "tauri": "tauri"
+  },
+  "dependencies": {
+    "@headlessui/react": "^2.2.10",
+    "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-dialog": "^2.7.0",
+    "@tauri-apps/plugin-fs": "^2.5.0",
+    "@tauri-apps/plugin-opener": "^2",
+    "dompurify": "^3.4.2",
+    "katex": "^0.16.45",
+    "marked": "^18.0.2",
+    "mermaid": "^11.14.0",
+    "morphdom": "^2.7.8",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.59.1",
+    "@tailwindcss/vite": "^4.2.4",
+    "@tauri-apps/cli": "^2",
+    "@types/morphdom": "^2.3.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^4.4.0",
+    "tailwindcss": "^4.2.4",
+    "typescript": "~5.6.2",
+    "vite": "^6.0.3"
+  },
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+}

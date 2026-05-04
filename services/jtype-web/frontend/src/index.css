@@ -1,0 +1,240 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-brand: #008884;
+  --color-brand-light: #22b8ad;
+  --color-brand-dark: #006f6b;
+}
+
+@layer base {
+  body {
+    @apply bg-[#f5f8f6] text-zinc-950 antialiased;
+  }
+}
+
+@layer components {
+  .workspace-card-link {
+    @apply inline-flex h-9 items-center justify-center rounded-full bg-[#eef7f4] px-3 text-sm font-semibold text-brand transition hover:bg-brand hover:text-white;
+  }
+
+  .sidebar-action {
+    @apply inline-flex h-9 items-center justify-center rounded-lg border border-black/[0.06] bg-white/80 px-3 text-xs font-semibold text-stone-800 shadow-sm shadow-emerald-950/5 transition hover:border-brand/25 hover:bg-white hover:text-brand-dark disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .sync-input {
+    @apply h-9 w-full rounded-lg border border-black/[0.06] bg-white/80 px-3 text-xs text-stone-800 outline-none transition placeholder:text-[#9aa6a1] focus:border-brand/45 focus:bg-white focus:ring-4 focus:ring-brand/10;
+  }
+
+  .workspace-row {
+    @apply flex w-full items-center justify-between gap-3 rounded-lg border border-black/[0.06] bg-white/80 px-3 py-2 text-left text-sm text-stone-800 transition hover:border-brand/30 hover:bg-[#e8f6f2];
+  }
+
+  .workspace-row-bound {
+    @apply border-brand/30 bg-[#e8f6f2] ring-1 ring-brand/10;
+  }
+
+  .menu-row {
+    @apply flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-semibold text-stone-700 transition hover:bg-[#e8f6f2] hover:text-brand-dark;
+  }
+
+  .editor-tool {
+    @apply inline-flex h-8 items-center justify-center rounded-lg px-2.5 text-xs font-semibold text-[#5f6d68] transition hover:bg-[#e8f6f2] hover:text-brand disabled:cursor-not-allowed disabled:opacity-40;
+  }
+
+  .view-mode-button {
+    @apply inline-flex h-6 items-center justify-center rounded px-2 text-[11px] font-semibold text-stone-500 transition hover:bg-stone-100 hover:text-stone-900;
+  }
+
+  .view-mode-button-active {
+    @apply bg-white text-brand shadow-sm hover:bg-white hover:text-brand;
+  }
+
+  .subtle-button {
+    @apply inline-flex h-7 items-center justify-center rounded-md px-2 text-xs font-semibold text-stone-600 transition hover:bg-stone-200 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .compact-select {
+    @apply h-7 rounded-md border border-stone-300 bg-white px-2 text-xs font-semibold text-stone-700 outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100;
+  }
+
+  .status-chip {
+    @apply inline-flex h-6 items-center rounded-full px-2 text-[11px] font-semibold uppercase;
+  }
+
+  .status-chip-neutral {
+    @apply bg-[#edf1ef] text-[#5f6d68];
+  }
+
+  .status-chip-warning {
+    @apply bg-amber-300 text-amber-950;
+  }
+
+  .status-chip-success {
+    @apply bg-[#d9f2ed] text-brand;
+  }
+
+  .field-label {
+    @apply text-xs font-semibold uppercase text-stone-500;
+  }
+
+  .field-input {
+    @apply mt-1 h-9 w-full rounded-md border border-stone-300 bg-white px-2 text-sm text-stone-800 outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100;
+  }
+
+  .field-textarea {
+    @apply mt-1 min-h-20 w-full rounded-lg border border-black/[0.08] bg-white/90 p-3 text-sm text-stone-800 outline-none focus:border-brand/45 focus:ring-4 focus:ring-brand/10;
+  }
+
+  .tree-button {
+    @apply flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-stone-700 transition hover:bg-stone-200/70;
+  }
+
+  .document-info-section {
+    @apply mb-4 rounded-xl border border-black/[0.06] bg-white p-3 shadow-sm shadow-emerald-950/5;
+  }
+
+  .context-menu {
+    @apply fixed z-50 min-w-52 rounded-md border border-stone-200 bg-stone-50 p-1 shadow-xl;
+  }
+
+  .context-menu-button {
+    @apply flex w-full items-center rounded px-3 py-2 text-left text-sm text-stone-700 hover:bg-stone-200 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+}
+
+.editor-preview-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 46%);
+  overflow: hidden;
+  position: relative;
+}
+
+.editor-preview-grid > textarea {
+  position: relative;
+  z-index: 2;
+}
+
+.editor-preview-grid > article {
+  position: relative;
+  z-index: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.editor-preview-grid.view-mode-write {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.editor-preview-grid.view-mode-preview {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.editor-preview-grid.view-mode-write #preview,
+.editor-preview-grid.view-mode-preview #editor,
+.editor-preview-grid.view-mode-write article,
+.editor-preview-grid.view-mode-preview textarea {
+  display: none;
+}
+
+.preview.empty {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  color: #78716c;
+}
+
+.preview h1,
+.preview h2,
+.preview h3 {
+  margin: 1.6em 0 0.45em;
+  color: #292524;
+  line-height: 1.15;
+  font-weight: 700;
+}
+
+.preview h1 { font-size: 2rem; }
+.preview h2 { font-size: 1.5rem; }
+.preview h3 { font-size: 1.2rem; }
+
+.preview h1:first-child,
+.preview h2:first-child,
+.preview h3:first-child {
+  margin-top: 0;
+}
+
+.preview p,
+.preview li {
+  max-width: 78ch;
+  overflow-wrap: anywhere;
+}
+
+.preview p { margin: 0.9em 0; }
+
+.preview ul,
+.preview ol {
+  margin: 0.9em 0;
+  padding-left: 1.5rem;
+}
+
+.preview ul { list-style: disc; }
+.preview ol { list-style: decimal; }
+
+.preview a {
+  color: #0f766e;
+  text-decoration: underline;
+}
+
+.preview code {
+  padding: 0.1em 0.35em;
+  background: #f5f5f4;
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+}
+
+.preview pre {
+  max-width: 100%;
+  overflow: auto;
+  padding: 16px;
+  color: #f8fafc;
+  background: #292524;
+  border-radius: 8px;
+}
+
+.preview pre code {
+  padding: 0;
+  color: inherit;
+  background: transparent;
+}
+
+.preview blockquote {
+  margin-left: 0;
+  padding-left: 18px;
+  color: #57534e;
+  border-left: 4px solid #14b8a6;
+}
+
+.preview table {
+  width: 100%;
+  max-width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+}
+
+.preview th,
+.preview td {
+  padding: 10px 12px;
+  border: 1px solid #e7e5e4;
+  text-align: left;
+  vertical-align: top;
+}
+
+.preview .math-block,
+.preview .mermaid {
+  max-width: 100%;
+  overflow: auto;
+  margin: 1rem 0;
+  padding: 12px;
+  border: 1px solid #e7e5e4;
+  border-radius: 8px;
+  background: #ffffff;
+}

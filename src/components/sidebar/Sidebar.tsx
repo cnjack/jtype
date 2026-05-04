@@ -1,0 +1,366 @@
+import { useAppDispatch, useAppState } from "../../app/AppState";
+import { useFileSystem } from "../../hooks";
+import { markdownNodes } from "../../lib/utils";
+import { appStorage } from "../../lib/storage";
+import type { EntryKind, FileTreeNode, LocalTrashItem } from "../../lib/types";
+import { useCallback, useEffect, useState, useMemo } from "react";
+
+export function Sidebar() {
+  const state = useAppState();
+  const dispatch = useAppDispatch();
+  const fs = useFileSystem();
+  const [switcherOpen, setSwitcherOpen] = useState(false);
+
+  if (state.mode === "empty" && !state.workspace) return null;
+  if (state.focusMode) return null;
+
+  const currentBinding = state.workspace
+    ? state.vaultBindings.find((binding) => binding.localVaultPath === state.workspace?.rootPath)
+    : null;
+  const workspaceName = currentBinding?.workspaceName || state.workspace?.name || "No vault";
+
+  return (
+    <aside id="workspace-sidebar" className="flex min-h-0 flex-col border-r border-black/[0.04] bg-[#f7faf8]">
+      <div className="p-5 pb-4">
+        <div className="relative">
+          <button
+            type="button"
+            className="flex w-full items-center gap-2 rounded-xl bg-white/75 px-2.5 py-2 text-left shadow-sm shadow-emerald-950/5 ring-1 ring-black/[0.04] transition hover:bg-white hover:ring-[#008884]/20"
+            onClick={() => setSwitcherOpen(open => !open)}
+          >
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-[#eef7f4] text-sm font-semibold text-[#006f6b]">
+              {workspaceName.charAt(0).toUpperCase()}
+            </span>
+            <span className="min-w-0 flex-1">
+              <span id="workspace-name" className="block truncate text-sm font-semibold text-stone-950">{workspaceName}</span>
+              <span id="workspace-path" className="block truncate text-xs text-[#6b7773]">{state.workspace?.rootPath ?? "Open a vault or Markdown file."}</span>
+            </span>
+            <span className="text-xs font-semibold text-[#8a9691]">v</span>
+          </button>
+          {switcherOpen && (
+            <div className="absolute left-0 top-12 z-50 w-[288px] overflow-hidden rounded-xl border border-black/[0.06] bg-[#fbfdfb] shadow-2xl shadow-stone-900/15">
+              <div className="border-b border-black/[0.06] p-3">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#eef7f4] text-sm font-semibold text-[#006f6b]">
+                    {workspaceName.charAt(0).toUpperCase()}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-semibold text-stone-950">{workspaceName}</span>
+                    <span className="block truncate text-xs text-[#6b7773]">
+                      {currentBinding ? "Bound cloud workspace" : "Local vault"}
+                    </span>
+                  </span>
+                </div>
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <button className="sidebar-action" type="button" onClick={() => { dispatch({ type: "SET_ACCOUNT_DIALOG", open: true }); setSwitcherOpen(false); }}>
+                    Settings
+                  </button>
+                  <button className="sidebar-action" type="button" onClick={() => { dispatch({ type: "CLOSE_WORKSPACE" }); setSwitcherOpen(false); }}>
+                    Close
+                  </button>
+                </div>
+              </div>
+              <div className="p-2">
+                <button className="workspace-row" type="button" onClick={() => { void fs.chooseWorkspaceFolder(); setSwitcherOpen(false); }}>
+                  <span className="min-w-0">
+                    <span className="block truncate font-semibold">Open another vault</span>
+                    <span className="block truncate text-xs text-stone-500">Choose a local folder</span>
+                  </span>
+                  <span className="shrink-0 rounded-full bg-[#edf1ef] px-2 py-1 text-xs font-semibold text-[#5f6d68]">Local</span>
+                </button>
+                {currentBinding && (
+                  <div className="mt-2 rounded-lg bg-[#e8f6f2] px-3 py-2 text-xs text-[#006f6b] ring-1 ring-[#008884]/10">
+                    Syncing with {currentBinding.workspaceName}.
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="mt-3">
+          <button
+            className="sidebar-action w-full"
+            type="button"
+            disabled={!state.workspace || state.isLoading}
+            onClick={() => dispatch({ type: "SET_CREATE_NOTE_DIALOG", open: true })}
+          >
+            New note
+          </button>
+        </div>
+      </div>
+
+      <div className="min-h-0 flex-1 overflow-auto">
+        <ExplorerPanel />
+      </div>
+    </aside>
+  );
+}
+
+function ExplorerPanel() {
+  const state = useAppState();
+  const dispatch = useAppDispatch();
+  const fs = useFileSystem();
+  const [query, setQuery] = useState("");
+  const [contextMenu, setContextMenu] = useState<{ node: FileTreeNode; x: number; y: number } | null>(null);
+  const [trashItems, setTrashItems] = useState<LocalTrashItem[]>([]);
+  const favorites = useMemo(() => readFavorites(state.workspace?.rootPath), [state.workspace?.rootPath, state.currentPath, state.favoriteVersion]);
+  const recentItems = useMemo(() => readRecentItems(), [state.currentPath, state.workspace]);
+
+  const filteredResults = useMemo(() => {
+    if (!query) return null;
+    const nodes = markdownNodes(state.workspace?.entries ?? []);
+    return nodes.filter((n) => `${n.name} ${n.relativePath}`.toLowerCase().includes(query.toLowerCase())).slice(0, 30);
+  }, [state.workspace, query]);
+
+  const loadTrash = useCallback(async () => {
+    const items = await fs.listTrash();
+    setTrashItems(items);
+  }, [fs.listTrash]);
+
+  useEffect(() => {
+    void loadTrash();
+  }, [loadTrash, state.workspace?.rootPath, state.workspace?.entries, state.statusMessage]);
+
+  useEffect(() => {
+    if (!contextMenu) return;
+    const close = () => setContextMenu(null);
+    document.addEventListener("click", close);
+    return () => document.removeEventListener("click", close);
+  }, [contextMenu]);
+
+  return (
+    <div className="px-3 pb-4">
+      <input
+        className="sync-input"
+        placeholder="Search files..."
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+      />
+
+      {filteredResults ? (
+        <div className="mt-3 space-y-1">
+          {filteredResults.length === 0 ? (
+            <p className="text-xs text-stone-500">No matches.</p>
+          ) : (
+            filteredResults.map((node) => (
+              <button key={node.path} type="button" className="command-row" onClick={() => fs.openMarkdownFile(node.path, node.relativePath)}>
+                <span className="min-w-0">
+                  <span className="block truncate font-semibold">{node.name}</span>
+                  <span className="block truncate text-xs text-stone-500">{node.relativePath}</span>
+                </span>
+              </button>
+            ))
+          )}
+        </div>
+      ) : (
+        <>
+          {favorites.length > 0 && (
+            <>
+              <div className="mb-2 mt-4 flex items-center justify-between">
+                <p className="text-xs font-semibold uppercase text-stone-500">Favorites</p>
+                <button className="subtle-button" type="button" disabled={!state.currentPath} onClick={() => {
+                  toggleFavorite(state.currentPath, state.workspace?.rootPath);
+                  dispatch({ type: "TOGGLE_FAVORITE" });
+                }}>
+                  Toggle
+                </button>
+              </div>
+              <div id="favorite-list" className="space-y-1">
+                {favorites.map((node) => (
+                  <button key={node.path} type="button" className="tree-button text-xs" onClick={() => fs.openMarkdownFile(node.path, node.relativePath)}>
+                    <span className="text-stone-500">Favorite</span>
+                    <span className="truncate font-semibold">{node.name}</span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+
+          <nav className="mt-2" aria-label="Workspace files">
+            {!state.workspace ? (
+              <p className="rounded-md border border-dashed border-stone-300 p-3 text-sm text-stone-500">
+                Drop a folder here to open it as a vault.
+              </p>
+            ) : (
+              <ul className="space-y-1">
+                {state.workspace.entries.map((node) => (
+                  <TreeNode
+                    key={node.path}
+                    node={node}
+                    depth={0}
+                    onContextMenu={(selectedNode, x, y) => setContextMenu({ node: selectedNode, x, y })}
+                  />
+                ))}
+              </ul>
+            )}
+          </nav>
+
+          <section className="mt-5 border-t border-emerald-900/10 pt-4">
+            <p className="mb-2 text-xs font-semibold uppercase text-stone-500">Recent</p>
+            <div className="space-y-1">
+              {recentItems.length === 0 ? (
+                <p className="text-xs text-stone-500">No recent items yet.</p>
+              ) : (
+                recentItems.map((item) => (
+                  <button
+                    key={item.path}
+                    type="button"
+                    className="tree-button text-xs"
+                    onClick={() => {
+                      if (item.kind === "workspace") fs.openWorkspace(item.path);
+                      else fs.openMarkdownFile(item.path);
+                    }}
+                  >
+                    <span className="truncate font-semibold">{item.name}</span>
+                  </button>
+                ))
+              )}
+            </div>
+          </section>
+
+          <section className="mt-5 border-t border-emerald-900/10 pt-4">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <p className="text-xs font-semibold uppercase text-stone-500">Trash</p>
+              {trashItems.length > 0 && (
+                <button className="subtle-button" type="button" onClick={() => { void fs.emptyTrash().then(loadTrash); }}>
+                  Empty
+                </button>
+              )}
+            </div>
+            <div className="space-y-1">
+              {trashItems.length === 0 ? (
+                <p className="text-xs text-stone-500">No deleted notes.</p>
+              ) : (
+                trashItems.map((item) => (
+                  <div key={item.trashId} className="rounded-lg px-2.5 py-2 text-xs text-[#4b5753] hover:bg-white/80">
+                    <p className="truncate font-semibold">{item.relativePath}</p>
+                    <div className="mt-1 flex items-center justify-between gap-2">
+                      <span className="truncate text-stone-500">{formatTrashTime(item.trashedAt)}</span>
+                      <button
+                        className="subtle-button"
+                        type="button"
+                        onClick={() => { void fs.restoreTrashItem(item.trashId).then(loadTrash); }}
+                      >
+                        Restore
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </section>
+        </>
+      )}
+      {contextMenu && (
+        <div
+          role="menu"
+          className="context-menu"
+          style={{ left: contextMenu.x, top: contextMenu.y }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {contextMenu.node.kind === "markdown" && (
+            <button
+              type="button"
+              className="context-menu-button"
+              onClick={() => {
+                void fs.openMarkdownFile(contextMenu.node.path, contextMenu.node.relativePath);
+                setContextMenu(null);
+              }}
+            >
+              Open
+            </button>
+          )}
+          <button
+            type="button"
+            className="context-menu-button text-red-700 hover:text-red-800"
+            onClick={() => {
+              void fs.deleteEntry(contextMenu.node.relativePath);
+              setContextMenu(null);
+            }}
+          >
+            Move to trash
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TreeNode({
+  node,
+  depth,
+  onContextMenu,
+}: {
+  node: FileTreeNode;
+  depth: number;
+  onContextMenu: (node: FileTreeNode, x: number, y: number) => void;
+}) {
+  const state = useAppState();
+  const fs = useFileSystem();
+  const dispatch = useAppDispatch();
+
+  if (node.relativePath === ".jtype") return null;
+
+  const isActive = node.relativePath === state.currentRelativePath;
+
+  return (
+    <li>
+      <button
+        type="button"
+        className={`tree-button ${isActive ? "tree-button-active" : ""}`}
+        style={{ paddingLeft: `${0.5 + depth * 0.75}rem` }}
+        onClick={() => {
+          if (node.kind === "markdown") fs.openMarkdownFile(node.path, node.relativePath);
+          else dispatch({ type: "SELECT_TREE_NODE", node });
+        }}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onContextMenu(node, e.clientX, e.clientY);
+        }}
+      >
+        {iconForNode(node) && <span className="shrink-0 text-[#8a9691]">{iconForNode(node)}</span>}
+        <span className="truncate">{node.name}</span>
+      </button>
+      {node.children.length > 0 && (
+        <ul className="mt-1 space-y-1">
+          {node.children.map((child) => (
+            <TreeNode key={child.path} node={child} depth={depth + 1} onContextMenu={onContextMenu} />
+          ))}
+        </ul>
+      )}
+    </li>
+  );
+}
+
+function iconForNode(node: FileTreeNode) {
+  if (node.kind === "folder") return ">";
+  if (node.kind === "markdown") return "";
+  return "";
+}
+
+function readFavorites(rootPath?: string): FileTreeNode[] {
+  const paths: string[] = appStorage.get(`favorites:${rootPath ?? "global"}`, []);
+  return paths.map((p: string) => {
+    const name = p.split(/[\\/]/).pop() ?? p;
+    return { name, path: p, relativePath: name, kind: "markdown" as EntryKind, children: [] };
+  });
+}
+
+function toggleFavorite(path: string, rootPath?: string) {
+  if (!path) return;
+  const key = `favorites:${rootPath ?? "global"}`;
+  const paths: string[] = appStorage.get(key, []);
+  const next = paths.includes(path) ? paths.filter((p) => p !== path) : [path, ...paths];
+  appStorage.set(key, next);
+}
+
+type RecentItem = { kind: "file" | "workspace"; name: string; path: string };
+function readRecentItems(): RecentItem[] {
+  return appStorage.get("recent", []);
+}
+
+function formatTrashTime(value: number) {
+  if (!value) return "Deleted";
+  return new Date(value * 1000).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}

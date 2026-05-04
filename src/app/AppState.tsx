@@ -1,0 +1,368 @@
+import { createContext, useContext, type Dispatch } from "react";
+import type {
+  Activity,
+  InspectorTab,
+  EditorMode,
+  EntryKind,
+  FileTreeNode,
+  WorkspaceSnapshot,
+  CloudProfile,
+  VaultBinding,
+  CloudWorkspace,
+  SyncConflict,
+  SyncStatus,
+} from "../lib/types";
+import type { AICommandProposal } from "./aiCommands";
+import { appStorage } from "../lib/storage";
+
+export type AppMode = "empty" | "workspace" | "single-file";
+
+export interface AppState {
+  mode: AppMode;
+  activeActivity: Activity;
+  activeInspector: InspectorTab;
+  editorMode: EditorMode;
+  focusMode: boolean;
+  documentPanelOpen: boolean;
+  currentPath: string;
+  currentRelativePath: string;
+  currentKind: EntryKind | "";
+  originalContent: string;
+  editorContent: string;
+  isDirty: boolean;
+  isLoading: boolean;
+  workspace: WorkspaceSnapshot | null;
+  syncToken: string;
+  syncUsername: string;
+  syncSiteUrl: string;
+  lastSyncSnapshot: string;
+  cloudProfile: CloudProfile | null;
+  vaultBindings: VaultBinding[];
+  cloudWorkspaces: CloudWorkspace[];
+  oauthDeviceCode: string;
+  oauthUserCode: string;
+  activeConflicts: SyncConflict[];
+  contextNode: FileTreeNode | null;
+  pendingAiProposal: AICommandProposal | null;
+  statusMessage: string;
+  contextMenu: { x: number; y: number; items: Array<{ label: string; action: () => void; disabled?: boolean }> } | null;
+  commandPaletteOpen: boolean;
+  quickSwitcherOpen: boolean;
+  createNoteDialogOpen: boolean;
+  accountDialogOpen: boolean;
+  accountDialogSection: "account" | "workspace";
+  serviceUrl: string;
+  favoriteVersion: number;
+  lastWorkspacePath: string;
+  lastFilePath: string;
+  syncStatus: SyncStatus;
+  lastSyncAt: number;
+  editorContentVersion: number;
+}
+
+export type AppAction =
+  | { type: "SET_LOADING"; isLoading: boolean }
+  | { type: "SET_STATUS"; message: string }
+  | { type: "SET_ACTIVITY"; activity: Activity }
+  | { type: "SET_INSPECTOR"; tab: InspectorTab }
+  | { type: "SET_EDITOR_MODE"; mode: EditorMode }
+  | { type: "TOGGLE_FOCUS_MODE" }
+  | { type: "TOGGLE_DOCUMENT_PANEL" }
+  | { type: "OPEN_WORKSPACE"; workspace: WorkspaceSnapshot }
+  | { type: "OPEN_FILE"; path: string; relativePath: string; content: string; kind: EntryKind }
+  | { type: "SET_EDITOR_CONTENT"; content: string }
+  | { type: "SAVE_FILE" }
+  | { type: "CLEAR_DOCUMENT" }
+  | { type: "UPDATE_WORKSPACE"; workspace: WorkspaceSnapshot }
+  | { type: "SET_SYNC_SESSION"; token: string; username: string; siteUrl: string; profile: CloudProfile }
+  | { type: "SET_CLOUD_PROFILE"; profile: CloudProfile }
+  | { type: "SET_VAULT_BINDINGS"; bindings: VaultBinding[] }
+  | { type: "SET_CLOUD_WORKSPACES"; workspaces: CloudWorkspace[] }
+  | { type: "SET_OAUTH"; deviceCode: string; userCode: string }
+  | { type: "CLEAR_OAUTH" }
+  | { type: "SET_CONFLICTS"; conflicts: SyncConflict[] }
+  | { type: "SET_CONTEXT_NODE"; node: FileTreeNode | null }
+  | { type: "SET_AI_PROPOSAL"; proposal: AICommandProposal | null }
+  | { type: "SET_CONTEXT_MENU"; menu: AppState["contextMenu"] }
+  | { type: "SET_COMMAND_PALETTE"; open: boolean }
+  | { type: "SET_QUICK_SWITCHER"; open: boolean }
+  | { type: "SET_CREATE_NOTE_DIALOG"; open: boolean }
+  | { type: "SET_ACCOUNT_DIALOG"; open: boolean; section?: "account" | "workspace" }
+  | { type: "SET_SERVICE_URL"; url: string }
+  | { type: "SET_SYNC_SNAPSHOT"; snapshot: string }
+  | { type: "SELECT_TREE_NODE"; node: FileTreeNode }
+  | { type: "DISCONNECT_ACCOUNT" }
+  | { type: "APPLY_AI_PATCH" }
+  | { type: "TOGGLE_FAVORITE" }
+  | { type: "SET_LAST_PATHS"; workspacePath: string; filePath: string }
+  | { type: "SET_SYNC_STATUS"; status: SyncStatus; success?: boolean }
+  | { type: "CLOSE_WORKSPACE" };
+
+function getMode(state: Pick<AppState, "workspace" | "currentPath">): AppMode {
+  if (state.workspace) return "workspace";
+  if (state.currentPath) return "single-file";
+  return "empty";
+}
+
+const initialState: AppState = {
+  mode: "empty",
+  activeActivity: "explorer",
+  activeInspector: "preview",
+  editorMode: appStorage.get("ui.editorMode", "split"),
+  focusMode: appStorage.get("ui.focusMode", false),
+  documentPanelOpen: appStorage.get("ui.documentPanelOpen", true),
+  currentPath: "",
+  currentRelativePath: "",
+  currentKind: "",
+  originalContent: "",
+  editorContent: "",
+  isDirty: false,
+  isLoading: false,
+  workspace: null,
+  syncToken: appStorage.get("sync.token", ""),
+  syncUsername: appStorage.get("sync.username", ""),
+  syncSiteUrl: appStorage.get("sync.siteUrl", ""),
+  lastSyncSnapshot: appStorage.get("sync.snapshot", ""),
+  cloudProfile: null,
+  vaultBindings: [],
+  cloudWorkspaces: [],
+  oauthDeviceCode: "",
+  oauthUserCode: "",
+  activeConflicts: [],
+  contextNode: null,
+  pendingAiProposal: null,
+  statusMessage: "Local-first mode. Files remain on disk.",
+  contextMenu: null,
+  commandPaletteOpen: false,
+  quickSwitcherOpen: false,
+  createNoteDialogOpen: false,
+  accountDialogOpen: false,
+  accountDialogSection: "workspace",
+  serviceUrl: "http://localhost:13345",
+  favoriteVersion: 0,
+  lastWorkspacePath: appStorage.get("lastWorkspacePath", ""),
+  lastFilePath: appStorage.get("lastFilePath", ""),
+  syncStatus: "idle",
+  lastSyncAt: 0,
+  editorContentVersion: 0,
+};
+
+export function appReducer(state: AppState, action: AppAction): AppState {
+  switch (action.type) {
+    case "SET_LOADING":
+      return { ...state, isLoading: action.isLoading };
+    case "SET_STATUS":
+      return { ...state, statusMessage: action.message };
+    case "SET_ACTIVITY":
+      return { ...state, activeActivity: action.activity };
+    case "SET_INSPECTOR":
+      return { ...state, activeInspector: action.tab };
+    case "SET_EDITOR_MODE":
+      appStorage.set("ui.editorMode", action.mode);
+      return { ...state, editorMode: action.mode };
+    case "TOGGLE_FOCUS_MODE":
+      appStorage.set("ui.focusMode", !state.focusMode);
+      return { ...state, focusMode: !state.focusMode };
+    case "TOGGLE_DOCUMENT_PANEL":
+      appStorage.set("ui.documentPanelOpen", !state.documentPanelOpen);
+      return { ...state, documentPanelOpen: !state.documentPanelOpen };
+    case "OPEN_WORKSPACE":
+      appStorage.set("lastWorkspacePath", action.workspace.rootPath);
+      appStorage.set("lastFilePath", "");
+      return {
+        ...state,
+        workspace: action.workspace,
+        currentPath: "",
+        currentRelativePath: "",
+        currentKind: "",
+        originalContent: "",
+        editorContent: "",
+        isDirty: false,
+        pendingAiProposal: null,
+        mode: "workspace" as AppMode,
+        lastWorkspacePath: action.workspace.rootPath,
+        lastFilePath: "",
+      };
+    case "OPEN_FILE": {
+      appStorage.set("lastFilePath", action.path);
+      const fileMode = getMode({ workspace: state.workspace, currentPath: action.path });
+      if (fileMode === "single-file") {
+        appStorage.set("lastWorkspacePath", "");
+      }
+      // When re-opening the same file with identical content (e.g. after sync),
+      // skip bumping editorContentVersion to avoid unnecessary editor/preview reset
+      const isSameFile = action.path === state.currentPath;
+      const contentChanged = action.content !== state.editorContent;
+      const bumpVersion = !isSameFile || contentChanged;
+      return {
+        ...state,
+        currentPath: action.path,
+        currentRelativePath: action.relativePath,
+        currentKind: action.kind,
+        originalContent: action.content,
+        editorContent: action.content,
+        isDirty: false,
+        pendingAiProposal: null,
+        mode: fileMode,
+        lastFilePath: action.path,
+        lastWorkspacePath: fileMode === "single-file" ? "" : state.lastWorkspacePath,
+        editorContentVersion: bumpVersion ? state.editorContentVersion + 1 : state.editorContentVersion,
+      };
+    }
+    case "SET_EDITOR_CONTENT": {
+      const isDirty = action.content !== state.originalContent;
+      return { ...state, editorContent: action.content, isDirty };
+    }
+    case "SAVE_FILE":
+      return { ...state, originalContent: state.editorContent, isDirty: false };
+    case "CLEAR_DOCUMENT":
+      appStorage.set("lastFilePath", "");
+      return {
+        ...state,
+        currentPath: "",
+        currentRelativePath: "",
+        currentKind: "",
+        originalContent: "",
+        editorContent: "",
+        isDirty: false,
+        pendingAiProposal: null,
+        mode: getMode({ workspace: state.workspace, currentPath: "" }),
+        lastFilePath: "",
+      };
+    case "UPDATE_WORKSPACE":
+      return { ...state, workspace: action.workspace };
+    case "SET_SYNC_SESSION": {
+      appStorage.set("sync.token", action.token);
+      appStorage.set("sync.username", action.username);
+      appStorage.set("sync.siteUrl", action.siteUrl);
+      return {
+        ...state,
+        syncToken: action.token,
+        syncUsername: action.username,
+        syncSiteUrl: action.siteUrl,
+        cloudProfile: action.profile,
+        oauthDeviceCode: "",
+        oauthUserCode: "",
+      };
+    }
+    case "SET_CLOUD_PROFILE":
+      return { ...state, cloudProfile: action.profile };
+    case "SET_VAULT_BINDINGS":
+      return { ...state, vaultBindings: action.bindings };
+    case "SET_CLOUD_WORKSPACES":
+      return { ...state, cloudWorkspaces: action.workspaces };
+    case "SET_OAUTH":
+      return { ...state, oauthDeviceCode: action.deviceCode, oauthUserCode: action.userCode };
+    case "CLEAR_OAUTH":
+      return { ...state, oauthDeviceCode: "", oauthUserCode: "" };
+    case "SET_CONFLICTS":
+      return { ...state, activeConflicts: action.conflicts };
+    case "SET_CONTEXT_NODE":
+      return { ...state, contextNode: action.node };
+    case "SET_AI_PROPOSAL":
+      return { ...state, pendingAiProposal: action.proposal };
+    case "SET_CONTEXT_MENU":
+      return { ...state, contextMenu: action.menu };
+    case "SET_COMMAND_PALETTE":
+      return { ...state, commandPaletteOpen: action.open };
+    case "SET_QUICK_SWITCHER":
+      return { ...state, quickSwitcherOpen: action.open };
+    case "SET_CREATE_NOTE_DIALOG":
+      return { ...state, createNoteDialogOpen: action.open };
+    case "SET_ACCOUNT_DIALOG":
+      return {
+        ...state,
+        accountDialogOpen: action.open,
+        accountDialogSection: action.section ?? state.accountDialogSection,
+      };
+    case "SET_SERVICE_URL":
+      return { ...state, serviceUrl: action.url };
+    case "SET_SYNC_SNAPSHOT": {
+      appStorage.set("sync.snapshot", action.snapshot);
+      return { ...state, lastSyncSnapshot: action.snapshot };
+    }
+    case "SELECT_TREE_NODE":
+      return {
+        ...state,
+        currentPath: action.node.path,
+        currentRelativePath: action.node.relativePath,
+        currentKind: action.node.kind,
+        originalContent: "",
+        editorContent: "",
+        isDirty: false,
+        pendingAiProposal: null,
+      };
+    case "DISCONNECT_ACCOUNT": {
+      appStorage.remove("sync.token");
+      appStorage.remove("sync.username");
+      appStorage.remove("sync.siteUrl");
+      appStorage.remove("sync.snapshot");
+      return {
+        ...state,
+        syncToken: "",
+        syncUsername: "",
+        syncSiteUrl: "",
+        cloudProfile: null,
+        vaultBindings: [],
+        cloudWorkspaces: [],
+        oauthDeviceCode: "",
+        oauthUserCode: "",
+        activeConflicts: [],
+      };
+    }
+    case "APPLY_AI_PATCH": {
+      if (!state.pendingAiProposal) return state;
+      const patch = state.pendingAiProposal.proposedChanges[0];
+      return {
+        ...state,
+        editorContent: patch.after,
+        isDirty: patch.after !== state.originalContent,
+        pendingAiProposal: null,
+        editorContentVersion: state.editorContentVersion + 1,
+      };
+    }
+    case "TOGGLE_FAVORITE":
+      return { ...state, favoriteVersion: state.favoriteVersion + 1 };
+    case "SET_LAST_PATHS":
+      appStorage.set("lastWorkspacePath", action.workspacePath);
+      appStorage.set("lastFilePath", action.filePath);
+      return { ...state, lastWorkspacePath: action.workspacePath, lastFilePath: action.filePath };
+    case "SET_SYNC_STATUS":
+      return { ...state, syncStatus: action.status, lastSyncAt: action.status === "idle" && action.success ? Date.now() : state.lastSyncAt };
+    case "CLOSE_WORKSPACE": {
+      appStorage.set("lastWorkspacePath", "");
+      appStorage.set("lastFilePath", "");
+      return {
+        ...state,
+        workspace: null,
+        currentPath: "",
+        currentRelativePath: "",
+        currentKind: "",
+        originalContent: "",
+        editorContent: "",
+        isDirty: false,
+        pendingAiProposal: null,
+        mode: "empty" as AppMode,
+        lastWorkspacePath: "",
+        lastFilePath: "",
+      };
+    }
+    default:
+      return state;
+  }
+}
+
+export { initialState };
+
+const AppStateContext = createContext<AppState>(initialState);
+const AppDispatchContext = createContext<Dispatch<AppAction>>(() => {});
+
+export function useAppState() {
+  return useContext(AppStateContext);
+}
+
+export function useAppDispatch() {
+  return useContext(AppDispatchContext);
+}
+
+export { AppStateContext, AppDispatchContext };
