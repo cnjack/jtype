@@ -6,6 +6,7 @@ import { parseFrontmatter, writeFrontmatter } from "../../lib/frontmatter";
 import { basename, normalizePath } from "../../lib/utils";
 import { useCommandsList } from "../../app/App";
 import { addMarkdownTableColumn, addMarkdownTableRow, formatMarkdownTable, insertBlockAtSafeCursor, insertOrEditTable } from "../../hooks/useCommands";
+import { useEagerSync } from "../../hooks/useEagerSync";
 import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/react";
 import { Breadcrumb } from "../layout/Breadcrumb";
 import type { EditorMode } from "../../lib/types";
@@ -28,7 +29,6 @@ import {
   CheckCircleIcon,
   StarIcon,
   TrashIcon,
-  ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 
 export function EditorShell() {
@@ -36,6 +36,7 @@ export function EditorShell() {
   const dispatch = useAppDispatch();
   const fs = useFileSystem();
   const commands = useCommandsList();
+  const { pushSingleDocument } = useEagerSync();
   const editorRef = useRef<HTMLTextAreaElement>(null);
   const previewRef = useRef<HTMLElement>(null);
   const isSyncingScroll = useRef(false);
@@ -198,7 +199,7 @@ export function EditorShell() {
             <button
               type="button"
               className="status-chip status-chip-warning cursor-pointer"
-              onClick={() => dispatch({ type: "SET_STATUS", message: `${state.activeConflicts.length} conflict${state.activeConflicts.length > 1 ? "s" : ""} need resolution` })}
+              onClick={() => dispatch({ type: "SET_CONFLICT_DIALOG", open: true })}
               title={`${state.activeConflicts.length} conflict${state.activeConflicts.length > 1 ? "s" : ""} to resolve`}
             >
               {state.activeConflicts.length} conflict{state.activeConflicts.length > 1 ? "s" : ""}
@@ -210,7 +211,15 @@ export function EditorShell() {
               type="button"
               title="Save"
               disabled={state.currentKind !== "markdown" || !state.isDirty}
-              onClick={() => fs.saveCurrentFile()}
+              onClick={() => {
+                const relPath = state.currentRelativePath;
+                const content = state.editorContent;
+                fs.saveCurrentFile().then(() => {
+                  if (relPath && state.mode === "workspace") {
+                    pushSingleDocument(relPath, content);
+                  }
+                });
+              }}
             >
               <CheckCircleIcon className="h-4 w-4" />
             </button>
@@ -318,20 +327,6 @@ export function EditorShell() {
             {state.currentKind === "markdown" && <PublishSection />}
             <LinksSection />
           </aside>
-        )}
-      </div>
-
-      <div id="operation-log" className="flex items-center justify-between border-t border-black/[0.04] bg-white/70 px-5 py-3 text-xs text-[#6b7773]">
-        <span>{state.statusMessage}</span>
-        {state.activeConflicts.length > 0 && (
-            <button
-              type="button"
-              className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-semibold text-amber-800 transition hover:bg-amber-200"
-              onClick={() => dispatch({ type: "SET_STATUS", message: `${state.activeConflicts.length} conflict${state.activeConflicts.length > 1 ? "s" : ""} need resolution` })}
-            >
-              <ExclamationTriangleIcon className="h-3 w-3" />
-              {state.activeConflicts.length} conflict{state.activeConflicts.length > 1 ? "s" : ""}
-            </button>
         )}
       </div>
 

@@ -261,6 +261,36 @@ function ExplorerPanel() {
     }
   }, [fs.listTrash, state.workspace?.rootPath]);
 
+  type MergedTrashItem = {
+    relativePath: string;
+    trashedAt: number;
+    localTrashId?: string;
+    cloudTrashId?: string;
+  };
+
+  const mergedTrashItems = useMemo(() => {
+    const map = new Map<string, MergedTrashItem>();
+    for (const item of trashItems) {
+      const existing = map.get(item.relativePath);
+      map.set(item.relativePath, {
+        relativePath: item.relativePath,
+        trashedAt: existing ? Math.max(existing.trashedAt, item.trashedAt) : item.trashedAt,
+        localTrashId: item.trashId,
+        cloudTrashId: existing?.cloudTrashId,
+      });
+    }
+    for (const item of cloudTrashItems) {
+      const existing = map.get(item.relativePath);
+      map.set(item.relativePath, {
+        relativePath: item.relativePath,
+        trashedAt: existing ? Math.max(existing.trashedAt, item.trashedAt) : item.trashedAt,
+        localTrashId: existing?.localTrashId,
+        cloudTrashId: item.cloudTrashId,
+      });
+    }
+    return Array.from(map.values()).sort((a, b) => b.trashedAt - a.trashedAt);
+  }, [trashItems, cloudTrashItems]);
+
   useEffect(() => {
     void loadTrash();
   }, [loadTrash, state.workspace?.rootPath, state.workspace?.entries, state.statusMessage]);
@@ -372,96 +402,60 @@ function ExplorerPanel() {
           <section className="mt-5 border-t border-emerald-900/10 pt-4">
             <div className="mb-2 flex items-center justify-between gap-2">
               <p className="text-xs font-semibold uppercase text-stone-500">Trash</p>
-              {(trashItems.length > 0 || cloudTrashItems.length > 0) && (
+              {mergedTrashItems.length > 0 && (
                 <button className="subtle-button aspect-square px-0" type="button" title="Empty trash" onClick={() => { void fs.emptyTrash().then(loadTrash); }}>
                   <TrashIcon className="h-4 w-4" />
                 </button>
               )}
             </div>
             <div className="space-y-1">
-              {trashItems.length === 0 && cloudTrashItems.length === 0 ? (
+              {mergedTrashItems.length === 0 ? (
                 <p className="text-xs text-stone-500">No deleted notes.</p>
               ) : (
-                <>
-                  {trashItems.map((item) => (
-                    <div key={item.trashId} className="rounded-lg px-2.5 py-2 text-xs text-[#4b5753] hover:bg-white/80">
-                      <div className="flex items-center gap-1">
-                        <p className="min-w-0 truncate font-semibold">{item.relativePath}</p>
-                        <span className="shrink-0 rounded bg-stone-100 px-1 py-0.5 text-[10px] text-stone-500">local</span>
-                      </div>
-                      <div className="mt-1 flex items-center justify-between gap-2">
-                        <span className="truncate text-stone-500">{formatTrashTime(item.trashedAt)}</span>
-                        <div className="flex gap-1">
-                          <button
-                            className="subtle-button aspect-square px-0"
-                            type="button"
-                            title="Restore"
-                            onClick={() => { void fs.restoreTrashItem(item.trashId).then(loadTrash); }}
-                          >
-                            <ArrowUturnLeftIcon className="h-4 w-4" />
-                          </button>
-                          <button
-                            className="subtle-button aspect-square px-0 text-red-400 hover:text-red-600"
-                            type="button"
-                            title="Permanently delete"
-                            onClick={() => { void fs.permanentDeleteTrash(item.trashId).then(loadTrash); }}
-                          >
-                            <XMarkIcon className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                  {cloudTrashItems.map((item) => (
-                    <div key={item.cloudTrashId ?? item.trashId} className="rounded-lg px-2.5 py-2 text-xs text-[#4b5753] hover:bg-white/80">
-                      <div className="flex items-center gap-1">
-                        <p className="min-w-0 truncate font-semibold">{item.relativePath}</p>
-                        <span className="shrink-0 rounded bg-[#eef7f4] px-1 py-0.5 text-[10px] text-[#006f6b]">cloud</span>
-                      </div>
-                      <div className="mt-1 flex items-center justify-between gap-2">
-                        <span className="truncate text-stone-500">{formatTrashTime(item.trashedAt)}</span>
-                        <div className="flex gap-1">
-                          <button
-                            className="subtle-button aspect-square px-0"
-                            type="button"
-                            title="Restore from cloud"
-                            onClick={() => {
-                              const cloudId = item.cloudTrashId;
-                              if (!cloudId || !state.workspace) return;
+                mergedTrashItems.map((item) => (
+                  <div key={item.localTrashId ?? item.cloudTrashId ?? item.relativePath} className="rounded-lg px-2.5 py-2 text-xs text-[#4b5753] hover:bg-white/80">
+                    <p className="min-w-0 truncate font-semibold">{item.relativePath}</p>
+                    <div className="mt-1 flex items-center justify-between gap-2">
+                      <span className="truncate text-stone-500">{formatTrashTime(item.trashedAt)}</span>
+                      <div className="flex gap-1">
+                        <button
+                          className="subtle-button aspect-square px-0"
+                          type="button"
+                          title="Restore"
+                          onClick={() => {
+                            if (item.localTrashId) {
+                              void fs.restoreTrashItem(item.localTrashId).then(loadTrash);
+                            } else if (item.cloudTrashId && state.workspace) {
                               void (async () => {
                                 try {
                                   const meta = await tauri.loadTrashMetadata(state.workspace!.rootPath);
-                                  meta.pendingTrashOps.push({ type: "restore", trashId: cloudId });
-                                  meta.items = meta.items.filter((i) => i.cloudTrashId !== cloudId);
+                                  meta.pendingTrashOps.push({ type: "restore", trashId: item.cloudTrashId! });
+                                  meta.items = meta.items.filter((i) => i.cloudTrashId !== item.cloudTrashId);
                                   await tauri.saveTrashMetadata(state.workspace!.rootPath, meta);
-                                  // Also restore any matching local trash item for the same path
-                                  const localMatch = trashItems.find((t) => t.relativePath === item.relativePath);
-                                  if (localMatch) {
-                                    const workspace = await tauri.restoreFromTrash(state.workspace!.rootPath, localMatch.trashId);
-                                    dispatch({ type: "UPDATE_WORKSPACE", workspace });
-                                  }
                                   dispatch({ type: "SET_STATUS", message: "Restore queued. Will sync on next push." });
                                   void loadTrash();
                                 } catch (error) {
                                   dispatch({ type: "SET_STATUS", message: String(error) });
                                 }
                               })();
-                            }}
-                          >
-                            <ArrowUturnLeftIcon className="h-4 w-4" />
-                          </button>
-                          <button
-                            className="subtle-button aspect-square px-0 text-red-400 hover:text-red-600"
-                            type="button"
-                            title="Permanently delete"
-                            onClick={() => {
-                              const cloudId = item.cloudTrashId;
-                              if (!cloudId || !state.workspace) return;
+                            }
+                          }}
+                        >
+                          <ArrowUturnLeftIcon className="h-4 w-4" />
+                        </button>
+                        <button
+                          className="subtle-button aspect-square px-0 text-red-400 hover:text-red-600"
+                          type="button"
+                          title="Permanently delete"
+                          onClick={() => {
+                            if (item.localTrashId) {
+                              void fs.permanentDeleteTrash(item.localTrashId).then(loadTrash);
+                            } else if (item.cloudTrashId && state.workspace) {
                               void (async () => {
                                 try {
                                   const meta = await tauri.loadTrashMetadata(state.workspace!.rootPath);
-                                  meta.pendingTrashOps.push({ type: "permanent_delete", trashId: cloudId });
-                                  meta.items = meta.items.filter((i) => i.cloudTrashId !== cloudId);
+                                  meta.pendingTrashOps.push({ type: "permanent_delete", trashId: item.cloudTrashId! });
+                                  meta.items = meta.items.filter((i) => i.cloudTrashId !== item.cloudTrashId);
                                   await tauri.saveTrashMetadata(state.workspace!.rootPath, meta);
                                   dispatch({ type: "SET_STATUS", message: "Permanent delete queued. Will sync on next push." });
                                   void loadTrash();
@@ -469,15 +463,15 @@ function ExplorerPanel() {
                                   dispatch({ type: "SET_STATUS", message: String(error) });
                                 }
                               })();
-                            }}
-                          >
-                            <XMarkIcon className="h-4 w-4" />
-                          </button>
-                        </div>
+                            }
+                          }}
+                        >
+                          <XMarkIcon className="h-4 w-4" />
+                        </button>
                       </div>
                     </div>
-                  ))}
-                </>
+                  </div>
+                ))
               )}
             </div>
           </section>

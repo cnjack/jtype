@@ -2,7 +2,7 @@ import { useCallback, useRef } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useAppDispatch, useAppState } from "../app/AppState";
 import { tauri } from "../lib/tauri";
-import { slugify, sha256Hex } from "../lib/utils";
+import { sha256Hex } from "../lib/utils";
 import type { AuthResponse, CloudProfile, VaultBinding, CloudDocument, CloudWorkspace, DeletedPath, DeletedPathInput, EntryKind, SyncPushDocument, SyncPushResponse, TrashSyncPayload } from "../lib/types";
 import { parseSyncConflicts } from "../lib/types";
 
@@ -197,7 +197,7 @@ export function useCloudSync() {
         dispatch({ type: "SET_CONFLICTS", conflicts: parseSyncConflicts(pushData.conflicts ?? []) });
         const snapshot = `${Date.now()}:${documents.map((d) => `${d.relativePath}:${d.content.length}`).join("|")}`;
         dispatch({ type: "SET_SYNC_SNAPSHOT", snapshot });
-        await applyCloudDocuments(pushData.documents, options.skipRelativePath);
+        await applyCloudDocumentsRef.current(pushData.documents, options.skipRelativePath);
         if (tauri.isAvailable && deletedPaths.length > 0) {
           try {
             await tauri.deleteSyncBases(state.workspace.rootPath, deletedPaths.map((d) => d.relativePath));
@@ -234,50 +234,9 @@ export function useCloudSync() {
         return;
       }
 
-      const documents = await tauri.collectSyncDocuments(state.workspace.rootPath);
-
-      const response = await fetch(`${getServiceUrl()}/api/sync/workspace`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${state.syncToken}` },
-        body: JSON.stringify({ workspaceName: state.workspace.name, documents }),
-      });
-      if (!response.ok) throw new Error(await response.text());
-      const result = (await response.json()) as { workspaceId?: string; workspaceName: string; documentCount: number; siteUrl: string };
-      const profile: CloudProfile = {
-        serverUrl: getServiceUrl(),
-        username: state.syncUsername,
-        siteUrl: result.siteUrl,
-        token: state.syncToken,
-        deviceId: state.cloudProfile?.deviceId ?? "",
-      };
-      dispatch({ type: "SET_SYNC_SESSION", token: state.syncToken, username: state.syncUsername, siteUrl: result.siteUrl, profile });
-      const snapshot = `${Date.now()}:${documents.map((d) => `${d.relativePath}:${d.content.length}`).join("|")}`;
-      dispatch({ type: "SET_SYNC_SNAPSHOT", snapshot });
-      if (result.workspaceId && state.workspace) {
-        const newBinding: VaultBinding = {
-          workspaceId: result.workspaceId,
-          workspaceName: result.workspaceName,
-          workspaceSlug: slugify(result.workspaceName),
-          localVaultPath: state.workspace.rootPath,
-          lastPulledClock: 0,
-        };
-        if (tauri.isAvailable) {
-          const bindings = await tauri.bindCloudWorkspace(newBinding);
-          dispatch({ type: "SET_VAULT_BINDINGS", bindings });
-        }
-        await refreshCloudWorkspaces();
-      }
-      // Save sync bases for initial sync
-      if (tauri.isAvailable && documents.length > 0) {
-        try {
-          await tauri.saveSyncBases(
-            state.workspace.rootPath,
-            documents.map((d) => ({ relativePath: d.relativePath, content: d.content }))
-          );
-        } catch { /* non-critical */ }
-      }
-      dispatch({ type: "SET_STATUS", message: `Synced ${result.documentCount} document(s) to ${result.siteUrl}.` });
-      dispatch({ type: "SET_SYNC_STATUS", status: "idle", success: true });
+      // No cloud workspace binding — cannot sync.
+      dispatch({ type: "SET_STATUS", message: "No cloud workspace bound. Open Account to connect a workspace first." });
+      dispatch({ type: "SET_SYNC_STATUS", status: "offline" });
     } catch (error) {
       dispatch({ type: "SET_SYNC_STATUS", status: "offline" });
       dispatch({ type: "SET_STATUS", message: String(error) });
@@ -285,6 +244,11 @@ export function useCloudSync() {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
   }, [dispatch, state.workspace, state.syncToken, state.syncUsername, state.cloudProfile, state.vaultBindings, getServiceUrl, refreshCloudWorkspaces]);
+
+  // Ref ensures pullCloudWorkspace/syncWorkspaceToWeb always call the latest
+  // applyCloudDocuments without needing it as a dependency (which would cause
+  // cascading recreation of every callback that touches it).
+  const applyCloudDocumentsRef = useRef<(documents: CloudDocument[], skipRelativePath?: string) => Promise<void>>(async () => {});
 
   const pullCloudWorkspace = useCallback(async (
     binding: VaultBinding,
@@ -335,13 +299,23 @@ export function useCloudSync() {
       });
     }
 
-    await applyCloudDocuments(pullDocsToApply, skipRelativePath);
+    await applyCloudDocumentsRef.current(pullDocsToApply, skipRelativePath);
     if (tauri.isAvailable && pullDocsToApply.length > 0) {
       try {
         await tauri.saveSyncBases(
           state.workspace.rootPath,
           pullDocsToApply.map((d) => ({ relativePath: d.relativePath, content: d.content }))
         );
+      } catch { /* non-critical */ }
+      // Remove restored documents from local trash so they don't re-appear in the trash list
+      try {
+        const localTrashItems = await tauri.listTrash(state.workspace.rootPath);
+        for (const doc of pullDocsToApply) {
+          const localItem = localTrashItems.find((item) => item.relativePath === doc.relativePath);
+          if (localItem) {
+            await tauri.permanentDeleteTrash(state.workspace.rootPath, localItem.trashId);
+          }
+        }
       } catch { /* non-critical */ }
     }
     if (pullData.deletedPaths && pullData.deletedPaths.length > 0 && tauri.isAvailable) {
@@ -381,6 +355,12 @@ export function useCloudSync() {
             }
           }
         }
+        // Build set of active cloud trash IDs from the server
+        const activeCloudTrashIds = new Set(pullData.trash.items.map((item) => item.id));
+        // Remove cloud trash items that are no longer active (e.g. restored)
+        trashMetadata.items = trashMetadata.items.filter(
+          (item) => item.source !== "cloud" || activeCloudTrashIds.has(item.cloudTrashId!)
+        );
         // Update metadata with cloud trash items
         for (const cloudItem of pullData.trash.items) {
           const existing = trashMetadata.items.find(
@@ -438,24 +418,40 @@ export function useCloudSync() {
     }
   }, [dispatch, state.workspace, state.isDirty, state.currentRelativePath, state.currentPath, state.currentKind, state.editorContent]);
 
-  const resolveConflict = useCallback(async (conflictId: string, resolution: "accept_local" | "accept_cloud") => {
+  // Keep ref in sync so pullCloudWorkspace always uses the latest version.
+  applyCloudDocumentsRef.current = applyCloudDocuments;
+
+  const resolveConflict = useCallback(async (conflictId: string, resolution: "accept_local" | "accept_cloud" | "manual_merge", content?: string) => {
     const binding = currentVaultBinding(state.vaultBindings, state.workspace?.rootPath ?? "");
     if (!binding || !state.syncToken) return;
     try {
+      const body: Record<string, string> = { resolution };
+      if (resolution === "manual_merge" && content != null) {
+        body.content = content;
+      }
       const response = await fetch(`${getServiceUrl()}/api/v1/workspaces/${binding.workspaceId}/conflicts/${conflictId}/resolve`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${state.syncToken}` },
-        body: JSON.stringify({ resolution }),
+        body: JSON.stringify(body),
       });
       if (!response.ok) throw new Error(await response.text());
       const document = (await response.json()) as CloudDocument;
-      dispatch({ type: "SET_CONFLICTS", conflicts: state.activeConflicts.filter((c) => c.conflictId !== conflictId) });
-      await applyCloudDocuments([document]);
+      dispatch({ type: "REMOVE_CONFLICT", conflictId });
+      await applyCloudDocumentsRef.current([document]);
+      // Update sync base so subsequent syncs don't re-conflict.
+      if (tauri.isAvailable && state.workspace) {
+        try {
+          await tauri.saveSyncBases(state.workspace.rootPath, [
+            { relativePath: document.relativePath, content: document.content },
+          ]);
+        } catch { /* non-critical */ }
+      }
       dispatch({ type: "SET_STATUS", message: `Resolved conflict in ${document.relativePath}.` });
     } catch (error) {
       dispatch({ type: "SET_STATUS", message: String(error) });
+      throw error;
     }
-  }, [dispatch, state.vaultBindings, state.workspace, state.syncToken, state.activeConflicts, getServiceUrl, applyCloudDocuments]);
+  }, [dispatch, state.vaultBindings, state.workspace, state.syncToken, getServiceUrl]);
 
   const loadCloudProfile = useCallback(async () => {
     if (!tauri.isAvailable) return;

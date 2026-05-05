@@ -1,6 +1,7 @@
 pub mod db;
 pub mod error;
 pub mod handlers;
+pub mod hub;
 pub mod middleware;
 pub mod util;
 
@@ -21,6 +22,7 @@ pub use error::AppError;
 pub struct AppState {
     pub pool: Pool<MySql>,
     pub public_base_url: String,
+    pub hub: hub::NotificationHub,
 }
 
 #[derive(Embed)]
@@ -46,9 +48,19 @@ pub async fn run_from_env() -> Result<(), AppError> {
 }
 
 pub fn build_router(pool: Pool<MySql>, public_base_url: String) -> Router {
+    let hub = hub::NotificationHub::new();
+    let cleanup_hub = hub.clone();
+    tokio::spawn(async move {
+        let mut interval = tokio::time::interval(std::time::Duration::from_secs(300));
+        loop {
+            interval.tick().await;
+            cleanup_hub.cleanup().await;
+        }
+    });
     let state = AppState {
         pool,
         public_base_url,
+        hub,
     };
 
     Router::new()
@@ -96,6 +108,10 @@ pub fn build_router(pool: Pool<MySql>, public_base_url: String) -> Router {
             get(handlers::workspace::get_workspace_manifest),
         )
         .route(
+            "/api/v1/workspaces/:workspace_id/live",
+            get(handlers::live::ws_upgrade),
+        )
+        .route(
             "/api/v1/workspaces/:workspace_id/invites",
             post(handlers::workspace::create_invite),
         )
@@ -110,7 +126,7 @@ pub fn build_router(pool: Pool<MySql>, public_base_url: String) -> Router {
         // Documents API
         .route(
             "/api/v1/workspaces/:workspace_id/documents",
-            get(handlers::document::list_documents).put(handlers::document::save_document),
+            get(handlers::document::list_documents),
         )
         .route(
             "/api/v1/workspaces/:workspace_id/documents/:document_id",
@@ -134,10 +150,13 @@ pub fn build_router(pool: Pool<MySql>, public_base_url: String) -> Router {
             post(handlers::sync::push),
         )
         .route(
+            "/api/v1/workspaces/:workspace_id/conflicts",
+            get(handlers::sync::list_conflicts),
+        )
+        .route(
             "/api/v1/workspaces/:workspace_id/conflicts/:conflict_id/resolve",
             post(handlers::sync::resolve_conflict),
         )
-        .route("/api/sync/workspace", post(handlers::sync::sync_legacy))
         // Trash API
         .route(
             "/api/v1/workspaces/:workspace_id/trash",

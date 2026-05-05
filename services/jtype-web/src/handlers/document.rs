@@ -9,6 +9,7 @@ use uuid::Uuid;
 use crate::db::models::*;
 use crate::error::AppError;
 use crate::handlers::workspace::require_workspace_role;
+use crate::hub::WorkspaceEvent;
 use crate::middleware::auth::extract_user;
 use crate::util::*;
 use crate::AppState;
@@ -85,30 +86,6 @@ pub async fn get_document(
         version_id: row.try_get("version_id")?,
         updated_clock: row.try_get("updated_clock")?,
     }))
-}
-
-pub async fn save_document(
-    State(state): State<AppState>,
-    headers: HeaderMap,
-    Path(workspace_id): Path<String>,
-    Json(payload): Json<CloudSaveDocumentRequest>,
-) -> Result<Json<CloudDocument>, AppError> {
-    let user = extract_user(&state.pool, &headers).await?;
-    require_workspace_role(
-        &state.pool,
-        &workspace_id,
-        &user.id,
-        &["owner", "admin", "editor"],
-    )
-    .await?;
-    let saved = save_document_version(&state.pool, &workspace_id, &user, payload, "web").await?;
-    match saved {
-        SaveDocumentOutcome::Saved(doc, _) => Ok(Json(doc)),
-        SaveDocumentOutcome::Conflict(c) => Err(AppError::BadRequest(format!(
-            "document conflict: {}",
-            c.conflict_id
-        ))),
-    }
 }
 
 pub async fn update_status(
@@ -233,6 +210,12 @@ pub async fn delete_document(
 
     tx.commit().await?;
 
+    state.hub.publish(&workspace_id, WorkspaceEvent::DocumentDeleted {
+        source_session_id: String::new(),
+        relative_path,
+        deleted_clock: next_clock,
+    }).await;
+
     Ok(StatusCode::NO_CONTENT)
 }
 
@@ -279,7 +262,7 @@ pub async fn list_versions(
 
 // ── Internal helpers ──
 
-#[derive(Debug, Clone, serde::Serialize)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum MergeStatus {
     Accepted,
@@ -377,11 +360,21 @@ pub async fn save_document_version(
             return Ok(SaveDocumentOutcome::Conflict(conflict));
         }
 
-        let merge_status = if cloud_hash == content_hash {
-            MergeStatus::Unchanged
-        } else {
-            MergeStatus::Accepted
-        };
+        if cloud_hash == content_hash {
+            let current_clock: i64 = row.try_get("updated_clock")?;
+            return Ok(SaveDocumentOutcome::Saved(
+                CloudDocument {
+                    relative_path,
+                    title,
+                    status: status.to_string(),
+                    content: payload.content,
+                    content_hash,
+                    version_id: parent_version_id.unwrap_or_default(),
+                    updated_clock: current_clock,
+                },
+                MergeStatus::Unchanged,
+            ));
+        }
         let saved = save_merged_document(
             pool,
             workspace_id,
@@ -396,7 +389,7 @@ pub async fn save_document_version(
             source,
         )
         .await?;
-        return Ok(SaveDocumentOutcome::Saved(saved, merge_status));
+        return Ok(SaveDocumentOutcome::Saved(saved, MergeStatus::Accepted));
     }
 
     ensure_workspace_budget(pool, workspace_id, &relative_path, &payload.content).await?;
@@ -614,11 +607,11 @@ async fn create_sync_conflict_with_ranges(
     conflict_ranges: Option<&Vec<crate::util::ConflictRange>>,
 ) -> Result<SyncConflict, AppError> {
     let conflict_id = Uuid::new_v4().to_string();
-    let ranges_json = conflict_ranges.and_then(|ranges| {
+    let ranges_json: Option<serde_json::Value> = conflict_ranges.and_then(|ranges| {
         if ranges.is_empty() {
             None
         } else {
-            Some(serde_json::to_string(ranges).unwrap_or_default())
+            serde_json::to_value(ranges).ok()
         }
     });
     sqlx::query(

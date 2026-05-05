@@ -9,6 +9,7 @@ use uuid::Uuid;
 use crate::db::models::*;
 use crate::error::AppError;
 use crate::handlers::workspace::require_workspace_role;
+use crate::hub::WorkspaceEvent;
 use crate::middleware::auth::extract_user;
 use crate::AppState;
 
@@ -104,36 +105,15 @@ pub async fn restore_from_trash(
             .fetch_optional(&state.pool)
             .await?;
 
-    let final_relative_path = if existing.is_some() {
-        let stem = relative_path
-            .strip_suffix(".md")
-            .map(|s| {
-                format!(
-                    "{} (restored).md",
-                    s.trim_end_matches(' ').trim_end_matches('(')
-                )
-            })
-            .unwrap_or_else(|| format!("{} (restored)", relative_path));
-        let mut candidate = stem.clone();
-        let mut suffix = 1;
-        loop {
-            let collision = sqlx::query(
-                "SELECT id FROM documents WHERE workspace_id = ? AND relative_path = ?",
-            )
+    if existing.is_some() {
+        sqlx::query("DELETE FROM documents WHERE workspace_id = ? AND relative_path = ?")
             .bind(&workspace_id)
-            .bind(&candidate)
-            .fetch_optional(&state.pool)
+            .bind(&relative_path)
+            .execute(&state.pool)
             .await?;
-            if collision.is_none() {
-                break;
-            }
-            suffix += 1;
-            candidate = format!("{} ({}).md", stem.trim_end_matches(".md"), suffix);
-        }
-        candidate
-    } else {
-        relative_path.clone()
-    };
+    }
+
+    let final_relative_path = relative_path.clone();
 
     let document_id = Uuid::new_v4().to_string();
     let version_id = Uuid::new_v4().to_string();
@@ -185,6 +165,12 @@ pub async fn restore_from_trash(
 
     tx.commit().await?;
 
+    state.hub.publish(&workspace_id, WorkspaceEvent::DocumentTrashed {
+        source_session_id: String::new(),
+        relative_path,
+        action: "restored".to_string(),
+    }).await;
+
     Ok(Json(CloudDocument {
         relative_path: final_relative_path,
         title,
@@ -214,6 +200,15 @@ pub async fn permanent_delete(
     let next_clock =
         crate::handlers::document::next_workspace_clock(&mut tx, &workspace_id).await?;
 
+    let relative_path: Option<String> = sqlx::query(
+        "SELECT relative_path FROM document_trash WHERE id = ? AND workspace_id = ?",
+    )
+    .bind(&trash_id)
+    .bind(&workspace_id)
+    .fetch_optional(&mut *tx)
+    .await?
+    .and_then(|r| r.try_get("relative_path").ok());
+
     let result = sqlx::query("DELETE FROM document_trash WHERE id = ? AND workspace_id = ?")
         .bind(&trash_id)
         .bind(&workspace_id)
@@ -238,6 +233,15 @@ pub async fn permanent_delete(
     .await?;
 
     tx.commit().await?;
+
+    if let Some(rp) = relative_path {
+        state.hub.publish(&workspace_id, WorkspaceEvent::DocumentDeleted {
+            source_session_id: String::new(),
+            relative_path: rp,
+            deleted_clock: next_clock,
+        }).await;
+    }
+
     Ok(StatusCode::NO_CONTENT)
 }
 
@@ -259,6 +263,17 @@ pub async fn empty_trash(
     let next_clock =
         crate::handlers::document::next_workspace_clock(&mut tx, &workspace_id).await?;
 
+    let trash_rows = sqlx::query(
+        "SELECT relative_path FROM document_trash WHERE workspace_id = ? AND restored_at IS NULL",
+    )
+    .bind(&workspace_id)
+    .fetch_all(&mut *tx)
+    .await?;
+    let trash_paths: Vec<String> = trash_rows
+        .into_iter()
+        .filter_map(|r| r.try_get("relative_path").ok())
+        .collect();
+
     sqlx::query("DELETE FROM document_trash WHERE workspace_id = ? AND restored_at IS NULL")
         .bind(&workspace_id)
         .execute(&mut *tx)
@@ -276,5 +291,14 @@ pub async fn empty_trash(
     .await?;
 
     tx.commit().await?;
+
+    for rp in trash_paths {
+        state.hub.publish(&workspace_id, WorkspaceEvent::DocumentDeleted {
+            source_session_id: String::new(),
+            relative_path: rp,
+            deleted_clock: next_clock,
+        }).await;
+    }
+
     Ok(StatusCode::NO_CONTENT)
 }

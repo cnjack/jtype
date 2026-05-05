@@ -80,9 +80,6 @@ export function VaultHome() {
           </div>
         </div>
       </div>
-      <div id="operation-log" className="border-t border-black/[0.04] bg-white/70 px-5 py-3 text-xs text-[#6b7773]">
-        {state.statusMessage}
-      </div>
     </section>
   );
 }

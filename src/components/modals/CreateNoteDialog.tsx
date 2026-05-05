@@ -1,62 +1,64 @@
-import { useCallback, useRef } from "react";
-import type { KeyboardEvent } from "react";
+import { useState } from "react";
+import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
+import { DocumentPlusIcon } from "@heroicons/react/24/outline";
 import { useAppDispatch, useAppState } from "../../app/AppState";
 import { useFileSystem } from "../../hooks";
-import { PaletteModal } from "./PaletteModal";
 
 export function CreateNoteDialog() {
   const state = useAppState();
   const dispatch = useAppDispatch();
   const fs = useFileSystem();
-  const queryRef = useRef("");
+  const [value, setValue] = useState("");
 
-  const handleCreate = useCallback(() => {
-    const trimmed = queryRef.current.trim();
+  const handleCreate = () => {
+    const trimmed = value.trim();
     if (!trimmed) return;
     dispatch({ type: "SET_CREATE_NOTE_DIALOG", open: false });
     fs.createDocument(trimmed.endsWith(".md") ? trimmed : `${trimmed}.md`);
-  }, [dispatch, fs]);
+    setValue("");
+  };
 
-  const handleKeyDown = useCallback((event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      handleCreate();
-    }
-  }, [handleCreate]);
+  const handleClose = () => {
+    dispatch({ type: "SET_CREATE_NOTE_DIALOG", open: false });
+    setValue("");
+  };
 
   return (
-    <PaletteModal
-      open={state.createNoteDialogOpen}
-      onClose={() => dispatch({ type: "SET_CREATE_NOTE_DIALOG", open: false })}
-      ariaLabel="Create new Document"
-      inputPlaceholder="Note name..."
-      inputAriaLabel="Note name"
-      onKeyDown={handleKeyDown}
-    >
-      {(query) => {
-        queryRef.current = query;
-        const trimmed = query.trim();
-        return (
-          <div className="space-y-2 p-2">
+    <Dialog open={state.createNoteDialogOpen} onClose={handleClose} className="relative z-50">
+      <div className="fixed inset-0 bg-black/20" aria-hidden="true" />
+      <div className="fixed inset-0 flex items-center justify-center p-4">
+        <DialogPanel className="w-full max-w-sm rounded-xl bg-white p-6 shadow-2xl">
+          <DialogTitle className="flex items-center gap-2 text-base font-semibold text-stone-900">
+            <DocumentPlusIcon className="h-5 w-5 text-[#006f6b]" />
+            New Document
+          </DialogTitle>
+          <input
+            className="mt-3 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-[#008884] focus:outline-none focus:ring-1 focus:ring-[#008884]"
+            placeholder="Note name..."
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") handleCreate(); }}
+            autoFocus
+          />
+          <div className="mt-4 flex justify-end gap-2">
             <button
-              className="command-row"
               type="button"
-              disabled={!trimmed}
-              onClick={handleCreate}
+              className="rounded-lg px-3 py-1.5 text-sm text-stone-600 hover:bg-stone-100"
+              onClick={handleClose}
             >
-              <span className="min-w-0">
-                <span className="block font-semibold">
-                  {trimmed ? `Create "${trimmed}"` : "Enter a note name"}
-                </span>
-                <span className="block text-xs text-stone-500">
-                  {trimmed.endsWith(".md") ? "Markdown file" : "Will add .md extension"}
-                </span>
-              </span>
-              <span className="shrink-0 text-xs text-stone-500">Enter</span>
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="rounded-lg bg-[#006f6b] px-3 py-1.5 text-sm font-medium text-white hover:bg-[#005854]"
+              onClick={handleCreate}
+              disabled={!value.trim()}
+            >
+              Create
             </button>
           </div>
-        );
-      }}
-    </PaletteModal>
+        </DialogPanel>
+      </div>
+    </Dialog>
   );
 }

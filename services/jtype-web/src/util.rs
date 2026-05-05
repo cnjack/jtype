@@ -96,12 +96,16 @@ pub fn normalize_relative_markdown_path(path: &str) -> Result<String, AppError> 
         || normalized.starts_with('/')
         || normalized.contains("../")
         || normalized == ".."
-        || !is_markdown_path(&normalized)
     {
         return Err(AppError::BadRequest(
             "relative Markdown path is required".to_string(),
         ));
     }
+    let normalized = if is_markdown_path(&normalized) {
+        normalized
+    } else {
+        format!("{}.md", normalized)
+    };
     Ok(normalized)
 }
 

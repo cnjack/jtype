@@ -77,8 +77,6 @@ export const api = {
     request<DocumentListItem[]>(`/api/v1/workspaces/${workspaceId}/documents`),
   getDocument: (workspaceId: string, docId: string) =>
     request<CloudDocument>(`/api/v1/workspaces/${workspaceId}/documents/${docId}`),
-  saveDocument: (workspaceId: string, data: { relativePath: string; content: string; title?: string; baseContentHash?: string; baseContent?: string }) =>
-    request<CloudDocument>(`/api/v1/workspaces/${workspaceId}/documents`, { method: 'PUT', body: JSON.stringify(data) }),
   updateDocumentStatus: (workspaceId: string, docId: string, status: string) =>
     request<DocumentListItem>(`/api/v1/workspaces/${workspaceId}/documents/${docId}/status`, { method: 'PUT', body: JSON.stringify({ status }) }),
   deleteDocument: (workspaceId: string, docId: string) =>
@@ -93,6 +91,15 @@ export const api = {
     request<void>(`/api/v1/workspaces/${workspaceId}/trash/${trashId}`, { method: 'DELETE' }),
   emptyTrash: (workspaceId: string) =>
     request<void>(`/api/v1/workspaces/${workspaceId}/trash`, { method: 'DELETE' }),
+
+  // Conflicts
+  listConflicts: (workspaceId: string) =>
+    request<SyncConflictItem[]>(`/api/v1/workspaces/${workspaceId}/conflicts`),
+  resolveConflict: (workspaceId: string, conflictId: string, resolution: string, content?: string) =>
+    request<CloudDocument>(`/api/v1/workspaces/${workspaceId}/conflicts/${conflictId}/resolve`, {
+      method: 'POST',
+      body: JSON.stringify({ resolution, content }),
+    }),
 
   // Device OAuth
   approveDevice: (userCode: string) =>
@@ -246,4 +253,13 @@ export interface DomainResponse {
   verifiedAt: string | null
   sslStatus: string | null
   sslExpiresAt: string | null
+}
+
+export interface SyncConflictItem {
+  conflictId: string
+  relativePath: string
+  localContent: string
+  cloudContent: string
+  baseContent?: string
+  conflictRanges?: string
 }

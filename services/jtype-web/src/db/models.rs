@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use serde_json::Value as JsonValue;
 
 // ── User ──
 
@@ -289,31 +290,6 @@ pub struct WorkspaceManifestResponse {
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct SyncWorkspaceRequest {
-    pub workspace_name: String,
-    pub documents: Vec<SyncDocumentInput>,
-}
-
-#[derive(Debug, Deserialize, Serialize, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct SyncDocumentInput {
-    pub relative_path: String,
-    pub title: String,
-    pub status: String,
-    pub content: String,
-}
-
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct SyncWorkspaceResponse {
-    pub workspace_id: String,
-    pub workspace_name: String,
-    pub document_count: usize,
-    pub site_url: String,
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct SyncPullRequest {
     pub since_clock: Option<i64>,
     pub device_id: Option<String>,
@@ -345,7 +321,7 @@ pub struct SyncConflict {
     pub local_content: String,
     pub cloud_content: String,
     pub base_content: Option<String>,
-    pub conflict_ranges: Option<String>,
+    pub conflict_ranges: Option<JsonValue>,
 }
 
 #[derive(Debug, Serialize)]
@@ -389,6 +365,17 @@ pub struct SyncPushResponse {
 pub struct ResolveConflictRequest {
     pub resolution: String,
     pub content: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SyncConflictResponse {
+    pub conflict_id: String,
+    pub relative_path: String,
+    pub local_content: String,
+    pub cloud_content: String,
+    pub base_content: Option<String>,
+    pub conflict_ranges: Option<String>,
 }
 
 // ── OAuth Device ──

@@ -5,17 +5,21 @@ export function usePeriodicSync(
   pullFn: (() => Promise<void>) | null,
   intervalMs: number,
   enabled: boolean,
+  wsConnected: boolean = false,
 ) {
   const syncingRef = useRef(false);
   const lastSyncRef = useRef(0);
+  const effectiveInterval = wsConnected
+    ? Math.max(intervalMs, 300_000)
+    : intervalMs;
 
   useEffect(() => {
-    if (!enabled || intervalMs <= 0) return;
+    if (!enabled || effectiveInterval <= 0) return;
 
     const timer = window.setInterval(async () => {
       if (syncingRef.current) return;
       const now = Date.now();
-      if (now - lastSyncRef.current < intervalMs * 0.8) return;
+      if (now - lastSyncRef.current < effectiveInterval * 0.8) return;
       syncingRef.current = true;
       try {
         await syncFn();
@@ -25,10 +29,10 @@ export function usePeriodicSync(
       } finally {
         syncingRef.current = false;
       }
-    }, intervalMs);
+    }, effectiveInterval);
 
     return () => clearInterval(timer);
-  }, [enabled, intervalMs, syncFn]);
+  }, [enabled, effectiveInterval, syncFn]);
 
   useEffect(() => {
     if (!enabled) return;

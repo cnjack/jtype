@@ -6,6 +6,9 @@ import { renderToContainer } from '../lib/markdown'
 import { parseFrontmatter, writeFrontmatter } from '../lib/frontmatter'
 import type { EditorMode } from '../lib/utils'
 import { usePrompt, useConfirm } from '../components/PromptDialogContext'
+import { useWorkspaceSocket } from '../hooks/useWorkspaceSocket'
+import { useOfflineSync } from '../hooks/useOfflineSync'
+import { ConflictResolver } from '../components/ConflictResolver'
 import {
   BoldIcon,
   ItalicIcon,
@@ -84,6 +87,10 @@ export function Workspace() {
   const [query, setQuery] = useState('')
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set<string>())
   const [favoriteVersion, setFavoriteVersion] = useState(0)
+  const [staleWarning, setStaleWarning] = useState<{ editedBy: string; wasDirty: boolean } | null>(null)
+  const [statusMessage, setStatusMessage] = useState('')
+  const { status: wsStatus, sessionId: wsSessionId, request: wsRequest, subscribe: wsSubscribe } = useWorkspaceSocket(workspace?.id)
+  const { hasPending, pendingCount, reconciling, saveOffline, reconcile } = useOfflineSync(workspace?.id)
 
   // Persist expanded folder state per workspace
   useEffect(() => {
@@ -175,6 +182,84 @@ export function Workspace() {
     return () => clearTimeout(timer)
   }, [docContent, editorMode])
 
+  useEffect(() => {
+    if (!wsSubscribe || !workspace?.id) return
+    return wsSubscribe((event: any) => {
+      if (event.sourceSessionId === wsSessionId) return
+      switch (event.type) {
+        case 'document:changed':
+          api.listDocuments(workspace.id).then(setDocuments)
+          if (selectedDoc) {
+            const curDoc = documents.find(d => d.id === selectedDoc)
+            if (curDoc && event.relativePath === curDoc.relativePath) {
+              if (dirty) {
+                setStaleWarning({ editedBy: event.editedBy || 'another user', wasDirty: true })
+              } else {
+                api.getDocument(workspace.id, selectedDoc).then(doc => {
+                  setDocContent(doc.content)
+                  setLoadedContentHash(doc.contentHash)
+                  setLoadedContent(doc.content)
+                })
+              }
+            }
+          }
+          break
+        case 'document:deleted':
+          api.listDocuments(workspace.id).then(setDocuments)
+          api.listTrash(workspace.id).then(setTrashItems)
+          if (selectedDoc) {
+            const curDoc = documents.find(d => d.id === selectedDoc)
+            if (curDoc && event.relativePath === curDoc.relativePath) {
+              setStatusMessage('This document was deleted by another user.')
+              setTimeout(() => setStatusMessage(''), 4000)
+              setSelectedDoc(null)
+              setDocContent('')
+              setDirty(false)
+            }
+          }
+          break
+        case 'document:trashed':
+          api.listDocuments(workspace.id).then(setDocuments)
+          api.listTrash(workspace.id).then(setTrashItems)
+          break
+        case 'sync:required':
+          api.listDocuments(workspace.id).then(setDocuments)
+          api.listTrash(workspace.id).then(setTrashItems)
+          break
+      }
+    })
+  }, [wsSubscribe, wsSessionId, workspace?.id, selectedDoc, documents, dirty])
+
+  useEffect(() => {
+    if (wsStatus === 'connected' && hasPending && workspace?.id) {
+      const token = localStorage.getItem('jtype.token')
+      if (token) {
+        reconcile(token).then(result => {
+          if (result.conflicts > 0) {
+            setStaleWarning({ editedBy: 'sync conflict', wasDirty: false })
+          }
+          if (result.pushed > 0) {
+            setStatusMessage(`${result.pushed} offline change${result.pushed > 1 ? 's' : ''} synced.`)
+            setTimeout(() => setStatusMessage(''), 3000)
+          }
+          if (result.conflicts > 0) {
+            setStatusMessage(`${result.conflicts} conflict${result.conflicts > 1 ? 's' : ''} need attention.`)
+            setTimeout(() => setStatusMessage(''), 5000)
+          }
+          api.listDocuments(workspace.id).then(setDocuments)
+        })
+      }
+    }
+  }, [wsStatus, hasPending, workspace?.id, reconcile])
+
+  useEffect(() => {
+    if (wsStatus === 'connected' || !workspace?.id) return
+    const timer = setInterval(() => {
+      api.listDocuments(workspace.id).then(setDocuments)
+    }, 10_000)
+    return () => clearInterval(timer)
+  }, [wsStatus, workspace?.id])
+
   async function openDocument(docId: string) {
     if (!workspaceId) return
     const doc = await api.getDocument(workspaceId, docId)
@@ -192,18 +277,29 @@ export function Workspace() {
     setSaving(true)
     try {
       const parsedDoc = parseFrontmatter(docContent)
-      const saved = await api.saveDocument(workspaceId, {
-        relativePath: doc.relativePath,
-        content: docContent,
-        title: parsedDoc.data.title || undefined,
-        baseContentHash: loadedContentHash || undefined,
-        baseContent: loadedContent || undefined,
-      })
-      setLoadedContentHash(saved.contentHash)
-      setLoadedContent(docContent)
+      if (wsStatus === 'connected') {
+        try {
+          const ack = await wsRequest({
+            type: 'document:save',
+            relativePath: doc.relativePath,
+            content: docContent,
+            title: parsedDoc.data.title || undefined,
+            baseContentHash: loadedContentHash || undefined,
+            baseContent: loadedContent || undefined,
+          })
+          if (ack.ok && ack.document) {
+            setLoadedContentHash(ack.document.contentHash)
+            setLoadedContent(docContent)
+            setDirty(false)
+            setDocuments(await api.listDocuments(workspaceId))
+            return
+          }
+        } catch { /* fall through to offline */ }
+      }
+      await saveOffline(doc.relativePath, docContent, loadedContentHash || '', loadedContent || '')
       setDirty(false)
-      const docs = await api.listDocuments(workspaceId)
-      setDocuments(docs)
+      setStatusMessage('Saved offline. Will sync when reconnected.')
+      setTimeout(() => setStatusMessage(''), 3000)
     } finally {
       setSaving(false)
     }
@@ -213,7 +309,13 @@ export function Workspace() {
     if (!workspaceId) return
     const path = await prompt('Document path (e.g. notes/hello.md):')
     if (!path?.trim()) return
-    await api.saveDocument(workspaceId, { relativePath: path.trim(), content: '' })
+    if (wsStatus !== 'connected') {
+      setStatusMessage('Not connected. Please wait for the connection to be established.')
+      setTimeout(() => setStatusMessage(''), 3000)
+      return
+    }
+    const ack = await wsRequest({ type: 'document:save', relativePath: path.trim(), content: '' })
+    if (!ack.ok) throw new Error(ack.error || 'Save failed')
     const docs = await api.listDocuments(workspaceId)
     setDocuments(docs)
   }
@@ -291,18 +393,21 @@ export function Workspace() {
     const nextContent = writeFrontmatter(docContent, { status })
     setSaving(true)
     try {
-      const saved = await api.saveDocument(workspaceId, {
+      const ack = await wsRequest({
+        type: 'document:save',
         relativePath: doc.relativePath,
         content: nextContent,
         title: parseFrontmatter(nextContent).data.title || undefined,
         baseContentHash: loadedContentHash || undefined,
         baseContent: loadedContent || undefined,
       })
-      setDocContent(nextContent)
-      setLoadedContentHash(saved.contentHash)
-      setLoadedContent(nextContent)
-      setDirty(false)
-      setDocuments(await api.listDocuments(workspaceId))
+      if (ack.ok) {
+        setDocContent(nextContent)
+        setLoadedContentHash(ack.document?.contentHash ?? loadedContentHash)
+        setLoadedContent(nextContent)
+        setDirty(false)
+        setDocuments(await api.listDocuments(workspaceId))
+      }
     } finally {
       setSaving(false)
     }
@@ -404,7 +509,7 @@ export function Workspace() {
   if (loading) return <div className="flex items-center justify-center py-20"><div className="h-6 w-6 animate-spin rounded-full border-2 border-brand border-t-transparent" /></div>
 
   return (
-    <div className="grid h-[calc(100vh-4rem)] grid-cols-[272px_minmax(0,1fr)] overflow-hidden bg-[#fbfdfb]">
+    <div className="grid h-[calc(100vh-4rem)] grid-rows-[1fr_auto] overflow-hidden bg-[#fbfdfb]">
       {workspace && (
         <WorkspaceSettingsDialog
           open={settingsOpen}
@@ -445,7 +550,7 @@ export function Workspace() {
       )}
 
       {activeSection === 'documents' && (
-        <>
+        <div className="grid grid-cols-[272px_minmax(0,1fr)] overflow-hidden">
           {!sidebarCollapsed && (
             <aside className="flex min-h-0 flex-col border-r border-black/[0.04] bg-[#f7faf8]">
               <div className="p-5 pb-4">
@@ -478,6 +583,10 @@ export function Workspace() {
                   onOpen={openDocument}
                   onDelete={deleteDocument}
                   onDocumentsChange={setDocuments}
+                  onSaveDocument={async (data) => {
+                    const ack = await wsRequest({ type: 'document:save', ...data })
+                    if (!ack.ok) throw new Error(ack.error || 'Save failed')
+                  }}
                   trashItems={trashItems}
                   onRestoreTrash={restoreTrashItem}
                   onDeleteTrash={deleteTrashItem}
@@ -537,6 +646,24 @@ export function Workspace() {
                   </button>
                 </div>
               </div>
+              {workspaceId && <ConflictResolver workspaceId={workspaceId} onResolved={reloadDocumentsAndTrash} />}
+              {staleWarning && (
+                <div className="bg-yellow-50 border-b border-yellow-200 px-4 py-2 flex items-center justify-between text-sm">
+                  <span>&#x26A0; Modified by {staleWarning.editedBy}{staleWarning.wasDirty ? '. You have unsaved changes.' : ''}</span>
+                  <div className="flex gap-2">
+                    <button onClick={async () => {
+                      if (!workspaceId || !selectedDocument) return
+                      const doc = await api.getDocument(workspaceId, selectedDocument.id)
+                      setDocContent(doc.content)
+                      setLoadedContentHash(doc.contentHash)
+                      setLoadedContent(doc.content)
+                      setDirty(false)
+                      setStaleWarning(null)
+                    }} className="text-red-600 hover:underline">Reload{staleWarning.wasDirty ? ' (discard)' : ''}</button>
+                    {staleWarning.wasDirty && <button onClick={() => { saveDocument(); setStaleWarning(null) }} className="text-blue-600 hover:underline">Save mine</button>}
+                  </div>
+                </div>
+              )}
               <div className="flex min-h-12 items-center gap-1 border-b border-black/[0.04] bg-[#fbfdfb] px-5">
                 <EditorToolbarButton title="Bold (Ctrl+B)" onClick={() => wrapSelection('**', '**', 'bold text')}>
                   <BoldIcon className="h-4 w-4" />
@@ -658,10 +785,7 @@ export function Workspace() {
                     <button
                       className="toolbar-button toolbar-button-primary"
                       type="button"
-                      onClick={() => {
-                        const input = document.querySelector<HTMLInputElement>('input[placeholder="path/to/doc.md"]')
-                        input?.focus()
-                      }}
+                      onClick={createDocument}
                     >
                       New Document
                     </button>
@@ -709,12 +833,24 @@ export function Workspace() {
               </div>
             </div>
           )}
-          <div id="operation-log" className="border-t border-black/[0.04] bg-white/70 px-5 py-3 text-xs text-[#6b7773]">
-            {selectedDoc ? `Opened ${documents.find(d => d.id === selectedDoc)?.relativePath || 'document'}.` : 'Select a document to edit.'}
-          </div>
         </section>
-        </>
+      </div>
       )}
+
+      <div id="operation-log" className="col-span-full flex items-center justify-between border-t border-black/[0.04] bg-white/70 px-5 py-3 text-xs text-[#6b7773]">
+        <span>{statusMessage || (selectedDoc ? `Opened ${documents.find(d => d.id === selectedDoc)?.relativePath || 'document'}.` : 'Select a document to edit.')}</span>
+        <span className="flex shrink-0 items-center gap-1.5">
+          {reconciling ? (
+            <span className="flex items-center gap-1.5 font-medium text-yellow-600"><span className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse" />Syncing...</span>
+          ) : wsStatus === 'connected' ? (
+            <span className="flex items-center gap-1.5 font-medium text-green-600"><span className="w-2 h-2 rounded-full bg-green-500" />Connected</span>
+          ) : wsStatus === 'connecting' ? (
+            <span className="flex items-center gap-1.5 font-medium text-yellow-600"><span className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse" />Connecting...</span>
+          ) : (
+            <span className="flex items-center gap-1.5 font-medium text-red-500"><span className="w-2 h-2 rounded-full bg-red-500" />{hasPending ? `Offline (${pendingCount} saved)` : 'Offline'}</span>
+          )}
+        </span>
+      </div>
 
       {activeSection === 'documents' && editorContextMenu && (
         <div
@@ -1579,6 +1715,7 @@ function WebDocExplorer({
   setFavoriteVersion,
   treeContextMenu,
   setTreeContextMenu,
+  onSaveDocument,
 }: {
   workspaceId: string | undefined
   documents: DocumentListItem[]
@@ -1586,6 +1723,7 @@ function WebDocExplorer({
   onOpen: (docId: string) => void
   onDelete: (docId: string) => void
   onDocumentsChange: (docs: DocumentListItem[]) => void
+  onSaveDocument: (data: { relativePath: string; content: string; title?: string }) => Promise<void>
   trashItems: TrashItem[]
   onRestoreTrash: (id: string) => void
   onDeleteTrash: (id: string) => void
@@ -1639,7 +1777,7 @@ function WebDocExplorer({
     const name = await prompt('New folder name:')
     if (!name?.trim()) return
     const placeholderPath = `${name.trim()}/.gitkeep`
-    await api.saveDocument(workspaceId, { relativePath: placeholderPath, content: '' })
+    await onSaveDocument({ relativePath: placeholderPath, content: '' })
     const docs = await api.listDocuments(workspaceId)
     onDocumentsChange(docs)
   }
@@ -1649,7 +1787,7 @@ function WebDocExplorer({
     const name = await prompt('New document name (e.g. note.md):')
     if (!name?.trim()) return
     const relativePath = `${folderPath}/${name.trim()}`
-    await api.saveDocument(workspaceId, { relativePath, content: '' })
+    await onSaveDocument({ relativePath, content: '' })
     const docs = await api.listDocuments(workspaceId)
     onDocumentsChange(docs)
     setExpanded(new Set(expanded).add(folderPath))
@@ -1677,7 +1815,7 @@ function WebDocExplorer({
     if (!newName || newName === doc.relativePath) return
     try {
       const fullDoc = await api.getDocument(workspaceId, doc.id)
-      await api.saveDocument(workspaceId, {
+      await onSaveDocument({
         relativePath: newName.trim(),
         content: fullDoc.content,
         title: fullDoc.title || undefined,
@@ -1812,10 +1950,7 @@ function WebDocExplorer({
               ) : (
                 trashItems.map(item => (
                   <div key={item.id} className="rounded-lg px-2.5 py-2 text-xs text-[#4b5753] hover:bg-white/80">
-                    <div className="flex items-center gap-1">
-                      <p className="min-w-0 truncate font-semibold">{item.relativePath}</p>
-                      <span className="shrink-0 rounded bg-stone-100 px-1 py-0.5 text-[10px] text-stone-500">cloud</span>
-                    </div>
+                    <p className="min-w-0 truncate font-semibold">{item.relativePath}</p>
                     <div className="mt-1 flex items-center justify-between gap-2">
                       <span className="truncate text-stone-500">{formatTrashTime(item.deletedAt)}</span>
                       <div className="flex gap-1">

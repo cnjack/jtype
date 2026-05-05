@@ -49,6 +49,7 @@ export interface AppState {
   commandPaletteOpen: boolean;
   quickSwitcherOpen: boolean;
   createNoteDialogOpen: boolean;
+  conflictDialogOpen: boolean;
   accountDialogOpen: boolean;
   accountDialogSection: "account" | "workspace";
   serviceUrl: string;
@@ -57,6 +58,9 @@ export interface AppState {
   lastFilePath: string;
   syncStatus: SyncStatus;
   lastSyncAt: number;
+  wsConnected: boolean;
+  lastWsActivityAt: number | null;
+  lastWsEventType: string | null;
   editorContentVersion: number;
   expandedFolders: Set<string>;
 }
@@ -82,12 +86,14 @@ export type AppAction =
   | { type: "SET_OAUTH"; deviceCode: string; userCode: string }
   | { type: "CLEAR_OAUTH" }
   | { type: "SET_CONFLICTS"; conflicts: SyncConflict[] }
+  | { type: "REMOVE_CONFLICT"; conflictId: string }
   | { type: "SET_CONTEXT_NODE"; node: FileTreeNode | null }
   | { type: "SET_AI_PROPOSAL"; proposal: AICommandProposal | null }
   | { type: "SET_CONTEXT_MENU"; menu: AppState["contextMenu"] }
   | { type: "SET_COMMAND_PALETTE"; open: boolean }
   | { type: "SET_QUICK_SWITCHER"; open: boolean }
   | { type: "SET_CREATE_NOTE_DIALOG"; open: boolean }
+  | { type: "SET_CONFLICT_DIALOG"; open: boolean }
   | { type: "SET_ACCOUNT_DIALOG"; open: boolean; section?: "account" | "workspace" }
   | { type: "SET_SERVICE_URL"; url: string }
   | { type: "SET_SYNC_SNAPSHOT"; snapshot: string }
@@ -97,6 +103,8 @@ export type AppAction =
   | { type: "TOGGLE_FAVORITE" }
   | { type: "SET_LAST_PATHS"; workspacePath: string; filePath: string }
   | { type: "SET_SYNC_STATUS"; status: SyncStatus; success?: boolean }
+  | { type: "SET_WS_CONNECTED"; connected: boolean }
+  | { type: "SET_WS_ACTIVITY"; msgType: string }
   | { type: "CLOSE_WORKSPACE" }
   | { type: "TOGGLE_EXPAND_FOLDER"; folderPath: string }
   | { type: "SET_EXPANDED_FOLDERS"; folders: Set<string> };
@@ -139,6 +147,7 @@ const initialState: AppState = {
   commandPaletteOpen: false,
   quickSwitcherOpen: false,
   createNoteDialogOpen: false,
+  conflictDialogOpen: false,
   accountDialogOpen: false,
   accountDialogSection: "workspace",
   serviceUrl: "http://localhost:13345",
@@ -147,6 +156,9 @@ const initialState: AppState = {
   lastFilePath: appStorage.get("lastFilePath", ""),
   syncStatus: "idle",
   lastSyncAt: 0,
+  wsConnected: false,
+  lastWsActivityAt: null,
+  lastWsEventType: null,
   editorContentVersion: 0,
   expandedFolders: new Set<string>(),
 };
@@ -266,8 +278,20 @@ export function appReducer(state: AppState, action: AppAction): AppState {
       return { ...state, oauthDeviceCode: action.deviceCode, oauthUserCode: action.userCode };
     case "CLEAR_OAUTH":
       return { ...state, oauthDeviceCode: "", oauthUserCode: "" };
-    case "SET_CONFLICTS":
-      return { ...state, activeConflicts: action.conflicts };
+    case "SET_CONFLICTS": {
+      // Merge incoming conflicts with existing ones.
+      // Incoming conflicts update/replace by relativePath; existing ones are kept.
+      const merged = new Map<string, typeof action.conflicts[number]>();
+      for (const c of state.activeConflicts) {
+        merged.set(c.relativePath, c);
+      }
+      for (const c of action.conflicts) {
+        merged.set(c.relativePath, c);
+      }
+      return { ...state, activeConflicts: Array.from(merged.values()) };
+    }
+    case "REMOVE_CONFLICT":
+      return { ...state, activeConflicts: state.activeConflicts.filter(c => c.conflictId !== action.conflictId) };
     case "SET_CONTEXT_NODE":
       return { ...state, contextNode: action.node };
     case "SET_AI_PROPOSAL":
@@ -280,6 +304,8 @@ export function appReducer(state: AppState, action: AppAction): AppState {
       return { ...state, quickSwitcherOpen: action.open };
     case "SET_CREATE_NOTE_DIALOG":
       return { ...state, createNoteDialogOpen: action.open };
+    case "SET_CONFLICT_DIALOG":
+      return { ...state, conflictDialogOpen: action.open };
     case "SET_ACCOUNT_DIALOG":
       return {
         ...state,
@@ -340,6 +366,10 @@ export function appReducer(state: AppState, action: AppAction): AppState {
       return { ...state, lastWorkspacePath: action.workspacePath, lastFilePath: action.filePath };
     case "SET_SYNC_STATUS":
       return { ...state, syncStatus: action.status, lastSyncAt: action.status === "idle" && action.success ? Date.now() : state.lastSyncAt };
+    case "SET_WS_CONNECTED":
+      return { ...state, wsConnected: action.connected };
+    case "SET_WS_ACTIVITY":
+      return { ...state, lastWsActivityAt: Date.now(), lastWsEventType: action.msgType };
     case "CLOSE_WORKSPACE": {
       appStorage.set("lastWorkspacePath", "");
       appStorage.set("lastFilePath", "");

@@ -2,6 +2,7 @@ import React, { useReducer, useCallback, useEffect, useRef, createContext, useCo
 import { appReducer, initialState, AppStateContext, AppDispatchContext } from "./AppState";
 import { useFileSystem, useCloudSync, useKeyboardShortcuts, useCommands } from "../hooks";
 import { usePeriodicSync } from "../hooks/usePeriodicSync";
+import { useCloudEvents } from "../hooks/useCloudEvents";
 import { useFileWatcher } from "../hooks/useFileWatcher";
 import type { CommandDef } from "../hooks/useCommands";
 import { Header } from "../components/layout/Header";
@@ -13,8 +14,12 @@ import { CommandPalette } from "../components/modals/CommandPalette";
 import { QuickSwitcher } from "../components/modals/QuickSwitcher";
 import { CreateNoteDialog } from "../components/modals/CreateNoteDialog";
 import { AccountDialog } from "../components/modals/AccountDialog";
+import { ConflictDialog } from "../components/modals/ConflictDialog";
+import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 import { PromptDialogProvider } from "../components/modals/PromptDialogContext";
 import { isTauriRuntime, relativePathFromWorkspace } from "../lib/utils";
+import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 
 const CommandsContext = createContext<CommandDef[]>([]);
 
@@ -75,6 +80,8 @@ function AppContent() {
   const isSyncEnabled = !!(state.workspace && state.syncToken && currentBinding);
   const startupPullDoneRef = useRef<string | null>(null);
 
+  useCloudEvents(sync.pullOnly);
+
   useEffect(() => {
     const bindingId = currentBinding?.workspaceId ?? null;
     if (startupPullDoneRef.current === bindingId) return;
@@ -96,6 +103,7 @@ function AppContent() {
     }, [state.workspace, state.syncToken, currentBinding, sync]),
     30_000,
     isSyncEnabled,
+    state.wsConnected,
   );
 
   useEffect(() => {
@@ -111,6 +119,35 @@ function AppContent() {
       window.removeEventListener("jtype:vault-restored", syncAfterTrashChange);
     };
   }, [state.workspace, state.syncToken, currentBinding, sync]);
+
+  useEffect(() => {
+    if (!isTauriRuntime()) return;
+    if (!state.cloudProfile?.token || !currentBinding?.workspaceId || !state.cloudProfile?.deviceId) return;
+
+    invoke("start_cloud_listener", {
+      serverUrl: state.cloudProfile.serverUrl,
+      token: state.cloudProfile.token,
+      workspaceId: currentBinding.workspaceId,
+      deviceId: state.cloudProfile.deviceId,
+    }).catch(() => {});
+    return () => {
+      invoke("stop_cloud_listener").catch(() => {});
+    };
+  }, [state.cloudProfile?.token, currentBinding?.workspaceId, state.cloudProfile?.deviceId, state.cloudProfile?.serverUrl]);
+
+  useEffect(() => {
+    if (!isTauriRuntime()) return;
+    const unlistenConnected = listen("cloud:ws-connected", () => dispatch({ type: "SET_WS_CONNECTED", connected: true }));
+    const unlistenDisconnected = listen("cloud:ws-disconnected", () => dispatch({ type: "SET_WS_CONNECTED", connected: false }));
+    const unlistenActivity = listen<{ msgType: string }>("cloud:ws-activity", (e) =>
+      dispatch({ type: "SET_WS_ACTIVITY", msgType: e.payload.msgType })
+    );
+    return () => {
+      unlistenConnected.then((fn) => fn());
+      unlistenDisconnected.then((fn) => fn());
+      unlistenActivity.then((fn) => fn());
+    };
+  }, []);
 
   useEffect(() => {
     if (isTauriRuntime()) {
@@ -151,17 +188,46 @@ function AppContent() {
   return (
     <CommandsContext.Provider value={commands}>
       <div className={`${state.mode === "empty" ? "app-empty" : state.mode === "workspace" ? "workspace-mode" : "single-file-mode"} ${state.focusMode ? "focus-mode" : ""} h-screen overflow-hidden bg-[#f5f8f6] text-stone-950 antialiased`}>
-        <main className="grid h-screen grid-rows-[auto_1fr]">
+        <main className="grid h-screen grid-rows-[auto_1fr_auto]">
           <Header />
           <section className={`grid min-h-0 ${sidebarVisible ? "grid-cols-[272px_minmax(0,1fr)]" : "grid-cols-[minmax(0,1fr)]"}`}>
             {sidebarVisible && <Sidebar />}
             {showWelcome ? <WelcomeScreen /> : showVaultHome ? <VaultHome /> : state.currentPath ? <EditorShell /> : <WelcomeScreen />}
           </section>
+          <div id="operation-log" className="flex items-center justify-between border-t border-black/[0.04] bg-white/70 px-5 py-3 text-xs text-[#6b7773]">
+            <span>{state.statusMessage}</span>
+            <span className="flex shrink-0 items-center gap-3">
+              {state.syncToken && (
+                state.wsConnected ? (
+                  <span className="flex items-center gap-1.5 font-medium text-green-600" title={state.lastWsEventType ? `Last event: ${state.lastWsEventType}` : "Connected"}>
+                    <span className="w-2 h-2 rounded-full bg-green-500" />
+                    Connected
+                    {state.lastWsEventType && (
+                      <span className="font-normal text-green-700 opacity-70">{state.lastWsEventType.replace("document:", "")}</span>
+                    )}
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1.5 font-medium text-red-500"><span className="w-2 h-2 rounded-full bg-red-500" />Offline</span>
+                )
+              )}
+              {state.activeConflicts.length > 0 && (
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-semibold text-amber-800 transition hover:bg-amber-200"
+                  onClick={() => dispatch({ type: "SET_CONFLICT_DIALOG", open: true })}
+                >
+                  <ExclamationTriangleIcon className="h-3 w-3" />
+                  {state.activeConflicts.length} conflict{state.activeConflicts.length > 1 ? "s" : ""}
+                </button>
+              )}
+            </span>
+          </div>
         </main>
         <CommandPalette />
         <QuickSwitcher />
         <CreateNoteDialog />
         <AccountDialog />
+        <ConflictDialog />
       </div>
     </CommandsContext.Provider>
   );

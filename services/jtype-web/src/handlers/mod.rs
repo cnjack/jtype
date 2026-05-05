@@ -2,6 +2,7 @@ pub mod admin;
 pub mod auth;
 pub mod document;
 pub mod domain;
+pub mod live;
 pub mod oauth;
 pub mod site;
 pub mod sync;

@@ -1,4 +1,5 @@
 mod workspace;
+mod ws_client;
 
 use notify::Watcher;
 use serde::{Deserialize, Serialize};
@@ -9,7 +10,7 @@ use std::{
     path::{Path, PathBuf},
     sync::Mutex,
 };
-use tauri::Emitter;
+use tauri::{AppHandle, Emitter};
 
 use workspace::{
     AiIndexResult, EntryKind, FolderContentsSummary, PublishResult, SyncBaseEntry, SyncDocument,
@@ -19,6 +20,12 @@ use workspace::{
 struct WatcherState {
     watcher: Option<notify::RecommendedWatcher>,
 }
+
+struct WsListenerHandle(Mutex<Option<tauri::async_runtime::JoinHandle<()>>>);
+
+/// Broadcast sender for outgoing WS messages.  Each call to `start_ws_listener`
+/// subscribes a new receiver so reconnects don't lose the handle.
+struct WsOutbox(tokio::sync::broadcast::Sender<String>);
 
 struct AppState {
     watcher_state: Mutex<WatcherState>,
@@ -498,6 +505,52 @@ fn save_trash_metadata_cmd(root_path: String, metadata: TrashMetadata) -> Result
     workspace::save_trash_metadata(&PathBuf::from(root_path), &metadata)
 }
 
+#[tauri::command]
+async fn cloud_ws_send(
+    state: tauri::State<'_, WsOutbox>,
+    message: String,
+) -> Result<(), String> {
+    // Ignore send errors — WS may be temporarily disconnected.
+    let _ = state.0.send(message);
+    Ok(())
+}
+
+#[tauri::command]
+async fn start_cloud_listener(
+    app: AppHandle,
+    listener_state: tauri::State<'_, WsListenerHandle>,
+    outbox_state: tauri::State<'_, WsOutbox>,
+    server_url: String,
+    token: String,
+    workspace_id: String,
+    device_id: String,
+) -> Result<(), String> {
+    if let Some(handle) = listener_state.0.lock().unwrap().take() {
+        handle.abort();
+    }
+    let outbox_tx = outbox_state.0.clone();
+    let handle = tauri::async_runtime::spawn(ws_client::start_ws_listener(
+        app,
+        server_url,
+        token,
+        workspace_id,
+        device_id,
+        outbox_tx,
+    ));
+    *listener_state.0.lock().unwrap() = Some(handle);
+    Ok(())
+}
+
+#[tauri::command]
+async fn stop_cloud_listener(
+    state: tauri::State<'_, WsListenerHandle>,
+) -> Result<(), String> {
+    if let Some(handle) = state.0.lock().unwrap().take() {
+        handle.abort();
+    }
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -540,11 +593,16 @@ pub fn run() {
             delete_workspace_folder,
             list_folder_contents_cmd,
             load_trash_metadata_cmd,
-            save_trash_metadata_cmd
+            save_trash_metadata_cmd,
+            start_cloud_listener,
+            stop_cloud_listener,
+            cloud_ws_send
         ])
         .manage(AppState {
             watcher_state: Mutex::new(WatcherState { watcher: None }),
         })
+        .manage(WsListenerHandle(Mutex::new(None)))
+        .manage(WsOutbox(tokio::sync::broadcast::channel::<String>(64).0))
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

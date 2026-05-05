@@ -49,7 +49,10 @@ preview: ## Preview built frontend
 	npm run preview
 
 # Web Service
-web: docker-deps web-api web-fe ## Start full web stack (dependencies + API + frontend)
+web: docker-deps web-build web-api web-fe ## Start full web stack (dependencies + API + frontend)
+
+web-build: ## Build web frontend
+	cd services/jtype-web/frontend && npm run build
 
 web-api: ## Start web API server (requires MySQL running)
 	cargo run --manifest-path services/jtype-web/Cargo.toml
