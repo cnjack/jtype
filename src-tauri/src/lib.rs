@@ -12,8 +12,8 @@ use std::{
 use tauri::Emitter;
 
 use workspace::{
-    AiIndexResult, EntryKind, PublishResult, SyncBaseEntry, SyncDocument, TrashItemInfo,
-    ValidationResult, WorkspaceSnapshot,
+    AiIndexResult, EntryKind, FolderContentsSummary, PublishResult, SyncBaseEntry, SyncDocument,
+    TrashItemInfo, TrashMetadata, ValidationResult, WorkspaceSnapshot,
 };
 
 struct WatcherState {
@@ -430,6 +430,74 @@ fn path_to_string(path: &Path) -> String {
     path.to_string_lossy().replace('\\', "/")
 }
 
+// ── Folder commands ──
+
+#[tauri::command]
+fn create_workspace_folder(
+    root_path: String,
+    folder_relative_path: String,
+) -> Result<WorkspaceSnapshot, String> {
+    let root = PathBuf::from(root_path);
+    workspace::create_folder(&root, &folder_relative_path)?;
+    workspace::open_workspace(&root)
+}
+
+#[tauri::command]
+fn rename_workspace_folder(
+    root_path: String,
+    from_relative_path: String,
+    to_relative_path: String,
+) -> Result<(WorkspaceSnapshot, Vec<String>), String> {
+    let root = PathBuf::from(root_path);
+    let impacted = workspace::rename_folder(&root, &from_relative_path, &to_relative_path)?;
+    let snapshot = workspace::open_workspace(&root)?;
+    Ok((snapshot, impacted))
+}
+
+#[tauri::command]
+fn move_workspace_folder(
+    root_path: String,
+    from_relative_path: String,
+    to_relative_path: String,
+) -> Result<(WorkspaceSnapshot, Vec<String>), String> {
+    let root = PathBuf::from(root_path);
+    let impacted = workspace::move_folder(&root, &from_relative_path, &to_relative_path)?;
+    let snapshot = workspace::open_workspace(&root)?;
+    Ok((snapshot, impacted))
+}
+
+#[tauri::command]
+fn delete_workspace_folder(
+    root_path: String,
+    folder_relative_path: String,
+    soft_delete: bool,
+) -> Result<(WorkspaceSnapshot, Vec<String>), String> {
+    let root = PathBuf::from(root_path);
+    let impacted = workspace::delete_folder(&root, &folder_relative_path, soft_delete)?;
+    let snapshot = workspace::open_workspace(&root)?;
+    Ok((snapshot, impacted))
+}
+
+#[tauri::command]
+fn list_folder_contents_cmd(
+    root_path: String,
+    folder_relative_path: String,
+) -> Result<FolderContentsSummary, String> {
+    workspace::list_folder_contents(&PathBuf::from(root_path), &folder_relative_path)
+}
+
+// ── Trash metadata commands ──
+
+#[tauri::command]
+fn load_trash_metadata_cmd(root_path: String) -> Result<TrashMetadata, String> {
+    workspace::load_trash_metadata(&PathBuf::from(root_path))
+}
+
+#[tauri::command]
+fn save_trash_metadata_cmd(root_path: String, metadata: TrashMetadata) -> Result<(), String> {
+    workspace::save_trash_metadata(&PathBuf::from(root_path), &metadata)
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -465,7 +533,14 @@ pub fn run() {
             permanent_delete_trash,
             empty_workspace_trash,
             start_file_watcher,
-            stop_file_watcher
+            stop_file_watcher,
+            create_workspace_folder,
+            rename_workspace_folder,
+            move_workspace_folder,
+            delete_workspace_folder,
+            list_folder_contents_cmd,
+            load_trash_metadata_cmd,
+            save_trash_metadata_cmd
         ])
         .manage(AppState {
             watcher_state: Mutex::new(WatcherState { watcher: None }),

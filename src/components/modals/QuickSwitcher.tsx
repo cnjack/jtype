@@ -28,9 +28,22 @@ export function QuickSwitcher() {
           return <p className="p-3 text-sm text-stone-500">Open a vault to quick switch files.</p>;
         }
 
-        const q = query.trim().toLowerCase();
+        const raw = query.trim();
+        let q = raw.toLowerCase();
+        let folderFilter = "";
+        if (q.startsWith("folder:")) {
+          folderFilter = q.slice(7).trim();
+          q = "";
+        }
+
         const results = allNodes
-          .filter((node) => !q || fuzzyMatch(`${node.name} ${node.relativePath}`, q))
+          .filter((node) => {
+            if (folderFilter) {
+              const parentPath = node.relativePath?.replace(/\/[^/]+$/, "") ?? "";
+              if (!parentPath.toLowerCase().includes(folderFilter)) return false;
+            }
+            return !q || fuzzyMatch(`${node.name} ${node.relativePath}`, q);
+          })
           .slice(0, 40);
 
         if (results.length === 0 && q) {

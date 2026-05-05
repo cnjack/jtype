@@ -9,6 +9,8 @@ import type {
   SyncBaseEntry,
   CloudProfile,
   VaultBinding,
+  FolderContentsSummary,
+  TrashMetadata,
 } from "./types";
 
 export const tauri = {
@@ -95,6 +97,27 @@ export const tauri = {
   },
   stopFileWatcher() {
     return invoke<void>("stop_file_watcher");
+  },
+  createFolder(rootPath: string, folderRelativePath: string) {
+    return invoke<WorkspaceSnapshot>("create_workspace_folder", { rootPath, folderRelativePath });
+  },
+  renameFolder(rootPath: string, fromRelativePath: string, toRelativePath: string) {
+    return invoke<[WorkspaceSnapshot, string[]]>("rename_workspace_folder", { rootPath, fromRelativePath, toRelativePath });
+  },
+  moveFolder(rootPath: string, fromRelativePath: string, toRelativePath: string) {
+    return invoke<[WorkspaceSnapshot, string[]]>("move_workspace_folder", { rootPath, fromRelativePath, toRelativePath });
+  },
+  deleteFolder(rootPath: string, folderRelativePath: string, softDelete: boolean) {
+    return invoke<[WorkspaceSnapshot, string[]]>("delete_workspace_folder", { rootPath, folderRelativePath, softDelete });
+  },
+  listFolderContents(rootPath: string, folderRelativePath: string) {
+    return invoke<FolderContentsSummary>("list_folder_contents_cmd", { rootPath, folderRelativePath });
+  },
+  loadTrashMetadata(rootPath: string) {
+    return invoke<TrashMetadata>("load_trash_metadata_cmd", { rootPath });
+  },
+  saveTrashMetadata(rootPath: string, metadata: TrashMetadata) {
+    return invoke<void>("save_trash_metadata_cmd", { rootPath, metadata });
   },
   get isAvailable() {
     return isTauriRuntime();

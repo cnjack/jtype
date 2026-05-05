@@ -1,10 +1,11 @@
-import { useEffect, useState, useRef, useCallback } from 'react'
+import { useEffect, useState, useRef, useCallback, useMemo, memo } from 'react'
 import { Menu, MenuButton, MenuItems, MenuItem, Dialog, DialogPanel } from '@headlessui/react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { api, getStoredUsername, type WorkspaceSummary, type DocumentListItem, type DomainResponse, type TrashItem } from '../api'
 import { renderToContainer } from '../lib/markdown'
 import { parseFrontmatter, writeFrontmatter } from '../lib/frontmatter'
 import type { EditorMode } from '../lib/utils'
+import { usePrompt, useConfirm } from '../components/PromptDialogContext'
 import {
   BoldIcon,
   ItalicIcon,
@@ -19,7 +20,6 @@ import {
   EyeIcon,
   InformationCircleIcon,
   GlobeAltIcon,
-  EyeSlashIcon,
   ArchiveBoxIcon,
   XMarkIcon,
   TrashIcon,
@@ -30,7 +30,18 @@ import {
   PlusIcon,
   DocumentPlusIcon,
   ChevronDownIcon,
+  ChevronRightIcon,
   CheckIcon,
+  FolderIcon,
+  FolderOpenIcon,
+  DocumentTextIcon,
+  StarIcon,
+  FolderPlusIcon,
+  ArrowsPointingInIcon,
+  ArrowsPointingOutIcon,
+  PencilIcon,
+  ClipboardIcon,
+
 } from '@heroicons/react/24/outline'
 
 type WorkspaceSection = 'documents' | 'trash' | 'publishing' | 'domains'
@@ -52,7 +63,6 @@ export function Workspace() {
   const [settingsSection, setSettingsSection] = useState<WorkspaceSettingsSection>(initialSection === 'trash' || initialSection === 'domains' ? initialSection : 'general')
   const [selectedDoc, setSelectedDoc] = useState<string | null>(null)
   const [docContent, setDocContent] = useState('')
-  const [newPath, setNewPath] = useState('')
   const [saving, setSaving] = useState(false)
   const [workspaceName, setWorkspaceName] = useState('')
   const [publishTitle, setPublishTitle] = useState('')
@@ -64,12 +74,30 @@ export function Workspace() {
   const [domainMessage, setDomainMessage] = useState('')
   const [editorMode, setEditorMode] = useState<EditorMode>('split')
   const [infoPanel, setInfoPanel] = useState(false)
-  const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null)
+  const [editorContextMenu, setEditorContextMenu] = useState<{ x: number; y: number } | null>(null)
+  const [treeContextMenu, setTreeContextMenu] = useState<{ node: WebTreeNode; x: number; y: number } | null>(null)
   const [dirty, setDirty] = useState(false)
   const sidebarCollapsed = false
   const [loadedContentHash, setLoadedContentHash] = useState<string | null>(null)
   const [loadedContent, setLoadedContent] = useState<string | null>(null)
   const [newWorkspaceName, setNewWorkspaceName] = useState('')
+  const [query, setQuery] = useState('')
+  const [expanded, setExpanded] = useState<Set<string>>(() => new Set<string>())
+  const [favoriteVersion, setFavoriteVersion] = useState(0)
+
+  // Persist expanded folder state per workspace
+  useEffect(() => {
+    if (!workspaceId) return
+    localStorage.setItem(`web-expanded:${workspaceId}`, JSON.stringify([...expanded]))
+  }, [expanded, workspaceId])
+
+  useEffect(() => {
+    if (!workspaceId) return
+    const saved = localStorage.getItem(`web-expanded:${workspaceId}`)
+    if (saved) {
+      try { setExpanded(new Set(JSON.parse(saved))) } catch { /* ignore */ }
+    }
+  }, [workspaceId])
 
   const editorRef = useRef<HTMLTextAreaElement>(null)
   const previewRef = useRef<HTMLElement>(null)
@@ -182,9 +210,10 @@ export function Workspace() {
   }
 
   async function createDocument() {
-    if (!workspaceId || !newPath.trim()) return
-    await api.saveDocument(workspaceId, { relativePath: newPath.trim(), content: '' })
-    setNewPath('')
+    if (!workspaceId) return
+    const path = await prompt('Document path (e.g. notes/hello.md):')
+    if (!path?.trim()) return
+    await api.saveDocument(workspaceId, { relativePath: path.trim(), content: '' })
     const docs = await api.listDocuments(workspaceId)
     setDocuments(docs)
   }
@@ -341,15 +370,22 @@ export function Workspace() {
 
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
-    setContextMenu({ x: e.clientX, y: e.clientY })
+    setEditorContextMenu({ x: e.clientX, y: e.clientY })
   }, [])
 
   useEffect(() => {
-    if (!contextMenu) return
-    const handler = () => setContextMenu(null)
+    if (!editorContextMenu) return
+    const handler = () => setEditorContextMenu(null)
     document.addEventListener('click', handler)
     return () => document.removeEventListener('click', handler)
-  }, [contextMenu])
+  }, [editorContextMenu])
+
+  useEffect(() => {
+    if (!treeContextMenu) return
+    const handler = () => setTreeContextMenu(null)
+    document.addEventListener('click', handler)
+    return () => document.removeEventListener('click', handler)
+  }, [treeContextMenu])
 
   const parsed = parseFrontmatter(docContent)
   const publishStatus = parsed.data.status || 'draft'
@@ -421,66 +457,40 @@ export function Workspace() {
                   onNewWorkspaceNameChange={setNewWorkspaceName}
                   onCreateWorkspace={createCloudWorkspace}
                 />
-                <div className="mt-3 space-y-1.5">
-                <input
-                  type="text"
-                  value={newPath}
-                  onChange={e => setNewPath(e.target.value)}
-                  placeholder="path/to/doc.md"
-                  className="sync-input w-full"
-                  onKeyDown={e => e.key === 'Enter' && createDocument()}
-                />
-                <button
-                  onClick={createDocument}
-                  className="sidebar-action w-full"
-                  type="button"
-                  title="New Document"
-                >
-                  <DocumentPlusIcon className="h-4 w-4" />
-                  <span className="ml-1.5">New Document</span>
-                </button>
-              </div>
-              </div>
-              <div className="min-h-0 flex-1 overflow-auto px-3 pb-4">
-                <div className="space-y-1">
-              {documents.map(doc => (
-                <div
-                  key={doc.id}
-                  className={`flex cursor-pointer items-center justify-between rounded-lg px-2.5 py-2 text-xs transition hover:bg-white/80 ${selectedDoc === doc.id ? 'bg-[#e8f6f2] font-semibold text-brand ring-1 ring-brand/15' : 'text-zinc-600'}`}
-                  onClick={() => openDocument(doc.id)}
-                >
-                  <span className="min-w-0 truncate">{doc.relativePath}</span>
-                  <span className={`ml-2 rounded-full px-1.5 py-0.5 text-[10px] ${doc.status === 'published' ? 'bg-brand/10 text-brand' : 'bg-zinc-100 text-zinc-500'}`}>{doc.status}</span>
+                <div className="mt-3 flex gap-1.5">
                   <button
-                    onClick={e => { e.stopPropagation(); deleteDocument(doc.id) }}
-                    className="ml-1 text-zinc-400 hover:text-red-500"
-                    aria-label={`Move ${doc.relativePath} to trash`}
-                    title="Move to trash"
+                    className="sidebar-action flex-1"
+                    type="button"
+                    title="New Document"
+                    disabled={!workspace}
+                    onClick={createDocument}
                   >
-                    <XMarkIcon className="h-4 w-4" />
+                    <DocumentPlusIcon className="h-4 w-4" />
+                    <span className="ml-1.5">New Document</span>
                   </button>
                 </div>
-              ))}
-                </div>
-                <section className="mt-5 border-t border-emerald-900/10 pt-4">
-                  <p className="mb-2 text-xs font-semibold uppercase text-stone-500">Trash</p>
-                  {trashItems.length === 0 ? (
-                    <p className="text-xs text-stone-500">No deleted documents.</p>
-                  ) : (
-                    <div className="space-y-1">
-                      {trashItems.map(item => (
-                        <button
-                          key={item.id}
-                          type="button"
-                          className="tree-button text-xs"
-                          onClick={() => restoreTrashItem(item.id)}
-                        >
-                          <span className="truncate font-semibold">{item.relativePath}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </section>
+              </div>
+              <div className="min-h-0 flex-1 overflow-auto">
+                <WebDocExplorer
+                  workspaceId={workspaceId}
+                  documents={documents}
+                  selectedDoc={selectedDoc}
+                  onOpen={openDocument}
+                  onDelete={deleteDocument}
+                  onDocumentsChange={setDocuments}
+                  trashItems={trashItems}
+                  onRestoreTrash={restoreTrashItem}
+                  onDeleteTrash={deleteTrashItem}
+                  onEmptyTrash={emptyTrash}
+                  query={query}
+                  setQuery={setQuery}
+                  expanded={expanded}
+                  setExpanded={setExpanded}
+                  favoriteVersion={favoriteVersion}
+                  setFavoriteVersion={setFavoriteVersion}
+                  treeContextMenu={treeContextMenu}
+                  setTreeContextMenu={setTreeContextMenu}
+                />
               </div>
             </aside>
           )}
@@ -617,13 +627,11 @@ export function Workspace() {
                       <section className="document-info-section">
                         <p className="text-sm font-semibold text-stone-950">Publish</p>
                         <p className="mt-1 text-xs text-stone-500">Current status: {publishStatus}</p>
-                        <div className="mt-3 grid grid-cols-2 gap-2">
-                          <button className="sidebar-action" type="button" title="Publish" onClick={() => setDocumentPublishStatus('published')}>
-                            <GlobeAltIcon className="h-4 w-4" />
-                          </button>
-                          <button className="sidebar-action" type="button" title="Unpublish" onClick={() => setDocumentPublishStatus('draft')}>
-                            <EyeSlashIcon className="h-4 w-4" />
-                          </button>
+                        <div className="mt-3">
+                          <StatusSelect
+                            value={publishStatus}
+                            onChange={(value) => setDocumentPublishStatus(value as 'draft' | 'published' | 'archived')}
+                          />
                         </div>
                       </section>
                     )}
@@ -684,12 +692,12 @@ export function Workspace() {
                         </div>
                       ) : (
                         documents.slice(0, 12).map(doc => (
-                          <button key={doc.id} type="button" className="command-row" onClick={() => openDocument(doc.id)}>
+                          <button key={doc.id} type="button" className={`command-row ${selectedDoc === doc.id ? 'bg-[#e8f6f2] ring-1 ring-brand/15' : ''}`} onClick={() => openDocument(doc.id)}>
                             <span className="min-w-0">
-                              <span className="block truncate font-semibold">{doc.relativePath.replace(/\.(md|markdown|mdown|mkd)$/i, '')}</span>
+                              <span className={`block truncate font-semibold ${selectedDoc === doc.id ? 'text-brand' : ''}`}>{doc.relativePath.replace(/\.(md|markdown|mdown|mkd)$/i, '')}</span>
                               <span className="block truncate text-xs text-stone-500">{doc.relativePath}</span>
                             </span>
-                            <span className="shrink-0 text-xs text-stone-500">Markdown</span>
+                            <span className={`shrink-0 text-xs ${selectedDoc === doc.id ? 'text-brand font-semibold' : 'text-stone-500'}`}>Markdown</span>
                           </button>
                         ))
                       )}
@@ -708,19 +716,19 @@ export function Workspace() {
         </>
       )}
 
-      {activeSection === 'documents' && contextMenu && (
+      {activeSection === 'documents' && editorContextMenu && (
         <div
           role="menu"
           className="context-menu"
-          style={{ left: contextMenu.x, top: contextMenu.y }}
+          style={{ left: editorContextMenu.x, top: editorContextMenu.y }}
         >
-          <button type="button" className="context-menu-button" onClick={() => { wrapSelection('**', '**', 'bold text'); setContextMenu(null) }}><BoldIcon className="mr-2 h-3.5 w-3.5" />Bold</button>
-          <button type="button" className="context-menu-button" onClick={() => { wrapSelection('_', '_', 'italic text'); setContextMenu(null) }}><ItalicIcon className="mr-2 h-3.5 w-3.5" />Italic</button>
-          <button type="button" className="context-menu-button" onClick={() => { wrapSelection('[', '](url)', 'link text'); setContextMenu(null) }}><LinkIcon className="mr-2 h-3.5 w-3.5" />Insert link</button>
-          <button type="button" className="context-menu-button" onClick={() => { insertOrEditTable(); setContextMenu(null) }}><TableCellsIcon className="mr-2 h-3.5 w-3.5" />Insert table</button>
-          <button type="button" className="context-menu-button" onClick={() => { addMarkdownTableRow(); setContextMenu(null) }}><TableCellsIcon className="mr-2 h-3.5 w-3.5" />Add table row below</button>
-          <button type="button" className="context-menu-button" onClick={() => { insertAtCursor('\n$$\nE = mc^2\n$$\n'); setContextMenu(null) }}><VariableIcon className="mr-2 h-3.5 w-3.5" />Insert formula</button>
-          <button type="button" className="context-menu-button" onClick={() => { insertAtCursor('\n```mermaid\nflowchart TD\n  A --> B\n```\n'); setContextMenu(null) }}><ArrowPathIcon className="mr-2 h-3.5 w-3.5" />Insert Mermaid diagram</button>
+          <button type="button" className="context-menu-button" onClick={() => { wrapSelection('**', '**', 'bold text'); setEditorContextMenu(null) }}><BoldIcon className="mr-2 h-3.5 w-3.5" />Bold</button>
+          <button type="button" className="context-menu-button" onClick={() => { wrapSelection('_', '_', 'italic text'); setEditorContextMenu(null) }}><ItalicIcon className="mr-2 h-3.5 w-3.5" />Italic</button>
+          <button type="button" className="context-menu-button" onClick={() => { wrapSelection('[', '](url)', 'link text'); setEditorContextMenu(null) }}><LinkIcon className="mr-2 h-3.5 w-3.5" />Insert link</button>
+          <button type="button" className="context-menu-button" onClick={() => { insertOrEditTable(); setEditorContextMenu(null) }}><TableCellsIcon className="mr-2 h-3.5 w-3.5" />Insert table</button>
+          <button type="button" className="context-menu-button" onClick={() => { addMarkdownTableRow(); setEditorContextMenu(null) }}><TableCellsIcon className="mr-2 h-3.5 w-3.5" />Add table row below</button>
+          <button type="button" className="context-menu-button" onClick={() => { insertAtCursor('\n$$\nE = mc^2\n$$\n'); setEditorContextMenu(null) }}><VariableIcon className="mr-2 h-3.5 w-3.5" />Insert formula</button>
+          <button type="button" className="context-menu-button" onClick={() => { insertAtCursor('\n```mermaid\nflowchart TD\n  A --> B\n```\n'); setEditorContextMenu(null) }}><ArrowPathIcon className="mr-2 h-3.5 w-3.5" />Insert Mermaid diagram</button>
         </div>
       )}
     </div>
@@ -1362,17 +1370,10 @@ function WebPropertiesSection({ content, onChange }: { content: string; onChange
           <label key={field} className="block">
             <span className="field-label">{field}</span>
             {field === 'status' ? (
-              <select
-                className="compact-select mt-1 w-full"
-                defaultValue={parsed.data[field] ?? ''}
-                aria-label={field}
-                onChange={(e) => updateField(field, e.target.value)}
-              >
-                <option value="">-</option>
-                <option value="draft">draft</option>
-                <option value="published">published</option>
-                <option value="archived">archived</option>
-              </select>
+              <StatusSelect
+                value={parsed.data[field] ?? ''}
+                onChange={(value) => updateField(field, value)}
+              />
             ) : (
               <input
                 className="field-input"
@@ -1385,6 +1386,44 @@ function WebPropertiesSection({ content, onChange }: { content: string; onChange
         ))}
       </div>
     </section>
+  )
+}
+
+function StatusSelect({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  const options = [
+    { label: '—', value: '' },
+    { label: 'Draft', value: 'draft' },
+    { label: 'Published', value: 'published' },
+    { label: 'Archived', value: 'archived' },
+  ]
+  const active = options.find(o => o.value === value) ?? options[0]!
+
+  return (
+    <Menu as="div" className="relative mt-1 w-full">
+      <MenuButton className="compact-select flex w-full items-center justify-between text-left">
+        <span>{active.label}</span>
+        <ChevronDownIcon className="h-3 w-3 text-stone-400" />
+      </MenuButton>
+      <MenuItems
+        transition
+        className="absolute left-0 z-50 mt-1 w-full origin-top rounded-lg border border-black/[0.06] bg-white p-1 shadow-lg shadow-stone-900/10 outline-none transition focus:outline-none data-[closed]:scale-95 data-[closed]:opacity-0"
+      >
+        {options.map((option) => (
+          <MenuItem key={option.value}>
+            {({ focus }) => (
+              <button
+                className={`flex w-full items-center rounded-md px-3 py-2 text-sm transition ${
+                  focus ? 'bg-[#e8f6f2] text-brand' : 'text-stone-700'
+                } ${active.value === option.value ? 'font-semibold' : ''}`}
+                onClick={() => onChange(option.value)}
+              >
+                {option.label}
+              </button>
+            )}
+          </MenuItem>
+        ))}
+      </MenuItems>
+    </Menu>
   )
 }
 
@@ -1440,6 +1479,518 @@ function WebLinksSection({ content }: { content: string }) {
       </div>
     </section>
   )
+}
+
+// -- Folder tree for web dashboard sidebar --
+
+interface WebTreeNode {
+  name: string
+  path: string
+  kind: 'folder' | 'document'
+  doc?: DocumentListItem
+  children: WebTreeNode[]
+}
+
+function buildDocTree(documents: DocumentListItem[]): WebTreeNode[] {
+  const root: WebTreeNode[] = []
+  const folderMap = new Map<string, WebTreeNode>()
+
+  const ensureFolder = (folderPath: string): WebTreeNode => {
+    if (folderMap.has(folderPath)) return folderMap.get(folderPath)!
+    const parts = folderPath.split('/')
+    const name = parts[parts.length - 1]!
+    const node: WebTreeNode = { name, path: folderPath, kind: 'folder', children: [] }
+    folderMap.set(folderPath, node)
+    if (parts.length > 1) {
+      const parent = ensureFolder(parts.slice(0, -1).join('/'))
+      parent.children.push(node)
+    } else {
+      root.push(node)
+    }
+    return node
+  }
+
+  for (const doc of documents) {
+    const parts = doc.relativePath.split('/')
+    const fileName = parts[parts.length - 1]!
+    const leaf: WebTreeNode = { name: fileName, path: doc.relativePath, kind: 'document', doc, children: [] }
+    if (parts.length > 1) {
+      const parent = ensureFolder(parts.slice(0, -1).join('/'))
+      parent.children.push(leaf)
+    } else {
+      root.push(leaf)
+    }
+  }
+
+  const sortNodes = (nodes: WebTreeNode[]) => {
+    nodes.sort((a, b) => {
+      if (a.kind !== b.kind) return a.kind === 'folder' ? -1 : 1
+      return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+    })
+    for (const n of nodes) if (n.kind === 'folder') sortNodes(n.children)
+  }
+  sortNodes(root)
+  return root
+}
+
+function allFolderPaths(nodes: WebTreeNode[]): Set<string> {
+  const paths = new Set<string>()
+  const walk = (list: WebTreeNode[]) => {
+    for (const n of list) {
+      if (n.kind === 'folder') {
+        paths.add(n.path)
+        walk(n.children)
+      }
+    }
+  }
+  walk(nodes)
+  return paths
+}
+
+function readFavorites(workspaceId?: string): DocumentListItem[] {
+  const key = `web-favorites:${workspaceId || 'global'}`
+  const ids: string[] = JSON.parse(localStorage.getItem(key) || '[]')
+  return ids.map(id => ({ id, relativePath: id, title: '', status: 'draft', contentHash: '', updatedClock: 0, versionId: null }))
+}
+
+function toggleFavoriteDoc(docId: string, workspaceId?: string) {
+  const key = `web-favorites:${workspaceId || 'global'}`
+  const ids: string[] = JSON.parse(localStorage.getItem(key) || '[]')
+  const next = ids.includes(docId) ? ids.filter(i => i !== docId) : [docId, ...ids]
+  localStorage.setItem(key, JSON.stringify(next))
+}
+
+function WebDocExplorer({
+  workspaceId,
+  documents,
+  selectedDoc,
+  onOpen,
+  onDelete,
+  onDocumentsChange,
+  trashItems,
+  onRestoreTrash,
+  onDeleteTrash,
+  onEmptyTrash,
+  query,
+  setQuery,
+  expanded,
+  setExpanded,
+  favoriteVersion,
+  setFavoriteVersion,
+  treeContextMenu,
+  setTreeContextMenu,
+}: {
+  workspaceId: string | undefined
+  documents: DocumentListItem[]
+  selectedDoc: string | null
+  onOpen: (docId: string) => void
+  onDelete: (docId: string) => void
+  onDocumentsChange: (docs: DocumentListItem[]) => void
+  trashItems: TrashItem[]
+  onRestoreTrash: (id: string) => void
+  onDeleteTrash: (id: string) => void
+  onEmptyTrash: () => void
+  query: string
+  setQuery: (q: string) => void
+  expanded: Set<string>
+  setExpanded: React.Dispatch<React.SetStateAction<Set<string>>>
+  favoriteVersion: number
+  setFavoriteVersion: React.Dispatch<React.SetStateAction<number>>
+  treeContextMenu: { node: WebTreeNode; x: number; y: number } | null
+  setTreeContextMenu: (c: { node: WebTreeNode; x: number; y: number } | null) => void
+}) {
+  const prompt = usePrompt()
+  const confirmDialog = useConfirm()
+  const tree = useMemo(() => buildDocTree(documents), [documents])
+  const folders = useMemo(() => allFolderPaths(tree), [tree])
+  const allExpanded = folders.size > 0 && folders.size === expanded.size
+
+  const toggleExpandCollapse = useCallback(() => {
+    if (allExpanded) {
+      setExpanded(new Set<string>())
+    } else {
+      setExpanded(new Set(folders))
+    }
+  }, [allExpanded, folders, setExpanded])
+
+  const handleToggle = useCallback((path: string) => {
+    setExpanded(prev => {
+      const next = new Set(prev)
+      if (next.has(path)) next.delete(path)
+      else next.add(path)
+      return next
+    })
+  }, [setExpanded])
+
+  const favorites = useMemo(() => {
+    const favIds = new Set(readFavorites(workspaceId).map(d => d.id))
+    return documents.filter(d => favIds.has(d.id))
+  }, [documents, workspaceId, favoriteVersion])
+
+  const filteredResults = useMemo(() => {
+    if (!query) return null
+    return documents
+      .filter(d => `${d.relativePath} ${d.title}`.toLowerCase().includes(query.toLowerCase()))
+      .slice(0, 30)
+  }, [documents, query])
+
+  const handleCreateFolder = async () => {
+    if (!workspaceId) return
+    const name = await prompt('New folder name:')
+    if (!name?.trim()) return
+    const placeholderPath = `${name.trim()}/.gitkeep`
+    await api.saveDocument(workspaceId, { relativePath: placeholderPath, content: '' })
+    const docs = await api.listDocuments(workspaceId)
+    onDocumentsChange(docs)
+  }
+
+  const handleCreateDocInFolder = async (folderPath: string) => {
+    if (!workspaceId) return
+    const name = await prompt('New document name (e.g. note.md):')
+    if (!name?.trim()) return
+    const relativePath = `${folderPath}/${name.trim()}`
+    await api.saveDocument(workspaceId, { relativePath, content: '' })
+    const docs = await api.listDocuments(workspaceId)
+    onDocumentsChange(docs)
+    setExpanded(new Set(expanded).add(folderPath))
+  }
+
+  const handleDeleteFolder = async (folderPath: string) => {
+    if (!workspaceId) return
+    const confirmed = await confirmDialog('Delete folder', `Delete folder "${folderPath}" and all its contents?`, true)
+    if (!confirmed) return
+    try {
+      const children = documents.filter(d => d.relativePath.startsWith(folderPath + '/'))
+      for (const child of children) {
+        await api.deleteDocument(workspaceId, child.id)
+      }
+      const docs = await api.listDocuments(workspaceId)
+      onDocumentsChange(docs)
+    } catch (err) {
+      alert(String(err))
+    }
+  }
+
+  const handleRenameDoc = async (doc: DocumentListItem) => {
+    if (!workspaceId) return
+    const newName = await prompt('Rename to:', doc.relativePath)
+    if (!newName || newName === doc.relativePath) return
+    try {
+      const fullDoc = await api.getDocument(workspaceId, doc.id)
+      await api.saveDocument(workspaceId, {
+        relativePath: newName.trim(),
+        content: fullDoc.content,
+        title: fullDoc.title || undefined,
+      })
+      await api.deleteDocument(workspaceId, doc.id)
+      const docs = await api.listDocuments(workspaceId)
+      onDocumentsChange(docs)
+      setTreeContextMenu(null)
+    } catch (err) {
+      alert(String(err))
+    }
+  }
+
+  return (
+    <div className="px-3 pb-4">
+      <input
+        className="sync-input"
+        placeholder="Search files..."
+        value={query}
+        onChange={e => setQuery(e.target.value)}
+      />
+
+      {filteredResults ? (
+        <div className="mt-3 space-y-1">
+          {filteredResults.length === 0 ? (
+            <p className="text-xs text-stone-500">No matches.</p>
+          ) : (
+            filteredResults.map(doc => (
+              <button key={doc.id} type="button" className="command-row" onClick={() => onOpen(doc.id)}>
+                <span className="min-w-0">
+                  <span className="block truncate font-semibold">{doc.relativePath.replace(/\.(md|markdown|mdown|mkd)$/i, '')}</span>
+                  <span className="block truncate text-xs text-stone-500">{doc.relativePath}</span>
+                </span>
+              </button>
+            ))
+          )}
+        </div>
+      ) : (
+        <>
+          {favorites.length > 0 && (
+            <>
+              <div className="mb-2 mt-4 flex items-center justify-between">
+                <p className="text-xs font-semibold uppercase text-stone-500">Favorites</p>
+                <button
+                  className="subtle-button aspect-square px-0"
+                  type="button"
+                  title="Toggle favorite"
+                  disabled={!selectedDoc}
+                  onClick={() => {
+                    if (selectedDoc) {
+                      toggleFavoriteDoc(selectedDoc, workspaceId)
+                      setFavoriteVersion(v => v + 1)
+                    }
+                  }}
+                >
+                  <StarIcon className="h-4 w-4" />
+                </button>
+              </div>
+              <div id="favorite-list" className="space-y-1">
+                {favorites.map(doc => (
+                  <button key={doc.id} type="button" className="tree-button text-xs" onClick={() => onOpen(doc.id)}>
+                    <span className="text-stone-500">Favorite</span>
+                    <span className="truncate font-semibold">{doc.relativePath.replace(/\.(md|markdown|mdown|mkd)$/i, '')}</span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+
+          <nav className="mt-2" aria-label="Workspace files">
+            {documents.length === 0 ? (
+              <p className="rounded-md border border-dashed border-stone-300 p-3 text-sm text-stone-500">
+                No documents yet.
+              </p>
+            ) : (
+              <>
+                <div className="mb-1 flex items-center justify-end gap-0.5">
+                  <button
+                    className="subtle-button aspect-square px-0"
+                    type="button"
+                    title="New folder"
+                    onClick={handleCreateFolder}
+                  >
+                    <FolderPlusIcon className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    className="subtle-button aspect-square px-0"
+                    type="button"
+                    title={allExpanded ? 'Collapse all' : 'Expand all'}
+                    onClick={toggleExpandCollapse}
+                  >
+                    {allExpanded
+                      ? <ArrowsPointingInIcon className="h-3.5 w-3.5" />
+                      : <ArrowsPointingOutIcon className="h-3.5 w-3.5" />}
+                  </button>
+                </div>
+                <ul className="space-y-1">
+                  {tree.map(node => (
+                    <WebTreeNodeRow
+                      key={node.path}
+                      node={node}
+                      depth={0}
+                      expanded={expanded}
+                      selectedDoc={selectedDoc}
+                      onToggle={handleToggle}
+                      onOpen={onOpen}
+                      onContextMenu={(n, x, y) => setTreeContextMenu({ node: n, x, y })}
+                    />
+                  ))}
+                </ul>
+              </>
+            )}
+          </nav>
+
+          <section className="mt-5 border-t border-emerald-900/10 pt-4">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <p className="text-xs font-semibold uppercase text-stone-500">Trash</p>
+              {trashItems.length > 0 && (
+                <button
+                  className="subtle-button aspect-square px-0"
+                  type="button"
+                  title="Empty trash"
+                  onClick={async () => { if (await confirmDialog('Empty trash', 'Permanently delete all items in trash?', true)) onEmptyTrash() }}
+                >
+                  <TrashIcon className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+            <div className="space-y-1">
+              {trashItems.length === 0 ? (
+                <p className="text-xs text-stone-500">No deleted documents.</p>
+              ) : (
+                trashItems.map(item => (
+                  <div key={item.id} className="rounded-lg px-2.5 py-2 text-xs text-[#4b5753] hover:bg-white/80">
+                    <div className="flex items-center gap-1">
+                      <p className="min-w-0 truncate font-semibold">{item.relativePath}</p>
+                      <span className="shrink-0 rounded bg-stone-100 px-1 py-0.5 text-[10px] text-stone-500">cloud</span>
+                    </div>
+                    <div className="mt-1 flex items-center justify-between gap-2">
+                      <span className="truncate text-stone-500">{formatTrashTime(item.deletedAt)}</span>
+                      <div className="flex gap-1">
+                        <button
+                          className="subtle-button aspect-square px-0"
+                          type="button"
+                          title="Restore"
+                          onClick={() => onRestoreTrash(item.id)}
+                        >
+                          <ArrowUturnLeftIcon className="h-4 w-4" />
+                        </button>
+                        <button
+                          className="subtle-button aspect-square px-0 text-red-400 hover:text-red-600"
+                          type="button"
+                          title="Permanently delete"
+                          onClick={async () => { if (await confirmDialog('Permanently delete', 'Permanently delete this item?', true)) onDeleteTrash(item.id) }}
+                        >
+                          <XMarkIcon className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </section>
+        </>
+      )}
+
+      {treeContextMenu && (
+        <div
+          role="menu"
+          className="context-menu"
+          style={{ left: treeContextMenu.x, top: treeContextMenu.y }}
+          onClick={e => e.stopPropagation()}
+        >
+          {treeContextMenu.node.kind === 'folder' && (
+            <>
+              <button
+                type="button"
+                className="context-menu-button"
+                onClick={() => { void handleCreateDocInFolder(treeContextMenu.node.path); setTreeContextMenu(null) }}
+              >
+                <DocumentPlusIcon className="mr-2 h-3.5 w-3.5" />New document
+              </button>
+              <button
+                type="button"
+                className="context-menu-button"
+                onClick={() => { void handleCreateFolder(); setTreeContextMenu(null) }}
+              >
+                <FolderPlusIcon className="mr-2 h-3.5 w-3.5" />New folder
+              </button>
+              <div className="my-1 border-t border-stone-200" />
+              <button
+                type="button"
+                className="context-menu-button text-red-700 hover:text-red-800"
+                onClick={() => { void handleDeleteFolder(treeContextMenu.node.path); setTreeContextMenu(null) }}
+              >
+                <TrashIcon className="mr-2 h-3.5 w-3.5" />Delete folder
+              </button>
+            </>
+          )}
+          {treeContextMenu.node.kind === 'document' && treeContextMenu.node.doc && (
+            <>
+              <button
+                type="button"
+                className="context-menu-button"
+                onClick={() => { onOpen(treeContextMenu.node.doc!.id); setTreeContextMenu(null) }}
+              >
+                <FolderOpenIcon className="mr-2 h-3.5 w-3.5" />Open
+              </button>
+              <button
+                type="button"
+                className="context-menu-button"
+                onClick={() => { void handleRenameDoc(treeContextMenu.node.doc!); }}
+              >
+                <PencilIcon className="mr-2 h-3.5 w-3.5" />Rename
+              </button>
+              <div className="my-1 border-t border-stone-200" />
+              <button
+                type="button"
+                className="context-menu-button"
+                onClick={() => {
+                  void navigator.clipboard.writeText(treeContextMenu.node.doc!.relativePath)
+                  setTreeContextMenu(null)
+                }}
+              >
+                <ClipboardIcon className="mr-2 h-3.5 w-3.5" />Copy path
+              </button>
+              <button
+                type="button"
+                className="context-menu-button text-red-700 hover:text-red-800"
+                onClick={() => { onDelete(treeContextMenu.node.doc!.id); setTreeContextMenu(null) }}
+              >
+                <TrashIcon className="mr-2 h-3.5 w-3.5" />Move to trash
+              </button>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+const WebTreeNodeRow = memo(function WebTreeNodeRow({
+  node,
+  depth,
+  expanded,
+  selectedDoc,
+  onToggle,
+  onOpen,
+  onContextMenu,
+}: {
+  node: WebTreeNode
+  depth: number
+  expanded: Set<string>
+  selectedDoc: string | null
+  onToggle: (path: string) => void
+  onOpen: (docId: string) => void
+  onContextMenu: (node: WebTreeNode, x: number, y: number) => void
+}) {
+  const isFolder = node.kind === 'folder'
+  const isExpanded = isFolder && expanded.has(node.path)
+  const isActive = !isFolder && node.doc?.id === selectedDoc
+
+  return (
+    <li>
+      <button
+        type="button"
+        className={`tree-button ${isActive ? 'tree-button-active' : ''}`}
+        style={{ paddingLeft: `${0.5 + depth * 0.75}rem` }}
+        onClick={() => {
+          if (isFolder) onToggle(node.path)
+          else if (node.doc) onOpen(node.doc.id)
+        }}
+        onContextMenu={e => {
+          e.preventDefault()
+          e.stopPropagation()
+          onContextMenu(node, e.clientX, e.clientY)
+        }}
+      >
+        {isFolder ? (
+          <span className="shrink-0 text-[#8a9691]">
+            {isExpanded ? <ChevronDownIcon className="h-3.5 w-3.5" /> : <ChevronRightIcon className="h-3.5 w-3.5" />}
+          </span>
+        ) : null}
+        <span className="shrink-0 text-[#8a9691]">
+          {isFolder ? <FolderIcon className="h-3.5 w-3.5" /> : <DocumentTextIcon className="h-3.5 w-3.5" />}
+        </span>
+        <span className={`truncate ${isFolder ? 'font-semibold text-[#4b5753]' : ''}`}>{node.name}</span>
+      </button>
+      {isFolder && isExpanded && node.children.length > 0 && (
+        <ul className="mt-0.5 space-y-0.5">
+          {node.children.map(child => (
+            <WebTreeNodeRow
+              key={child.path}
+              node={child}
+              depth={depth + 1}
+              expanded={expanded}
+              selectedDoc={selectedDoc}
+              onToggle={onToggle}
+              onOpen={onOpen}
+              onContextMenu={onContextMenu}
+            />
+          ))}
+        </ul>
+      )}
+    </li>
+  )
+})
+
+function formatTrashTime(value: string | number): string {
+  const ts = typeof value === 'string' ? new Date(value).getTime() : value * 1000
+  if (Number.isNaN(ts)) return 'Deleted'
+  return new Date(ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 }
 
 function displayWorkspaceName(workspace: WorkspaceSummary | null): string {

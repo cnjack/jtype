@@ -173,8 +173,11 @@ export type TrashItem = {
   title: string;
   contentHash: string;
   deletedByUserId: string;
+  sourceDeviceId?: string;
+  sourceUserId?: string;
   deletedAt: string;
   expiresAt: string;
+  deletedClock: number;
 };
 
 export type SyncStatus = "idle" | "syncing" | "conflict" | "offline";
@@ -197,6 +200,61 @@ export type DocumentSummary = {
   status: string;
   publish: boolean;
   tags: string[];
+};
+
+export type FolderContentsSummary = {
+  folderName: string;
+  totalDocuments: number;
+  totalSubfolders: number;
+  documentNames: string[];
+};
+
+export type MergedTrashItem = {
+  id: string;
+  documentId?: string;
+  relativePath: string;
+  title: string;
+  contentHash?: string;
+  deletedAt: string;
+  expiresAt?: string;
+  deletedClock?: number;
+  source: "cloud" | "local";
+  syncStatus: "local_only" | "synced" | "conflict" | "pending_restore";
+};
+
+export type TrashEvent = {
+  id: string;
+  eventType: "empty_trash" | "permanent_delete_item" | "permanent_delete_all";
+  eventClock: number;
+  eventData: Record<string, unknown>;
+  createdAt: string;
+};
+
+export type TrashSyncPayload = {
+  items: TrashItem[];
+  events: TrashEvent[];
+  expiredTrashIds: string[];
+  trashCursor: number;
+};
+
+export type TrashMetadata = {
+  items: TrashMetadataItem[];
+  lastSyncedClock: number;
+  pendingTrashOps: PendingTrashOp[];
+};
+
+export type PendingTrashOp =
+  | { type: "restore"; trashId: string }
+  | { type: "permanent_delete"; trashId: string }
+  | { type: "empty_trash" };
+
+export type TrashMetadataItem = {
+  trashId: string;
+  relativePath: string;
+  name: string;
+  trashedAt: number;
+  source: string;
+  cloudTrashId?: string;
 };
 
 export type AppCommand = {

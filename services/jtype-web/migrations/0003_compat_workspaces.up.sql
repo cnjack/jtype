@@ -1,0 +1,5 @@
+ALTER TABLE workspaces MODIFY COLUMN id CHAR(36) NOT NULL;
+ALTER TABLE workspaces ADD COLUMN user_id CHAR(36) NULL AFTER id;
+ALTER TABLE workspaces ADD COLUMN owner_user_id CHAR(36) NULL AFTER user_id;
+ALTER TABLE workspaces ADD COLUMN slug VARCHAR(255) NULL AFTER name;
+ALTER TABLE workspaces ADD COLUMN storage_budget_bytes BIGINT NOT NULL DEFAULT 1073741824 AFTER root_hint;

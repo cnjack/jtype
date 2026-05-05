@@ -3,7 +3,7 @@ import { openUrl } from "@tauri-apps/plugin-opener";
 import { useAppDispatch, useAppState } from "../app/AppState";
 import { tauri } from "../lib/tauri";
 import { slugify, sha256Hex } from "../lib/utils";
-import type { AuthResponse, CloudProfile, VaultBinding, CloudDocument, CloudWorkspace, DeletedPath, DeletedPathInput, EntryKind, SyncPushDocument, SyncPushResponse } from "../lib/types";
+import type { AuthResponse, CloudProfile, VaultBinding, CloudDocument, CloudWorkspace, DeletedPath, DeletedPathInput, EntryKind, SyncPushDocument, SyncPushResponse, TrashSyncPayload } from "../lib/types";
 import { parseSyncConflicts } from "../lib/types";
 
 export function useCloudSync() {
@@ -169,6 +169,19 @@ export function useCloudSync() {
           .filter((relativePath) => !options.skipRelativePath || relativePath !== options.skipRelativePath)
           .map((relativePath) => ({ relativePath }));
 
+        // Load pending local trash operations for push
+        let trashOperations: Array<Record<string, unknown>> = [];
+        if (tauri.isAvailable) {
+          try {
+            const trashMeta = await tauri.loadTrashMetadata(state.workspace.rootPath);
+            trashOperations = (trashMeta.pendingTrashOps).map((op) => {
+              if (op.type === "restore") return { type: "restore", trashId: op.trashId };
+              if (op.type === "permanent_delete") return { type: "permanent_delete", trashId: op.trashId };
+              return { type: "empty_trash" };
+            });
+          } catch { /* non-critical */ }
+        }
+
         const push = await fetch(`${getServiceUrl()}/api/v1/workspaces/${binding.workspaceId}/sync/push`, {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${state.syncToken}` },
@@ -176,6 +189,7 @@ export function useCloudSync() {
             deviceId: state.cloudProfile?.deviceId ?? "desktop",
             documents: pushDocs,
             deletedPaths,
+            trashOperations,
           }),
         });
         if (!push.ok) throw new Error(await push.text());
@@ -187,6 +201,15 @@ export function useCloudSync() {
         if (tauri.isAvailable && deletedPaths.length > 0) {
           try {
             await tauri.deleteSyncBases(state.workspace.rootPath, deletedPaths.map((d) => d.relativePath));
+          } catch { /* non-critical */ }
+        }
+
+        // Clear pending trash ops after successful push
+        if (tauri.isAvailable && trashOperations.length > 0) {
+          try {
+            const trashMeta = await tauri.loadTrashMetadata(state.workspace.rootPath);
+            trashMeta.pendingTrashOps = [];
+            await tauri.saveTrashMetadata(state.workspace.rootPath, trashMeta);
           } catch { /* non-critical */ }
         }
 
@@ -270,13 +293,27 @@ export function useCloudSync() {
     locallyDeletedPaths: Set<string> = new Set(),
   ): Promise<{ deletedPaths: string[] }> => {
     if (!state.workspace || !state.syncToken) return { deletedPaths: [] };
+
+    // Load trash metadata to get the last synced cursor
+    let trashClock = 0;
+    if (tauri.isAvailable) {
+      try {
+        const meta = await tauri.loadTrashMetadata(state.workspace.rootPath);
+        trashClock = meta.lastSyncedClock ?? 0;
+      } catch { /* default to 0 */ }
+    }
+
     const response = await fetch(`${getServiceUrl()}/api/v1/workspaces/${binding.workspaceId}/sync/pull`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${state.syncToken}` },
-      body: JSON.stringify({ sinceClock: binding.lastPulledClock, deviceId: state.cloudProfile?.deviceId ?? "desktop" }),
+      body: JSON.stringify({
+        sinceClock: binding.lastPulledClock,
+        deviceId: state.cloudProfile?.deviceId ?? "desktop",
+        sinceTrashEventClock: trashClock,
+      }),
     });
     if (!response.ok) throw new Error(await response.text());
-    const pullData = (await response.json()) as { documents: CloudDocument[]; deletedPaths?: DeletedPath[]; conflicts: Array<Record<string, unknown>> };
+    const pullData = (await response.json()) as { documents: CloudDocument[]; deletedPaths?: DeletedPath[]; conflicts: Array<Record<string, unknown>>; trash?: TrashSyncPayload };
     dispatch({ type: "SET_CONFLICTS", conflicts: parseSyncConflicts(pullData.conflicts ?? []) });
 
     // During pull, only apply cloud documents for files that haven't been locally modified.
@@ -321,6 +358,50 @@ export function useCloudSync() {
       const workspace = await tauri.openWorkspace(state.workspace.rootPath);
       dispatch({ type: "UPDATE_WORKSPACE", workspace });
     }
+
+    // Handle trash sync data from pull
+    if (pullData.trash && tauri.isAvailable) {
+      try {
+        const trashMetadata = await tauri.loadTrashMetadata(state.workspace.rootPath);
+        // Process trash events (empty_trash, permanent_delete_item)
+        for (const event of pullData.trash.events) {
+          if (event.eventType === "empty_trash") {
+            await tauri.emptyTrash(state.workspace.rootPath);
+            trashMetadata.items = [];
+          } else if (event.eventType === "permanent_delete_item") {
+            const trashId = (event.eventData as Record<string, string>).trashId;
+            if (trashId) {
+              const localItem = trashMetadata.items.find(
+                (item) => item.cloudTrashId === trashId
+              );
+              if (localItem) {
+                try { await tauri.permanentDeleteTrash(state.workspace.rootPath, localItem.trashId); } catch { /* ignore */ }
+                trashMetadata.items = trashMetadata.items.filter((item) => item.cloudTrashId !== trashId);
+              }
+            }
+          }
+        }
+        // Update metadata with cloud trash items
+        for (const cloudItem of pullData.trash.items) {
+          const existing = trashMetadata.items.find(
+            (item) => item.cloudTrashId === cloudItem.id
+          );
+          if (!existing) {
+            trashMetadata.items.push({
+              trashId: `cloud_${cloudItem.id}`,
+              relativePath: cloudItem.relativePath,
+              name: cloudItem.title,
+              trashedAt: Math.floor(new Date(cloudItem.deletedAt).getTime() / 1000),
+              source: "cloud",
+              cloudTrashId: cloudItem.id,
+            });
+          }
+        }
+        trashMetadata.lastSyncedClock = pullData.trash.trashCursor;
+        await tauri.saveTrashMetadata(state.workspace.rootPath, trashMetadata);
+      } catch { /* non-critical */ }
+    }
+
     const nextClock = Math.max(
       binding.lastPulledClock,
       ...pullData.documents.map((d) => d.updatedClock),

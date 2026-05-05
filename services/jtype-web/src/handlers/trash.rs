@@ -166,12 +166,13 @@ pub async fn restore_from_trash(
     .await?;
 
     sqlx::query(
-        r#"INSERT INTO document_versions (id, workspace_id, document_id, parent_version_id, source, content_hash, content)
-           VALUES (?, ?, ?, NULL, 'system', ?, ?)"#,
+        r#"INSERT INTO document_versions (id, workspace_id, document_id, parent_version_id, author_user_id, source, content_hash, content)
+           VALUES (?, ?, ?, NULL, ?, 'system', ?, ?)"#,
     )
     .bind(&version_id)
     .bind(&workspace_id)
     .bind(&document_id)
+    .bind(&user.id)
     .bind(&content_hash)
     .bind(&content)
     .execute(&mut *tx)
@@ -209,15 +210,34 @@ pub async fn permanent_delete(
     )
     .await?;
 
+    let mut tx = state.pool.begin().await?;
+    let next_clock =
+        crate::handlers::document::next_workspace_clock(&mut tx, &workspace_id).await?;
+
     let result = sqlx::query("DELETE FROM document_trash WHERE id = ? AND workspace_id = ?")
         .bind(&trash_id)
         .bind(&workspace_id)
-        .execute(&state.pool)
+        .execute(&mut *tx)
         .await?;
 
     if result.rows_affected() == 0 {
+        tx.commit().await?;
         return Err(AppError::NotFound);
     }
+
+    let event_id = Uuid::new_v4().to_string();
+    sqlx::query(
+        r#"INSERT INTO trash_events (id, workspace_id, event_type, event_data, event_clock)
+           VALUES (?, ?, 'permanent_delete_item', ?, ?)"#,
+    )
+    .bind(&event_id)
+    .bind(&workspace_id)
+    .bind(serde_json::json!({ "trashId": trash_id }).to_string())
+    .bind(next_clock)
+    .execute(&mut *tx)
+    .await?;
+
+    tx.commit().await?;
     Ok(StatusCode::NO_CONTENT)
 }
 
@@ -235,10 +255,26 @@ pub async fn empty_trash(
     )
     .await?;
 
+    let mut tx = state.pool.begin().await?;
+    let next_clock =
+        crate::handlers::document::next_workspace_clock(&mut tx, &workspace_id).await?;
+
     sqlx::query("DELETE FROM document_trash WHERE workspace_id = ? AND restored_at IS NULL")
         .bind(&workspace_id)
-        .execute(&state.pool)
+        .execute(&mut *tx)
         .await?;
 
+    let event_id = Uuid::new_v4().to_string();
+    sqlx::query(
+        r#"INSERT INTO trash_events (id, workspace_id, event_type, event_data, event_clock)
+           VALUES (?, ?, 'empty_trash', '{}', ?)"#,
+    )
+    .bind(&event_id)
+    .bind(&workspace_id)
+    .bind(next_clock)
+    .execute(&mut *tx)
+    .await?;
+
+    tx.commit().await?;
     Ok(StatusCode::NO_CONTENT)
 }

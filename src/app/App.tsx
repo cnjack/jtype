@@ -13,6 +13,7 @@ import { CommandPalette } from "../components/modals/CommandPalette";
 import { QuickSwitcher } from "../components/modals/QuickSwitcher";
 import { CreateNoteDialog } from "../components/modals/CreateNoteDialog";
 import { AccountDialog } from "../components/modals/AccountDialog";
+import { PromptDialogProvider } from "../components/modals/PromptDialogContext";
 import { isTauriRuntime, relativePathFromWorkspace } from "../lib/utils";
 
 const CommandsContext = createContext<CommandDef[]>([]);
@@ -27,7 +28,9 @@ export function App() {
   return (
     <AppStateContext.Provider value={state}>
       <AppDispatchContext.Provider value={dispatch}>
-        <AppContent />
+        <PromptDialogProvider>
+          <AppContent />
+        </PromptDialogProvider>
       </AppDispatchContext.Provider>
     </AppStateContext.Provider>
   );

@@ -7,6 +7,7 @@ import { basename, normalizePath } from "../../lib/utils";
 import { useCommandsList } from "../../app/App";
 import { addMarkdownTableColumn, addMarkdownTableRow, formatMarkdownTable, insertBlockAtSafeCursor, insertOrEditTable } from "../../hooks/useCommands";
 import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/react";
+import { Breadcrumb } from "../layout/Breadcrumb";
 import type { EditorMode } from "../../lib/types";
 import {
   BoldIcon,
@@ -159,9 +160,7 @@ export function EditorShell() {
         <div className="min-w-0">
           {documentLocation && (
             <div className="flex items-center gap-2">
-              <p id="document-breadcrumbs" className="truncate text-xs font-medium text-[#6b7773]">
-                {documentLocation}
-              </p>
+              <Breadcrumb />
             </div>
           )}
           <div className={`${documentLocation ? "mt-1 " : ""}flex items-center gap-2`}>

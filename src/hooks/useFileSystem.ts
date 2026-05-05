@@ -3,6 +3,7 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { openPath } from "@tauri-apps/plugin-opener";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { useAppDispatch, useAppState } from "../app/AppState";
+import { usePrompt } from "../components/modals/PromptDialogContext";
 import { tauri } from "../lib/tauri";
 import { basename, isMarkdownPath, relativePathFromWorkspace, normalizePath } from "../lib/utils";
 import { parseFrontmatter, writeFrontmatter, titleFromMarkdown } from "../lib/frontmatter";
@@ -14,6 +15,7 @@ import type { AICommandProposal } from "../lib/aiCommands";
 export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
   const dispatch = useAppDispatch();
   const state = useAppState();
+  const prompt = usePrompt();
   const onAfterSaveRef = useRef(onAfterSave);
   onAfterSaveRef.current = onAfterSave;
 
@@ -156,7 +158,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
   const renameCurrentEntry = useCallback(async () => {
     if (!state.workspace || !state.currentRelativePath) return;
     const fromRelativePath = state.currentRelativePath;
-    const nextPath = window.prompt("Move or rename path", fromRelativePath)?.trim();
+    const nextPath = (await prompt("Move or rename path", fromRelativePath))?.trim();
     if (!nextPath || nextPath === fromRelativePath) return;
     const impacted = await findLinkImpacts(fromRelativePath);
     let updateLinks = false;
@@ -166,7 +168,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
       );
     }
     await renameEntry(fromRelativePath, nextPath, updateLinks);
-  }, [dispatch, state.workspace, state.currentRelativePath, renameEntry]);
+  }, [dispatch, state.workspace, state.currentRelativePath, renameEntry, prompt]);
 
   const deleteEntry = useCallback(async (relativePath: string) => {
     if (!state.workspace || !relativePath) return;
@@ -208,10 +210,53 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     if (!state.workspace) return;
     try {
       dispatch({ type: "SET_LOADING", isLoading: true });
+      // Find the cloud trash ID and relativePath before restoring
+      let cloudTrashId: string | undefined;
+      let relPath: string | undefined;
+      if (tauri.isAvailable) {
+        try {
+          const meta = await tauri.loadTrashMetadata(state.workspace.rootPath);
+          const item = meta.items.find((i) => i.trashId === trashId);
+          cloudTrashId = item?.cloudTrashId;
+          relPath = item?.relativePath;
+        } catch { /* ignore */ }
+        // Fallback: get relativePath from the local trash list
+        if (!relPath) {
+          try {
+            const localItems = await tauri.listTrash(state.workspace.rootPath);
+            relPath = localItems.find((i) => i.trashId === trashId)?.relativePath;
+          } catch { /* ignore */ }
+        }
+      }
       const workspace = await tauri.restoreFromTrash(state.workspace.rootPath, trashId);
       dispatch({ type: "UPDATE_WORKSPACE", workspace });
       dispatch({ type: "SET_STATUS", message: "Restored from trash." });
       window.dispatchEvent(new CustomEvent("jtype:vault-restored"));
+      // Record pending op for cloud sync and clean up any cloud metadata item for the same path
+      if (tauri.isAvailable) {
+        try {
+          const meta = await tauri.loadTrashMetadata(state.workspace.rootPath);
+          const ops = meta.pendingTrashOps;
+          if (cloudTrashId) {
+            ops.push({ type: "restore", trashId: cloudTrashId });
+          }
+          // Also queue restore + remove any cloud metadata item for the same relativePath
+          if (relPath) {
+            for (const cloudItem of meta.items) {
+              if (cloudItem.source === "cloud" && cloudItem.relativePath === relPath && cloudItem.cloudTrashId && cloudItem.cloudTrashId !== cloudTrashId) {
+                ops.push({ type: "restore", trashId: cloudItem.cloudTrashId });
+              }
+            }
+            meta.items = meta.items.filter(
+              (i) => i.trashId !== trashId && !(i.source === "cloud" && i.relativePath === relPath),
+            );
+          } else {
+            meta.items = meta.items.filter((i) => i.trashId !== trashId);
+          }
+          meta.pendingTrashOps = ops;
+          await tauri.saveTrashMetadata(state.workspace.rootPath, meta);
+        } catch { /* non-critical */ }
+      }
     } catch (error) {
       dispatch({ type: "SET_STATUS", message: String(error) });
     } finally {
@@ -227,10 +272,51 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
       dispatch({ type: "SET_LOADING", isLoading: true });
       await tauri.emptyTrash(state.workspace.rootPath);
       dispatch({ type: "SET_STATUS", message: "Trash emptied." });
+      // Record pending op for cloud sync
+      if (tauri.isAvailable) {
+        try {
+          const meta = await tauri.loadTrashMetadata(state.workspace.rootPath);
+          const ops = meta.pendingTrashOps;
+          ops.push({ type: "empty_trash" });
+          meta.pendingTrashOps = ops;
+          meta.items = [];
+          await tauri.saveTrashMetadata(state.workspace.rootPath, meta);
+        } catch { /* non-critical */ }
+      }
     } catch (error) {
       dispatch({ type: "SET_STATUS", message: String(error) });
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
+    }
+  }, [dispatch, state.workspace]);
+
+  const permanentDeleteTrash = useCallback(async (trashId: string) => {
+    if (!state.workspace) return;
+    try {
+      // Find cloud trash ID before deleting
+      let cloudTrashId: string | undefined;
+      if (tauri.isAvailable) {
+        try {
+          const meta = await tauri.loadTrashMetadata(state.workspace.rootPath);
+          const item = meta.items.find((i) => i.trashId === trashId);
+          cloudTrashId = item?.cloudTrashId;
+        } catch { /* ignore */ }
+      }
+      await tauri.permanentDeleteTrash(state.workspace.rootPath, trashId);
+      dispatch({ type: "SET_STATUS", message: "Item permanently deleted." });
+      // Record pending op for cloud sync
+      if (tauri.isAvailable && cloudTrashId) {
+        try {
+          const meta = await tauri.loadTrashMetadata(state.workspace.rootPath);
+          const ops = meta.pendingTrashOps;
+          ops.push({ type: "permanent_delete", trashId: cloudTrashId });
+          meta.pendingTrashOps = ops;
+          meta.items = meta.items.filter((i) => i.trashId !== trashId);
+          await tauri.saveTrashMetadata(state.workspace.rootPath, meta);
+        } catch { /* non-critical */ }
+      }
+    } catch (error) {
+      dispatch({ type: "SET_STATUS", message: String(error) });
     }
   }, [dispatch, state.workspace]);
 
@@ -358,6 +444,67 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     });
   }, [openMarkdownFile, openWorkspace]);
 
+  const createFolder = useCallback(async (folderRelativePath: string) => {
+    if (!state.workspace) return;
+    try {
+      dispatch({ type: "SET_LOADING", isLoading: true });
+      const workspace = await tauri.createFolder(state.workspace.rootPath, folderRelativePath);
+      dispatch({ type: "UPDATE_WORKSPACE", workspace });
+      dispatch({ type: "SET_STATUS", message: `Created folder ${folderRelativePath}.` });
+    } catch (error) {
+      dispatch({ type: "SET_STATUS", message: String(error) });
+    } finally {
+      dispatch({ type: "SET_LOADING", isLoading: false });
+    }
+  }, [dispatch, state.workspace]);
+
+  const renameFolder = useCallback(async (fromRelativePath: string, toRelativePath: string) => {
+    if (!state.workspace) return;
+    try {
+      dispatch({ type: "SET_LOADING", isLoading: true });
+      const [workspace] = await tauri.renameFolder(state.workspace.rootPath, fromRelativePath, toRelativePath);
+      dispatch({ type: "UPDATE_WORKSPACE", workspace });
+      dispatch({ type: "SET_STATUS", message: `Renamed folder to ${toRelativePath}.` });
+    } catch (error) {
+      dispatch({ type: "SET_STATUS", message: String(error) });
+    } finally {
+      dispatch({ type: "SET_LOADING", isLoading: false });
+    }
+  }, [dispatch, state.workspace]);
+
+  const moveFolder = useCallback(async (fromRelativePath: string, toRelativePath: string) => {
+    if (!state.workspace) return;
+    try {
+      dispatch({ type: "SET_LOADING", isLoading: true });
+      const [workspace] = await tauri.moveFolder(state.workspace.rootPath, fromRelativePath, toRelativePath);
+      dispatch({ type: "UPDATE_WORKSPACE", workspace });
+      dispatch({ type: "SET_STATUS", message: `Moved folder to ${toRelativePath}.` });
+    } catch (error) {
+      dispatch({ type: "SET_STATUS", message: String(error) });
+    } finally {
+      dispatch({ type: "SET_LOADING", isLoading: false });
+    }
+  }, [dispatch, state.workspace]);
+
+  const deleteFolder = useCallback(async (folderRelativePath: string, softDelete = true) => {
+    if (!state.workspace) return;
+    const confirmed = window.confirm(`Delete folder "${folderRelativePath}" and move all documents to trash?`);
+    if (!confirmed) return;
+    try {
+      dispatch({ type: "SET_LOADING", isLoading: true });
+      const [workspace, impacted] = await tauri.deleteFolder(state.workspace.rootPath, folderRelativePath, softDelete);
+      dispatch({ type: "UPDATE_WORKSPACE", workspace });
+      if (state.currentRelativePath.startsWith(`${folderRelativePath}/`)) {
+        dispatch({ type: "CLEAR_DOCUMENT" });
+      }
+      dispatch({ type: "SET_STATUS", message: `Deleted folder ${folderRelativePath}. ${impacted.length} document(s) moved to trash.` });
+    } catch (error) {
+      dispatch({ type: "SET_STATUS", message: String(error) });
+    } finally {
+      dispatch({ type: "SET_LOADING", isLoading: false });
+    }
+  }, [dispatch, state.workspace, state.currentRelativePath]);
+
   const openInitialPath = useCallback(async () => {
     if (!tauri.isAvailable) return;
     try {
@@ -383,12 +530,17 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     listTrash,
     restoreTrashItem,
     emptyTrash,
+    permanentDeleteTrash,
     exportSite,
     runPublishChecks,
     buildAiIndex,
     proposeTitleFrontmatter,
     registerDragDrop,
     openInitialPath,
+    createFolder,
+    renameFolder,
+    moveFolder,
+    deleteFolder,
   };
 }
 

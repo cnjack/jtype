@@ -1,0 +1,4 @@
+ALTER TABLE users ADD COLUMN display_name VARCHAR(255) NULL AFTER site_title;
+ALTER TABLE users ADD COLUMN email VARCHAR(255) NULL AFTER display_name;
+ALTER TABLE users ADD COLUMN disabled_at TIMESTAMP NULL AFTER role;
+ALTER TABLE users ADD COLUMN storage_budget_bytes BIGINT NOT NULL DEFAULT 1073741824 AFTER disabled_at;

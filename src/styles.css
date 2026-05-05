@@ -137,11 +137,11 @@
   }
 
   .context-menu {
-    @apply fixed z-50 min-w-52 rounded-md border border-stone-200 bg-stone-50 p-1 shadow-xl;
+    @apply fixed z-50 min-w-52 rounded-md border border-[#e7e5e4] bg-[#fafaf9] p-1 shadow-[0_20px_25px_-5px_rgb(0_0_0/0.1)];
   }
 
   .context-menu-button {
-    @apply flex w-full items-center rounded px-3 py-2 text-left text-sm text-stone-700 hover:bg-stone-200 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply flex w-full items-center rounded-sm px-3 py-2 text-left text-sm text-stone-700 hover:bg-[#e8f6f2] hover:text-[#006f6b] disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .field-label {

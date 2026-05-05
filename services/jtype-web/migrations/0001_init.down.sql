@@ -1,0 +1,15 @@
+DROP TABLE IF EXISTS ssl_certificates;
+DROP TABLE IF EXISTS custom_domains;
+DROP TABLE IF EXISTS ai_chunks;
+DROP TABLE IF EXISTS publish_revisions;
+DROP TABLE IF EXISTS publish_targets;
+DROP TABLE IF EXISTS sync_conflicts;
+DROP TABLE IF EXISTS workspace_sync_cursors;
+DROP TABLE IF EXISTS document_versions;
+DROP TABLE IF EXISTS documents;
+DROP TABLE IF EXISTS workspace_invites;
+DROP TABLE IF EXISTS workspace_members;
+DROP TABLE IF EXISTS workspaces;
+DROP TABLE IF EXISTS oauth_device_codes;
+DROP TABLE IF EXISTS sessions;
+DROP TABLE IF EXISTS users;

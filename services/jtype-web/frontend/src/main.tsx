@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom'
 import './index.css'
 import { AuthProvider } from './components/AuthContext'
+import { PromptDialogProvider } from './components/PromptDialogContext'
 import { Layout } from './components/Layout'
 import { Landing } from './pages/Landing'
 import { Login } from './pages/Login'
@@ -15,19 +16,21 @@ import { api } from './api'
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/oauth/device" element={<DeviceOAuth />} />
-          <Route element={<Layout />}>
-            <Route path="/dashboard" element={<WorkspaceRedirect />} />
-            <Route path="/workspaces" element={<WorkspaceRedirect />} />
-            <Route path="/admin" element={<Admin />} />
-            <Route path="/workspaces/:workspaceId" element={<Workspace />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
+      <PromptDialogProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/oauth/device" element={<DeviceOAuth />} />
+            <Route element={<Layout />}>
+              <Route path="/dashboard" element={<WorkspaceRedirect />} />
+              <Route path="/workspaces" element={<WorkspaceRedirect />} />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="/workspaces/:workspaceId" element={<Workspace />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </PromptDialogProvider>
     </AuthProvider>
   </StrictMode>,
 )

@@ -103,11 +103,21 @@ pub async fn pull(
         upsert_sync_cursor(&state.pool, &workspace_id, device_id, next_clock).await?;
     }
     let conflicts = load_open_conflicts(&state.pool, &workspace_id).await?;
+
+    // Load trash sync data if requested
+    let trash = if payload.since_trash_event_clock.is_some() {
+        let since_trash_clock = payload.since_trash_event_clock.unwrap_or(0);
+        Some(load_trash_sync_data(&state.pool, &workspace_id, since_trash_clock).await?)
+    } else {
+        None
+    };
+
     Ok(Json(SyncPullResponse {
         workspace_id,
         documents,
         deleted_paths,
         conflicts,
+        trash,
     }))
 }
 
@@ -170,6 +180,16 @@ pub async fn push(
         {
             accepted += 1;
             deleted_paths.push(deleted_path);
+        }
+    }
+
+    // Process trash operations (restore, permanent delete, empty)
+    for op in payload.trash_operations {
+        match process_trash_operation(&state.pool, &workspace_id, &user, device_id.as_deref(), op)
+            .await
+        {
+            Ok(_) => accepted += 1,
+            Err(_) => { /* idempotent — skip errors */ }
         }
     }
 
@@ -460,4 +480,259 @@ async fn trash_document_by_relative_path(
         relative_path,
         deleted_clock: next_clock,
     }))
+}
+
+async fn load_trash_sync_data(
+    pool: &sqlx::Pool<sqlx::MySql>,
+    workspace_id: &str,
+    since_trash_event_clock: i64,
+) -> Result<TrashSyncData, AppError> {
+    let events = load_trash_events_since(pool, workspace_id, since_trash_event_clock).await?;
+    let items = load_all_undeleted_trash_items(pool, workspace_id).await?;
+    let trash_cursor = events
+        .last()
+        .map(|e| e.event_clock)
+        .unwrap_or(since_trash_event_clock);
+
+    // Find expired items (where expires_at < NOW() in the DB)
+    let expired_rows = sqlx::query(
+        r#"SELECT id FROM document_trash
+           WHERE workspace_id = ? AND restored_at IS NULL AND expires_at < CURRENT_TIMESTAMP"#,
+    )
+    .bind(workspace_id)
+    .fetch_all(pool)
+    .await?;
+    let expired_trash_ids: Vec<String> = expired_rows
+        .into_iter()
+        .filter_map(|row| row.try_get("id").ok())
+        .collect();
+
+    Ok(TrashSyncData {
+        items,
+        events,
+        expired_trash_ids,
+        trash_cursor,
+    })
+}
+
+async fn load_trash_events_since(
+    pool: &sqlx::Pool<sqlx::MySql>,
+    workspace_id: &str,
+    since_clock: i64,
+) -> Result<Vec<TrashEvent>, AppError> {
+    let rows = sqlx::query(
+        r#"SELECT id, event_type, event_clock, event_data,
+                  DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') as created_at
+           FROM trash_events
+           WHERE workspace_id = ? AND event_clock > ?
+           ORDER BY event_clock"#,
+    )
+    .bind(workspace_id)
+    .bind(since_clock)
+    .fetch_all(pool)
+    .await?;
+    rows.into_iter()
+        .map(|row| {
+            Ok(TrashEvent {
+                id: row.try_get("id")?,
+                event_type: row.try_get("event_type")?,
+                event_clock: row.try_get("event_clock")?,
+                event_data: row
+                    .try_get::<String, _>("event_data")
+                    .ok()
+                    .and_then(|s| serde_json::from_str(&s).ok())
+                    .unwrap_or(serde_json::json!({})),
+                created_at: row.try_get("created_at")?,
+            })
+        })
+        .collect()
+}
+
+async fn load_all_undeleted_trash_items(
+    pool: &sqlx::Pool<sqlx::MySql>,
+    workspace_id: &str,
+) -> Result<Vec<TrashSyncItem>, AppError> {
+    let rows = sqlx::query(
+        r#"SELECT id, document_id, relative_path, title, content_hash,
+                  deleted_by_user_id, source_device_id, source_user_id,
+                  DATE_FORMAT(deleted_at, '%Y-%m-%d %H:%i:%s') as deleted_at,
+                  DATE_FORMAT(expires_at, '%Y-%m-%d %H:%i:%s') as expires_at,
+                  deleted_clock
+           FROM document_trash
+           WHERE workspace_id = ? AND restored_at IS NULL
+           ORDER BY deleted_at DESC"#,
+    )
+    .bind(workspace_id)
+    .fetch_all(pool)
+    .await?;
+    rows.into_iter()
+        .map(|row| {
+            Ok(TrashSyncItem {
+                id: row.try_get("id")?,
+                document_id: row.try_get("document_id")?,
+                relative_path: row.try_get("relative_path")?,
+                title: row.try_get("title")?,
+                content_hash: row.try_get("content_hash")?,
+                deleted_by_user_id: row.try_get("deleted_by_user_id")?,
+                source_device_id: row.try_get("source_device_id").ok(),
+                source_user_id: row.try_get("source_user_id").ok(),
+                deleted_at: row.try_get("deleted_at")?,
+                expires_at: row.try_get("expires_at")?,
+                deleted_clock: row.try_get("deleted_clock")?,
+            })
+        })
+        .collect()
+}
+
+async fn process_trash_operation(
+    pool: &sqlx::Pool<sqlx::MySql>,
+    workspace_id: &str,
+    user: &AuthUser,
+    device_id: Option<&str>,
+    operation: TrashOperation,
+) -> Result<(), AppError> {
+    match operation {
+        TrashOperation::Restore { trash_id } => {
+            // Delegate to existing restore logic via the trash handler
+            let row = sqlx::query(
+                r#"SELECT document_id, relative_path, title, content, content_hash, version_id
+                   FROM document_trash
+                   WHERE id = ? AND workspace_id = ? AND restored_at IS NULL"#,
+            )
+            .bind(&trash_id)
+            .bind(workspace_id)
+            .fetch_optional(pool)
+            .await?;
+            let Some(row) = row else {
+                return Ok(()); // idempotent
+            };
+            let relative_path: String = row.try_get("relative_path")?;
+            let title: String = row.try_get("title")?;
+            let content: String = row.try_get("content")?;
+            let content_hash: String = row.try_get("content_hash")?;
+            let document_id = Uuid::new_v4().to_string();
+            let version_id = Uuid::new_v4().to_string();
+
+            let mut tx = pool.begin().await?;
+            let next_clock =
+                crate::handlers::document::next_workspace_clock(&mut tx, workspace_id).await?;
+
+            // Check if document already exists at path
+            let existing = sqlx::query(
+                "SELECT id FROM documents WHERE workspace_id = ? AND relative_path = ?",
+            )
+            .bind(workspace_id)
+            .bind(&relative_path)
+            .fetch_optional(&mut *tx)
+            .await?;
+
+            let final_path = if existing.is_some() {
+                let stem = relative_path
+                    .strip_suffix(".md")
+                    .map(|s| format!("{} (restored).md", s))
+                    .unwrap_or_else(|| format!("{} (restored)", relative_path));
+                stem
+            } else {
+                relative_path
+            };
+
+            sqlx::query(
+                r#"INSERT INTO documents (id, workspace_id, relative_path, title, status, content_hash, content, updated_clock, current_version_id)
+                   VALUES (?, ?, ?, ?, 'draft', ?, ?, ?, ?)"#,
+            )
+            .bind(&document_id)
+            .bind(workspace_id)
+            .bind(&final_path)
+            .bind(&title)
+            .bind(&content_hash)
+            .bind(&content)
+            .bind(next_clock)
+            .bind(&version_id)
+            .execute(&mut *tx)
+            .await?;
+
+            sqlx::query(
+                r#"INSERT INTO document_versions (id, workspace_id, document_id, parent_version_id, author_user_id, source, content_hash, content)
+                   VALUES (?, ?, ?, NULL, ?, 'system', ?, ?)"#,
+            )
+            .bind(&version_id)
+            .bind(workspace_id)
+            .bind(&document_id)
+            .bind(&user.id)
+            .bind(&content_hash)
+            .bind(&content)
+            .execute(&mut *tx)
+            .await?;
+
+            sqlx::query(
+                r#"UPDATE document_trash SET restored_at = CURRENT_TIMESTAMP,
+                   restored_by_device_id = ?, restored_by_user_id = ?, restored_clock = ?
+                   WHERE id = ?"#,
+            )
+            .bind(device_id)
+            .bind(&user.id)
+            .bind(next_clock)
+            .bind(&trash_id)
+            .execute(&mut *tx)
+            .await?;
+
+            tx.commit().await?;
+            Ok(())
+        }
+        TrashOperation::PermanentDelete { trash_id } => {
+            let mut tx = pool.begin().await?;
+            let next_clock =
+                crate::handlers::document::next_workspace_clock(&mut tx, workspace_id).await?;
+
+            let result =
+                sqlx::query("DELETE FROM document_trash WHERE id = ? AND workspace_id = ?")
+                    .bind(&trash_id)
+                    .bind(workspace_id)
+                    .execute(&mut *tx)
+                    .await?;
+
+            if result.rows_affected() > 0 {
+                let event_id = Uuid::new_v4().to_string();
+                sqlx::query(
+                    r#"INSERT INTO trash_events (id, workspace_id, event_type, event_data, event_clock)
+                       VALUES (?, ?, 'permanent_delete_item', ?, ?)"#,
+                )
+                .bind(&event_id)
+                .bind(workspace_id)
+                .bind(serde_json::json!({ "trashId": trash_id }).to_string())
+                .bind(next_clock)
+                .execute(&mut *tx)
+                .await?;
+            }
+
+            tx.commit().await?;
+            Ok(())
+        }
+        TrashOperation::EmptyTrash => {
+            let mut tx = pool.begin().await?;
+            let next_clock =
+                crate::handlers::document::next_workspace_clock(&mut tx, workspace_id).await?;
+
+            sqlx::query(
+                "DELETE FROM document_trash WHERE workspace_id = ? AND restored_at IS NULL",
+            )
+            .bind(workspace_id)
+            .execute(&mut *tx)
+            .await?;
+
+            let event_id = Uuid::new_v4().to_string();
+            sqlx::query(
+                r#"INSERT INTO trash_events (id, workspace_id, event_type, event_data, event_clock)
+                   VALUES (?, ?, 'empty_trash', '{}', ?)"#,
+            )
+            .bind(&event_id)
+            .bind(workspace_id)
+            .bind(next_clock)
+            .execute(&mut *tx)
+            .await?;
+
+            tx.commit().await?;
+            Ok(())
+        }
+    }
 }

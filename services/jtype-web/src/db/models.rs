@@ -317,6 +317,7 @@ pub struct SyncWorkspaceResponse {
 pub struct SyncPullRequest {
     pub since_clock: Option<i64>,
     pub device_id: Option<String>,
+    pub since_trash_event_clock: Option<i64>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -326,6 +327,8 @@ pub struct SyncPushRequest {
     pub documents: Vec<CloudSaveDocumentRequest>,
     #[serde(default)]
     pub deleted_paths: Vec<DeletedPathInput>,
+    #[serde(default)]
+    pub trash_operations: Vec<TrashOperation>,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -352,6 +355,8 @@ pub struct SyncPullResponse {
     pub documents: Vec<CloudDocument>,
     pub deleted_paths: Vec<DeletedPath>,
     pub conflicts: Vec<SyncConflict>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub trash: Option<TrashSyncData>,
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -449,4 +454,58 @@ pub struct DomainResponse {
 pub struct UploadCertificateRequest {
     pub cert_chain_pem: String,
     pub private_key_pem: String,
+}
+
+// ── Trash Sync ──
+
+#[derive(Debug, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct TrashEvent {
+    pub id: String,
+    pub event_type: String,
+    pub event_clock: i64,
+    pub event_data: serde_json::Value,
+    pub created_at: String,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TrashSyncData {
+    pub items: Vec<TrashSyncItem>,
+    pub events: Vec<TrashEvent>,
+    pub expired_trash_ids: Vec<String>,
+    pub trash_cursor: i64,
+}
+
+#[derive(Debug, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct TrashSyncItem {
+    pub id: String,
+    pub document_id: String,
+    pub relative_path: String,
+    pub title: String,
+    pub content_hash: String,
+    pub deleted_by_user_id: String,
+    pub source_device_id: Option<String>,
+    pub source_user_id: Option<String>,
+    pub deleted_at: String,
+    pub expires_at: String,
+    pub deleted_clock: i64,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+#[serde(tag = "type")]
+pub enum TrashOperation {
+    #[serde(rename = "restore")]
+    Restore {
+        #[serde(rename = "trashId")]
+        trash_id: String,
+    },
+    #[serde(rename = "permanent_delete")]
+    PermanentDelete {
+        #[serde(rename = "trashId")]
+        trash_id: String,
+    },
+    #[serde(rename = "empty_trash")]
+    EmptyTrash,
 }

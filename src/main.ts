@@ -191,6 +191,13 @@ type AppCommand = {
   run: () => Promise<void> | void;
 };
 
+// Legacy prompt helper — this file is pre-React and not used by the current app.
+// New UI should use PromptDialog from src/components/modals/PromptDialog.tsx.
+function legacyPrompt(message: string, defaultValue?: string): string | null {
+  // eslint-disable-next-line no-restricted-globals
+  return window.prompt(message, defaultValue);
+}
+
 const openButton = document.querySelector<HTMLButtonElement>("#open-file");
 const openFolderButton = document.querySelector<HTMLButtonElement>("#open-folder");
 const saveButton = document.querySelector<HTMLButtonElement>("#save-file");
@@ -1202,7 +1209,7 @@ async function syncWorkspaceToWeb(options: { silent?: boolean } = {}) {
 
 async function createDocument(defaultPath = "untitled.md") {
   if (!state.workspace) return;
-  const relativePath = window.prompt("New Markdown path or folder name", defaultPath)?.trim();
+  const relativePath = legacyPrompt("New Markdown path or folder name", defaultPath)?.trim();
   if (!relativePath) return;
   const kind: EntryKind = isMarkdownPath(relativePath) ? "markdown" : "folder";
 
@@ -1232,7 +1239,7 @@ async function createDocument(defaultPath = "untitled.md") {
 async function renameCurrentEntryWithImpact() {
   if (!state.workspace || !state.currentRelativePath) return;
   const fromRelativePath = state.currentRelativePath;
-  const nextPath = window.prompt("Move or rename path", fromRelativePath)?.trim();
+  const nextPath = legacyPrompt("Move or rename path", fromRelativePath)?.trim();
   if (!nextPath || nextPath === fromRelativePath) return;
 
   const impacted = await findLinkImpacts(fromRelativePath);

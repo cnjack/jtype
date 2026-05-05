@@ -1137,6 +1137,250 @@ fn escape_html(value: &str) -> String {
         .replace('"', "&quot;")
 }
 
+// ── Folder operations ──
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FolderContentsSummary {
+    pub folder_name: String,
+    pub total_documents: usize,
+    pub total_subfolders: usize,
+    pub document_names: Vec<String>,
+}
+
+pub fn validate_folder_name(name: &str) -> Result<(), String> {
+    if name.is_empty() {
+        return Err("Folder name cannot be empty.".to_string());
+    }
+    if name.len() > 255 {
+        return Err("Folder name too long.".to_string());
+    }
+    for segment in name.split('/') {
+        let segment = segment.trim();
+        if segment.is_empty() {
+            continue;
+        }
+        if segment == "." || segment == ".." || segment == ".jtype" {
+            return Err(format!("'{}' is a reserved name.", segment));
+        }
+        for c in segment.chars() {
+            if matches!(c, '<' | '>' | ':' | '"' | '|' | '?' | '*') {
+                return Err(format!("Invalid character '{}' in folder name.", c));
+            }
+        }
+    }
+    Ok(())
+}
+
+fn collect_docs_in_folder(root: &Path, folder_relative: &str) -> Result<Vec<String>, String> {
+    let folder_path = safe_join(root, folder_relative)?;
+    if !folder_path.is_dir() {
+        return Ok(Vec::new());
+    }
+    let mut docs = Vec::new();
+    collect_docs_recursive(&folder_path, root, &mut docs)?;
+    Ok(docs)
+}
+
+fn collect_docs_recursive(
+    dir: &Path,
+    root: &Path,
+    docs: &mut Vec<String>,
+) -> Result<(), String> {
+    let entries = fs::read_dir(dir).map_err(|e| e.to_string())?;
+    for entry in entries {
+        let entry = entry.map_err(|e| e.to_string())?;
+        let path = entry.path();
+        if path.is_dir() {
+            let name = entry.file_name().to_string_lossy().to_string();
+            if name == ".jtype" || name == ".git" || name == "node_modules" || name == "target" {
+                continue;
+            }
+            collect_docs_recursive(&path, root, docs)?;
+        } else if is_markdown_path(&path) {
+            let relative = path.strip_prefix(root).map_err(|e| e.to_string())?;
+            docs.push(path_to_string(relative));
+        }
+    }
+    Ok(())
+}
+
+pub fn create_folder(root: &Path, folder_relative_path: &str) -> Result<(), String> {
+    validate_folder_name(folder_relative_path)?;
+    let folder_path = safe_join(root, folder_relative_path)?;
+    if folder_path.exists() {
+        return Err("Folder already exists.".to_string());
+    }
+    fs::create_dir_all(&folder_path).map_err(|e| format!("Failed to create folder: {}", e))
+}
+
+pub fn rename_folder(
+    root: &Path,
+    from_relative: &str,
+    to_relative: &str,
+) -> Result<Vec<String>, String> {
+    let from_path = safe_join(root, from_relative)?;
+    if !from_path.is_dir() {
+        return Err("Source folder not found.".to_string());
+    }
+    validate_folder_name(to_relative)?;
+    let to_path = safe_join(root, to_relative)?;
+    if to_path.exists() {
+        return Err("Target folder already exists.".to_string());
+    }
+    if let Some(parent) = to_path.parent() {
+        fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+    }
+    let impacted = collect_docs_in_folder(root, from_relative)?;
+    fs::rename(&from_path, &to_path).map_err(|e| e.to_string())?;
+    Ok(impacted)
+}
+
+pub fn move_folder(
+    root: &Path,
+    from_relative: &str,
+    to_relative: &str,
+) -> Result<Vec<String>, String> {
+    if to_relative.starts_with(&format!("{}/", from_relative)) {
+        return Err("Cannot move folder into itself.".to_string());
+    }
+    let from_path = safe_join(root, from_relative)?;
+    if !from_path.is_dir() {
+        return Err("Source folder not found.".to_string());
+    }
+    let to_path = safe_join(root, to_relative)?;
+    if to_path.exists() {
+        return Err("Target location already exists.".to_string());
+    }
+    if let Some(parent) = to_path.parent() {
+        fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+    }
+    let impacted = collect_docs_in_folder(root, from_relative)?;
+    fs::rename(&from_path, &to_path).map_err(|e| e.to_string())?;
+    Ok(impacted)
+}
+
+pub fn delete_folder(
+    root: &Path,
+    folder_relative_path: &str,
+    soft_delete: bool,
+) -> Result<Vec<String>, String> {
+    let folder_path = safe_join(root, folder_relative_path)?;
+    if !folder_path.is_dir() {
+        return Err("Folder not found.".to_string());
+    }
+    let impacted = collect_docs_in_folder(root, folder_relative_path)?;
+    if impacted.is_empty() {
+        fs::remove_dir_all(&folder_path).map_err(|e| e.to_string())?;
+        return Ok(Vec::new());
+    }
+    if soft_delete {
+        for doc_relative_path in &impacted {
+            trash_entry(root, doc_relative_path)?;
+        }
+        let _ = fs::remove_dir_all(&folder_path);
+    } else {
+        fs::remove_dir_all(&folder_path).map_err(|e| e.to_string())?;
+    }
+    Ok(impacted)
+}
+
+pub fn list_folder_contents(
+    root: &Path,
+    folder_relative_path: &str,
+) -> Result<FolderContentsSummary, String> {
+    let folder_path = safe_join(root, folder_relative_path)?;
+    if !folder_path.is_dir() {
+        return Err("Folder not found.".to_string());
+    }
+    let folder_name = Path::new(folder_relative_path)
+        .file_name()
+        .and_then(|v| v.to_str())
+        .unwrap_or(folder_relative_path)
+        .to_string();
+    let mut total_documents = 0;
+    let mut total_subfolders = 0;
+    let mut document_names = Vec::new();
+    let entries = fs::read_dir(&folder_path).map_err(|e| e.to_string())?;
+    for entry in entries {
+        let entry = entry.map_err(|e| e.to_string())?;
+        let path = entry.path();
+        let name = entry.file_name().to_string_lossy().to_string();
+        if name == ".jtype" || name == ".git" || name == "node_modules" || name == "target" {
+            continue;
+        }
+        if path.is_dir() {
+            total_subfolders += 1;
+        } else if is_markdown_path(&path) {
+            total_documents += 1;
+            document_names.push(name);
+        }
+    }
+    Ok(FolderContentsSummary {
+        folder_name,
+        total_documents,
+        total_subfolders,
+        document_names,
+    })
+}
+
+// ── Trash metadata for sync ──
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PendingTrashOp {
+    #[serde(rename = "type")]
+    pub op_type: String,
+    #[serde(default)]
+    pub trash_id: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TrashMetadata {
+    pub items: Vec<TrashMetadataItem>,
+    pub last_synced_clock: i64,
+    #[serde(default)]
+    pub pending_trash_ops: Vec<PendingTrashOp>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TrashMetadataItem {
+    pub trash_id: String,
+    pub relative_path: String,
+    pub name: String,
+    pub trashed_at: u64,
+    pub source: String,
+    pub cloud_trash_id: Option<String>,
+}
+
+fn trash_metadata_path(root: &Path) -> PathBuf {
+    root.join(".jtype").join("trash-metadata.json")
+}
+
+pub fn load_trash_metadata(root: &Path) -> Result<TrashMetadata, String> {
+    let path = trash_metadata_path(root);
+    if !path.exists() {
+        return Ok(TrashMetadata {
+            items: Vec::new(),
+            last_synced_clock: 0,
+            pending_trash_ops: Vec::new(),
+        });
+    }
+    let content = fs::read_to_string(&path).map_err(|e| e.to_string())?;
+    serde_json::from_str(&content).map_err(|e| e.to_string())
+}
+
+pub fn save_trash_metadata(root: &Path, metadata: &TrashMetadata) -> Result<(), String> {
+    let path = trash_metadata_path(root);
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+    }
+    let json = serde_json::to_string_pretty(metadata).map_err(|e| e.to_string())?;
+    fs::write(&path, json).map_err(|e| e.to_string())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1290,5 +1534,97 @@ mod tests {
         assert_eq!(docs.len(), 2);
         assert!(docs.iter().any(|doc| doc.title == "Home"));
         assert!(docs.iter().any(|doc| doc.status == "draft"));
+    }
+
+    #[test]
+    fn creates_and_lists_folder() {
+        let dir = tempdir().unwrap();
+        open_workspace(dir.path()).unwrap();
+        create_folder(dir.path(), "projects").unwrap();
+        assert!(dir.path().join("projects").is_dir());
+        // Duplicate creation should fail
+        assert!(create_folder(dir.path(), "projects").is_err());
+    }
+
+    #[test]
+    fn renames_folder_and_reports_impacted_docs() {
+        let dir = tempdir().unwrap();
+        fs::create_dir_all(dir.path().join("meetings")).unwrap();
+        fs::write(dir.path().join("meetings").join("standup.md"), "# Standup").unwrap();
+        fs::write(dir.path().join("meetings").join("retro.md"), "# Retro").unwrap();
+
+        let impacted = rename_folder(dir.path(), "meetings", "meet-logs").unwrap();
+        assert_eq!(impacted.len(), 2);
+        assert!(dir.path().join("meet-logs").is_dir());
+        assert!(!dir.path().join("meetings").exists());
+    }
+
+    #[test]
+    fn move_folder_circular_check() {
+        let dir = tempdir().unwrap();
+        fs::create_dir_all(dir.path().join("a").join("b")).unwrap();
+        let result = move_folder(dir.path(), "a", "a/b/a");
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("Cannot move folder into itself"));
+    }
+
+    #[test]
+    fn deletes_folder_soft_delete_moves_docs_to_trash() {
+        let dir = tempdir().unwrap();
+        open_workspace(dir.path()).unwrap();
+        fs::create_dir_all(dir.path().join("archive")).unwrap();
+        fs::write(dir.path().join("archive").join("old.md"), "# Old").unwrap();
+
+        let impacted = delete_folder(dir.path(), "archive", true).unwrap();
+        assert_eq!(impacted.len(), 1);
+        assert!(!dir.path().join("archive").exists());
+        // Document should be in trash
+        let trash_items = list_trash(dir.path()).unwrap();
+        assert_eq!(trash_items.len(), 1);
+        assert_eq!(trash_items[0].relative_path, "archive/old.md");
+    }
+
+    #[test]
+    fn validates_folder_name_rejects_reserved() {
+        assert!(validate_folder_name(".jtype").is_err());
+        assert!(validate_folder_name("..").is_err());
+        assert!(validate_folder_name("valid-folder").is_ok());
+        assert!(validate_folder_name("a/b/<bad>").is_err());
+    }
+
+    #[test]
+    fn list_folder_contents_counts_correctly() {
+        let dir = tempdir().unwrap();
+        fs::create_dir_all(dir.path().join("docs").join("sub")).unwrap();
+        fs::write(dir.path().join("docs").join("a.md"), "# A").unwrap();
+        fs::write(dir.path().join("docs").join("b.md"), "# B").unwrap();
+
+        let summary = list_folder_contents(dir.path(), "docs").unwrap();
+        assert_eq!(summary.total_documents, 2);
+        assert_eq!(summary.total_subfolders, 1);
+        assert_eq!(summary.folder_name, "docs");
+    }
+
+    #[test]
+    fn trash_metadata_roundtrip() {
+        let dir = tempdir().unwrap();
+        open_workspace(dir.path()).unwrap();
+        let metadata = TrashMetadata {
+            items: vec![TrashMetadataItem {
+                trash_id: "123/test.md".to_string(),
+                relative_path: "test.md".to_string(),
+                name: "test.md".to_string(),
+                trashed_at: 1000,
+                source: "local".to_string(),
+                cloud_trash_id: None,
+            }],
+            last_synced_clock: 42,
+            pending_trash_ops: Vec::new(),
+        };
+        save_trash_metadata(dir.path(), &metadata).unwrap();
+        let loaded = load_trash_metadata(dir.path()).unwrap();
+        assert_eq!(loaded.items.len(), 1);
+        assert_eq!(loaded.last_synced_clock, 42);
+        assert_eq!(loaded.items[0].source, "local");
     }
 }

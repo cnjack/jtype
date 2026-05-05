@@ -58,6 +58,7 @@ export interface AppState {
   syncStatus: SyncStatus;
   lastSyncAt: number;
   editorContentVersion: number;
+  expandedFolders: Set<string>;
 }
 
 export type AppAction =
@@ -96,7 +97,9 @@ export type AppAction =
   | { type: "TOGGLE_FAVORITE" }
   | { type: "SET_LAST_PATHS"; workspacePath: string; filePath: string }
   | { type: "SET_SYNC_STATUS"; status: SyncStatus; success?: boolean }
-  | { type: "CLOSE_WORKSPACE" };
+  | { type: "CLOSE_WORKSPACE" }
+  | { type: "TOGGLE_EXPAND_FOLDER"; folderPath: string }
+  | { type: "SET_EXPANDED_FOLDERS"; folders: Set<string> };
 
 function getMode(state: Pick<AppState, "workspace" | "currentPath">): AppMode {
   if (state.workspace) return "workspace";
@@ -145,6 +148,7 @@ const initialState: AppState = {
   syncStatus: "idle",
   lastSyncAt: 0,
   editorContentVersion: 0,
+  expandedFolders: new Set<string>(),
 };
 
 export function appReducer(state: AppState, action: AppAction): AppState {
@@ -194,6 +198,12 @@ export function appReducer(state: AppState, action: AppAction): AppState {
       const isSameFile = action.path === state.currentPath;
       const contentChanged = action.content !== state.editorContent;
       const bumpVersion = !isSameFile || contentChanged;
+      // Auto-expand parent folders so the opened file is visible in the sidebar
+      const parentSegments = action.relativePath.split("/").slice(0, -1);
+      const expandedFolders = new Set(state.expandedFolders);
+      for (let i = 1; i <= parentSegments.length; i++) {
+        expandedFolders.add(parentSegments.slice(0, i).join("/"));
+      }
       return {
         ...state,
         currentPath: action.path,
@@ -207,6 +217,7 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         lastFilePath: action.path,
         lastWorkspacePath: fileMode === "single-file" ? "" : state.lastWorkspacePath,
         editorContentVersion: bumpVersion ? state.editorContentVersion + 1 : state.editorContentVersion,
+        expandedFolders,
       };
     }
     case "SET_EDITOR_CONTENT": {
@@ -345,8 +356,20 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         mode: "empty" as AppMode,
         lastWorkspacePath: "",
         lastFilePath: "",
+        expandedFolders: new Set<string>(),
       };
     }
+    case "TOGGLE_EXPAND_FOLDER": {
+      const next = new Set(state.expandedFolders);
+      if (next.has(action.folderPath)) {
+        next.delete(action.folderPath);
+      } else {
+        next.add(action.folderPath);
+      }
+      return { ...state, expandedFolders: next };
+    }
+    case "SET_EXPANDED_FOLDERS":
+      return { ...state, expandedFolders: action.folders };
     default:
       return state;
   }
