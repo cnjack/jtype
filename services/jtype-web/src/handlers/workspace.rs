@@ -342,6 +342,24 @@ pub async fn load_workspace_summary(
     })
 }
 
+/// DELETE /api/v1/workspaces/:workspace_id
+/// Only the workspace owner can delete a workspace. CASCADE cleans all related data.
+pub async fn delete_workspace(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Path(workspace_id): Path<String>,
+) -> Result<StatusCode, AppError> {
+    let user = extract_user(&state.pool, &headers).await?;
+    require_workspace_role(&state.pool, &workspace_id, &user.id, &["owner"]).await?;
+
+    sqlx::query("DELETE FROM workspaces WHERE id = ?")
+        .bind(&workspace_id)
+        .execute(&state.pool)
+        .await?;
+
+    Ok(StatusCode::NO_CONTENT)
+}
+
 pub async fn require_workspace_role(
     pool: &sqlx::Pool<sqlx::MySql>,
     workspace_id: &str,

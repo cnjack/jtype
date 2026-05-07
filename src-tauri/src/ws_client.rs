@@ -1,7 +1,7 @@
 use futures::{SinkExt, StreamExt};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter};
-use tokio_tungstenite::{connect_async, tungstenite::Message};
+use tokio_tungstenite::{connect_async, tungstenite::{self, Message}};
 
 #[derive(Deserialize)]
 struct WsMessage {
@@ -157,6 +157,13 @@ pub async fn start_ws_listener(
                 let _ = app.emit("cloud:ws-disconnected", ());
             }
             Err(e) => {
+                // If the server says the workspace is gone (404 / 410),
+                // notify the frontend and stop reconnecting.
+                if is_workspace_gone(&e) {
+                    eprintln!("[ws_client] workspace {workspace_id} no longer exists, stopping");
+                    let _ = app.emit("cloud:workspace-gone", &workspace_id);
+                    return;
+                }
                 eprintln!("[ws_client] connect error: {e}, retrying in {backoff_secs}s");
                 let _ = app.emit("cloud:ws-disconnected", ());
             }
@@ -179,4 +186,14 @@ fn build_ws_url(server_url: &str, token: &str, workspace_id: &str, device_id: &s
         "{}/api/v1/workspaces/{}/live?token={}&clientType=desktop&deviceId={}",
         ws_base, workspace_id, token, device_id
     )
+}
+
+/// Returns true when the WebSocket handshake was rejected with 404 or 410,
+/// meaning the workspace has been deleted or the user was removed.
+fn is_workspace_gone(err: &tungstenite::Error) -> bool {
+    if let tungstenite::Error::Http(response) = err {
+        let code = response.status().as_u16();
+        return code == 404 || code == 410;
+    }
+    false
 }

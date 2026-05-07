@@ -135,6 +135,11 @@ function AppContent() {
     };
   }, [state.cloudProfile?.token, currentBinding?.workspaceId, state.cloudProfile?.deviceId, state.cloudProfile?.serverUrl]);
 
+  const workspaceRef = useRef(state.workspace);
+  workspaceRef.current = state.workspace;
+  const syncRef = useRef(sync);
+  syncRef.current = sync;
+
   useEffect(() => {
     if (!isTauriRuntime()) return;
     const unlistenConnected = listen("cloud:ws-connected", () => dispatch({ type: "SET_WS_CONNECTED", connected: true }));
@@ -142,10 +147,25 @@ function AppContent() {
     const unlistenActivity = listen<{ msgType: string }>("cloud:ws-activity", (e) =>
       dispatch({ type: "SET_WS_ACTIVITY", msgType: e.payload.msgType })
     );
+    const unlistenWorkspaceGone = listen<string>("cloud:workspace-gone", async (e) => {
+      const goneWorkspaceId = e.payload;
+      console.warn(`[cloud] workspace ${goneWorkspaceId} no longer exists on server`);
+      dispatch({ type: "SET_WS_CONNECTED", connected: false });
+      try {
+        await invoke("unbind_cloud_workspace", {
+          workspaceId: goneWorkspaceId,
+          vaultPath: workspaceRef.current?.rootPath ?? "",
+        });
+        await syncRef.current.loadVaultBindings();
+      } catch (err) {
+        console.error("[cloud] failed to unbind gone workspace:", err);
+      }
+    });
     return () => {
       unlistenConnected.then((fn) => fn());
       unlistenDisconnected.then((fn) => fn());
       unlistenActivity.then((fn) => fn());
+      unlistenWorkspaceGone.then((fn) => fn());
     };
   }, []);
 

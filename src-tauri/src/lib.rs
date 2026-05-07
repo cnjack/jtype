@@ -505,6 +505,80 @@ fn save_trash_metadata_cmd(root_path: String, metadata: TrashMetadata) -> Result
     workspace::save_trash_metadata(&PathBuf::from(root_path), &metadata)
 }
 
+// ── Vault settings types ──
+
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[serde(rename_all = "camelCase")]
+struct VaultSettings {
+    cloud_sync_enabled: bool,
+    sync_prompt_dismissed_at: Option<String>,
+    sync_disabled_permanently: bool,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[serde(rename_all = "camelCase")]
+struct VaultSettingsStore {
+    #[serde(flatten)]
+    entries: std::collections::HashMap<String, VaultSettings>,
+}
+
+// ── Vault lifecycle commands ──
+
+#[tauri::command]
+fn unbind_cloud_workspace(workspace_id: String, vault_path: String) -> Result<(), String> {
+    // 1. Remove binding from vault-bindings.json
+    let mut store = read_binding_store()?;
+    store.bindings.retain(|b| b.workspace_id != workspace_id);
+    write_json(&vault_bindings_file()?, &store)?;
+
+    // 2. Delete .jtype/sync-base/ directory
+    let sync_base_dir = PathBuf::from(&vault_path).join(".jtype").join("sync-base");
+    if sync_base_dir.exists() {
+        fs::remove_dir_all(&sync_base_dir).map_err(|e| e.to_string())?;
+    }
+
+    Ok(())
+}
+
+#[tauri::command]
+fn clear_sync_bases(vault_path: String) -> Result<(), String> {
+    let sync_base_dir = PathBuf::from(&vault_path).join(".jtype").join("sync-base");
+    if sync_base_dir.exists() {
+        fs::remove_dir_all(&sync_base_dir).map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
+#[tauri::command]
+fn save_vault_settings(vault_path: String, settings: VaultSettings) -> Result<(), String> {
+    let file = vault_settings_file()?;
+    let mut entries: std::collections::HashMap<String, VaultSettings> = if file.exists() {
+        let content = fs::read_to_string(&file).map_err(|e| e.to_string())?;
+        serde_json::from_str(&content).unwrap_or_default()
+    } else {
+        std::collections::HashMap::new()
+    };
+    entries.insert(vault_path, settings);
+    write_json(&file, &entries)?;
+    Ok(())
+}
+
+#[tauri::command]
+fn load_vault_settings(vault_path: String) -> Result<Option<VaultSettings>, String> {
+    let file = vault_settings_file()?;
+    if !file.exists() {
+        return Ok(None);
+    }
+    let content = fs::read_to_string(&file).map_err(|e| e.to_string())?;
+    let entries: std::collections::HashMap<String, VaultSettings> =
+        serde_json::from_str(&content).unwrap_or_default();
+    Ok(entries.get(&vault_path).cloned())
+}
+
+fn vault_settings_file() -> Result<PathBuf, String> {
+    Ok(config_dir()?.join("vault-settings.json"))
+}
+
 #[tauri::command]
 async fn cloud_ws_send(
     state: tauri::State<'_, WsOutbox>,
@@ -596,7 +670,11 @@ pub fn run() {
             save_trash_metadata_cmd,
             start_cloud_listener,
             stop_cloud_listener,
-            cloud_ws_send
+            cloud_ws_send,
+            unbind_cloud_workspace,
+            clear_sync_bases,
+            save_vault_settings,
+            load_vault_settings
         ])
         .manage(AppState {
             watcher_state: Mutex::new(WatcherState { watcher: None }),

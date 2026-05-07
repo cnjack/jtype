@@ -101,7 +101,29 @@ pub fn build_router(pool: Pool<MySql>, public_base_url: String) -> Router {
         )
         .route(
             "/api/v1/workspaces/:workspace_id",
-            get(handlers::workspace::get_workspace).put(handlers::workspace::update_workspace),
+            get(handlers::workspace::get_workspace)
+                .put(handlers::workspace::update_workspace)
+                .delete(handlers::workspace::delete_workspace),
+        )
+        .route(
+            "/api/v1/workspaces/:workspace_id/members",
+            get(handlers::member::list_members),
+        )
+        .route(
+            "/api/v1/workspaces/:workspace_id/members/:user_id/remove",
+            post(handlers::member::remove_member),
+        )
+        .route(
+            "/api/v1/workspaces/:workspace_id/members/:user_id",
+            put(handlers::member::update_member_role),
+        )
+        .route(
+            "/api/v1/workspaces/:workspace_id/leave",
+            post(handlers::member::leave_workspace),
+        )
+        .route(
+            "/api/v1/workspaces/:workspace_id/transfer",
+            post(handlers::member::transfer_ownership),
         )
         .route(
             "/api/v1/workspaces/:workspace_id/manifest",
