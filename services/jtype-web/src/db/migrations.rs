@@ -1,4 +1,4 @@
-use sqlx::{MySql, Pool, Row};
+use sqlx::{MySql, Pool};
 
 use crate::error::AppError;
 
@@ -20,42 +20,6 @@ fn all_migrations() -> Vec<Migration> {
             up: include_str!("../../migrations/0001_init.up.sql"),
             down: include_str!("../../migrations/0001_init.down.sql"),
         },
-        Migration {
-            version: 2,
-            name: "user_columns",
-            up: include_str!("../../migrations/0002_user_columns.up.sql"),
-            down: include_str!("../../migrations/0002_user_columns.down.sql"),
-        },
-        Migration {
-            version: 3,
-            name: "compat_workspaces",
-            up: include_str!("../../migrations/0003_compat_workspaces.up.sql"),
-            down: include_str!("../../migrations/0003_compat_workspaces.down.sql"),
-        },
-        Migration {
-            version: 4,
-            name: "workspace_publish_settings",
-            up: include_str!("../../migrations/0004_workspace_publish_settings.up.sql"),
-            down: include_str!("../../migrations/0004_workspace_publish_settings.down.sql"),
-        },
-        Migration {
-            version: 5,
-            name: "conflict_ranges_and_trash",
-            up: include_str!("../../migrations/0005_conflict_ranges_and_trash.up.sql"),
-            down: include_str!("../../migrations/0005_conflict_ranges_and_trash.down.sql"),
-        },
-        Migration {
-            version: 6,
-            name: "trash_sync",
-            up: include_str!("../../migrations/0006_trash_sync.up.sql"),
-            down: include_str!("../../migrations/0006_trash_sync.down.sql"),
-        },
-        Migration {
-            version: 7,
-            name: "trash_source_user",
-            up: include_str!("../../migrations/0007_trash_source_user.up.sql"),
-            down: include_str!("../../migrations/0007_trash_source_user.down.sql"),
-        },
     ]
 }
 
@@ -73,57 +37,6 @@ CREATE TABLE IF NOT EXISTS _schema_migrations (
 
 async fn ensure_schema_table(pool: &Pool<MySql>) -> Result<(), AppError> {
     sqlx::query(ENSURE_TABLE).execute(pool).await?;
-
-    // One-time upgrade: if the legacy `_migrations` table exists, seed
-    // `_schema_migrations` from it so already-applied migrations are not
-    // replayed.
-    let legacy_exists: i64 = sqlx::query_scalar(
-        "SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = '_migrations'",
-    )
-    .fetch_one(pool)
-    .await?;
-
-    if legacy_exists > 0 {
-        let rows = sqlx::query("SELECT name FROM _migrations ORDER BY applied_at")
-            .fetch_all(pool)
-            .await?;
-        let legacy_names: Vec<String> = rows
-            .into_iter()
-            .map(|r| r.try_get::<String, _>("name").unwrap_or_default())
-            .collect();
-
-        // Map old names → new version numbers
-        let mapping: &[(&str, i64, &str)] = &[
-            ("001_init", 1, "init"),
-            ("002_user_columns", 2, "user_columns"),
-            ("003_compat_workspaces", 3, "compat_workspaces"),
-            (
-                "004_workspace_publish_settings",
-                4,
-                "workspace_publish_settings",
-            ),
-            (
-                "005_conflict_ranges_and_trash",
-                5,
-                "conflict_ranges_and_trash",
-            ),
-        ];
-
-        for (old_name, version, new_name) in mapping {
-            if legacy_names.contains(&old_name.to_string()) {
-                sqlx::query(
-                    "INSERT IGNORE INTO _schema_migrations (version, name) VALUES (?, ?)",
-                )
-                .bind(version)
-                .bind(new_name)
-                .execute(pool)
-                .await?;
-            }
-        }
-
-        eprintln!("[migrations] migrated legacy _migrations table to _schema_migrations");
-    }
-
     Ok(())
 }
 
@@ -157,11 +70,17 @@ async fn remove_version(pool: &Pool<MySql>, version: i64) -> Result<(), AppError
 // ---------------------------------------------------------------------------
 
 /// Execute a SQL script that may contain multiple statements separated by `;`.
-/// Skips empty lines and SQL comments (`--`).
+/// Skips empty statements and strips leading SQL comments (`--`).
 async fn exec_sql(pool: &Pool<MySql>, sql: &str) -> Result<(), AppError> {
     for statement in sql.split(';') {
-        let stmt = statement.trim();
-        if stmt.is_empty() || stmt.starts_with("--") {
+        // Strip leading comment lines
+        let stmt: String = statement
+            .lines()
+            .filter(|line| !line.trim_start().starts_with("--"))
+            .collect::<Vec<_>>()
+            .join("\n");
+        let stmt = stmt.trim();
+        if stmt.is_empty() {
             continue;
         }
         sqlx::query(stmt).execute(pool).await.map_err(|e| {

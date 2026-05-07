@@ -1,4 +1,0 @@
-ALTER TABLE users DROP COLUMN IF EXISTS storage_budget_bytes;
-ALTER TABLE users DROP COLUMN IF EXISTS disabled_at;
-ALTER TABLE users DROP COLUMN IF EXISTS email;
-ALTER TABLE users DROP COLUMN IF EXISTS display_name;

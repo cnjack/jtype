@@ -185,8 +185,8 @@ pub async fn delete_document(
     let next_clock = next_workspace_clock(&mut tx, &workspace_id).await?;
 
     sqlx::query(
-        r#"INSERT INTO document_trash (id, workspace_id, document_id, relative_path, title, content, content_hash, version_id, deleted_by_user_id, deleted_by_device_id, deleted_clock, expires_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 30 DAY))"#,
+        r#"INSERT INTO document_trash (id, workspace_id, document_id, relative_path, title, content, content_hash, version_id, deleted_by_user_id, deleted_by_device_id, source_device_id, source_user_id, deleted_clock, expires_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 30 DAY))"#,
     )
     .bind(&trash_id)
     .bind(&workspace_id)
@@ -198,6 +198,8 @@ pub async fn delete_document(
     .bind(&version_id)
     .bind(&user.id)
     .bind(&device_id)
+    .bind(&device_id)
+    .bind(&user.id)
     .bind(next_clock)
     .execute(&mut *tx)
     .await?;

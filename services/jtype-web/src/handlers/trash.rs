@@ -74,6 +74,10 @@ pub async fn restore_from_trash(
     Path((workspace_id, trash_id)): Path<(String, String)>,
 ) -> Result<Json<CloudDocument>, AppError> {
     let user = extract_user(&state.pool, &headers).await?;
+    let device_id = headers
+        .get("x-device-id")
+        .and_then(|v| v.to_str().ok())
+        .map(|s| s.to_string());
     require_workspace_role(
         &state.pool,
         &workspace_id,
@@ -158,10 +162,17 @@ pub async fn restore_from_trash(
     .execute(&mut *tx)
     .await?;
 
-    sqlx::query("UPDATE document_trash SET restored_at = CURRENT_TIMESTAMP WHERE id = ?")
-        .bind(&trash_id)
-        .execute(&mut *tx)
-        .await?;
+    sqlx::query(
+        r#"UPDATE document_trash SET restored_at = CURRENT_TIMESTAMP,
+           restored_by_device_id = ?, restored_by_user_id = ?, restored_clock = ?
+           WHERE id = ?"#,
+    )
+    .bind(&device_id)
+    .bind(&user.id)
+    .bind(next_clock)
+    .bind(&trash_id)
+    .execute(&mut *tx)
+    .await?;
 
     tx.commit().await?;
 
