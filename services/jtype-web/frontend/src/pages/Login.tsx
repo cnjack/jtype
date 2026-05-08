@@ -1,6 +1,11 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../components/AuthContext'
+import {
+  CloudArrowUpIcon,
+  BoltIcon,
+  LockClosedIcon,
+} from '@heroicons/react/24/outline'
 
 export function Login() {
   const [isRegister, setIsRegister] = useState(false)
@@ -30,63 +35,178 @@ export function Login() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-zinc-900">
-      <div className="w-full max-w-sm rounded-xl border border-zinc-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-        <h2 className="mb-6 text-center text-2xl font-bold text-zinc-900 dark:text-white">
-          {isRegister ? 'Create account' : 'Sign in'}
-        </h2>
-
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div>
-            <label htmlFor="login-username" className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-              Username
-            </label>
-            <input
-              id="login-username"
-              type="text"
-              value={username}
-              onChange={e => setUsername(e.target.value)}
-              required
-              className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
-            />
-          </div>
-          <div>
-            <label htmlFor="login-password" className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-              Password
-            </label>
-            <input
-              id="login-password"
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              required
-              className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
-            />
-          </div>
-
-          {error && (
-            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-dark disabled:opacity-50"
+    <div className="flex min-h-screen">
+      {/* Left: brand panel */}
+      <div className="relative hidden flex-1 flex-col justify-between bg-brand p-12 text-white lg:flex">
+        <div>
+          <div
+            className="select-none"
+            style={{
+              fontFamily:
+                "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, monospace",
+              fontSize: 28,
+              fontWeight: 700,
+              letterSpacing: -0.5,
+            }}
           >
-            {loading ? 'Please wait...' : isRegister ? 'Create account' : 'Sign in'}
-          </button>
-        </form>
+            <span className="opacity-60">[</span>
+            <span className="text-white">J</span>
+            <span className="text-white/90">TYPE</span>
+            <span className="opacity-60">]</span>
+          </div>
+        </div>
 
-        <p className="mt-4 text-center text-sm text-zinc-500">
-          {isRegister ? 'Already have an account?' : "Don't have an account?"}{' '}
-          <button
-            type="button"
-            onClick={() => setIsRegister(!isRegister)}
-            className="font-medium text-brand hover:underline"
-          >
-            {isRegister ? 'Sign in' : 'Register'}
-          </button>
-        </p>
+        <div className="max-w-md">
+          <h1 className="mb-4 text-4xl font-bold tracking-tight">
+            Your Markdown workspace,
+            <br />
+            synced to the cloud.
+          </h1>
+          <p className="text-base leading-relaxed text-white/80">
+            Local-first notes with cloud sync, publishing, and AI-ready indexing.
+          </p>
+
+          <div className="mt-8 space-y-4">
+            <div className="flex items-start gap-3">
+              <div className="rounded-lg bg-white/10 p-2">
+                <CloudArrowUpIcon className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold">Cloud Sync</p>
+                <p className="text-sm text-white/70">
+                  Keep your vaults in sync across all devices.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="rounded-lg bg-white/10 p-2">
+                <BoltIcon className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold">AI-Ready</p>
+                <p className="text-sm text-white/70">
+                  Indexed and ready for intelligent assistance.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="rounded-lg bg-white/10 p-2">
+                <LockClosedIcon className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold">Local-First</p>
+                <p className="text-sm text-white/70">
+                  Your files stay on your machine. Always.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p className="text-xs text-white/50">© {new Date().getFullYear()} JType</p>
+      </div>
+
+      {/* Right: form panel */}
+      <div className="flex flex-1 items-center justify-center bg-[#f5f8f6] p-6">
+        <div className="w-full max-w-sm">
+          {/* Mobile logo */}
+          <div className="mb-8 flex justify-center lg:hidden">
+            <div
+              className="select-none text-brand"
+              style={{
+                fontFamily:
+                  "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, monospace",
+                fontSize: 28,
+                fontWeight: 700,
+                letterSpacing: -0.5,
+              }}
+            >
+              <span className="text-stone-400">[</span>
+              <span className="text-brand">J</span>
+              <span className="text-stone-900">TYPE</span>
+              <span className="text-stone-400">]</span>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-black/[0.06] bg-white p-8 shadow-sm shadow-emerald-950/5">
+            <h2 className="mb-1 text-2xl font-bold text-stone-900">
+              {isRegister ? 'Create account' : 'Welcome back'}
+            </h2>
+            <p className="mb-6 text-sm text-stone-500">
+              {isRegister
+                ? 'Sign up to start syncing your vaults.'
+                : 'Sign in to your JType Cloud account.'}
+            </p>
+
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+              <div>
+                <label
+                  htmlFor="login-username"
+                  className="field-label mb-1.5 block"
+                >
+                  Username
+                </label>
+                <input
+                  id="login-username"
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                  className="sync-input h-10"
+                  placeholder="Enter your username"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="login-password"
+                  className="field-label mb-1.5 block"
+                >
+                  Password
+                </label>
+                <input
+                  id="login-password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="sync-input h-10"
+                  placeholder="Enter your password"
+                />
+              </div>
+
+              {error && (
+                <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
+                  {error}
+                </p>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="toolbar-button toolbar-button-primary mt-1 h-10 justify-center"
+              >
+                {loading
+                  ? 'Please wait...'
+                  : isRegister
+                    ? 'Create account'
+                    : 'Sign in'}
+              </button>
+            </form>
+
+            <p className="mt-5 text-center text-sm text-stone-500">
+              {isRegister
+                ? 'Already have an account?'
+                : "Don't have an account?"}{' '}
+              <button
+                type="button"
+                onClick={() => setIsRegister(!isRegister)}
+                className="font-semibold text-brand hover:underline"
+              >
+                {isRegister ? 'Sign in' : 'Register'}
+              </button>
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   )
