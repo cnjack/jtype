@@ -8,6 +8,13 @@ import "katex/dist/katex.min.css";
 import { marked } from "marked";
 import { createLineDiff, type AICommandProposal } from "./aiCommands";
 
+async function confirmAsync(message: string): Promise<boolean> {
+  if (typeof window !== "undefined" && window.jtypeConfirm) {
+    return window.jtypeConfirm(message);
+  }
+  return window.confirm(message);
+}
+
 type EntryKind = "folder" | "markdown" | "asset";
 type Activity = "files" | "search" | "library" | "publish" | "ai" | "settings";
 type InspectorTab = "preview" | "properties" | "outline" | "links" | "publish" | "ai";
@@ -1245,7 +1252,7 @@ async function renameCurrentEntryWithImpact() {
   const impacted = await findLinkImpacts(fromRelativePath);
   let updateLinks = false;
   if (impacted.length > 0) {
-    updateLinks = window.confirm(
+    updateLinks = await confirmAsync(
       `Rename impact:\n\n${impacted.length} Markdown file(s) link to ${fromRelativePath}.\n\nChoose OK to rename and update links, or Cancel to rename only.`
     );
   }
@@ -1287,7 +1294,7 @@ async function renameEntry(fromRelativePath: string, toRelativePath: string, upd
 
 async function deleteCurrentEntry() {
   if (!state.workspace || !state.currentRelativePath) return;
-  const confirmed = window.confirm(`Delete ${state.currentRelativePath}? This removes it from disk.`);
+  const confirmed = await confirmAsync(`Delete ${state.currentRelativePath}? This removes it from disk.`);
   if (!confirmed) return;
 
   try {

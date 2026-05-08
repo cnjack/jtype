@@ -4,6 +4,7 @@ import { openPath } from "@tauri-apps/plugin-opener";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { useAppDispatch, useAppState } from "../app/AppState";
 import { usePrompt } from "../components/modals/PromptDialogContext";
+import { useConfirm } from "../components/modals/ConfirmDialogContext";
 import { tauri } from "../lib/tauri";
 import { basename, isMarkdownPath, relativePathFromWorkspace, normalizePath } from "../lib/utils";
 import { parseFrontmatter, writeFrontmatter, titleFromMarkdown } from "../lib/frontmatter";
@@ -16,6 +17,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
   const dispatch = useAppDispatch();
   const state = useAppState();
   const prompt = usePrompt();
+  const confirm = useConfirm();
   const onAfterSaveRef = useRef(onAfterSave);
   onAfterSaveRef.current = onAfterSave;
 
@@ -173,8 +175,9 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     const impacted = await findLinkImpacts(fromRelativePath);
     let updateLinks = false;
     if (impacted.length > 0) {
-      updateLinks = window.confirm(
-        `Rename impact:\n\n${impacted.length} Markdown file(s) link to ${fromRelativePath}.\n\nChoose OK to rename and update links, or Cancel to rename only.`
+      updateLinks = await confirm(
+        `Rename impact:\n\n${impacted.length} Markdown file(s) link to ${fromRelativePath}.\n\nChoose OK to rename and update links, or Cancel to rename only.`,
+        { title: "Rename impact" }
       );
     }
     await renameEntry(fromRelativePath, nextPath, updateLinks);
@@ -182,7 +185,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
 
   const deleteEntry = useCallback(async (relativePath: string) => {
     if (!state.workspace || !relativePath) return;
-    const confirmed = window.confirm(`Move ${relativePath} to trash?`);
+    const confirmed = await confirm(`Move ${relativePath} to trash?`, { title: "Move to trash" });
     if (!confirmed) return;
     try {
       dispatch({ type: "SET_LOADING", isLoading: true });
@@ -280,7 +283,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
 
   const emptyTrash = useCallback(async () => {
     if (!state.workspace) return;
-    const confirmed = window.confirm("Empty trash permanently?");
+    const confirmed = await confirm("Empty trash permanently?", { title: "Empty trash", destructive: true });
     if (!confirmed) return;
     try {
       dispatch({ type: "SET_LOADING", isLoading: true });
@@ -484,12 +487,22 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
       const workspace = await tauri.createFolder(state.workspace.rootPath, folderRelativePath);
       dispatch({ type: "UPDATE_WORKSPACE", workspace });
       dispatch({ type: "SET_STATUS", message: `Created folder ${folderRelativePath}.` });
+      // Notify other clients via WS so they refresh their folder list.
+      const vaultSettings = state.vaultSettings[state.workspace.rootPath];
+      const binding = state.vaultBindings.find((item) => item.localVaultPath === state.workspace?.rootPath);
+      if (tauri.isAvailable && state.syncToken && binding && vaultSettings?.cloudSyncEnabled !== false) {
+        try {
+          const wsMsg = JSON.stringify({ type: "folder:changed", relativePath: folderRelativePath });
+          await tauri.cloudWsSend(wsMsg);
+        } catch { /* non-critical — WS may be disconnected */ }
+      }
+      return workspace;
     } catch (error) {
       dispatch({ type: "SET_STATUS", message: String(error) });
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, state.workspace]);
+  }, [dispatch, state.workspace, state.syncToken, state.vaultBindings, state.vaultSettings]);
 
   const renameFolder = useCallback(async (fromRelativePath: string, toRelativePath: string) => {
     if (!state.workspace) return;
@@ -521,7 +534,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
 
   const deleteFolder = useCallback(async (folderRelativePath: string, softDelete = true) => {
     if (!state.workspace) return;
-    const confirmed = window.confirm(`Delete folder "${folderRelativePath}" and move all documents to trash?`);
+    const confirmed = await confirm(`Delete folder "${folderRelativePath}" and move all documents to trash?`, { title: "Delete folder", destructive: true });
     if (!confirmed) return;
     try {
       dispatch({ type: "SET_LOADING", isLoading: true });

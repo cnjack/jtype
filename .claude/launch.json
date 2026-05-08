@@ -1,0 +1,24 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "jtype-desktop",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 1420
+    },
+    {
+      "name": "jtype-web-backend",
+      "runtimeExecutable": "cargo",
+      "runtimeArgs": ["run", "--manifest-path", "services/jtype-web/Cargo.toml"],
+      "port": 13345
+    },
+    {
+      "name": "jtype-web-frontend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 5173,
+      "cwd": "services/jtype-web/frontend"
+    }
+  ]
+}

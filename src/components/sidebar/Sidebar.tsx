@@ -369,7 +369,7 @@ function ExplorerPanel() {
                       const name = await prompt("New folder name:");
                       if (name && name.trim()) {
                         try {
-                          const workspace = await tauri.createFolder(state.workspace.rootPath, name.trim());
+                          const workspace = await fs.createFolder(name.trim());
                           dispatch({ type: "UPDATE_WORKSPACE", workspace });
                           dispatch({ type: "SET_STATUS", message: `Created folder ${name.trim()}.` });
                         } catch (error) {
@@ -403,7 +403,9 @@ function ExplorerPanel() {
 
           <section className="mt-5 border-t border-emerald-900/10 pt-4">
             <div className="mb-2 flex items-center justify-between gap-2">
-              <p className="text-xs font-semibold uppercase text-stone-500">Trash</p>
+              <p className="flex items-center gap-1 text-xs font-semibold uppercase text-stone-500">
+                <TrashIcon className="h-3 w-3" />Trash
+              </p>
               {mergedTrashItems.length > 0 && (
                 <button className="subtle-button aspect-square px-0" type="button" title="Empty trash" onClick={() => { void fs.emptyTrash().then(loadTrash); }}>
                   <TrashIcon className="h-4 w-4" />
@@ -506,7 +508,7 @@ function ExplorerPanel() {
                   const name = await prompt("New folder name:");
                   if (name && state.workspace) {
                     try {
-                      const workspace = await tauri.createFolder(state.workspace!.rootPath, `${contextMenu.node.relativePath}/${name.trim()}`);
+                      const workspace = await fs.createFolder(`${contextMenu.node.relativePath}/${name.trim()}`);
                       dispatch({ type: "UPDATE_WORKSPACE", workspace });
                       dispatch({ type: "SET_STATUS", message: `Created folder ${name.trim()}.` });
                     } catch (error) {

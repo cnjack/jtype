@@ -17,6 +17,7 @@ import { AccountDialog } from "../components/modals/AccountDialog";
 import { ConflictDialog } from "../components/modals/ConflictDialog";
 import { ExclamationTriangleIcon, SignalSlashIcon } from "@heroicons/react/24/outline";
 import { PromptDialogProvider } from "../components/modals/PromptDialogContext";
+import { ConfirmDialogProvider } from "../components/modals/ConfirmDialogContext";
 import { isTauriRuntime, relativePathFromWorkspace } from "../lib/utils";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
@@ -33,9 +34,11 @@ export function App() {
   return (
     <AppStateContext.Provider value={state}>
       <AppDispatchContext.Provider value={dispatch}>
-        <PromptDialogProvider>
-          <AppContent />
-        </PromptDialogProvider>
+        <ConfirmDialogProvider>
+          <PromptDialogProvider>
+            <AppContent />
+          </PromptDialogProvider>
+        </ConfirmDialogProvider>
       </AppDispatchContext.Provider>
     </AppStateContext.Provider>
   );

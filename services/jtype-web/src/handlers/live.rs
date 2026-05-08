@@ -230,6 +230,17 @@ async fn handle_ws_text(
             )
             .await;
         }
+        "folder:changed" => {
+            state
+                .hub
+                .publish(
+                    workspace_id,
+                    WorkspaceEvent::SyncRequired {
+                        reason: "folder-changed".to_string(),
+                    },
+                )
+                .await;
+        }
         "ping" => {
             let _ = sender
                 .send(Message::Text(r#"{"type":"pong"}"#.to_string()))

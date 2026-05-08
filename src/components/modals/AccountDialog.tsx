@@ -1,5 +1,6 @@
 import { useAppDispatch, useAppState } from "../../app/AppState";
 import { useCloudSync } from "../../hooks";
+import { useConfirm } from "./ConfirmDialogContext";
 import type { CloudWorkspace } from "../../lib/types";
 import { useEffect, useState } from "react";
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
@@ -9,6 +10,7 @@ export function AccountDialog() {
   const state = useAppState();
   const dispatch = useAppDispatch();
   const sync = useCloudSync();
+  const confirm = useConfirm();
   const [activeSection, setActiveSection] = useState<"account" | "workspace">(state.accountDialogSection);
   const [pendingWorkspaceSync, setPendingWorkspaceSync] = useState(false);
 
@@ -43,8 +45,9 @@ export function AccountDialog() {
 
   const disconnectCurrentVault = async () => {
     if (!currentVaultBinding) return;
-    const confirmed = window.confirm(
+    const confirmed = await confirm(
       `Disconnect "${currentVaultBinding.workspaceName}" from this vault?\n\nLocal files will stay on disk. Cloud data and workspace membership are not changed.`,
+      { title: "Disconnect workspace" },
     );
     if (!confirmed) return;
     await sync.disconnectWorkspace();
