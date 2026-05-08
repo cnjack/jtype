@@ -1,8 +1,15 @@
-import { createContext, useContext, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, type ReactNode } from 'react'
 import { usePromptDialog } from './PromptDialog'
 
 export type PromptFn = (title: string, defaultValue?: string) => Promise<string | null>
 export type ConfirmFn = (title: string, message: string, danger?: boolean) => Promise<boolean>
+
+declare global {
+  interface Window {
+    jtypePrompt?: PromptFn
+    jtypeConfirm?: ConfirmFn
+  }
+}
 
 interface PromptDialogContextValue {
   prompt: PromptFn
@@ -13,6 +20,16 @@ const PromptDialogContext = createContext<PromptDialogContextValue | null>(null)
 
 export function PromptDialogProvider({ children }: { children: ReactNode }) {
   const { PromptDialog, prompt, confirm } = usePromptDialog()
+
+  useEffect(() => {
+    window.jtypePrompt = prompt
+    window.jtypeConfirm = confirm
+    return () => {
+      delete window.jtypePrompt
+      delete window.jtypeConfirm
+    }
+  }, [prompt, confirm])
+
   return (
     <PromptDialogContext.Provider value={{ prompt, confirm }}>
       {children}

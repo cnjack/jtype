@@ -407,7 +407,14 @@ pub async fn save_document_version(
     let next_clock = next_workspace_clock(&mut tx, workspace_id).await?;
     sqlx::query(
         r#"INSERT INTO documents (id, workspace_id, relative_path, title, status, content_hash, content, updated_clock, current_version_id)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"#,
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+           ON DUPLICATE KEY UPDATE
+             title = VALUES(title),
+             status = VALUES(status),
+             content_hash = VALUES(content_hash),
+             content = VALUES(content),
+             updated_clock = VALUES(updated_clock),
+             current_version_id = VALUES(current_version_id)"#,
     )
     .bind(&document_id)
     .bind(workspace_id)

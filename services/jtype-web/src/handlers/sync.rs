@@ -684,7 +684,7 @@ async fn load_all_undeleted_trash_items(
         .collect()
 }
 
-async fn process_trash_operation(
+pub async fn process_trash_operation(
     pool: &sqlx::Pool<sqlx::MySql>,
     hub: &crate::hub::NotificationHub,
     workspace_id: &str,

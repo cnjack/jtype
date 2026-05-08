@@ -16,14 +16,12 @@ import {
   CodeBracketIcon,
   TableCellsIcon,
   VariableIcon,
-  ArrowPathIcon,
+  ShareIcon,
   ClipboardDocumentCheckIcon,
   PencilSquareIcon,
   ViewColumnsIcon,
   EyeIcon,
   InformationCircleIcon,
-  GlobeAltIcon,
-  ArchiveBoxIcon,
   XMarkIcon,
   TrashIcon,
   ArrowUturnLeftIcon,
@@ -54,6 +52,7 @@ export function Workspace() {
   const { workspaceId } = useParams<{ workspaceId: string }>()
   const navigate = useNavigate()
   const location = useLocation()
+  const prompt = usePrompt()
   const initialSection = ((location.state as { section?: WorkspaceSection } | null)?.section) ?? 'documents'
   const [workspace, setWorkspace] = useState<WorkspaceSummary | null>(null)
   const [workspaces, setWorkspaces] = useState<WorkspaceSummary[]>([])
@@ -275,6 +274,12 @@ export function Workspace() {
     setLoadedContent(doc.content)
     setDirty(false)
   }
+
+  const toggleFavorite = useCallback(() => {
+    if (!selectedDoc) return
+    toggleFavoriteDoc(selectedDoc, workspaceId)
+    setFavoriteVersion(v => v + 1)
+  }, [selectedDoc, workspaceId])
 
   async function saveDocument() {
     if (!workspaceId || !selectedDoc) return
@@ -503,6 +508,13 @@ export function Workspace() {
   const parsed = parseFrontmatter(docContent)
   const publishStatus = parsed.data.status || 'draft'
   const selectedDocument = selectedDoc ? documents.find(d => d.id === selectedDoc) ?? null : null
+  const documentLocation = selectedDocument?.relativePath && selectedDocument.relativePath.includes('/') ? selectedDocument.relativePath.replace(/\/[^/]+$/, '') : ''
+  const fileName = selectedDocument?.relativePath ? selectedDocument.relativePath.split('/').pop() || '' : ''
+  const isFavorite = selectedDoc ? (() => {
+    const key = `web-favorites:${workspaceId || 'global'}`
+    const ids: string[] = JSON.parse(localStorage.getItem(key) || '[]')
+    return ids.includes(selectedDoc)
+  })() : false
   const publicUrl = workspace ? `/u/${getStoredUsername() || 'me'}/${workspace.slug}` : ''
   const boundDomains = workspace ? domains.filter(domain => domain.workspaceId === workspace.id) : []
   const availableDomains = workspace ? domains.filter(domain => !domain.workspaceId || domain.workspaceId === workspace.id) : []
@@ -617,43 +629,58 @@ export function Workspace() {
         <section className="flex min-w-0 flex-col overflow-hidden bg-[#fbfdfb]">
           {selectedDoc ? (
             <>
-              <div className="flex min-h-[68px] items-center justify-between gap-3 border-b border-black/[0.04] bg-white/70 px-6 backdrop-blur-xl">
+              <div className="flex min-h-[56px] items-center justify-between gap-3 border-b border-black/[0.04] bg-white/60 px-5 backdrop-blur-xl">
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-zinc-950">
-                    {selectedDocument ? selectedDocument.title || selectedDocument.relativePath : displayWorkspaceName(workspace)}
-                  </p>
-                  <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-zinc-500">
-                    <a className="truncate font-semibold text-brand" href={publicUrl} target="_blank" rel="noreferrer">{publicUrl}</a>
-                    {selectedDoc && <span className="truncate">{documents.find(d => d.id === selectedDoc)?.relativePath}</span>}
+                  <div className="flex items-center gap-2">
+                    <div className="flex min-w-0 items-baseline gap-1">
+                      {workspace && documentLocation && (
+                        <span className="shrink-0 truncate text-xs text-[#9aa6a1]">
+                          {workspace.name}
+                          {documentLocation ? ` / ${documentLocation.replace(/\//g, " / ")}` : ""}
+                          {" / "}
+                        </span>
+                      )}
+                      <p className="truncate text-sm font-semibold text-stone-950">{fileName}</p>
+                    </div>
+                    {selectedDoc && (
+                      <button
+                        type="button"
+                        className={`editor-tool h-8 w-8 px-0 ${isFavorite ? "text-amber-500 hover:text-amber-600" : ""}`}
+                        aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+                        aria-pressed={isFavorite}
+                        title={isFavorite ? "Remove from favorites" : "Add to favorites"}
+                        onClick={toggleFavorite}
+                      >
+                        <StarIcon className="h-4 w-4" fill={isFavorite ? "currentColor" : "none"} />
+                      </button>
+                    )}
+                    {workspace && selectedDocument?.relativePath && (
+                      <button
+                        type="button"
+                        className="editor-tool h-8 w-8 px-0 hover:text-red-700"
+                        aria-label="Move to trash"
+                        title="Move to trash"
+                        onClick={() => { if (selectedDoc) { void deleteDocument(selectedDoc); setSelectedDoc(null) } }}
+                      >
+                        <TrashIcon className="h-4 w-4" />
+                      </button>
+                    )}
                   </div>
                 </div>
-                <div className="flex shrink-0 items-center gap-2">
+                <div className="flex shrink-0 items-center gap-1">
                   <span className={`status-chip ${dirty ? 'status-chip-warning' : 'status-chip-neutral'}`}>{dirty ? 'Unsaved' : 'Saved'}</span>
                   <span className="status-chip status-chip-neutral">{publishStatus}</span>
-                  <button
-                    onClick={() => setDocumentPublishStatus(publishStatus === 'published' ? 'draft' : 'published')}
-                    disabled={saving}
-                    className="editor-tool"
-                    title={publishStatus === 'published' ? 'Unpublish' : 'Publish'}
-                  >
-                    {publishStatus === 'published' ? <ArrowUturnLeftIcon className="h-4 w-4" /> : <GlobeAltIcon className="h-4 w-4" />}
-                  </button>
-                  <button
-                    onClick={() => setDocumentPublishStatus('archived')}
-                    disabled={saving}
-                    className="editor-tool"
-                    title="Archive"
-                  >
-                    <ArchiveBoxIcon className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={saveDocument}
-                    disabled={saving || !dirty}
-                    className="sidebar-action bg-brand px-3 text-white hover:bg-brand-dark hover:text-white"
-                    title={saving ? 'Saving...' : 'Save'}
-                  >
-                    <CheckCircleIcon className="h-4 w-4" />
-                  </button>
+                  {selectedDoc && (
+                    <button
+                      className="sidebar-action bg-[#008884] px-3 text-white hover:bg-[#006f6b] hover:text-white disabled:opacity-50"
+                      type="button"
+                      title="Save"
+                      disabled={!dirty}
+                      onClick={() => { void saveDocument() }}
+                    >
+                      <CheckCircleIcon className="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
               </div>
               {workspaceId && <ConflictResolver workspaceId={workspaceId} onResolved={reloadDocumentsAndTrash} />}
@@ -694,7 +721,7 @@ export function Workspace() {
                   <VariableIcon className="h-4 w-4" />
                 </EditorToolbarButton>
                 <EditorToolbarButton title="Insert Mermaid diagram" onClick={() => insertAtCursor('\n```mermaid\nflowchart TD\n  A --> B\n```\n')}>
-                  <ArrowPathIcon className="h-4 w-4" />
+                  <ShareIcon className="h-4 w-4" />
                 </EditorToolbarButton>
                 <EditorToolbarButton title="Task list" onClick={() => insertAtCursor('\n- [ ] Task\n')}>
                   <ClipboardDocumentCheckIcon className="h-4 w-4" />
@@ -874,7 +901,7 @@ export function Workspace() {
           <button type="button" className="context-menu-button" onClick={() => { insertOrEditTable(); setEditorContextMenu(null) }}><TableCellsIcon className="mr-2 h-3.5 w-3.5" />Insert table</button>
           <button type="button" className="context-menu-button" onClick={() => { addMarkdownTableRow(); setEditorContextMenu(null) }}><TableCellsIcon className="mr-2 h-3.5 w-3.5" />Add table row below</button>
           <button type="button" className="context-menu-button" onClick={() => { insertAtCursor('\n$$\nE = mc^2\n$$\n'); setEditorContextMenu(null) }}><VariableIcon className="mr-2 h-3.5 w-3.5" />Insert formula</button>
-          <button type="button" className="context-menu-button" onClick={() => { insertAtCursor('\n```mermaid\nflowchart TD\n  A --> B\n```\n'); setEditorContextMenu(null) }}><ArrowPathIcon className="mr-2 h-3.5 w-3.5" />Insert Mermaid diagram</button>
+          <button type="button" className="context-menu-button" onClick={() => { insertAtCursor('\n```mermaid\nflowchart TD\n  A --> B\n```\n'); setEditorContextMenu(null) }}><ShareIcon className="mr-2 h-3.5 w-3.5" />Insert Mermaid diagram</button>
         </div>
       )}
     </div>

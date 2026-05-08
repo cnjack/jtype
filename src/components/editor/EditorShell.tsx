@@ -8,7 +8,6 @@ import { useCommandsList } from "../../app/App";
 import { addMarkdownTableColumn, addMarkdownTableRow, formatMarkdownTable, insertBlockAtSafeCursor, insertOrEditTable } from "../../hooks/useCommands";
 import { useEagerSync } from "../../hooks/useEagerSync";
 import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/react";
-import { Breadcrumb } from "../layout/Breadcrumb";
 import type { EditorMode } from "../../lib/types";
 import {
   BoldIcon,
@@ -164,13 +163,17 @@ export function EditorShell() {
     <section className="flex min-h-0 flex-col bg-[#fbfdfb]">
       <div className="flex min-h-[56px] items-center justify-between gap-3 border-b border-black/[0.04] bg-white/60 px-5 backdrop-blur-xl">
         <div className="min-w-0">
-          {documentLocation && (
-            <div className="flex items-center gap-2">
-              <Breadcrumb />
+          <div className="flex items-center gap-2">
+            <div className="flex min-w-0 items-baseline gap-1">
+              {state.workspace && state.currentRelativePath && (
+                <span className="shrink-0 truncate text-xs text-[#9aa6a1]">
+                  {state.workspace.name}
+                  {documentLocation ? ` / ${documentLocation.replace(/\//g, " / ")}` : ""}
+                  {" / "}
+                </span>
+              )}
+              <p className="truncate text-sm font-semibold text-stone-950">{fileName}</p>
             </div>
-          )}
-          <div className={`${documentLocation ? "mt-1 " : ""}flex items-center gap-2`}>
-            <p className="truncate text-sm font-semibold text-stone-950">{fileName}</p>
             {state.currentPath && (
               <button
                 type="button"

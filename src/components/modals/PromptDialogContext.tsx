@@ -1,12 +1,26 @@
-import { createContext, useContext, type ReactNode } from "react";
+import { createContext, useContext, useEffect, type ReactNode } from "react";
 import { usePromptDialog } from "./PromptDialog";
 
 export type PromptFn = (title: string, defaultValue?: string) => Promise<string | null>;
+
+declare global {
+  interface Window {
+    jtypePrompt?: PromptFn;
+  }
+}
 
 const PromptContext = createContext<PromptFn | null>(null);
 
 export function PromptDialogProvider({ children }: { children: ReactNode }) {
   const { PromptDialog, prompt } = usePromptDialog();
+
+  useEffect(() => {
+    window.jtypePrompt = prompt;
+    return () => {
+      delete window.jtypePrompt;
+    };
+  }, [prompt]);
+
   return (
     <PromptContext.Provider value={prompt}>
       {children}

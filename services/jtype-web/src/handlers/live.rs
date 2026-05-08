@@ -8,7 +8,7 @@ use serde::Deserialize;
 use sqlx::Row;
 use uuid::Uuid;
 
-use crate::db::models::{AuthUser, CloudSaveDocumentRequest};
+use crate::db::models::{AuthUser, CloudSaveDocumentRequest, TrashOperation};
 use crate::error::AppError;
 use crate::handlers::document::{save_document_version, SaveDocumentOutcome};
 use crate::handlers::workspace::require_workspace_role;
@@ -230,7 +230,124 @@ async fn handle_ws_text(
             )
             .await;
         }
+        "folder:created" => {
+            if role == "viewer" {
+                let _ = sender
+                    .send(Message::Text(
+                        r#"{"type":"ack","ok":false,"error":"read-only access"}"#.to_string(),
+                    ))
+                    .await;
+                return;
+            }
+            if let Some(relative_path) = parsed.get("relativePath").and_then(|v| v.as_str()) {
+                let mut tx = match state.pool.begin().await {
+                    Ok(tx) => tx,
+                    Err(_) => return,
+                };
+                if let Err(e) = crate::handlers::folder::upsert_folder_with_ancestors(
+                    &mut tx,
+                    workspace_id,
+                    relative_path,
+                )
+                .await
+                {
+                    let _ = sender
+                        .send(Message::Text(
+                            serde_json::json!({
+                                "type": "ack",
+                                "ok": false,
+                                "error": e.to_string(),
+                            })
+                            .to_string(),
+                        ))
+                        .await;
+                    return;
+                }
+                if let Err(_) = tx.commit().await {
+                    return;
+                }
+                state
+                    .hub
+                    .publish(
+                        workspace_id,
+                        WorkspaceEvent::SyncRequired {
+                            reason: "folder-changed".to_string(),
+                        },
+                    )
+                    .await;
+            }
+        }
+        "folder:deleted" => {
+            if role == "viewer" {
+                let _ = sender
+                    .send(Message::Text(
+                        r#"{"type":"ack","ok":false,"error":"read-only access"}"#.to_string(),
+                    ))
+                    .await;
+                return;
+            }
+            if let Some(relative_path) = parsed.get("relativePath").and_then(|v| v.as_str()) {
+                let mut tx = match state.pool.begin().await {
+                    Ok(tx) => tx,
+                    Err(_) => return,
+                };
+                if let Err(e) = crate::handlers::folder::record_folder_deletion(
+                    &mut tx,
+                    workspace_id,
+                    relative_path,
+                )
+                .await
+                {
+                    let _ = sender
+                        .send(Message::Text(
+                            serde_json::json!({
+                                "type": "ack",
+                                "ok": false,
+                                "error": e.to_string(),
+                            })
+                            .to_string(),
+                        ))
+                        .await;
+                    return;
+                }
+                if let Err(e) = sqlx::query(
+                    r#"DELETE FROM workspace_folders
+                       WHERE workspace_id = ? AND (relative_path = ? OR relative_path LIKE ?)"#,
+                )
+                .bind(workspace_id)
+                .bind(relative_path)
+                .bind(format!("{relative_path}/%"))
+                .execute(&mut *tx)
+                .await
+                {
+                    let _ = sender
+                        .send(Message::Text(
+                            serde_json::json!({
+                                "type": "ack",
+                                "ok": false,
+                                "error": e.to_string(),
+                            })
+                            .to_string(),
+                        ))
+                        .await;
+                    return;
+                }
+                if let Err(_) = tx.commit().await {
+                    return;
+                }
+                state
+                    .hub
+                    .publish(
+                        workspace_id,
+                        WorkspaceEvent::SyncRequired {
+                            reason: "folder-changed".to_string(),
+                        },
+                    )
+                    .await;
+            }
+        }
         "folder:changed" => {
+            // Legacy fallback: just broadcast sync required without persisting.
             state
                 .hub
                 .publish(
@@ -240,6 +357,20 @@ async fn handle_ws_text(
                     },
                 )
                 .await;
+        }
+        "trash:permanent_delete" | "trash:empty_trash" | "trash:restore" => {
+            handle_trash_operation(
+                parsed,
+                state,
+                workspace_id,
+                user_id,
+                username,
+                session_id,
+                device_id,
+                role,
+                sender,
+            )
+            .await;
         }
         "ping" => {
             let _ = sender
@@ -341,6 +472,90 @@ async fn handle_doc_save(
                 "relativePath": c.relative_path,
             });
             let _ = sender.send(Message::Text(err.to_string())).await;
+        }
+        Err(e) => {
+            let err = serde_json::json!({
+                "type": "ack",
+                "ref": ref_id,
+                "ok": false,
+                "error": e.to_string(),
+            });
+            let _ = sender.send(Message::Text(err.to_string())).await;
+        }
+    }
+}
+
+async fn handle_trash_operation(
+    parsed: serde_json::Value,
+    state: &AppState,
+    workspace_id: &str,
+    user_id: &str,
+    username: &str,
+    _session_id: &str,
+    device_id: &Option<String>,
+    role: &str,
+    sender: &tokio::sync::mpsc::Sender<Message>,
+) {
+    let ref_id = parsed
+        .get("ref")
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string());
+
+    if role == "viewer" {
+        let ack = serde_json::json!({
+            "type": "ack",
+            "ref": ref_id,
+            "ok": false,
+            "error": "read-only access",
+        });
+        let _ = sender.send(Message::Text(ack.to_string())).await;
+        return;
+    }
+
+    // Strip the "trash:" prefix from the type field so it matches TrashOperation variants
+    let mut adjusted = parsed.clone();
+    if let Some(serde_json::Value::String(t)) = adjusted.get("type") {
+        let stripped = t.strip_prefix("trash:").unwrap_or(t);
+        adjusted["type"] = serde_json::Value::String(stripped.to_string());
+    }
+
+    let operation = match serde_json::from_value::<TrashOperation>(adjusted) {
+        Ok(op) => op,
+        Err(e) => {
+            let err = serde_json::json!({
+                "type": "ack",
+                "ref": ref_id,
+                "ok": false,
+                "error": e.to_string(),
+            });
+            let _ = sender.send(Message::Text(err.to_string())).await;
+            return;
+        }
+    };
+
+    let auth_user = AuthUser {
+        id: user_id.to_string(),
+        username: username.to_string(),
+        role: role.to_string(),
+    };
+
+    match crate::handlers::sync::process_trash_operation(
+        &state.pool,
+        &state.hub,
+        workspace_id,
+        &auth_user,
+        device_id.as_deref(),
+        operation,
+    )
+    .await
+    {
+        Ok(_) => {
+            let ack = serde_json::json!({
+                "type": "ack",
+                "ref": ref_id,
+                "ok": true,
+            });
+            let _ = sender.send(Message::Text(ack.to_string())).await;
         }
         Err(e) => {
             let err = serde_json::json!({

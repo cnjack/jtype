@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__Claude_Preview__preview_start",
+      "Bash(cargo check *)",
+      "Bash(npx tsc *)",
+      "Bash(curl -s http://localhost:13345/api/health)",
+      "Bash(netstat -ano)",
+      "Bash(curl -s http://localhost:13345/api/v1/workspaces)",
+      "Bash(curl -s http://localhost:5173/api/v1/workspaces)",
+      "Bash(npx vite *)"
+    ]
+  }
+}

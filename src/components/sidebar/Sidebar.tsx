@@ -386,17 +386,24 @@ function ExplorerPanel() {
                       : <ArrowsPointingOutIcon className="h-3.5 w-3.5" />}
                   </button>
                 </div>
-                <ul className="space-y-1">
-                  {state.workspace.entries.map((node) => (
-                    <TreeNode
-                      key={node.path}
-                      node={node}
-                      depth={0}
-                      onContextMenu={(selectedNode, x, y) => setContextMenu({ node: selectedNode, x, y })}
-                      onDrop={(target, source) => handleDrop(target, source)}
-                    />
-                  ))}
-                </ul>
+                {state.workspace.entries.filter((n) => n.relativePath !== ".jtype").length === 0 ? (
+                  <div className="rounded-md border border-dashed border-stone-300 p-4">
+                    <p className="text-sm font-semibold text-stone-800">No documents yet.</p>
+                    <p className="mt-1 text-sm text-stone-500">Create your first Markdown note.</p>
+                  </div>
+                ) : (
+                  <ul className="space-y-1">
+                    {state.workspace.entries.map((node) => (
+                      <TreeNode
+                        key={node.path}
+                        node={node}
+                        depth={0}
+                        onContextMenu={(selectedNode, x, y) => setContextMenu({ node: selectedNode, x, y })}
+                        onDrop={(target, source) => handleDrop(target, source)}
+                      />
+                    ))}
+                  </ul>
+                )}
               </>
             )}
           </nav>

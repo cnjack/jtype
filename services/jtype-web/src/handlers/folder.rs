@@ -226,7 +226,7 @@ async fn upsert_single_folder(
     Ok(true)
 }
 
-async fn record_folder_deletion(
+pub async fn record_folder_deletion(
     tx: &mut sqlx::Transaction<'_, sqlx::MySql>,
     workspace_id: &str,
     relative_path: &str,

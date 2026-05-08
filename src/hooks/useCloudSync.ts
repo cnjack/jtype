@@ -210,19 +210,6 @@ export function useCloudSync() {
           .filter((relativePath) => !options.skipRelativePath || relativePath !== options.skipRelativePath)
           .map((relativePath) => ({ relativePath }));
 
-        // Load pending local trash operations for push
-        let trashOperations: TrashOperationPayload[] = [];
-        if (tauri.isAvailable) {
-          try {
-            const trashMeta = await tauri.loadTrashMetadata(state.workspace.rootPath);
-            trashOperations = (trashMeta.pendingTrashOps).map((op): TrashOperationPayload => {
-              if (op.type === "restore") return { type: "restore", trashId: op.trashId };
-              if (op.type === "permanent_delete") return { type: "permanent_delete", trashId: op.trashId };
-              return { type: "empty_trash" };
-            });
-          } catch { /* non-critical */ }
-        }
-
         const push = await fetch(`${getServiceUrl()}/api/v1/workspaces/${binding.workspaceId}/sync/push`, {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${state.syncToken}` },
@@ -231,7 +218,6 @@ export function useCloudSync() {
             folders: foldersForPush,
             documents: pushDocs,
             deletedPaths,
-            trashOperations,
           }),
         });
         if (push.status === 403 || push.status === 404) {
@@ -248,33 +234,6 @@ export function useCloudSync() {
         if (tauri.isAvailable && deletedPaths.length > 0) {
           try {
             await tauri.deleteSyncBases(state.workspace.rootPath, deletedPaths.map((d) => d.relativePath));
-          } catch { /* non-critical */ }
-        }
-
-        // Clear pending trash ops after successful push
-        if (tauri.isAvailable && trashOperations.length > 0) {
-          try {
-            const trashMeta = await tauri.loadTrashMetadata(state.workspace.rootPath);
-            const sentTrashIds = new Set(
-              trashOperations
-                .filter((op): op is Extract<TrashOperationPayload, { trashId: string }> => op.type !== "empty_trash")
-                .map((op) => op.trashId)
-            );
-            const sentEmptyTrash = trashOperations.some((op) => op.type === "empty_trash");
-            trashMeta.pendingTrashOps = trashMeta.pendingTrashOps.filter(
-              (op) => !trashOperations.some((sent) => (
-                sent.type === op.type &&
-                (sent.type === "empty_trash" || (op.type !== "empty_trash" && sent.trashId === op.trashId))
-              ))
-            );
-            if (sentEmptyTrash) {
-              trashMeta.items = [];
-            } else if (sentTrashIds.size > 0) {
-              trashMeta.items = trashMeta.items.filter(
-                (item) => !item.cloudTrashId || !sentTrashIds.has(item.cloudTrashId)
-              );
-            }
-            await tauri.saveTrashMetadata(state.workspace.rootPath, trashMeta);
           } catch { /* non-critical */ }
         }
 
@@ -416,6 +375,7 @@ export function useCloudSync() {
       dispatch({ type: "UPDATE_WORKSPACE", workspace });
     }
 
+    let trashChanged = false;
     // Handle trash sync data from pull
     if (pullData.trash && tauri.isAvailable) {
       try {
@@ -431,6 +391,7 @@ export function useCloudSync() {
           if (event.eventType === "empty_trash") {
             await tauri.emptyTrash(state.workspace.rootPath);
             trashMetadata.items = [];
+            trashChanged = true;
           } else if (event.eventType === "permanent_delete_item") {
             const trashId = (event.eventData as Record<string, string>).trashId;
             if (trashId) {
@@ -440,6 +401,7 @@ export function useCloudSync() {
               if (localItem) {
                 try { await tauri.permanentDeleteTrash(state.workspace.rootPath, localItem.trashId); } catch { /* ignore */ }
                 trashMetadata.items = trashMetadata.items.filter((item) => item.cloudTrashId !== trashId);
+                trashChanged = true;
               }
             }
           }
@@ -453,9 +415,11 @@ export function useCloudSync() {
                 .map((item) => item.id)
         );
         // Remove cloud trash items that are no longer active (e.g. restored)
+        const beforeFilter = trashMetadata.items.length;
         trashMetadata.items = trashMetadata.items.filter(
           (item) => item.source !== "cloud" || activeCloudTrashIds.has(item.cloudTrashId!)
         );
+        if (trashMetadata.items.length !== beforeFilter) trashChanged = true;
         // Update metadata with cloud trash items
         for (const cloudItem of pullData.trash.items.filter((item) => activeCloudTrashIds.has(item.id))) {
           const existing = trashMetadata.items.find(
@@ -470,10 +434,18 @@ export function useCloudSync() {
               source: "cloud",
               cloudTrashId: cloudItem.id,
             });
+            trashChanged = true;
           }
         }
         trashMetadata.lastSyncedClock = pullData.trash.trashCursor;
         await tauri.saveTrashMetadata(state.workspace.rootPath, trashMetadata);
+        // Refresh workspace so Sidebar trash list re-renders
+        if (trashChanged) {
+          try {
+            const workspace = await tauri.openWorkspace(state.workspace.rootPath);
+            dispatch({ type: "UPDATE_WORKSPACE", workspace });
+          } catch { /* ignore */ }
+        }
       } catch { /* non-critical */ }
     }
 

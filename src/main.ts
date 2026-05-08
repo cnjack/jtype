@@ -8,11 +8,25 @@ import "katex/dist/katex.min.css";
 import { marked } from "marked";
 import { createLineDiff, type AICommandProposal } from "./aiCommands";
 
+declare global {
+  interface Window {
+    jtypePrompt?: (title: string, defaultValue?: string) => Promise<string | null>;
+    jtypeConfirm?: (message: string, options?: { title?: string; confirmLabel?: string; cancelLabel?: string; destructive?: boolean }) => Promise<boolean>;
+  }
+}
+
+async function promptAsync(title: string, defaultValue?: string): Promise<string | null> {
+  if (typeof window !== "undefined" && window.jtypePrompt) {
+    return window.jtypePrompt(title, defaultValue);
+  }
+  throw new Error("Prompt dialog not available. Ensure PromptDialogProvider is mounted.");
+}
+
 async function confirmAsync(message: string): Promise<boolean> {
   if (typeof window !== "undefined" && window.jtypeConfirm) {
     return window.jtypeConfirm(message);
   }
-  return window.confirm(message);
+  throw new Error("Confirm dialog not available. Ensure ConfirmDialogProvider is mounted.");
 }
 
 type EntryKind = "folder" | "markdown" | "asset";
@@ -197,13 +211,6 @@ type AppCommand = {
   disabledReason?: () => string | undefined;
   run: () => Promise<void> | void;
 };
-
-// Legacy prompt helper — this file is pre-React and not used by the current app.
-// New UI should use PromptDialog from src/components/modals/PromptDialog.tsx.
-function legacyPrompt(message: string, defaultValue?: string): string | null {
-  // eslint-disable-next-line no-restricted-globals
-  return window.prompt(message, defaultValue);
-}
 
 const openButton = document.querySelector<HTMLButtonElement>("#open-file");
 const openFolderButton = document.querySelector<HTMLButtonElement>("#open-folder");
@@ -1216,7 +1223,7 @@ async function syncWorkspaceToWeb(options: { silent?: boolean } = {}) {
 
 async function createDocument(defaultPath = "untitled.md") {
   if (!state.workspace) return;
-  const relativePath = legacyPrompt("New Markdown path or folder name", defaultPath)?.trim();
+  const relativePath = (await promptAsync("New Markdown path or folder name", defaultPath))?.trim();
   if (!relativePath) return;
   const kind: EntryKind = isMarkdownPath(relativePath) ? "markdown" : "folder";
 
@@ -1246,7 +1253,7 @@ async function createDocument(defaultPath = "untitled.md") {
 async function renameCurrentEntryWithImpact() {
   if (!state.workspace || !state.currentRelativePath) return;
   const fromRelativePath = state.currentRelativePath;
-  const nextPath = legacyPrompt("Move or rename path", fromRelativePath)?.trim();
+  const nextPath = (await promptAsync("Move or rename path", fromRelativePath))?.trim();
   if (!nextPath || nextPath === fromRelativePath) return;
 
   const impacted = await findLinkImpacts(fromRelativePath);
