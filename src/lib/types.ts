@@ -44,6 +44,10 @@ export type SyncDocument = {
   content: string;
 };
 
+export type SyncFolder = {
+  relativePath: string;
+};
+
 export type SyncBaseEntry = {
   relativePath: string;
   content: string;
@@ -113,6 +117,12 @@ export type CloudDocument = {
   updatedClock: number;
 };
 
+export type CloudFolder = {
+  id?: string;
+  relativePath: string;
+  updatedClock?: number;
+};
+
 export type ConflictRange = {
   baseStart: number;
   baseEnd: number;
@@ -151,12 +161,18 @@ export type SyncPushDocument = CloudDocument & {
 export type SyncPushResponse = {
   workspaceId: string;
   accepted: number;
+  folders?: CloudFolder[];
   documents: SyncPushDocument[];
   deletedPaths?: DeletedPath[];
   conflicts: SyncConflict[];
 };
 
 export type DeletedPath = {
+  relativePath: string;
+  deletedClock: number;
+};
+
+export type DeletedFolder = {
   relativePath: string;
   deletedClock: number;
 };

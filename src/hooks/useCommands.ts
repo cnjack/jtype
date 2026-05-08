@@ -15,6 +15,10 @@ export interface CommandDef {
 export function useCommands(fs: ReturnType<typeof import("./useFileSystem").useFileSystem>, sync: ReturnType<typeof import("./useCloudSync").useCloudSync>) {
   const state = useAppState();
   const dispatch = useAppDispatch();
+  const currentVaultSettings = state.workspace ? state.vaultSettings[state.workspace.rootPath] : undefined;
+  const currentVaultBinding = state.workspace
+    ? state.vaultBindings.find((binding) => binding.localVaultPath === state.workspace?.rootPath)
+    : null;
 
   const commands: CommandDef[] = [
     {
@@ -111,8 +115,8 @@ export function useCommands(fs: ReturnType<typeof import("./useFileSystem").useF
       title: "Sync vault to cloud workspace",
       aliases: ["upload", "site"],
       scope: ["publish", "workspace"],
-      isEnabled: () => Boolean(state.workspace && state.syncToken) && !state.isLoading,
-      disabledReason: () => "Login or register before syncing",
+      isEnabled: () => Boolean(state.workspace && state.syncToken && currentVaultBinding && currentVaultSettings?.cloudSyncEnabled !== false) && !state.isLoading,
+      disabledReason: () => currentVaultSettings?.cloudSyncEnabled === false ? "Enable cloud sync for this vault first" : "Bind this vault to a cloud workspace before syncing",
       run: () => sync.syncWorkspaceToWeb(),
     },
     {

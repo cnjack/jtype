@@ -303,11 +303,7 @@ fn build_nav_tree(
     render_nav_nodes(&root, username, workspace_slug, active_path, 0)
 }
 
-fn insert_into_tree<'a>(
-    nodes: &mut Vec<NavNode<'a>>,
-    parts: &[&str],
-    doc: &'a SiteDocument,
-) {
+fn insert_into_tree<'a>(nodes: &mut Vec<NavNode<'a>>, parts: &[&str], doc: &'a SiteDocument) {
     if parts.len() <= 1 {
         // Leaf document
         nodes.push(NavNode::Doc { doc });
@@ -316,9 +312,9 @@ fn insert_into_tree<'a>(
 
     let folder_name = parts[0];
     // Find or create folder
-    let folder_idx = nodes.iter().position(|n| {
-        matches!(n, NavNode::Folder { name, .. } if name == folder_name)
-    });
+    let folder_idx = nodes
+        .iter()
+        .position(|n| matches!(n, NavNode::Folder { name, .. } if name == folder_name));
 
     let idx = if let Some(idx) = folder_idx {
         idx

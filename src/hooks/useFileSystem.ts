@@ -126,18 +126,14 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
       if (kind === "markdown") {
         await openMarkdownFile(`${workspace.rootPath}/${trimmed}`, trimmed);
         // Send document:save via WS so web clients see the new document immediately.
-        if (tauri.isAvailable) {
+        const vaultSettings = state.vaultSettings[state.workspace.rootPath];
+        const binding = state.vaultBindings.find((item) => item.localVaultPath === state.workspace?.rootPath);
+        if (tauri.isAvailable && state.syncToken && binding && vaultSettings?.cloudSyncEnabled !== false) {
           try {
             const content = await tauri.readFile(`${workspace.rootPath}/${trimmed}`);
             const wsMsg = JSON.stringify({ type: "document:save", relativePath: trimmed, title: "", status: "", content });
             await tauri.cloudWsSend(wsMsg);
           } catch { /* non-critical — WS may be disconnected */ }
-        }
-        // Trigger an immediate HTTP sync push as well (conflict resolution, sync bases, etc.).
-        try {
-          await onAfterSaveRef.current?.();
-        } catch (syncError) {
-          dispatch({ type: "SET_STATUS", message: `Created ${trimmed} (sync failed: ${String(syncError)})` });
         }
       } else {
         dispatch({ type: "SET_STATUS", message: `Created folder ${trimmed}.` });
@@ -147,7 +143,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, state.workspace, openMarkdownFile]);
+  }, [dispatch, state.workspace, state.syncToken, state.vaultBindings, state.vaultSettings, openMarkdownFile]);
 
   const renameEntry = useCallback(async (fromRelativePath: string, toRelativePath: string, updateLinks: boolean) => {
     if (!state.workspace) return;
@@ -245,20 +241,23 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
       const workspace = await tauri.restoreFromTrash(state.workspace.rootPath, trashId);
       dispatch({ type: "UPDATE_WORKSPACE", workspace });
       dispatch({ type: "SET_STATUS", message: "Restored from trash." });
-      window.dispatchEvent(new CustomEvent("jtype:vault-restored"));
       // Record pending op for cloud sync and clean up any cloud metadata item for the same path
       if (tauri.isAvailable) {
         try {
           const meta = await tauri.loadTrashMetadata(state.workspace.rootPath);
           const ops = meta.pendingTrashOps;
           if (cloudTrashId) {
-            ops.push({ type: "restore", trashId: cloudTrashId });
+            if (!ops.some((op) => op.type === "restore" && op.trashId === cloudTrashId)) {
+              ops.push({ type: "restore", trashId: cloudTrashId });
+            }
           }
           // Also queue restore + remove any cloud metadata item for the same relativePath
           if (relPath) {
             for (const cloudItem of meta.items) {
               if (cloudItem.source === "cloud" && cloudItem.relativePath === relPath && cloudItem.cloudTrashId && cloudItem.cloudTrashId !== cloudTrashId) {
-                ops.push({ type: "restore", trashId: cloudItem.cloudTrashId });
+                if (!ops.some((op) => op.type === "restore" && op.trashId === cloudItem.cloudTrashId)) {
+                  ops.push({ type: "restore", trashId: cloudItem.cloudTrashId });
+                }
               }
             }
             meta.items = meta.items.filter(
@@ -271,6 +270,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
           await tauri.saveTrashMetadata(state.workspace.rootPath, meta);
         } catch { /* non-critical */ }
       }
+      window.dispatchEvent(new CustomEvent("jtype:vault-restored"));
     } catch (error) {
       dispatch({ type: "SET_STATUS", message: String(error) });
     } finally {

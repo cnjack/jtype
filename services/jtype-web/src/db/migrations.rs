@@ -20,6 +20,12 @@ fn all_migrations() -> Vec<Migration> {
             up: include_str!("../../migrations/0001_init.up.sql"),
             down: include_str!("../../migrations/0001_init.down.sql"),
         },
+        Migration {
+            version: 2,
+            name: "workspace_folders",
+            up: include_str!("../../migrations/0002_workspace_folders.up.sql"),
+            down: include_str!("../../migrations/0002_workspace_folders.down.sql"),
+        },
     ]
 }
 
@@ -41,10 +47,9 @@ async fn ensure_schema_table(pool: &Pool<MySql>) -> Result<(), AppError> {
 }
 
 async fn current_version(pool: &Pool<MySql>) -> Result<i64, AppError> {
-    let version: Option<i64> =
-        sqlx::query_scalar("SELECT MAX(version) FROM _schema_migrations")
-            .fetch_one(pool)
-            .await?;
+    let version: Option<i64> = sqlx::query_scalar("SELECT MAX(version) FROM _schema_migrations")
+        .fetch_one(pool)
+        .await?;
     Ok(version.unwrap_or(0))
 }
 
@@ -129,9 +134,7 @@ pub async fn rollback_last(pool: &Pool<MySql>) -> Result<Option<i64>, AppError> 
     let m = migrations
         .iter()
         .find(|m| m.version == cur)
-        .ok_or_else(|| {
-            AppError::Server(format!("no migration found for current version {cur}"))
-        })?;
+        .ok_or_else(|| AppError::Server(format!("no migration found for current version {cur}")))?;
 
     eprintln!("[migrations] applying DOWN v{}: {}", m.version, m.name);
     exec_sql(pool, m.down).await?;

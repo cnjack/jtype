@@ -176,11 +176,17 @@ pub async fn restore_from_trash(
 
     tx.commit().await?;
 
-    state.hub.publish(&workspace_id, WorkspaceEvent::DocumentTrashed {
-        source_session_id: String::new(),
-        relative_path,
-        action: "restored".to_string(),
-    }).await;
+    state
+        .hub
+        .publish(
+            &workspace_id,
+            WorkspaceEvent::DocumentTrashed {
+                source_session_id: String::new(),
+                relative_path,
+                action: "restored".to_string(),
+            },
+        )
+        .await;
 
     Ok(Json(CloudDocument {
         relative_path: final_relative_path,
@@ -211,14 +217,13 @@ pub async fn permanent_delete(
     let next_clock =
         crate::handlers::document::next_workspace_clock(&mut tx, &workspace_id).await?;
 
-    let relative_path: Option<String> = sqlx::query(
-        "SELECT relative_path FROM document_trash WHERE id = ? AND workspace_id = ?",
-    )
-    .bind(&trash_id)
-    .bind(&workspace_id)
-    .fetch_optional(&mut *tx)
-    .await?
-    .and_then(|r| r.try_get("relative_path").ok());
+    let relative_path: Option<String> =
+        sqlx::query("SELECT relative_path FROM document_trash WHERE id = ? AND workspace_id = ?")
+            .bind(&trash_id)
+            .bind(&workspace_id)
+            .fetch_optional(&mut *tx)
+            .await?
+            .and_then(|r| r.try_get("relative_path").ok());
 
     let result = sqlx::query("DELETE FROM document_trash WHERE id = ? AND workspace_id = ?")
         .bind(&trash_id)
@@ -246,11 +251,17 @@ pub async fn permanent_delete(
     tx.commit().await?;
 
     if let Some(rp) = relative_path {
-        state.hub.publish(&workspace_id, WorkspaceEvent::DocumentDeleted {
-            source_session_id: String::new(),
-            relative_path: rp,
-            deleted_clock: next_clock,
-        }).await;
+        state
+            .hub
+            .publish(
+                &workspace_id,
+                WorkspaceEvent::DocumentDeleted {
+                    source_session_id: String::new(),
+                    relative_path: rp,
+                    deleted_clock: next_clock,
+                },
+            )
+            .await;
     }
 
     Ok(StatusCode::NO_CONTENT)
@@ -304,11 +315,17 @@ pub async fn empty_trash(
     tx.commit().await?;
 
     for rp in trash_paths {
-        state.hub.publish(&workspace_id, WorkspaceEvent::DocumentDeleted {
-            source_session_id: String::new(),
-            relative_path: rp,
-            deleted_clock: next_clock,
-        }).await;
+        state
+            .hub
+            .publish(
+                &workspace_id,
+                WorkspaceEvent::DocumentDeleted {
+                    source_session_id: String::new(),
+                    relative_path: rp,
+                    deleted_clock: next_clock,
+                },
+            )
+            .await;
     }
 
     Ok(StatusCode::NO_CONTENT)

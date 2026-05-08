@@ -21,11 +21,17 @@ async fn pull_empty_workspace() {
     assert_eq!(status, StatusCode::OK);
     assert_eq!(body["workspaceId"].as_str().unwrap(), ws_id);
     assert!(
-        body["documents"].as_array().map(|a| a.is_empty()).unwrap_or(false),
+        body["documents"]
+            .as_array()
+            .map(|a| a.is_empty())
+            .unwrap_or(false),
         "documents should be empty"
     );
     assert!(
-        body["deletedPaths"].as_array().map(|a| a.is_empty()).unwrap_or(false),
+        body["deletedPaths"]
+            .as_array()
+            .map(|a| a.is_empty())
+            .unwrap_or(false),
         "deletedPaths should be empty"
     );
 }
@@ -49,9 +55,13 @@ async fn pull_returns_saved_documents() {
     .await;
 
     assert_eq!(status, StatusCode::OK);
-    let docs = body["documents"].as_array().expect("documents should be an array");
+    let docs = body["documents"]
+        .as_array()
+        .expect("documents should be an array");
     assert!(!docs.is_empty(), "should return at least one document");
-    let found = docs.iter().any(|d| d["relativePath"].as_str() == Some("hello.md"));
+    let found = docs
+        .iter()
+        .any(|d| d["relativePath"].as_str() == Some("hello.md"));
     assert!(found, "saved document should appear in pull response");
 }
 
@@ -76,9 +86,16 @@ async fn pull_since_clock_filters() {
     .await;
 
     assert_eq!(status, StatusCode::OK);
-    let docs = body["documents"].as_array().expect("documents should be an array");
-    let found = docs.iter().any(|d| d["relativePath"].as_str() == Some("filter.md"));
-    assert!(!found, "already-seen document should be filtered out by sinceClock");
+    let docs = body["documents"]
+        .as_array()
+        .expect("documents should be an array");
+    let found = docs
+        .iter()
+        .any(|d| d["relativePath"].as_str() == Some("filter.md"));
+    assert!(
+        !found,
+        "already-seen document should be filtered out by sinceClock"
+    );
 }
 
 // 4. pull_with_trash_clock_returns_trash — pull with sinceTrashEventClock=0, assert 200 + trash field
@@ -130,10 +147,18 @@ async fn push_new_document() {
 
     assert_eq!(status, StatusCode::OK, "push should return 200: {body}");
     assert_eq!(body["workspaceId"].as_str().unwrap(), ws_id);
-    assert_eq!(body["accepted"].as_i64().unwrap_or(0), 1, "one document should be accepted");
-    let docs = body["documents"].as_array().expect("documents should be an array");
+    assert_eq!(
+        body["accepted"].as_i64().unwrap_or(0),
+        1,
+        "one document should be accepted"
+    );
+    let docs = body["documents"]
+        .as_array()
+        .expect("documents should be an array");
     assert!(!docs.is_empty(), "documents array should not be empty");
-    let found = docs.iter().any(|d| d["relativePath"].as_str() == Some("pushed.md"));
+    let found = docs
+        .iter()
+        .any(|d| d["relativePath"].as_str() == Some("pushed.md"));
     assert!(found, "pushed document should appear in response");
 }
 
@@ -165,8 +190,16 @@ async fn push_updates_existing() {
     )
     .await;
 
-    assert_eq!(status, StatusCode::OK, "push update should return 200: {body}");
-    assert_eq!(body["accepted"].as_i64().unwrap_or(0), 1, "update should be accepted");
+    assert_eq!(
+        status,
+        StatusCode::OK,
+        "push update should return 200: {body}"
+    );
+    assert_eq!(
+        body["accepted"].as_i64().unwrap_or(0),
+        1,
+        "update should be accepted"
+    );
 }
 
 // 7. push_deleted_paths — save doc, push with deletedPaths=[{relativePath}], assert 200
@@ -190,7 +223,11 @@ async fn push_deleted_paths() {
     )
     .await;
 
-    assert_eq!(status, StatusCode::OK, "push with deletedPaths should return 200: {body}");
+    assert_eq!(
+        status,
+        StatusCode::OK,
+        "push with deletedPaths should return 200: {body}"
+    );
     assert_eq!(body["workspaceId"].as_str().unwrap(), ws_id);
 }
 
@@ -254,10 +291,21 @@ async fn sync_legacy_creates_workspace() {
     )
     .await;
 
-    assert_eq!(status, StatusCode::OK, "legacy sync should return 200: {body}");
+    assert_eq!(
+        status,
+        StatusCode::OK,
+        "legacy sync should return 200: {body}"
+    );
     assert_eq!(body["workspaceName"].as_str().unwrap(), ws_name);
-    assert_eq!(body["documentCount"].as_i64().unwrap_or(0), 2, "documentCount should match uploaded docs");
-    assert!(body["workspaceId"].as_str().is_some(), "workspaceId should be present");
+    assert_eq!(
+        body["documentCount"].as_i64().unwrap_or(0),
+        2,
+        "documentCount should match uploaded docs"
+    );
+    assert!(
+        body["workspaceId"].as_str().is_some(),
+        "workspaceId should be present"
+    );
 }
 
 // 11. sync_legacy_replaces_documents — sync workspace twice, second call replaces all docs
@@ -299,7 +347,11 @@ async fn sync_legacy_replaces_documents() {
     )
     .await;
 
-    assert_eq!(status, StatusCode::OK, "second legacy sync should return 200: {body}");
+    assert_eq!(
+        status,
+        StatusCode::OK,
+        "second legacy sync should return 200: {body}"
+    );
     assert_eq!(
         body["documentCount"].as_i64().unwrap_or(0),
         1,
@@ -346,6 +398,10 @@ async fn push_empty_trash_operation() {
     )
     .await;
 
-    assert_eq!(status, StatusCode::OK, "push with empty_trash operation should return 200: {body}");
+    assert_eq!(
+        status,
+        StatusCode::OK,
+        "push with empty_trash operation should return 200: {body}"
+    );
     assert_eq!(body["workspaceId"].as_str().unwrap(), ws_id);
 }

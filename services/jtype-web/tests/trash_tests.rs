@@ -183,8 +183,10 @@ async fn restore_creates_document() {
     assert_eq!(status, StatusCode::OK);
     let docs = list.as_array().unwrap();
     assert!(
-        docs.iter()
-            .any(|d| d["relativePath"].as_str().unwrap_or("").contains("back-again")),
+        docs.iter().any(|d| d["relativePath"]
+            .as_str()
+            .unwrap_or("")
+            .contains("back-again")),
         "restored document not found in doc list: {list}"
     );
 }

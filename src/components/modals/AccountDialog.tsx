@@ -3,17 +3,24 @@ import { useCloudSync } from "../../hooks";
 import type { CloudWorkspace } from "../../lib/types";
 import { useEffect, useState } from "react";
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
-import { CloudArrowUpIcon, LinkSlashIcon } from "@heroicons/react/24/outline";
+import { CloudArrowUpIcon, LinkSlashIcon, XMarkIcon } from "@heroicons/react/24/outline";
 
 export function AccountDialog() {
   const state = useAppState();
   const dispatch = useAppDispatch();
   const sync = useCloudSync();
   const [activeSection, setActiveSection] = useState<"account" | "workspace">(state.accountDialogSection);
+  const [pendingWorkspaceSync, setPendingWorkspaceSync] = useState(false);
 
   useEffect(() => {
     if (state.accountDialogOpen) setActiveSection(state.accountDialogSection);
   }, [state.accountDialogOpen, state.accountDialogSection]);
+
+  useEffect(() => {
+    if (!pendingWorkspaceSync || !state.syncToken || !state.workspace) return;
+    setPendingWorkspaceSync(false);
+    void sync.autoCreateAndBindWorkspace();
+  }, [pendingWorkspaceSync, state.syncToken, state.workspace, sync]);
 
   const displaySiteUrl = state.syncSiteUrl.replace("/@", "/u/");
   const currentVaultBinding = state.workspace
@@ -21,6 +28,7 @@ export function AccountDialog() {
     : null;
   const currentVaultSettings = state.workspace ? state.vaultSettings[state.workspace.rootPath] : undefined;
   const isLocalMode = state.workspace && currentVaultSettings?.cloudSyncEnabled === false;
+  const activeVaultBinding = isLocalMode ? null : currentVaultBinding;
   const canSyncCurrentVault = Boolean(state.workspace && state.syncToken && !isLocalMode);
 
   const bindWorkspace = async (ws: CloudWorkspace) => {
@@ -42,6 +50,15 @@ export function AccountDialog() {
     await sync.disconnectWorkspace();
   };
 
+  const startWorkspaceSync = async () => {
+    if (!state.syncToken) {
+      setPendingWorkspaceSync(true);
+      await sync.startBrowserOAuth();
+      return;
+    }
+    await sync.autoCreateAndBindWorkspace();
+  };
+
   return (
     <Dialog open={state.accountDialogOpen} onClose={() => dispatch({ type: "SET_ACCOUNT_DIALOG", open: false })} className="modal-backdrop">
       <DialogPanel className="command-modal flex h-[min(720px,92vh)] max-w-5xl flex-col">
@@ -56,8 +73,8 @@ export function AccountDialog() {
                   : "Connect in the browser. Desktop never asks for your password."}
             </p>
           </div>
-          <button className="subtle-button" type="button" aria-label="Close account dialog" onClick={() => dispatch({ type: "SET_ACCOUNT_DIALOG", open: false })}>
-            Close
+          <button className="subtle-button aspect-square px-0" type="button" aria-label="Close account dialog" title="Close" onClick={() => dispatch({ type: "SET_ACCOUNT_DIALOG", open: false })}>
+            <XMarkIcon className="h-4 w-4" />
           </button>
         </div>
         <div className="grid min-h-0 flex-1 md:grid-cols-[220px_minmax(0,1fr)]">
@@ -91,10 +108,10 @@ export function AccountDialog() {
                       className="sidebar-action"
                       type="button"
                       disabled={!canSyncCurrentVault || state.isLoading}
-                      onClick={() => currentVaultBinding ? sync.syncWorkspaceToWeb() : sync.autoCreateAndBindWorkspace()}
+                      onClick={() => activeVaultBinding ? sync.syncWorkspaceToWeb() : sync.autoCreateAndBindWorkspace()}
                       title={isLocalMode ? "Enable cloud sync for this vault first" : "Sync current vault"}
                     >
-                      {currentVaultBinding ? "Sync now" : "Start sync"}
+                      {activeVaultBinding ? "Sync now" : "Start sync"}
                     </button>
                   </div>
                   {displaySiteUrl && (
@@ -117,31 +134,40 @@ export function AccountDialog() {
                         <p className="font-semibold text-stone-900">Current vault</p>
                         <p className="mt-1 truncate text-stone-500">{state.workspace.rootPath}</p>
                       </div>
-                      <span className={`shrink-0 rounded-full px-2 py-1 font-semibold ${currentVaultBinding && !isLocalMode ? "bg-teal-50 text-teal-700" : "bg-stone-100 text-stone-600"}`}>
-                        {currentVaultBinding && !isLocalMode ? "Cloud sync" : "Local mode"}
+                      <span className={`shrink-0 rounded-full px-2 py-1 font-semibold ${activeVaultBinding ? "bg-teal-50 text-teal-700" : "bg-stone-100 text-stone-600"}`}>
+                        {activeVaultBinding ? "Cloud sync" : "Local mode"}
                       </span>
                     </div>
                     <p className="mt-2 text-stone-600">
-                      {currentVaultBinding && !isLocalMode
-                        ? `Bound to ${currentVaultBinding.workspaceName}. Sync will push and pull this vault.`
+                      {activeVaultBinding
+                        ? `Bound to ${activeVaultBinding.workspaceName}. Sync will push and pull this vault.`
                         : isLocalMode
                           ? "This vault is local-only. You can keep working without cloud sync or enable it below."
                           : "Not bound to a cloud workspace yet. Binding starts bidirectional sync for this vault."}
                     </p>
                     <div className="mt-4 flex flex-wrap gap-2">
-                      {currentVaultBinding && !isLocalMode && (
-                        <button className="toolbar-button" type="button" onClick={disconnectCurrentVault} title="Disconnect cloud sync">
-                          <LinkSlashIcon className="h-4 w-4" />
-                          Disconnect
-                        </button>
+                      {activeVaultBinding && (
+                        <>
+                          <button className="toolbar-button toolbar-button-primary" type="button" disabled={state.isLoading} onClick={() => sync.syncWorkspaceToWeb()} title="Sync now">
+                            <CloudArrowUpIcon className="h-4 w-4" />
+                            Sync now
+                          </button>
+                          <button className="toolbar-button" type="button" onClick={disconnectCurrentVault} title="Disconnect cloud sync">
+                            <LinkSlashIcon className="h-4 w-4" />
+                            Disconnect
+                          </button>
+                        </>
                       )}
-                      {isLocalMode && (
-                        <button className="toolbar-button toolbar-button-primary" type="button" onClick={() => sync.autoCreateAndBindWorkspace()} title="Enable cloud sync">
+                      {!activeVaultBinding && (
+                        <button className="toolbar-button toolbar-button-primary" type="button" disabled={state.isLoading} onClick={startWorkspaceSync} title={isLocalMode ? "Enable cloud sync" : "Start cloud sync"}>
                           <CloudArrowUpIcon className="h-4 w-4" />
-                          Enable cloud sync
+                          {isLocalMode ? "Enable cloud sync" : "Start sync"}
                         </button>
                       )}
                     </div>
+                    {pendingWorkspaceSync && !state.syncToken && (
+                      <p className="mt-3 text-xs text-teal-700">Browser authorization is open. Sync will continue after sign-in completes.</p>
+                    )}
                   </div>
                 )}
                 <div className="mt-6">
@@ -153,7 +179,7 @@ export function AccountDialog() {
                       <p className="text-xs text-stone-500">No cloud workspaces yet. Sync this vault to create one.</p>
                     ) : (
                       state.cloudWorkspaces.map((ws) => {
-                        const isBound = currentVaultBinding?.workspaceId === ws.id;
+                        const isBound = activeVaultBinding?.workspaceId === ws.id;
                         const workspaceName = (ws.name || ws.slug || "Untitled workspace").replace(/^:/, "");
                         return (
                         <button key={ws.id} className={`workspace-row ${isBound && !isLocalMode ? "workspace-row-bound" : ""}`} type="button" onClick={() => bindWorkspace(ws)}>

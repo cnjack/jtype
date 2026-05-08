@@ -131,7 +131,9 @@ async fn owner_can_remove_editor() {
     )
     .await;
     let members = body.as_array().unwrap();
-    let has_user2 = members.iter().any(|m| m["userId"].as_str() == Some(&user2_id));
+    let has_user2 = members
+        .iter()
+        .any(|m| m["userId"].as_str() == Some(&user2_id));
     assert!(!has_user2, "removed user should not appear in member list");
 }
 

@@ -150,7 +150,7 @@ function UserSettingsDialog({ onClose }: { onClose: () => void }) {
           <p className="mb-2 text-xs font-semibold uppercase text-stone-500">Account</p>
           <div className="rounded-lg bg-white px-3 py-2 text-sm font-semibold text-brand shadow-sm shadow-emerald-950/5 ring-1 ring-brand/10">Profile</div>
         </aside>
-        <main className="min-h-0 overflow-y-auto p-8">
+        <main className="soft-scrollbar min-h-0 overflow-y-auto p-8">
           <div className="mb-7 flex items-start justify-between gap-4">
             <div>
               <h2 className="text-3xl font-semibold text-zinc-950">Settings</h2>
@@ -196,7 +196,7 @@ function UserSettingsDialog({ onClose }: { onClose: () => void }) {
                           <span className="block truncate font-semibold text-zinc-950">{device.deviceId.slice(0, 8)}...</span>
                           <span className="block truncate text-xs text-zinc-500">{device.workspaceName}</span>
                         </span>
-                        <span className="text-xs text-zinc-400">{new Date(device.updatedAt).toLocaleDateString()}</span>
+                        <span className="shrink-0 text-xs text-zinc-400">{formatDeviceUpdatedAt(device.updatedAt)}</span>
                       </div>
                     ))}
                   </div>
@@ -239,4 +239,21 @@ function formatBytes(bytes: number): string {
   return `${(bytes / 1024 / 1024 / 1024).toFixed(1)} GB`
 }
 
+function formatDeviceUpdatedAt(value: string): string {
+  const trimmed = value?.trim()
+  if (!trimmed) return 'Last seen recently'
+
+  const normalized = trimmed.includes('T')
+    ? trimmed
+    : trimmed.replace(' ', 'T')
+  const date = new Date(normalized)
+
+  if (Number.isNaN(date.getTime())) return 'Last seen recently'
+
+  return date.toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
 

@@ -120,6 +120,32 @@
   .command-row {
     @apply flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition hover:bg-[#e8f6f2] disabled:cursor-not-allowed disabled:opacity-50;
   }
+
+  .soft-scrollbar {
+    scrollbar-color: rgb(95 109 104 / 0.42) transparent;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+  }
+
+  .soft-scrollbar::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  .soft-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .soft-scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgb(95 109 104 / 0.36);
+    background-clip: padding-box;
+    border: 3px solid transparent;
+    border-radius: 999px;
+  }
+
+  .soft-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: rgb(0 136 132 / 0.48);
+  }
 }
 
 .editor-preview-grid {
@@ -257,4 +283,228 @@
   border: 1px solid #e7e5e4;
   border-radius: 8px;
   background: #ffffff;
+}
+
+.landing-page-grid {
+  background-image:
+    linear-gradient(rgb(13 13 12 / 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(13 13 12 / 0.035) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: linear-gradient(to bottom, black 0%, black 72%, transparent 100%);
+}
+
+.landing-film {
+  transform: translateZ(0);
+}
+
+.landing-panel {
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.72);
+}
+
+.landing-file-row {
+  animation: landingFileFloat 8s ease-in-out infinite;
+}
+
+.landing-file-row:nth-child(2) {
+  animation-delay: 0.45s;
+}
+
+.landing-file-row:nth-child(4) {
+  animation-delay: 0.9s;
+}
+
+.landing-file-row-active {
+  animation: landingActiveFile 2.8s ease-in-out infinite;
+}
+
+.landing-progress {
+  width: 68%;
+  animation: landingProgress 4.8s ease-in-out infinite;
+}
+
+.landing-md-line {
+  opacity: 1;
+  transform: translateY(3px);
+  animation: landingTypeLine 7.2s ease-in-out infinite;
+}
+
+.landing-md-line:nth-child(1) { animation-delay: 0s; }
+.landing-md-line:nth-child(2) { animation-delay: 0.08s; }
+.landing-md-line:nth-child(3) { animation-delay: 0.16s; }
+.landing-md-line:nth-child(4) { animation-delay: 0.24s; }
+.landing-md-line:nth-child(5) { animation-delay: 0.32s; }
+.landing-md-line:nth-child(6) { animation-delay: 0.4s; }
+.landing-md-line:nth-child(7) { animation-delay: 0.48s; }
+.landing-md-line:nth-child(8) { animation-delay: 0.56s; }
+.landing-md-line:nth-child(9) { animation-delay: 0.64s; }
+.landing-md-line:nth-child(10) { animation-delay: 0.72s; }
+.landing-md-line:nth-child(11) { animation-delay: 0.8s; }
+.landing-md-line:nth-child(12) { animation-delay: 0.88s; }
+.landing-md-line:nth-child(13) { animation-delay: 0.96s; }
+
+.landing-cursor {
+  animation: landingCursor 1s steps(2, jump-none) infinite;
+}
+
+.landing-packet {
+  position: absolute;
+  z-index: 2;
+  top: 54%;
+  left: 19%;
+  height: 10px;
+  width: 10px;
+  border-radius: 999px;
+  background: #008884;
+  box-shadow: 0 0 0 7px rgb(0 136 132 / 0.12), 0 10px 24px rgb(0 136 132 / 0.24);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.landing-packet-one {
+  animation: landingPacket 4.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.landing-packet-two {
+  top: 31%;
+  animation: landingPacket 4.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  animation-delay: 1.35s;
+}
+
+.landing-check-pop {
+  animation: landingCheckPop 3.2s ease-in-out infinite;
+}
+
+.landing-publish-body {
+  animation: landingPublishReveal 5.2s ease-in-out infinite;
+}
+
+@keyframes landingFileFloat {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(3px);
+  }
+}
+
+@keyframes landingActiveFile {
+  0%, 100% {
+    box-shadow: 0 0 0 1px rgb(0 136 132 / 0.15);
+  }
+  50% {
+    box-shadow: 0 0 0 1px rgb(0 136 132 / 0.22), 0 8px 22px rgb(0 136 132 / 0.12);
+  }
+}
+
+@keyframes landingProgress {
+  0%, 18% {
+    width: 14%;
+  }
+  58%, 82% {
+    width: 92%;
+  }
+  100% {
+    width: 14%;
+  }
+}
+
+@keyframes landingTypeLine {
+  0%, 4% {
+    opacity: 0.62;
+    transform: translateY(3px);
+  }
+  13%, 82% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0.78;
+    transform: translateY(0);
+  }
+}
+
+@keyframes landingCursor {
+  0%, 44% {
+    opacity: 1;
+  }
+  45%, 100% {
+    opacity: 0;
+  }
+}
+
+@keyframes landingPacket {
+  0%, 18% {
+    opacity: 0;
+    transform: translateX(0) translateY(18px) scale(0.72);
+  }
+  28% {
+    opacity: 1;
+  }
+  62% {
+    opacity: 1;
+    transform: translateX(50vw) translateY(-20px) scale(1);
+  }
+  76%, 100% {
+    opacity: 0;
+    transform: translateX(58vw) translateY(-26px) scale(0.82);
+  }
+}
+
+@keyframes landingCheckPop {
+  0%, 45%, 100% {
+    transform: scale(1);
+  }
+  55% {
+    transform: scale(1.18);
+  }
+}
+
+@keyframes landingPublishReveal {
+  0%, 28% {
+    opacity: 0.72;
+    transform: translateY(8px);
+  }
+  44%, 100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 1023px) {
+  .landing-packet {
+    display: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .landing-hero {
+    min-height: auto;
+  }
+
+  .landing-md-line:nth-child(n + 10) {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-file-row,
+  .landing-file-row-active,
+  .landing-progress,
+  .landing-md-line,
+  .landing-cursor,
+  .landing-packet-one,
+  .landing-packet-two,
+  .landing-check-pop,
+  .landing-publish-body {
+    animation: none;
+  }
+
+  .landing-md-line {
+    opacity: 1;
+    transform: none;
+  }
+
+  .landing-progress {
+    width: 76%;
+  }
 }

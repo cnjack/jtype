@@ -202,14 +202,12 @@ pub async fn update_member_role(
 
     let _status: String = target.try_get("status")?;
 
-    sqlx::query(
-        "UPDATE workspace_members SET role = ? WHERE workspace_id = ? AND user_id = ?",
-    )
-    .bind(&role)
-    .bind(&workspace_id)
-    .bind(&target_user_id)
-    .execute(&state.pool)
-    .await?;
+    sqlx::query("UPDATE workspace_members SET role = ? WHERE workspace_id = ? AND user_id = ?")
+        .bind(&role)
+        .bind(&workspace_id)
+        .bind(&target_user_id)
+        .execute(&state.pool)
+        .await?;
 
     // Return updated member info
     let row = sqlx::query(

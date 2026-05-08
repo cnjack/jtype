@@ -82,8 +82,7 @@ async fn list_workspaces_shows_owned() {
 #[tokio::test]
 async fn list_workspaces_unauthenticated() {
     let (app, _pool) = common::setup().await;
-    let (status, _body) =
-        common::req(app, "GET", "/api/v1/workspaces", None, None).await;
+    let (status, _body) = common::req(app, "GET", "/api/v1/workspaces", None, None).await;
     assert_eq!(status, StatusCode::UNAUTHORIZED);
 }
 
@@ -93,8 +92,7 @@ async fn get_workspace_success() {
     let (token, _) = common::register_user(app.clone(), &common::uid()).await;
     let ws_id = common::create_workspace(app.clone(), &token, &common::wname()).await;
     let uri = format!("/api/v1/workspaces/{ws_id}");
-    let (status, body) =
-        common::req(app, "GET", &uri, Some(&token), None).await;
+    let (status, body) = common::req(app, "GET", &uri, Some(&token), None).await;
     assert_eq!(status, StatusCode::OK);
     assert_eq!(body["id"].as_str().unwrap(), ws_id);
 }
@@ -182,11 +180,12 @@ async fn get_workspace_manifest_empty() {
     let (token, _) = common::register_user(app.clone(), &common::uid()).await;
     let ws_id = common::create_workspace(app.clone(), &token, &common::wname()).await;
     let uri = format!("/api/v1/workspaces/{ws_id}/manifest");
-    let (status, body) =
-        common::req(app, "GET", &uri, Some(&token), None).await;
+    let (status, body) = common::req(app, "GET", &uri, Some(&token), None).await;
     assert_eq!(status, StatusCode::OK);
     assert_eq!(body["workspaceId"].as_str().unwrap(), ws_id);
-    let docs = body["documents"].as_array().expect("documents should be an array");
+    let docs = body["documents"]
+        .as_array()
+        .expect("documents should be an array");
     assert_eq!(docs.len(), 0);
 }
 

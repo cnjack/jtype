@@ -212,11 +212,17 @@ pub async fn delete_document(
 
     tx.commit().await?;
 
-    state.hub.publish(&workspace_id, WorkspaceEvent::DocumentDeleted {
-        source_session_id: String::new(),
-        relative_path,
-        deleted_clock: next_clock,
-    }).await;
+    state
+        .hub
+        .publish(
+            &workspace_id,
+            WorkspaceEvent::DocumentDeleted {
+                source_session_id: String::new(),
+                relative_path,
+                deleted_clock: next_clock,
+            },
+        )
+        .await;
 
     Ok(StatusCode::NO_CONTENT)
 }
@@ -538,9 +544,13 @@ pub async fn next_workspace_clock(
     let row = sqlx::query(
         r#"SELECT GREATEST(
                 COALESCE((SELECT MAX(updated_clock) FROM documents WHERE workspace_id = ?), 0),
-                COALESCE((SELECT MAX(deleted_clock) FROM document_trash WHERE workspace_id = ?), 0)
+                COALESCE((SELECT MAX(deleted_clock) FROM document_trash WHERE workspace_id = ?), 0),
+                COALESCE((SELECT MAX(updated_clock) FROM workspace_folders WHERE workspace_id = ?), 0),
+                COALESCE((SELECT MAX(deleted_clock) FROM workspace_folder_deletions WHERE workspace_id = ?), 0)
             ) + 1 AS next_clock"#,
     )
+    .bind(workspace_id)
+    .bind(workspace_id)
     .bind(workspace_id)
     .bind(workspace_id)
     .fetch_one(&mut **tx)

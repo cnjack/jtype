@@ -149,7 +149,6 @@ async fn get_me_no_token() {
 #[tokio::test]
 async fn get_me_bad_token() {
     let (app, _pool) = common::setup().await;
-    let (status, _body) =
-        common::req(app, "GET", "/api/me", Some("not-a-valid-token"), None).await;
+    let (status, _body) = common::req(app, "GET", "/api/me", Some("not-a-valid-token"), None).await;
     assert_eq!(status, StatusCode::UNAUTHORIZED);
 }

@@ -17,7 +17,7 @@ import {
   CodeBracketIcon,
   TableCellsIcon,
   VariableIcon,
-  ArrowPathIcon,
+  ShareIcon,
   ClipboardDocumentCheckIcon,
   PencilSquareIcon,
   ViewColumnsIcon,
@@ -88,6 +88,11 @@ export function EditorShell() {
   const fileStateLabel = state.isDirty ? "Unsaved changes" : state.currentPath ? "Saved" : "Ready";
   const parsed = isMarkdown ? parseFrontmatter(state.editorContent) : null;
   const publishStatus = state.currentPath && parsed ? parsed.data.status || (parsed.data.publish ? "published" : "draft") : "";
+  const currentVaultSettings = state.workspace ? state.vaultSettings[state.workspace.rootPath] : undefined;
+  const currentVaultBinding = state.workspace
+    ? state.vaultBindings.find((binding) => binding.localVaultPath === state.workspace?.rootPath)
+    : null;
+  const cloudSyncEnabled = Boolean(currentVaultBinding && currentVaultSettings?.cloudSyncEnabled !== false);
 
   const isFavorite = (() => {
     if (!state.currentPath) return false;
@@ -194,7 +199,7 @@ export function EditorShell() {
         <div className="flex shrink-0 items-center gap-1">
           <span id="file-state" className={`status-chip ${state.isDirty ? "status-chip-warning" : "status-chip-neutral"}`}>{fileStateLabel}</span>
           {isMarkdown && state.mode === "workspace" && <span className="status-chip status-chip-neutral">{publishStatus}</span>}
-          {state.syncSiteUrl && isMarkdown && state.mode === "workspace" && <span className="status-chip status-chip-info">Synced</span>}
+          {cloudSyncEnabled && state.syncSiteUrl && isMarkdown && state.mode === "workspace" && <span className="status-chip status-chip-info">Synced</span>}
           {state.activeConflicts.length > 0 && (
             <button
               type="button"
@@ -247,7 +252,7 @@ export function EditorShell() {
           <VariableIcon className="h-4 w-4" />
         </EditorToolbarButton>
         <EditorToolbarButton command="insert.mermaid" title="Insert Mermaid diagram" disabled={!isMarkdown} runCommand={runCommand}>
-          <ArrowPathIcon className="h-4 w-4" />
+          <ShareIcon className="h-4 w-4" />
         </EditorToolbarButton>
         <EditorToolbarButton command="insert.task" title="Task list" disabled={!isMarkdown} runCommand={runCommand}>
           <ClipboardDocumentCheckIcon className="h-4 w-4" />
@@ -343,7 +348,7 @@ export function EditorShell() {
           <button type="button" className="context-menu-button" disabled={!isMarkdown} onClick={() => { addMarkdownTableColumn(); setContextMenu(null); }}><TableCellsIcon className="mr-2 h-3.5 w-3.5" />Add table column right</button>
           <button type="button" className="context-menu-button" disabled={!isMarkdown} onClick={() => { formatMarkdownTable(); setContextMenu(null); }}><TableCellsIcon className="mr-2 h-3.5 w-3.5" />Format table</button>
           <button type="button" className="context-menu-button" disabled={!isMarkdown} onClick={() => { insertBlockAtSafeCursor("\n$$\nE = mc^2\n$$\n"); setContextMenu(null); }}><VariableIcon className="mr-2 h-3.5 w-3.5" />Insert formula</button>
-          <button type="button" className="context-menu-button" disabled={!isMarkdown} onClick={() => { insertBlockAtSafeCursor("\n```mermaid\nflowchart TD\n  A --> B\n```\n"); setContextMenu(null); }}><ArrowPathIcon className="mr-2 h-3.5 w-3.5" />Insert Mermaid diagram</button>
+          <button type="button" className="context-menu-button" disabled={!isMarkdown} onClick={() => { insertBlockAtSafeCursor("\n```mermaid\nflowchart TD\n  A --> B\n```\n"); setContextMenu(null); }}><ShareIcon className="mr-2 h-3.5 w-3.5" />Insert Mermaid diagram</button>
         </div>
       )}
     </section>

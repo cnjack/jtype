@@ -251,6 +251,33 @@ pub struct DocumentListItem {
     pub version_id: Option<String>,
 }
 
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateFolderRequest {
+    pub relative_path: String,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct SyncFolderInput {
+    pub relative_path: String,
+}
+
+#[derive(Debug, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct FolderListItem {
+    pub id: String,
+    pub relative_path: String,
+    pub updated_clock: i64,
+}
+
+#[derive(Debug, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct DeletedFolder {
+    pub relative_path: String,
+    pub deleted_clock: i64,
+}
+
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DocumentVersionResponse {
@@ -300,6 +327,8 @@ pub struct SyncPullRequest {
 #[serde(rename_all = "camelCase")]
 pub struct SyncPushRequest {
     pub device_id: Option<String>,
+    #[serde(default)]
+    pub folders: Vec<SyncFolderInput>,
     pub documents: Vec<CloudSaveDocumentRequest>,
     #[serde(default)]
     pub deleted_paths: Vec<DeletedPathInput>,
@@ -328,6 +357,8 @@ pub struct SyncConflict {
 #[serde(rename_all = "camelCase")]
 pub struct SyncPullResponse {
     pub workspace_id: String,
+    pub folders: Vec<FolderListItem>,
+    pub deleted_folders: Vec<DeletedFolder>,
     pub documents: Vec<CloudDocument>,
     pub deleted_paths: Vec<DeletedPath>,
     pub conflicts: Vec<SyncConflict>,
@@ -355,6 +386,7 @@ pub struct SyncPushDocument {
 pub struct SyncPushResponse {
     pub workspace_id: String,
     pub accepted: usize,
+    pub folders: Vec<FolderListItem>,
     pub documents: Vec<SyncPushDocument>,
     pub deleted_paths: Vec<DeletedPath>,
     pub conflicts: Vec<SyncConflict>,

@@ -14,7 +14,7 @@ use tauri::{AppHandle, Emitter};
 
 use workspace::{
     AiIndexResult, EntryKind, FolderContentsSummary, PublishResult, SyncBaseEntry, SyncDocument,
-    TrashItemInfo, TrashMetadata, ValidationResult, WorkspaceSnapshot,
+    SyncFolder, TrashItemInfo, TrashMetadata, ValidationResult, WorkspaceSnapshot,
 };
 
 struct WatcherState {
@@ -62,6 +62,12 @@ struct VaultBindingStore {
 struct CloudSyncDocument {
     relative_path: String,
     content: String,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct CloudSyncFolder {
+    relative_path: String,
 }
 
 #[tauri::command]
@@ -160,6 +166,11 @@ fn collect_sync_documents(root_path: String) -> Result<Vec<SyncDocument>, String
 }
 
 #[tauri::command]
+fn collect_sync_folders(root_path: String) -> Result<Vec<SyncFolder>, String> {
+    workspace::collect_sync_folders(&PathBuf::from(root_path))
+}
+
+#[tauri::command]
 fn save_sync_bases(root_path: String, documents: Vec<SyncBaseEntry>) -> Result<(), String> {
     workspace::save_sync_bases(&PathBuf::from(root_path), &documents)
 }
@@ -223,9 +234,10 @@ fn bind_cloud_workspace(binding: VaultBinding) -> Result<Vec<VaultBinding>, Stri
         return Err("Local vault path is required.".to_string());
     }
     let mut store = read_binding_store()?;
-    store
-        .bindings
-        .retain(|item| item.workspace_id != binding.workspace_id && item.local_vault_path != binding.local_vault_path);
+    store.bindings.retain(|item| {
+        item.workspace_id != binding.workspace_id
+            && item.local_vault_path != binding.local_vault_path
+    });
     store.bindings.push(binding);
     store
         .bindings
@@ -238,8 +250,13 @@ fn bind_cloud_workspace(binding: VaultBinding) -> Result<Vec<VaultBinding>, Stri
 fn apply_cloud_documents(
     root_path: String,
     documents: Vec<CloudSyncDocument>,
+    folders: Vec<CloudSyncFolder>,
 ) -> Result<WorkspaceSnapshot, String> {
     let root = PathBuf::from(root_path);
+    for folder in folders {
+        let target = safe_join(&root, &folder.relative_path)?;
+        fs::create_dir_all(target).map_err(|error| error.to_string())?;
+    }
     for document in documents {
         if !workspace::is_markdown_path(&PathBuf::from(&document.relative_path)) {
             continue;
@@ -249,6 +266,28 @@ fn apply_cloud_documents(
             fs::create_dir_all(parent).map_err(|error| error.to_string())?;
         }
         fs::write(target, document.content).map_err(|error| error.to_string())?;
+    }
+    workspace::open_workspace(&root)
+}
+
+#[tauri::command]
+fn apply_deleted_cloud_folders(
+    root_path: String,
+    folders: Vec<CloudSyncFolder>,
+) -> Result<WorkspaceSnapshot, String> {
+    let root = PathBuf::from(root_path);
+    let mut folders = folders;
+    folders.sort_by(|left, right| right.relative_path.cmp(&left.relative_path));
+    for folder in folders {
+        let target = safe_join(&root, &folder.relative_path)?;
+        if target.is_dir()
+            && fs::read_dir(&target)
+                .map_err(|error| error.to_string())?
+                .next()
+                .is_none()
+        {
+            fs::remove_dir(&target).map_err(|error| error.to_string())?;
+        }
     }
     workspace::open_workspace(&root)
 }
@@ -582,10 +621,7 @@ fn vault_settings_file() -> Result<PathBuf, String> {
 }
 
 #[tauri::command]
-async fn cloud_ws_send(
-    state: tauri::State<'_, WsOutbox>,
-    message: String,
-) -> Result<(), String> {
+async fn cloud_ws_send(state: tauri::State<'_, WsOutbox>, message: String) -> Result<(), String> {
     // Ignore send errors — WS may be temporarily disconnected.
     let _ = state.0.send(message);
     Ok(())
@@ -618,9 +654,7 @@ async fn start_cloud_listener(
 }
 
 #[tauri::command]
-async fn stop_cloud_listener(
-    state: tauri::State<'_, WsListenerHandle>,
-) -> Result<(), String> {
+async fn stop_cloud_listener(state: tauri::State<'_, WsListenerHandle>) -> Result<(), String> {
     if let Some(handle) = state.0.lock().unwrap().take() {
         handle.abort();
     }
@@ -648,6 +682,7 @@ pub fn run() {
             validate_workspace,
             build_ai_index,
             collect_sync_documents,
+            collect_sync_folders,
             save_sync_bases,
             delete_sync_bases,
             load_sync_bases,
@@ -656,6 +691,7 @@ pub fn run() {
             list_vault_bindings,
             bind_cloud_workspace,
             apply_cloud_documents,
+            apply_deleted_cloud_folders,
             trash_workspace_entry,
             list_workspace_trash,
             restore_workspace_trash,

@@ -109,6 +109,29 @@ pub fn normalize_relative_markdown_path(path: &str) -> Result<String, AppError> 
     Ok(normalized)
 }
 
+pub fn normalize_folder_path(path: &str) -> Result<String, AppError> {
+    let normalized = path.trim().replace('\\', "/").trim_matches('/').to_string();
+    if normalized.is_empty()
+        || normalized.starts_with('/')
+        || normalized.contains("../")
+        || normalized == ".."
+        || normalized.split('/').any(|part| {
+            part.is_empty()
+                || part == "."
+                || part == ".."
+                || part == ".jtype"
+                || part == ".git"
+                || part == "node_modules"
+                || part == "target"
+        })
+    {
+        return Err(AppError::BadRequest(
+            "relative folder path is required".to_string(),
+        ));
+    }
+    Ok(normalized)
+}
+
 pub fn slugify(value: &str) -> String {
     let mut slug = String::new();
     let mut previous_dash = false;

@@ -221,7 +221,14 @@ async fn list_versions_multiple_saves() {
         .to_string();
 
     // Two more saves with different content.
-    common::save_doc(app.clone(), &token, &ws_id, path, "# Version 2\n\nMore content.").await;
+    common::save_doc(
+        app.clone(),
+        &token,
+        &ws_id,
+        path,
+        "# Version 2\n\nMore content.",
+    )
+    .await;
     common::save_doc(
         app.clone(),
         &token,
@@ -342,8 +349,8 @@ async fn list_versions_not_found() {
 
     // The server may return 404 or an empty array; both are acceptable.
     let is_not_found = status == StatusCode::NOT_FOUND;
-    let is_empty_ok = status == StatusCode::OK
-        && body.as_array().map(|a| a.is_empty()).unwrap_or(false);
+    let is_empty_ok =
+        status == StatusCode::OK && body.as_array().map(|a| a.is_empty()).unwrap_or(false);
     assert!(
         is_not_found || is_empty_ok,
         "expected 404 or empty 200 for unknown document, got {}",

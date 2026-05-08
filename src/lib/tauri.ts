@@ -6,6 +6,7 @@ import type {
   AiIndexResult,
   ValidationResult,
   SyncDocument,
+  SyncFolder,
   SyncBaseEntry,
   CloudProfile,
   VaultBinding,
@@ -57,11 +58,17 @@ export const tauri = {
   listVaultBindings() {
     return invoke<VaultBinding[]>("list_vault_bindings");
   },
-  applyCloudDocuments(rootPath: string, documents: Array<{ relativePath: string; content: string }>) {
-    return invoke<WorkspaceSnapshot>("apply_cloud_documents", { rootPath, documents });
+  applyCloudDocuments(rootPath: string, documents: Array<{ relativePath: string; content: string }>, folders: SyncFolder[] = []) {
+    return invoke<WorkspaceSnapshot>("apply_cloud_documents", { rootPath, documents, folders });
+  },
+  applyDeletedCloudFolders(rootPath: string, folders: SyncFolder[]) {
+    return invoke<WorkspaceSnapshot>("apply_deleted_cloud_folders", { rootPath, folders });
   },
   collectSyncDocuments(rootPath: string) {
     return invoke<SyncDocument[]>("collect_sync_documents", { rootPath });
+  },
+  collectSyncFolders(rootPath: string) {
+    return invoke<SyncFolder[]>("collect_sync_folders", { rootPath });
   },
   saveSyncBases(rootPath: string, documents: SyncBaseEntry[]) {
     return invoke<void>("save_sync_bases", { rootPath, documents });

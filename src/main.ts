@@ -1653,6 +1653,7 @@ async function applyCloudDocuments(documents: CloudDocument[]) {
   if (!state.workspace || documents.length === 0) return;
   const workspace = await invoke<WorkspaceSnapshot>("apply_cloud_documents", {
     rootPath: state.workspace.rootPath,
+    folders: [],
     documents: documents.map((document) => ({
       relativePath: document.relativePath,
       content: document.content,

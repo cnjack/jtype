@@ -355,7 +355,11 @@ async fn save_document_viewer_forbidden() {
         Some(json!({ "role": "viewer" })),
     )
     .await;
-    assert_eq!(invite_status, StatusCode::OK, "invite creation failed: {invite_body}");
+    assert_eq!(
+        invite_status,
+        StatusCode::OK,
+        "invite creation failed: {invite_body}"
+    );
     let invite_token = invite_body["inviteToken"].as_str().unwrap().to_string();
 
     // User2 accepts the invite

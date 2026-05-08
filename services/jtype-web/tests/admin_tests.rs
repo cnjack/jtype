@@ -41,7 +41,10 @@ async fn admin_list_users_as_admin() {
     // Spot-check fields on the first entry
     let first = &arr[0];
     assert!(first["id"].as_str().is_some(), "missing id: {first}");
-    assert!(first["username"].as_str().is_some(), "missing username: {first}");
+    assert!(
+        first["username"].as_str().is_some(),
+        "missing username: {first}"
+    );
     assert!(first["role"].as_str().is_some(), "missing role: {first}");
 }
 
@@ -51,8 +54,7 @@ async fn admin_list_users_forbidden() {
     let username = common::uid();
     let (token, _) = common::register_user(app.clone(), &username).await;
 
-    let (status, _) =
-        common::req(app, "GET", "/api/admin/users", Some(&token), None).await;
+    let (status, _) = common::req(app, "GET", "/api/admin/users", Some(&token), None).await;
 
     assert_eq!(status, StatusCode::FORBIDDEN);
 }
@@ -177,8 +179,14 @@ async fn admin_list_workspaces() {
     let ws_name = common::wname();
     common::create_workspace(app.clone(), &token2, &ws_name).await;
 
-    let (status, body) =
-        common::req(app, "GET", "/api/admin/workspaces", Some(&admin_token), None).await;
+    let (status, body) = common::req(
+        app,
+        "GET",
+        "/api/admin/workspaces",
+        Some(&admin_token),
+        None,
+    )
+    .await;
 
     assert_eq!(status, StatusCode::OK);
     let arr = body.as_array().expect("expected JSON array");

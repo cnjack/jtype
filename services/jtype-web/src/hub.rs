@@ -27,6 +27,8 @@ pub enum WorkspaceEvent {
         relative_path: String,
         action: String,
     },
+    #[serde(rename = "sync:required", rename_all = "camelCase")]
+    SyncRequired { reason: String },
 }
 
 const CHANNEL_CAPACITY: usize = 256;

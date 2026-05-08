@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useCallback, useMemo, memo } from 'react'
 import { Menu, MenuButton, MenuItems, MenuItem, Dialog, DialogPanel } from '@headlessui/react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
-import { api, getStoredUsername, type WorkspaceSummary, type DocumentListItem, type DomainResponse, type TrashItem } from '../api'
+import { api, getStoredUsername, type WorkspaceSummary, type DocumentListItem, type FolderListItem, type DomainResponse, type TrashItem } from '../api'
 import { renderToContainer } from '../lib/markdown'
 import { parseFrontmatter, writeFrontmatter } from '../lib/frontmatter'
 import type { EditorMode } from '../lib/utils'
@@ -58,6 +58,7 @@ export function Workspace() {
   const [workspace, setWorkspace] = useState<WorkspaceSummary | null>(null)
   const [workspaces, setWorkspaces] = useState<WorkspaceSummary[]>([])
   const [documents, setDocuments] = useState<DocumentListItem[]>([])
+  const [folders, setFolders] = useState<FolderListItem[]>([])
   const [trashItems, setTrashItems] = useState<TrashItem[]>([])
   const [domains, setDomains] = useState<DomainResponse[]>([])
   const [loading, setLoading] = useState(true)
@@ -115,12 +116,14 @@ export function Workspace() {
     Promise.all([
       api.listWorkspaces(),
       api.getWorkspace(workspaceId),
+      api.listFolders(workspaceId),
       api.listDocuments(workspaceId),
       api.listTrash(workspaceId),
       api.listDomains(),
-    ]).then(([workspaceList, ws, docs, trash, domainList]) => {
+    ]).then(([workspaceList, ws, folderList, docs, trash, domainList]) => {
       setWorkspaces(workspaceList.workspaces)
       setWorkspace(ws)
+      setFolders(folderList)
       setDocuments(docs)
       setTrashItems(trash)
       setDomains(domainList)
@@ -223,6 +226,7 @@ export function Workspace() {
           api.listTrash(workspace.id).then(setTrashItems)
           break
         case 'sync:required':
+          api.listFolders(workspace.id).then(setFolders)
           api.listDocuments(workspace.id).then(setDocuments)
           api.listTrash(workspace.id).then(setTrashItems)
           break
@@ -247,6 +251,7 @@ export function Workspace() {
             setTimeout(() => setStatusMessage(''), 5000)
           }
           api.listDocuments(workspace.id).then(setDocuments)
+          api.listFolders(workspace.id).then(setFolders)
         })
       }
     }
@@ -255,6 +260,7 @@ export function Workspace() {
   useEffect(() => {
     if (wsStatus === 'connected' || !workspace?.id) return
     const timer = setInterval(() => {
+      api.listFolders(workspace.id).then(setFolders)
       api.listDocuments(workspace.id).then(setDocuments)
     }, 10_000)
     return () => clearInterval(timer)
@@ -329,10 +335,12 @@ export function Workspace() {
 
   async function reloadDocumentsAndTrash() {
     if (!workspaceId) return
-    const [docs, trash] = await Promise.all([
+    const [folderList, docs, trash] = await Promise.all([
+      api.listFolders(workspaceId),
       api.listDocuments(workspaceId),
       api.listTrash(workspaceId),
     ])
+    setFolders(folderList)
     setDocuments(docs)
     setTrashItems(trash)
   }
@@ -578,11 +586,13 @@ export function Workspace() {
               <div className="min-h-0 flex-1 overflow-auto">
                 <WebDocExplorer
                   workspaceId={workspaceId}
+                  folders={folders}
                   documents={documents}
                   selectedDoc={selectedDoc}
                   onOpen={openDocument}
                   onDelete={deleteDocument}
                   onDocumentsChange={setDocuments}
+                  onFoldersChange={setFolders}
                   onSaveDocument={async (data) => {
                     const ack = await wsRequest({ type: 'document:save', ...data })
                     if (!ack.ok) throw new Error(ack.error || 'Save failed')
@@ -1623,19 +1633,24 @@ interface WebTreeNode {
   name: string
   path: string
   kind: 'folder' | 'document'
+  folder?: FolderListItem
   doc?: DocumentListItem
   children: WebTreeNode[]
 }
 
-function buildDocTree(documents: DocumentListItem[]): WebTreeNode[] {
+function buildDocTree(folders: FolderListItem[], documents: DocumentListItem[]): WebTreeNode[] {
   const root: WebTreeNode[] = []
   const folderMap = new Map<string, WebTreeNode>()
 
-  const ensureFolder = (folderPath: string): WebTreeNode => {
-    if (folderMap.has(folderPath)) return folderMap.get(folderPath)!
+  const ensureFolder = (folderPath: string, folder?: FolderListItem): WebTreeNode => {
+    if (folderMap.has(folderPath)) {
+      const existing = folderMap.get(folderPath)!
+      if (folder) existing.folder = folder
+      return existing
+    }
     const parts = folderPath.split('/')
     const name = parts[parts.length - 1]!
-    const node: WebTreeNode = { name, path: folderPath, kind: 'folder', children: [] }
+    const node: WebTreeNode = { name, path: folderPath, kind: 'folder', folder, children: [] }
     folderMap.set(folderPath, node)
     if (parts.length > 1) {
       const parent = ensureFolder(parts.slice(0, -1).join('/'))
@@ -1644,6 +1659,10 @@ function buildDocTree(documents: DocumentListItem[]): WebTreeNode[] {
       root.push(node)
     }
     return node
+  }
+
+  for (const folder of folders) {
+    ensureFolder(folder.relativePath, folder)
   }
 
   for (const doc of documents) {
@@ -1698,11 +1717,13 @@ function toggleFavoriteDoc(docId: string, workspaceId?: string) {
 
 function WebDocExplorer({
   workspaceId,
+  folders,
   documents,
   selectedDoc,
   onOpen,
   onDelete,
   onDocumentsChange,
+  onFoldersChange,
   trashItems,
   onRestoreTrash,
   onDeleteTrash,
@@ -1718,11 +1739,13 @@ function WebDocExplorer({
   onSaveDocument,
 }: {
   workspaceId: string | undefined
+  folders: FolderListItem[]
   documents: DocumentListItem[]
   selectedDoc: string | null
   onOpen: (docId: string) => void
   onDelete: (docId: string) => void
   onDocumentsChange: (docs: DocumentListItem[]) => void
+  onFoldersChange: (folders: FolderListItem[]) => void
   onSaveDocument: (data: { relativePath: string; content: string; title?: string }) => Promise<void>
   trashItems: TrashItem[]
   onRestoreTrash: (id: string) => void
@@ -1739,17 +1762,17 @@ function WebDocExplorer({
 }) {
   const prompt = usePrompt()
   const confirmDialog = useConfirm()
-  const tree = useMemo(() => buildDocTree(documents), [documents])
-  const folders = useMemo(() => allFolderPaths(tree), [tree])
-  const allExpanded = folders.size > 0 && folders.size === expanded.size
+  const tree = useMemo(() => buildDocTree(folders, documents), [folders, documents])
+  const folderPaths = useMemo(() => allFolderPaths(tree), [tree])
+  const allExpanded = folderPaths.size > 0 && folderPaths.size === expanded.size
 
   const toggleExpandCollapse = useCallback(() => {
     if (allExpanded) {
       setExpanded(new Set<string>())
     } else {
-      setExpanded(new Set(folders))
+      setExpanded(new Set(folderPaths))
     }
-  }, [allExpanded, folders, setExpanded])
+  }, [allExpanded, folderPaths, setExpanded])
 
   const handleToggle = useCallback((path: string) => {
     setExpanded(prev => {
@@ -1772,14 +1795,15 @@ function WebDocExplorer({
       .slice(0, 30)
   }, [documents, query])
 
-  const handleCreateFolder = async () => {
+  const handleCreateFolder = async (parentPath = '') => {
     if (!workspaceId) return
     const name = await prompt('New folder name:')
     if (!name?.trim()) return
-    const placeholderPath = `${name.trim()}/.gitkeep`
-    await onSaveDocument({ relativePath: placeholderPath, content: '' })
-    const docs = await api.listDocuments(workspaceId)
-    onDocumentsChange(docs)
+    const relativePath = parentPath ? `${parentPath}/${name.trim()}` : name.trim()
+    await api.createFolder(workspaceId, relativePath)
+    const folderList = await api.listFolders(workspaceId)
+    onFoldersChange(folderList)
+    setExpanded(new Set(expanded).add(relativePath))
   }
 
   const handleCreateDocInFolder = async (folderPath: string) => {
@@ -1790,6 +1814,7 @@ function WebDocExplorer({
     await onSaveDocument({ relativePath, content: '' })
     const docs = await api.listDocuments(workspaceId)
     onDocumentsChange(docs)
+    onFoldersChange(await api.listFolders(workspaceId))
     setExpanded(new Set(expanded).add(folderPath))
   }
 
@@ -1802,7 +1827,14 @@ function WebDocExplorer({
       for (const child of children) {
         await api.deleteDocument(workspaceId, child.id)
       }
+      const folder = folders.find(f => f.relativePath === folderPath)
+      if (folder) await api.deleteFolder(workspaceId, folder.id)
+      for (const childFolder of folders.filter(f => f.relativePath.startsWith(folderPath + '/'))) {
+        await api.deleteFolder(workspaceId, childFolder.id).catch(() => undefined)
+      }
+      const folderList = await api.listFolders(workspaceId)
       const docs = await api.listDocuments(workspaceId)
+      onFoldersChange(folderList)
       onDocumentsChange(docs)
     } catch (err) {
       alert(String(err))
@@ -1886,47 +1918,46 @@ function WebDocExplorer({
           )}
 
           <nav className="mt-2" aria-label="Workspace files">
-            {documents.length === 0 ? (
+            <div className="mb-1 flex items-center justify-end gap-0.5">
+              <button
+                className="subtle-button aspect-square px-0"
+                type="button"
+                title="New folder"
+                onClick={() => handleCreateFolder()}
+              >
+                <FolderPlusIcon className="h-3.5 w-3.5" />
+              </button>
+              <button
+                className="subtle-button aspect-square px-0"
+                type="button"
+                title={allExpanded ? 'Collapse all' : 'Expand all'}
+                onClick={toggleExpandCollapse}
+                disabled={folderPaths.size === 0}
+              >
+                {allExpanded
+                  ? <ArrowsPointingInIcon className="h-3.5 w-3.5" />
+                  : <ArrowsPointingOutIcon className="h-3.5 w-3.5" />}
+              </button>
+            </div>
+            {tree.length === 0 ? (
               <p className="rounded-md border border-dashed border-stone-300 p-3 text-sm text-stone-500">
                 No documents yet.
               </p>
             ) : (
-              <>
-                <div className="mb-1 flex items-center justify-end gap-0.5">
-                  <button
-                    className="subtle-button aspect-square px-0"
-                    type="button"
-                    title="New folder"
-                    onClick={handleCreateFolder}
-                  >
-                    <FolderPlusIcon className="h-3.5 w-3.5" />
-                  </button>
-                  <button
-                    className="subtle-button aspect-square px-0"
-                    type="button"
-                    title={allExpanded ? 'Collapse all' : 'Expand all'}
-                    onClick={toggleExpandCollapse}
-                  >
-                    {allExpanded
-                      ? <ArrowsPointingInIcon className="h-3.5 w-3.5" />
-                      : <ArrowsPointingOutIcon className="h-3.5 w-3.5" />}
-                  </button>
-                </div>
-                <ul className="space-y-1">
-                  {tree.map(node => (
-                    <WebTreeNodeRow
-                      key={node.path}
-                      node={node}
-                      depth={0}
-                      expanded={expanded}
-                      selectedDoc={selectedDoc}
-                      onToggle={handleToggle}
-                      onOpen={onOpen}
-                      onContextMenu={(n, x, y) => setTreeContextMenu({ node: n, x, y })}
-                    />
-                  ))}
-                </ul>
-              </>
+              <ul className="space-y-1">
+                {tree.map(node => (
+                  <WebTreeNodeRow
+                    key={node.path}
+                    node={node}
+                    depth={0}
+                    expanded={expanded}
+                    selectedDoc={selectedDoc}
+                    onToggle={handleToggle}
+                    onOpen={onOpen}
+                    onContextMenu={(n, x, y) => setTreeContextMenu({ node: n, x, y })}
+                  />
+                ))}
+              </ul>
             )}
           </nav>
 
@@ -1999,7 +2030,7 @@ function WebDocExplorer({
               <button
                 type="button"
                 className="context-menu-button"
-                onClick={() => { void handleCreateFolder(); setTreeContextMenu(null) }}
+                onClick={() => { void handleCreateFolder(treeContextMenu.node.path); setTreeContextMenu(null) }}
               >
                 <FolderPlusIcon className="mr-2 h-3.5 w-3.5" />New folder
               </button>

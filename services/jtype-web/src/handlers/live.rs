@@ -1,6 +1,6 @@
 use axum::{
-    extract::{Path, Query, State},
     extract::ws::{Message, WebSocket, WebSocketUpgrade},
+    extract::{Path, Query, State},
     response::IntoResponse,
 };
 use futures::{SinkExt, StreamExt};
@@ -104,7 +104,11 @@ async fn handle_ws(
         "sessionId": session_id,
         "workspaceClock": workspace_clock,
     });
-    if sink.send(Message::Text(connected.to_string())).await.is_err() {
+    if sink
+        .send(Message::Text(connected.to_string()))
+        .await
+        .is_err()
+    {
         return;
     }
 
@@ -167,16 +171,7 @@ async fn handle_ws(
             match msg {
                 Message::Text(text) => {
                     handle_ws_text(
-                        &text,
-                        &state_b,
-                        &wid_b,
-                        &uid,
-                        &uname,
-                        &sid,
-                        &ct,
-                        &did,
-                        &r,
-                        &out_tx,
+                        &text, &state_b, &wid_b, &uid, &uname, &sid, &ct, &did, &r, &out_tx,
                     )
                     .await;
                 }
@@ -292,8 +287,7 @@ async fn handle_doc_save(
         role: role.to_string(),
     };
 
-    match save_document_version(&state.pool, workspace_id, &auth_user, payload, client_type).await
-    {
+    match save_document_version(&state.pool, workspace_id, &auth_user, payload, client_type).await {
         Ok(SaveDocumentOutcome::Saved(doc, _)) => {
             state
                 .hub
@@ -353,9 +347,13 @@ async fn fetch_workspace_clock(pool: &sqlx::Pool<sqlx::MySql>, workspace_id: &st
     sqlx::query(
         r#"SELECT GREATEST(
                 COALESCE((SELECT MAX(updated_clock) FROM documents WHERE workspace_id = ?), 0),
-                COALESCE((SELECT MAX(deleted_clock) FROM document_trash WHERE workspace_id = ?), 0)
+                COALESCE((SELECT MAX(deleted_clock) FROM document_trash WHERE workspace_id = ?), 0),
+                COALESCE((SELECT MAX(updated_clock) FROM workspace_folders WHERE workspace_id = ?), 0),
+                COALESCE((SELECT MAX(deleted_clock) FROM workspace_folder_deletions WHERE workspace_id = ?), 0)
             ) AS workspace_clock"#,
     )
+    .bind(workspace_id)
+    .bind(workspace_id)
     .bind(workspace_id)
     .bind(workspace_id)
     .fetch_one(pool)

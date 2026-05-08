@@ -68,6 +68,12 @@ pub struct SyncDocument {
     pub content: String,
 }
 
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct SyncFolder {
+    pub relative_path: String,
+}
+
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SyncBaseEntry {
@@ -415,6 +421,37 @@ pub fn collect_sync_documents(root: &Path) -> Result<Vec<SyncDocument>, String> 
     }
 
     Ok(documents)
+}
+
+pub fn collect_sync_folders(root: &Path) -> Result<Vec<SyncFolder>, String> {
+    let mut folders = Vec::new();
+    collect_sync_folders_inner(root, root, &mut folders)?;
+    folders.sort_by(|left, right| left.relative_path.cmp(&right.relative_path));
+    Ok(folders)
+}
+
+fn collect_sync_folders_inner(
+    root: &Path,
+    current: &Path,
+    folders: &mut Vec<SyncFolder>,
+) -> Result<(), String> {
+    for entry in fs::read_dir(current).map_err(|error| error.to_string())? {
+        let entry = entry.map_err(|error| error.to_string())?;
+        let path = entry.path();
+        if !path.is_dir() {
+            continue;
+        }
+        let name = entry.file_name().to_string_lossy().to_string();
+        if name == ".jtype" || name == ".git" || name == "node_modules" || name == "target" {
+            continue;
+        }
+        let relative = path.strip_prefix(root).map_err(|error| error.to_string())?;
+        folders.push(SyncFolder {
+            relative_path: path_to_string(relative),
+        });
+        collect_sync_folders_inner(root, &path, folders)?;
+    }
+    Ok(())
 }
 
 pub fn save_sync_bases(root: &Path, documents: &[SyncBaseEntry]) -> Result<(), String> {
@@ -1182,11 +1219,7 @@ fn collect_docs_in_folder(root: &Path, folder_relative: &str) -> Result<Vec<Stri
     Ok(docs)
 }
 
-fn collect_docs_recursive(
-    dir: &Path,
-    root: &Path,
-    docs: &mut Vec<String>,
-) -> Result<(), String> {
+fn collect_docs_recursive(dir: &Path, root: &Path, docs: &mut Vec<String>) -> Result<(), String> {
     let entries = fs::read_dir(dir).map_err(|e| e.to_string())?;
     for entry in entries {
         let entry = entry.map_err(|e| e.to_string())?;
@@ -1537,6 +1570,26 @@ mod tests {
     }
 
     #[test]
+    fn collects_sync_folders_including_empty_dirs() {
+        let dir = tempdir().unwrap();
+        fs::create_dir_all(dir.path().join("empty").join("nested")).unwrap();
+        fs::create_dir_all(dir.path().join(".jtype")).unwrap();
+        fs::create_dir_all(dir.path().join("notes")).unwrap();
+        fs::write(dir.path().join("notes").join("first.md"), "# First").unwrap();
+
+        let folders = collect_sync_folders(dir.path()).unwrap();
+        let paths: Vec<String> = folders
+            .into_iter()
+            .map(|folder| folder.relative_path)
+            .collect();
+
+        assert!(paths.contains(&"empty".to_string()));
+        assert!(paths.contains(&"empty/nested".to_string()));
+        assert!(paths.contains(&"notes".to_string()));
+        assert!(!paths.contains(&".jtype".to_string()));
+    }
+
+    #[test]
     fn creates_and_lists_folder() {
         let dir = tempdir().unwrap();
         open_workspace(dir.path()).unwrap();
@@ -1565,7 +1618,9 @@ mod tests {
         fs::create_dir_all(dir.path().join("a").join("b")).unwrap();
         let result = move_folder(dir.path(), "a", "a/b/a");
         assert!(result.is_err());
-        assert!(result.unwrap_err().contains("Cannot move folder into itself"));
+        assert!(result
+            .unwrap_err()
+            .contains("Cannot move folder into itself"));
     }
 
     #[test]

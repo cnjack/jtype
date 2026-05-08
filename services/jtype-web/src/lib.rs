@@ -147,6 +147,14 @@ pub fn build_router(pool: Pool<MySql>, public_base_url: String) -> Router {
         )
         // Documents API
         .route(
+            "/api/v1/workspaces/:workspace_id/folders",
+            get(handlers::folder::list_folders).post(handlers::folder::create_folder),
+        )
+        .route(
+            "/api/v1/workspaces/:workspace_id/folders/:folder_id",
+            delete(handlers::folder::delete_folder),
+        )
+        .route(
             "/api/v1/workspaces/:workspace_id/documents",
             get(handlers::document::list_documents),
         )

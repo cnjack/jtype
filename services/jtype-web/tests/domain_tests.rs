@@ -5,11 +5,7 @@ use serde_json::json;
 
 // ── Local helper ──────────────────────────────────────────────────────────────
 
-async fn add_domain(
-    app: axum::Router,
-    token: &str,
-    domain: &str,
-) -> (String, serde_json::Value) {
+async fn add_domain(app: axum::Router, token: &str, domain: &str) -> (String, serde_json::Value) {
     let (status, body) = common::req(
         app,
         "POST",
@@ -28,8 +24,7 @@ async fn add_domain(
 async fn list_domains_empty() {
     let (app, _pool) = common::setup().await;
     let (token, _) = common::register_user(app.clone(), &common::uid()).await;
-    let (status, body) =
-        common::req(app, "GET", "/api/v1/domains", Some(&token), None).await;
+    let (status, body) = common::req(app, "GET", "/api/v1/domains", Some(&token), None).await;
     assert_eq!(status, StatusCode::OK);
     assert!(
         body.as_array().unwrap().is_empty(),
@@ -76,7 +71,11 @@ async fn add_domain_with_workspace() {
         Some(json!({ "domain": domain, "workspaceId": ws_id })),
     )
     .await;
-    assert_eq!(status, StatusCode::OK, "add domain with workspace failed: {body}");
+    assert_eq!(
+        status,
+        StatusCode::OK,
+        "add domain with workspace failed: {body}"
+    );
     assert_eq!(
         body["workspaceId"].as_str().unwrap_or(""),
         ws_id,
@@ -111,7 +110,11 @@ async fn add_domain_invalid_fqdn() {
         Some(json!({ "domain": "not a domain!!!" })),
     )
     .await;
-    assert_eq!(status, StatusCode::BAD_REQUEST, "expected 400 for invalid FQDN: {body}");
+    assert_eq!(
+        status,
+        StatusCode::BAD_REQUEST,
+        "expected 400 for invalid FQDN: {body}"
+    );
 }
 
 #[tokio::test]
@@ -159,14 +162,10 @@ async fn list_domains_shows_added() {
     let domain_b = format!("{}.example.com", common::uid());
     add_domain(app.clone(), &token, &domain_a).await;
     add_domain(app.clone(), &token, &domain_b).await;
-    let (status, body) =
-        common::req(app, "GET", "/api/v1/domains", Some(&token), None).await;
+    let (status, body) = common::req(app, "GET", "/api/v1/domains", Some(&token), None).await;
     assert_eq!(status, StatusCode::OK);
     let arr = body.as_array().unwrap();
-    let domains: Vec<&str> = arr
-        .iter()
-        .filter_map(|d| d["domain"].as_str())
-        .collect();
+    let domains: Vec<&str> = arr.iter().filter_map(|d| d["domain"].as_str()).collect();
     assert!(
         domains.contains(&domain_a.as_str()),
         "domain_a not in list: {body}"

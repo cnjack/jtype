@@ -29,12 +29,23 @@ pub async fn pull(
     )
     .await?;
     let since_clock = payload.since_clock.unwrap_or(0);
+    let folders =
+        crate::handlers::folder::load_folders_since(&state.pool, &workspace_id, since_clock)
+            .await?;
+    let deleted_folders = crate::handlers::folder::load_deleted_folders_since(
+        &state.pool,
+        &workspace_id,
+        since_clock,
+    )
+    .await?;
     let documents = load_documents_since(&state.pool, &workspace_id, since_clock).await?;
     let deleted_paths = load_deleted_paths_since(&state.pool, &workspace_id, since_clock).await?;
     if let Some(device_id) = payload.device_id.as_deref() {
-        let next_clock = documents
+        let next_clock = folders
             .iter()
-            .map(|d| d.updated_clock)
+            .map(|f| f.updated_clock)
+            .chain(deleted_folders.iter().map(|f| f.deleted_clock))
+            .chain(documents.iter().map(|d| d.updated_clock))
             .chain(deleted_paths.iter().map(|d| d.deleted_clock))
             .max()
             .unwrap_or(since_clock);
@@ -52,6 +63,8 @@ pub async fn pull(
 
     Ok(Json(SyncPullResponse {
         workspace_id,
+        folders,
+        deleted_folders,
         documents,
         deleted_paths,
         conflicts,
@@ -79,6 +92,32 @@ pub async fn push(
     let mut push_docs: Vec<SyncPushDocument> = Vec::new();
     let mut deleted_paths: Vec<DeletedPath> = Vec::new();
 
+    if !payload.folders.is_empty() {
+        let mut tx = state.pool.begin().await?;
+        let mut changed_folder = false;
+        for folder in payload.folders {
+            changed_folder |= crate::handlers::folder::upsert_folder_with_ancestors(
+                &mut tx,
+                &workspace_id,
+                &folder.relative_path,
+            )
+            .await?;
+        }
+        tx.commit().await?;
+        if changed_folder {
+            accepted += 1;
+            state
+                .hub
+                .publish(
+                    &workspace_id,
+                    WorkspaceEvent::SyncRequired {
+                        reason: "folder-changed".to_string(),
+                    },
+                )
+                .await;
+        }
+    }
+
     for doc in payload.documents {
         match crate::handlers::document::save_document_version(
             &state.pool,
@@ -92,15 +131,21 @@ pub async fn push(
             crate::handlers::document::SaveDocumentOutcome::Saved(doc, status) => {
                 accepted += 1;
                 if status != crate::handlers::document::MergeStatus::Unchanged {
-                    state.hub.publish(&workspace_id, WorkspaceEvent::DocumentChanged {
-                        source_session_id: String::new(),
-                        relative_path: doc.relative_path.clone(),
-                        content_hash: doc.content_hash.clone(),
-                        updated_clock: doc.updated_clock,
-                        edited_by: user.username.clone(),
-                        source: "desktop".to_string(),
-                        device_id: device_id.clone(),
-                    }).await;
+                    state
+                        .hub
+                        .publish(
+                            &workspace_id,
+                            WorkspaceEvent::DocumentChanged {
+                                source_session_id: String::new(),
+                                relative_path: doc.relative_path.clone(),
+                                content_hash: doc.content_hash.clone(),
+                                updated_clock: doc.updated_clock,
+                                edited_by: user.username.clone(),
+                                source: "desktop".to_string(),
+                                device_id: device_id.clone(),
+                            },
+                        )
+                        .await;
                 }
                 push_docs.push(SyncPushDocument {
                     doc,
@@ -128,30 +173,46 @@ pub async fn push(
         .await?
         {
             accepted += 1;
-            state.hub.publish(&workspace_id, WorkspaceEvent::DocumentTrashed {
-                source_session_id: String::new(),
-                relative_path: deleted_path.relative_path.clone(),
-                action: "trashed".to_string(),
-            }).await;
+            state
+                .hub
+                .publish(
+                    &workspace_id,
+                    WorkspaceEvent::DocumentTrashed {
+                        source_session_id: String::new(),
+                        relative_path: deleted_path.relative_path.clone(),
+                        action: "trashed".to_string(),
+                    },
+                )
+                .await;
             deleted_paths.push(deleted_path);
         }
     }
 
     // Process trash operations (restore, permanent delete, empty)
     for op in payload.trash_operations {
-        match process_trash_operation(&state.pool, &state.hub, &workspace_id, &user, device_id.as_deref(), op)
-            .await
+        match process_trash_operation(
+            &state.pool,
+            &state.hub,
+            &workspace_id,
+            &user,
+            device_id.as_deref(),
+            op,
+        )
+        .await
         {
             Ok(_) => accepted += 1,
             Err(_) => { /* idempotent — skip errors */ }
         }
     }
 
+    let folders =
+        crate::handlers::folder::load_folders_since(&state.pool, &workspace_id, 0).await?;
     let documents = load_documents_since(&state.pool, &workspace_id, 0).await?;
     if let Some(device_id) = device_id.as_deref() {
-        let next_clock = documents
+        let next_clock = folders
             .iter()
-            .map(|d| d.updated_clock)
+            .map(|f| f.updated_clock)
+            .chain(documents.iter().map(|d| d.updated_clock))
             .chain(deleted_paths.iter().map(|d| d.deleted_clock))
             .max()
             .unwrap_or(0);
@@ -160,6 +221,7 @@ pub async fn push(
     Ok(Json(SyncPushResponse {
         workspace_id,
         accepted,
+        folders,
         documents: push_docs,
         deleted_paths,
         conflicts,

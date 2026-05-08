@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
-import { ExclamationTriangleIcon, ArrowLeftIcon, ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
+import { ExclamationTriangleIcon, ArrowLeftIcon, ChevronLeftIcon, ChevronRightIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useAppDispatch, useAppState } from "../../app/AppState";
 import { useCloudSync } from "../../hooks";
 import type { SyncConflict } from "../../lib/types";
@@ -114,10 +114,12 @@ export function ConflictDialog() {
               )}
               <button
                 type="button"
-                className="rounded px-2 py-1 text-xs text-stone-500 hover:bg-stone-100"
+                className="rounded p-1 text-stone-400 hover:bg-stone-100 hover:text-stone-600"
+                aria-label="Close conflicts dialog"
+                title="Close"
                 onClick={handleClose}
               >
-                Close
+                <XMarkIcon className="h-4 w-4" />
               </button>
             </div>
           </div>

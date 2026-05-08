@@ -90,7 +90,8 @@ pub async fn req(
     let json = if bytes.is_empty() {
         Value::Null
     } else {
-        serde_json::from_slice(&bytes).unwrap_or_else(|_| Value::String(String::from_utf8_lossy(&bytes).into()))
+        serde_json::from_slice(&bytes)
+            .unwrap_or_else(|_| Value::String(String::from_utf8_lossy(&bytes).into()))
     };
     (status, json)
 }
@@ -167,12 +168,7 @@ pub async fn save_doc(
 }
 
 /// Move a document to trash. Returns the trash id.
-pub async fn trash_doc(
-    app: Router,
-    token: &str,
-    workspace_id: &str,
-    document_id: &str,
-) -> String {
+pub async fn trash_doc(app: Router, token: &str, workspace_id: &str, document_id: &str) -> String {
     let (status, body) = req(
         app,
         "DELETE",

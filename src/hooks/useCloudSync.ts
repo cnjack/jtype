@@ -3,8 +3,13 @@ import { openUrl } from "@tauri-apps/plugin-opener";
 import { useAppDispatch, useAppState } from "../app/AppState";
 import { tauri } from "../lib/tauri";
 import { sha256Hex } from "../lib/utils";
-import type { AuthResponse, CloudProfile, VaultBinding, CloudDocument, CloudWorkspace, DeletedPath, DeletedPathInput, EntryKind, SyncPushDocument, SyncPushResponse, TrashSyncPayload, VaultSettings } from "../lib/types";
+import type { AuthResponse, CloudProfile, VaultBinding, CloudDocument, CloudFolder, CloudWorkspace, DeletedFolder, DeletedPath, DeletedPathInput, EntryKind, SyncPushDocument, SyncPushResponse, TrashSyncPayload, VaultSettings } from "../lib/types";
 import { parseSyncConflicts } from "../lib/types";
+
+type TrashOperationPayload =
+  | { type: "restore"; trashId: string }
+  | { type: "permanent_delete"; trashId: string }
+  | { type: "empty_trash" };
 
 const cloudEnabledSettings: VaultSettings = {
   cloudSyncEnabled: true,
@@ -161,6 +166,7 @@ export function useCloudSync() {
       if (binding) {
         // 1. Collect local documents BEFORE pull overwrites them
         const documents = await tauri.collectSyncDocuments(state.workspace.rootPath);
+        const folders = await tauri.collectSyncFolders(state.workspace.rootPath);
 
         // 2. Load sync bases (last synced content per document) for three-way merge
         let syncBases: Record<string, string> = {};
@@ -178,7 +184,9 @@ export function useCloudSync() {
         // 3. Pull cloud changes and apply to disk (only overwrites files not locally modified)
         const pullResult = await pullCloudWorkspace(binding, options.skipRelativePath, syncBases, locallyDeletedPaths);
         const remoteDeletedPaths = new Set(pullResult.deletedPaths);
+        const remoteDeletedFolders = new Set(pullResult.deletedFolders);
         const documentsForPush = documents.filter((d) => !remoteDeletedPaths.has(d.relativePath));
+        const foldersForPush = folders.filter((f) => !remoteDeletedFolders.has(f.relativePath));
 
         // 4. Push with base content info so server can three-way merge
         const pushDocs = await Promise.all(
@@ -203,11 +211,11 @@ export function useCloudSync() {
           .map((relativePath) => ({ relativePath }));
 
         // Load pending local trash operations for push
-        let trashOperations: Array<Record<string, unknown>> = [];
+        let trashOperations: TrashOperationPayload[] = [];
         if (tauri.isAvailable) {
           try {
             const trashMeta = await tauri.loadTrashMetadata(state.workspace.rootPath);
-            trashOperations = (trashMeta.pendingTrashOps).map((op) => {
+            trashOperations = (trashMeta.pendingTrashOps).map((op): TrashOperationPayload => {
               if (op.type === "restore") return { type: "restore", trashId: op.trashId };
               if (op.type === "permanent_delete") return { type: "permanent_delete", trashId: op.trashId };
               return { type: "empty_trash" };
@@ -220,6 +228,7 @@ export function useCloudSync() {
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${state.syncToken}` },
           body: JSON.stringify({
             deviceId: state.cloudProfile?.deviceId ?? "desktop",
+            folders: foldersForPush,
             documents: pushDocs,
             deletedPaths,
             trashOperations,
@@ -235,7 +244,7 @@ export function useCloudSync() {
         dispatch({ type: "SET_CONFLICTS", conflicts: parseSyncConflicts(pushData.conflicts ?? []) });
         const snapshot = `${Date.now()}:${documents.map((d) => `${d.relativePath}:${d.content.length}`).join("|")}`;
         dispatch({ type: "SET_SYNC_SNAPSHOT", snapshot });
-        await applyCloudDocumentsRef.current(pushData.documents, options.skipRelativePath);
+        await applyCloudDocumentsRef.current(pushData.documents, pushData.folders ?? [], options.skipRelativePath);
         if (tauri.isAvailable && deletedPaths.length > 0) {
           try {
             await tauri.deleteSyncBases(state.workspace.rootPath, deletedPaths.map((d) => d.relativePath));
@@ -246,7 +255,25 @@ export function useCloudSync() {
         if (tauri.isAvailable && trashOperations.length > 0) {
           try {
             const trashMeta = await tauri.loadTrashMetadata(state.workspace.rootPath);
-            trashMeta.pendingTrashOps = [];
+            const sentTrashIds = new Set(
+              trashOperations
+                .filter((op): op is Extract<TrashOperationPayload, { trashId: string }> => op.type !== "empty_trash")
+                .map((op) => op.trashId)
+            );
+            const sentEmptyTrash = trashOperations.some((op) => op.type === "empty_trash");
+            trashMeta.pendingTrashOps = trashMeta.pendingTrashOps.filter(
+              (op) => !trashOperations.some((sent) => (
+                sent.type === op.type &&
+                (sent.type === "empty_trash" || (op.type !== "empty_trash" && sent.trashId === op.trashId))
+              ))
+            );
+            if (sentEmptyTrash) {
+              trashMeta.items = [];
+            } else if (sentTrashIds.size > 0) {
+              trashMeta.items = trashMeta.items.filter(
+                (item) => !item.cloudTrashId || !sentTrashIds.has(item.cloudTrashId)
+              );
+            }
             await tauri.saveTrashMetadata(state.workspace.rootPath, trashMeta);
           } catch { /* non-critical */ }
         }
@@ -286,15 +313,15 @@ export function useCloudSync() {
   // Ref ensures pullCloudWorkspace/syncWorkspaceToWeb always call the latest
   // applyCloudDocuments without needing it as a dependency (which would cause
   // cascading recreation of every callback that touches it).
-  const applyCloudDocumentsRef = useRef<(documents: CloudDocument[], skipRelativePath?: string) => Promise<void>>(async () => {});
+  const applyCloudDocumentsRef = useRef<(documents: CloudDocument[], folders?: CloudFolder[], skipRelativePath?: string) => Promise<void>>(async () => {});
 
   const pullCloudWorkspace = useCallback(async (
     binding: VaultBinding,
     skipRelativePath?: string,
     syncBases?: Record<string, string>,
     locallyDeletedPaths: Set<string> = new Set(),
-  ): Promise<{ deletedPaths: string[] }> => {
-    if (!state.workspace || !state.syncToken) return { deletedPaths: [] };
+  ): Promise<{ deletedPaths: string[]; deletedFolders: string[] }> => {
+    if (!state.workspace || !state.syncToken) return { deletedPaths: [], deletedFolders: [] };
 
     // Load trash metadata to get the last synced cursor
     let trashClock = 0;
@@ -316,10 +343,17 @@ export function useCloudSync() {
     });
     if (response.status === 403 || response.status === 404) {
       await handleWorkspaceAccessLoss(binding, response.status);
-      return { deletedPaths: [] };
+      return { deletedPaths: [], deletedFolders: [] };
     }
     if (!response.ok) throw new Error(await response.text());
-    const pullData = (await response.json()) as { documents: CloudDocument[]; deletedPaths?: DeletedPath[]; conflicts: Array<Record<string, unknown>>; trash?: TrashSyncPayload };
+    const pullData = (await response.json()) as {
+      folders?: CloudFolder[];
+      deletedFolders?: DeletedFolder[];
+      documents: CloudDocument[];
+      deletedPaths?: DeletedPath[];
+      conflicts: Array<Record<string, unknown>>;
+      trash?: TrashSyncPayload;
+    };
     dispatch({ type: "SET_CONFLICTS", conflicts: parseSyncConflicts(pullData.conflicts ?? []) });
 
     // During pull, only apply cloud documents for files that haven't been locally modified.
@@ -341,7 +375,7 @@ export function useCloudSync() {
       });
     }
 
-    await applyCloudDocumentsRef.current(pullDocsToApply, skipRelativePath);
+    await applyCloudDocumentsRef.current(pullDocsToApply, pullData.folders ?? [], skipRelativePath);
     if (tauri.isAvailable && pullDocsToApply.length > 0) {
       try {
         await tauri.saveSyncBases(
@@ -374,11 +408,24 @@ export function useCloudSync() {
       const workspace = await tauri.openWorkspace(state.workspace.rootPath);
       dispatch({ type: "UPDATE_WORKSPACE", workspace });
     }
+    if (pullData.deletedFolders && pullData.deletedFolders.length > 0 && tauri.isAvailable) {
+      const workspace = await tauri.applyDeletedCloudFolders(
+        state.workspace.rootPath,
+        pullData.deletedFolders.map((f) => ({ relativePath: f.relativePath }))
+      );
+      dispatch({ type: "UPDATE_WORKSPACE", workspace });
+    }
 
     // Handle trash sync data from pull
     if (pullData.trash && tauri.isAvailable) {
       try {
         const trashMetadata = await tauri.loadTrashMetadata(state.workspace.rootPath);
+        const pendingTrashIds = new Set(
+          trashMetadata.pendingTrashOps
+            .filter((op): op is Extract<TrashOperationPayload, { trashId: string }> => op.type !== "empty_trash")
+            .map((op) => op.trashId)
+        );
+        const hasPendingEmptyTrash = trashMetadata.pendingTrashOps.some((op) => op.type === "empty_trash");
         // Process trash events (empty_trash, permanent_delete_item)
         for (const event of pullData.trash.events) {
           if (event.eventType === "empty_trash") {
@@ -398,13 +445,19 @@ export function useCloudSync() {
           }
         }
         // Build set of active cloud trash IDs from the server
-        const activeCloudTrashIds = new Set(pullData.trash.items.map((item) => item.id));
+        const activeCloudTrashIds = new Set(
+          hasPendingEmptyTrash
+            ? []
+            : pullData.trash.items
+                .filter((item) => !pendingTrashIds.has(item.id))
+                .map((item) => item.id)
+        );
         // Remove cloud trash items that are no longer active (e.g. restored)
         trashMetadata.items = trashMetadata.items.filter(
           (item) => item.source !== "cloud" || activeCloudTrashIds.has(item.cloudTrashId!)
         );
         // Update metadata with cloud trash items
-        for (const cloudItem of pullData.trash.items) {
+        for (const cloudItem of pullData.trash.items.filter((item) => activeCloudTrashIds.has(item.id))) {
           const existing = trashMetadata.items.find(
             (item) => item.cloudTrashId === cloudItem.id
           );
@@ -426,6 +479,8 @@ export function useCloudSync() {
 
     const nextClock = Math.max(
       binding.lastPulledClock,
+      ...(pullData.folders ?? []).map((f) => f.updatedClock ?? 0),
+      ...(pullData.deletedFolders ?? []).map((f) => f.deletedClock),
       ...pullData.documents.map((d) => d.updatedClock),
       ...(pullData.deletedPaths ?? []).map((d) => d.deletedClock),
     );
@@ -434,11 +489,14 @@ export function useCloudSync() {
       const bindings = await tauri.bindCloudWorkspace(updatedBinding);
       dispatch({ type: "SET_VAULT_BINDINGS", bindings });
     }
-    return { deletedPaths: (pullData.deletedPaths ?? []).map((d) => d.relativePath) };
+    return {
+      deletedPaths: (pullData.deletedPaths ?? []).map((d) => d.relativePath),
+      deletedFolders: (pullData.deletedFolders ?? []).map((d) => d.relativePath),
+    };
   }, [dispatch, state.workspace, state.syncToken, state.cloudProfile, getServiceUrl, handleWorkspaceAccessLoss]);
 
-  const applyCloudDocuments = useCallback(async (documents: CloudDocument[], skipRelativePath?: string) => {
-    if (!state.workspace || documents.length === 0) return;
+  const applyCloudDocuments = useCallback(async (documents: CloudDocument[], folders: CloudFolder[] = [], skipRelativePath?: string) => {
+    if (!state.workspace || (documents.length === 0 && folders.length === 0)) return;
     const filtered = (state.isDirty && state.currentRelativePath) || skipRelativePath
       ? documents.filter((d) => {
           if (state.isDirty && d.relativePath === state.currentRelativePath) return false;
@@ -446,10 +504,11 @@ export function useCloudSync() {
           return true;
         })
       : documents;
-    if (filtered.length === 0) return;
+    if (filtered.length === 0 && folders.length === 0) return;
     const workspace = await tauri.applyCloudDocuments(
       state.workspace.rootPath,
-      filtered.map((d) => ({ relativePath: d.relativePath, content: d.content }))
+      filtered.map((d) => ({ relativePath: d.relativePath, content: d.content })),
+      folders.map((f) => ({ relativePath: f.relativePath }))
     );
     dispatch({ type: "UPDATE_WORKSPACE", workspace });
     const currentDoc = !state.isDirty && state.currentRelativePath
@@ -574,31 +633,32 @@ export function useCloudSync() {
   const disconnectWorkspace = useCallback(async () => {
     if (!state.workspace) return;
     const binding = currentVaultBinding(state.vaultBindings, state.workspace.rootPath);
-    if (!binding) {
-      await saveCurrentVaultSettings({
-        cloudSyncEnabled: false,
-        syncPromptDismissedAt: null,
-        syncDisabledPermanently: false,
-      });
-      dispatch({ type: "SET_STATUS", message: "This vault is now in local mode." });
-      return;
-    }
-    if (tauri.isAvailable) {
-      await tauri.stopCloudListener().catch(() => undefined);
-      await tauri.unbindCloudWorkspace(binding.workspaceId, state.workspace.rootPath);
-      await tauri.saveVaultSettings(state.workspace.rootPath, {
-        cloudSyncEnabled: false,
-        syncPromptDismissedAt: null,
-        syncDisabledPermanently: false,
-      });
-    }
     const settings: VaultSettings = {
       cloudSyncEnabled: false,
       syncPromptDismissedAt: null,
       syncDisabledPermanently: false,
     };
+    if (!binding) {
+      await saveCurrentVaultSettings(settings);
+      dispatch({ type: "SET_STATUS", message: "This vault is now in local mode." });
+      return;
+    }
+    let persistenceWarning = "";
+    if (tauri.isAvailable) {
+      await tauri.stopCloudListener().catch(() => undefined);
+      try {
+        await tauri.unbindCloudWorkspace(binding.workspaceId, state.workspace.rootPath);
+      } catch (error) {
+        persistenceWarning = ` Local binding persistence failed: ${String(error)}`;
+      }
+      try {
+        await tauri.saveVaultSettings(state.workspace.rootPath, settings);
+      } catch (error) {
+        persistenceWarning = ` Local sync settings persistence failed: ${String(error)}`;
+      }
+    }
     dispatch({ type: "DISCONNECT_WORKSPACE", workspaceId: binding.workspaceId, vaultPath: state.workspace.rootPath, settings });
-    dispatch({ type: "SET_STATUS", message: "Disconnected cloud sync. Local files were kept." });
+    dispatch({ type: "SET_STATUS", message: `Disconnected cloud sync. Local files were kept.${persistenceWarning}` });
   }, [dispatch, saveCurrentVaultSettings, state.vaultBindings, state.workspace]);
 
   const autoCreateAndBindWorkspace = useCallback(async () => {
@@ -671,10 +731,12 @@ export function useCloudSync() {
 
   const pullOnly = useCallback(async () => {
     if (!state.workspace || !state.syncToken) return;
+    const vaultSettings = state.vaultSettings[state.workspace.rootPath];
+    if (vaultSettings?.cloudSyncEnabled === false) return;
     const binding = currentVaultBinding(state.vaultBindings, state.workspace.rootPath);
     if (!binding) return;
     await pullCloudWorkspace(binding);
-  }, [state.workspace, state.syncToken, state.vaultBindings, pullCloudWorkspace]);
+  }, [state.workspace, state.syncToken, state.vaultBindings, state.vaultSettings, pullCloudWorkspace]);
 
   return {
     getServiceUrl,

@@ -73,6 +73,12 @@ export const api = {
     request<WorkspaceSummary>(`/api/v1/workspaces/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
 
   // Documents
+  listFolders: (workspaceId: string) =>
+    request<FolderListItem[]>(`/api/v1/workspaces/${workspaceId}/folders`),
+  createFolder: (workspaceId: string, relativePath: string) =>
+    request<FolderListItem>(`/api/v1/workspaces/${workspaceId}/folders`, { method: 'POST', body: JSON.stringify({ relativePath }) }),
+  deleteFolder: (workspaceId: string, folderId: string) =>
+    request<void>(`/api/v1/workspaces/${workspaceId}/folders/${folderId}`, { method: 'DELETE' }),
   listDocuments: (workspaceId: string) =>
     request<DocumentListItem[]>(`/api/v1/workspaces/${workspaceId}/documents`),
   getDocument: (workspaceId: string, docId: string) =>
@@ -210,6 +216,12 @@ export interface DocumentListItem {
   contentHash: string
   updatedClock: number
   versionId: string | null
+}
+
+export interface FolderListItem {
+  id: string
+  relativePath: string
+  updatedClock: number
 }
 
 export interface CloudDocument {

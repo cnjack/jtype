@@ -1,7 +1,10 @@
 use futures::{SinkExt, StreamExt};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter};
-use tokio_tungstenite::{connect_async, tungstenite::{self, Message}};
+use tokio_tungstenite::{
+    connect_async,
+    tungstenite::{self, Message},
+};
 
 #[derive(Deserialize)]
 struct WsMessage {
@@ -53,8 +56,7 @@ pub async fn start_ws_listener(
                 let mut outbox_rx = outbox.subscribe();
 
                 let ping_handle = tauri::async_runtime::spawn(async move {
-                    let mut interval =
-                        tokio::time::interval(std::time::Duration::from_secs(30));
+                    let mut interval = tokio::time::interval(std::time::Duration::from_secs(30));
                     loop {
                         tokio::select! {
                             _ = interval.tick() => {
@@ -83,13 +85,13 @@ pub async fn start_ws_listener(
 
                 while let Some(msg) = read.next().await {
                     match msg {
-                        Ok(Message::Text(text)) => {                            // Suppress pong noise in both logs and activity events.
+                        Ok(Message::Text(text)) => {
+                            // Suppress pong noise in both logs and activity events.
                             if text.contains("\"pong\"") {
                                 continue;
-                            }                            eprintln!("[ws_client] ← RECV text: {text}");
-                            if let Ok(parsed) =
-                                serde_json::from_str::<WsMessage>(&text)
-                            {
+                            }
+                            eprintln!("[ws_client] ← RECV text: {text}");
+                            if let Ok(parsed) = serde_json::from_str::<WsMessage>(&text) {
                                 // Emit activity for EVERY named message so the frontend can
                                 // observe WS liveness and debug missing notifications.
                                 let activity = WsActivity {
@@ -98,33 +100,31 @@ pub async fn start_ws_listener(
                                     at_ms: std::time::SystemTime::now()
                                         .duration_since(std::time::UNIX_EPOCH)
                                         .unwrap_or_default()
-                                        .as_millis() as u64,
+                                        .as_millis()
+                                        as u64,
                                 };
                                 let _ = app.emit("cloud:ws-activity", &activity);
 
                                 match parsed.msg_type.as_str() {
-                                    "document:changed"
-                                    | "document:deleted"
+                                    "document:changed" | "document:deleted"
                                     | "document:trashed" => {
                                         // Skip changes originated by this device to avoid
                                         // wasteful self-pulls and potential race conditions.
-                                        let is_self = parsed.device_id_field.as_deref() == Some(&device_id)
+                                        let is_self = parsed.device_id_field.as_deref()
+                                            == Some(&device_id)
                                             && parsed.source.as_deref() == Some("desktop");
                                         if is_self {
                                             eprintln!(
                                                 "[ws_client] skipping self-change: {} {:?}",
-                                                parsed.msg_type,
-                                                parsed.relative_path
+                                                parsed.msg_type, parsed.relative_path
                                             );
                                             continue;
                                         }
                                         eprintln!(
                                             "[ws_client] remote change: {} {:?}",
-                                            parsed.msg_type,
-                                            parsed.relative_path
+                                            parsed.msg_type, parsed.relative_path
                                         );
-                                        let _ =
-                                            app.emit("cloud:remote-change", &text);
+                                        let _ = app.emit("cloud:remote-change", &text);
                                     }
                                     "sync:required" => {
                                         eprintln!("[ws_client] sync:required");

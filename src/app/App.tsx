@@ -15,7 +15,7 @@ import { QuickSwitcher } from "../components/modals/QuickSwitcher";
 import { CreateNoteDialog } from "../components/modals/CreateNoteDialog";
 import { AccountDialog } from "../components/modals/AccountDialog";
 import { ConflictDialog } from "../components/modals/ConflictDialog";
-import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
+import { ExclamationTriangleIcon, SignalSlashIcon } from "@heroicons/react/24/outline";
 import { PromptDialogProvider } from "../components/modals/PromptDialogContext";
 import { isTauriRuntime, relativePathFromWorkspace } from "../lib/utils";
 import { invoke } from "@tauri-apps/api/core";
@@ -46,7 +46,8 @@ function AppContent() {
   const sync = useCloudSync();
   const autoSync = useCallback(async () => {
     const vaultSettings = state.workspace ? state.vaultSettings[state.workspace.rootPath] : undefined;
-    if (state.workspace && state.syncToken && state.vaultBindings.length > 0 && vaultSettings?.cloudSyncEnabled !== false) {
+    const binding = state.vaultBindings.find((b) => b.localVaultPath === state.workspace?.rootPath);
+    if (state.workspace && state.syncToken && binding && vaultSettings?.cloudSyncEnabled !== false) {
       const merged = await sync.syncWorkspaceToWeb({ silent: true, skipRelativePath: state.currentRelativePath || undefined });
       if (merged && merged.mergeStatus === "merged" && merged.relativePath === state.currentRelativePath && !state.isDirty) {
         const { tauri } = await import("../lib/tauri");
@@ -99,15 +100,15 @@ function AppContent() {
 
   usePeriodicSync(
     useCallback(async () => {
-      if (state.workspace && state.syncToken && currentBinding) {
+      if (state.workspace && state.syncToken && currentBinding && currentVaultSettings?.cloudSyncEnabled !== false) {
         await sync.syncWorkspaceToWeb({ silent: true });
       }
-    }, [state.workspace, state.syncToken, currentBinding, sync]),
+    }, [state.workspace, state.syncToken, currentBinding, currentVaultSettings?.cloudSyncEnabled, sync]),
     useCallback(async () => {
-      if (state.workspace && state.syncToken && currentBinding) {
+      if (state.workspace && state.syncToken && currentBinding && currentVaultSettings?.cloudSyncEnabled !== false) {
         await sync.pullOnly();
       }
-    }, [state.workspace, state.syncToken, currentBinding, sync]),
+    }, [state.workspace, state.syncToken, currentBinding, currentVaultSettings?.cloudSyncEnabled, sync]),
     30_000,
     isSyncEnabled,
     state.wsConnected,
@@ -254,7 +255,7 @@ function AppContent() {
           <div id="operation-log" className="flex items-center justify-between border-t border-black/[0.04] bg-white/70 px-5 py-3 text-xs text-[#6b7773]">
             <span>{state.statusMessage}</span>
             <span className="flex shrink-0 items-center gap-3">
-              {state.syncToken && (
+              {isSyncEnabled && (
                 state.wsConnected ? (
                   <span className="flex items-center gap-1.5 font-medium text-green-600" title={state.lastWsEventType ? `Last event: ${state.lastWsEventType}` : "Connected"}>
                     <span className="w-2 h-2 rounded-full bg-green-500" />
@@ -264,7 +265,10 @@ function AppContent() {
                     )}
                   </span>
                 ) : (
-                  <span className="flex items-center gap-1.5 font-medium text-red-500"><span className="w-2 h-2 rounded-full bg-red-500" />Offline</span>
+                  <span className="flex items-center gap-1.5 font-medium text-stone-500" title="Cloud workspace connection is offline">
+                    <SignalSlashIcon className="h-3.5 w-3.5" />
+                    Offline
+                  </span>
                 )
               )}
               {state.activeConflicts.length > 0 && (

@@ -10,6 +10,9 @@ function mockApi(page: Page) {
     { id: "doc-1", relativePath: "intro.md", title: "Intro", status: "published", contentHash: "abc", updatedClock: 5, versionId: "v1" },
     { id: "doc-2", relativePath: "guides/setup.md", title: "Setup Guide", status: "draft", contentHash: "def", updatedClock: 3, versionId: "v2" },
   ];
+  const folders = [
+    { id: "folder-1", relativePath: "guides", updatedClock: 2 },
+  ];
   const trashItems: Array<Record<string, string>> = [];
 
   return page.route("**/api/**", async (route) => {
@@ -323,6 +326,32 @@ function mockApi(page: Page) {
     }
 
     // Documents
+    if (url.match(/\/api\/v1\/workspaces\/[^/]+\/folders$/) && method === "GET") {
+      return route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(folders),
+      });
+    }
+    if (url.match(/\/api\/v1\/workspaces\/[^/]+\/folders$/) && method === "POST") {
+      const folder = {
+        id: `folder-${folders.length + 1}`,
+        relativePath: body?.relativePath || "New Folder",
+        updatedClock: 20 + folders.length,
+      };
+      folders.push(folder);
+      return route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(folder),
+      });
+    }
+    if (url.match(/\/api\/v1\/workspaces\/[^/]+\/folders\/[^/]+$/) && method === "DELETE") {
+      const folderId = url.split("/").pop();
+      const index = folders.findIndex((folder) => folder.id === folderId);
+      if (index >= 0) folders.splice(index, 1);
+      return route.fulfill({ status: 204 });
+    }
     if (url.match(/\/api\/v1\/workspaces\/[^/]+\/documents$/) && method === "GET") {
       return route.fulfill({
         status: 200,
@@ -521,8 +550,11 @@ test.describe("Dashboard", () => {
 test.describe("Workspace Documents", () => {
   test.beforeEach(async ({ page }) => {
     await mockApi(page);
-    await loginAs(page);
-    await page.getByText("notes").click();
+    await page.addInitScript(() => {
+      localStorage.setItem("jtype.token", "tok_test");
+      localStorage.setItem("jtype.username", "testuser");
+    });
+    await page.goto("/workspaces/ws-1");
   });
 
   test("lists documents", async ({ page }) => {
@@ -540,6 +572,15 @@ test.describe("Workspace Documents", () => {
     await page.getByRole("button", { name: "+" }).click();
     // After creation, docs are refreshed
     await expect(page.getByText("intro.md")).toBeVisible();
+  });
+
+  test("creates an empty folder without gitkeep placeholder", async ({ page }) => {
+    await page.getByRole("button", { name: "New folder" }).click();
+    await page.getByRole("dialog").locator("input").fill("Research");
+    await page.getByRole("button", { name: "OK" }).click();
+
+    await expect(page.getByRole("button", { name: /Research/ })).toBeVisible();
+    await expect(page.getByText(".gitkeep")).toHaveCount(0);
   });
 
   test("deletes a document", async ({ page }) => {

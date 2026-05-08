@@ -40,7 +40,9 @@ export function Sidebar() {
   const currentBinding = state.workspace
     ? state.vaultBindings.find((binding) => binding.localVaultPath === state.workspace?.rootPath)
     : null;
-  const workspaceName = currentBinding?.workspaceName || state.workspace?.name || "No vault";
+  const currentVaultSettings = state.workspace ? state.vaultSettings[state.workspace.rootPath] : undefined;
+  const activeCloudBinding = currentVaultSettings?.cloudSyncEnabled === false ? null : currentBinding;
+  const workspaceName = activeCloudBinding?.workspaceName || state.workspace?.name || "No vault";
   const docCount = state.workspace ? markdownNodes(state.workspace.entries).length : 0;
 
   return (
@@ -136,9 +138,9 @@ export function Sidebar() {
                   <span className="font-semibold">Close vault</span>
                 </MenuItem>
               )}
-              {currentBinding && (
+              {activeCloudBinding && (
                 <div className="mt-1 rounded-lg bg-[#e8f6f2] px-3 py-2 text-xs text-[#006f6b] ring-1 ring-[#008884]/10">
-                  Syncing with {currentBinding.workspaceName}.
+                  Syncing with {activeCloudBinding.workspaceName}.
                 </div>
               )}
             </div>
