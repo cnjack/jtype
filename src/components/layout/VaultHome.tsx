@@ -4,6 +4,7 @@ import { useFileSystem } from "../../hooks";
 import { markdownNodes } from "../../lib/utils";
 import { appStorage } from "../../lib/storage";
 import { basename } from "../../lib/utils";
+import { SyncPromptDialog } from "../modals/SyncPromptDialog";
 
 export function VaultHome() {
   const state = useAppState();
@@ -13,9 +14,22 @@ export function VaultHome() {
   const recentItems = useMemo(() => readRecentItems(), [state.currentPath]);
   const recentDocs = recentItems.filter((item) => item.kind === "file").slice(0, 4);
   const vaultName = state.workspace?.name ?? "Vault";
+  const currentBinding = state.workspace
+    ? state.vaultBindings.find((binding) => binding.localVaultPath === state.workspace?.rootPath)
+    : null;
+  const vaultSettings = state.workspace ? state.vaultSettings[state.workspace.rootPath] : undefined;
+  const shouldShowSyncPrompt = Boolean(
+    state.workspace &&
+    vaultSettings !== undefined &&
+    !currentBinding &&
+    (vaultSettings == null || vaultSettings.cloudSyncEnabled !== false) &&
+    !vaultSettings?.syncDisabledPermanently &&
+    shouldRemind(vaultSettings?.syncPromptDismissedAt),
+  );
 
   return (
     <section id="vault-home" className="flex min-h-0 flex-col bg-[#fbfdfb]">
+      <SyncPromptDialog open={shouldShowSyncPrompt} />
       <div className="min-h-0 flex-1 overflow-y-auto">
         <div className="mx-auto w-full max-w-6xl px-10 py-12">
           <div className="max-w-3xl">
@@ -82,6 +96,13 @@ export function VaultHome() {
       </div>
     </section>
   );
+}
+
+function shouldRemind(dismissedAt?: string | null) {
+  if (!dismissedAt) return true;
+  const timestamp = Date.parse(dismissedAt);
+  if (!Number.isFinite(timestamp)) return true;
+  return Date.now() - timestamp >= 7 * 24 * 60 * 60 * 1000;
 }
 
 type RecentItem = { kind: "file" | "workspace"; name: string; path: string };

@@ -9,6 +9,8 @@ export function useEagerSync() {
   const pushSingleDocument = useCallback(
     async (relativePath: string, content: string) => {
       if (!state.workspace || !state.syncToken) return;
+      const vaultSettings = state.vaultSettings[state.workspace.rootPath];
+      if (vaultSettings?.cloudSyncEnabled === false) return;
       const binding = state.vaultBindings.find(
         (b) => b.localVaultPath === state.workspace?.rootPath,
       );
@@ -95,6 +97,7 @@ export function useEagerSync() {
       state.workspace,
       state.syncToken,
       state.vaultBindings,
+      state.vaultSettings,
       state.cloudProfile,
       state.serviceUrl,
     ],

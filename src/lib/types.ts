@@ -78,6 +78,12 @@ export type VaultBinding = {
   lastPulledClock: number;
 };
 
+export type VaultSettings = {
+  cloudSyncEnabled: boolean;
+  syncPromptDismissedAt?: string | null;
+  syncDisabledPermanently: boolean;
+};
+
 export type CloudWorkspace = {
   id: string;
   name: string;

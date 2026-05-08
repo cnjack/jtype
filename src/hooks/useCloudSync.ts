@@ -3,8 +3,14 @@ import { openUrl } from "@tauri-apps/plugin-opener";
 import { useAppDispatch, useAppState } from "../app/AppState";
 import { tauri } from "../lib/tauri";
 import { sha256Hex } from "../lib/utils";
-import type { AuthResponse, CloudProfile, VaultBinding, CloudDocument, CloudWorkspace, DeletedPath, DeletedPathInput, EntryKind, SyncPushDocument, SyncPushResponse, TrashSyncPayload } from "../lib/types";
+import type { AuthResponse, CloudProfile, VaultBinding, CloudDocument, CloudWorkspace, DeletedPath, DeletedPathInput, EntryKind, SyncPushDocument, SyncPushResponse, TrashSyncPayload, VaultSettings } from "../lib/types";
 import { parseSyncConflicts } from "../lib/types";
+
+const cloudEnabledSettings: VaultSettings = {
+  cloudSyncEnabled: true,
+  syncPromptDismissedAt: null,
+  syncDisabledPermanently: false,
+};
 
 export function useCloudSync() {
   const dispatch = useAppDispatch();
@@ -109,7 +115,27 @@ export function useCloudSync() {
     }
   }, [dispatch, state.syncToken, getServiceUrl]);
 
-  const syncWorkspaceToWeb = useCallback(async (options: { silent?: boolean; skipRelativePath?: string } = {}): Promise<SyncPushDocument | undefined> => {
+  const handleWorkspaceAccessLoss = useCallback(async (binding: VaultBinding, statusCode: number) => {
+    if (!state.workspace) return;
+    const settings: VaultSettings = {
+      cloudSyncEnabled: false,
+      syncPromptDismissedAt: null,
+      syncDisabledPermanently: false,
+    };
+    if (tauri.isAvailable) {
+      await tauri.unbindCloudWorkspace(binding.workspaceId, state.workspace.rootPath).catch(() => undefined);
+      await tauri.saveVaultSettings(state.workspace.rootPath, settings).catch(() => undefined);
+    }
+    dispatch({ type: "DISCONNECT_WORKSPACE", workspaceId: binding.workspaceId, vaultPath: state.workspace.rootPath, settings });
+    dispatch({
+      type: "SET_STATUS",
+      message: statusCode === 404
+        ? "Cloud workspace was deleted. Local files were kept and this vault is now local-only."
+        : "You no longer have access to this cloud workspace. Local files were kept.",
+    });
+  }, [dispatch, state.workspace]);
+
+  const syncWorkspaceToWeb = useCallback(async (options: { silent?: boolean; skipRelativePath?: string; bindingOverride?: VaultBinding } = {}): Promise<SyncPushDocument | undefined> => {
     if (!state.workspace) {
       dispatch({ type: "SET_STATUS", message: "Open a vault before syncing." });
       return;
@@ -123,7 +149,14 @@ export function useCloudSync() {
       dispatch({ type: "SET_SYNC_STATUS", status: "syncing" });
       if (!options.silent) dispatch({ type: "SET_STATUS", message: "Syncing vault..." });
 
-      const binding = currentVaultBinding(state.vaultBindings, state.workspace.rootPath);
+      const vaultSettings = state.vaultSettings[state.workspace.rootPath];
+      if (vaultSettings?.cloudSyncEnabled === false && !options.bindingOverride) {
+        dispatch({ type: "SET_STATUS", message: "This vault is in local mode. Enable cloud sync from Settings to sync." });
+        dispatch({ type: "SET_SYNC_STATUS", status: "idle" });
+        return;
+      }
+
+      const binding = options.bindingOverride ?? currentVaultBinding(state.vaultBindings, state.workspace.rootPath);
 
       if (binding) {
         // 1. Collect local documents BEFORE pull overwrites them
@@ -192,6 +225,11 @@ export function useCloudSync() {
             trashOperations,
           }),
         });
+        if (push.status === 403 || push.status === 404) {
+          await handleWorkspaceAccessLoss(binding, push.status);
+          dispatch({ type: "SET_SYNC_STATUS", status: "idle" });
+          return;
+        }
         if (!push.ok) throw new Error(await push.text());
         const pushData = (await push.json()) as SyncPushResponse;
         dispatch({ type: "SET_CONFLICTS", conflicts: parseSyncConflicts(pushData.conflicts ?? []) });
@@ -243,7 +281,7 @@ export function useCloudSync() {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, state.workspace, state.syncToken, state.syncUsername, state.cloudProfile, state.vaultBindings, getServiceUrl, refreshCloudWorkspaces]);
+  }, [dispatch, state.workspace, state.syncToken, state.syncUsername, state.cloudProfile, state.vaultBindings, state.vaultSettings, getServiceUrl, refreshCloudWorkspaces, handleWorkspaceAccessLoss]);
 
   // Ref ensures pullCloudWorkspace/syncWorkspaceToWeb always call the latest
   // applyCloudDocuments without needing it as a dependency (which would cause
@@ -276,6 +314,10 @@ export function useCloudSync() {
         sinceTrashEventClock: trashClock,
       }),
     });
+    if (response.status === 403 || response.status === 404) {
+      await handleWorkspaceAccessLoss(binding, response.status);
+      return { deletedPaths: [] };
+    }
     if (!response.ok) throw new Error(await response.text());
     const pullData = (await response.json()) as { documents: CloudDocument[]; deletedPaths?: DeletedPath[]; conflicts: Array<Record<string, unknown>>; trash?: TrashSyncPayload };
     dispatch({ type: "SET_CONFLICTS", conflicts: parseSyncConflicts(pullData.conflicts ?? []) });
@@ -393,7 +435,7 @@ export function useCloudSync() {
       dispatch({ type: "SET_VAULT_BINDINGS", bindings });
     }
     return { deletedPaths: (pullData.deletedPaths ?? []).map((d) => d.relativePath) };
-  }, [dispatch, state.workspace, state.syncToken, state.cloudProfile, getServiceUrl]);
+  }, [dispatch, state.workspace, state.syncToken, state.cloudProfile, getServiceUrl, handleWorkspaceAccessLoss]);
 
   const applyCloudDocuments = useCallback(async (documents: CloudDocument[], skipRelativePath?: string) => {
     if (!state.workspace || documents.length === 0) return;
@@ -477,6 +519,130 @@ export function useCloudSync() {
     }
   }, [dispatch]);
 
+  const saveCurrentVaultSettings = useCallback(async (settings: VaultSettings) => {
+    if (!state.workspace) return;
+    if (tauri.isAvailable) {
+      await tauri.saveVaultSettings(state.workspace.rootPath, settings);
+    }
+    dispatch({ type: "SET_VAULT_SETTINGS", vaultPath: state.workspace.rootPath, settings });
+  }, [dispatch, state.workspace]);
+
+  const hasUnpushedLocalChanges = useCallback(async () => {
+    if (!state.workspace || !tauri.isAvailable) return false;
+    const [syncBases, documents] = await Promise.all([
+      tauri.loadSyncBases(state.workspace.rootPath).catch(() => ({} as Record<string, string>)),
+      tauri.collectSyncDocuments(state.workspace.rootPath),
+    ]);
+    return documents.some((doc) => syncBases[doc.relativePath] == null || syncBases[doc.relativePath] !== doc.content);
+  }, [state.workspace]);
+
+  const bindCurrentVaultToWorkspace = useCallback(async (workspace: CloudWorkspace) => {
+    if (!state.workspace) {
+      dispatch({ type: "SET_STATUS", message: "Open a vault before binding a cloud workspace." });
+      return;
+    }
+    const workspaceName = (workspace.name || workspace.slug || "Untitled workspace").replace(/^:/, "");
+    const currentBinding = currentVaultBinding(state.vaultBindings, state.workspace.rootPath);
+    const isSwitch = Boolean(currentBinding && currentBinding.workspaceId !== workspace.id);
+    if (isSwitch && await hasUnpushedLocalChanges()) {
+      dispatch({ type: "SET_STATUS", message: "Sync this vault before switching cloud workspaces." });
+      throw new Error("UNPUSHED_CHANGES");
+    }
+
+    const binding: VaultBinding = {
+      workspaceId: workspace.id,
+      workspaceName,
+      workspaceSlug: workspace.slug,
+      localVaultPath: state.workspace.rootPath,
+      lastPulledClock: 0,
+    };
+
+    let nextBindings = state.vaultBindings
+      .filter((item) => item.workspaceId !== workspace.id)
+      .filter((item) => item.localVaultPath !== state.workspace?.rootPath);
+    nextBindings = [...nextBindings, binding];
+
+    if (tauri.isAvailable) {
+      if (isSwitch) await tauri.clearSyncBases(state.workspace.rootPath);
+      nextBindings = await tauri.bindCloudWorkspace(binding);
+    }
+    dispatch({ type: "SET_VAULT_BINDINGS", bindings: nextBindings });
+    await saveCurrentVaultSettings(cloudEnabledSettings);
+    dispatch({ type: "SET_STATUS", message: `Bound "${workspaceName}" to current vault.` });
+  }, [dispatch, hasUnpushedLocalChanges, saveCurrentVaultSettings, state.vaultBindings, state.workspace]);
+
+  const disconnectWorkspace = useCallback(async () => {
+    if (!state.workspace) return;
+    const binding = currentVaultBinding(state.vaultBindings, state.workspace.rootPath);
+    if (!binding) {
+      await saveCurrentVaultSettings({
+        cloudSyncEnabled: false,
+        syncPromptDismissedAt: null,
+        syncDisabledPermanently: false,
+      });
+      dispatch({ type: "SET_STATUS", message: "This vault is now in local mode." });
+      return;
+    }
+    if (tauri.isAvailable) {
+      await tauri.stopCloudListener().catch(() => undefined);
+      await tauri.unbindCloudWorkspace(binding.workspaceId, state.workspace.rootPath);
+      await tauri.saveVaultSettings(state.workspace.rootPath, {
+        cloudSyncEnabled: false,
+        syncPromptDismissedAt: null,
+        syncDisabledPermanently: false,
+      });
+    }
+    const settings: VaultSettings = {
+      cloudSyncEnabled: false,
+      syncPromptDismissedAt: null,
+      syncDisabledPermanently: false,
+    };
+    dispatch({ type: "DISCONNECT_WORKSPACE", workspaceId: binding.workspaceId, vaultPath: state.workspace.rootPath, settings });
+    dispatch({ type: "SET_STATUS", message: "Disconnected cloud sync. Local files were kept." });
+  }, [dispatch, saveCurrentVaultSettings, state.vaultBindings, state.workspace]);
+
+  const autoCreateAndBindWorkspace = useCallback(async () => {
+    if (!state.workspace) return;
+    if (!state.syncToken) {
+      await startBrowserOAuth();
+      return;
+    }
+    try {
+      dispatch({ type: "SET_LOADING", isLoading: true });
+      dispatch({ type: "SET_STATUS", message: "Creating cloud workspace..." });
+      const response = await fetch(`${getServiceUrl()}/api/v1/workspaces`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${state.syncToken}` },
+        body: JSON.stringify({ name: state.workspace.name }),
+      });
+      if (!response.ok) throw new Error(await response.text());
+      const workspace = (await response.json()) as CloudWorkspace;
+      const binding: VaultBinding = {
+        workspaceId: workspace.id,
+        workspaceName: workspace.name,
+        workspaceSlug: workspace.slug,
+        localVaultPath: state.workspace.rootPath,
+        lastPulledClock: 0,
+      };
+      const nextBindings = tauri.isAvailable
+        ? await tauri.bindCloudWorkspace(binding)
+        : [
+            ...state.vaultBindings.filter((item) => item.localVaultPath !== state.workspace?.rootPath && item.workspaceId !== workspace.id),
+            binding,
+          ];
+      dispatch({ type: "SET_VAULT_BINDINGS", bindings: nextBindings });
+      await saveCurrentVaultSettings(cloudEnabledSettings);
+      await refreshCloudWorkspaces();
+      await syncWorkspaceToWeb({ silent: true, bindingOverride: binding });
+      dispatch({ type: "SET_STATUS", message: `Synced "${state.workspace.name}" to cloud workspace ${workspace.name}.` });
+    } catch (error) {
+      dispatch({ type: "SET_STATUS", message: String(error) });
+      throw error;
+    } finally {
+      dispatch({ type: "SET_LOADING", isLoading: false });
+    }
+  }, [dispatch, getServiceUrl, refreshCloudWorkspaces, saveCurrentVaultSettings, startBrowserOAuth, state.syncToken, state.vaultBindings, state.workspace, syncWorkspaceToWeb]);
+
   const openOrBindCloudWorkspace = useCallback(async (workspaceId: string) => {
     const workspace = state.cloudWorkspaces.find((w) => w.id === workspaceId);
     if (!workspace) return;
@@ -498,6 +664,7 @@ export function useCloudSync() {
     if (tauri.isAvailable) {
       const bindings = await tauri.bindCloudWorkspace(binding);
       dispatch({ type: "SET_VAULT_BINDINGS", bindings });
+      await tauri.saveVaultSettings(selectedPath, cloudEnabledSettings).catch(() => undefined);
     }
     return selectedPath;
   }, [dispatch, state.cloudWorkspaces, state.vaultBindings]);
@@ -519,6 +686,10 @@ export function useCloudSync() {
     resolveConflict,
     loadCloudProfile,
     loadVaultBindings,
+    saveCurrentVaultSettings,
+    bindCurrentVaultToWorkspace,
+    disconnectWorkspace,
+    autoCreateAndBindWorkspace,
     openOrBindCloudWorkspace,
   };
 }

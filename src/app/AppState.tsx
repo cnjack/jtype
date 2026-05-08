@@ -11,6 +11,7 @@ import type {
   CloudWorkspace,
   SyncConflict,
   SyncStatus,
+  VaultSettings,
 } from "../lib/types";
 import type { AICommandProposal } from "./aiCommands";
 import { appStorage } from "../lib/storage";
@@ -38,6 +39,7 @@ export interface AppState {
   lastSyncSnapshot: string;
   cloudProfile: CloudProfile | null;
   vaultBindings: VaultBinding[];
+  vaultSettings: Record<string, VaultSettings | null>;
   cloudWorkspaces: CloudWorkspace[];
   oauthDeviceCode: string;
   oauthUserCode: string;
@@ -82,6 +84,8 @@ export type AppAction =
   | { type: "SET_SYNC_SESSION"; token: string; username: string; siteUrl: string; profile: CloudProfile }
   | { type: "SET_CLOUD_PROFILE"; profile: CloudProfile }
   | { type: "SET_VAULT_BINDINGS"; bindings: VaultBinding[] }
+  | { type: "SET_VAULT_SETTINGS"; vaultPath: string; settings: VaultSettings | null }
+  | { type: "DISCONNECT_WORKSPACE"; workspaceId: string; vaultPath: string; settings?: VaultSettings }
   | { type: "SET_CLOUD_WORKSPACES"; workspaces: CloudWorkspace[] }
   | { type: "SET_OAUTH"; deviceCode: string; userCode: string }
   | { type: "CLEAR_OAUTH" }
@@ -136,6 +140,7 @@ const initialState: AppState = {
   lastSyncSnapshot: appStorage.get("sync.snapshot", ""),
   cloudProfile: null,
   vaultBindings: [],
+  vaultSettings: {},
   cloudWorkspaces: [],
   oauthDeviceCode: "",
   oauthUserCode: "",
@@ -272,6 +277,25 @@ export function appReducer(state: AppState, action: AppAction): AppState {
       return { ...state, cloudProfile: action.profile };
     case "SET_VAULT_BINDINGS":
       return { ...state, vaultBindings: action.bindings };
+    case "SET_VAULT_SETTINGS": {
+      const next = { ...state.vaultSettings };
+      next[action.vaultPath] = action.settings;
+      return { ...state, vaultSettings: next };
+    }
+    case "DISCONNECT_WORKSPACE": {
+      const nextSettings = { ...state.vaultSettings };
+      if (action.settings) nextSettings[action.vaultPath] = action.settings;
+      return {
+        ...state,
+        vaultBindings: state.vaultBindings.filter(
+          (binding) => !(binding.workspaceId === action.workspaceId && binding.localVaultPath === action.vaultPath),
+        ),
+        vaultSettings: nextSettings,
+        activeConflicts: [],
+        syncStatus: "idle",
+        wsConnected: false,
+      };
+    }
     case "SET_CLOUD_WORKSPACES":
       return { ...state, cloudWorkspaces: action.workspaces };
     case "SET_OAUTH":

@@ -45,7 +45,8 @@ function AppContent() {
   const { state, dispatch } = useApp();
   const sync = useCloudSync();
   const autoSync = useCallback(async () => {
-    if (state.workspace && state.syncToken && state.vaultBindings.length > 0) {
+    const vaultSettings = state.workspace ? state.vaultSettings[state.workspace.rootPath] : undefined;
+    if (state.workspace && state.syncToken && state.vaultBindings.length > 0 && vaultSettings?.cloudSyncEnabled !== false) {
       const merged = await sync.syncWorkspaceToWeb({ silent: true, skipRelativePath: state.currentRelativePath || undefined });
       if (merged && merged.mergeStatus === "merged" && merged.relativePath === state.currentRelativePath && !state.isDirty) {
         const { tauri } = await import("../lib/tauri");
@@ -54,7 +55,7 @@ function AppContent() {
         dispatch({ type: "SET_STATUS", message: `Saved & merged with cloud changes.` });
       }
     }
-  }, [state.workspace, state.syncToken, state.vaultBindings, state.currentRelativePath, state.currentPath, state.currentKind, state.isDirty, sync, dispatch]);
+  }, [state.workspace, state.syncToken, state.vaultBindings, state.vaultSettings, state.currentRelativePath, state.currentPath, state.currentKind, state.isDirty, sync, dispatch]);
   const fs = useFileSystem(autoSync);
   const { commands, findCommand } = useCommands(fs, sync);
   useFileWatcher();
@@ -77,7 +78,13 @@ function AppContent() {
   const currentBinding = state.vaultBindings.find(
     (b) => b.localVaultPath === state.workspace?.rootPath
   );
-  const isSyncEnabled = !!(state.workspace && state.syncToken && currentBinding);
+  const currentVaultSettings = state.workspace ? state.vaultSettings[state.workspace.rootPath] : undefined;
+  const isSyncEnabled = !!(
+    state.workspace &&
+    state.syncToken &&
+    currentBinding &&
+    currentVaultSettings?.cloudSyncEnabled !== false
+  );
   const startupPullDoneRef = useRef<string | null>(null);
 
   useCloudEvents(sync.pullOnly);
@@ -85,10 +92,10 @@ function AppContent() {
   useEffect(() => {
     const bindingId = currentBinding?.workspaceId ?? null;
     if (startupPullDoneRef.current === bindingId) return;
-    if (!state.workspace || !state.syncToken || !currentBinding) return;
+    if (!state.workspace || !state.syncToken || !currentBinding || currentVaultSettings?.cloudSyncEnabled === false) return;
     startupPullDoneRef.current = bindingId;
     sync.pullOnly();
-  }, [state.workspace, state.syncToken, currentBinding, sync]);
+  }, [state.workspace, state.syncToken, currentBinding, currentVaultSettings?.cloudSyncEnabled, sync]);
 
   usePeriodicSync(
     useCallback(async () => {
@@ -108,7 +115,7 @@ function AppContent() {
 
   useEffect(() => {
     const syncAfterTrashChange = () => {
-      if (state.workspace && state.syncToken && currentBinding) {
+      if (state.workspace && state.syncToken && currentBinding && currentVaultSettings?.cloudSyncEnabled !== false) {
         void sync.syncWorkspaceToWeb({ silent: true });
       }
     };
@@ -118,11 +125,11 @@ function AppContent() {
       window.removeEventListener("jtype:vault-deleted", syncAfterTrashChange);
       window.removeEventListener("jtype:vault-restored", syncAfterTrashChange);
     };
-  }, [state.workspace, state.syncToken, currentBinding, sync]);
+  }, [state.workspace, state.syncToken, currentBinding, currentVaultSettings?.cloudSyncEnabled, sync]);
 
   useEffect(() => {
     if (!isTauriRuntime()) return;
-    if (!state.cloudProfile?.token || !currentBinding?.workspaceId || !state.cloudProfile?.deviceId) return;
+    if (!state.cloudProfile?.token || !currentBinding?.workspaceId || !state.cloudProfile?.deviceId || currentVaultSettings?.cloudSyncEnabled === false) return;
 
     invoke("start_cloud_listener", {
       serverUrl: state.cloudProfile.serverUrl,
@@ -133,7 +140,7 @@ function AppContent() {
     return () => {
       invoke("stop_cloud_listener").catch(() => {});
     };
-  }, [state.cloudProfile?.token, currentBinding?.workspaceId, state.cloudProfile?.deviceId, state.cloudProfile?.serverUrl]);
+  }, [state.cloudProfile?.token, currentBinding?.workspaceId, state.cloudProfile?.deviceId, state.cloudProfile?.serverUrl, currentVaultSettings?.cloudSyncEnabled]);
 
   const workspaceRef = useRef(state.workspace);
   workspaceRef.current = state.workspace;
@@ -156,6 +163,18 @@ function AppContent() {
           workspaceId: goneWorkspaceId,
           vaultPath: workspaceRef.current?.rootPath ?? "",
         });
+        if (workspaceRef.current?.rootPath) {
+          const settings = {
+            cloudSyncEnabled: false,
+            syncPromptDismissedAt: null,
+            syncDisabledPermanently: false,
+          };
+          await invoke("save_vault_settings", {
+            vaultPath: workspaceRef.current.rootPath,
+            settings,
+          });
+          dispatch({ type: "SET_VAULT_SETTINGS", vaultPath: workspaceRef.current.rootPath, settings });
+        }
         await syncRef.current.loadVaultBindings();
       } catch (err) {
         console.error("[cloud] failed to unbind gone workspace:", err);
@@ -168,6 +187,24 @@ function AppContent() {
       unlistenWorkspaceGone.then((fn) => fn());
     };
   }, []);
+
+  useEffect(() => {
+    if (!isTauriRuntime() || !state.workspace) return;
+    const rootPath = state.workspace.rootPath;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { tauri } = await import("../lib/tauri");
+        const settings = await tauri.loadVaultSettings(rootPath);
+        if (!cancelled) dispatch({ type: "SET_VAULT_SETTINGS", vaultPath: rootPath, settings });
+      } catch {
+        if (!cancelled) dispatch({ type: "SET_VAULT_SETTINGS", vaultPath: rootPath, settings: null });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [state.workspace?.rootPath, dispatch]);
 
   useEffect(() => {
     if (isTauriRuntime()) {

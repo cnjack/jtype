@@ -9,6 +9,7 @@ import type {
   SyncBaseEntry,
   CloudProfile,
   VaultBinding,
+  VaultSettings,
   FolderContentsSummary,
   TrashMetadata,
 } from "./types";
@@ -73,6 +74,18 @@ export const tauri = {
   },
   bindCloudWorkspace(binding: VaultBinding) {
     return invoke<VaultBinding[]>("bind_cloud_workspace", { binding });
+  },
+  unbindCloudWorkspace(workspaceId: string, vaultPath: string) {
+    return invoke<void>("unbind_cloud_workspace", { workspaceId, vaultPath });
+  },
+  clearSyncBases(vaultPath: string) {
+    return invoke<void>("clear_sync_bases", { vaultPath });
+  },
+  loadVaultSettings(vaultPath: string) {
+    return invoke<VaultSettings | null>("load_vault_settings", { vaultPath });
+  },
+  saveVaultSettings(vaultPath: string, settings: VaultSettings) {
+    return invoke<void>("save_vault_settings", { vaultPath, settings });
   },
   detectVaultRoot(path: string) {
     return invoke<string | null>("detect_vault_root", { path });

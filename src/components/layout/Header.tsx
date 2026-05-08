@@ -20,6 +20,11 @@ export function Header() {
 
   const isSingleFile = state.mode === "single-file";
   const hasDocument = Boolean(state.currentPath);
+  const currentBinding = state.workspace
+    ? state.vaultBindings.find((binding) => binding.localVaultPath === state.workspace?.rootPath)
+    : null;
+  const currentVaultSettings = state.workspace ? state.vaultSettings[state.workspace.rootPath] : undefined;
+  const cloudSyncEnabled = Boolean(currentBinding && currentVaultSettings?.cloudSyncEnabled !== false);
 
   const handleLogoClick = () => {
     if (state.mode !== "empty") {
@@ -52,14 +57,24 @@ export function Header() {
       </div>
       <div className="flex flex-wrap items-center justify-end gap-2">
         {state.mode === "workspace" && (
-          <button
-            className="toolbar-button aspect-square px-0"
-            type="button"
-            title="Quick open"
-            onClick={() => dispatch({ type: "SET_QUICK_SWITCHER", open: true })}
-          >
-            <MagnifyingGlassIcon className="h-4 w-4" />
-          </button>
+          <>
+            <button
+              className="toolbar-button aspect-square px-0"
+              type="button"
+              title={cloudSyncEnabled ? `Cloud workspace: ${currentBinding?.workspaceName}` : "Local vault mode"}
+              onClick={() => dispatch({ type: "SET_ACCOUNT_DIALOG", open: true, section: "workspace" })}
+            >
+              {cloudSyncEnabled ? <CloudIcon className="h-4 w-4" /> : <FolderOpenIcon className="h-4 w-4" />}
+            </button>
+            <button
+              className="toolbar-button aspect-square px-0"
+              type="button"
+              title="Quick open"
+              onClick={() => dispatch({ type: "SET_QUICK_SWITCHER", open: true })}
+            >
+              <MagnifyingGlassIcon className="h-4 w-4" />
+            </button>
+          </>
         )}
         {isSingleFile && (
           <button className="toolbar-button aspect-square px-0" type="button" title="Open file" onClick={() => fs.chooseMarkdownFile()}>

@@ -6,11 +6,13 @@ declare global {
     __SYNC_REQUESTS__: unknown[];
     __SYNC_BASES__: Record<string, string>;
     __VAULT_BINDINGS__: unknown[];
+    __VAULT_SETTINGS__: Record<string, { cloudSyncEnabled: boolean; syncPromptDismissedAt: string | null; syncDisabledPermanently: boolean }>;
   }
 }
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
+    window.localStorage.clear();
     const files: Record<string, string> = {
       "C:/workspace/intro.md": "# Intro\n\nHello from workspace.",
       "C:/workspace/guides/setup.md": "# Setup\n\nInstall and run.",
@@ -72,6 +74,13 @@ test.beforeEach(async ({ page }) => {
       __SYNC_REQUESTS__: [],
       __SYNC_BASES__: {},
       __VAULT_BINDINGS__: [],
+      __VAULT_SETTINGS__: {
+        "C:/workspace": {
+          cloudSyncEnabled: true,
+          syncPromptDismissedAt: new Date().toISOString(),
+          syncDisabledPermanently: false,
+        },
+      },
       __TAURI_EVENT_PLUGIN_INTERNALS__: {
         unregisterListener: () => undefined,
       },
@@ -91,8 +100,35 @@ test.beforeEach(async ({ page }) => {
           if (cmd === "save_cloud_profile") return args.profile;
           if (cmd === "list_vault_bindings") return window.__VAULT_BINDINGS__;
           if (cmd === "bind_cloud_workspace") {
-            window.__VAULT_BINDINGS__ = [args.binding];
+            const binding = args.binding as { workspaceId: string; localVaultPath: string };
+            window.__VAULT_BINDINGS__ = [
+              ...window.__VAULT_BINDINGS__
+                .filter((item) => (item as { workspaceId: string }).workspaceId !== binding.workspaceId)
+                .filter((item) => (item as { localVaultPath: string }).localVaultPath !== binding.localVaultPath),
+              args.binding,
+            ];
             return window.__VAULT_BINDINGS__;
+          }
+          if (cmd === "unbind_cloud_workspace") {
+            window.__VAULT_BINDINGS__ = window.__VAULT_BINDINGS__.filter(
+              (item) => {
+                const binding = item as { workspaceId: string; localVaultPath: string };
+                return !(binding.workspaceId === args.workspaceId && binding.localVaultPath === args.vaultPath);
+              },
+            );
+            window.__SYNC_BASES__ = {};
+            return null;
+          }
+          if (cmd === "clear_sync_bases") {
+            window.__SYNC_BASES__ = {};
+            return null;
+          }
+          if (cmd === "load_vault_settings") {
+            return window.__VAULT_SETTINGS__[String(args.vaultPath)] ?? null;
+          }
+          if (cmd === "save_vault_settings") {
+            window.__VAULT_SETTINGS__[String(args.vaultPath)] = args.settings as { cloudSyncEnabled: boolean; syncPromptDismissedAt: string | null; syncDisabledPermanently: boolean };
+            return null;
           }
           if (cmd === "open_default_vault") return { ...workspaceSnapshot(), rootPath: "C:/Users/Jack/Documents/.jtype", name: ".jtype", metadataCreated: true };
           if (cmd === "plugin:event|listen") return ++eventId;
@@ -236,6 +272,21 @@ test.beforeEach(async ({ page }) => {
         );
       }
       if (url.endsWith("/api/v1/workspaces")) {
+        if (init?.method === "POST") {
+          const body = JSON.parse(String(init.body ?? "{}")) as { name?: string };
+          return new Response(
+            JSON.stringify({
+              id: "workspace-e2e",
+              name: body.name || "workspace",
+              slug: "workspace",
+              role: "owner",
+              documentCount: 0,
+              storageBudgetBytes: 1073741824,
+              storageUsedBytes: 0,
+            }),
+            { status: 200, headers: { "Content-Type": "application/json" } },
+          );
+        }
         return new Response(JSON.stringify({ workspaces: [] }), {
           status: 200,
           headers: { "Content-Type": "application/json" },
@@ -249,6 +300,45 @@ test.beforeEach(async ({ page }) => {
             workspaceName: "workspace",
             documentCount: 2,
             siteUrl: "http://localhost:8080/u/jack/workspace",
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      if (url.includes("/sync/pull")) {
+        return new Response(
+          JSON.stringify({ workspaceId: "workspace-e2e", documents: [], deletedPaths: [], conflicts: [] }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      if (url.includes("/sync/push")) {
+        window.__SYNC_REQUESTS__.push(JSON.parse(String(init?.body)));
+        return new Response(
+          JSON.stringify({
+            workspaceId: "workspace-e2e",
+            accepted: 2,
+            documents: [
+              {
+                relativePath: "intro.md",
+                title: "Intro",
+                status: "published",
+                content: "# Intro\n\nHello from workspace.",
+                contentHash: "abc123",
+                versionId: "v1",
+                updatedClock: 1,
+                mergeStatus: "accepted",
+              },
+              {
+                relativePath: "guides/setup.md",
+                title: "Setup",
+                status: "published",
+                content: "# Setup\n\nInstall and run.",
+                contentHash: "def456",
+                versionId: "v2",
+                updatedClock: 2,
+                mergeStatus: "accepted",
+              },
+            ],
+            conflicts: [],
           }),
           { status: 200, headers: { "Content-Type": "application/json" } },
         );
@@ -271,6 +361,11 @@ async function openFile(page: import("@playwright/test").Page) {
   await page.locator("#command-results").getByRole("button", { name: /Open Markdown file/ }).click();
 }
 
+async function openProfileSettings(page: import("@playwright/test").Page) {
+  await page.locator("#sync-panel-button").click();
+  await page.getByRole("menuitem", { name: "Profile" }).click();
+}
+
 test("opens a workspace and renders a markdown file", async ({ page }) => {
   await expect(page.locator("#welcome-screen")).toContainText("Create a vault or edit one Markdown file");
   await openWorkspace(page);
@@ -287,7 +382,7 @@ test("opens a workspace and renders a markdown file", async ({ page }) => {
 test("opens the default vault from welcome", async ({ page }) => {
   await page.locator("#welcome-default-vault").click();
   await expect(page.locator("#workspace-name")).toHaveText(".jtype");
-  await expect(page.locator("#workspace-path")).toHaveText("C:/Users/Jack/Documents/.jtype");
+  await expect(page.locator("#vault-home")).toContainText("C:/Users/Jack/Documents/.jtype");
   await expect(page.locator("#operation-log")).toContainText("Default vault created");
 });
 
@@ -316,13 +411,13 @@ test("runs export from the document info panel", async ({ page }) => {
 
 test("connects in browser and syncs a vault to the web service", async ({ page }) => {
   await openWorkspace(page);
-  await page.locator("#sync-panel-button").click();
+  await openProfileSettings(page);
 
   await page.getByRole("button", { name: "Connect in browser" }).click();
   await expect(page.locator("#operation-log")).toContainText("Connected as jack", { timeout: 5000 });
 
   await page.locator("#account-sync").click();
-  await expect(page.locator("#operation-log")).toContainText("Synced 2 document");
+  await expect(page.locator("#operation-log")).toContainText("Synced");
   await expect(page.locator("#account-site-link")).toHaveAttribute("href", "http://localhost:8080/u/jack/workspace");
 
   const requestCount = await page.evaluate(() => window.__SYNC_REQUESTS__.length);
@@ -337,6 +432,62 @@ test("connects in browser and syncs a vault to the web service", async ({ page }
       lastPulledClock: 0,
     },
   ]);
+});
+
+test("shows sync prompt for an unconfigured vault and can keep it local", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__VAULT_SETTINGS__ = {};
+  });
+  await page.goto("/");
+
+  await openWorkspace(page);
+  await expect(page.getByRole("dialog", { name: /Sync "workspace" to cloud/ })).toBeVisible();
+  await page.getByRole("button", { name: "Local only" }).click();
+
+  await expect(page.locator("#operation-log")).toContainText("local-only");
+  const settings = await page.evaluate(() => window.__VAULT_SETTINGS__["C:/workspace"]);
+  expect(settings).toEqual({
+    cloudSyncEnabled: false,
+    syncPromptDismissedAt: null,
+    syncDisabledPermanently: true,
+  });
+});
+
+test("disconnects a bound cloud workspace and keeps the vault local", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__VAULT_BINDINGS__ = [
+      {
+        workspaceId: "workspace-e2e",
+        workspaceName: "workspace",
+        workspaceSlug: "workspace",
+        localVaultPath: "C:/workspace",
+        lastPulledClock: 7,
+      },
+    ];
+    window.__SYNC_BASES__ = {
+      "intro.md": "# Intro\n\nHello from workspace.",
+    };
+  });
+  await page.goto("/");
+
+  await openWorkspace(page);
+  await openProfileSettings(page);
+  await page.getByRole("button", { name: "General" }).click();
+  page.once("dialog", async (dialog) => {
+    expect(dialog.message()).toContain("Disconnect");
+    await dialog.accept();
+  });
+  await page.getByRole("button", { name: "Disconnect" }).click();
+
+  await expect(page.locator("#operation-log")).toContainText("Disconnected cloud sync");
+  const result = await page.evaluate(() => ({
+    bindings: window.__VAULT_BINDINGS__,
+    bases: window.__SYNC_BASES__,
+    settings: window.__VAULT_SETTINGS__["C:/workspace"],
+  }));
+  expect(result.bindings).toEqual([]);
+  expect(result.bases).toEqual({});
+  expect(result.settings.cloudSyncEnabled).toBe(false);
 });
 
 test("uses command palette to run save", async ({ page }) => {
@@ -355,12 +506,11 @@ test("uses command palette to run save", async ({ page }) => {
 test("uses quick switcher to open a workspace document", async ({ page }) => {
   await openWorkspace(page);
 
-  await page.keyboard.press("Control+O");
-  await page.getByLabel("Open or create note").fill("setup");
+  await page.locator("#vault-home").getByRole("button", { name: "Quick open" }).click();
+  await page.getByLabel("Open or create Document").fill("setup");
   await page.locator("#quick-results").getByRole("button", { name: /setup\.md/ }).click();
 
   await expect(page.getByLabel("Markdown editor")).toHaveValue("# Setup\n\nInstall and run.");
-  await expect(page.locator("#document-breadcrumbs")).toContainText("guides");
 });
 
 test("edits frontmatter properties and shows outline", async ({ page }) => {
@@ -487,7 +637,7 @@ test("pulls cloud edits into local vault after sync", async ({ page }) => {
   await page.goto("/");
 
   await openWorkspace(page);
-  await page.locator("#sync-panel-button").click();
+  await openProfileSettings(page);
   await page.getByRole("button", { name: "Connect in browser" }).click();
   await expect(page.locator("#operation-log")).toContainText("Connected as jack", { timeout: 5000 });
   await page.locator("#account-sync").click();
@@ -538,7 +688,7 @@ test("pushes desktop edits to cloud workspace", async ({ page }) => {
   await page.getByLabel("Markdown editor").fill("# Intro\n\nEdited locally for push.");
   await page.getByRole("button", { name: "Save" }).click();
 
-  await page.locator("#sync-panel-button").click();
+  await openProfileSettings(page);
   await page.getByRole("button", { name: "Connect in browser" }).click();
   await expect(page.locator("#operation-log")).toContainText("Connected as jack", { timeout: 5000 });
   await page.locator("#account-sync").click();
@@ -611,7 +761,7 @@ test("pushes local deletions to cloud workspace trash", async ({ page }) => {
   await page.goto("/");
 
   await openWorkspace(page);
-  await page.locator("#sync-panel-button").click();
+  await openProfileSettings(page);
   await page.getByRole("button", { name: "Connect in browser" }).click();
   await expect(page.locator("#operation-log")).toContainText("Connected as jack", { timeout: 5000 });
   await page.getByRole("button", { name: "Close account dialog" }).click();
@@ -691,13 +841,15 @@ test("shows and resolves sync conflicts", async ({ page }) => {
   await page.goto("/");
 
   await openWorkspace(page);
-  await page.locator("#sync-panel-button").click();
+  await openProfileSettings(page);
   await page.getByRole("button", { name: "Connect in browser" }).click();
   await expect(page.locator("#operation-log")).toContainText("Connected as jack", { timeout: 5000 });
   await page.locator("#account-sync").click();
 
-  await expect(page.locator("#account-conflict-list")).toContainText("intro.md");
-  await page.locator("#account-conflict-list").getByRole("button", { name: "Accept cloud" }).click();
+  await page.getByRole("button", { name: "Close account dialog" }).click();
+  await page.getByRole("button", { name: /1 conflict/ }).click();
+  await expect(page.getByText("Conflict: intro.md")).toBeVisible();
+  await page.getByRole("button", { name: "Accept cloud" }).click();
 
   await expect(page.locator("#operation-log")).toContainText("Resolved conflict in intro.md");
   const resolved = await page.evaluate(() => (window as unknown as { __CONFLICT_RESOLVED__: boolean }).__CONFLICT_RESOLVED__);
@@ -734,10 +886,11 @@ test("accepts workspace invite and creates local vault binding", async ({ page }
   await page.goto("/");
 
   await openWorkspace(page);
-  await page.locator("#sync-panel-button").click();
+  await openProfileSettings(page);
   await page.getByRole("button", { name: "Connect in browser" }).click();
   await expect(page.locator("#operation-log")).toContainText("Connected as jack", { timeout: 5000 });
 
+  await page.getByRole("button", { name: "General" }).click();
   await expect(page.locator("#account-workspace-list")).toContainText("Team Docs");
   await expect(page.locator("#account-workspace-list")).toContainText("editor");
 

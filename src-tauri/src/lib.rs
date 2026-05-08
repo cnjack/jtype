@@ -225,7 +225,7 @@ fn bind_cloud_workspace(binding: VaultBinding) -> Result<Vec<VaultBinding>, Stri
     let mut store = read_binding_store()?;
     store
         .bindings
-        .retain(|item| item.workspace_id != binding.workspace_id);
+        .retain(|item| item.workspace_id != binding.workspace_id && item.local_vault_path != binding.local_vault_path);
     store.bindings.push(binding);
     store
         .bindings
@@ -528,7 +528,9 @@ struct VaultSettingsStore {
 fn unbind_cloud_workspace(workspace_id: String, vault_path: String) -> Result<(), String> {
     // 1. Remove binding from vault-bindings.json
     let mut store = read_binding_store()?;
-    store.bindings.retain(|b| b.workspace_id != workspace_id);
+    store
+        .bindings
+        .retain(|b| !(b.workspace_id == workspace_id && b.local_vault_path == vault_path));
     write_json(&vault_bindings_file()?, &store)?;
 
     // 2. Delete .jtype/sync-base/ directory
