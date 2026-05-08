@@ -38,6 +38,9 @@ createRoot(document.getElementById('root')!).render(
 function WorkspaceRedirect() {
   const navigate = useNavigate()
   const [empty, setEmpty] = useState(false)
+  const [workspaceName, setWorkspaceName] = useState('')
+  const [creating, setCreating] = useState(false)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     api.listWorkspaces().then(res => {
@@ -49,6 +52,21 @@ function WorkspaceRedirect() {
     })
   }, [navigate])
 
+  async function createWorkspace() {
+    const name = workspaceName.trim()
+    if (!name || creating) return
+    setCreating(true)
+    setError('')
+    try {
+      const workspace = await api.createWorkspace(name)
+      navigate(`/workspaces/${workspace.id}`, { replace: true })
+    } catch (err) {
+      setError(String(err))
+    } finally {
+      setCreating(false)
+    }
+  }
+
   if (!empty) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -59,11 +77,30 @@ function WorkspaceRedirect() {
 
   return (
     <div className="flex h-full items-center justify-center bg-[#fbfdfb]">
-      <div className="max-w-sm text-center">
+      <div className="w-full max-w-sm text-center">
         <h1 className="text-2xl font-semibold text-zinc-950">Create a cloud workspace</h1>
         <p className="mt-2 text-sm text-zinc-500">
-          Use the workspace switcher in the header to create your first cloud workspace.
+          Start with a private cloud workspace for web editing, sync, publishing, and collaboration.
         </p>
+        <div className="mt-6 flex gap-2">
+          <input
+            className="sync-input text-left"
+            value={workspaceName}
+            onChange={event => setWorkspaceName(event.target.value)}
+            onKeyDown={event => event.key === 'Enter' && createWorkspace()}
+            placeholder="Workspace name"
+            aria-label="Workspace name"
+          />
+          <button
+            className="sidebar-action shrink-0"
+            type="button"
+            disabled={!workspaceName.trim() || creating}
+            onClick={createWorkspace}
+          >
+            {creating ? 'Creating...' : 'Create'}
+          </button>
+        </div>
+        {error && <p className="mt-3 text-xs font-medium text-red-600">{error}</p>}
       </div>
     </div>
   )
