@@ -24,10 +24,16 @@ import {
 } from '@heroicons/react/24/outline'
 
 export function Layout() {
-  const { user, logout } = useAuth()
+  const { user, loading, logout } = useAuth()
   const navigate = useNavigate()
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [adminOpen, setAdminOpen] = useState(false)
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/login', { replace: true })
+    }
+  }, [loading, navigate, user])
 
   useEffect(() => {
     if (!user) return
@@ -44,6 +50,16 @@ export function Layout() {
   }
 
   const userInitial = (user?.username || 'J').charAt(0).toUpperCase()
+
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-[#f5f8f6]">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand border-t-transparent" />
+      </div>
+    )
+  }
+
+  if (!user) return null
 
   return (
     <div className="grid h-screen grid-rows-[64px_minmax(0,1fr)] overflow-hidden bg-[#f5f8f6] text-zinc-950">
@@ -256,4 +272,3 @@ function formatDeviceUpdatedAt(value: string): string {
     year: 'numeric',
   })
 }
-

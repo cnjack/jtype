@@ -1,6 +1,7 @@
 mod common;
 
 use axum::http::StatusCode;
+use jtype_web::util::sha256_hex;
 use serde_json::json;
 
 #[tokio::test]
@@ -150,5 +151,24 @@ async fn get_me_no_token() {
 async fn get_me_bad_token() {
     let (app, _pool) = common::setup().await;
     let (status, _body) = common::req(app, "GET", "/api/me", Some("not-a-valid-token"), None).await;
+    assert_eq!(status, StatusCode::UNAUTHORIZED);
+}
+
+#[tokio::test]
+async fn get_me_expired_session() {
+    let (app, pool) = common::setup().await;
+    let username = common::uid();
+    let (token, _) = common::register_user(app.clone(), &username).await;
+    let token_hash = sha256_hex(&token);
+
+    sqlx::query(
+        "UPDATE sessions SET expires_at = CURRENT_TIMESTAMP - INTERVAL 1 SECOND WHERE token_hash = ?",
+    )
+    .bind(token_hash)
+    .execute(&pool)
+    .await
+    .expect("expire session");
+
+    let (status, _body) = common::req(app, "GET", "/api/me", Some(&token), None).await;
     assert_eq!(status, StatusCode::UNAUTHORIZED);
 }

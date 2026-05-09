@@ -12,7 +12,8 @@ pub async fn extract_user(pool: &Pool<MySql>, headers: &HeaderMap) -> Result<Aut
         r#"SELECT u.id, u.username, u.role, u.disabled_at
            FROM sessions s
            JOIN users u ON u.id = s.user_id
-           WHERE s.token_hash = ?"#,
+           WHERE s.token_hash = ?
+             AND (s.expires_at IS NULL OR s.expires_at > CURRENT_TIMESTAMP)"#,
     )
     .bind(token_hash)
     .fetch_optional(pool)

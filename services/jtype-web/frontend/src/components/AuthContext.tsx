@@ -1,5 +1,12 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
-import { api, setToken, clearToken, setStoredUsername, getStoredUsername, type AuthResponse } from '../api'
+import {
+  api,
+  setToken,
+  clearStoredAuth,
+  setStoredUsername,
+  getStoredToken,
+  type AuthResponse,
+} from '../api'
 
 interface AuthState {
   user: AuthResponse | null
@@ -16,11 +23,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const stored = getStoredUsername()
-    if (stored) {
-      api.me().then(setUser).catch(() => clearToken()).finally(() => setLoading(false))
-    } else {
-      setLoading(false)
+    let cancelled = false
+
+    async function restoreSession() {
+      const token = getStoredToken()
+      if (!token) {
+        clearStoredAuth()
+        if (!cancelled) setLoading(false)
+        return
+      }
+
+      try {
+        const currentUser = await api.me()
+        if (cancelled) return
+        setStoredUsername(currentUser.username)
+        setUser(currentUser)
+      } catch {
+        if (!cancelled) {
+          clearStoredAuth()
+          setUser(null)
+        }
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+
+    void restoreSession()
+
+    return () => {
+      cancelled = true
     }
   }, [])
 
@@ -39,9 +70,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   function logout() {
-    clearToken()
+    clearStoredAuth()
     setUser(null)
-    localStorage.removeItem('jtype.username')
   }
 
   return (

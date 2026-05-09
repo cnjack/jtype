@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import {
+  ArrowLeftOnRectangleIcon,
   ArrowRightIcon,
   BoltIcon,
   CheckCircleIcon,
@@ -11,6 +12,7 @@ import {
   GlobeAltIcon,
   SparklesIcon,
 } from '@heroicons/react/24/outline'
+import { useAuth } from '../components/AuthContext'
 
 const markdownLines = [
   '---',
@@ -68,6 +70,11 @@ const surfaces = [
 ]
 
 export function Landing() {
+  const { user, loading, logout } = useAuth()
+  const appLink = user ? '/workspaces' : '/login'
+  const appCtaLabel = user ? 'Open dashboard' : 'Start writing'
+  const appCtaTitle = user ? 'Open JType Cloud dashboard' : 'Start with JType Cloud'
+
   return (
     <div className="min-h-screen overflow-hidden bg-[#f5f8f6] text-[#0d0d0c]">
       <section className="landing-hero relative isolate min-h-[88svh] overflow-hidden px-4 pb-0 pt-4 sm:px-6 sm:pb-4 lg:px-8">
@@ -98,21 +105,46 @@ export function Landing() {
             >
               GitHub
             </a>
-            <Link
-              to="/login"
-              className="inline-flex h-9 items-center gap-2 rounded-lg border border-brand bg-brand px-3 text-sm font-semibold text-white shadow-sm shadow-brand/15 transition hover:border-brand-dark hover:bg-brand-dark"
-              title="Sign in"
-            >
-              Sign in
-              <ArrowRightIcon className="h-4 w-4" />
-            </Link>
+            {loading ? (
+              <span className="inline-flex h-9 items-center rounded-lg border border-black/[0.06] bg-white/70 px-3 text-sm font-semibold text-[#6b7773]">
+                Checking session
+              </span>
+            ) : user ? (
+              <>
+                <Link
+                  to="/workspaces"
+                  className="inline-flex h-9 items-center rounded-lg border border-brand/20 bg-[#e8f6f2] px-3 text-sm font-semibold text-brand-dark transition hover:border-brand/30 hover:bg-white"
+                  title="Open JType Cloud dashboard"
+                >
+                  {user.username}
+                </Link>
+                <button
+                  type="button"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-black/[0.06] bg-white/80 text-[#4b5753] shadow-sm shadow-emerald-950/5 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700"
+                  title="Sign out"
+                  aria-label="Sign out"
+                  onClick={logout}
+                >
+                  <ArrowLeftOnRectangleIcon className="h-4 w-4" />
+                </button>
+              </>
+            ) : (
+              <Link
+                to="/login"
+                className="inline-flex h-9 items-center gap-2 rounded-lg border border-brand bg-brand px-3 text-sm font-semibold text-white shadow-sm shadow-brand/15 transition hover:border-brand-dark hover:bg-brand-dark"
+                title="Sign in"
+              >
+                Sign in
+                <ArrowRightIcon className="h-4 w-4" />
+              </Link>
+            )}
           </div>
         </nav>
 
         <div className="relative mx-auto flex max-w-7xl flex-col items-center pt-12 text-center sm:pt-16">
           <div className="inline-flex items-center gap-2 rounded-full border border-brand/15 bg-white/75 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-brand-dark shadow-sm shadow-emerald-950/5 backdrop-blur">
             <SparklesIcon className="h-4 w-4" />
-            Local-first Markdown vault
+            {user ? `Signed in as ${user.username}` : 'Local-first Markdown vault'}
           </div>
           <h1 className="mt-6 max-w-5xl text-5xl font-semibold leading-[0.98] tracking-tight text-[#0d0d0c] sm:text-6xl lg:text-7xl">
             JType
@@ -123,11 +155,11 @@ export function Landing() {
           </p>
           <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
             <Link
-              to="/login"
+              to={appLink}
               className="inline-flex h-11 items-center gap-2 rounded-lg border border-brand bg-brand px-5 text-sm font-semibold text-white shadow-lg shadow-brand/15 transition hover:border-brand-dark hover:bg-brand-dark"
-              title="Start with JType Cloud"
+              title={appCtaTitle}
             >
-              Start writing
+              {appCtaLabel}
               <ArrowRightIcon className="h-4 w-4" />
             </Link>
             <a
@@ -209,11 +241,11 @@ export function Landing() {
               </p>
             </div>
             <Link
-              to="/login"
+              to={appLink}
               className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-brand bg-brand px-5 text-sm font-semibold text-white shadow-sm shadow-brand/15 transition hover:border-brand-dark hover:bg-brand-dark"
-              title="Go to login"
+              title={appCtaTitle}
             >
-              Go to JType Cloud
+              {user ? 'Open JType Cloud' : 'Go to JType Cloud'}
               <ArrowRightIcon className="h-4 w-4" />
             </Link>
           </div>

@@ -1,27 +1,34 @@
 const API_BASE = ''
+const TOKEN_STORAGE_KEY = 'jtype.token'
+const USERNAME_STORAGE_KEY = 'jtype.username'
 
-function getToken(): string {
-  return localStorage.getItem('jtype.token') || ''
+export function getStoredToken(): string {
+  return localStorage.getItem(TOKEN_STORAGE_KEY) || ''
 }
 
 export function setToken(token: string) {
-  localStorage.setItem('jtype.token', token)
+  localStorage.setItem(TOKEN_STORAGE_KEY, token)
 }
 
 export function clearToken() {
-  localStorage.removeItem('jtype.token')
+  localStorage.removeItem(TOKEN_STORAGE_KEY)
+}
+
+export function clearStoredAuth() {
+  localStorage.removeItem(TOKEN_STORAGE_KEY)
+  localStorage.removeItem(USERNAME_STORAGE_KEY)
 }
 
 export function getStoredUsername(): string | null {
-  return localStorage.getItem('jtype.username')
+  return localStorage.getItem(USERNAME_STORAGE_KEY)
 }
 
 export function setStoredUsername(username: string) {
-  localStorage.setItem('jtype.username', username)
+  localStorage.setItem(USERNAME_STORAGE_KEY, username)
 }
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const token = getToken()
+  const token = getStoredToken()
   const res = await fetch(`${API_BASE}${path}`, {
     ...options,
     headers: {

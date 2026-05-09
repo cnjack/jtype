@@ -473,7 +473,7 @@ async function loginAs(page: Page, username = "testuser", password = "password12
   await page.getByLabel("Username").fill(username);
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Sign in" }).click();
-  await page.waitForURL("/dashboard");
+  await page.waitForURL(/\/workspaces(\/ws-1)?$/);
 }
 
 test.describe("Landing page", () => {
@@ -481,8 +481,26 @@ test.describe("Landing page", () => {
     await mockApi(page);
     await page.goto("/");
     await expect(page.locator("h1")).toContainText("JType");
-    await page.getByRole("link", { name: "Get started" }).click();
+    await page.getByRole("link", { name: "Start writing" }).click();
     await expect(page).toHaveURL("/login");
+  });
+
+  test("shows persisted login state and can sign out", async ({ page }) => {
+    await mockApi(page);
+    await loginAs(page);
+
+    const reopened = await page.context().newPage();
+    await mockApi(reopened);
+    await reopened.goto("/");
+
+    await expect(reopened.getByText("Signed in as testuser")).toBeVisible();
+    await expect(reopened.getByRole("link", { name: "Open dashboard" })).toBeVisible();
+    await expect(reopened.getByRole("link", { name: "Sign in" })).toHaveCount(0);
+
+    await reopened.getByRole("button", { name: "Sign out" }).click();
+    await expect(reopened.getByRole("link", { name: "Sign in" })).toBeVisible();
+    expect(await reopened.evaluate(() => localStorage.getItem("jtype.token"))).toBeNull();
+    expect(await reopened.evaluate(() => localStorage.getItem("jtype.username"))).toBeNull();
   });
 });
 
@@ -493,7 +511,7 @@ test.describe("Authentication", () => {
     await page.getByLabel("Username").fill("testuser");
     await page.getByLabel("Password").fill("password123");
     await page.getByRole("button", { name: "Sign in" }).click();
-    await expect(page).toHaveURL("/dashboard");
+    await expect(page).toHaveURL(/\/workspaces(\/ws-1)?$/);
   });
 
   test("register flow", async ({ page }) => {
@@ -503,7 +521,7 @@ test.describe("Authentication", () => {
     await page.getByLabel("Username").fill("newuser");
     await page.getByLabel("Password").fill("strongpassword");
     await page.getByRole("button", { name: "Create account" }).click();
-    await expect(page).toHaveURL("/dashboard");
+    await expect(page).toHaveURL(/\/workspaces(\/ws-1)?$/);
   });
 
   test("shows error on failed login", async ({ page }) => {

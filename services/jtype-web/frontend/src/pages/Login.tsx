@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../components/AuthContext'
 import {
@@ -12,14 +12,20 @@ export function Login() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
-  const { login, register } = useAuth()
+  const [submitting, setSubmitting] = useState(false)
+  const { login, register, user, loading } = useAuth()
   const navigate = useNavigate()
+
+  useEffect(() => {
+    if (!loading && user) {
+      navigate('/workspaces', { replace: true })
+    }
+  }, [loading, navigate, user])
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setError('')
-    setLoading(true)
+    setSubmitting(true)
     try {
       if (isRegister) {
         await register(username, password)
@@ -30,8 +36,16 @@ export function Login() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong')
     } finally {
-      setLoading(false)
+      setSubmitting(false)
     }
+  }
+
+  if (loading || user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#f5f8f6]">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand border-t-transparent" />
+      </div>
+    )
   }
 
   return (
@@ -182,10 +196,10 @@ export function Login() {
 
               <button
                 type="submit"
-                disabled={loading}
+                disabled={submitting}
                 className="toolbar-button toolbar-button-primary mt-1 h-10 justify-center"
               >
-                {loading
+                {submitting
                   ? 'Please wait...'
                   : isRegister
                     ? 'Create account'
