@@ -54,105 +54,105 @@ pub async fn start_ws_listener(
 
                 // New receiver per connection attempt so old messages don't replay.
                 let mut outbox_rx = outbox.subscribe();
+                // Single interval lives here — no separate spawn, so aborting the
+                // outer start_ws_listener task also cancels writes and reads together.
+                let mut ping_interval =
+                    tokio::time::interval(std::time::Duration::from_secs(30));
 
-                let ping_handle = tauri::async_runtime::spawn(async move {
-                    let mut interval = tokio::time::interval(std::time::Duration::from_secs(30));
-                    loop {
-                        tokio::select! {
-                            _ = interval.tick() => {
-                                if write
-                                    .send(Message::Text("{\"type\":\"ping\"}".into()))
-                                    .await
-                                    .is_err()
-                                {
-                                    break;
-                                }
-                            }
-                            Ok(msg) = outbox_rx.recv() => {
-                                eprintln!("[ws_client] → SEND {}", &msg[..msg.len().min(200)]);
-                                if write
-                                    .send(Message::Text(msg.into()))
-                                    .await
-                                    .is_err()
-                                {
-                                    eprintln!("[ws_client] → SEND FAILED");
-                                    break;
-                                }
+                loop {
+                    tokio::select! {
+                        _ = ping_interval.tick() => {
+                            if write
+                                .send(Message::Text("{\"type\":\"ping\"}".into()))
+                                .await
+                                .is_err()
+                            {
+                                break;
                             }
                         }
-                    }
-                });
-
-                while let Some(msg) = read.next().await {
-                    match msg {
-                        Ok(Message::Text(text)) => {
-                            // Suppress pong noise in both logs and activity events.
-                            if text.contains("\"pong\"") {
-                                continue;
+                        Ok(msg) = outbox_rx.recv() => {
+                            eprintln!("[ws_client] → SEND {}", &msg[..msg.len().min(200)]);
+                            if write
+                                .send(Message::Text(msg.into()))
+                                .await
+                                .is_err()
+                            {
+                                eprintln!("[ws_client] → SEND FAILED");
+                                break;
                             }
-                            eprintln!("[ws_client] ← RECV text: {text}");
-                            if let Ok(parsed) = serde_json::from_str::<WsMessage>(&text) {
-                                // Emit activity for EVERY named message so the frontend can
-                                // observe WS liveness and debug missing notifications.
-                                let activity = WsActivity {
-                                    msg_type: parsed.msg_type.clone(),
-                                    relative_path: parsed.relative_path.clone(),
-                                    at_ms: std::time::SystemTime::now()
-                                        .duration_since(std::time::UNIX_EPOCH)
-                                        .unwrap_or_default()
-                                        .as_millis()
-                                        as u64,
-                                };
-                                let _ = app.emit("cloud:ws-activity", &activity);
+                        }
+                        item = read.next() => {
+                            match item {
+                                Some(Ok(Message::Text(text))) => {
+                                    // Suppress pong noise in both logs and activity events.
+                                    if text.contains("\"pong\"") {
+                                        continue;
+                                    }
+                                    eprintln!("[ws_client] ← RECV text: {text}");
+                                    if let Ok(parsed) = serde_json::from_str::<WsMessage>(&text) {
+                                        // Emit activity for EVERY named message so the frontend can
+                                        // observe WS liveness and debug missing notifications.
+                                        let activity = WsActivity {
+                                            msg_type: parsed.msg_type.clone(),
+                                            relative_path: parsed.relative_path.clone(),
+                                            at_ms: std::time::SystemTime::now()
+                                                .duration_since(std::time::UNIX_EPOCH)
+                                                .unwrap_or_default()
+                                                .as_millis()
+                                                as u64,
+                                        };
+                                        let _ = app.emit("cloud:ws-activity", &activity);
 
-                                match parsed.msg_type.as_str() {
-                                    "document:changed" | "document:deleted"
-                                    | "document:trashed" => {
-                                        // Skip changes originated by this device to avoid
-                                        // wasteful self-pulls and potential race conditions.
-                                        let is_self = parsed.device_id_field.as_deref()
-                                            == Some(&device_id)
-                                            && parsed.source.as_deref() == Some("desktop");
-                                        if is_self {
-                                            eprintln!(
-                                                "[ws_client] skipping self-change: {} {:?}",
-                                                parsed.msg_type, parsed.relative_path
-                                            );
-                                            continue;
+                                        match parsed.msg_type.as_str() {
+                                            "document:changed" | "document:deleted"
+                                            | "document:trashed" => {
+                                                // Skip changes originated by this device to avoid
+                                                // wasteful self-pulls and potential race conditions.
+                                                let is_self = parsed.device_id_field.as_deref()
+                                                    == Some(&device_id)
+                                                    && parsed.source.as_deref() == Some("desktop");
+                                                if is_self {
+                                                    eprintln!(
+                                                        "[ws_client] skipping self-change: {} {:?}",
+                                                        parsed.msg_type, parsed.relative_path
+                                                    );
+                                                    continue;
+                                                }
+                                                eprintln!(
+                                                    "[ws_client] remote change: {} {:?}",
+                                                    parsed.msg_type, parsed.relative_path
+                                                );
+                                                let _ = app.emit("cloud:remote-change", &text);
+                                            }
+                                            "sync:required" => {
+                                                eprintln!("[ws_client] sync:required");
+                                                let _ = app.emit("cloud:sync-required", ());
+                                            }
+                                            "connected" => {
+                                                eprintln!("[ws_client] server confirmed connected");
+                                                let _ = app.emit("cloud:ws-connected", &text);
+                                            }
+                                            _ => {}
                                         }
-                                        eprintln!(
-                                            "[ws_client] remote change: {} {:?}",
-                                            parsed.msg_type, parsed.relative_path
-                                        );
-                                        let _ = app.emit("cloud:remote-change", &text);
                                     }
-                                    "sync:required" => {
-                                        eprintln!("[ws_client] sync:required");
-                                        let _ = app.emit("cloud:sync-required", ());
-                                    }
-                                    "connected" => {
-                                        eprintln!("[ws_client] server confirmed connected");
-                                        let _ = app.emit("cloud:ws-connected", &text);
-                                    }
-                                    _ => {}
+                                }
+                                Some(Ok(Message::Close(f))) => {
+                                    eprintln!("[ws_client] ← RECV close frame: {f:?}");
+                                    break;
+                                }
+                                Some(Err(e)) => {
+                                    eprintln!("[ws_client] read error: {e}");
+                                    break;
+                                }
+                                None => break,
+                                Some(Ok(other)) => {
+                                    eprintln!("[ws_client] ← RECV non-text frame: {other:?}");
                                 }
                             }
-                        }
-                        Ok(Message::Close(f)) => {
-                            eprintln!("[ws_client] ← RECV close frame: {f:?}");
-                            break;
-                        }
-                        Err(e) => {
-                            eprintln!("[ws_client] read error: {e}");
-                            break;
-                        }
-                        Ok(other) => {
-                            eprintln!("[ws_client] ← RECV non-text frame: {other:?}");
                         }
                     }
                 }
 
-                ping_handle.abort();
                 eprintln!("[ws_client] disconnected (workspace={workspace_id}), retrying in {backoff_secs}s");
                 let _ = app.emit("cloud:ws-disconnected", ());
             }

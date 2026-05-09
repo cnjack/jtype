@@ -240,7 +240,8 @@ pub fn conflict_sibling_path(relative_path: &str) -> String {
 
 fn parse_frontmatter(content: &str) -> std::collections::HashMap<String, String> {
     let mut frontmatter = std::collections::HashMap::new();
-    let mut lines = content.lines();
+    let normalized = content.replace("\r\n", "\n");
+    let mut lines = normalized.lines();
     if lines.next() != Some("---") {
         return frontmatter;
     }

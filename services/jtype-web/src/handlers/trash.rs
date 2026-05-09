@@ -86,14 +86,36 @@ pub async fn restore_from_trash(
     )
     .await?;
 
+    let doc = restore_trash_item_core(
+        &state.pool,
+        &state.hub,
+        &workspace_id,
+        &user.id,
+        device_id.as_deref(),
+        &trash_id,
+    )
+    .await?;
+
+    Ok(Json(doc))
+}
+
+/// Core restore logic shared by the REST handler and sync trash operations.
+pub async fn restore_trash_item_core(
+    pool: &sqlx::Pool<sqlx::MySql>,
+    hub: &crate::hub::ConnectionHub,
+    workspace_id: &str,
+    user_id: &str,
+    device_id: Option<&str>,
+    trash_id: &str,
+) -> Result<CloudDocument, AppError> {
     let row = sqlx::query(
         r#"SELECT document_id, relative_path, title, content, content_hash, version_id
            FROM document_trash
            WHERE id = ? AND workspace_id = ? AND restored_at IS NULL"#,
     )
-    .bind(&trash_id)
-    .bind(&workspace_id)
-    .fetch_optional(&state.pool)
+    .bind(trash_id)
+    .bind(workspace_id)
+    .fetch_optional(pool)
     .await?
     .ok_or(AppError::NotFound)?;
 
@@ -104,16 +126,16 @@ pub async fn restore_from_trash(
 
     let existing =
         sqlx::query("SELECT id FROM documents WHERE workspace_id = ? AND relative_path = ?")
-            .bind(&workspace_id)
+            .bind(workspace_id)
             .bind(&relative_path)
-            .fetch_optional(&state.pool)
+            .fetch_optional(pool)
             .await?;
 
     if existing.is_some() {
         sqlx::query("DELETE FROM documents WHERE workspace_id = ? AND relative_path = ?")
-            .bind(&workspace_id)
+            .bind(workspace_id)
             .bind(&relative_path)
-            .execute(&state.pool)
+            .execute(pool)
             .await?;
     }
 
@@ -123,23 +145,23 @@ pub async fn restore_from_trash(
     let version_id = Uuid::new_v4().to_string();
 
     super::document::ensure_workspace_budget(
-        &state.pool,
-        &workspace_id,
+        pool,
+        workspace_id,
         &final_relative_path,
         &content,
     )
     .await?;
 
-    let mut tx = state.pool.begin().await?;
+    let mut tx = pool.begin().await?;
 
-    let next_clock = super::document::next_workspace_clock(&mut tx, &workspace_id).await?;
+    let next_clock = super::document::next_workspace_clock(&mut tx, workspace_id).await?;
 
     sqlx::query(
         r#"INSERT INTO documents (id, workspace_id, relative_path, title, status, content_hash, content, updated_clock, current_version_id)
            VALUES (?, ?, ?, ?, 'draft', ?, ?, ?, ?)"#,
     )
     .bind(&document_id)
-    .bind(&workspace_id)
+    .bind(workspace_id)
     .bind(&final_relative_path)
     .bind(&title)
     .bind(&content_hash)
@@ -154,9 +176,9 @@ pub async fn restore_from_trash(
            VALUES (?, ?, ?, NULL, ?, 'system', ?, ?)"#,
     )
     .bind(&version_id)
-    .bind(&workspace_id)
+    .bind(workspace_id)
     .bind(&document_id)
-    .bind(&user.id)
+    .bind(user_id)
     .bind(&content_hash)
     .bind(&content)
     .execute(&mut *tx)
@@ -167,28 +189,27 @@ pub async fn restore_from_trash(
            restored_by_device_id = ?, restored_by_user_id = ?, restored_clock = ?
            WHERE id = ?"#,
     )
-    .bind(&device_id)
-    .bind(&user.id)
+    .bind(device_id)
+    .bind(user_id)
     .bind(next_clock)
-    .bind(&trash_id)
+    .bind(trash_id)
     .execute(&mut *tx)
     .await?;
 
     tx.commit().await?;
 
-    state
-        .hub
-        .publish(
-            &workspace_id,
-            WorkspaceEvent::DocumentTrashed {
-                source_session_id: String::new(),
-                relative_path,
-                action: "restored".to_string(),
-            },
-        )
-        .await;
+    hub.publish(
+        workspace_id,
+        WorkspaceEvent::DocumentTrashed {
+            workspace_id: workspace_id.to_string(),
+            source_session_id: None,
+            relative_path,
+            action: "restored".to_string(),
+        },
+    )
+    .await;
 
-    Ok(Json(CloudDocument {
+    Ok(CloudDocument {
         relative_path: final_relative_path,
         title,
         status: "draft".to_string(),
@@ -196,7 +217,7 @@ pub async fn restore_from_trash(
         content_hash,
         version_id,
         updated_clock: next_clock,
-    }))
+    })
 }
 
 pub async fn permanent_delete(
@@ -213,21 +234,31 @@ pub async fn permanent_delete(
     )
     .await?;
 
-    let mut tx = state.pool.begin().await?;
+    permanent_delete_core(&state.pool, &state.hub, &workspace_id, &trash_id).await
+}
+
+/// Core permanent-delete logic shared by the REST handler and sync trash operations.
+pub async fn permanent_delete_core(
+    pool: &sqlx::Pool<sqlx::MySql>,
+    hub: &crate::hub::ConnectionHub,
+    workspace_id: &str,
+    trash_id: &str,
+) -> Result<StatusCode, AppError> {
+    let mut tx = pool.begin().await?;
     let next_clock =
-        crate::handlers::document::next_workspace_clock(&mut tx, &workspace_id).await?;
+        crate::handlers::document::next_workspace_clock(&mut tx, workspace_id).await?;
 
     let relative_path: Option<String> =
         sqlx::query("SELECT relative_path FROM document_trash WHERE id = ? AND workspace_id = ?")
-            .bind(&trash_id)
-            .bind(&workspace_id)
+            .bind(trash_id)
+            .bind(workspace_id)
             .fetch_optional(&mut *tx)
             .await?
             .and_then(|r| r.try_get("relative_path").ok());
 
     let result = sqlx::query("DELETE FROM document_trash WHERE id = ? AND workspace_id = ?")
-        .bind(&trash_id)
-        .bind(&workspace_id)
+        .bind(trash_id)
+        .bind(workspace_id)
         .execute(&mut *tx)
         .await?;
 
@@ -242,7 +273,7 @@ pub async fn permanent_delete(
            VALUES (?, ?, 'permanent_delete_item', ?, ?)"#,
     )
     .bind(&event_id)
-    .bind(&workspace_id)
+    .bind(workspace_id)
     .bind(serde_json::json!({ "trashId": trash_id }).to_string())
     .bind(next_clock)
     .execute(&mut *tx)
@@ -251,17 +282,16 @@ pub async fn permanent_delete(
     tx.commit().await?;
 
     if let Some(rp) = relative_path {
-        state
-            .hub
-            .publish(
-                &workspace_id,
-                WorkspaceEvent::DocumentDeleted {
-                    source_session_id: String::new(),
-                    relative_path: rp,
-                    deleted_clock: next_clock,
-                },
-            )
-            .await;
+        hub.publish(
+            workspace_id,
+            WorkspaceEvent::DocumentDeleted {
+                workspace_id: workspace_id.to_string(),
+                source_session_id: None,
+                relative_path: rp,
+                deleted_clock: next_clock,
+            },
+        )
+        .await;
     }
 
     Ok(StatusCode::NO_CONTENT)
@@ -281,14 +311,23 @@ pub async fn empty_trash(
     )
     .await?;
 
-    let mut tx = state.pool.begin().await?;
+    empty_trash_core(&state.pool, &state.hub, &workspace_id).await
+}
+
+/// Core empty-trash logic shared by the REST handler and sync trash operations.
+pub async fn empty_trash_core(
+    pool: &sqlx::Pool<sqlx::MySql>,
+    hub: &crate::hub::ConnectionHub,
+    workspace_id: &str,
+) -> Result<StatusCode, AppError> {
+    let mut tx = pool.begin().await?;
     let next_clock =
-        crate::handlers::document::next_workspace_clock(&mut tx, &workspace_id).await?;
+        crate::handlers::document::next_workspace_clock(&mut tx, workspace_id).await?;
 
     let trash_rows = sqlx::query(
         "SELECT relative_path FROM document_trash WHERE workspace_id = ? AND restored_at IS NULL",
     )
-    .bind(&workspace_id)
+    .bind(workspace_id)
     .fetch_all(&mut *tx)
     .await?;
     let trash_paths: Vec<String> = trash_rows
@@ -297,7 +336,7 @@ pub async fn empty_trash(
         .collect();
 
     sqlx::query("DELETE FROM document_trash WHERE workspace_id = ? AND restored_at IS NULL")
-        .bind(&workspace_id)
+        .bind(workspace_id)
         .execute(&mut *tx)
         .await?;
 
@@ -307,7 +346,7 @@ pub async fn empty_trash(
            VALUES (?, ?, 'empty_trash', '{}', ?)"#,
     )
     .bind(&event_id)
-    .bind(&workspace_id)
+    .bind(workspace_id)
     .bind(next_clock)
     .execute(&mut *tx)
     .await?;
@@ -315,17 +354,16 @@ pub async fn empty_trash(
     tx.commit().await?;
 
     for rp in trash_paths {
-        state
-            .hub
-            .publish(
-                &workspace_id,
-                WorkspaceEvent::DocumentDeleted {
-                    source_session_id: String::new(),
-                    relative_path: rp,
-                    deleted_clock: next_clock,
-                },
-            )
-            .await;
+        hub.publish(
+            workspace_id,
+            WorkspaceEvent::DocumentDeleted {
+                workspace_id: workspace_id.to_string(),
+                source_session_id: None,
+                relative_path: rp,
+                deleted_clock: next_clock,
+            },
+        )
+        .await;
     }
 
     Ok(StatusCode::NO_CONTENT)

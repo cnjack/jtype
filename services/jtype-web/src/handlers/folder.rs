@@ -60,6 +60,7 @@ pub async fn create_folder(
         .publish(
             &workspace_id,
             WorkspaceEvent::SyncRequired {
+                workspace_id: workspace_id.clone(),
                 reason: "folder-changed".to_string(),
             },
         )
@@ -109,6 +110,7 @@ pub async fn delete_folder(
         .publish(
             &workspace_id,
             WorkspaceEvent::SyncRequired {
+                workspace_id: workspace_id.clone(),
                 reason: "folder-changed".to_string(),
             },
         )
@@ -192,38 +194,34 @@ async fn upsert_single_folder(
     workspace_id: &str,
     relative_path: &str,
 ) -> Result<bool, AppError> {
-    let existing = sqlx::query(
-        "SELECT id FROM workspace_folders WHERE workspace_id = ? AND relative_path = ?",
-    )
-    .bind(workspace_id)
-    .bind(relative_path)
-    .fetch_optional(&mut **tx)
-    .await?;
-
-    if existing.is_some() {
-        return Ok(false);
-    }
-
     let folder_id = Uuid::new_v4().to_string();
     let clock = next_workspace_clock(tx, workspace_id).await?;
-    sqlx::query(
+    // Atomic upsert — avoids TOCTOU race when concurrent requests both insert the same path.
+    // rows_affected == 1 means a new row was inserted; == 2 means an existing row was updated
+    // (MySQL's ON DUPLICATE KEY UPDATE counts as 2 affected rows).
+    let result = sqlx::query(
         r#"INSERT INTO workspace_folders (id, workspace_id, relative_path, updated_clock)
-           VALUES (?, ?, ?, ?)"#,
+           VALUES (?, ?, ?, ?)
+           ON DUPLICATE KEY UPDATE updated_clock = VALUES(updated_clock)"#,
     )
-    .bind(folder_id)
+    .bind(&folder_id)
     .bind(workspace_id)
     .bind(relative_path)
     .bind(clock)
     .execute(&mut **tx)
     .await?;
-    sqlx::query(
-        "DELETE FROM workspace_folder_deletions WHERE workspace_id = ? AND relative_path = ?",
-    )
-    .bind(workspace_id)
-    .bind(relative_path)
-    .execute(&mut **tx)
-    .await?;
-    Ok(true)
+
+    let inserted = result.rows_affected() == 1;
+    if inserted {
+        sqlx::query(
+            "DELETE FROM workspace_folder_deletions WHERE workspace_id = ? AND relative_path = ?",
+        )
+        .bind(workspace_id)
+        .bind(relative_path)
+        .execute(&mut **tx)
+        .await?;
+    }
+    Ok(inserted)
 }
 
 pub async fn record_folder_deletion(
@@ -240,6 +238,27 @@ pub async fn record_folder_deletion(
     .bind(workspace_id)
     .bind(relative_path)
     .bind(clock)
+    .execute(&mut **tx)
+    .await?;
+    Ok(())
+}
+
+/// Normalize, record tombstone, and remove live rows from workspace_folders.
+/// Mirrors the REST delete_folder handler but takes a relative path directly.
+pub async fn delete_folder_by_path(
+    tx: &mut sqlx::Transaction<'_, sqlx::MySql>,
+    workspace_id: &str,
+    relative_path: &str,
+) -> Result<(), AppError> {
+    let relative_path = crate::util::normalize_folder_path(relative_path)?;
+    record_folder_deletion(tx, workspace_id, &relative_path).await?;
+    sqlx::query(
+        r#"DELETE FROM workspace_folders
+           WHERE workspace_id = ? AND (relative_path = ? OR relative_path LIKE ?)"#,
+    )
+    .bind(workspace_id)
+    .bind(&relative_path)
+    .bind(format!("{relative_path}/%"))
     .execute(&mut **tx)
     .await?;
     Ok(())

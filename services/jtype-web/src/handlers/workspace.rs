@@ -8,6 +8,7 @@ use uuid::Uuid;
 
 use crate::db::models::*;
 use crate::error::AppError;
+use crate::hub::WorkspaceEvent;
 use crate::middleware::auth::extract_user;
 use crate::util::*;
 use crate::AppState;
@@ -108,9 +109,20 @@ pub async fn update_workspace(
             .await?;
     }
 
-    Ok(Json(
-        load_workspace_summary(&state.pool, &user.id, &workspace_id).await?,
-    ))
+    let summary = load_workspace_summary(&state.pool, &user.id, &workspace_id).await?;
+    state
+        .hub
+        .publish(
+            &workspace_id,
+            WorkspaceEvent::WorkspaceUpdated {
+                workspace_id: workspace_id.clone(),
+                name: summary.name.clone(),
+                slug: summary.slug.clone(),
+                publish_title: summary.publish_title.clone(),
+            },
+        )
+        .await;
+    Ok(Json(summary))
 }
 
 pub async fn get_workspace(
@@ -183,6 +195,7 @@ pub async fn create_invite(
     let invite_id = Uuid::new_v4().to_string();
     let invite_token = random_token();
     let token_hash = sha256_hex(&invite_token);
+    let email_normalized = payload.email.map(|v| v.trim().to_ascii_lowercase());
     sqlx::query(
         r#"INSERT INTO workspace_invites (id, workspace_id, invited_by_user_id, email, role, token_hash)
            VALUES (?, ?, ?, ?, ?, ?)"#,
@@ -190,11 +203,42 @@ pub async fn create_invite(
     .bind(&invite_id)
     .bind(&workspace_id)
     .bind(&user.id)
-    .bind(payload.email.map(|v| v.trim().to_ascii_lowercase()))
+    .bind(&email_normalized)
     .bind(role)
     .bind(token_hash)
     .execute(&state.pool)
     .await?;
+
+    // Notify the invited user if they already have an account (M1)
+    if let Some(ref email) = email_normalized {
+        if let Ok(Some(ws)) = sqlx::query("SELECT name FROM workspaces WHERE id = ?")
+            .bind(&workspace_id)
+            .fetch_optional(&state.pool)
+            .await
+        {
+            let workspace_name: String = ws.try_get("name").unwrap_or_default();
+            if let Ok(Some(invited)) = sqlx::query("SELECT id FROM users WHERE email = ?")
+                .bind(email)
+                .fetch_optional(&state.pool)
+                .await
+            {
+                let invited_user_id: String = invited.try_get("id").unwrap_or_default();
+                state
+                    .hub
+                    .publish_to_user(
+                        &invited_user_id,
+                        WorkspaceEvent::WorkspaceInvited {
+                            workspace_id: workspace_id.clone(),
+                            workspace_name,
+                            role: role.to_string(),
+                            invited_by_username: user.username.clone(),
+                        },
+                    )
+                    .await;
+            }
+        }
+    }
+
     Ok(Json(InviteResponse {
         invite_id,
         workspace_id,
@@ -260,6 +304,22 @@ pub async fn accept_invite(
         .execute(&mut *tx)
         .await?;
     tx.commit().await?;
+
+    state
+        .hub
+        .publish(
+            &workspace_id,
+            WorkspaceEvent::MemberJoined {
+                workspace_id: workspace_id.clone(),
+                user_id: user.id.clone(),
+                username: user.username.clone(),
+                role: role.to_string(),
+            },
+        )
+        .await;
+    // Add workspace to all active sessions of the new member (H12)
+    state.hub.add_workspace_to_user(&user.id, &workspace_id).await;
+
     Ok(Json(
         load_workspace_summary(&state.pool, &user.id, &workspace_id).await?,
     ))
@@ -356,6 +416,18 @@ pub async fn delete_workspace(
         .bind(&workspace_id)
         .execute(&state.pool)
         .await?;
+
+    state
+        .hub
+        .publish(
+            &workspace_id,
+            WorkspaceEvent::WorkspaceDeleted {
+                workspace_id: workspace_id.clone(),
+            },
+        )
+        .await;
+    // Kick all active sessions from this workspace (H9)
+    state.hub.kick_all_from_workspace(&workspace_id).await;
 
     Ok(StatusCode::NO_CONTENT)
 }

@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
 import { ArrowRightIcon, ChevronDownIcon, ChevronRightIcon, FolderIcon } from "@heroicons/react/24/outline";
 import { useAppDispatch, useAppState } from "../../app/AppState";
-import { tauri } from "../../lib/tauri";
+import { useFileSystem } from "../../hooks";
 import type { FileTreeNode } from "../../lib/types";
 
 export function MoveFolderDialog({
@@ -20,6 +20,7 @@ export function MoveFolderDialog({
 }) {
   const state = useAppState();
   const dispatch = useAppDispatch();
+  const fs = useFileSystem();
   const [selected, setSelected] = useState("");
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
@@ -38,13 +39,10 @@ export function MoveFolderDialog({
     if (!state.workspace || !isValid) return;
     try {
       if (sourceKind === "folder") {
-        const [workspace] = await tauri.moveFolder(state.workspace.rootPath, sourcePath, destPath);
-        dispatch({ type: "UPDATE_WORKSPACE", workspace });
+        await fs.moveFolder(sourcePath, destPath);
       } else {
-        const workspace = await tauri.renameEntry(state.workspace.rootPath, sourcePath, destPath);
-        dispatch({ type: "UPDATE_WORKSPACE", workspace });
+        await fs.renameEntry(sourcePath, destPath, false);
       }
-      dispatch({ type: "SET_STATUS", message: `Moved ${sourceName} to ${selected || "root"}.` });
       onClose();
     } catch (error) {
       dispatch({ type: "SET_STATUS", message: String(error) });

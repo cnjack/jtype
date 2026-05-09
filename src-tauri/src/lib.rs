@@ -186,6 +186,21 @@ fn load_sync_bases(root_path: String) -> Result<std::collections::HashMap<String
 }
 
 #[tauri::command]
+fn save_sync_folder_bases(root_path: String, folders: Vec<String>) -> Result<(), String> {
+    workspace::save_sync_folder_bases(&PathBuf::from(root_path), &folders)
+}
+
+#[tauri::command]
+fn delete_sync_folder_bases(root_path: String, relative_paths: Vec<String>) -> Result<(), String> {
+    workspace::delete_sync_folder_bases(&PathBuf::from(root_path), &relative_paths)
+}
+
+#[tauri::command]
+fn load_sync_folder_bases(root_path: String) -> Result<Vec<String>, String> {
+    workspace::load_sync_folder_bases(&PathBuf::from(root_path))
+}
+
+#[tauri::command]
 fn load_cloud_profile() -> Result<CloudProfile, String> {
     let file = cloud_profile_file()?;
     if !file.exists() {
@@ -686,6 +701,9 @@ pub fn run() {
             save_sync_bases,
             delete_sync_bases,
             load_sync_bases,
+            save_sync_folder_bases,
+            delete_sync_folder_bases,
+            load_sync_folder_bases,
             load_cloud_profile,
             save_cloud_profile,
             list_vault_bindings,

@@ -22,7 +22,7 @@ pub use error::AppError;
 pub struct AppState {
     pub pool: Pool<MySql>,
     pub public_base_url: String,
-    pub hub: hub::NotificationHub,
+    pub hub: hub::ConnectionHub,
 }
 
 #[derive(Embed)]
@@ -48,7 +48,15 @@ pub async fn run_from_env() -> Result<(), AppError> {
 }
 
 pub fn build_router(pool: Pool<MySql>, public_base_url: String) -> Router {
-    let hub = hub::NotificationHub::new();
+    let (router, _hub) = build_router_with_hub(pool, public_base_url);
+    router
+}
+
+pub fn build_router_with_hub(
+    pool: Pool<MySql>,
+    public_base_url: String,
+) -> (Router, hub::ConnectionHub) {
+    let hub = hub::ConnectionHub::new();
     let cleanup_hub = hub.clone();
     tokio::spawn(async move {
         let mut interval = tokio::time::interval(std::time::Duration::from_secs(300));
@@ -63,7 +71,9 @@ pub fn build_router(pool: Pool<MySql>, public_base_url: String) -> Router {
         hub,
     };
 
-    Router::new()
+    let return_hub = state.hub.clone();
+
+    let router = Router::new()
         // Health
         .route("/health", get(|| async { "ok" }))
         // Auth API
@@ -128,6 +138,10 @@ pub fn build_router(pool: Pool<MySql>, public_base_url: String) -> Router {
         .route(
             "/api/v1/workspaces/:workspace_id/manifest",
             get(handlers::workspace::get_workspace_manifest),
+        )
+        .route(
+            "/api/v1/live",
+            get(handlers::live::ws_upgrade_user),
         )
         .route(
             "/api/v1/workspaces/:workspace_id/live",
@@ -236,7 +250,9 @@ pub fn build_router(pool: Pool<MySql>, public_base_url: String) -> Router {
                 .allow_methods(Any)
                 .allow_headers(Any),
         )
-        .with_state(state)
+        .with_state(state);
+
+    (router, return_hub)
 }
 
 async fn serve_frontend(uri: Uri) -> Response {

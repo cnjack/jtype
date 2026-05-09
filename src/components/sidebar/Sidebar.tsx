@@ -3,7 +3,7 @@ import { useFileSystem } from "../../hooks";
 import { markdownNodes } from "../../lib/utils";
 import { tauri } from "../../lib/tauri";
 import { appStorage } from "../../lib/storage";
-import type { EntryKind, FileTreeNode, LocalTrashItem, TrashMetadataItem } from "../../lib/types";
+import type { EntryKind, FileTreeNode, LocalTrashItem, RecentItem, TrashMetadataItem } from "../../lib/types";
 import { useCallback, useEffect, useState, useMemo } from "react";
 import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/react";
 import { DeleteFolderDialog } from "../modals/DeleteFolderDialog";
@@ -234,17 +234,14 @@ function ExplorerPanel() {
           dispatch({ type: "SET_STATUS", message: "Cannot move folder into itself." });
           return;
         }
-        const [workspace] = await tauri.moveFolder(state.workspace.rootPath, sourceRelativePath, destPath);
-        dispatch({ type: "UPDATE_WORKSPACE", workspace });
+        await fs.moveFolder(sourceRelativePath, destPath);
       } else {
-        const workspace = await tauri.renameEntry(state.workspace.rootPath, sourceRelativePath, destPath);
-        dispatch({ type: "UPDATE_WORKSPACE", workspace });
+        await fs.renameEntry(sourceRelativePath, destPath, false);
       }
-      dispatch({ type: "SET_STATUS", message: `Moved ${sourceName} to ${targetFolder || "root"}.` });
     } catch (error) {
       dispatch({ type: "SET_STATUS", message: String(error) });
     }
-  }, [state.workspace, dispatch]);
+  }, [state.workspace, dispatch, fs]);
 
   const filteredResults = useMemo(() => {
     if (!query) return null;
@@ -534,9 +531,7 @@ function ExplorerPanel() {
                     const parentPath = contextMenu.node.relativePath.split("/").slice(0, -1).join("/");
                     const newRelative = parentPath ? `${parentPath}/${newName.trim()}` : newName.trim();
                     try {
-                      const [workspace] = await tauri.renameFolder(state.workspace!.rootPath, contextMenu.node.relativePath, newRelative);
-                      dispatch({ type: "UPDATE_WORKSPACE", workspace });
-                      dispatch({ type: "SET_STATUS", message: `Renamed folder to ${newName.trim()}.` });
+                      await fs.renameFolder(contextMenu.node.relativePath, newRelative);
                     } catch (error) {
                       dispatch({ type: "SET_STATUS", message: String(error) });
                     }
@@ -569,13 +564,7 @@ function ExplorerPanel() {
                     const parentPath = contextMenu.node.relativePath.split("/").slice(0, -1).join("/");
                     const newRelative = parentPath ? `${parentPath}/${newName.trim()}` : newName.trim();
                     try {
-                      const workspace = await tauri.renameEntry(state.workspace!.rootPath, contextMenu.node.relativePath, newRelative);
-                      dispatch({ type: "UPDATE_WORKSPACE", workspace });
-                      dispatch({ type: "SET_STATUS", message: `Renamed to ${newName.trim()}.` });
-                      // If the renamed file is currently open, update its path
-                      if (state.currentRelativePath === contextMenu.node.relativePath) {
-                        void fs.openMarkdownFile(`${state.workspace!.rootPath}/${newRelative}`, newRelative);
-                      }
+                      await fs.renameEntry(contextMenu.node.relativePath, newRelative, true);
                     } catch (error) {
                       dispatch({ type: "SET_STATUS", message: String(error) });
                     }
@@ -791,7 +780,6 @@ function toggleFavorite(path: string, rootPath?: string) {
   appStorage.set(key, next);
 }
 
-type RecentItem = { kind: "file" | "workspace"; name: string; path: string };
 function recentVaults(currentPath?: string): RecentItem[] {
   const recent: RecentItem[] = appStorage.get("recent", []);
   return recent

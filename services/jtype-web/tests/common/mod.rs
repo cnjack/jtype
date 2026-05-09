@@ -43,6 +43,14 @@ pub async fn setup() -> (Router, Pool<MySql>) {
     (app, pool)
 }
 
+/// Returns (app_router, pool, hub) — use when testing WS event notifications.
+pub async fn setup_with_hub() -> (Router, Pool<MySql>, jtype_web::hub::ConnectionHub) {
+    let pool = setup_db().await;
+    let (app, hub) =
+        jtype_web::build_router_with_hub(pool.clone(), "http://localhost:13345".to_string());
+    (app, pool, hub)
+}
+
 // ── Unique name helpers ───────────────────────────────────────────────────────
 
 /// Generate a unique username safe for MySQL (alpha, <= 30 chars).

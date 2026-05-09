@@ -105,7 +105,7 @@ function shouldRemind(dismissedAt?: string | null) {
   return Date.now() - timestamp >= 7 * 24 * 60 * 60 * 1000;
 }
 
-type RecentItem = { kind: "file" | "workspace"; name: string; path: string };
+import type { RecentItem } from "../../lib/types";
 
 function readRecentItems(): RecentItem[] {
   return appStorage.get("recent", []);

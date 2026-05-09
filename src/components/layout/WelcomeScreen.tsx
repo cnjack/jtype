@@ -66,7 +66,7 @@ export function WelcomeScreen() {
   );
 }
 
-type RecentItem = { kind: "file" | "workspace"; name: string; path: string };
+import type { RecentItem } from "../../lib/types";
 function readRecentItems(): RecentItem[] {
   try {
     return JSON.parse(window.localStorage.getItem("jtype.recent") ?? "[]");

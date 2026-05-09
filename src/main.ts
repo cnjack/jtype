@@ -7,6 +7,31 @@ import katex from "katex";
 import "katex/dist/katex.min.css";
 import { marked } from "marked";
 import { createLineDiff, type AICommandProposal } from "./aiCommands";
+import { parseFrontmatter, writeFrontmatter, titleFromMarkdown } from "./lib/frontmatter";
+import type {
+  EntryKind,
+  InspectorTab,
+  EditorMode,
+  FileTreeNode,
+  WorkspaceSnapshot,
+  PublishResult,
+  AiIndexResult,
+  ValidationResult,
+  SyncDocument,
+  AuthResponse,
+  SyncResponse,
+  CloudProfile,
+  VaultBinding,
+  CloudWorkspace,
+  CloudWorkspaceListResponse,
+  OAuthDeviceStartResponse,
+  CloudDocument,
+  SyncConflict,
+  SyncPushResponse,
+  RecentItem,
+  DocumentSummary,
+  AppCommand,
+} from "./lib/types";
 
 declare global {
   interface Window {
@@ -29,132 +54,7 @@ async function confirmAsync(message: string): Promise<boolean> {
   throw new Error("Confirm dialog not available. Ensure ConfirmDialogProvider is mounted.");
 }
 
-type EntryKind = "folder" | "markdown" | "asset";
 type Activity = "files" | "search" | "library" | "publish" | "ai" | "settings";
-type InspectorTab = "preview" | "properties" | "outline" | "links" | "publish" | "ai";
-type EditorMode = "write" | "split" | "preview";
-type CommandScope =
-  | "global"
-  | "workspace"
-  | "file"
-  | "folder"
-  | "editor"
-  | "selection"
-  | "publish"
-  | "ai";
-
-type FileTreeNode = {
-  name: string;
-  path: string;
-  relativePath: string;
-  kind: EntryKind;
-  children: FileTreeNode[];
-};
-
-type WorkspaceSnapshot = {
-  rootPath: string;
-  name: string;
-  entries: FileTreeNode[];
-  metadataCreated: boolean;
-};
-
-type PublishResult = {
-  outputDir: string;
-  pages: string[];
-};
-
-type AiIndexResult = {
-  outputFile: string;
-  documents: number;
-  chunks: number;
-  links: number;
-  assets: number;
-};
-
-type ValidationResult = {
-  errors: string[];
-  warnings: string[];
-};
-
-type SyncDocument = {
-  relativePath: string;
-  title: string;
-  status: string;
-  content: string;
-};
-
-type AuthResponse = {
-  token: string;
-  username: string;
-  siteUrl: string;
-};
-
-type SyncResponse = {
-  workspaceId?: string;
-  workspaceName: string;
-  documentCount: number;
-  siteUrl: string;
-};
-
-type CloudProfile = {
-  serverUrl: string;
-  username: string;
-  siteUrl: string;
-  token: string;
-  deviceId: string;
-};
-
-type VaultBinding = {
-  workspaceId: string;
-  workspaceName: string;
-  workspaceSlug: string;
-  localVaultPath: string;
-  lastPulledClock: number;
-};
-
-type CloudWorkspace = {
-  id: string;
-  name: string;
-  slug: string;
-  role: string;
-  documentCount: number;
-  storageBudgetBytes: number;
-};
-
-type CloudWorkspaceListResponse = {
-  workspaces: CloudWorkspace[];
-};
-
-type OAuthDeviceStartResponse = {
-  deviceCode: string;
-  userCode: string;
-  verificationUrl: string;
-};
-
-type CloudDocument = {
-  relativePath: string;
-  title: string;
-  status: string;
-  content: string;
-  contentHash: string;
-  versionId: string;
-  updatedClock: number;
-};
-
-type SyncConflict = {
-  conflictId: string;
-  relativePath: string;
-  localContent: string;
-  cloudContent: string;
-  baseContent?: string;
-};
-
-type SyncPushResponse = {
-  workspaceId: string;
-  accepted: number;
-  documents: CloudDocument[];
-  conflicts: SyncConflict[];
-};
 
 type AppState = {
   activeActivity: Activity;
@@ -179,37 +79,6 @@ type AppState = {
   activeConflicts: SyncConflict[];
   contextNode: FileTreeNode | null;
   pendingAiProposal: AICommandProposal | null;
-};
-
-type RecentItem = {
-  kind: "file" | "workspace";
-  name: string;
-  path: string;
-};
-
-type FrontmatterParse = {
-  data: Record<string, string>;
-  body: string;
-  hasFrontmatter: boolean;
-};
-
-type DocumentSummary = {
-  node: FileTreeNode;
-  title: string;
-  status: string;
-  publish: boolean;
-  tags: string[];
-};
-
-type AppCommand = {
-  id: string;
-  title: string;
-  aliases?: string[];
-  shortcut?: string;
-  scope: CommandScope[];
-  isEnabled: () => boolean;
-  disabledReason?: () => string | undefined;
-  run: () => Promise<void> | void;
 };
 
 const openButton = document.querySelector<HTMLButtonElement>("#open-file");
@@ -1816,45 +1685,6 @@ function renderStateChips(label: string) {
 
 function isFavorite(path: string) {
   return path ? readFavorites().includes(path) : false;
-}
-
-function parseFrontmatter(content: string): FrontmatterParse {
-  if (!content.startsWith("---\n") && !content.startsWith("---\r\n")) {
-    return { data: {}, body: content, hasFrontmatter: false };
-  }
-  const normalized = content.replace(/\r\n/g, "\n");
-  const end = normalized.indexOf("\n---", 4);
-  if (end === -1) return { data: {}, body: content, hasFrontmatter: false };
-
-  const yaml = normalized.slice(4, end).trim();
-  const body = normalized.slice(end + 4).replace(/^\n/, "");
-  const data: Record<string, string> = {};
-  for (const line of yaml.split("\n")) {
-    const index = line.indexOf(":");
-    if (index > 0) {
-      const key = line.slice(0, index).trim();
-      const value = line.slice(index + 1).trim().replace(/^["']|["']$/g, "");
-      data[key] = value;
-    }
-  }
-  return { data, body, hasFrontmatter: true };
-}
-
-function writeFrontmatter(content: string, nextData: Record<string, string>) {
-  const parsed = parseFrontmatter(content);
-  const merged = { ...parsed.data, ...nextData };
-  const yaml = Object.entries(merged)
-    .filter(([, value]) => value !== "")
-    .map(([key, value]) => `${key}: ${value}`)
-    .join("\n");
-  return `---\n${yaml}\n---\n\n${parsed.body.trimStart()}`;
-}
-
-function titleFromMarkdown(content: string, fallback: string) {
-  const parsed = parseFrontmatter(content);
-  if (parsed.data.title) return parsed.data.title;
-  const match = parsed.body.match(/^#\s+(.+)$/m);
-  return match?.[1]?.trim() || fallback;
 }
 
 function truthy(value: string | undefined) {

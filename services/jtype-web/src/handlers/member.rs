@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::Row;
 
 use crate::error::AppError;
+use crate::hub::WorkspaceEvent;
 use crate::handlers::workspace::require_workspace_role;
 use crate::middleware::auth::extract_user;
 use crate::AppState;
@@ -129,10 +130,30 @@ pub async fn remove_member(
     .execute(&state.pool)
     .await?;
 
+    // Fetch target username for the event
+    let target_username: String = sqlx::query_scalar("SELECT username FROM users WHERE id = ?")
+        .bind(&target_user_id)
+        .fetch_one(&state.pool)
+        .await
+        .unwrap_or_default();
+
+    state
+        .hub
+        .publish(
+            &workspace_id,
+            WorkspaceEvent::MemberRemoved {
+                workspace_id: workspace_id.clone(),
+                user_id: target_user_id.clone(),
+                username: target_username,
+                removed_by_user_id: user.id.clone(),
+            },
+        )
+        .await;
+    // Kick target user from workspace across all sessions (H10)
+    state.hub.kick_user_from_workspace(&target_user_id, &workspace_id).await;
+
     Ok(StatusCode::NO_CONTENT)
 }
-
-/// POST /api/v1/workspaces/:workspace_id/leave
 /// A member voluntarily leaves the workspace. Owner cannot leave.
 pub async fn leave_workspace(
     State(state): State<AppState>,
@@ -161,6 +182,20 @@ pub async fn leave_workspace(
     .bind(&user.id)
     .execute(&state.pool)
     .await?;
+
+    state
+        .hub
+        .publish(
+            &workspace_id,
+            WorkspaceEvent::MemberLeft {
+                workspace_id: workspace_id.clone(),
+                user_id: user.id.clone(),
+                username: user.username.clone(),
+            },
+        )
+        .await;
+    // Remove user's own session subscriptions for this workspace (H11)
+    state.hub.kick_user_from_workspace(&user.id, &workspace_id).await;
 
     Ok(StatusCode::NO_CONTENT)
 }
@@ -192,7 +227,7 @@ pub async fn update_member_role(
 
     // Ensure target is an active member
     let target = sqlx::query(
-        "SELECT status FROM workspace_members WHERE workspace_id = ? AND user_id = ? AND status = 'active'",
+        "SELECT role, status FROM workspace_members WHERE workspace_id = ? AND user_id = ? AND status = 'active'",
     )
     .bind(&workspace_id)
     .bind(&target_user_id)
@@ -201,6 +236,28 @@ pub async fn update_member_role(
     .ok_or(AppError::NotFound)?;
 
     let _status: String = target.try_get("status")?;
+    let previous_role: String = target.try_get("role")?;
+
+    // No-op guard: skip update and event if role is unchanged (M4)
+    if role == previous_role {
+        let row = sqlx::query(
+            r#"SELECT wm.user_id, u.username, wm.role, wm.status, wm.joined_at
+               FROM workspace_members wm
+               JOIN users u ON u.id = wm.user_id
+               WHERE wm.workspace_id = ? AND wm.user_id = ?"#,
+        )
+        .bind(&workspace_id)
+        .bind(&target_user_id)
+        .fetch_one(&state.pool)
+        .await?;
+        return Ok(Json(MemberInfo {
+            user_id: row.try_get("user_id")?,
+            username: row.try_get("username")?,
+            role: row.try_get("role")?,
+            status: row.try_get("status")?,
+            joined_at: row.try_get::<Option<String>, _>("joined_at").unwrap_or(None),
+        }));
+    }
 
     sqlx::query("UPDATE workspace_members SET role = ? WHERE workspace_id = ? AND user_id = ?")
         .bind(&role)
@@ -221,9 +278,25 @@ pub async fn update_member_role(
     .fetch_one(&state.pool)
     .await?;
 
+    let username: String = row.try_get("username")?;
+
+    state
+        .hub
+        .publish(
+            &workspace_id,
+            WorkspaceEvent::MemberRoleChanged {
+                workspace_id: workspace_id.clone(),
+                user_id: target_user_id.clone(),
+                username: username.clone(),
+                previous_role,
+                new_role: role.clone(),
+            },
+        )
+        .await;
+
     Ok(Json(MemberInfo {
         user_id: row.try_get("user_id")?,
-        username: row.try_get("username")?,
+        username,
         role: row.try_get("role")?,
         status: row.try_get("status")?,
         joined_at: row
@@ -243,9 +316,19 @@ pub async fn transfer_ownership(
     let user = extract_user(&state.pool, &headers).await?;
     require_workspace_role(&state.pool, &workspace_id, &user.id, &["owner"]).await?;
 
+    // Self-transfer guard (M3)
+    if user.id == payload.new_owner_user_id {
+        return Err(AppError::BadRequest(
+            "Cannot transfer ownership to yourself.".to_string(),
+        ));
+    }
+
     // Ensure target is an active member
     let target = sqlx::query(
-        "SELECT status FROM workspace_members WHERE workspace_id = ? AND user_id = ? AND status = 'active'",
+        r#"SELECT wm.role, wm.status, u.username
+           FROM workspace_members wm
+           JOIN users u ON u.id = wm.user_id
+           WHERE wm.workspace_id = ? AND wm.user_id = ? AND wm.status = 'active'"#,
     )
     .bind(&workspace_id)
     .bind(&payload.new_owner_user_id)
@@ -256,6 +339,8 @@ pub async fn transfer_ownership(
     ))?;
 
     let _status: String = target.try_get("status")?;
+    let target_previous_role: String = target.try_get("role")?;
+    let target_username: String = target.try_get("username")?;
 
     let mut tx = state.pool.begin().await?;
 
@@ -285,6 +370,36 @@ pub async fn transfer_ownership(
         .await?;
 
     tx.commit().await?;
+
+    // Notify: old owner demoted to admin
+    state
+        .hub
+        .publish(
+            &workspace_id,
+            WorkspaceEvent::MemberRoleChanged {
+                workspace_id: workspace_id.clone(),
+                user_id: user.id.clone(),
+                username: user.username.clone(),
+                previous_role: "owner".to_string(),
+                new_role: "admin".to_string(),
+            },
+        )
+        .await;
+
+    // Notify: new owner promoted to owner
+    state
+        .hub
+        .publish(
+            &workspace_id,
+            WorkspaceEvent::MemberRoleChanged {
+                workspace_id: workspace_id.clone(),
+                user_id: payload.new_owner_user_id.clone(),
+                username: target_username,
+                previous_role: target_previous_role,
+                new_role: "owner".to_string(),
+            },
+        )
+        .await;
 
     Ok(StatusCode::NO_CONTENT)
 }

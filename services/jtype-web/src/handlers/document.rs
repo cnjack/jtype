@@ -114,6 +114,18 @@ pub async fn update_status(
         }
     };
 
+    // Fetch previous status before updating
+    let prev_row = sqlx::query(
+        "SELECT status, relative_path FROM documents WHERE id = ? AND workspace_id = ?",
+    )
+    .bind(&document_id)
+    .bind(&workspace_id)
+    .fetch_optional(&state.pool)
+    .await?
+    .ok_or(AppError::NotFound)?;
+    let previous_status: String = prev_row.try_get("status")?;
+    let relative_path: String = prev_row.try_get("relative_path")?;
+
     let result = sqlx::query("UPDATE documents SET status = ? WHERE id = ? AND workspace_id = ?")
         .bind(status)
         .bind(&document_id)
@@ -133,6 +145,21 @@ pub async fn update_status(
     .bind(&workspace_id)
     .fetch_one(&state.pool)
     .await?;
+
+    state
+        .hub
+        .publish(
+            &workspace_id,
+            WorkspaceEvent::DocumentStatusChanged {
+                workspace_id: workspace_id.clone(),
+                source_session_id: None,
+                relative_path,
+                document_id: document_id.clone(),
+                status: status.to_string(),
+                previous_status,
+            },
+        )
+        .await;
 
     Ok(Json(DocumentListItem {
         id: row.try_get("id")?,
@@ -217,7 +244,8 @@ pub async fn delete_document(
         .publish(
             &workspace_id,
             WorkspaceEvent::DocumentDeleted {
-                source_session_id: String::new(),
+                workspace_id: workspace_id.clone(),
+                source_session_id: None,
                 relative_path,
                 deleted_clock: next_clock,
             },

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
 import { FolderPlusIcon } from "@heroicons/react/24/outline";
 import { useAppDispatch, useAppState } from "../../app/AppState";
-import { tauri } from "../../lib/tauri";
+import { useFileSystem } from "../../hooks";
 
 export function CreateFolderDialog({
   open,
@@ -15,6 +15,7 @@ export function CreateFolderDialog({
 }) {
   const state = useAppState();
   const dispatch = useAppDispatch();
+  const fs = useFileSystem();
   const [name, setName] = useState("");
   const [error, setError] = useState("");
 
@@ -22,10 +23,8 @@ export function CreateFolderDialog({
     if (!state.workspace || !name.trim()) return;
     const folderRelativePath = parentPath ? `${parentPath}/${name.trim()}` : name.trim();
     try {
-      const workspace = await tauri.createFolder(state.workspace.rootPath, folderRelativePath);
-      dispatch({ type: "UPDATE_WORKSPACE", workspace });
+      await fs.createFolder(folderRelativePath);
       dispatch({ type: "TOGGLE_EXPAND_FOLDER", folderPath: parentPath || folderRelativePath });
-      dispatch({ type: "SET_STATUS", message: `Created folder ${name.trim()}.` });
       setName("");
       setError("");
       onClose();

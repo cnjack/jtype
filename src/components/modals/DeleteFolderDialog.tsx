@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
 import { TrashIcon } from "@heroicons/react/24/outline";
-import { useAppDispatch, useAppState } from "../../app/AppState";
+import { useAppState } from "../../app/AppState";
 import { tauri } from "../../lib/tauri";
+import { useFileSystem } from "../../hooks";
 import type { FolderContentsSummary } from "../../lib/types";
 
 export function DeleteFolderDialog({
@@ -17,7 +18,7 @@ export function DeleteFolderDialog({
   folderName: string;
 }) {
   const state = useAppState();
-  const dispatch = useAppDispatch();
+  const fs = useFileSystem();
   const [summary, setSummary] = useState<FolderContentsSummary | null>(null);
   const [mode, setMode] = useState<"trash" | "keep">("trash");
 
@@ -35,18 +36,9 @@ export function DeleteFolderDialog({
 
   const handleDelete = async () => {
     if (!state.workspace) return;
-    try {
-      const softDelete = mode === "trash";
-      const [workspace] = await tauri.deleteFolder(state.workspace.rootPath, folderPath, softDelete);
-      dispatch({ type: "UPDATE_WORKSPACE", workspace });
-      if (state.currentRelativePath?.startsWith(folderPath + "/") || state.currentRelativePath === folderPath) {
-        dispatch({ type: "CLEAR_DOCUMENT" });
-      }
-      dispatch({ type: "SET_STATUS", message: `Deleted folder ${folderName}.` });
-      onClose();
-    } catch (error) {
-      dispatch({ type: "SET_STATUS", message: String(error) });
-    }
+    const softDelete = mode === "trash";
+    await fs.deleteFolder(folderPath, softDelete, true);
+    onClose();
   };
 
   const isEmpty = summary && summary.totalDocuments === 0 && summary.totalSubfolders === 0;

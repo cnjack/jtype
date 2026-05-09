@@ -1,5 +1,9 @@
 # JType Web Service API and WebSocket Operations
 
+> **⚠️ 已重构**: WS operations 和客户端行为规范已按 domain 拆分到 [docs/api/](api/) 目录。本文件保留 Auth, Admin, Domains, Public Sites 等非 WS 域的 REST API 参考。
+>
+> 新文档入口: [docs/api/README.md](api/README.md)
+
 This document describes the current HTTP routes registered by `services/jtype-web/src/lib.rs` and the live WebSocket protocol implemented by `services/jtype-web/src/handlers/live.rs`.
 
 Sources reviewed: web service route composition, handlers, DB models, web frontend API client and socket hook, desktop cloud sync/WS client code, and web service/E2E tests.

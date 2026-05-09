@@ -125,9 +125,11 @@ function AppContent() {
     };
     window.addEventListener("jtype:vault-deleted", syncAfterTrashChange);
     window.addEventListener("jtype:vault-restored", syncAfterTrashChange);
+    window.addEventListener("jtype:vault-folder-changed", syncAfterTrashChange);
     return () => {
       window.removeEventListener("jtype:vault-deleted", syncAfterTrashChange);
       window.removeEventListener("jtype:vault-restored", syncAfterTrashChange);
+      window.removeEventListener("jtype:vault-folder-changed", syncAfterTrashChange);
     };
   }, [state.workspace, state.syncToken, currentBinding, currentVaultSettings?.cloudSyncEnabled, sync]);
 

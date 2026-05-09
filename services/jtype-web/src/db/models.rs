@@ -323,6 +323,12 @@ pub struct SyncPullRequest {
     pub since_trash_event_clock: Option<i64>,
 }
 
+#[derive(Debug, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct DeletedFolderInput {
+    pub relative_path: String,
+}
+
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SyncPushRequest {
@@ -332,6 +338,8 @@ pub struct SyncPushRequest {
     pub documents: Vec<CloudSaveDocumentRequest>,
     #[serde(default)]
     pub deleted_paths: Vec<DeletedPathInput>,
+    #[serde(default)]
+    pub deleted_folders: Vec<DeletedFolderInput>,
     #[serde(default)]
     pub trash_operations: Vec<TrashOperation>,
 }

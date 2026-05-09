@@ -170,8 +170,10 @@ export function useCloudSync() {
 
         // 2. Load sync bases (last synced content per document) for three-way merge
         let syncBases: Record<string, string> = {};
+        let syncFolderBases: string[] = [];
         if (tauri.isAvailable) {
           try { syncBases = await tauri.loadSyncBases(state.workspace.rootPath); } catch { /* first sync */ }
+          try { syncFolderBases = await tauri.loadSyncFolderBases(state.workspace.rootPath); } catch { /* first sync */ }
         }
 
         const localPathsBeforePull = new Set(documents.map((d) => d.relativePath));
@@ -180,6 +182,9 @@ export function useCloudSync() {
             .filter((relativePath) => !localPathsBeforePull.has(relativePath))
             .filter((relativePath) => !options.skipRelativePath || relativePath !== options.skipRelativePath)
         );
+        const localFolderPaths = new Set(folders.map((f) => f.relativePath));
+        const locallyDeletedFolders = syncFolderBases
+          .filter((relativePath) => !localFolderPaths.has(relativePath));
 
         // 3. Pull cloud changes and apply to disk (only overwrites files not locally modified)
         const pullResult = await pullCloudWorkspace(binding, options.skipRelativePath, syncBases, locallyDeletedPaths);
@@ -218,6 +223,7 @@ export function useCloudSync() {
             folders: foldersForPush,
             documents: pushDocs,
             deletedPaths,
+            deletedFolders: locallyDeletedFolders.map((relativePath) => ({ relativePath })),
           }),
         });
         if (push.status === 403 || push.status === 404) {
@@ -243,6 +249,14 @@ export function useCloudSync() {
             await tauri.saveSyncBases(
               state.workspace.rootPath,
               pushData.documents.map((d) => ({ relativePath: d.relativePath, content: d.content }))
+            );
+          } catch { /* non-critical */ }
+        }
+        if (tauri.isAvailable) {
+          try {
+            await tauri.saveSyncFolderBases(
+              state.workspace.rootPath,
+              pushData.folders?.map((f) => f.relativePath) ?? []
             );
           } catch { /* non-critical */ }
         }
@@ -373,6 +387,13 @@ export function useCloudSync() {
         pullData.deletedFolders.map((f) => ({ relativePath: f.relativePath }))
       );
       dispatch({ type: "UPDATE_WORKSPACE", workspace });
+    }
+    if (tauri.isAvailable) {
+      try {
+        const cloudFolders = pullData.folders ?? [];
+        const mergedFolders = cloudFolders.map((f) => f.relativePath);
+        await tauri.saveSyncFolderBases(state.workspace.rootPath, mergedFolders);
+      } catch { /* non-critical */ }
     }
 
     let trashChanged = false;

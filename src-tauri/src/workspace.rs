@@ -336,15 +336,7 @@ pub fn validate_workspace(root: &Path) -> Result<ValidationResult, String> {
             warnings.push(format!("Missing title in {}.", relative_string));
         }
 
-        if frontmatter
-            .get("status")
-            .map(|value| value.eq_ignore_ascii_case("draft"))
-            .unwrap_or(false)
-            || frontmatter
-                .get("publish")
-                .map(|value| value.eq_ignore_ascii_case("false"))
-                .unwrap_or(false)
-        {
+        if normalize_status(&frontmatter) == "draft" {
             errors.push(format!(
                 "Draft document {} is not publishable.",
                 relative_string
@@ -398,19 +390,7 @@ pub fn collect_sync_documents(root: &Path) -> Result<Vec<SyncDocument>, String> 
                     .unwrap_or("Untitled")
                     .to_string()
             });
-        let status = if frontmatter
-            .get("status")
-            .map(|value| value.eq_ignore_ascii_case("draft"))
-            .unwrap_or(false)
-            || frontmatter
-                .get("publish")
-                .map(|value| value.eq_ignore_ascii_case("false"))
-                .unwrap_or(false)
-        {
-            "draft"
-        } else {
-            "published"
-        };
+        let status = normalize_status(&frontmatter);
 
         documents.push(SyncDocument {
             relative_path: path_to_string(relative),
@@ -485,6 +465,29 @@ pub fn load_all_sync_bases(root: &Path) -> Result<HashMap<String, String>, Strin
     }
     collect_files_recursive(&base_dir, &base_dir, &mut result)?;
     Ok(result)
+}
+
+pub fn save_sync_folder_bases(root: &Path, folders: &[String]) -> Result<(), String> {
+    let path = root.join(".jtype").join("sync-folder-bases.json");
+    let json = serde_json::to_string(folders).map_err(|e| e.to_string())?;
+    fs::write(&path, json).map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+pub fn delete_sync_folder_bases(root: &Path, relative_paths: &[String]) -> Result<(), String> {
+    let mut existing = load_sync_folder_bases(root)?;
+    existing.retain(|p| !relative_paths.contains(p));
+    save_sync_folder_bases(root, &existing)?;
+    Ok(())
+}
+
+pub fn load_sync_folder_bases(root: &Path) -> Result<Vec<String>, String> {
+    let path = root.join(".jtype").join("sync-folder-bases.json");
+    if !path.exists() {
+        return Ok(Vec::new());
+    }
+    let content = fs::read_to_string(&path).map_err(|e| e.to_string())?;
+    serde_json::from_str(&content).map_err(|e| e.to_string())
 }
 
 fn collect_files_recursive(
@@ -816,12 +819,18 @@ fn page_template(title: &str, body: &str) -> String {
 }
 
 fn extract_title(content: &str) -> Option<String> {
-    content.lines().find_map(|line| {
-        line.strip_prefix("# ")
-            .map(str::trim)
-            .filter(|value| !value.is_empty())
-            .map(str::to_string)
-    })
+    let frontmatter = parse_frontmatter(content);
+    frontmatter
+        .get("title")
+        .cloned()
+        .or_else(|| {
+            content.lines().find_map(|line| {
+                line.strip_prefix("# ")
+                    .map(str::trim)
+                    .filter(|value| !value.is_empty())
+                    .map(str::to_string)
+            })
+        })
 }
 
 #[derive(Debug, Clone)]
@@ -866,9 +875,26 @@ fn extract_markdown_references(content: &str) -> Vec<MarkdownReference> {
     references
 }
 
+fn normalize_status(frontmatter: &HashMap<String, String>) -> &'static str {
+    if frontmatter
+        .get("status")
+        .map(|v| v.eq_ignore_ascii_case("draft"))
+        .unwrap_or(false)
+        || frontmatter
+            .get("publish")
+            .map(|v| v.eq_ignore_ascii_case("false"))
+            .unwrap_or(false)
+    {
+        "draft"
+    } else {
+        "published"
+    }
+}
+
 fn parse_frontmatter(content: &str) -> HashMap<String, String> {
     let mut frontmatter = HashMap::new();
-    let mut lines = content.lines();
+    let normalized = content.replace("\r\n", "\n");
+    let mut lines = normalized.lines();
 
     if lines.next() != Some("---") {
         return frontmatter;
@@ -1197,7 +1223,7 @@ pub fn validate_folder_name(name: &str) -> Result<(), String> {
         if segment.is_empty() {
             continue;
         }
-        if segment == "." || segment == ".." || segment == ".jtype" {
+        if segment == "." || segment == ".." || segment == ".jtype" || segment == ".git" || segment == "node_modules" || segment == "target" {
             return Err(format!("'{}' is a reserved name.", segment));
         }
         for c in segment.chars() {

@@ -92,7 +92,7 @@ pub async fn push(
     let mut push_docs: Vec<SyncPushDocument> = Vec::new();
     let mut deleted_paths: Vec<DeletedPath> = Vec::new();
 
-    if !payload.folders.is_empty() {
+    if !payload.folders.is_empty() || !payload.deleted_folders.is_empty() {
         let mut tx = state.pool.begin().await?;
         let mut changed_folder = false;
         for folder in payload.folders {
@@ -103,6 +103,15 @@ pub async fn push(
             )
             .await?;
         }
+        for deleted in payload.deleted_folders {
+            crate::handlers::folder::delete_folder_by_path(
+                &mut tx,
+                &workspace_id,
+                &deleted.relative_path,
+            )
+            .await?;
+            changed_folder = true;
+        }
         tx.commit().await?;
         if changed_folder {
             accepted += 1;
@@ -111,6 +120,7 @@ pub async fn push(
                 .publish(
                     &workspace_id,
                     WorkspaceEvent::SyncRequired {
+                        workspace_id: workspace_id.clone(),
                         reason: "folder-changed".to_string(),
                     },
                 )
@@ -136,7 +146,8 @@ pub async fn push(
                         .publish(
                             &workspace_id,
                             WorkspaceEvent::DocumentChanged {
-                                source_session_id: String::new(),
+                                workspace_id: workspace_id.clone(),
+                                source_session_id: None,
                                 relative_path: doc.relative_path.clone(),
                                 content_hash: doc.content_hash.clone(),
                                 updated_clock: doc.updated_clock,
@@ -178,7 +189,8 @@ pub async fn push(
                 .publish(
                     &workspace_id,
                     WorkspaceEvent::DocumentTrashed {
-                        source_session_id: String::new(),
+                        workspace_id: workspace_id.clone(),
+                        source_session_id: None,
                         relative_path: deleted_path.relative_path.clone(),
                         action: "trashed".to_string(),
                     },
@@ -340,7 +352,8 @@ pub async fn resolve_conflict(
                         .publish(
                             &workspace_id,
                             WorkspaceEvent::DocumentChanged {
-                                source_session_id: String::new(),
+                                workspace_id: workspace_id.clone(),
+                                source_session_id: None,
                                 relative_path: doc.relative_path.clone(),
                                 content_hash: doc.content_hash.clone(),
                                 updated_clock: doc.updated_clock,
@@ -392,7 +405,8 @@ pub async fn resolve_conflict(
         .publish(
             &workspace_id,
             WorkspaceEvent::DocumentChanged {
-                source_session_id: String::new(),
+                workspace_id: workspace_id.clone(),
+                source_session_id: None,
                 relative_path: saved.relative_path.clone(),
                 content_hash: saved.content_hash.clone(),
                 updated_clock: saved.updated_clock,
@@ -686,7 +700,7 @@ async fn load_all_undeleted_trash_items(
 
 pub async fn process_trash_operation(
     pool: &sqlx::Pool<sqlx::MySql>,
-    hub: &crate::hub::NotificationHub,
+    hub: &crate::hub::ConnectionHub,
     workspace_id: &str,
     user: &AuthUser,
     device_id: Option<&str>,
@@ -694,198 +708,30 @@ pub async fn process_trash_operation(
 ) -> Result<(), AppError> {
     match operation {
         TrashOperation::Restore { trash_id } => {
-            let row = sqlx::query(
-                r#"SELECT document_id, relative_path, title, content, content_hash, version_id
-                   FROM document_trash
-                   WHERE id = ? AND workspace_id = ? AND restored_at IS NULL"#,
-            )
-            .bind(&trash_id)
-            .bind(workspace_id)
-            .fetch_optional(pool)
-            .await?;
-            let Some(row) = row else {
-                return Ok(());
-            };
-            let relative_path: String = row.try_get("relative_path")?;
-            let title: String = row.try_get("title")?;
-            let content: String = row.try_get("content")?;
-            let content_hash: String = row.try_get("content_hash")?;
-            let document_id = Uuid::new_v4().to_string();
-            let version_id = Uuid::new_v4().to_string();
-
-            let mut tx = pool.begin().await?;
-            let next_clock =
-                crate::handlers::document::next_workspace_clock(&mut tx, workspace_id).await?;
-
-            let existing = sqlx::query(
-                "SELECT id FROM documents WHERE workspace_id = ? AND relative_path = ?",
-            )
-            .bind(workspace_id)
-            .bind(&relative_path)
-            .fetch_optional(&mut *tx)
-            .await?;
-
-            if existing.is_some() {
-                sqlx::query("DELETE FROM documents WHERE workspace_id = ? AND relative_path = ?")
-                    .bind(workspace_id)
-                    .bind(&relative_path)
-                    .execute(&mut *tx)
-                    .await?;
-            }
-
-            let final_path = relative_path;
-
-            sqlx::query(
-                r#"INSERT INTO documents (id, workspace_id, relative_path, title, status, content_hash, content, updated_clock, current_version_id)
-                   VALUES (?, ?, ?, ?, 'draft', ?, ?, ?, ?)"#,
-            )
-            .bind(&document_id)
-            .bind(workspace_id)
-            .bind(&final_path)
-            .bind(&title)
-            .bind(&content_hash)
-            .bind(&content)
-            .bind(next_clock)
-            .bind(&version_id)
-            .execute(&mut *tx)
-            .await?;
-
-            sqlx::query(
-                r#"INSERT INTO document_versions (id, workspace_id, document_id, parent_version_id, author_user_id, source, content_hash, content)
-                   VALUES (?, ?, ?, NULL, ?, 'system', ?, ?)"#,
-            )
-            .bind(&version_id)
-            .bind(workspace_id)
-            .bind(&document_id)
-            .bind(&user.id)
-            .bind(&content_hash)
-            .bind(&content)
-            .execute(&mut *tx)
-            .await?;
-
-            sqlx::query(
-                r#"UPDATE document_trash SET restored_at = CURRENT_TIMESTAMP,
-                   restored_by_device_id = ?, restored_by_user_id = ?, restored_clock = ?
-                   WHERE id = ?"#,
-            )
-            .bind(device_id)
-            .bind(&user.id)
-            .bind(next_clock)
-            .bind(&trash_id)
-            .execute(&mut *tx)
-            .await?;
-
-            tx.commit().await?;
-
-            hub.publish(
+            match super::trash::restore_trash_item_core(
+                pool,
+                hub,
                 workspace_id,
-                WorkspaceEvent::DocumentTrashed {
-                    source_session_id: String::new(),
-                    relative_path: final_path,
-                    action: "restored".to_string(),
-                },
+                &user.id,
+                device_id,
+                &trash_id,
             )
-            .await;
-
-            Ok(())
+            .await
+            {
+                Ok(_) => Ok(()),
+                Err(AppError::NotFound) => Ok(()), // silently skip missing items during sync
+                Err(e) => Err(e),
+            }
         }
         TrashOperation::PermanentDelete { trash_id } => {
-            let mut tx = pool.begin().await?;
-            let next_clock =
-                crate::handlers::document::next_workspace_clock(&mut tx, workspace_id).await?;
-
-            let row = sqlx::query(
-                "SELECT relative_path FROM document_trash WHERE id = ? AND workspace_id = ?",
-            )
-            .bind(&trash_id)
-            .bind(workspace_id)
-            .fetch_optional(&mut *tx)
-            .await?;
-
-            let result =
-                sqlx::query("DELETE FROM document_trash WHERE id = ? AND workspace_id = ?")
-                    .bind(&trash_id)
-                    .bind(workspace_id)
-                    .execute(&mut *tx)
-                    .await?;
-
-            if result.rows_affected() > 0 {
-                let event_id = Uuid::new_v4().to_string();
-                sqlx::query(
-                    r#"INSERT INTO trash_events (id, workspace_id, event_type, event_data, event_clock)
-                       VALUES (?, ?, 'permanent_delete_item', ?, ?)"#,
-                )
-                .bind(&event_id)
-                .bind(workspace_id)
-                .bind(serde_json::json!({ "trashId": trash_id }).to_string())
-                .bind(next_clock)
-                .execute(&mut *tx)
-                .await?;
+            match super::trash::permanent_delete_core(pool, hub, workspace_id, &trash_id).await {
+                Ok(_) => Ok(()),
+                Err(AppError::NotFound) => Ok(()),
+                Err(e) => Err(e),
             }
-
-            tx.commit().await?;
-
-            if let Some(r) = row {
-                let relative_path: String = r.try_get("relative_path")?;
-                hub.publish(
-                    workspace_id,
-                    WorkspaceEvent::DocumentDeleted {
-                        source_session_id: String::new(),
-                        relative_path,
-                        deleted_clock: next_clock,
-                    },
-                )
-                .await;
-            }
-
-            Ok(())
         }
         TrashOperation::EmptyTrash => {
-            let mut tx = pool.begin().await?;
-            let next_clock =
-                crate::handlers::document::next_workspace_clock(&mut tx, workspace_id).await?;
-
-            let rows = sqlx::query(
-                "SELECT relative_path FROM document_trash WHERE workspace_id = ? AND restored_at IS NULL",
-            )
-            .bind(workspace_id)
-            .fetch_all(&mut *tx)
-            .await?;
-
-            sqlx::query(
-                "DELETE FROM document_trash WHERE workspace_id = ? AND restored_at IS NULL",
-            )
-            .bind(workspace_id)
-            .execute(&mut *tx)
-            .await?;
-
-            let event_id = Uuid::new_v4().to_string();
-            sqlx::query(
-                r#"INSERT INTO trash_events (id, workspace_id, event_type, event_data, event_clock)
-                   VALUES (?, ?, 'empty_trash', '{}', ?)"#,
-            )
-            .bind(&event_id)
-            .bind(workspace_id)
-            .bind(next_clock)
-            .execute(&mut *tx)
-            .await?;
-
-            tx.commit().await?;
-
-            for row in rows {
-                if let Ok(relative_path) = row.try_get::<String, _>("relative_path") {
-                    hub.publish(
-                        workspace_id,
-                        WorkspaceEvent::DocumentDeleted {
-                            source_session_id: String::new(),
-                            relative_path,
-                            deleted_clock: next_clock,
-                        },
-                    )
-                    .await;
-                }
-            }
-
+            super::trash::empty_trash_core(pool, hub, workspace_id).await?;
             Ok(())
         }
     }

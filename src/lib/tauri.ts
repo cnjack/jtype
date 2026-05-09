@@ -79,6 +79,15 @@ export const tauri = {
   loadSyncBases(rootPath: string) {
     return invoke<Record<string, string>>("load_sync_bases", { rootPath });
   },
+  saveSyncFolderBases(rootPath: string, folders: string[]) {
+    return invoke<void>("save_sync_folder_bases", { rootPath, folders });
+  },
+  deleteSyncFolderBases(rootPath: string, relativePaths: string[]) {
+    return invoke<void>("delete_sync_folder_bases", { rootPath, relativePaths });
+  },
+  loadSyncFolderBases(rootPath: string) {
+    return invoke<string[]>("load_sync_folder_bases", { rootPath });
+  },
   bindCloudWorkspace(binding: VaultBinding) {
     return invoke<VaultBinding[]>("bind_cloud_workspace", { binding });
   },
