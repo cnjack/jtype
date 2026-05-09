@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "jtype-web.fullname" . }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "jtype-web.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "jtype-web.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "jtype-web.selectorLabels" . | nindent 8 }}
+    spec:
+      imagePullSecrets:
+        {{- toYaml .Values.imagePullSecrets | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 13345
+              protocol: TCP
+          env:
+            - name: JTYPED_BIND_ADDR
+              value: {{ .Values.env.JTYPED_BIND_ADDR | quote }}
+            - name: JTYPED_PUBLIC_BASE_URL
+              value: {{ .Values.env.JTYPED_PUBLIC_BASE_URL | quote }}
+            {{- if .Values.databaseUrl }}
+            - name: JTYPED_DATABASE_URL
+              value: {{ .Values.databaseUrl | quote }}
+            {{- else }}
+            - name: JTYPED_DATABASE_URL
+              value: "mysql://{{ .Values.mysql.user }}:{{ .Values.mysql.password }}@{{ .Values.mysql.host }}:{{ .Values.mysql.port }}/{{ .Values.mysql.database }}"
+            {{- end }}
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

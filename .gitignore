@@ -43,3 +43,4 @@ target/
 *.png binary
 *.jpg binary
 *.jar binary
+my-values.yaml

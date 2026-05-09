@@ -1,0 +1,40 @@
+# 生产环境示例配置
+# 使用方法: helm install jtype-web ./helm/jtype-web -f values-prod.yaml
+
+image:
+  repository: ghcr.io/cnjack/jtype
+  # 切换版本: latest, v0.2.0, v0.2.1 等
+  tag: "latest"
+
+# MySQL 配置（使用你已有的 MySQL）
+mysql:
+  host: "mysql.default.svc.cluster.local"
+  port: 3306
+  database: "jtype"
+  user: "jtype"
+  password: "your-mysql-password"
+
+# 或者直接用连接字符串（优先级更高）
+# databaseUrl: "mysql://jtype:password@mysql-host:3306/jtype"
+
+env:
+  JTYPED_PUBLIC_BASE_URL: "https://your-domain.com"
+
+# 启用 Ingress
+ingress:
+  enabled: true
+  className: nginx
+  hosts:
+    - host: your-domain.com
+      paths:
+        - path: /
+          pathType: Prefix
+
+# 资源限制
+resources:
+  limits:
+    cpu: 1000m
+    memory: 512Mi
+  requests:
+    cpu: 200m
+    memory: 256Mi

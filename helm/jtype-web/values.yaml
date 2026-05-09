@@ -1,0 +1,87 @@
+# Default values for jtype-web.
+# This is a YAML-formatted file.
+
+namespace: default
+
+replicaCount: 1
+
+image:
+  repository: ghcr.io/cnjack/jtype
+  pullPolicy: IfNotPresent
+  # 版本标签，默认使用 latest
+  # 可改为具体版本如 "v0.2.0"、"v0.2.1" 等
+  tag: "latest"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# 已有 MySQL 配置（不在此 Helm chart 中部署）
+mysql:
+  enabled: false
+  # 你的已有 MySQL 连接信息
+  host: "mysql.default.svc.cluster.local"
+  port: 3306
+  database: "jtype"
+  user: "jtype"
+  password: "jtype-local"
+
+# jtype-web 服务配置
+service:
+  type: ClusterIP
+  port: 13345
+  targetPort: 13345
+
+ingress:
+  enabled: false
+  className: "nginx"
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: jtype-web.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  #  - secretName: jtype-web-tls
+  #    hosts:
+  #      - jtype-web.local
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+# 环境变量
+env:
+  JTYPED_BIND_ADDR: "0.0.0.0:13345"
+  JTYPED_PUBLIC_BASE_URL: "http://localhost:13345"
+
+# 使用已有的数据库连接字符串（优先级高于 mysql 配置）
+# 如果设置了这个，会忽略 mysql.host/port/database/user/password
+databaseUrl: ""
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# 健康检查
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 13345
+  initialDelaySeconds: 10
+  periodSeconds: 30
+
+readinessProbe:
+  httpGet:
+    path: /health
+    port: 13345
+  initialDelaySeconds: 5
+  periodSeconds: 10
