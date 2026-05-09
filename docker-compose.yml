@@ -26,6 +26,7 @@ services:
     environment:
       RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY:-jtype}
       RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY:-jtype-local-secret}
+      RUSTFS_CONSOLE_ENABLE: "true"
     command: ["server", "/data", "--console-address", "0.0.0.0:9001"]
     ports:
       - "9000:9000"

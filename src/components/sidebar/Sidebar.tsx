@@ -369,8 +369,7 @@ function ExplorerPanel() {
                       const name = await prompt("New folder name:");
                       if (name && name.trim()) {
                         try {
-                          const workspace = await fs.createFolder(name.trim());
-                          dispatch({ type: "UPDATE_WORKSPACE", workspace });
+                          await fs.createFolder(name.trim());
                           dispatch({ type: "SET_STATUS", message: `Created folder ${name.trim()}.` });
                         } catch (error) {
                           dispatch({ type: "SET_STATUS", message: String(error) });
@@ -515,8 +514,7 @@ function ExplorerPanel() {
                   const name = await prompt("New folder name:");
                   if (name && state.workspace) {
                     try {
-                      const workspace = await fs.createFolder(`${contextMenu.node.relativePath}/${name.trim()}`);
-                      dispatch({ type: "UPDATE_WORKSPACE", workspace });
+                      await fs.createFolder(`${contextMenu.node.relativePath}/${name.trim()}`);
                       dispatch({ type: "SET_STATUS", message: `Created folder ${name.trim()}.` });
                     } catch (error) {
                       dispatch({ type: "SET_STATUS", message: String(error) });
