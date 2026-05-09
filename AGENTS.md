@@ -126,3 +126,48 @@ The desktop app frontend and web service share a hardcoded HTTP API contract. Wh
 - Sync pull/push/conflict shapes
 
 Search both frontend and web service code before assuming a change is isolated.
+
+## TypeScript Type & Utility Discipline
+
+- **Canonical types** live in `src/lib/types.ts`. Never redefine types inline in components, hooks, or `main.ts`.
+- **`RecentItem`**, **`FileTreeNode`**, **`SyncConflict`**, **`AppCommand`**, etc. — import from `src/lib/types.ts`.
+- **`main.ts`** is a legacy vanilla-JS layer. It has its own `Activity` and `AppState` types that intentionally differ from the React app's types. Do not merge them blindly.
+- **Frontmatter utilities** (`parseFrontmatter`, `writeFrontmatter`, `titleFromMarkdown`) live in `src/lib/frontmatter.ts`. Do not reimplement inline.
+- **Markdown rendering** (`renderMarkdownToHtml`) lives in `src/lib/markdown.ts`. The web frontend has a copy at `services/jtype-web/frontend/src/lib/markdown.ts` — keep them in sync until a shared package is created.
+
+## Rust Cross-Platform Consistency
+
+Tauri desktop (`src-tauri/src/workspace.rs`) and web service (`services/jtype-web/src/util.rs`) share equivalent utilities. When modifying one, check the other:
+
+| Utility | Tauri | Web Service |
+|---------|-------|-------------|
+| `parse_frontmatter` | `workspace.rs` | `util.rs` |
+| `extract_title` | `workspace.rs` | `util.rs` |
+| `normalize_status` | `workspace.rs` | `util.rs` |
+| `validate_folder_name` / `normalize_folder_path` | `workspace.rs` | `util.rs` |
+
+### Rules
+
+- **`parse_frontmatter`** must normalize `\r\n` → `\n` before parsing. Both copies do this.
+- **`extract_title`** must check frontmatter `title` field first, then fall back to `# heading`.
+- **`normalize_status`** must check both `status: draft` and `publish: false`. Use the extracted function, not inline logic.
+- **Reserved folder names** (`.jtype`, `.git`, `node_modules`, `target`) must match between Tauri's `validate_folder_name` and web's `normalize_folder_path`.
+
+## Trash Operation Dedup
+
+Trash SQL logic lives in `services/jtype-web/src/handlers/trash.rs` as reusable core functions:
+
+- `restore_trash_item_core()` — restores a trashed document, enforces workspace budget
+- `permanent_delete_core()` — permanently deletes a trash item, writes trash event
+- `empty_trash_core()` — bulk deletes all trash, writes trash event
+
+The sync handler (`sync.rs` `process_trash_operation`) calls these core functions. **Never duplicate trash SQL in sync.rs** — add new logic to `trash.rs` core functions instead.
+
+## Known Shared Code Duplication
+
+The following files are near-identical copies between desktop and web frontends. Keep them in sync manually until a shared package is created:
+
+| Desktop (`src/lib/`) | Web (`services/jtype-web/frontend/src/lib/`) |
+|-----------------------|----------------------------------------------|
+| `markdown.ts` | `markdown.ts` |
+| `frontmatter.ts` | `frontmatter.ts` (has inline `FrontmatterParse` instead of importing) |
