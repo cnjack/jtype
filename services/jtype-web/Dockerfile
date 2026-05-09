@@ -9,7 +9,7 @@ FROM rust:1.89 AS builder
 WORKDIR /app
 COPY services/jtype-web/Cargo.toml ./Cargo.toml
 COPY services/jtype-web/src ./src
-COPY infra/mysql /infra/mysql
+COPY services/jtype-web/migrations ./migrations
 COPY --from=frontend /app/frontend/dist ./frontend/dist
 RUN cargo build --release
 
