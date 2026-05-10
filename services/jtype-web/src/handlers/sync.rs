@@ -91,6 +91,7 @@ pub async fn push(
     let device_id = payload.device_id.clone();
     let mut push_docs: Vec<SyncPushDocument> = Vec::new();
     let mut deleted_paths: Vec<DeletedPath> = Vec::new();
+    let session_id = super::extract_session_id(&headers);
 
     if !payload.folders.is_empty() || !payload.deleted_folders.is_empty() {
         let mut tx = state.pool.begin().await?;
@@ -117,12 +118,13 @@ pub async fn push(
             accepted += 1;
             state
                 .hub
-                .publish(
+                .publish_to_workspace(
                     &workspace_id,
                     WorkspaceEvent::SyncRequired {
                         workspace_id: workspace_id.clone(),
                         reason: "folder-changed".to_string(),
                     },
+                    session_id.as_deref(),
                 )
                 .await;
         }
@@ -143,11 +145,11 @@ pub async fn push(
                 if status != crate::handlers::document::MergeStatus::Unchanged {
                     state
                         .hub
-                        .publish(
+                        .publish_to_workspace(
                             &workspace_id,
                             WorkspaceEvent::DocumentChanged {
                                 workspace_id: workspace_id.clone(),
-                                source_session_id: None,
+                                source_session_id: session_id.clone(),
                                 relative_path: doc.relative_path.clone(),
                                 content_hash: doc.content_hash.clone(),
                                 updated_clock: doc.updated_clock,
@@ -155,6 +157,7 @@ pub async fn push(
                                 source: "desktop".to_string(),
                                 device_id: device_id.clone(),
                             },
+                            session_id.as_deref(),
                         )
                         .await;
                 }
@@ -186,14 +189,16 @@ pub async fn push(
             accepted += 1;
             state
                 .hub
-                .publish(
+                .publish_to_workspace(
                     &workspace_id,
                     WorkspaceEvent::DocumentTrashed {
                         workspace_id: workspace_id.clone(),
-                        source_session_id: None,
+                        source_session_id: session_id.clone(),
                         relative_path: deleted_path.relative_path.clone(),
                         action: "trashed".to_string(),
+                        event_clock: deleted_path.deleted_clock,
                     },
+                    session_id.as_deref(),
                 )
                 .await;
             deleted_paths.push(deleted_path);
@@ -209,6 +214,7 @@ pub async fn push(
             &user,
             device_id.as_deref(),
             op,
+            session_id.as_deref(),
         )
         .await
         {
@@ -317,6 +323,7 @@ pub async fn resolve_conflict(
     let local_content: String = row.try_get("local_content")?;
     let cloud_content: String = row.try_get("cloud_content")?;
     let resolution = payload.resolution.trim().to_ascii_lowercase();
+    let session_id = super::extract_session_id(&headers);
     let content = match resolution.as_str() {
         "accept_local" => local_content,
         "accept_cloud" => cloud_content,
@@ -349,11 +356,11 @@ pub async fn resolve_conflict(
                 crate::handlers::document::SaveDocumentOutcome::Saved(doc, _) => {
                     state
                         .hub
-                        .publish(
+                        .publish_to_workspace(
                             &workspace_id,
                             WorkspaceEvent::DocumentChanged {
                                 workspace_id: workspace_id.clone(),
-                                source_session_id: None,
+                                source_session_id: session_id.clone(),
                                 relative_path: doc.relative_path.clone(),
                                 content_hash: doc.content_hash.clone(),
                                 updated_clock: doc.updated_clock,
@@ -361,6 +368,7 @@ pub async fn resolve_conflict(
                                 source: "system".to_string(),
                                 device_id: None,
                             },
+                            session_id.as_deref(),
                         )
                         .await;
                     Ok(Json(doc))
@@ -402,11 +410,11 @@ pub async fn resolve_conflict(
     // Broadcast the resolved document so other connected clients refresh.
     state
         .hub
-        .publish(
+        .publish_to_workspace(
             &workspace_id,
             WorkspaceEvent::DocumentChanged {
                 workspace_id: workspace_id.clone(),
-                source_session_id: None,
+                source_session_id: session_id.clone(),
                 relative_path: saved.relative_path.clone(),
                 content_hash: saved.content_hash.clone(),
                 updated_clock: saved.updated_clock,
@@ -414,6 +422,7 @@ pub async fn resolve_conflict(
                 source: "system".to_string(),
                 device_id: None,
             },
+            session_id.as_deref(),
         )
         .await;
 
@@ -705,6 +714,7 @@ pub async fn process_trash_operation(
     user: &AuthUser,
     device_id: Option<&str>,
     operation: TrashOperation,
+    exclude_session: Option<&str>,
 ) -> Result<(), AppError> {
     match operation {
         TrashOperation::Restore { trash_id } => {
@@ -715,6 +725,7 @@ pub async fn process_trash_operation(
                 &user.id,
                 device_id,
                 &trash_id,
+                exclude_session,
             )
             .await
             {
@@ -724,14 +735,22 @@ pub async fn process_trash_operation(
             }
         }
         TrashOperation::PermanentDelete { trash_id } => {
-            match super::trash::permanent_delete_core(pool, hub, workspace_id, &trash_id).await {
+            match super::trash::permanent_delete_core(
+                pool,
+                hub,
+                workspace_id,
+                &trash_id,
+                exclude_session,
+            )
+            .await
+            {
                 Ok(_) => Ok(()),
                 Err(AppError::NotFound) => Ok(()),
                 Err(e) => Err(e),
             }
         }
         TrashOperation::EmptyTrash => {
-            super::trash::empty_trash_core(pool, hub, workspace_id).await?;
+            super::trash::empty_trash_core(pool, hub, workspace_id, exclude_session).await?;
             Ok(())
         }
     }

@@ -10,6 +10,7 @@ import {
   findPendingSave,
 } from '../lib/offlineDb'
 import type { PendingSave } from '../lib/offlineDb'
+import { httpRequest } from '../lib/http'
 
 export interface ReconcileResult {
   pushed: number
@@ -68,7 +69,7 @@ export function useOfflineSync(workspaceId: string | undefined) {
       const syncState = await getSyncState(workspaceId)
       const sinceClock = syncState?.lastSyncedClock ?? 0
 
-      const pullRes = await fetch(`/api/v1/workspaces/${workspaceId}/sync/pull`, {
+      const pullRes = await httpRequest(`/api/v1/workspaces/${workspaceId}/sync/pull`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -131,7 +132,7 @@ export function useOfflineSync(workspaceId: string | undefined) {
 
       if (pushDocs.length > 0 || pushDeleted.length > 0) {
         try {
-          const pushRes = await fetch(`/api/v1/workspaces/${workspaceId}/sync/push`, {
+          const pushRes = await httpRequest(`/api/v1/workspaces/${workspaceId}/sync/push`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

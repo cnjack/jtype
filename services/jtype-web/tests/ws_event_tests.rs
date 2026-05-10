@@ -162,8 +162,7 @@ async fn remove_member_publishes_member_removed() {
     let (token2, _) = common::register_user(app.clone(), &common::uid()).await;
     let ws_id = common::create_workspace(app.clone(), &token1, &common::wname()).await;
 
-    let member_user_id =
-        invite_and_accept(app.clone(), &ws_id, &token1, &token2, "editor").await;
+    let member_user_id = invite_and_accept(app.clone(), &ws_id, &token1, &token2, "editor").await;
 
     // Subscribe after join to avoid capturing the member:joined event
     let (_sid, mut rx) = hub.subscribe_for_test(&ws_id).await;
@@ -231,8 +230,7 @@ async fn update_member_role_publishes_role_changed() {
     let (token2, _) = common::register_user(app.clone(), &common::uid()).await;
     let ws_id = common::create_workspace(app.clone(), &token1, &common::wname()).await;
 
-    let member_user_id =
-        invite_and_accept(app.clone(), &ws_id, &token1, &token2, "editor").await;
+    let member_user_id = invite_and_accept(app.clone(), &ws_id, &token1, &token2, "editor").await;
 
     let (_sid, mut rx) = hub.subscribe_for_test(&ws_id).await;
 
@@ -267,8 +265,7 @@ async fn transfer_ownership_publishes_two_role_changed() {
     let (token2, _) = common::register_user(app.clone(), &common::uid()).await;
     let ws_id = common::create_workspace(app.clone(), &token1, &common::wname()).await;
 
-    let member_user_id =
-        invite_and_accept(app.clone(), &ws_id, &token1, &token2, "editor").await;
+    let member_user_id = invite_and_accept(app.clone(), &ws_id, &token1, &token2, "editor").await;
 
     let (_sid, mut rx) = hub.subscribe_for_test(&ws_id).await;
 
@@ -300,8 +297,6 @@ async fn transfer_ownership_publishes_two_role_changed() {
     assert!(demote.is_some(), "expected owner→admin demotion event");
 
     // One should be: editor → owner (new owner)
-    let promote = role_events
-        .iter()
-        .find(|e| e["newRole"] == "owner");
+    let promote = role_events.iter().find(|e| e["newRole"] == "owner");
     assert!(promote.is_some(), "expected promotion to owner event");
 }

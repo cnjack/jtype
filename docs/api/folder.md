@@ -36,11 +36,15 @@ Workspace 文件夹的 CRUD 以及相关 WS 事件。
 
 ---
 
-## WS Operations (Client → Server)
+## WS Operations (Client → Server) — ⚠️ DEPRECATED
 
-### `folder:created`
+> **已废弃**: 以下 WS 操作已被 REST 端点替代。所有写操作应通过 REST 发送。WS 仅用于接收通知。
+> - `folder:created` → 使用 `POST /api/v1/workspaces/:workspace_id/folders`
+> - `folder:deleted` → 使用 `DELETE /api/v1/workspaces/:workspace_id/folders/:folder_id`
 
-通过 WS 创建文件夹。**仅 Web 使用**, Desktop 走 `sync/push` REST API。
+### `folder:created` ⚠️ DEPRECATED
+
+通过 WS 创建文件夹。**已废弃**, 请使用 REST `POST /folders`。
 
 - **Required role**: `owner` / `admin` / `editor`
 
@@ -73,9 +77,9 @@ Workspace 文件夹的 CRUD 以及相关 WS 事件。
 - 创建文件夹和祖先目录
 - 广播 `sync:required` (`reason: "folder-changed"`)
 
-### `folder:deleted`
+### `folder:deleted` ⚠️ DEPRECATED
 
-通过 WS 删除文件夹。**仅 Web 使用**。
+通过 WS 删除文件夹。**已废弃**, 请使用 REST `DELETE /folders/:folder_id`。
 
 - **Required role**: `owner` / `admin` / `editor`
 

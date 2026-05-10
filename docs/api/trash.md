@@ -51,11 +51,16 @@
 
 ---
 
-## WS Operations (Client → Server)
+## WS Operations (Client → Server) — ⚠️ DEPRECATED
 
-### `trash:restore`
+> **已废弃**: 以下 WS 操作已被 REST 端点替代。所有写操作应通过 REST 发送。WS 仅用于接收通知。
+> - `trash:restore` → 使用 `POST /api/v1/workspaces/:workspace_id/trash/:trash_id/restore`
+> - `trash:permanent_delete` → 使用 `DELETE /api/v1/workspaces/:workspace_id/trash/:trash_id`
+> - `trash:empty_trash` → 使用 `DELETE /api/v1/workspaces/:workspace_id/trash`
 
-通过 WS 恢复回收站文档。**仅 Web 使用。**
+### `trash:restore` ⚠️ DEPRECATED
+
+通过 WS 恢复回收站文档。**已废弃**, 请使用 REST `POST /trash/:trash_id/restore`。
 
 - **Required role**: `owner` / `admin` / `editor`
 
@@ -84,9 +89,9 @@
 
 **Side effects**: 与 REST restore 相同, 广播 `document:trashed` (`action: "restored"`)
 
-### `trash:permanent_delete`
+### `trash:permanent_delete` ⚠️ DEPRECATED
 
-通过 WS 永久删除回收站项目。**仅 Web 使用。**
+通过 WS 永久删除回收站项目。**已废弃**, 请使用 REST `DELETE /trash/:trash_id`。
 
 - **Required role**: `owner` / `admin` / `editor`
 
@@ -105,9 +110,9 @@
 
 **Side effects**: 与 REST permanent delete 相同, 广播 `document:deleted`
 
-### `trash:empty_trash`
+### `trash:empty_trash` ⚠️ DEPRECATED
 
-通过 WS 清空回收站。**仅 Web 使用。**
+通过 WS 清空回收站。**已废弃**, 请使用 REST `DELETE /trash`。
 
 - **Required role**: `owner` / `admin` / `editor`
 

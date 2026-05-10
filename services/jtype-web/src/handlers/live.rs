@@ -331,12 +331,13 @@ async fn handle_ws_text(
                 }
                 state
                     .hub
-                    .publish(
+                    .publish_to_workspace(
                         workspace_id,
                         WorkspaceEvent::SyncRequired {
                             workspace_id: workspace_id.to_string(),
                             reason: "folder-changed".to_string(),
                         },
+                        Some(session_id),
                     )
                     .await;
                 let _ = sender
@@ -467,12 +468,13 @@ async fn handle_ws_text(
                 }
                 state
                     .hub
-                    .publish(
+                    .publish_to_workspace(
                         workspace_id,
                         WorkspaceEvent::SyncRequired {
                             workspace_id: workspace_id.to_string(),
                             reason: "folder-changed".to_string(),
                         },
+                        Some(session_id),
                     )
                     .await;
                 let _ = sender
@@ -622,7 +624,7 @@ async fn handle_trash_operation(
     workspace_id: &str,
     user_id: &str,
     username: &str,
-    _session_id: &str,
+    session_id: &str,
     device_id: &Option<String>,
     role: &str,
     sender: &tokio::sync::mpsc::Sender<Message>,
@@ -677,6 +679,7 @@ async fn handle_trash_operation(
         &auth_user,
         device_id.as_deref(),
         operation,
+        Some(session_id),
     )
     .await
     {
@@ -701,23 +704,13 @@ async fn handle_trash_operation(
 }
 
 async fn fetch_workspace_clock(pool: &sqlx::Pool<sqlx::MySql>, workspace_id: &str) -> i64 {
-    sqlx::query(
-        r#"SELECT GREATEST(
-                COALESCE((SELECT MAX(updated_clock) FROM documents WHERE workspace_id = ?), 0),
-                COALESCE((SELECT MAX(deleted_clock) FROM document_trash WHERE workspace_id = ?), 0),
-                COALESCE((SELECT MAX(updated_clock) FROM workspace_folders WHERE workspace_id = ?), 0),
-                COALESCE((SELECT MAX(deleted_clock) FROM workspace_folder_deletions WHERE workspace_id = ?), 0)
-            ) AS workspace_clock"#,
-    )
-    .bind(workspace_id)
-    .bind(workspace_id)
-    .bind(workspace_id)
-    .bind(workspace_id)
-    .fetch_one(pool)
-    .await
-    .ok()
-    .and_then(|r| r.try_get("workspace_clock").ok())
-    .unwrap_or(0)
+    sqlx::query("SELECT sync_clock AS workspace_clock FROM workspaces WHERE id = ?")
+        .bind(workspace_id)
+        .fetch_one(pool)
+        .await
+        .ok()
+        .and_then(|r| r.try_get("workspace_clock").ok())
+        .unwrap_or(0)
 }
 
 // ── Per-user singleton WS handler (/api/v1/live) ─────────────────────────────

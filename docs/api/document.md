@@ -53,13 +53,63 @@
 - **Response**: `Array<{ id, parentVersionId, source, contentHash, content, createdAt }>`
 - **WS 事件**: 无
 
+### `POST /api/v1/workspaces/:workspace_id/documents/save`
+
+保存或创建单个文档, 支持三方合并和冲突检测。Desktop 和 Web 均使用此端点。
+
+- **Auth**: bearer
+- **Required role**: `owner` / `admin` / `editor`
+- **Optional header**: `x-device-id`, `x-client-type` (默认 `"web"`)
+
+**Request**:
+
+```ts
+{
+  relativePath: string,
+  title?: string,
+  status?: string,
+  content: string,
+  baseContentHash?: string,    // 用于冲突检测
+  baseContent?: string         // 用于三方合并
+}
+```
+
+**Success Response** (200):
+
+```ts
+{
+  relativePath: string,
+  contentHash: string,
+  updatedClock: number,
+  mergeStatus: "accepted" | "merged" | "unchanged"
+}
+```
+
+**Conflict Response** (409):
+
+```ts
+{
+  error: "conflict",
+  conflictId: string,
+  relativePath: string
+}
+```
+
+**Semantics**:
+- 保存文档, 创建新 version
+- 路径不存在时自动创建文档
+- `baseContentHash` 不匹配且双方均有变更时, 尝试三方合并 (需 `baseContent`); 无法合并则返回 409 冲突
+- **WS 事件**: 广播 `document:changed` 到 workspace 所有在线成员
+
 ---
 
-## WS Operations (Client → Server)
+## WS Operations (Client → Server) — ⚠️ DEPRECATED
 
-### `document:save`
+> **已废弃**: 以下 WS 操作已被 REST 端点替代。所有写操作应通过 REST 发送。WS 仅用于接收通知。
 
-通过 WS 保存文档内容。**仅 Web 使用**, Desktop 走 `sync/push` REST API。
+### `document:save` ⚠️ DEPRECATED
+
+通过 WS 保存文档内容。**已废弃**, 请使用 `POST /api/v1/workspaces/:workspace_id/documents/save`。
 
 - **Required role**: `owner` / `admin` / `editor`
 

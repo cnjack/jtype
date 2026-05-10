@@ -93,6 +93,7 @@ pub async fn restore_from_trash(
         &user.id,
         device_id.as_deref(),
         &trash_id,
+        super::extract_session_id(&headers).as_deref(),
     )
     .await?;
 
@@ -107,6 +108,7 @@ pub async fn restore_trash_item_core(
     user_id: &str,
     device_id: Option<&str>,
     trash_id: &str,
+    exclude_session: Option<&str>,
 ) -> Result<CloudDocument, AppError> {
     let row = sqlx::query(
         r#"SELECT document_id, relative_path, title, content, content_hash, version_id
@@ -144,13 +146,8 @@ pub async fn restore_trash_item_core(
     let document_id = Uuid::new_v4().to_string();
     let version_id = Uuid::new_v4().to_string();
 
-    super::document::ensure_workspace_budget(
-        pool,
-        workspace_id,
-        &final_relative_path,
-        &content,
-    )
-    .await?;
+    super::document::ensure_workspace_budget(pool, workspace_id, &final_relative_path, &content)
+        .await?;
 
     let mut tx = pool.begin().await?;
 
@@ -198,14 +195,16 @@ pub async fn restore_trash_item_core(
 
     tx.commit().await?;
 
-    hub.publish(
+    hub.publish_to_workspace(
         workspace_id,
         WorkspaceEvent::DocumentTrashed {
             workspace_id: workspace_id.to_string(),
-            source_session_id: None,
+            source_session_id: exclude_session.map(|s| s.to_string()),
             relative_path,
             action: "restored".to_string(),
+            event_clock: next_clock,
         },
+        exclude_session,
     )
     .await;
 
@@ -234,7 +233,14 @@ pub async fn permanent_delete(
     )
     .await?;
 
-    permanent_delete_core(&state.pool, &state.hub, &workspace_id, &trash_id).await
+    permanent_delete_core(
+        &state.pool,
+        &state.hub,
+        &workspace_id,
+        &trash_id,
+        super::extract_session_id(&headers).as_deref(),
+    )
+    .await
 }
 
 /// Core permanent-delete logic shared by the REST handler and sync trash operations.
@@ -243,10 +249,10 @@ pub async fn permanent_delete_core(
     hub: &crate::hub::ConnectionHub,
     workspace_id: &str,
     trash_id: &str,
+    exclude_session: Option<&str>,
 ) -> Result<StatusCode, AppError> {
     let mut tx = pool.begin().await?;
-    let next_clock =
-        crate::handlers::document::next_workspace_clock(&mut tx, workspace_id).await?;
+    let next_clock = crate::handlers::document::next_workspace_clock(&mut tx, workspace_id).await?;
 
     let relative_path: Option<String> =
         sqlx::query("SELECT relative_path FROM document_trash WHERE id = ? AND workspace_id = ?")
@@ -282,14 +288,15 @@ pub async fn permanent_delete_core(
     tx.commit().await?;
 
     if let Some(rp) = relative_path {
-        hub.publish(
+        hub.publish_to_workspace(
             workspace_id,
             WorkspaceEvent::DocumentDeleted {
                 workspace_id: workspace_id.to_string(),
-                source_session_id: None,
+                source_session_id: exclude_session.map(|s| s.to_string()),
                 relative_path: rp,
                 deleted_clock: next_clock,
             },
+            exclude_session,
         )
         .await;
     }
@@ -311,7 +318,13 @@ pub async fn empty_trash(
     )
     .await?;
 
-    empty_trash_core(&state.pool, &state.hub, &workspace_id).await
+    empty_trash_core(
+        &state.pool,
+        &state.hub,
+        &workspace_id,
+        super::extract_session_id(&headers).as_deref(),
+    )
+    .await
 }
 
 /// Core empty-trash logic shared by the REST handler and sync trash operations.
@@ -319,10 +332,10 @@ pub async fn empty_trash_core(
     pool: &sqlx::Pool<sqlx::MySql>,
     hub: &crate::hub::ConnectionHub,
     workspace_id: &str,
+    exclude_session: Option<&str>,
 ) -> Result<StatusCode, AppError> {
     let mut tx = pool.begin().await?;
-    let next_clock =
-        crate::handlers::document::next_workspace_clock(&mut tx, workspace_id).await?;
+    let next_clock = crate::handlers::document::next_workspace_clock(&mut tx, workspace_id).await?;
 
     let trash_rows = sqlx::query(
         "SELECT relative_path FROM document_trash WHERE workspace_id = ? AND restored_at IS NULL",
@@ -354,14 +367,15 @@ pub async fn empty_trash_core(
     tx.commit().await?;
 
     for rp in trash_paths {
-        hub.publish(
+        hub.publish_to_workspace(
             workspace_id,
             WorkspaceEvent::DocumentDeleted {
                 workspace_id: workspace_id.to_string(),
-                source_session_id: None,
+                source_session_id: exclude_session.map(|s| s.to_string()),
                 relative_path: rp,
                 deleted_clock: next_clock,
             },
+            exclude_session,
         )
         .await;
     }

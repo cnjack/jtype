@@ -55,14 +55,16 @@ pub async fn create_folder(
     tx.commit().await?;
 
     let folder = load_folder_by_path(&state.pool, &workspace_id, &relative_path).await?;
+    let session_id = super::extract_session_id(&headers);
     state
         .hub
-        .publish(
+        .publish_to_workspace(
             &workspace_id,
             WorkspaceEvent::SyncRequired {
                 workspace_id: workspace_id.clone(),
                 reason: "folder-changed".to_string(),
             },
+            session_id.as_deref(),
         )
         .await;
     Ok(Json(folder))
@@ -105,14 +107,16 @@ pub async fn delete_folder(
     .await?;
     tx.commit().await?;
 
+    let session_id = super::extract_session_id(&headers);
     state
         .hub
-        .publish(
+        .publish_to_workspace(
             &workspace_id,
             WorkspaceEvent::SyncRequired {
                 workspace_id: workspace_id.clone(),
                 reason: "folder-changed".to_string(),
             },
+            session_id.as_deref(),
         )
         .await;
     Ok(StatusCode::NO_CONTENT)

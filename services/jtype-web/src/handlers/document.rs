@@ -1,6 +1,7 @@
 use axum::{
     extract::{Path, State},
     http::{HeaderMap, StatusCode},
+    response::{IntoResponse, Response},
     Json,
 };
 use sqlx::Row;
@@ -146,18 +147,20 @@ pub async fn update_status(
     .fetch_one(&state.pool)
     .await?;
 
+    let session_id = super::extract_session_id(&headers);
     state
         .hub
-        .publish(
+        .publish_to_workspace(
             &workspace_id,
             WorkspaceEvent::DocumentStatusChanged {
                 workspace_id: workspace_id.clone(),
-                source_session_id: None,
+                source_session_id: session_id.clone(),
                 relative_path,
                 document_id: document_id.clone(),
                 status: status.to_string(),
                 previous_status,
             },
+            session_id.as_deref(),
         )
         .await;
 
@@ -239,20 +242,94 @@ pub async fn delete_document(
 
     tx.commit().await?;
 
+    let session_id = super::extract_session_id(&headers);
     state
         .hub
-        .publish(
+        .publish_to_workspace(
             &workspace_id,
-            WorkspaceEvent::DocumentDeleted {
+            WorkspaceEvent::DocumentTrashed {
                 workspace_id: workspace_id.clone(),
-                source_session_id: None,
+                source_session_id: session_id.clone(),
                 relative_path,
-                deleted_clock: next_clock,
+                action: "trashed".to_string(),
+                event_clock: next_clock,
             },
+            session_id.as_deref(),
         )
         .await;
 
     Ok(StatusCode::NO_CONTENT)
+}
+
+/// REST endpoint: POST /api/v1/workspaces/:workspace_id/documents/save
+///
+/// Saves or creates a single document with three-way merge support.
+/// Replaces the deprecated WS `document:save` operation.
+pub async fn save_document(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Path(workspace_id): Path<String>,
+    Json(payload): Json<CloudSaveDocumentRequest>,
+) -> Result<Response, AppError> {
+    let user = extract_user(&state.pool, &headers).await?;
+    require_workspace_role(
+        &state.pool,
+        &workspace_id,
+        &user.id,
+        &["owner", "admin", "editor"],
+    )
+    .await?;
+
+    let client_type = headers
+        .get("x-client-type")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("web");
+    let device_id = headers
+        .get("x-device-id")
+        .and_then(|v| v.to_str().ok())
+        .map(|s| s.to_string());
+    let session_id = super::extract_session_id(&headers);
+
+    match save_document_version(&state.pool, &workspace_id, &user, payload, client_type).await? {
+        SaveDocumentOutcome::Saved(doc, merge_status) => {
+            state
+                .hub
+                .publish_to_workspace(
+                    &workspace_id,
+                    WorkspaceEvent::DocumentChanged {
+                        workspace_id: workspace_id.clone(),
+                        source_session_id: session_id.clone(),
+                        relative_path: doc.relative_path.clone(),
+                        content_hash: doc.content_hash.clone(),
+                        updated_clock: doc.updated_clock,
+                        edited_by: user.username.clone(),
+                        source: client_type.to_string(),
+                        device_id,
+                    },
+                    session_id.as_deref(),
+                )
+                .await;
+
+            Ok(Json(serde_json::json!({
+                "relativePath": doc.relative_path,
+                "contentHash": doc.content_hash,
+                "updatedClock": doc.updated_clock,
+                "mergeStatus": merge_status,
+            }))
+            .into_response())
+        }
+        SaveDocumentOutcome::Conflict(c) => {
+            Ok((
+                StatusCode::CONFLICT,
+                Json(serde_json::json!({
+                    "error": "conflict",
+                    "conflictId": c.conflict_id,
+                    "relativePath": c.relative_path,
+                })),
+            )
+                .into_response())
+        }
+    }
 }
 
 pub async fn list_versions(
@@ -576,20 +653,22 @@ pub async fn next_workspace_clock(
     tx: &mut sqlx::Transaction<'_, sqlx::MySql>,
     workspace_id: &str,
 ) -> Result<i64, AppError> {
-    let row = sqlx::query(
-        r#"SELECT GREATEST(
-                COALESCE((SELECT MAX(updated_clock) FROM documents WHERE workspace_id = ?), 0),
-                COALESCE((SELECT MAX(deleted_clock) FROM document_trash WHERE workspace_id = ?), 0),
-                COALESCE((SELECT MAX(updated_clock) FROM workspace_folders WHERE workspace_id = ?), 0),
-                COALESCE((SELECT MAX(deleted_clock) FROM workspace_folder_deletions WHERE workspace_id = ?), 0)
-            ) + 1 AS next_clock"#,
+    let result = sqlx::query(
+        r#"UPDATE workspaces
+           SET sync_clock = LAST_INSERT_ID(sync_clock + 1),
+               updated_at = updated_at
+           WHERE id = ?"#,
     )
     .bind(workspace_id)
-    .bind(workspace_id)
-    .bind(workspace_id)
-    .bind(workspace_id)
-    .fetch_one(&mut **tx)
+    .execute(&mut **tx)
     .await?;
+    if result.rows_affected() == 0 {
+        return Err(AppError::NotFound);
+    }
+
+    let row = sqlx::query("SELECT CAST(LAST_INSERT_ID() AS SIGNED) AS next_clock")
+        .fetch_one(&mut **tx)
+        .await?;
     Ok(row.try_get("next_clock")?)
 }
 

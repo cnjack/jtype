@@ -8,6 +8,7 @@ import "katex/dist/katex.min.css";
 import { marked } from "marked";
 import { createLineDiff, type AICommandProposal } from "./aiCommands";
 import { parseFrontmatter, writeFrontmatter, titleFromMarkdown } from "./lib/frontmatter";
+import { httpRequest } from "./lib/http";
 import type {
   EntryKind,
   InspectorTab,
@@ -829,7 +830,7 @@ async function loadVaultBindings() {
 async function refreshCloudWorkspaces() {
   if (!state.syncToken) return;
   try {
-    const response = await fetch(`${syncServiceUrl()}/api/v1/workspaces`, {
+    const response = await httpRequest(`${syncServiceUrl()}/api/v1/workspaces`, {
       headers: { Authorization: `Bearer ${state.syncToken}` },
     });
     if (!response.ok) throw new Error(await response.text());
@@ -932,7 +933,7 @@ function stopDevicePolling() {
 async function startBrowserOAuth() {
   try {
     setLoading(true);
-    const response = await fetch(`${syncServiceUrl()}/api/oauth/device/start`, {
+    const response = await httpRequest(`${syncServiceUrl()}/api/oauth/device/start`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ deviceId: state.cloudProfile?.deviceId ?? "desktop" }),
@@ -948,7 +949,7 @@ async function startBrowserOAuth() {
     stopDevicePolling();
     devicePollTimer = window.setInterval(async () => {
       try {
-        const pollResponse = await fetch(`${syncServiceUrl()}/api/oauth/device/poll`, {
+        const pollResponse = await httpRequest(`${syncServiceUrl()}/api/oauth/device/poll`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ deviceCode: state.oauthDeviceCode }),
@@ -1026,7 +1027,7 @@ async function syncWorkspaceToWeb(options: { silent?: boolean } = {}) {
     const binding = currentVaultBinding();
     if (binding) {
       await pullCloudWorkspace(binding);
-      const push = await fetch(`${syncServiceUrl()}/api/v1/workspaces/${binding.workspaceId}/sync/push`, {
+      const push = await httpRequest(`${syncServiceUrl()}/api/v1/workspaces/${binding.workspaceId}/sync/push`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -1054,7 +1055,7 @@ async function syncWorkspaceToWeb(options: { silent?: boolean } = {}) {
       return;
     }
 
-    const response = await fetch(`${syncServiceUrl()}/api/sync/workspace`, {
+    const response = await httpRequest(`${syncServiceUrl()}/api/sync/workspace`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -1513,7 +1514,7 @@ function currentVaultBinding() {
 
 async function pullCloudWorkspace(binding: VaultBinding) {
   if (!state.workspace || !state.syncToken) return;
-  const response = await fetch(`${syncServiceUrl()}/api/v1/workspaces/${binding.workspaceId}/sync/pull`, {
+  const response = await httpRequest(`${syncServiceUrl()}/api/v1/workspaces/${binding.workspaceId}/sync/pull`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -1568,7 +1569,7 @@ async function resolveConflict(conflictId: string, resolution: "accept_local" | 
   const binding = currentVaultBinding();
   if (!binding || !state.syncToken) return;
   try {
-    const response = await fetch(`${syncServiceUrl()}/api/v1/workspaces/${binding.workspaceId}/conflicts/${conflictId}/resolve`, {
+    const response = await httpRequest(`${syncServiceUrl()}/api/v1/workspaces/${binding.workspaceId}/conflicts/${conflictId}/resolve`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

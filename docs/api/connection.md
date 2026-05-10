@@ -2,6 +2,8 @@
 
 WebSocket 连接协议、认证、生命周期和重连策略。
 
+> **设计原则**: WebSocket 仅用于接收服务端推送通知 (server → client events)。所有写操作通过 REST HTTP 发送。客户端不再通过 WS 发送业务请求。
+>
 > **设计变更**: 新设计将 WS endpoint 从 per-workspace (`/api/v1/workspaces/:id/live`) 改为 per-user (`/api/v1/live`)。详见 [ws-lookup-redesign.md](../ws-lookup-redesign.md)。
 
 ---
@@ -152,9 +154,11 @@ WS 广播包含发送者自身 (设计问题 D4), 客户端需自行过滤:
 
 ---
 
-## Ack 机制 (仅 Web 使用)
+## Ack 机制 — ⚠️ DEPRECATED
 
-Web 前端通过 `request(msg)` 发送带 `ref` 的消息, 等待匹配的 `ack` 响应:
+> **已废弃**: 随着 WS 写操作迁移到 REST, ack 机制不再需要。Web 前端不再通过 WS 发送带 `ref` 的请求。WS 仅接收服务端推送的事件。
+
+~~Web 前端通过 `request(msg)` 发送带 `ref` 的消息, 等待匹配的 `ack` 响应:~~
 
 ```ts
 // Client → Server (带 ref)

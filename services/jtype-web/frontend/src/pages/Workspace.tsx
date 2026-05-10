@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useCallback, useMemo, memo } from 'react'
 import { Menu, MenuButton, MenuItems, MenuItem, Dialog, DialogPanel } from '@headlessui/react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
-import { api, getStoredUsername, type WorkspaceSummary, type DocumentListItem, type FolderListItem, type DomainResponse, type TrashItem } from '../api'
+import { api, getStoredUsername, setSessionId, type WorkspaceSummary, type DocumentListItem, type FolderListItem, type DomainResponse, type TrashItem } from '../api'
 import { renderToContainer } from '../lib/markdown'
 import { parseFrontmatter, writeFrontmatter } from '../lib/frontmatter'
 import type { EditorMode } from '../lib/utils'
@@ -89,8 +89,11 @@ export function Workspace() {
   const [favoriteVersion, setFavoriteVersion] = useState(0)
   const [staleWarning, setStaleWarning] = useState<{ editedBy: string; wasDirty: boolean } | null>(null)
   const [statusMessage, setStatusMessage] = useState('')
-  const { status: wsStatus, sessionId: wsSessionId, request: wsRequest, subscribe: wsSubscribe } = useWorkspaceSocket(workspace?.id)
+  const { status: wsStatus, sessionId: wsSessionId, subscribe: wsSubscribe } = useWorkspaceSocket(workspace?.id)
   const { hasPending, pendingCount, reconciling, saveOffline, reconcile } = useOfflineSync(workspace?.id)
+
+  // Keep the REST client's session ID in sync with the WS connection
+  useEffect(() => { setSessionId(wsSessionId) }, [wsSessionId])
 
   // Persist expanded folder state per workspace
   useEffect(() => {
@@ -288,25 +291,20 @@ export function Workspace() {
     setSaving(true)
     try {
       const parsedDoc = parseFrontmatter(docContent)
-      if (wsStatus === 'connected') {
-        try {
-          const ack = await wsRequest({
-            type: 'document:save',
-            relativePath: doc.relativePath,
-            content: docContent,
-            title: parsedDoc.data.title || undefined,
-            baseContentHash: loadedContentHash || undefined,
-            baseContent: loadedContent || undefined,
-          })
-          if (ack.ok && ack.document) {
-            setLoadedContentHash(ack.document.contentHash)
-            setLoadedContent(docContent)
-            setDirty(false)
-            setDocuments(await api.listDocuments(workspaceId))
-            return
-          }
-        } catch { /* fall through to offline */ }
-      }
+      try {
+        const result = await api.saveDocument(workspaceId, {
+          relativePath: doc.relativePath,
+          content: docContent,
+          title: parsedDoc.data.title || undefined,
+          baseContentHash: loadedContentHash || undefined,
+          baseContent: loadedContent || undefined,
+        })
+        setLoadedContentHash(result.contentHash)
+        setLoadedContent(docContent)
+        setDirty(false)
+        setDocuments(await api.listDocuments(workspaceId))
+        return
+      } catch { /* fall through to offline */ }
       await saveOffline(doc.relativePath, docContent, loadedContentHash || '', loadedContent || '')
       setDirty(false)
       setStatusMessage('Saved offline. Will sync when reconnected.')
@@ -320,13 +318,7 @@ export function Workspace() {
     if (!workspaceId) return
     const path = await prompt('Document path (e.g. notes/hello.md):')
     if (!path?.trim()) return
-    if (wsStatus !== 'connected') {
-      setStatusMessage('Not connected. Please wait for the connection to be established.')
-      setTimeout(() => setStatusMessage(''), 3000)
-      return
-    }
-    const ack = await wsRequest({ type: 'document:save', relativePath: path.trim(), content: '' })
-    if (!ack.ok) throw new Error(ack.error || 'Save failed')
+    await api.saveDocument(workspaceId, { relativePath: path.trim(), content: '' })
     const docs = await api.listDocuments(workspaceId)
     setDocuments(docs)
   }
@@ -406,21 +398,18 @@ export function Workspace() {
     const nextContent = writeFrontmatter(docContent, { status })
     setSaving(true)
     try {
-      const ack = await wsRequest({
-        type: 'document:save',
+      const result = await api.saveDocument(workspaceId, {
         relativePath: doc.relativePath,
         content: nextContent,
         title: parseFrontmatter(nextContent).data.title || undefined,
         baseContentHash: loadedContentHash || undefined,
         baseContent: loadedContent || undefined,
       })
-      if (ack.ok) {
-        setDocContent(nextContent)
-        setLoadedContentHash(ack.document?.contentHash ?? loadedContentHash)
-        setLoadedContent(nextContent)
-        setDirty(false)
-        setDocuments(await api.listDocuments(workspaceId))
-      }
+      setDocContent(nextContent)
+      setLoadedContentHash(result.contentHash)
+      setLoadedContent(nextContent)
+      setDirty(false)
+      setDocuments(await api.listDocuments(workspaceId))
     } finally {
       setSaving(false)
     }
@@ -606,8 +595,8 @@ export function Workspace() {
                   onDocumentsChange={setDocuments}
                   onFoldersChange={setFolders}
                   onSaveDocument={async (data) => {
-                    const ack = await wsRequest({ type: 'document:save', ...data })
-                    if (!ack.ok) throw new Error(ack.error || 'Save failed')
+                    if (!workspaceId) throw new Error('No workspace')
+                    await api.saveDocument(workspaceId, data)
                   }}
                   trashItems={trashItems}
                   onRestoreTrash={restoreTrashItem}

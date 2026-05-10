@@ -89,17 +89,40 @@ function AppContent() {
     currentBinding &&
     currentVaultSettings?.cloudSyncEnabled !== false
   );
-  const startupPullDoneRef = useRef<string | null>(null);
+  const openedVaultPullKeyRef = useRef<string | null>(null);
+  const currentVaultSettingsLoaded = state.workspace
+    ? Object.prototype.hasOwnProperty.call(state.vaultSettings, state.workspace.rootPath)
+    : false;
 
   useCloudEvents(sync.pullOnly);
 
   useEffect(() => {
-    const bindingId = currentBinding?.workspaceId ?? null;
-    if (startupPullDoneRef.current === bindingId) return;
-    if (!state.workspace || !state.syncToken || !currentBinding || currentVaultSettings?.cloudSyncEnabled === false) return;
-    startupPullDoneRef.current = bindingId;
-    sync.pullOnly();
-  }, [state.workspace, state.syncToken, currentBinding, currentVaultSettings?.cloudSyncEnabled, sync]);
+    const rootPath = state.workspace?.rootPath;
+    if (!rootPath || !state.syncToken || !currentBinding) {
+      openedVaultPullKeyRef.current = null;
+      return;
+    }
+    if (!currentVaultSettingsLoaded) return;
+    if (currentVaultSettings?.cloudSyncEnabled === false) {
+      openedVaultPullKeyRef.current = null;
+      return;
+    }
+
+    const pullKey = `${rootPath}:${currentBinding.workspaceId}`;
+    if (openedVaultPullKeyRef.current === pullKey) return;
+    openedVaultPullKeyRef.current = pullKey;
+    sync.pullOnly({ full: true, reason: "open-vault" }).catch((error) => {
+      dispatch({ type: "SET_STATUS", message: `Cloud update failed: ${String(error)}` });
+    });
+  }, [
+    state.workspace?.rootPath,
+    state.syncToken,
+    currentBinding?.workspaceId,
+    currentVaultSettingsLoaded,
+    currentVaultSettings?.cloudSyncEnabled,
+    sync,
+    dispatch,
+  ]);
 
   usePeriodicSync(
     useCallback(async () => {
@@ -157,6 +180,7 @@ function AppContent() {
     if (!isTauriRuntime()) return;
     const unlistenConnected = listen("cloud:ws-connected", () => dispatch({ type: "SET_WS_CONNECTED", connected: true }));
     const unlistenDisconnected = listen("cloud:ws-disconnected", () => dispatch({ type: "SET_WS_CONNECTED", connected: false }));
+    const unlistenSession = listen<string>("cloud:ws-session", (e) => dispatch({ type: "SET_WS_SESSION", sessionId: e.payload }));
     const unlistenActivity = listen<{ msgType: string }>("cloud:ws-activity", (e) =>
       dispatch({ type: "SET_WS_ACTIVITY", msgType: e.payload.msgType })
     );
@@ -189,6 +213,7 @@ function AppContent() {
     return () => {
       unlistenConnected.then((fn) => fn());
       unlistenDisconnected.then((fn) => fn());
+      unlistenSession.then((fn) => fn());
       unlistenActivity.then((fn) => fn());
       unlistenWorkspaceGone.then((fn) => fn());
     };

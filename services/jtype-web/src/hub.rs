@@ -29,6 +29,7 @@ pub enum WorkspaceEvent {
         source_session_id: Option<String>,
         relative_path: String,
         action: String,
+        event_clock: i64,
     },
     #[serde(rename = "sync:required", rename_all = "camelCase")]
     SyncRequired {
@@ -149,7 +150,11 @@ impl ConnectionHub {
         }
         inner.sessions.insert(
             session_id,
-            SessionEntry { user_id, sender, workspaces },
+            SessionEntry {
+                user_id,
+                sender,
+                workspaces,
+            },
         );
     }
 
@@ -326,7 +331,8 @@ mod tests {
     async fn register_and_receive_event() {
         let hub = ConnectionHub::new();
         let (tx, mut rx) = mpsc::channel(32);
-        hub.register("s1".into(), "u1".into(), vec!["ws-1".into()], tx).await;
+        hub.register("s1".into(), "u1".into(), vec!["ws-1".into()], tx)
+            .await;
 
         hub.publish_to_workspace(
             "ws-1",
@@ -350,8 +356,10 @@ mod tests {
         let hub = ConnectionHub::new();
         let (tx1, mut rx1) = mpsc::channel(32);
         let (tx2, mut rx2) = mpsc::channel(32);
-        hub.register("s1".into(), "u1".into(), vec!["ws-1".into()], tx1).await;
-        hub.register("s2".into(), "u2".into(), vec!["ws-2".into()], tx2).await;
+        hub.register("s1".into(), "u1".into(), vec!["ws-1".into()], tx1)
+            .await;
+        hub.register("s2".into(), "u2".into(), vec!["ws-2".into()], tx2)
+            .await;
 
         hub.publish_to_workspace(
             "ws-1",
@@ -373,7 +381,8 @@ mod tests {
     async fn unregister_removes_session() {
         let hub = ConnectionHub::new();
         let (tx, mut rx) = mpsc::channel(32);
-        hub.register("s1".into(), "u1".into(), vec!["ws-1".into()], tx).await;
+        hub.register("s1".into(), "u1".into(), vec!["ws-1".into()], tx)
+            .await;
         hub.unregister("s1").await;
 
         hub.publish_to_workspace(
@@ -394,8 +403,10 @@ mod tests {
         let hub = ConnectionHub::new();
         let (tx1, mut rx1) = mpsc::channel(32);
         let (tx2, mut rx2) = mpsc::channel(32);
-        hub.register("s1".into(), "u1".into(), vec!["ws-1".into()], tx1).await;
-        hub.register("s2".into(), "u2".into(), vec!["ws-1".into()], tx2).await;
+        hub.register("s1".into(), "u1".into(), vec!["ws-1".into()], tx1)
+            .await;
+        hub.register("s2".into(), "u2".into(), vec!["ws-1".into()], tx2)
+            .await;
 
         hub.publish_to_workspace(
             "ws-1",
@@ -415,7 +426,8 @@ mod tests {
     async fn kick_user_from_workspace_works() {
         let hub = ConnectionHub::new();
         let (tx1, mut rx1) = mpsc::channel(32);
-        hub.register("s1".into(), "u1".into(), vec!["ws-1".into()], tx1).await;
+        hub.register("s1".into(), "u1".into(), vec!["ws-1".into()], tx1)
+            .await;
         hub.kick_user_from_workspace("u1", "ws-1").await;
 
         hub.publish_to_workspace(
@@ -436,8 +448,10 @@ mod tests {
         let hub = ConnectionHub::new();
         let (tx1, mut rx1) = mpsc::channel(32);
         let (tx2, mut rx2) = mpsc::channel(32);
-        hub.register("s1".into(), "u1".into(), vec!["ws-1".into()], tx1).await;
-        hub.register("s2".into(), "u2".into(), vec!["ws-1".into()], tx2).await;
+        hub.register("s1".into(), "u1".into(), vec!["ws-1".into()], tx1)
+            .await;
+        hub.register("s2".into(), "u2".into(), vec!["ws-1".into()], tx2)
+            .await;
 
         hub.publish_to_workspace(
             "ws-1",
@@ -465,7 +479,9 @@ mod tests {
                 "workspace:updated",
             ),
             (
-                WorkspaceEvent::WorkspaceDeleted { workspace_id: "ws1".into() },
+                WorkspaceEvent::WorkspaceDeleted {
+                    workspace_id: "ws1".into(),
+                },
                 "workspace:deleted",
             ),
             (

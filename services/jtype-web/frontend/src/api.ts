@@ -1,6 +1,16 @@
+import { httpRequest } from './lib/http'
+
 const API_BASE = ''
 const TOKEN_STORAGE_KEY = 'jtype.token'
 const USERNAME_STORAGE_KEY = 'jtype.username'
+
+let _sessionId: string | null = null
+
+/** Set the active WS session ID so REST calls can include it for sender exclusion. */
+export function setSessionId(id: string | null) { _sessionId = id }
+
+/** Get the active WS session ID. */
+export function getSessionId(): string | null { return _sessionId }
 
 export function getStoredToken(): string {
   return localStorage.getItem(TOKEN_STORAGE_KEY) || ''
@@ -29,11 +39,12 @@ export function setStoredUsername(username: string) {
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = getStoredToken()
-  const res = await fetch(`${API_BASE}${path}`, {
+  const res = await httpRequest(`${API_BASE}${path}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(_sessionId ? { 'X-Session-Id': _sessionId } : {}),
       ...(options.headers || {}),
     },
   })
@@ -94,6 +105,11 @@ export const api = {
     request<DocumentListItem>(`/api/v1/workspaces/${workspaceId}/documents/${docId}/status`, { method: 'PUT', body: JSON.stringify({ status }) }),
   deleteDocument: (workspaceId: string, docId: string) =>
     request<void>(`/api/v1/workspaces/${workspaceId}/documents/${docId}`, { method: 'DELETE' }),
+  saveDocument: (workspaceId: string, data: SaveDocumentRequest) =>
+    request<SaveDocumentResponse>(`/api/v1/workspaces/${workspaceId}/documents/save`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
   listVersions: (workspaceId: string, docId: string) =>
     request<DocumentVersion[]>(`/api/v1/workspaces/${workspaceId}/documents/${docId}/versions`),
   listTrash: (workspaceId: string) =>
@@ -281,4 +297,20 @@ export interface SyncConflictItem {
   cloudContent: string
   baseContent?: string
   conflictRanges?: string
+}
+
+export interface SaveDocumentRequest {
+  relativePath: string
+  title?: string
+  status?: string
+  content: string
+  baseContentHash?: string
+  baseContent?: string
+}
+
+export interface SaveDocumentResponse {
+  relativePath: string
+  contentHash: string
+  updatedClock: number
+  mergeStatus: 'accepted' | 'merged' | 'unchanged'
 }

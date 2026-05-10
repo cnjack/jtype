@@ -26,6 +26,12 @@ fn all_migrations() -> Vec<Migration> {
             up: include_str!("../../migrations/0002_workspace_folders.up.sql"),
             down: include_str!("../../migrations/0002_workspace_folders.down.sql"),
         },
+        Migration {
+            version: 3,
+            name: "workspace_sync_clock",
+            up: include_str!("../../migrations/0003_workspace_sync_clock.up.sql"),
+            down: include_str!("../../migrations/0003_workspace_sync_clock.down.sql"),
+        },
     ]
 }
 

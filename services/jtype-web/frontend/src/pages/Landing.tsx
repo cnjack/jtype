@@ -99,7 +99,8 @@ export function Landing() {
           </div>
           <div className="flex items-center gap-2">
             <a
-              href="https://github.com/nicepkg/jtype"
+              href="https://github.com/cnjack/jtype"
+              target="_blank"
               className="hidden h-9 items-center justify-center rounded-lg border border-black/[0.06] bg-white/80 px-3 text-sm font-semibold text-[#4b5753] shadow-sm shadow-emerald-950/5 transition hover:border-brand/30 hover:bg-white hover:text-brand-dark sm:inline-flex"
               title="Open GitHub"
             >

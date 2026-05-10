@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import { useAppState } from "../app/AppState";
 import { tauri } from "../lib/tauri";
+import { httpRequest } from "../lib/http";
 import { sha256Hex } from "../lib/utils";
 
 export function useEagerSync() {
@@ -37,7 +38,7 @@ export function useEagerSync() {
       const baseHash = base != null ? await sha256Hex(base) : undefined;
 
       try {
-        const response = await fetch(
+        const response = await httpRequest(
           `${serviceUrl}/api/v1/workspaces/${binding.workspaceId}/sync/push`,
           {
             method: "POST",

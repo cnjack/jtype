@@ -139,10 +139,7 @@ pub fn build_router_with_hub(
             "/api/v1/workspaces/:workspace_id/manifest",
             get(handlers::workspace::get_workspace_manifest),
         )
-        .route(
-            "/api/v1/live",
-            get(handlers::live::ws_upgrade_user),
-        )
+        .route("/api/v1/live", get(handlers::live::ws_upgrade_user))
         .route(
             "/api/v1/workspaces/:workspace_id/live",
             get(handlers::live::ws_upgrade),
@@ -171,6 +168,10 @@ pub fn build_router_with_hub(
         .route(
             "/api/v1/workspaces/:workspace_id/documents",
             get(handlers::document::list_documents),
+        )
+        .route(
+            "/api/v1/workspaces/:workspace_id/documents/save",
+            post(handlers::document::save_document),
         )
         .route(
             "/api/v1/workspaces/:workspace_id/documents/:document_id",

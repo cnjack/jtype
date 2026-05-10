@@ -7,8 +7,8 @@ use serde::{Deserialize, Serialize};
 use sqlx::Row;
 
 use crate::error::AppError;
-use crate::hub::WorkspaceEvent;
 use crate::handlers::workspace::require_workspace_role;
+use crate::hub::WorkspaceEvent;
 use crate::middleware::auth::extract_user;
 use crate::AppState;
 
@@ -137,9 +137,10 @@ pub async fn remove_member(
         .await
         .unwrap_or_default();
 
+    let session_id = super::extract_session_id(&headers);
     state
         .hub
-        .publish(
+        .publish_to_workspace(
             &workspace_id,
             WorkspaceEvent::MemberRemoved {
                 workspace_id: workspace_id.clone(),
@@ -147,10 +148,14 @@ pub async fn remove_member(
                 username: target_username,
                 removed_by_user_id: user.id.clone(),
             },
+            session_id.as_deref(),
         )
         .await;
     // Kick target user from workspace across all sessions (H10)
-    state.hub.kick_user_from_workspace(&target_user_id, &workspace_id).await;
+    state
+        .hub
+        .kick_user_from_workspace(&target_user_id, &workspace_id)
+        .await;
 
     Ok(StatusCode::NO_CONTENT)
 }
@@ -183,19 +188,24 @@ pub async fn leave_workspace(
     .execute(&state.pool)
     .await?;
 
+    let session_id = super::extract_session_id(&headers);
     state
         .hub
-        .publish(
+        .publish_to_workspace(
             &workspace_id,
             WorkspaceEvent::MemberLeft {
                 workspace_id: workspace_id.clone(),
                 user_id: user.id.clone(),
                 username: user.username.clone(),
             },
+            session_id.as_deref(),
         )
         .await;
     // Remove user's own session subscriptions for this workspace (H11)
-    state.hub.kick_user_from_workspace(&user.id, &workspace_id).await;
+    state
+        .hub
+        .kick_user_from_workspace(&user.id, &workspace_id)
+        .await;
 
     Ok(StatusCode::NO_CONTENT)
 }
@@ -255,7 +265,9 @@ pub async fn update_member_role(
             username: row.try_get("username")?,
             role: row.try_get("role")?,
             status: row.try_get("status")?,
-            joined_at: row.try_get::<Option<String>, _>("joined_at").unwrap_or(None),
+            joined_at: row
+                .try_get::<Option<String>, _>("joined_at")
+                .unwrap_or(None),
         }));
     }
 
@@ -280,9 +292,10 @@ pub async fn update_member_role(
 
     let username: String = row.try_get("username")?;
 
+    let session_id = super::extract_session_id(&headers);
     state
         .hub
-        .publish(
+        .publish_to_workspace(
             &workspace_id,
             WorkspaceEvent::MemberRoleChanged {
                 workspace_id: workspace_id.clone(),
@@ -291,6 +304,7 @@ pub async fn update_member_role(
                 previous_role,
                 new_role: role.clone(),
             },
+            session_id.as_deref(),
         )
         .await;
 
@@ -371,10 +385,11 @@ pub async fn transfer_ownership(
 
     tx.commit().await?;
 
+    let session_id = super::extract_session_id(&headers);
     // Notify: old owner demoted to admin
     state
         .hub
-        .publish(
+        .publish_to_workspace(
             &workspace_id,
             WorkspaceEvent::MemberRoleChanged {
                 workspace_id: workspace_id.clone(),
@@ -383,13 +398,14 @@ pub async fn transfer_ownership(
                 previous_role: "owner".to_string(),
                 new_role: "admin".to_string(),
             },
+            session_id.as_deref(),
         )
         .await;
 
     // Notify: new owner promoted to owner
     state
         .hub
-        .publish(
+        .publish_to_workspace(
             &workspace_id,
             WorkspaceEvent::MemberRoleChanged {
                 workspace_id: workspace_id.clone(),
@@ -398,6 +414,7 @@ pub async fn transfer_ownership(
                 previous_role: target_previous_role,
                 new_role: "owner".to_string(),
             },
+            session_id.as_deref(),
         )
         .await;
 

@@ -110,9 +110,10 @@ pub async fn update_workspace(
     }
 
     let summary = load_workspace_summary(&state.pool, &user.id, &workspace_id).await?;
+    let session_id = super::extract_session_id(&headers);
     state
         .hub
-        .publish(
+        .publish_to_workspace(
             &workspace_id,
             WorkspaceEvent::WorkspaceUpdated {
                 workspace_id: workspace_id.clone(),
@@ -120,6 +121,7 @@ pub async fn update_workspace(
                 slug: summary.slug.clone(),
                 publish_title: summary.publish_title.clone(),
             },
+            session_id.as_deref(),
         )
         .await;
     Ok(Json(summary))
@@ -305,9 +307,10 @@ pub async fn accept_invite(
         .await?;
     tx.commit().await?;
 
+    let session_id = super::extract_session_id(&headers);
     state
         .hub
-        .publish(
+        .publish_to_workspace(
             &workspace_id,
             WorkspaceEvent::MemberJoined {
                 workspace_id: workspace_id.clone(),
@@ -315,10 +318,14 @@ pub async fn accept_invite(
                 username: user.username.clone(),
                 role: role.to_string(),
             },
+            session_id.as_deref(),
         )
         .await;
     // Add workspace to all active sessions of the new member (H12)
-    state.hub.add_workspace_to_user(&user.id, &workspace_id).await;
+    state
+        .hub
+        .add_workspace_to_user(&user.id, &workspace_id)
+        .await;
 
     Ok(Json(
         load_workspace_summary(&state.pool, &user.id, &workspace_id).await?,
@@ -417,13 +424,15 @@ pub async fn delete_workspace(
         .execute(&state.pool)
         .await?;
 
+    let session_id = super::extract_session_id(&headers);
     state
         .hub
-        .publish(
+        .publish_to_workspace(
             &workspace_id,
             WorkspaceEvent::WorkspaceDeleted {
                 workspace_id: workspace_id.clone(),
             },
+            session_id.as_deref(),
         )
         .await;
     // Kick all active sessions from this workspace (H9)

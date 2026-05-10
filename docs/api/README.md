@@ -1,6 +1,8 @@
 # JType API & WS Operations — Overview
 
-按 domain 拆分的 API 和 WebSocket 操作文档。每个文件包含 REST endpoints、WS operations (client → server)、WS events (server → client) 及客户端行为规范。
+按 domain 拆分的 API 和 WebSocket 操作文档。每个文件包含 REST endpoints、WS events (server → client) 及客户端行为规范。
+
+> **设计原则**: 所有写操作通过 REST HTTP 发送, WebSocket 仅用于接收服务端推送通知。客户端不再通过 WS 发送业务请求。
 
 > **前身**: 本目录替代了原 [api-ws-operations.md](../api-ws-operations.md)。
 
@@ -10,13 +12,13 @@
 
 | 文件 | 内容 |
 |------|------|
-| [connection.md](connection.md) | WS 连接协议、认证、生命周期、重连、自回显过滤、ack 机制 |
+| [connection.md](connection.md) | WS 连接协议、认证、生命周期、重连、自回显过滤 |
 | [workspace.md](workspace.md) | Workspace CRUD, `workspace:updated` ⚠️, `workspace:deleted` ⚠️, `workspace:invited` ⚠️ |
-| [document.md](document.md) | 文档 CRUD、WS `document:save`, `document:changed`, `document:deleted`, `document:trashed`, `document:status-changed` ⚠️ |
+| [document.md](document.md) | 文档 CRUD (含 REST save)、`document:changed`, `document:deleted`, `document:trashed`, `document:status-changed` ⚠️ |
 | [member.md](member.md) | 成员管理、邀请, `member:joined` ⚠️, `member:removed` ⚠️, `member:left` ⚠️, `member:role-changed` ⚠️ |
-| [folder.md](folder.md) | 文件夹 CRUD, WS `folder:created`/`folder:deleted`, `sync:required` |
+| [folder.md](folder.md) | 文件夹 CRUD, `sync:required` |
 | [sync.md](sync.md) | Sync pull/push、三方合并、冲突解决, `sync:required` |
-| [trash.md](trash.md) | 回收站 CRUD, WS trash 操作, 复用 document events |
+| [trash.md](trash.md) | 回收站 REST CRUD, 复用 document events |
 
 ⚠️ = 当前缺失, 需要新增实现的 WS event
 
@@ -66,17 +68,18 @@
 
 ## Desktop vs Web 操作路径对比
 
-> **设计问题 D3**: 同一业务操作在两个客户端使用不同通道。
+> **已解决 (D3)**: 所有客户端统一通过 REST 发送写操作, WS 仅接收通知。
 
 | 操作 | Desktop | Web |
 |------|---------|-----|
-| 保存文档 | REST `sync/push` (含 eager push) | WS `document:save` |
-| 创建文件夹 | REST `sync/push` (folders 字段) | WS `folder:created` |
-| 删除文件夹 | REST `sync/push` 不直接支持, 通过 pull 同步 | WS `folder:deleted` |
-| 移入回收站 | REST `sync/push` (deletedPaths 字段) | REST `DELETE /documents/:id` |
-| 恢复文档 | REST `sync/push` (trashOperations) | WS `trash:restore` |
-| 永久删除 | REST `sync/push` (trashOperations) | WS `trash:permanent_delete` |
-| 清空回收站 | REST `sync/push` (trashOperations) | WS `trash:empty_trash` |
+| 保存文档 | REST `sync/push` (含 eager push) | REST `POST /documents/save` |
+| 创建文档 | REST `sync/push` | REST `POST /documents/save` |
+| 创建文件夹 | REST `sync/push` (folders 字段) 或 `POST /folders` | REST `POST /folders` |
+| 删除文件夹 | REST `sync/push` 或 `DELETE /folders/:id` | REST `DELETE /folders/:id` |
+| 移入回收站 | REST `sync/push` (deletedPaths) 或 `DELETE /documents/:id` | REST `DELETE /documents/:id` |
+| 恢复文档 | REST `sync/push` (trashOperations) 或 `POST /trash/:id/restore` | REST `POST /trash/:id/restore` |
+| 永久删除 | REST `sync/push` (trashOperations) 或 `DELETE /trash/:id` | REST `DELETE /trash/:id` |
+| 清空回收站 | REST `sync/push` (trashOperations) 或 `DELETE /trash` | REST `DELETE /trash` |
 
 ---
 
@@ -97,13 +100,13 @@
 
 关键问题速查:
 
-| # | 严重度 | 描述 |
-|---|--------|------|
-| B1 | HIGH | `folder:created`/`folder:deleted` 成功后无 ack, Web 超时 |
-| D1 | HIGH | 多个 REST handler 缺少 WS 通知 |
-| D2 | HIGH | REST 无法 dispatch 到特定用户的 WS 连接 |
-| D3 | MEDIUM | Desktop/Web 操作路径不对称 |
-| D4 | MEDIUM | 广播包含发送者, 需客户端自行过滤 |
+| # | 严重度 | 描述 | 状态 |
+|---|--------|------|------|
+| B1 | ~~HIGH~~ | ~~`folder:created`/`folder:deleted` 成功后无 ack~~ | ✅ 已解决: WS 写操作已废弃, 改用 REST |
+| D1 | HIGH | 多个 REST handler 缺少 WS 通知 | 待实现 |
+| D2 | HIGH | REST 无法 dispatch 到特定用户的 WS 连接 | 待实现 |
+| D3 | ~~MEDIUM~~ | ~~Desktop/Web 操作路径不对称~~ | ✅ 已解决: 统一使用 REST |
+| D4 | MEDIUM | 广播包含发送者, 需客户端自行过滤 | 待优化 |
 
 ---
 

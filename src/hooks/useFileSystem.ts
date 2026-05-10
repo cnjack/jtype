@@ -6,6 +6,7 @@ import { useAppDispatch, useAppState } from "../app/AppState";
 import { usePrompt } from "../components/modals/PromptDialogContext";
 import { useConfirm } from "../components/modals/ConfirmDialogContext";
 import { tauri } from "../lib/tauri";
+import { httpRequest } from "../lib/http";
 import { basename, isMarkdownPath, relativePathFromWorkspace, normalizePath } from "../lib/utils";
 import { parseFrontmatter, writeFrontmatter, titleFromMarkdown } from "../lib/frontmatter";
 import type { RecentItem } from "../lib/types";
@@ -20,6 +21,41 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
   const confirm = useConfirm();
   const onAfterSaveRef = useRef(onAfterSave);
   onAfterSaveRef.current = onAfterSave;
+
+  /** Returns cloud REST context for the current vault, or null if sync is not active. */
+  const getCloudContext = useCallback(() => {
+    if (!state.workspace || !state.syncToken) return null;
+    const vaultSettings = state.vaultSettings[state.workspace.rootPath];
+    if (vaultSettings?.cloudSyncEnabled === false) return null;
+    const binding = state.vaultBindings.find((item) => item.localVaultPath === state.workspace?.rootPath);
+    if (!binding || !state.cloudProfile?.token) return null;
+    const serviceUrl = (state.serviceUrl || state.cloudProfile?.serverUrl || "http://localhost:13345").trim().replace(/\/$/, "");
+    return {
+      serviceUrl,
+      token: state.syncToken,
+      workspaceId: binding.workspaceId,
+      deviceId: state.cloudProfile?.deviceId ?? "desktop",
+    };
+  }, [state.workspace, state.syncToken, state.vaultBindings, state.vaultSettings, state.cloudProfile, state.serviceUrl]);
+
+  /** Fire-and-forget REST call to the cloud service. Non-critical — errors are silently ignored. */
+  const cloudRest = useCallback(async (path: string, method: string, body?: Record<string, unknown>) => {
+    const ctx = getCloudContext();
+    if (!ctx) return;
+    try {
+      await httpRequest(`${ctx.serviceUrl}/api/v1/workspaces/${ctx.workspaceId}${path}`, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${ctx.token}`,
+          "x-device-id": ctx.deviceId,
+          "x-client-type": "desktop",
+          ...(state.wsSessionId ? { "x-session-id": state.wsSessionId } : {}),
+        },
+        ...(body ? { body: JSON.stringify(body) } : {}),
+      });
+    } catch { /* non-critical */ }
+  }, [getCloudContext, state.wsSessionId]);
 
   const openMarkdownFile = useCallback(async (path: string, relativePath = "") => {
     if (!isMarkdownPath(path)) return;
@@ -128,22 +164,19 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
       const workspace = await tauri.createEntry(state.workspace.rootPath, trimmed, "markdown");
       dispatch({ type: "UPDATE_WORKSPACE", workspace });
       await openMarkdownFile(`${workspace.rootPath}/${trimmed}`, trimmed);
-      // Send document:save via WS so web clients see the new document immediately.
-      const vaultSettings = state.vaultSettings[state.workspace.rootPath];
-      const binding = state.vaultBindings.find((item) => item.localVaultPath === state.workspace?.rootPath);
-      if (tauri.isAvailable && state.syncToken && binding && vaultSettings?.cloudSyncEnabled !== false) {
+      // Notify cloud via REST so web clients see the new document immediately.
+      if (tauri.isAvailable && getCloudContext()) {
         try {
           const content = await tauri.readFile(`${workspace.rootPath}/${trimmed}`);
-          const wsMsg = JSON.stringify({ type: "document:save", relativePath: trimmed, title: "", status: "", content });
-          await tauri.cloudWsSend(wsMsg);
-        } catch { /* non-critical — WS may be disconnected */ }
+          await cloudRest("/documents/save", "POST", { relativePath: trimmed, title: "", status: "", content });
+        } catch { /* non-critical */ }
       }
     } catch (error) {
       dispatch({ type: "SET_STATUS", message: String(error) });
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, state.workspace, state.syncToken, state.vaultBindings, state.vaultSettings, openMarkdownFile]);
+  }, [dispatch, state.workspace, openMarkdownFile, getCloudContext, cloudRest]);
 
   const renameEntry = useCallback(async (fromRelativePath: string, toRelativePath: string, updateLinks: boolean) => {
     if (!state.workspace) return;
@@ -244,12 +277,11 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
       const workspace = await tauri.restoreFromTrash(state.workspace.rootPath, trashId);
       dispatch({ type: "UPDATE_WORKSPACE", workspace });
       dispatch({ type: "SET_STATUS", message: "Restored from trash." });
-      // Send via WS for real-time sync across clients
+      // Notify cloud via REST for real-time sync across clients
       if (tauri.isAvailable && cloudTrashId) {
         try {
-          const wsMsg = JSON.stringify({ type: "trash:restore", trashId: cloudTrashId });
-          await tauri.cloudWsSend(wsMsg);
-        } catch { /* non-critical — WS may be disconnected */ }
+          await cloudRest(`/trash/${cloudTrashId}/restore`, "POST", {});
+        } catch { /* non-critical */ }
       }
       // Clean up local trash metadata (match by relativePath so cloud entries are removed too)
       if (tauri.isAvailable) {
@@ -281,12 +313,11 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
       dispatch({ type: "SET_LOADING", isLoading: true });
       await tauri.emptyTrash(state.workspace.rootPath);
       dispatch({ type: "SET_STATUS", message: "Trash emptied." });
-      // Send via WS for real-time sync across clients
+      // Notify cloud via REST for real-time sync across clients
       if (tauri.isAvailable) {
         try {
-          const wsMsg = JSON.stringify({ type: "trash:empty_trash" });
-          await tauri.cloudWsSend(wsMsg);
-        } catch { /* non-critical — WS may be disconnected */ }
+          await cloudRest("/trash", "DELETE");
+        } catch { /* non-critical */ }
       }
       // Clean up local trash metadata and refresh workspace
       if (tauri.isAvailable) {
@@ -330,12 +361,11 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
       }
       await tauri.permanentDeleteTrash(state.workspace.rootPath, trashId);
       dispatch({ type: "SET_STATUS", message: "Item permanently deleted." });
-      // Send via WS for real-time sync across clients
+      // Notify cloud via REST for real-time sync across clients
       if (tauri.isAvailable && cloudTrashId) {
         try {
-          const wsMsg = JSON.stringify({ type: "trash:permanent_delete", trashId: cloudTrashId });
-          await tauri.cloudWsSend(wsMsg);
-        } catch { /* non-critical — WS may be disconnected */ }
+          await cloudRest(`/trash/${cloudTrashId}`, "DELETE");
+        } catch { /* non-critical */ }
       }
       // Clean up local trash metadata (match by relativePath so cloud entries are removed too)
       if (tauri.isAvailable) {
@@ -489,14 +519,11 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
       const workspace = await tauri.createFolder(state.workspace.rootPath, folderRelativePath);
       dispatch({ type: "UPDATE_WORKSPACE", workspace });
       dispatch({ type: "SET_STATUS", message: `Created folder ${folderRelativePath}.` });
-      // Notify other clients via WS so they refresh their folder list.
-      const vaultSettings = state.vaultSettings[state.workspace.rootPath];
-      const binding = state.vaultBindings.find((item) => item.localVaultPath === state.workspace?.rootPath);
-      if (tauri.isAvailable && state.syncToken && binding && vaultSettings?.cloudSyncEnabled !== false) {
+      // Notify cloud via REST so other clients refresh their folder list.
+      if (tauri.isAvailable && getCloudContext()) {
         try {
-          const wsMsg = JSON.stringify({ type: "folder:created", relativePath: folderRelativePath });
-          await tauri.cloudWsSend(wsMsg);
-        } catch { /* non-critical — WS may be disconnected */ }
+          await cloudRest("/folders", "POST", { relativePath: folderRelativePath });
+        } catch { /* non-critical */ }
       }
       // Trigger full sync push so the folder reliably reaches the server.
       window.dispatchEvent(new CustomEvent("jtype:vault-folder-changed"));
@@ -506,7 +533,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, state.workspace, state.syncToken, state.vaultBindings, state.vaultSettings]);
+  }, [dispatch, state.workspace, getCloudContext, cloudRest]);
 
   const renameFolder = useCallback(async (fromRelativePath: string, toRelativePath: string) => {
     if (!state.workspace) return;
@@ -552,38 +579,15 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
         dispatch({ type: "CLEAR_DOCUMENT" });
       }
       dispatch({ type: "SET_STATUS", message: `Deleted folder ${folderRelativePath}. ${impacted.length} document(s) moved to trash.` });
-      // Notify other clients via WS so they refresh their folder list.
-      const vaultSettings = state.vaultSettings[state.workspace.rootPath];
-      const binding = state.vaultBindings.find((item) => item.localVaultPath === state.workspace?.rootPath);
-      const shouldSendWs = tauri.isAvailable && state.syncToken && binding && vaultSettings?.cloudSyncEnabled !== false;
-      console.log("[deleteFolder:ws-check]", {
-        tauriAvailable: tauri.isAvailable,
-        hasSyncToken: !!state.syncToken,
-        hasBinding: !!binding,
-        cloudSyncEnabled: vaultSettings?.cloudSyncEnabled,
-        shouldSendWs,
-      });
-      if (shouldSendWs) {
-        try {
-          const wsMsg = JSON.stringify({ type: "folder:deleted", relativePath: folderRelativePath });
-          console.log("[deleteFolder:ws-send] →", wsMsg);
-          await tauri.cloudWsSend(wsMsg);
-          console.log("[deleteFolder:ws-send] ✓ success");
-        } catch (err) {
-          console.error("[deleteFolder:ws-send] ✗ failed:", err);
-        }
-      } else {
-        console.log("[deleteFolder:ws-send] SKIPPED — condition not met");
-      }
       // Trigger full sync push so the folder deletion reliably reaches the server.
-      console.log("[deleteFolder:dispatch] jtype:vault-folder-changed");
+      // The sync push includes deletedFolders which handles the folder deletion on the cloud.
       window.dispatchEvent(new CustomEvent("jtype:vault-folder-changed"));
     } catch (error) {
       dispatch({ type: "SET_STATUS", message: String(error) });
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, state.workspace, state.currentRelativePath, state.syncToken, state.vaultBindings, state.vaultSettings]);
+  }, [dispatch, state.workspace, state.currentRelativePath]);
 
   const openInitialPath = useCallback(async () => {
     if (!tauri.isAvailable) return;

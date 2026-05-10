@@ -61,6 +61,7 @@ export interface AppState {
   syncStatus: SyncStatus;
   lastSyncAt: number;
   wsConnected: boolean;
+  wsSessionId: string | null;
   lastWsActivityAt: number | null;
   lastWsEventType: string | null;
   editorContentVersion: number;
@@ -108,6 +109,7 @@ export type AppAction =
   | { type: "SET_LAST_PATHS"; workspacePath: string; filePath: string }
   | { type: "SET_SYNC_STATUS"; status: SyncStatus; success?: boolean }
   | { type: "SET_WS_CONNECTED"; connected: boolean }
+  | { type: "SET_WS_SESSION"; sessionId: string | null }
   | { type: "SET_WS_ACTIVITY"; msgType: string }
   | { type: "CLOSE_WORKSPACE" }
   | { type: "TOGGLE_EXPAND_FOLDER"; folderPath: string }
@@ -162,6 +164,7 @@ const initialState: AppState = {
   syncStatus: "idle",
   lastSyncAt: 0,
   wsConnected: false,
+  wsSessionId: null,
   lastWsActivityAt: null,
   lastWsEventType: null,
   editorContentVersion: 0,
@@ -391,7 +394,9 @@ export function appReducer(state: AppState, action: AppAction): AppState {
     case "SET_SYNC_STATUS":
       return { ...state, syncStatus: action.status, lastSyncAt: action.status === "idle" && action.success ? Date.now() : state.lastSyncAt };
     case "SET_WS_CONNECTED":
-      return { ...state, wsConnected: action.connected };
+      return { ...state, wsConnected: action.connected, ...(action.connected ? {} : { wsSessionId: null }) };
+    case "SET_WS_SESSION":
+      return { ...state, wsSessionId: action.sessionId };
     case "SET_WS_ACTIVITY":
       return { ...state, lastWsActivityAt: Date.now(), lastWsEventType: action.msgType };
     case "CLOSE_WORKSPACE": {

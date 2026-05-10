@@ -18,6 +18,9 @@ struct WsMessage {
     device_id_field: Option<String>,
     /// The source platform ("desktop", "web", etc.).
     source: Option<String>,
+    /// WS session ID assigned by the server on "connected" message.
+    #[serde(rename = "sessionId")]
+    session_id: Option<String>,
 }
 
 /// Payload for the `cloud:ws-activity` frontend event.
@@ -130,6 +133,9 @@ pub async fn start_ws_listener(
                                             }
                                             "connected" => {
                                                 eprintln!("[ws_client] server confirmed connected");
+                                                if let Some(sid) = &parsed.session_id {
+                                                    let _ = app.emit("cloud:ws-session", sid.as_str());
+                                                }
                                                 let _ = app.emit("cloud:ws-connected", &text);
                                             }
                                             _ => {}

@@ -1,11 +1,35 @@
 mod common;
 use axum::http::StatusCode;
+use serde_json::json;
 
 // ── Helper ────────────────────────────────────────────────────────────────────
 
+async fn save_document(
+    app: axum::Router,
+    token: &str,
+    ws_id: &str,
+    path: &str,
+    content: &str,
+) -> serde_json::Value {
+    let (status, body) = common::req(
+        app,
+        "POST",
+        &format!("/api/v1/workspaces/{ws_id}/documents/save"),
+        Some(token),
+        Some(json!({
+            "relativePath": path,
+            "content": content,
+            "title": path.trim_end_matches(".md"),
+        })),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK, "save_document failed: {body}");
+    body
+}
+
 /// Save a document at `path`, delete it (moves to trash), and return the trash_id.
 async fn put_in_trash(app: axum::Router, token: &str, ws_id: &str, path: &str) -> String {
-    common::save_doc(app.clone(), token, ws_id, path, "# Trash me").await;
+    save_document(app.clone(), token, ws_id, path, "# Trash me").await;
 
     // Resolve the document_id by listing documents.
     let (_, list) = common::req(
@@ -144,13 +168,13 @@ async fn restore_from_trash() {
     .await;
 
     assert_eq!(status, StatusCode::OK, "restore response: {body}");
-    // The response must be a CloudDocument — at minimum it has an id and relativePath.
-    assert!(!body["id"].as_str().unwrap_or("").is_empty());
+    // The response must be a CloudDocument with the restored path and a sync clock.
     let path = body["relativePath"].as_str().unwrap_or("");
     assert!(
         path == "restore-me.md" || path.contains("restore-me"),
         "unexpected relativePath: {path}"
     );
+    assert!(body["updatedClock"].as_i64().unwrap_or(0) > 0);
 }
 
 // 5. After a restore the document re-appears in the active document list.
@@ -286,6 +310,44 @@ async fn permanent_delete_removes_from_trash() {
     assert!(
         !items.iter().any(|t| t["id"].as_str() == Some(&trash_id)),
         "permanently deleted item still present in trash"
+    );
+}
+
+#[tokio::test]
+async fn permanent_delete_does_not_make_later_document_clock_go_backwards() {
+    let (app, _pool) = common::setup().await;
+    let (token, _) = common::register_user(app.clone(), &common::uid()).await;
+    let ws_id = common::create_workspace(app.clone(), &token, &common::wname()).await;
+
+    let trash_id = put_in_trash(app.clone(), &token, &ws_id, "clock-source.md").await;
+
+    common::req(
+        app.clone(),
+        "DELETE",
+        &format!("/api/v1/workspaces/{ws_id}/trash/{trash_id}"),
+        Some(&token),
+        None,
+    )
+    .await;
+
+    let (status, pull_body) = common::req(
+        app.clone(),
+        "POST",
+        &format!("/api/v1/workspaces/{ws_id}/sync/pull"),
+        Some(&token),
+        Some(json!({ "sinceClock": 0, "sinceTrashEventClock": 0 })),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK, "pull response: {pull_body}");
+    let trash_cursor = pull_body["trash"]["trashCursor"].as_i64().unwrap_or(0);
+    assert!(trash_cursor > 0, "trash cursor should advance: {pull_body}");
+
+    let saved = save_document(app, &token, &ws_id, "after-delete.md", "# Later").await;
+    let next_document_clock = saved["updatedClock"].as_i64().unwrap_or(0);
+
+    assert!(
+        next_document_clock > trash_cursor,
+        "document clock should stay ahead of trash cursor: document={next_document_clock}, trash={trash_cursor}"
     );
 }
 
