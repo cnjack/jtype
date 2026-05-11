@@ -127,6 +127,16 @@ pub async fn start_ws_listener(
                                                 );
                                                 let _ = app.emit("cloud:remote-change", &text);
                                             }
+                                            "workspace:deleted" => {
+                                                eprintln!("[ws_client] workspace:deleted received — stopping listener");
+                                                let _ = app.emit("cloud:workspace-gone", &workspace_id);
+                                                return;
+                                            }
+                                            "member:removed" => {
+                                                eprintln!("[ws_client] member:removed received — access revoked");
+                                                let _ = app.emit("cloud:member-kicked", &workspace_id);
+                                                return;
+                                            }
                                             "sync:required" => {
                                                 eprintln!("[ws_client] sync:required");
                                                 let _ = app.emit("cloud:sync-required", ());

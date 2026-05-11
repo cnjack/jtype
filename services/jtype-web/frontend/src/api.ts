@@ -89,6 +89,40 @@ export const api = {
   getWorkspace: (id: string) => request<WorkspaceSummary>(`/api/v1/workspaces/${id}`),
   updateWorkspace: (id: string, data: { name?: string; publishTitle?: string }) =>
     request<WorkspaceSummary>(`/api/v1/workspaces/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteWorkspace: (workspaceId: string) =>
+    request<void>(`/api/v1/workspaces/${workspaceId}`, { method: 'DELETE' }),
+  leaveWorkspace: (workspaceId: string) =>
+    request<void>(`/api/v1/workspaces/${workspaceId}/leave`, { method: 'POST', body: '{}' }),
+  transferOwnership: (workspaceId: string, newOwnerUserId: string) =>
+    request<void>(`/api/v1/workspaces/${workspaceId}/transfer`, { method: 'POST', body: JSON.stringify({ newOwnerUserId }) }),
+
+  // Members
+  listMembers: (workspaceId: string) =>
+    request<MemberInfo[]>(`/api/v1/workspaces/${workspaceId}/members`),
+  removeMember: (workspaceId: string, userId: string) =>
+    request<void>(`/api/v1/workspaces/${workspaceId}/members/${userId}/remove`, { method: 'POST', body: '{}' }),
+  updateMemberRole: (workspaceId: string, userId: string, role: string) =>
+    request<MemberInfo>(`/api/v1/workspaces/${workspaceId}/members/${userId}`, { method: 'PUT', body: JSON.stringify({ role }) }),
+
+  // Invites
+  createInvite: (workspaceId: string, data: { email?: string; role?: string }) =>
+    request<InviteResponse>(`/api/v1/workspaces/${workspaceId}/invites`, { method: 'POST', body: JSON.stringify(data) }),
+  revokeInvite: (workspaceId: string, inviteId: string) =>
+    request<void>(`/api/v1/workspaces/${workspaceId}/invites/${inviteId}/revoke`, { method: 'POST', body: '{}' }),
+  listInvites: (workspaceId: string) =>
+    request<InviteListItem[]>(`/api/v1/workspaces/${workspaceId}/invites`),
+  previewInvite: async (token: string): Promise<InvitePreview> => {
+    const res = await fetch(`${API_BASE}/api/v1/workspace-invites/${token}`, {
+      headers: { 'Content-Type': 'application/json' },
+    })
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ error: res.statusText }))
+      throw new Error(body.error || res.statusText)
+    }
+    return res.json()
+  },
+  acceptInvite: (token: string) =>
+    request<WorkspaceSummary>(`/api/v1/workspace-invites/${token}/accept`, { method: 'POST', body: '{}' }),
 
   // Documents
   listFolders: (workspaceId: string) =>
@@ -313,4 +347,34 @@ export interface SaveDocumentResponse {
   contentHash: string
   updatedClock: number
   mergeStatus: 'accepted' | 'merged' | 'unchanged'
+}
+
+export interface MemberInfo {
+  userId: string
+  username: string
+  role: string
+  status: string
+  joinedAt: string | null
+}
+
+export interface InviteResponse {
+  inviteId: string
+  workspaceId: string
+  role: string
+  inviteToken: string
+}
+
+export interface InviteListItem {
+  inviteId: string
+  email: string | null
+  role: string
+  status: string
+  createdAt: string
+}
+
+export interface InvitePreview {
+  workspaceName: string
+  invitedByUsername: string
+  role: string
+  status: 'pending' | 'accepted' | 'revoked'
 }

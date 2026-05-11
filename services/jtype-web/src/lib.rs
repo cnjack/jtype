@@ -146,11 +146,15 @@ pub fn build_router_with_hub(
         )
         .route(
             "/api/v1/workspaces/:workspace_id/invites",
-            post(handlers::workspace::create_invite),
+            get(handlers::workspace::list_invites).post(handlers::workspace::create_invite),
         )
         .route(
             "/api/v1/workspaces/:workspace_id/invites/:invite_id/revoke",
             post(handlers::workspace::revoke_invite),
+        )
+        .route(
+            "/api/v1/workspace-invites/:invite_token",
+            get(handlers::workspace::preview_invite),
         )
         .route(
             "/api/v1/workspace-invites/:invite_token/accept",

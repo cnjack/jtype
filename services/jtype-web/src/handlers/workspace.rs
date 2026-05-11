@@ -332,6 +332,88 @@ pub async fn accept_invite(
     ))
 }
 
+/// GET /api/v1/workspace-invites/:invite_token (no auth required)
+/// Returns a preview of the invite: workspace name, inviter, role, status.
+pub async fn preview_invite(
+    State(state): State<AppState>,
+    Path(invite_token): Path<String>,
+) -> Result<Json<InvitePreviewResponse>, AppError> {
+    let token_hash = sha256_hex(&invite_token);
+    let row = sqlx::query(
+        r#"SELECT wi.role,
+                  wi.accepted_at,
+                  wi.revoked_at,
+                  w.name AS workspace_name,
+                  u.username AS invited_by_username
+           FROM workspace_invites wi
+           JOIN workspaces w ON w.id = wi.workspace_id
+           JOIN users u ON u.id = wi.invited_by_user_id
+           WHERE wi.token_hash = ?"#,
+    )
+    .bind(token_hash)
+    .fetch_optional(&state.pool)
+    .await?
+    .ok_or(AppError::NotFound)?;
+
+    let role: String = row.try_get("role")?;
+    let workspace_name: String = row.try_get("workspace_name")?;
+    let invited_by_username: String = row.try_get("invited_by_username")?;
+    let accepted_at: Option<String> = row.try_get("accepted_at").unwrap_or(None);
+    let revoked_at: Option<String> = row.try_get("revoked_at").unwrap_or(None);
+
+    let status = if revoked_at.is_some() {
+        "revoked".to_string()
+    } else if accepted_at.is_some() {
+        "accepted".to_string()
+    } else {
+        "pending".to_string()
+    };
+
+    Ok(Json(InvitePreviewResponse {
+        workspace_name,
+        invited_by_username,
+        role,
+        status,
+    }))
+}
+
+/// GET /api/v1/workspaces/:workspace_id/invites
+/// Lists pending invites for the workspace. Requires owner or admin.
+pub async fn list_invites(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Path(workspace_id): Path<String>,
+) -> Result<Json<Vec<InviteListItem>>, AppError> {
+    let user = extract_user(&state.pool, &headers).await?;
+    require_workspace_role(&state.pool, &workspace_id, &user.id, &["owner", "admin"]).await?;
+
+    let rows = sqlx::query(
+        r#"SELECT id, email, role, accepted_at, revoked_at,
+                  CAST(created_at AS CHAR) AS created_at
+           FROM workspace_invites
+           WHERE workspace_id = ? AND accepted_at IS NULL AND revoked_at IS NULL
+           ORDER BY created_at DESC"#,
+    )
+    .bind(&workspace_id)
+    .fetch_all(&state.pool)
+    .await?;
+
+    let invites = rows
+        .into_iter()
+        .map(|row| {
+            Ok(InviteListItem {
+                invite_id: row.try_get("id")?,
+                email: row.try_get("email")?,
+                role: row.try_get("role")?,
+                status: "pending".to_string(),
+                created_at: row.try_get::<Option<String>, _>("created_at")?.unwrap_or_default(),
+            })
+        })
+        .collect::<Result<Vec<_>, sqlx::Error>>()?;
+
+    Ok(Json(invites))
+}
+
 // ── Helpers ──
 
 pub async fn upsert_workspace(

@@ -35,6 +35,13 @@ export function AccountDialog() {
 
   const bindWorkspace = async (ws: CloudWorkspace) => {
     if (!state.workspace) return;
+    if (state.isDirty) {
+      const confirmed = await confirm(
+        "You have unsaved changes. Switching cloud workspace before saving may cause conflicts.\n\nContinue anyway?",
+        { title: "Unsaved changes" },
+      );
+      if (!confirmed) return;
+    }
     try {
       await sync.bindCurrentVaultToWorkspace(ws);
     } catch (error) {

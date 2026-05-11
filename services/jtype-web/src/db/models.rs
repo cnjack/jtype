@@ -214,6 +214,25 @@ pub struct InviteResponse {
     pub invite_token: String,
 }
 
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct InvitePreviewResponse {
+    pub workspace_name: String,
+    pub invited_by_username: String,
+    pub role: String,
+    pub status: String,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct InviteListItem {
+    pub invite_id: String,
+    pub email: Option<String>,
+    pub role: String,
+    pub status: String,
+    pub created_at: String,
+}
+
 // ── Documents ──
 
 #[derive(Debug, Deserialize)]
