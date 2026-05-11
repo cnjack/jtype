@@ -14,7 +14,7 @@
     "dompurify": "^3.4.2",
     "katex": "^0.16.45",
     "marked": "^18.0.3",
-    "mermaid": "^11.14.0",
+    "mermaid": "^11.15.0",
     "morphdom": "^2.7.8",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
