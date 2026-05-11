@@ -64,11 +64,6 @@ export function EditorShell() {
     };
   }, [state.editorContent, state.currentKind, state.editorMode]);
 
-  const handleInput = useCallback(() => {
-    const content = editorRef.current?.value ?? "";
-    dispatch({ type: "SET_EDITOR_CONTENT", content });
-  }, [dispatch]);
-
   const fileName = state.currentPath ? basename(state.currentPath) : "No file selected";
   const isMarkdown = state.currentKind === "markdown";
   const documentLocation = (() => {
@@ -92,6 +87,14 @@ export function EditorShell() {
     ? state.vaultBindings.find((binding) => binding.localVaultPath === state.workspace?.rootPath)
     : null;
   const cloudSyncEnabled = Boolean(currentVaultBinding && currentVaultSettings?.cloudSyncEnabled !== false);
+  const isCloudViewer = Boolean(currentVaultBinding?.workspaceRole === "viewer" && currentVaultSettings?.cloudSyncEnabled !== false);
+  const canEditMarkdown = isMarkdown && !isCloudViewer;
+
+  const handleInput = useCallback(() => {
+    if (isCloudViewer) return;
+    const content = editorRef.current?.value ?? "";
+    dispatch({ type: "SET_EDITOR_CONTENT", content });
+  }, [dispatch, isCloudViewer]);
 
   const isFavorite = (() => {
     if (!state.currentPath) return false;
@@ -119,8 +122,9 @@ export function EditorShell() {
 
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
+    if (isCloudViewer) return;
     setContextMenu({ x: e.clientX, y: e.clientY });
-  }, []);
+  }, [isCloudViewer]);
 
   useEffect(() => {
     if (!contextMenu) return;
@@ -192,6 +196,7 @@ export function EditorShell() {
                 className="editor-tool h-8 w-8 px-0 hover:text-red-700"
                 aria-label="Move to trash"
                 title="Move to trash"
+                disabled={isCloudViewer}
                 onClick={() => runCommand("file.delete")}
               >
                 <TrashIcon className="h-4 w-4" />
@@ -203,6 +208,7 @@ export function EditorShell() {
           <span id="file-state" className={`status-chip ${state.isDirty ? "status-chip-warning" : "status-chip-neutral"}`}>{fileStateLabel}</span>
           {isMarkdown && state.mode === "workspace" && <span className="status-chip status-chip-neutral">{publishStatus}</span>}
           {cloudSyncEnabled && state.syncSiteUrl && isMarkdown && state.mode === "workspace" && <span className="status-chip status-chip-info">Synced</span>}
+          {isCloudViewer && <span className="status-chip status-chip-neutral">Read-only</span>}
           {state.activeConflicts.length > 0 && (
             <button
               type="button"
@@ -218,7 +224,7 @@ export function EditorShell() {
               className="sidebar-action bg-[#008884] px-3 text-white hover:bg-[#006f6b] hover:text-white disabled:opacity-50"
               type="button"
               title="Save"
-              disabled={state.currentKind !== "markdown" || !state.isDirty}
+              disabled={!canEditMarkdown || !state.isDirty}
               onClick={() => {
                 const relPath = state.currentRelativePath;
                 const content = state.editorContent;
@@ -236,28 +242,28 @@ export function EditorShell() {
       </div>
 
       <div className="flex min-h-12 items-center gap-1 border-b border-black/[0.04] bg-[#fbfdfb] px-5">
-        <EditorToolbarButton command="editor.bold" title="Bold - Ctrl+B" disabled={!isMarkdown} runCommand={runCommand}>
+        <EditorToolbarButton command="editor.bold" title="Bold - Ctrl+B" disabled={!canEditMarkdown} runCommand={runCommand}>
           <BoldIcon className="h-4 w-4" />
         </EditorToolbarButton>
-        <EditorToolbarButton command="editor.italic" title="Italic - Ctrl+I" disabled={!isMarkdown} runCommand={runCommand}>
+        <EditorToolbarButton command="editor.italic" title="Italic - Ctrl+I" disabled={!canEditMarkdown} runCommand={runCommand}>
           <ItalicIcon className="h-4 w-4" />
         </EditorToolbarButton>
-        <EditorToolbarButton command="editor.link" title="Link - Ctrl+K" disabled={!isMarkdown} runCommand={runCommand}>
+        <EditorToolbarButton command="editor.link" title="Link - Ctrl+K" disabled={!canEditMarkdown} runCommand={runCommand}>
           <LinkIcon className="h-4 w-4" />
         </EditorToolbarButton>
-        <EditorToolbarButton command="editor.code" title="Inline code" disabled={!isMarkdown} runCommand={runCommand}>
+        <EditorToolbarButton command="editor.code" title="Inline code" disabled={!canEditMarkdown} runCommand={runCommand}>
           <CodeBracketIcon className="h-4 w-4" />
         </EditorToolbarButton>
-        <EditorToolbarButton command="insert.table" title="Insert or edit table - Ctrl+Shift+T" disabled={!isMarkdown} runCommand={runCommand}>
+        <EditorToolbarButton command="insert.table" title="Insert or edit table - Ctrl+Shift+T" disabled={!canEditMarkdown} runCommand={runCommand}>
           <TableCellsIcon className="h-4 w-4" />
         </EditorToolbarButton>
-        <EditorToolbarButton command="insert.math" title="Insert formula block" disabled={!isMarkdown} runCommand={runCommand}>
+        <EditorToolbarButton command="insert.math" title="Insert formula block" disabled={!canEditMarkdown} runCommand={runCommand}>
           <VariableIcon className="h-4 w-4" />
         </EditorToolbarButton>
-        <EditorToolbarButton command="insert.mermaid" title="Insert Mermaid diagram" disabled={!isMarkdown} runCommand={runCommand}>
+        <EditorToolbarButton command="insert.mermaid" title="Insert Mermaid diagram" disabled={!canEditMarkdown} runCommand={runCommand}>
           <ShareIcon className="h-4 w-4" />
         </EditorToolbarButton>
-        <EditorToolbarButton command="insert.task" title="Task list" disabled={!isMarkdown} runCommand={runCommand}>
+        <EditorToolbarButton command="insert.task" title="Task list" disabled={!canEditMarkdown} runCommand={runCommand}>
           <ClipboardDocumentCheckIcon className="h-4 w-4" />
         </EditorToolbarButton>
         <div className="ml-auto flex items-center gap-1 rounded-full bg-[#eef5f1] p-1">
@@ -305,6 +311,7 @@ export function EditorShell() {
             aria-label="Markdown editor"
             placeholder="Open or drop a Markdown file to start editing."
             disabled={!isMarkdown}
+            readOnly={isCloudViewer}
             onInput={handleInput}
             onContextMenu={handleContextMenu}
           />
@@ -344,14 +351,14 @@ export function EditorShell() {
           className="context-menu"
           style={{ left: contextMenu.x, top: contextMenu.y }}
         >
-          <button type="button" className="context-menu-button" disabled={!isMarkdown} onClick={() => { runCommand("editor.bold"); setContextMenu(null); }}><BoldIcon className="mr-2 h-3.5 w-3.5" />Bold</button>
-          <button type="button" className="context-menu-button" disabled={!isMarkdown} onClick={() => { runCommand("editor.link"); setContextMenu(null); }}><LinkIcon className="mr-2 h-3.5 w-3.5" />Insert link</button>
-          <button type="button" className="context-menu-button" disabled={!isMarkdown} onClick={() => { insertOrEditTable(); setContextMenu(null); }}><TableCellsIcon className="mr-2 h-3.5 w-3.5" />Insert or format table</button>
-          <button type="button" className="context-menu-button" disabled={!isMarkdown} onClick={() => { addMarkdownTableRow(); setContextMenu(null); }}><TableCellsIcon className="mr-2 h-3.5 w-3.5" />Add table row below</button>
-          <button type="button" className="context-menu-button" disabled={!isMarkdown} onClick={() => { addMarkdownTableColumn(); setContextMenu(null); }}><TableCellsIcon className="mr-2 h-3.5 w-3.5" />Add table column right</button>
-          <button type="button" className="context-menu-button" disabled={!isMarkdown} onClick={() => { formatMarkdownTable(); setContextMenu(null); }}><TableCellsIcon className="mr-2 h-3.5 w-3.5" />Format table</button>
-          <button type="button" className="context-menu-button" disabled={!isMarkdown} onClick={() => { insertBlockAtSafeCursor("\n$$\nE = mc^2\n$$\n"); setContextMenu(null); }}><VariableIcon className="mr-2 h-3.5 w-3.5" />Insert formula</button>
-          <button type="button" className="context-menu-button" disabled={!isMarkdown} onClick={() => { insertBlockAtSafeCursor("\n```mermaid\nflowchart TD\n  A --> B\n```\n"); setContextMenu(null); }}><ShareIcon className="mr-2 h-3.5 w-3.5" />Insert Mermaid diagram</button>
+          <button type="button" className="context-menu-button" disabled={!canEditMarkdown} onClick={() => { runCommand("editor.bold"); setContextMenu(null); }}><BoldIcon className="mr-2 h-3.5 w-3.5" />Bold</button>
+          <button type="button" className="context-menu-button" disabled={!canEditMarkdown} onClick={() => { runCommand("editor.link"); setContextMenu(null); }}><LinkIcon className="mr-2 h-3.5 w-3.5" />Insert link</button>
+          <button type="button" className="context-menu-button" disabled={!canEditMarkdown} onClick={() => { insertOrEditTable(); setContextMenu(null); }}><TableCellsIcon className="mr-2 h-3.5 w-3.5" />Insert or format table</button>
+          <button type="button" className="context-menu-button" disabled={!canEditMarkdown} onClick={() => { addMarkdownTableRow(); setContextMenu(null); }}><TableCellsIcon className="mr-2 h-3.5 w-3.5" />Add table row below</button>
+          <button type="button" className="context-menu-button" disabled={!canEditMarkdown} onClick={() => { addMarkdownTableColumn(); setContextMenu(null); }}><TableCellsIcon className="mr-2 h-3.5 w-3.5" />Add table column right</button>
+          <button type="button" className="context-menu-button" disabled={!canEditMarkdown} onClick={() => { formatMarkdownTable(); setContextMenu(null); }}><TableCellsIcon className="mr-2 h-3.5 w-3.5" />Format table</button>
+          <button type="button" className="context-menu-button" disabled={!canEditMarkdown} onClick={() => { insertBlockAtSafeCursor("\n$$\nE = mc^2\n$$\n"); setContextMenu(null); }}><VariableIcon className="mr-2 h-3.5 w-3.5" />Insert formula</button>
+          <button type="button" className="context-menu-button" disabled={!canEditMarkdown} onClick={() => { insertBlockAtSafeCursor("\n```mermaid\nflowchart TD\n  A --> B\n```\n"); setContextMenu(null); }}><ShareIcon className="mr-2 h-3.5 w-3.5" />Insert Mermaid diagram</button>
         </div>
       )}
     </section>
@@ -369,6 +376,11 @@ function EditorToolbarButton({ title, disabled, runCommand, command, children }:
 function PropertiesSection() {
   const state = useAppState();
   const dispatch = useAppDispatch();
+  const currentVaultSettings = state.workspace ? state.vaultSettings[state.workspace.rootPath] : undefined;
+  const currentVaultBinding = state.workspace
+    ? state.vaultBindings.find((binding) => binding.localVaultPath === state.workspace?.rootPath)
+    : null;
+  const readOnly = Boolean(currentVaultBinding?.workspaceRole === "viewer" && currentVaultSettings?.cloudSyncEnabled !== false);
   if (state.currentKind !== "markdown") {
     return (
       <section id="properties-panel" className="document-info-section">
@@ -381,6 +393,7 @@ function PropertiesSection() {
   const advancedFields = ["publish", "createdAt", "updatedAt"];
 
   const updateField = (field: string, value: string) => {
+    if (readOnly) return;
     const editor = document.querySelector<HTMLTextAreaElement>('textarea[aria-label="Markdown editor"]');
     if (!editor) return;
     const newContent = writeFrontmatter(editor.value, { [field]: value.trim() });
@@ -393,11 +406,11 @@ function PropertiesSection() {
       <p className="text-sm font-semibold text-stone-950">Properties</p>
       <p className="mt-1 text-xs text-stone-500">Edits are written back to YAML frontmatter.</p>
       <div className="mt-3 space-y-3">
-        {basicFields.map((field) => <PropertyField key={field} field={field} value={parsed.data[field] ?? ""} onUpdate={updateField} />)}
+        {basicFields.map((field) => <PropertyField key={field} field={field} value={parsed.data[field] ?? ""} disabled={readOnly} onUpdate={updateField} />)}
         <details className="rounded-md border border-stone-200 bg-stone-50 p-2">
           <summary className="cursor-pointer text-xs font-semibold uppercase text-stone-500">Advanced</summary>
           <div className="mt-3 space-y-3">
-            {advancedFields.map((field) => <PropertyField key={field} field={field} value={parsed.data[field] ?? ""} onUpdate={updateField} />)}
+            {advancedFields.map((field) => <PropertyField key={field} field={field} value={parsed.data[field] ?? ""} disabled={readOnly} onUpdate={updateField} />)}
           </div>
         </details>
       </div>
@@ -405,16 +418,17 @@ function PropertiesSection() {
   );
 }
 
-function PropertyField({ field, value, onUpdate }: { field: string; value: string; onUpdate: (field: string, value: string) => void }) {
+function PropertyField({ field, value, disabled, onUpdate }: { field: string; value: string; disabled: boolean; onUpdate: (field: string, value: string) => void }) {
   return (
     <label className="block">
       <span className="field-label">{field}</span>
       {field === "status" ? (
-        <StatusDropdown value={value} onChange={(v) => onUpdate(field, v)} />
+        <StatusDropdown value={value} disabled={disabled} onChange={(v) => onUpdate(field, v)} />
       ) : field === "description" ? (
         <textarea
           className="field-textarea"
           defaultValue={value}
+          disabled={disabled}
           aria-label={field}
           onChange={(e) => onUpdate(field, e.target.value)}
           onBlur={(e) => onUpdate(field, e.target.value)}
@@ -423,6 +437,7 @@ function PropertyField({ field, value, onUpdate }: { field: string; value: strin
         <input
           className="field-input"
           defaultValue={value}
+          disabled={disabled}
           aria-label={field}
           onChange={(e) => onUpdate(field, e.target.value)}
           onBlur={(e) => onUpdate(field, e.target.value)}
@@ -510,7 +525,7 @@ function PublishSection() {
   );
 }
 
-function StatusDropdown({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+function StatusDropdown({ value, disabled, onChange }: { value: string; disabled: boolean; onChange: (value: string) => void }) {
   const options = [
     { label: "—", value: "" },
     { label: "Draft", value: "draft" },
@@ -521,7 +536,7 @@ function StatusDropdown({ value, onChange }: { value: string; onChange: (value: 
 
   return (
     <Menu as="div" className="relative mt-1 w-full">
-      <MenuButton className="compact-select flex w-full items-center justify-between text-left">
+      <MenuButton className="compact-select flex w-full items-center justify-between text-left disabled:opacity-60" disabled={disabled}>
         <span>{active.label}</span>
         <svg className="h-3 w-3 text-stone-400" viewBox="0 0 20 20" fill="currentColor">
           <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />

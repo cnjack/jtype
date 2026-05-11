@@ -11,6 +11,7 @@ import { Login } from './pages/Login'
 import { Admin } from './pages/Admin'
 import { Workspace } from './pages/Workspace'
 import { DeviceOAuth } from './pages/DeviceOAuth'
+import { InviteAccept } from './pages/InviteAccept'
 import { api } from './api'
 
 createRoot(document.getElementById('root')!).render(
@@ -22,6 +23,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
             <Route path="/oauth/device" element={<DeviceOAuth />} />
+            <Route path="/invites/:token" element={<InviteAccept />} />
             <Route element={<Layout />}>
               <Route path="/dashboard" element={<WorkspaceRedirect />} />
               <Route path="/workspaces" element={<WorkspaceRedirect />} />

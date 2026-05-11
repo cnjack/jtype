@@ -15,7 +15,7 @@
 | [connection.md](connection.md) | WS 连接协议、认证、生命周期、重连、自回显过滤 |
 | [workspace.md](workspace.md) | Workspace CRUD, `workspace:updated` ⚠️, `workspace:deleted` ⚠️, `workspace:invited` ⚠️ |
 | [document.md](document.md) | 文档 CRUD (含 REST save)、`document:changed`, `document:deleted`, `document:trashed`, `document:status-changed` ⚠️ |
-| [member.md](member.md) | 成员管理、邀请, `member:joined` ⚠️, `member:removed` ⚠️, `member:left` ⚠️, `member:role-changed` ⚠️ |
+| [member.md](member.md) | 成员管理、邀请, `member:joined` ⚠️, `member:removed` ⚠️, `member:left` ⚠️, `member:role-changed` |
 | [folder.md](folder.md) | 文件夹 CRUD, `sync:required` |
 | [sync.md](sync.md) | Sync pull/push、三方合并、冲突解决, `sync:required` |
 | [trash.md](trash.md) | 回收站 REST CRUD, 复用 document events |
@@ -50,6 +50,7 @@
 | `document:deleted` | workspace | REST delete, trash permanent delete, empty trash | self-filter → pullOnly() | self-filter → re-list docs+trash, close editor |
 | `document:trashed` | workspace | sync push deletedPaths, trash restore | self-filter → pullOnly() | self-filter → re-list docs+trash |
 | `sync:required` | workspace | folder ops, broadcast lag | pullOnly() | re-list all |
+| `member:role-changed` | workspace | role update, transfer | 更新本地 role 缓存 | 刷新成员列表 + 权限 |
 
 ### 新增事件 (待实现)
 
@@ -61,7 +62,6 @@
 | `member:joined` | workspace | accept invite | — | 刷新成员列表 |
 | `member:removed` | workspace+user | remove member | 被移除者: unbind; 其他: — | 被移除者: 跳转; 其他: 刷新列表 |
 | `member:left` | workspace | leave workspace | — | 刷新成员列表 |
-| `member:role-changed` | workspace | role update, transfer | 更新本地 role 缓存 | 刷新成员列表 + 权限 |
 | `document:status-changed` | workspace | update status | pullOnly() | 刷新文档列表 |
 
 ---

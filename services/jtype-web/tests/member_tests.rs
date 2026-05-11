@@ -2,6 +2,7 @@ mod common;
 
 use axum::http::StatusCode;
 use serde_json::json;
+use sqlx::Row;
 
 // ── Local helpers ─────────────────────────────────────────────────────────────
 
@@ -101,6 +102,77 @@ async fn list_members_requires_membership() {
 // ══════════════════════════════════════════════════════════════════════════════
 // REMOVE MEMBER
 // ══════════════════════════════════════════════════════════════════════════════
+
+#[tokio::test]
+async fn seed_promotes_first_admin_to_owner_when_owner_missing() {
+    let (app, pool) = common::setup().await;
+    let (token1, _) = common::register_user(app.clone(), &common::uid()).await;
+    let (token2, _) = common::register_user(app.clone(), &common::uid()).await;
+    let user1_id = get_user_id(app.clone(), &token1).await;
+    let user2_id = get_user_id(app, &token2).await;
+    let ws_id = uuid::Uuid::new_v4().to_string();
+    let name = common::wname();
+
+    sqlx::query(
+        "INSERT INTO workspaces (id, user_id, owner_user_id, name, slug, publish_title) VALUES (?, NULL, NULL, ?, ?, ?)",
+    )
+    .bind(&ws_id)
+    .bind(&name)
+    .bind(&name)
+    .bind(&name)
+    .execute(&pool)
+    .await
+    .unwrap();
+
+    sqlx::query(
+        r#"INSERT INTO workspace_members (workspace_id, user_id, role, status, joined_at, created_at)
+           VALUES (?, ?, 'admin', 'active', '2024-01-01 00:00:00', '2024-01-01 00:00:00')"#,
+    )
+    .bind(&ws_id)
+    .bind(&user1_id)
+    .execute(&pool)
+    .await
+    .unwrap();
+    sqlx::query(
+        r#"INSERT INTO workspace_members (workspace_id, user_id, role, status, joined_at, created_at)
+           VALUES (?, ?, 'admin', 'active', '2024-01-02 00:00:00', '2024-01-02 00:00:00')"#,
+    )
+    .bind(&ws_id)
+    .bind(&user2_id)
+    .execute(&pool)
+    .await
+    .unwrap();
+
+    jtype_web::db::migrations::run_all(&pool).await.unwrap();
+
+    let owner_row = sqlx::query("SELECT owner_user_id FROM workspaces WHERE id = ?")
+        .bind(&ws_id)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    let owner_user_id: String = owner_row.try_get("owner_user_id").unwrap();
+    assert_eq!(owner_user_id, user1_id);
+
+    let rows = sqlx::query("SELECT user_id, role FROM workspace_members WHERE workspace_id = ?")
+        .bind(&ws_id)
+        .fetch_all(&pool)
+        .await
+        .unwrap();
+    let user1_role: String = rows
+        .iter()
+        .find(|row| row.try_get::<String, _>("user_id").unwrap() == user1_id)
+        .unwrap()
+        .try_get("role")
+        .unwrap();
+    let user2_role: String = rows
+        .iter()
+        .find(|row| row.try_get::<String, _>("user_id").unwrap() == user2_id)
+        .unwrap()
+        .try_get("role")
+        .unwrap();
+    assert_eq!(user1_role, "owner");
+    assert_eq!(user2_role, "admin");
+}
 
 #[tokio::test]
 async fn owner_can_remove_editor() {
@@ -340,7 +412,7 @@ async fn owner_can_change_role() {
 }
 
 #[tokio::test]
-async fn non_owner_cannot_change_role() {
+async fn admin_can_change_member_role() {
     let (app, _pool) = common::setup().await;
     let (token1, _) = common::register_user(app.clone(), &common::uid()).await;
     let (token2, _) = common::register_user(app.clone(), &common::uid()).await;
@@ -350,13 +422,95 @@ async fn non_owner_cannot_change_role() {
     invite_and_accept(app.clone(), &ws_id, &token1, &token2, "admin").await;
     let user3_id = invite_and_accept(app.clone(), &ws_id, &token1, &token3, "editor").await;
 
-    // user2 (admin) tries to change user3's role
+    let (status, _) = common::req(
+        app.clone(),
+        "PUT",
+        &format!("/api/v1/workspaces/{ws_id}/members/{user3_id}"),
+        Some(&token2),
+        Some(json!({ "role": "viewer" })),
+    )
+    .await;
+
+    assert_eq!(status, StatusCode::OK);
+
+    let (_, body) = common::req(
+        app,
+        "GET",
+        &format!("/api/v1/workspaces/{ws_id}/members"),
+        Some(&token1),
+        None,
+    )
+    .await;
+    let members = body.as_array().unwrap();
+    let user3_member = members
+        .iter()
+        .find(|m| m["userId"].as_str() == Some(&user3_id))
+        .expect("user3 should be in member list");
+    assert_eq!(user3_member["role"].as_str().unwrap(), "viewer");
+}
+
+#[tokio::test]
+async fn admin_cannot_change_admin_role() {
+    let (app, _pool) = common::setup().await;
+    let (token1, _) = common::register_user(app.clone(), &common::uid()).await;
+    let (token2, _) = common::register_user(app.clone(), &common::uid()).await;
+    let (token3, _) = common::register_user(app.clone(), &common::uid()).await;
+    let ws_id = common::create_workspace(app.clone(), &token1, &common::wname()).await;
+
+    invite_and_accept(app.clone(), &ws_id, &token1, &token2, "admin").await;
+    let user3_id = invite_and_accept(app.clone(), &ws_id, &token1, &token3, "admin").await;
+
     let (status, _) = common::req(
         app,
         "PUT",
         &format!("/api/v1/workspaces/{ws_id}/members/{user3_id}"),
         Some(&token2),
-        Some(json!({ "role": "admin" })),
+        Some(json!({ "role": "viewer" })),
+    )
+    .await;
+
+    assert_eq!(status, StatusCode::FORBIDDEN);
+}
+
+#[tokio::test]
+async fn admin_cannot_change_owner_role() {
+    let (app, _pool) = common::setup().await;
+    let (token1, _) = common::register_user(app.clone(), &common::uid()).await;
+    let (token2, _) = common::register_user(app.clone(), &common::uid()).await;
+    let ws_id = common::create_workspace(app.clone(), &token1, &common::wname()).await;
+    let user1_id = get_user_id(app.clone(), &token1).await;
+
+    invite_and_accept(app.clone(), &ws_id, &token1, &token2, "admin").await;
+
+    let (status, _) = common::req(
+        app,
+        "PUT",
+        &format!("/api/v1/workspaces/{ws_id}/members/{user1_id}"),
+        Some(&token2),
+        Some(json!({ "role": "viewer" })),
+    )
+    .await;
+
+    assert_eq!(status, StatusCode::FORBIDDEN);
+}
+
+#[tokio::test]
+async fn editor_cannot_change_role() {
+    let (app, _pool) = common::setup().await;
+    let (token1, _) = common::register_user(app.clone(), &common::uid()).await;
+    let (token2, _) = common::register_user(app.clone(), &common::uid()).await;
+    let (token3, _) = common::register_user(app.clone(), &common::uid()).await;
+    let ws_id = common::create_workspace(app.clone(), &token1, &common::wname()).await;
+
+    invite_and_accept(app.clone(), &ws_id, &token1, &token2, "editor").await;
+    let user3_id = invite_and_accept(app.clone(), &ws_id, &token1, &token3, "editor").await;
+
+    let (status, _) = common::req(
+        app,
+        "PUT",
+        &format!("/api/v1/workspaces/{ws_id}/members/{user3_id}"),
+        Some(&token2),
+        Some(json!({ "role": "viewer" })),
     )
     .await;
 

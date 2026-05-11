@@ -203,11 +203,39 @@ function AppContent() {
             vaultPath: workspaceRef.current.rootPath,
             settings,
           });
-          dispatch({ type: "SET_VAULT_SETTINGS", vaultPath: workspaceRef.current.rootPath, settings });
+          dispatch({ type: "DISCONNECT_WORKSPACE", workspaceId: goneWorkspaceId, vaultPath: workspaceRef.current.rootPath, settings });
         }
         await syncRef.current.loadVaultBindings();
+        dispatch({ type: "SET_STATUS", message: "Cloud workspace was deleted. Local files were kept and this vault is now local-only." });
       } catch (err) {
         console.error("[cloud] failed to unbind gone workspace:", err);
+      }
+    });
+    const unlistenMemberKicked = listen<string>("cloud:member-kicked", async (e) => {
+      const kickedWorkspaceId = e.payload;
+      console.warn(`[cloud] removed from workspace ${kickedWorkspaceId}`);
+      dispatch({ type: "SET_WS_CONNECTED", connected: false });
+      try {
+        await invoke("unbind_cloud_workspace", {
+          workspaceId: kickedWorkspaceId,
+          vaultPath: workspaceRef.current?.rootPath ?? "",
+        });
+        if (workspaceRef.current?.rootPath) {
+          const settings = {
+            cloudSyncEnabled: false,
+            syncPromptDismissedAt: null,
+            syncDisabledPermanently: false,
+          };
+          await invoke("save_vault_settings", {
+            vaultPath: workspaceRef.current.rootPath,
+            settings,
+          });
+          dispatch({ type: "DISCONNECT_WORKSPACE", workspaceId: kickedWorkspaceId, vaultPath: workspaceRef.current.rootPath, settings });
+        }
+        await syncRef.current.loadVaultBindings();
+        dispatch({ type: "SET_STATUS", message: "You have been removed from this cloud workspace. Local files were kept." });
+      } catch (err) {
+        console.error("[cloud] failed to unbind after member removal:", err);
       }
     });
     return () => {
@@ -216,6 +244,7 @@ function AppContent() {
       unlistenSession.then((fn) => fn());
       unlistenActivity.then((fn) => fn());
       unlistenWorkspaceGone.then((fn) => fn());
+      unlistenMemberKicked.then((fn) => fn());
     };
   }, []);
 

@@ -880,6 +880,7 @@ async function openOrBindCloudWorkspace(workspaceId: string) {
     workspaceId: workspace.id,
     workspaceName: workspace.name,
     workspaceSlug: workspace.slug,
+    workspaceRole: workspace.role,
     localVaultPath: selectedPath,
     lastPulledClock: 0,
   };
@@ -1075,6 +1076,7 @@ async function syncWorkspaceToWeb(options: { silent?: boolean } = {}) {
         workspaceId: result.workspaceId,
         workspaceName: result.workspaceName,
         workspaceSlug: slugify(result.workspaceName),
+        workspaceRole: "owner",
         localVaultPath: state.workspace.rootPath,
         lastPulledClock: 0,
       };

@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useCallback, useMemo, memo } from 'react'
 import { Menu, MenuButton, MenuItems, MenuItem, Dialog, DialogPanel } from '@headlessui/react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
-import { api, getStoredUsername, setSessionId, type WorkspaceSummary, type DocumentListItem, type FolderListItem, type DomainResponse, type TrashItem } from '../api'
+import { api, getStoredUsername, setSessionId, type WorkspaceSummary, type DocumentListItem, type FolderListItem, type DomainResponse, type TrashItem, type MemberInfo, type InviteListItem, type InviteResponse } from '../api'
 import { renderToContainer } from '../lib/markdown'
 import { parseFrontmatter, writeFrontmatter } from '../lib/frontmatter'
 import type { EditorMode } from '../lib/utils'
@@ -42,11 +42,16 @@ import {
   ArrowsPointingOutIcon,
   PencilIcon,
   ClipboardIcon,
-
+  UserGroupIcon,
+  UserMinusIcon,
+  ExclamationTriangleIcon,
+  ArrowRightStartOnRectangleIcon,
+  ArrowPathIcon,
+  Cog6ToothIcon,
 } from '@heroicons/react/24/outline'
 
 type WorkspaceSection = 'documents' | 'trash' | 'publishing' | 'domains'
-type WorkspaceSettingsSection = 'general' | 'trash' | 'domains'
+type WorkspaceSettingsSection = 'general' | 'trash' | 'domains' | 'members'
 
 export function Workspace() {
   const { workspaceId } = useParams<{ workspaceId: string }>()
@@ -91,6 +96,8 @@ export function Workspace() {
   const [statusMessage, setStatusMessage] = useState('')
   const { status: wsStatus, sessionId: wsSessionId, subscribe: wsSubscribe } = useWorkspaceSocket(workspace?.id)
   const { hasPending, pendingCount, reconciling, saveOffline, reconcile } = useOfflineSync(workspace?.id)
+  const canEditContent = workspace?.role !== 'viewer'
+  const canManageWorkspace = workspace?.role === 'owner' || workspace?.role === 'admin'
 
   // Keep the REST client's session ID in sync with the WS connection
   useEffect(() => { setSessionId(wsSessionId) }, [wsSessionId])
@@ -286,6 +293,11 @@ export function Workspace() {
 
   async function saveDocument() {
     if (!workspaceId || !selectedDoc) return
+    if (!canEditContent) {
+      setStatusMessage('Viewer access is read-only.')
+      setTimeout(() => setStatusMessage(''), 3000)
+      return
+    }
     const doc = documents.find(d => d.id === selectedDoc)
     if (!doc) return
     setSaving(true)
@@ -316,6 +328,11 @@ export function Workspace() {
 
   async function createDocument() {
     if (!workspaceId) return
+    if (!canEditContent) {
+      setStatusMessage('Viewer access is read-only.')
+      setTimeout(() => setStatusMessage(''), 3000)
+      return
+    }
     const path = await prompt('Document path (e.g. notes/hello.md):')
     if (!path?.trim()) return
     await api.saveDocument(workspaceId, { relativePath: path.trim(), content: '' })
@@ -344,6 +361,11 @@ export function Workspace() {
 
   async function saveWorkspaceSettings() {
     if (!workspaceId) return
+    if (!canManageWorkspace) {
+      setSettingsMessage('Only owners and admins can change workspace settings')
+      setTimeout(() => setSettingsMessage(''), 2500)
+      return
+    }
     setSaving(true)
     try {
       const updated = await api.updateWorkspace(workspaceId, {
@@ -366,23 +388,27 @@ export function Workspace() {
 
   async function addDomain() {
     if (!newDomain.trim() || !workspaceId) return
+    if (!canManageWorkspace) return
     await api.addDomain(newDomain.trim(), workspaceId)
     setNewDomain('')
     await reloadDomains()
   }
 
   async function verifyDomain(id: string) {
+    if (!canManageWorkspace) return
     await api.verifyDomain(id)
     await reloadDomains()
   }
 
   async function bindDomain(domain: DomainResponse, bind: boolean) {
+    if (!canManageWorkspace) return
     await api.bindDomain(domain.id, bind ? workspaceId : undefined)
     await reloadDomains()
   }
 
   async function uploadCertificate() {
     if (!certDomainId) return
+    if (!canManageWorkspace) return
     await api.uploadCertificate(certDomainId, certChainPem, privateKeyPem)
     setCertChainPem('')
     setPrivateKeyPem('')
@@ -393,6 +419,7 @@ export function Workspace() {
 
   async function setDocumentPublishStatus(status: 'published' | 'draft' | 'archived') {
     if (!workspaceId || !selectedDoc) return
+    if (!canEditContent) return
     const doc = documents.find(d => d.id === selectedDoc)
     if (!doc) return
     const nextContent = writeFrontmatter(docContent, { status })
@@ -417,6 +444,11 @@ export function Workspace() {
 
   async function deleteDocument(docId: string) {
     if (!workspaceId) return
+    if (!canEditContent) {
+      setStatusMessage('Viewer access is read-only.')
+      setTimeout(() => setStatusMessage(''), 3000)
+      return
+    }
     await api.deleteDocument(workspaceId, docId)
     if (selectedDoc === docId) {
       setSelectedDoc(null)
@@ -428,29 +460,34 @@ export function Workspace() {
 
   async function restoreTrashItem(trashId: string) {
     if (!workspaceId) return
+    if (!canEditContent) return
     await api.restoreTrash(workspaceId, trashId)
     await reloadDocumentsAndTrash()
   }
 
   async function deleteTrashItem(trashId: string) {
     if (!workspaceId) return
+    if (!canEditContent) return
     await api.deleteTrash(workspaceId, trashId)
     setTrashItems(items => items.filter(item => item.id !== trashId))
   }
 
   async function emptyTrash() {
     if (!workspaceId || trashItems.length === 0) return
+    if (!canEditContent) return
     await api.emptyTrash(workspaceId)
     setTrashItems([])
   }
 
   const handleEditorInput = useCallback(() => {
+    if (!canEditContent) return
     const content = editorRef.current?.value ?? ''
     setDocContent(content)
     setDirty(true)
-  }, [])
+  }, [canEditContent])
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (!canEditContent) return
     if (e.ctrlKey || e.metaKey) {
       if (e.key === 's') {
         e.preventDefault()
@@ -473,7 +510,7 @@ export function Workspace() {
         insertOrEditTable()
       }
     }
-  }, [selectedDoc, docContent, documents, workspaceId])
+  }, [canEditContent, selectedDoc, docContent, documents, workspaceId])
 
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
@@ -508,7 +545,6 @@ export function Workspace() {
   const boundDomains = workspace ? domains.filter(domain => domain.workspaceId === workspace.id) : []
   const availableDomains = workspace ? domains.filter(domain => !domain.workspaceId || domain.workspaceId === workspace.id) : []
   const verifiedDomains = boundDomains.filter(domain => domain.status === 'verified')
-
   const getGridClass = (mode: EditorMode) => {
     if (mode === 'write') return 'editor-preview-grid view-mode-write'
     if (mode === 'preview') return 'editor-preview-grid view-mode-preview'
@@ -570,13 +606,17 @@ export function Workspace() {
                   newWorkspaceName={newWorkspaceName}
                   onNewWorkspaceNameChange={setNewWorkspaceName}
                   onCreateWorkspace={createCloudWorkspace}
+                  onOpenSettings={() => {
+                    setSettingsSection('general')
+                    setSettingsOpen(true)
+                  }}
                 />
                 <div className="mt-3 flex gap-1.5">
                   <button
                     className="sidebar-action flex-1"
                     type="button"
                     title="New Document"
-                    disabled={!workspace}
+                    disabled={!workspace || !canEditContent}
                     onClick={createDocument}
                   >
                     <DocumentPlusIcon className="h-4 w-4" />
@@ -610,6 +650,7 @@ export function Workspace() {
                   setFavoriteVersion={setFavoriteVersion}
                   treeContextMenu={treeContextMenu}
                   setTreeContextMenu={setTreeContextMenu}
+                  readOnly={!canEditContent}
                 />
               </div>
             </aside>
@@ -643,7 +684,7 @@ export function Workspace() {
                         <StarIcon className="h-4 w-4" fill={isFavorite ? "currentColor" : "none"} />
                       </button>
                     )}
-                    {workspace && selectedDocument?.relativePath && (
+                    {workspace && selectedDocument?.relativePath && canEditContent && (
                       <button
                         type="button"
                         className="editor-tool h-8 w-8 px-0 hover:text-red-700"
@@ -659,12 +700,13 @@ export function Workspace() {
                 <div className="flex shrink-0 items-center gap-1">
                   <span className={`status-chip ${dirty ? 'status-chip-warning' : 'status-chip-neutral'}`}>{dirty ? 'Unsaved' : 'Saved'}</span>
                   <span className="status-chip status-chip-neutral">{publishStatus}</span>
+                  {!canEditContent && <span className="status-chip status-chip-neutral">Read-only</span>}
                   {selectedDoc && (
                     <button
                       className="sidebar-action bg-[#008884] px-3 text-white hover:bg-[#006f6b] hover:text-white disabled:opacity-50"
                       type="button"
                       title="Save"
-                      disabled={!dirty}
+                      disabled={!dirty || !canEditContent}
                       onClick={() => { void saveDocument() }}
                     >
                       <CheckCircleIcon className="h-4 w-4" />
@@ -672,7 +714,7 @@ export function Workspace() {
                   )}
                 </div>
               </div>
-              {workspaceId && <ConflictResolver workspaceId={workspaceId} onResolved={reloadDocumentsAndTrash} />}
+              {workspaceId && canEditContent && <ConflictResolver workspaceId={workspaceId} onResolved={reloadDocumentsAndTrash} />}
               {staleWarning && (
                 <div className="bg-yellow-50 border-b border-yellow-200 px-4 py-2 flex items-center justify-between text-sm">
                   <span>&#x26A0; Modified by {staleWarning.editedBy}{staleWarning.wasDirty ? '. You have unsaved changes.' : ''}</span>
@@ -686,33 +728,33 @@ export function Workspace() {
                       setDirty(false)
                       setStaleWarning(null)
                     }} className="text-red-600 hover:underline">Reload{staleWarning.wasDirty ? ' (discard)' : ''}</button>
-                    {staleWarning.wasDirty && <button onClick={() => { saveDocument(); setStaleWarning(null) }} className="text-blue-600 hover:underline">Save mine</button>}
+                    {staleWarning.wasDirty && canEditContent && <button onClick={() => { saveDocument(); setStaleWarning(null) }} className="text-blue-600 hover:underline">Save mine</button>}
                   </div>
                 </div>
               )}
               <div className="flex min-h-12 items-center gap-1 border-b border-black/[0.04] bg-[#fbfdfb] px-5">
-                <EditorToolbarButton title="Bold (Ctrl+B)" onClick={() => wrapSelection('**', '**', 'bold text')}>
+                <EditorToolbarButton title="Bold (Ctrl+B)" disabled={!canEditContent} onClick={() => wrapSelection('**', '**', 'bold text')}>
                   <BoldIcon className="h-4 w-4" />
                 </EditorToolbarButton>
-                <EditorToolbarButton title="Italic (Ctrl+I)" onClick={() => wrapSelection('_', '_', 'italic text')}>
+                <EditorToolbarButton title="Italic (Ctrl+I)" disabled={!canEditContent} onClick={() => wrapSelection('_', '_', 'italic text')}>
                   <ItalicIcon className="h-4 w-4" />
                 </EditorToolbarButton>
-                <EditorToolbarButton title="Link (Ctrl+K)" onClick={() => wrapSelection('[', '](url)', 'link text')}>
+                <EditorToolbarButton title="Link (Ctrl+K)" disabled={!canEditContent} onClick={() => wrapSelection('[', '](url)', 'link text')}>
                   <LinkIcon className="h-4 w-4" />
                 </EditorToolbarButton>
-                <EditorToolbarButton title="Inline code" onClick={() => wrapSelection('`', '`', 'code')}>
+                <EditorToolbarButton title="Inline code" disabled={!canEditContent} onClick={() => wrapSelection('`', '`', 'code')}>
                   <CodeBracketIcon className="h-4 w-4" />
                 </EditorToolbarButton>
-                <EditorToolbarButton title="Insert table (Ctrl+Shift+T)" onClick={() => insertOrEditTable()}>
+                <EditorToolbarButton title="Insert table (Ctrl+Shift+T)" disabled={!canEditContent} onClick={() => insertOrEditTable()}>
                   <TableCellsIcon className="h-4 w-4" />
                 </EditorToolbarButton>
-                <EditorToolbarButton title="Insert formula" onClick={() => insertAtCursor('\n$$\nE = mc^2\n$$\n')}>
+                <EditorToolbarButton title="Insert formula" disabled={!canEditContent} onClick={() => insertAtCursor('\n$$\nE = mc^2\n$$\n')}>
                   <VariableIcon className="h-4 w-4" />
                 </EditorToolbarButton>
-                <EditorToolbarButton title="Insert Mermaid diagram" onClick={() => insertAtCursor('\n```mermaid\nflowchart TD\n  A --> B\n```\n')}>
+                <EditorToolbarButton title="Insert Mermaid diagram" disabled={!canEditContent} onClick={() => insertAtCursor('\n```mermaid\nflowchart TD\n  A --> B\n```\n')}>
                   <ShareIcon className="h-4 w-4" />
                 </EditorToolbarButton>
-                <EditorToolbarButton title="Task list" onClick={() => insertAtCursor('\n- [ ] Task\n')}>
+                <EditorToolbarButton title="Task list" disabled={!canEditContent} onClick={() => insertAtCursor('\n- [ ] Task\n')}>
                   <ClipboardDocumentCheckIcon className="h-4 w-4" />
                 </EditorToolbarButton>
                 <div className="ml-auto flex items-center gap-1 rounded-full bg-[#eef5f1] p-1">
@@ -751,9 +793,10 @@ export function Workspace() {
                   <textarea
                     ref={editorRef}
                     value={docContent}
-                    onChange={handleEditorInput}
+                    onChange={canEditContent ? handleEditorInput : undefined}
                     onKeyDown={handleKeyDown}
-                    onContextMenu={handleContextMenu}
+                    onContextMenu={canEditContent ? handleContextMenu : undefined}
+                    readOnly={!canEditContent}
                     className="h-full w-full min-h-0 resize-none bg-white/40 p-8 font-mono text-[13px] leading-7 text-stone-800 outline-none placeholder:text-[#9aa6a1]"
                     style={{ position: 'relative', zIndex: 2 }}
                     spellCheck={false}
@@ -812,6 +855,7 @@ export function Workspace() {
                       className="toolbar-button toolbar-button-primary"
                       type="button"
                       onClick={createDocument}
+                      disabled={!canEditContent}
                     >
                       New Document
                     </button>
@@ -878,7 +922,7 @@ export function Workspace() {
         </span>
       </div>
 
-      {activeSection === 'documents' && editorContextMenu && (
+      {activeSection === 'documents' && canEditContent && editorContextMenu && (
         <div
           role="menu"
           className="context-menu"
@@ -904,6 +948,7 @@ function CloudWorkspaceSwitcher({
   newWorkspaceName,
   onNewWorkspaceNameChange,
   onCreateWorkspace,
+  onOpenSettings,
 }: {
   workspace: WorkspaceSummary | null
   workspaces: WorkspaceSummary[]
@@ -911,6 +956,7 @@ function CloudWorkspaceSwitcher({
   newWorkspaceName: string
   onNewWorkspaceNameChange: (value: string) => void
   onCreateWorkspace: () => void
+  onOpenSettings: () => void
 }) {
   return (
     <Menu as="div" className="relative">
@@ -968,6 +1014,22 @@ function CloudWorkspaceSwitcher({
               New
             </button>
           </div>
+        </div>
+        <div className="border-t border-black/[0.06] p-2">
+          <MenuItem>
+            <button
+              className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-zinc-700 transition data-[focus]:bg-[#e8f6f2] data-[focus]:text-brand disabled:cursor-not-allowed disabled:opacity-50"
+              type="button"
+              disabled={!workspace}
+              onClick={onOpenSettings}
+            >
+              <Cog6ToothIcon className="h-4 w-4 shrink-0 text-zinc-500" />
+              <span className="min-w-0 text-left">
+                <span className="block truncate font-semibold">Workspace settings</span>
+                <span className="block truncate text-xs text-zinc-500">Members, domains, publishing</span>
+              </span>
+            </button>
+          </MenuItem>
         </div>
       </MenuItems>
     </Menu>
@@ -1047,6 +1109,7 @@ function WorkspaceSettingsDialog({
 }) {
   const items: Array<{ id: WorkspaceSettingsSection; label: string; description: string }> = [
     { id: 'general', label: 'General', description: 'Name, publishing identity, and storage' },
+    { id: 'members', label: 'Members', description: 'Team members and invitations' },
     { id: 'domains', label: 'Domains', description: 'Custom domains and SSL' },
     { id: 'trash', label: 'Trash', description: 'Restore or delete cloud documents' },
   ]
@@ -1083,10 +1146,10 @@ function WorkspaceSettingsDialog({
             <div className="mb-7 flex items-start justify-between gap-4">
               <div>
                 <h2 className="text-3xl font-semibold text-zinc-950">
-                  {active === 'general' ? 'General' : active === 'domains' ? 'Domains' : 'Trash'}
+                  {active === 'general' ? 'General' : active === 'domains' ? 'Domains' : active === 'members' ? 'Members' : 'Trash'}
                 </h2>
                 <p className="mt-1 text-sm text-zinc-500">
-                  {active === 'general' ? 'Manage cloud workspace name, publishing title, and storage.' : active === 'domains' ? 'Bind custom domains and manage certificates.' : 'Restore deleted documents or remove them permanently.'}
+                  {active === 'general' ? 'Manage cloud workspace name, publishing title, and storage.' : active === 'domains' ? 'Bind custom domains and manage certificates.' : active === 'members' ? 'Manage team members, invitations, and access.' : 'Restore deleted documents or remove them permanently.'}
                 </p>
               </div>
               <button className="subtle-button aspect-square px-0" type="button" title="Close" onClick={onClose}><XMarkIcon className="h-4 w-4" /></button>
@@ -1137,10 +1200,401 @@ function WorkspaceSettingsDialog({
                 onEmpty={onEmpty}
               />
             )}
+            {active === 'members' && (
+              <MembersPanel workspace={workspace} onWorkspaceDeleted={onClose} />
+            )}
           </main>
         </DialogPanel>
       </div>
     </Dialog>
+  )
+}
+
+function MembersPanel({
+  workspace,
+  onWorkspaceDeleted,
+}: {
+  workspace: WorkspaceSummary
+  onWorkspaceDeleted?: () => void
+}) {
+  const navigate = useNavigate()
+  const confirm = useConfirm()
+  const [members, setMembers] = useState<MemberInfo[]>([])
+  const [pendingInvites, setPendingInvites] = useState<InviteListItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [inviteEmail, setInviteEmail] = useState('')
+  const [inviteRole, setInviteRole] = useState('editor')
+  const [inviteLink, setInviteLink] = useState<string | null>(null)
+  const [inviteMessage, setInviteMessage] = useState('')
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deleteConfirmName, setDeleteConfirmName] = useState('')
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false)
+  const [actionMessage, setActionMessage] = useState('')
+  const currentUsername = getStoredUsername()
+  const isOwner = workspace.role === 'owner'
+  const isAdminOrOwner = workspace.role === 'owner' || workspace.role === 'admin'
+
+  const canAdmin = isAdminOrOwner
+
+  useEffect(() => {
+    setLoading(true)
+    const tasks: Promise<unknown>[] = [
+      api.listMembers(workspace.id).then(setMembers),
+    ]
+    if (canAdmin) {
+      tasks.push(api.listInvites(workspace.id).then(setPendingInvites))
+    }
+    Promise.all(tasks).finally(() => setLoading(false))
+  }, [workspace.id, canAdmin])
+
+  async function handleInvite() {
+    setInviteMessage('')
+    try {
+      const result: InviteResponse = await api.createInvite(workspace.id, {
+        email: inviteEmail.trim() || undefined,
+        role: inviteRole,
+      })
+      const link = `${window.location.origin}/invites/${result.inviteToken}`
+      setInviteLink(link)
+      setInviteEmail('')
+      setInviteMessage('Invite created.')
+      if (canAdmin) {
+        const invites = await api.listInvites(workspace.id)
+        setPendingInvites(invites)
+      }
+    } catch (err) {
+      setInviteMessage(err instanceof Error ? err.message : 'Failed to create invite.')
+    }
+  }
+
+  async function handleRevoke(inviteId: string) {
+    await api.revokeInvite(workspace.id, inviteId)
+    setPendingInvites(invites => invites.filter(i => i.inviteId !== inviteId))
+  }
+
+  async function handleRoleChange(userId: string, role: string) {
+    await api.updateMemberRole(workspace.id, userId, role)
+    setMembers(ms => ms.map(m => m.userId === userId ? { ...m, role } : m))
+  }
+
+  async function handleRemove(userId: string) {
+    const ok = await confirm('Remove member', 'Remove this member from the workspace?')
+    if (!ok) return
+    await api.removeMember(workspace.id, userId)
+    setMembers(ms => ms.filter(m => m.userId !== userId))
+    setActionMessage('Member removed.')
+    setTimeout(() => setActionMessage(''), 3000)
+  }
+
+  async function handleLeave() {
+    setShowLeaveConfirm(false)
+    try {
+      await api.leaveWorkspace(workspace.id)
+      navigate('/workspaces', { replace: true })
+    } catch (err) {
+      setActionMessage(err instanceof Error ? err.message : 'Failed to leave workspace.')
+      setTimeout(() => setActionMessage(''), 4000)
+    }
+  }
+
+  async function handleDelete() {
+    if (deleteConfirmName !== workspace.name) return
+    setShowDeleteConfirm(false)
+    try {
+      await api.deleteWorkspace(workspace.id)
+      navigate('/workspaces', { replace: true })
+      onWorkspaceDeleted?.()
+    } catch (err) {
+      setActionMessage(err instanceof Error ? err.message : 'Failed to delete workspace.')
+      setTimeout(() => setActionMessage(''), 4000)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand border-t-transparent" />
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-8">
+      {/* Invite section */}
+      <section>
+        <p className="mb-3 text-sm font-semibold text-zinc-950">Invite people</p>
+        <div className="flex gap-2">
+          <input
+            className="sync-input flex-1"
+            type="email"
+            placeholder="Email (optional)"
+            value={inviteEmail}
+            onChange={e => setInviteEmail(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleInvite()}
+          />
+          <Menu as="div" className="relative">
+            <MenuButton type="button" className="sidebar-action gap-1 capitalize">
+              {inviteRole}
+              <ChevronDownIcon className="h-3.5 w-3.5" />
+            </MenuButton>
+            <MenuItems className="absolute right-0 top-9 z-20 w-36 overflow-hidden rounded-xl border border-black/[0.06] bg-white shadow-xl">
+              {['editor', 'viewer', 'admin'].map(r => (
+                <MenuItem key={r}>
+                  <button
+                    type="button"
+                    className="flex w-full items-center gap-2 px-3 py-2 text-sm capitalize transition hover:bg-[#e8f6f2] data-[focus]:bg-[#e8f6f2]"
+                    onClick={() => setInviteRole(r)}
+                  >
+                    {inviteRole === r && <CheckIcon className="h-3.5 w-3.5 text-brand" />}
+                    <span className={inviteRole === r ? 'text-brand font-semibold' : ''}>{r}</span>
+                  </button>
+                </MenuItem>
+              ))}
+            </MenuItems>
+          </Menu>
+          <button type="button" className="sidebar-action bg-brand text-white hover:bg-brand/90" onClick={handleInvite}>
+            <UserGroupIcon className="h-4 w-4" />
+            <span className="ml-1">Invite</span>
+          </button>
+        </div>
+        {inviteMessage && (
+          <p className="mt-2 text-xs text-zinc-500">{inviteMessage}</p>
+        )}
+        {inviteLink && (
+          <div className="mt-3 flex items-center gap-2 rounded-lg bg-[#eef7f4] px-3 py-2">
+            <input
+              className="min-w-0 flex-1 bg-transparent text-xs font-mono text-zinc-700 outline-none"
+              readOnly
+              value={inviteLink}
+            />
+            <button
+              type="button"
+              title="Copy link"
+              className="shrink-0 text-brand hover:text-brand/80"
+              onClick={() => { navigator.clipboard.writeText(inviteLink); setInviteMessage('Link copied!') }}
+            >
+              <ClipboardIcon className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+      </section>
+
+      {/* Pending invites */}
+      {canAdmin && pendingInvites.length > 0 && (
+        <section>
+          <p className="mb-3 text-sm font-semibold text-zinc-950">Pending invites</p>
+          <div className="space-y-1">
+            {pendingInvites.map(invite => (
+              <div key={invite.inviteId} className="flex items-center gap-3 rounded-lg bg-[#f7faf8] px-3 py-2 text-sm">
+                <span className="min-w-0 flex-1 truncate text-zinc-600">{invite.email || <span className="text-zinc-400 italic">no email</span>}</span>
+                <span className="shrink-0 text-xs capitalize text-zinc-500">{invite.role}</span>
+                <span className="shrink-0 text-xs text-zinc-400">{new Date(invite.createdAt).toLocaleDateString()}</span>
+                <button
+                  type="button"
+                  title="Revoke invite"
+                  className="shrink-0 text-zinc-400 hover:text-red-600"
+                  onClick={() => handleRevoke(invite.inviteId)}
+                >
+                  <XMarkIcon className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Members list */}
+      <section>
+        <p className="mb-3 text-sm font-semibold text-zinc-950">Members ({members.length})</p>
+        <div className="space-y-1">
+          {members.map(member => {
+            const isMe = member.username === currentUsername
+            const canEdit = isOwner || (workspace.role === 'admin' && member.role !== 'owner' && member.role !== 'admin')
+            return (
+              <div key={member.userId} className="flex items-center gap-3 rounded-lg bg-[#f7faf8] px-3 py-2 text-sm">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-white text-xs font-semibold text-zinc-700 ring-1 ring-black/[0.04]">
+                  {member.username.charAt(0).toUpperCase()}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate font-semibold text-zinc-950">{member.username}{isMe && <span className="ml-1 text-xs font-normal text-zinc-400">(you)</span>}</span>
+                </span>
+                {canEdit && !isMe ? (
+                  <Menu as="div" className="relative shrink-0">
+                    <MenuButton type="button" className="flex items-center gap-1 rounded-md px-2 py-1 text-xs capitalize text-zinc-600 hover:bg-white hover:ring-1 hover:ring-black/[0.06]">
+                      {member.role}
+                      <ChevronDownIcon className="h-3 w-3" />
+                    </MenuButton>
+                    <MenuItems className="absolute right-0 top-8 z-20 w-32 overflow-hidden rounded-xl border border-black/[0.06] bg-white shadow-xl">
+                      {['admin', 'editor', 'viewer'].map(r => (
+                        <MenuItem key={r}>
+                          <button
+                            type="button"
+                            className="flex w-full items-center gap-2 px-3 py-2 text-sm capitalize hover:bg-[#e8f6f2] data-[focus]:bg-[#e8f6f2]"
+                            onClick={() => handleRoleChange(member.userId, r)}
+                          >
+                            {member.role === r && <CheckIcon className="h-3.5 w-3.5 text-brand" />}
+                            <span className={member.role === r ? 'text-brand font-semibold' : ''}>{r}</span>
+                          </button>
+                        </MenuItem>
+                      ))}
+                    </MenuItems>
+                  </Menu>
+                ) : (
+                  <span className="shrink-0 text-xs capitalize text-zinc-500">{member.role}</span>
+                )}
+                {canEdit && !isMe && (
+                  <button
+                    type="button"
+                    title="Remove member"
+                    className="shrink-0 text-zinc-300 hover:text-red-600"
+                    onClick={() => handleRemove(member.userId)}
+                  >
+                    <UserMinusIcon className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </section>
+
+      {actionMessage && (
+        <p className="text-xs text-zinc-500">{actionMessage}</p>
+      )}
+
+      {/* Danger zone */}
+      <section className="rounded-xl border border-red-100 bg-red-50/40 p-5">
+        <p className="mb-4 text-sm font-semibold text-red-700">Danger zone</p>
+        <div className="space-y-3">
+          {!isOwner && (
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-zinc-950">Leave workspace</p>
+                <p className="text-xs text-zinc-500">You will lose access to all cloud documents.</p>
+              </div>
+              <button
+                type="button"
+                className="flex items-center gap-1.5 rounded-lg border border-red-200 px-3 py-1.5 text-sm text-red-700 transition hover:bg-red-100"
+                onClick={() => setShowLeaveConfirm(true)}
+              >
+                <ArrowRightStartOnRectangleIcon className="h-4 w-4" />
+                Leave
+              </button>
+            </div>
+          )}
+          {isOwner && (
+            <>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-zinc-950">Transfer ownership</p>
+                  <p className="text-xs text-zinc-500">Pass ownership to another admin member.</p>
+                </div>
+                <button
+                  type="button"
+                  title="Transfer ownership (select a member above)"
+                  className="flex items-center gap-1.5 rounded-lg border border-zinc-200 px-3 py-1.5 text-sm text-zinc-700 transition hover:bg-zinc-100"
+                  onClick={async () => {
+                    const admins = members.filter(m => m.role === 'admin')
+                    const firstAdmin = admins[0]
+                    if (!firstAdmin) {
+                      setActionMessage('Promote a member to admin first before transferring ownership.')
+                      setTimeout(() => setActionMessage(''), 4000)
+                      return
+                    }
+                    const ok = await confirm(
+                      'Transfer ownership',
+                      `Transfer ownership to ${firstAdmin.username}? You will become an admin.`,
+                    )
+                    if (!ok) return
+                    try {
+                      await api.transferOwnership(workspace.id, firstAdmin.userId)
+                      const updated = await api.listMembers(workspace.id)
+                      setMembers(updated)
+                      setActionMessage('Ownership transferred.')
+                      setTimeout(() => setActionMessage(''), 3000)
+                    } catch (err) {
+                      setActionMessage(err instanceof Error ? err.message : 'Transfer failed.')
+                      setTimeout(() => setActionMessage(''), 4000)
+                    }
+                  }}
+                >
+                  <ArrowPathIcon className="h-4 w-4" />
+                  Transfer
+                </button>
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-zinc-950">Delete workspace</p>
+                  <p className="text-xs text-zinc-500">Permanently remove this workspace and all documents.</p>
+                </div>
+                <button
+                  type="button"
+                  className="flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-sm text-red-700 transition hover:bg-red-100"
+                  onClick={() => setShowDeleteConfirm(true)}
+                >
+                  <ExclamationTriangleIcon className="h-4 w-4" />
+                  Delete
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </section>
+
+      {/* Leave confirm dialog */}
+      <Dialog open={showLeaveConfirm} onClose={() => setShowLeaveConfirm(false)} className="relative z-[60]">
+        <div className="fixed inset-0 bg-stone-950/40" aria-hidden="true" />
+        <div className="fixed inset-0 flex items-center justify-center p-4">
+          <DialogPanel className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-2xl">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-red-50">
+              <ArrowRightStartOnRectangleIcon className="h-6 w-6 text-red-600" />
+            </div>
+            <h3 className="mb-2 text-xl font-semibold text-zinc-950">Leave workspace?</h3>
+            <p className="mb-6 text-sm text-zinc-500">
+              You will lose access to all cloud documents. Your local files are unaffected.
+            </p>
+            <div className="flex gap-3">
+              <button type="button" className="flex-1 rounded-xl border border-zinc-200 px-4 py-2.5 text-sm font-semibold text-zinc-700 hover:bg-zinc-50" onClick={() => setShowLeaveConfirm(false)}>Cancel</button>
+              <button type="button" className="flex-1 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700" onClick={handleLeave}>Leave</button>
+            </div>
+          </DialogPanel>
+        </div>
+      </Dialog>
+
+      {/* Delete confirm dialog */}
+      <Dialog open={showDeleteConfirm} onClose={() => setShowDeleteConfirm(false)} className="relative z-[60]">
+        <div className="fixed inset-0 bg-stone-950/40" aria-hidden="true" />
+        <div className="fixed inset-0 flex items-center justify-center p-4">
+          <DialogPanel className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-2xl">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-red-50">
+              <ExclamationTriangleIcon className="h-6 w-6 text-red-600" />
+            </div>
+            <h3 className="mb-2 text-xl font-semibold text-zinc-950">Delete workspace?</h3>
+            <p className="mb-4 text-sm text-zinc-500">
+              This will permanently delete <strong>{workspace.name}</strong> and all its documents. This cannot be undone.
+            </p>
+            <p className="mb-2 text-xs font-semibold text-zinc-700">Type the workspace name to confirm:</p>
+            <input
+              className="sync-input mb-4"
+              placeholder={workspace.name}
+              value={deleteConfirmName}
+              onChange={e => setDeleteConfirmName(e.target.value)}
+            />
+            <div className="flex gap-3">
+              <button type="button" className="flex-1 rounded-xl border border-zinc-200 px-4 py-2.5 text-sm font-semibold text-zinc-700 hover:bg-zinc-50" onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmName('') }}>Cancel</button>
+              <button
+                type="button"
+                disabled={deleteConfirmName !== workspace.name}
+                className="flex-1 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-40"
+                onClick={handleDelete}
+              >
+                Delete
+              </button>
+            </div>
+          </DialogPanel>
+        </div>
+      </Dialog>
+    </div>
   )
 }
 
@@ -1506,9 +1960,9 @@ function formatDateTime(value: string): string {
   return date.toLocaleString()
 }
 
-function EditorToolbarButton({ title, onClick, children }: { title: string; onClick: () => void; children: React.ReactNode }) {
+function EditorToolbarButton({ title, disabled = false, onClick, children }: { title: string; disabled?: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
-    <button className="editor-tool" type="button" title={title} onClick={onClick}>
+    <button className="editor-tool" type="button" title={title} disabled={disabled} onClick={onClick}>
       {children}
     </button>
   )
@@ -1753,6 +2207,7 @@ function WebDocExplorer({
   treeContextMenu,
   setTreeContextMenu,
   onSaveDocument,
+  readOnly,
 }: {
   workspaceId: string | undefined
   folders: FolderListItem[]
@@ -1763,6 +2218,7 @@ function WebDocExplorer({
   onDocumentsChange: (docs: DocumentListItem[]) => void
   onFoldersChange: (folders: FolderListItem[]) => void
   onSaveDocument: (data: { relativePath: string; content: string; title?: string }) => Promise<void>
+  readOnly: boolean
   trashItems: TrashItem[]
   onRestoreTrash: (id: string) => void
   onDeleteTrash: (id: string) => void
@@ -1813,6 +2269,7 @@ function WebDocExplorer({
 
   const handleCreateFolder = async (parentPath = '') => {
     if (!workspaceId) return
+    if (readOnly) return
     const name = await prompt('New folder name:')
     if (!name?.trim()) return
     const relativePath = parentPath ? `${parentPath}/${name.trim()}` : name.trim()
@@ -1824,6 +2281,7 @@ function WebDocExplorer({
 
   const handleCreateDocInFolder = async (folderPath: string) => {
     if (!workspaceId) return
+    if (readOnly) return
     const name = await prompt('New document name (e.g. note.md):')
     if (!name?.trim()) return
     const relativePath = `${folderPath}/${name.trim()}`
@@ -1836,6 +2294,7 @@ function WebDocExplorer({
 
   const handleDeleteFolder = async (folderPath: string) => {
     if (!workspaceId) return
+    if (readOnly) return
     const confirmed = await confirmDialog('Delete folder', `Delete folder "${folderPath}" and all its contents?`, true)
     if (!confirmed) return
     try {
@@ -1859,6 +2318,7 @@ function WebDocExplorer({
 
   const handleRenameDoc = async (doc: DocumentListItem) => {
     if (!workspaceId) return
+    if (readOnly) return
     const newName = await prompt('Rename to:', doc.relativePath)
     if (!newName || newName === doc.relativePath) return
     try {
@@ -1939,6 +2399,7 @@ function WebDocExplorer({
                 className="subtle-button aspect-square px-0"
                 type="button"
                 title="New folder"
+                disabled={readOnly}
                 onClick={() => handleCreateFolder()}
               >
                 <FolderPlusIcon className="h-3.5 w-3.5" />
@@ -1985,6 +2446,7 @@ function WebDocExplorer({
                   className="subtle-button aspect-square px-0"
                   type="button"
                   title="Empty trash"
+                  disabled={readOnly}
                   onClick={async () => { if (await confirmDialog('Empty trash', 'Permanently delete all items in trash?', true)) onEmptyTrash() }}
                 >
                   <TrashIcon className="h-4 w-4" />
@@ -2005,6 +2467,7 @@ function WebDocExplorer({
                           className="subtle-button aspect-square px-0"
                           type="button"
                           title="Restore"
+                          disabled={readOnly}
                           onClick={() => onRestoreTrash(item.id)}
                         >
                           <ArrowUturnLeftIcon className="h-4 w-4" />
@@ -2013,6 +2476,7 @@ function WebDocExplorer({
                           className="subtle-button aspect-square px-0 text-red-400 hover:text-red-600"
                           type="button"
                           title="Permanently delete"
+                          disabled={readOnly}
                           onClick={async () => { if (await confirmDialog('Permanently delete', 'Permanently delete this item?', true)) onDeleteTrash(item.id) }}
                         >
                           <XMarkIcon className="h-4 w-4" />
@@ -2036,28 +2500,32 @@ function WebDocExplorer({
         >
           {treeContextMenu.node.kind === 'folder' && (
             <>
-              <button
-                type="button"
-                className="context-menu-button"
-                onClick={() => { void handleCreateDocInFolder(treeContextMenu.node.path); setTreeContextMenu(null) }}
-              >
-                <DocumentPlusIcon className="mr-2 h-3.5 w-3.5" />New document
-              </button>
-              <button
-                type="button"
-                className="context-menu-button"
-                onClick={() => { void handleCreateFolder(treeContextMenu.node.path); setTreeContextMenu(null) }}
-              >
-                <FolderPlusIcon className="mr-2 h-3.5 w-3.5" />New folder
-              </button>
-              <div className="my-1 border-t border-stone-200" />
-              <button
-                type="button"
-                className="context-menu-button text-red-700 hover:text-red-800"
-                onClick={() => { void handleDeleteFolder(treeContextMenu.node.path); setTreeContextMenu(null) }}
-              >
-                <TrashIcon className="mr-2 h-3.5 w-3.5" />Delete folder
-              </button>
+              {!readOnly && (
+                <>
+                  <button
+                    type="button"
+                    className="context-menu-button"
+                    onClick={() => { void handleCreateDocInFolder(treeContextMenu.node.path); setTreeContextMenu(null) }}
+                  >
+                    <DocumentPlusIcon className="mr-2 h-3.5 w-3.5" />New document
+                  </button>
+                  <button
+                    type="button"
+                    className="context-menu-button"
+                    onClick={() => { void handleCreateFolder(treeContextMenu.node.path); setTreeContextMenu(null) }}
+                  >
+                    <FolderPlusIcon className="mr-2 h-3.5 w-3.5" />New folder
+                  </button>
+                  <div className="my-1 border-t border-stone-200" />
+                  <button
+                    type="button"
+                    className="context-menu-button text-red-700 hover:text-red-800"
+                    onClick={() => { void handleDeleteFolder(treeContextMenu.node.path); setTreeContextMenu(null) }}
+                  >
+                    <TrashIcon className="mr-2 h-3.5 w-3.5" />Delete folder
+                  </button>
+                </>
+              )}
             </>
           )}
           {treeContextMenu.node.kind === 'document' && treeContextMenu.node.doc && (
@@ -2069,13 +2537,15 @@ function WebDocExplorer({
               >
                 <FolderOpenIcon className="mr-2 h-3.5 w-3.5" />Open
               </button>
-              <button
-                type="button"
-                className="context-menu-button"
-                onClick={() => { void handleRenameDoc(treeContextMenu.node.doc!); }}
-              >
-                <PencilIcon className="mr-2 h-3.5 w-3.5" />Rename
-              </button>
+              {!readOnly && (
+                <button
+                  type="button"
+                  className="context-menu-button"
+                  onClick={() => { void handleRenameDoc(treeContextMenu.node.doc!); }}
+                >
+                  <PencilIcon className="mr-2 h-3.5 w-3.5" />Rename
+                </button>
+              )}
               <div className="my-1 border-t border-stone-200" />
               <button
                 type="button"
@@ -2087,13 +2557,15 @@ function WebDocExplorer({
               >
                 <ClipboardIcon className="mr-2 h-3.5 w-3.5" />Copy path
               </button>
-              <button
-                type="button"
-                className="context-menu-button text-red-700 hover:text-red-800"
-                onClick={() => { onDelete(treeContextMenu.node.doc!.id); setTreeContextMenu(null) }}
-              >
-                <TrashIcon className="mr-2 h-3.5 w-3.5" />Move to trash
-              </button>
+              {!readOnly && (
+                <button
+                  type="button"
+                  className="context-menu-button text-red-700 hover:text-red-800"
+                  onClick={() => { onDelete(treeContextMenu.node.doc!.id); setTreeContextMenu(null) }}
+                >
+                  <TrashIcon className="mr-2 h-3.5 w-3.5" />Move to trash
+                </button>
+              )}
             </>
           )}
         </div>

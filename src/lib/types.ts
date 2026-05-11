@@ -78,6 +78,7 @@ export type VaultBinding = {
   workspaceId: string;
   workspaceName: string;
   workspaceSlug: string;
+  workspaceRole: string;
   localVaultPath: string;
   lastPulledClock: number;
 };

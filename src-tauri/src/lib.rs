@@ -47,8 +47,14 @@ struct VaultBinding {
     workspace_id: String,
     workspace_name: String,
     workspace_slug: String,
+    #[serde(default = "default_workspace_role")]
+    workspace_role: String,
     local_vault_path: String,
     last_pulled_clock: i64,
+}
+
+fn default_workspace_role() -> String {
+    "editor".to_string()
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
@@ -247,6 +253,10 @@ fn bind_cloud_workspace(binding: VaultBinding) -> Result<Vec<VaultBinding>, Stri
     }
     if binding.local_vault_path.trim().is_empty() {
         return Err("Local vault path is required.".to_string());
+    }
+    let mut binding = binding;
+    if binding.workspace_role.trim().is_empty() {
+        binding.workspace_role = default_workspace_role();
     }
     let mut store = read_binding_store()?;
     store.bindings.retain(|item| {

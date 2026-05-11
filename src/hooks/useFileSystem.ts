@@ -21,6 +21,11 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
   const confirm = useConfirm();
   const onAfterSaveRef = useRef(onAfterSave);
   onAfterSaveRef.current = onAfterSave;
+  const currentVaultSettings = state.workspace ? state.vaultSettings[state.workspace.rootPath] : undefined;
+  const currentVaultBinding = state.workspace
+    ? state.vaultBindings.find((binding) => binding.localVaultPath === state.workspace?.rootPath)
+    : null;
+  const isCloudViewer = Boolean(currentVaultBinding?.workspaceRole === "viewer" && currentVaultSettings?.cloudSyncEnabled !== false);
 
   /** Returns cloud REST context for the current vault, or null if sync is not active. */
   const getCloudContext = useCallback(() => {
@@ -138,6 +143,10 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
 
   const saveCurrentFile = useCallback(async () => {
     if (!state.currentPath || state.currentKind !== "markdown") return;
+    if (isCloudViewer) {
+      dispatch({ type: "SET_STATUS", message: "Viewer access is read-only." });
+      return;
+    }
     try {
       dispatch({ type: "SET_LOADING", isLoading: true });
       dispatch({ type: "SET_STATUS", message: "Saving..." });
@@ -150,10 +159,14 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, state.currentPath, state.currentKind, state.editorContent, state.currentRelativePath]);
+  }, [dispatch, isCloudViewer, state.currentPath, state.currentKind, state.editorContent, state.currentRelativePath]);
 
   const createDocument = useCallback(async (relativePath: string) => {
     if (!state.workspace) return;
+    if (isCloudViewer) {
+      dispatch({ type: "SET_STATUS", message: "Viewer access is read-only." });
+      return;
+    }
     let trimmed = relativePath.trim();
     if (!trimmed) return;
     if (!isMarkdownPath(trimmed)) {
@@ -176,10 +189,14 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, state.workspace, openMarkdownFile, getCloudContext, cloudRest]);
+  }, [dispatch, isCloudViewer, state.workspace, openMarkdownFile, getCloudContext, cloudRest]);
 
   const renameEntry = useCallback(async (fromRelativePath: string, toRelativePath: string, updateLinks: boolean) => {
     if (!state.workspace) return;
+    if (isCloudViewer) {
+      dispatch({ type: "SET_STATUS", message: "Viewer access is read-only." });
+      return;
+    }
     try {
       dispatch({ type: "SET_LOADING", isLoading: true });
       const impacted = updateLinks ? await findLinkImpacts(fromRelativePath) : [];
@@ -197,7 +214,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, state.workspace, openMarkdownFile]);
+  }, [dispatch, isCloudViewer, state.workspace, openMarkdownFile]);
 
   const renameCurrentEntry = useCallback(async () => {
     if (!state.workspace || !state.currentRelativePath) return;
@@ -217,6 +234,10 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
 
   const deleteEntry = useCallback(async (relativePath: string) => {
     if (!state.workspace || !relativePath) return;
+    if (isCloudViewer) {
+      dispatch({ type: "SET_STATUS", message: "Viewer access is read-only." });
+      return;
+    }
     const confirmed = await confirm(`Move ${relativePath} to trash?`, { title: "Move to trash" });
     if (!confirmed) return;
     try {
@@ -234,7 +255,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, state.workspace, state.currentRelativePath]);
+  }, [dispatch, isCloudViewer, state.workspace, state.currentRelativePath]);
 
   const deleteCurrentEntry = useCallback(async () => {
     if (!state.currentRelativePath) return;
@@ -253,6 +274,10 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
 
   const restoreTrashItem = useCallback(async (trashId: string) => {
     if (!state.workspace) return;
+    if (isCloudViewer) {
+      dispatch({ type: "SET_STATUS", message: "Viewer access is read-only." });
+      return;
+    }
     try {
       dispatch({ type: "SET_LOADING", isLoading: true });
       // Find the cloud trash ID and relativePath before restoring.
@@ -303,10 +328,14 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, state.workspace]);
+  }, [dispatch, isCloudViewer, state.workspace]);
 
   const emptyTrash = useCallback(async () => {
     if (!state.workspace) return;
+    if (isCloudViewer) {
+      dispatch({ type: "SET_STATUS", message: "Viewer access is read-only." });
+      return;
+    }
     const confirmed = await confirm("Empty trash permanently?", { title: "Empty trash", destructive: true });
     if (!confirmed) return;
     try {
@@ -335,10 +364,14 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, state.workspace]);
+  }, [dispatch, isCloudViewer, state.workspace]);
 
   const permanentDeleteTrash = useCallback(async (trashId: string) => {
     if (!state.workspace) return;
+    if (isCloudViewer) {
+      dispatch({ type: "SET_STATUS", message: "Viewer access is read-only." });
+      return;
+    }
     try {
       // Find the cloud trash ID and relativePath before deleting.
       // Metadata stores cloud items with trashId = `cloud_${id}`, so we must
@@ -386,7 +419,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } catch (error) {
       dispatch({ type: "SET_STATUS", message: String(error) });
     }
-  }, [dispatch, state.workspace]);
+  }, [dispatch, isCloudViewer, state.workspace]);
 
   const exportSite = useCallback(async () => {
     if (!state.workspace) return;
@@ -514,6 +547,10 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
 
   const createFolder = useCallback(async (folderRelativePath: string) => {
     if (!state.workspace) return;
+    if (isCloudViewer) {
+      dispatch({ type: "SET_STATUS", message: "Viewer access is read-only." });
+      return;
+    }
     try {
       dispatch({ type: "SET_LOADING", isLoading: true });
       const workspace = await tauri.createFolder(state.workspace.rootPath, folderRelativePath);
@@ -533,10 +570,14 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, state.workspace, getCloudContext, cloudRest]);
+  }, [dispatch, isCloudViewer, state.workspace, getCloudContext, cloudRest]);
 
   const renameFolder = useCallback(async (fromRelativePath: string, toRelativePath: string) => {
     if (!state.workspace) return;
+    if (isCloudViewer) {
+      dispatch({ type: "SET_STATUS", message: "Viewer access is read-only." });
+      return;
+    }
     try {
       dispatch({ type: "SET_LOADING", isLoading: true });
       const [workspace] = await tauri.renameFolder(state.workspace.rootPath, fromRelativePath, toRelativePath);
@@ -548,10 +589,14 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, state.workspace]);
+  }, [dispatch, isCloudViewer, state.workspace]);
 
   const moveFolder = useCallback(async (fromRelativePath: string, toRelativePath: string) => {
     if (!state.workspace) return;
+    if (isCloudViewer) {
+      dispatch({ type: "SET_STATUS", message: "Viewer access is read-only." });
+      return;
+    }
     try {
       dispatch({ type: "SET_LOADING", isLoading: true });
       const [workspace] = await tauri.moveFolder(state.workspace.rootPath, fromRelativePath, toRelativePath);
@@ -563,10 +608,14 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, state.workspace]);
+  }, [dispatch, isCloudViewer, state.workspace]);
 
   const deleteFolder = useCallback(async (folderRelativePath: string, softDelete = true, skipConfirm = false) => {
     if (!state.workspace) return;
+    if (isCloudViewer) {
+      dispatch({ type: "SET_STATUS", message: "Viewer access is read-only." });
+      return;
+    }
     if (!skipConfirm) {
       const confirmed = await confirm(`Delete folder "${folderRelativePath}" and move all documents to trash?`, { title: "Delete folder", destructive: true });
       if (!confirmed) return;
@@ -587,7 +636,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, state.workspace, state.currentRelativePath]);
+  }, [dispatch, isCloudViewer, state.workspace, state.currentRelativePath]);
 
   const openInitialPath = useCallback(async () => {
     if (!tauri.isAvailable) return;
