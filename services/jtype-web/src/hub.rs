@@ -80,14 +80,13 @@ pub enum WorkspaceEvent {
         previous_role: String,
         new_role: String,
     },
-    #[serde(rename = "document:status-changed", rename_all = "camelCase")]
-    DocumentStatusChanged {
+    #[serde(rename = "document:publish-changed", rename_all = "camelCase")]
+    DocumentPublishChanged {
         workspace_id: String,
         source_session_id: Option<String>,
         relative_path: String,
         document_id: String,
-        status: String,
-        previous_status: String,
+        is_published: bool,
     },
 }
 
@@ -521,15 +520,14 @@ mod tests {
                 "member:role-changed",
             ),
             (
-                WorkspaceEvent::DocumentStatusChanged {
+                WorkspaceEvent::DocumentPublishChanged {
                     workspace_id: "ws1".into(),
                     source_session_id: Some("sess1".into()),
                     relative_path: "notes/hello.md".into(),
                     document_id: "d1".into(),
-                    status: "published".into(),
-                    previous_status: "draft".into(),
+                    is_published: true,
                 },
-                "document:status-changed",
+                "document:publish-changed",
             ),
         ];
 

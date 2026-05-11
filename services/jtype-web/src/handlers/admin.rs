@@ -19,7 +19,8 @@ pub async fn list_users(
 
     let rows = sqlx::query(
         r#"SELECT u.id, u.username, u.role, u.site_title, u.display_name, u.email,
-                  u.disabled_at, u.created_at,
+                  CASE WHEN u.disabled_at IS NULL THEN 1 ELSE 0 END AS is_enabled,
+                  u.created_at,
                   COALESCE(u.storage_budget_bytes, 1073741824) AS storage_budget_bytes,
                   COUNT(DISTINCT wm.workspace_id) AS workspace_count,
                                      CAST(COALESCE(SUM(OCTET_LENGTH(d.content)), 0) AS SIGNED) AS storage_used_bytes
@@ -42,10 +43,7 @@ pub async fn list_users(
             site_title: row.try_get("site_title").unwrap_or_default(),
             display_name: row.try_get("display_name").unwrap_or(None),
             email: row.try_get("email").unwrap_or(None),
-            enabled: row
-                .try_get::<Option<String>, _>("disabled_at")
-                .unwrap_or(None)
-                .is_none(),
+            enabled: row.try_get::<i8, _>("is_enabled").unwrap_or(1) != 0,
             workspace_count: row.try_get("workspace_count").unwrap_or(0),
             storage_used_bytes: row.try_get("storage_used_bytes").unwrap_or(0),
             storage_budget_bytes: row.try_get("storage_budget_bytes").unwrap_or(1_073_741_824),
@@ -66,7 +64,8 @@ pub async fn get_user(
 
     let row = sqlx::query(
         r#"SELECT u.id, u.username, u.role, u.site_title, u.display_name, u.email,
-                  u.disabled_at, u.created_at,
+                  CASE WHEN u.disabled_at IS NULL THEN 1 ELSE 0 END AS is_enabled,
+                  u.created_at,
                   COALESCE(u.storage_budget_bytes, 1073741824) AS storage_budget_bytes,
                   COUNT(DISTINCT wm.workspace_id) AS workspace_count,
                    CAST(COALESCE(SUM(OCTET_LENGTH(d.content)), 0) AS SIGNED) AS storage_used_bytes
@@ -89,10 +88,7 @@ pub async fn get_user(
         site_title: row.try_get("site_title")?,
         display_name: row.try_get("display_name").unwrap_or(None),
         email: row.try_get("email").unwrap_or(None),
-        enabled: row
-            .try_get::<Option<String>, _>("disabled_at")
-            .unwrap_or(None)
-            .is_none(),
+        enabled: row.try_get::<i8, _>("is_enabled").unwrap_or(1) != 0,
         workspace_count: row.try_get("workspace_count")?,
         storage_used_bytes: row.try_get("storage_used_bytes")?,
         storage_budget_bytes: row.try_get("storage_budget_bytes")?,
@@ -254,7 +250,7 @@ pub async fn stats(
         .await?
         .try_get("c")?;
     let storage: i64 =
-        sqlx::query("SELECT COALESCE(SUM(OCTET_LENGTH(content)), 0) AS c FROM documents")
+        sqlx::query("SELECT CAST(COALESCE(SUM(OCTET_LENGTH(content)), 0) AS SIGNED) AS c FROM documents")
             .fetch_one(&state.pool)
             .await?
             .try_get("c")?;

@@ -38,6 +38,12 @@ fn all_migrations() -> Vec<Migration> {
             up: include_str!("../../migrations/0004_workspace_owner_invariant.up.sql"),
             down: include_str!("../../migrations/0004_workspace_owner_invariant.down.sql"),
         },
+        Migration {
+            version: 5,
+            name: "sites",
+            up: include_str!("../../migrations/0005_sites.up.sql"),
+            down: include_str!("../../migrations/0005_sites.down.sql"),
+        },
     ]
 }
 

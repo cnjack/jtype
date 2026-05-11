@@ -240,7 +240,6 @@ pub struct InviteListItem {
 pub struct CloudSaveDocumentRequest {
     pub relative_path: String,
     pub title: Option<String>,
-    pub status: Option<String>,
     pub content: String,
     pub base_content_hash: Option<String>,
     pub base_content: Option<String>,
@@ -251,7 +250,7 @@ pub struct CloudSaveDocumentRequest {
 pub struct CloudDocument {
     pub relative_path: String,
     pub title: String,
-    pub status: String,
+    pub is_published: bool,
     pub content: String,
     pub content_hash: String,
     pub version_id: String,
@@ -264,7 +263,7 @@ pub struct DocumentListItem {
     pub id: String,
     pub relative_path: String,
     pub title: String,
-    pub status: String,
+    pub is_published: bool,
     pub content_hash: String,
     pub updated_clock: i64,
     pub version_id: Option<String>,
@@ -308,18 +307,12 @@ pub struct DocumentVersionResponse {
     pub created_at: String,
 }
 
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct UpdateDocumentStatusRequest {
-    pub status: String,
-}
-
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ManifestDocument {
     pub relative_path: String,
     pub title: String,
-    pub status: String,
+    pub is_published: bool,
     pub content_hash: String,
     pub version_id: String,
     pub updated_clock: i64,
@@ -554,4 +547,81 @@ pub enum TrashOperation {
     },
     #[serde(rename = "empty_trash")]
     EmptyTrash,
+}
+
+// ── Site & Publish ──
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SiteSettingsResponse {
+    pub id: String,
+    pub workspace_id: String,
+    pub name: String,
+    pub footer_html: Option<String>,
+    pub theme: String,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateSiteSettingsRequest {
+    pub name: Option<String>,
+    pub footer_html: Option<String>,
+    pub theme: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PublishedPageItem {
+    pub id: String,
+    pub document_id: String,
+    pub relative_path: String,
+    pub title: String,
+    pub content_hash: String,
+    pub version_id: Option<String>,
+    pub published_at: String,
+    pub updated_at: String,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PublishDocumentResponse {
+    pub document_id: String,
+    pub relative_path: String,
+    pub title: String,
+    pub content_hash: String,
+    pub published_at: String,
+    pub is_published: bool,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PublishBatchRequest {
+    pub document_ids: Vec<String>,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PublishBatchResponse {
+    pub published: Vec<PublishDocumentResponse>,
+    pub failed: Vec<String>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PreviewRequest {
+    pub content: String,
+    pub theme: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PublishStatusResponse {
+    pub document_id: String,
+    pub is_published: bool,
+    pub published_at: Option<String>,
+    pub current_hash: String,
+    pub published_hash: Option<String>,
+    pub has_unpublished_changes: bool,
 }

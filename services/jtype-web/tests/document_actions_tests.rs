@@ -1,6 +1,5 @@
 mod common;
 use axum::http::StatusCode;
-use serde_json::json;
 
 /// Save a document and return its document_id by listing the workspace documents.
 async fn setup_doc(app: axum::Router, token: &str, ws_id: &str, path: &str) -> String {
@@ -24,11 +23,11 @@ async fn setup_doc(app: axum::Router, token: &str, ws_id: &str, path: &str) -> S
 }
 
 // ---------------------------------------------------------------------------
-// Status update tests
+// Publish action tests
 // ---------------------------------------------------------------------------
 
 #[tokio::test]
-async fn update_status_to_published() {
+async fn publish_document_sets_is_published() {
     let (app, _pool) = common::setup().await;
     let (token, _) = common::register_user(app.clone(), &common::uid()).await;
     let ws_id = common::create_workspace(app.clone(), &token, &common::wname()).await;
@@ -37,92 +36,102 @@ async fn update_status_to_published() {
 
     let (status, body) = common::req(
         app,
-        "PUT",
-        &format!("/api/v1/workspaces/{ws_id}/documents/{doc_id}/status"),
+        "POST",
+        &format!("/api/v1/workspaces/{ws_id}/documents/{doc_id}/publish"),
         Some(&token),
-        Some(json!({ "status": "published" })),
+        None,
     )
     .await;
 
     assert_eq!(status, StatusCode::OK);
-    assert_eq!(body["status"].as_str().unwrap(), "published");
+    assert!(body["isPublished"].as_bool().unwrap_or(false));
 }
 
 #[tokio::test]
-async fn update_status_to_archived() {
+async fn unpublish_document_clears_is_published() {
     let (app, _pool) = common::setup().await;
     let (token, _) = common::register_user(app.clone(), &common::uid()).await;
     let ws_id = common::create_workspace(app.clone(), &token, &common::wname()).await;
-    let path = "archive-me.md";
+    let path = "unpub.md";
     let doc_id = setup_doc(app.clone(), &token, &ws_id, path).await;
 
-    let (status, body) = common::req(
-        app,
-        "PUT",
-        &format!("/api/v1/workspaces/{ws_id}/documents/{doc_id}/status"),
-        Some(&token),
-        Some(json!({ "status": "archived" })),
-    )
-    .await;
-
-    assert_eq!(status, StatusCode::OK);
-    assert_eq!(body["status"].as_str().unwrap(), "archived");
-}
-
-#[tokio::test]
-async fn update_status_to_draft() {
-    let (app, _pool) = common::setup().await;
-    let (token, _) = common::register_user(app.clone(), &common::uid()).await;
-    let ws_id = common::create_workspace(app.clone(), &token, &common::wname()).await;
-    let path = "back-to-draft.md";
-    let doc_id = setup_doc(app.clone(), &token, &ws_id, path).await;
-
-    // First publish the document.
+    // First publish.
     common::req(
         app.clone(),
-        "PUT",
-        &format!("/api/v1/workspaces/{ws_id}/documents/{doc_id}/status"),
+        "POST",
+        &format!("/api/v1/workspaces/{ws_id}/documents/{doc_id}/publish"),
         Some(&token),
-        Some(json!({ "status": "published" })),
+        None,
     )
     .await;
 
-    // Then revert to draft.
+    // Then unpublish.
+    let (status, _body) = common::req(
+        app,
+        "DELETE",
+        &format!("/api/v1/workspaces/{ws_id}/documents/{doc_id}/publish"),
+        Some(&token),
+        None,
+    )
+    .await;
+
+    assert_eq!(status, StatusCode::NO_CONTENT);
+}
+
+#[tokio::test]
+async fn get_publish_status_before_publish() {
+    let (app, _pool) = common::setup().await;
+    let (token, _) = common::register_user(app.clone(), &common::uid()).await;
+    let ws_id = common::create_workspace(app.clone(), &token, &common::wname()).await;
+    let path = "status-check.md";
+    let doc_id = setup_doc(app.clone(), &token, &ws_id, path).await;
+
     let (status, body) = common::req(
         app,
-        "PUT",
-        &format!("/api/v1/workspaces/{ws_id}/documents/{doc_id}/status"),
+        "GET",
+        &format!("/api/v1/workspaces/{ws_id}/documents/{doc_id}/publish"),
         Some(&token),
-        Some(json!({ "status": "draft" })),
+        None,
     )
     .await;
 
     assert_eq!(status, StatusCode::OK);
-    assert_eq!(body["status"].as_str().unwrap(), "draft");
+    assert!(!body["isPublished"].as_bool().unwrap_or(true));
 }
 
 #[tokio::test]
-async fn update_status_invalid() {
+async fn get_publish_status_after_publish() {
     let (app, _pool) = common::setup().await;
     let (token, _) = common::register_user(app.clone(), &common::uid()).await;
     let ws_id = common::create_workspace(app.clone(), &token, &common::wname()).await;
-    let path = "invalid-status.md";
+    let path = "pub-status.md";
     let doc_id = setup_doc(app.clone(), &token, &ws_id, path).await;
 
-    let (status, _body) = common::req(
-        app,
-        "PUT",
-        &format!("/api/v1/workspaces/{ws_id}/documents/{doc_id}/status"),
+    common::req(
+        app.clone(),
+        "POST",
+        &format!("/api/v1/workspaces/{ws_id}/documents/{doc_id}/publish"),
         Some(&token),
-        Some(json!({ "status": "review" })),
+        None,
     )
     .await;
 
-    assert_eq!(status, StatusCode::BAD_REQUEST);
+    let (status, body) = common::req(
+        app,
+        "GET",
+        &format!("/api/v1/workspaces/{ws_id}/documents/{doc_id}/publish"),
+        Some(&token),
+        None,
+    )
+    .await;
+
+    assert_eq!(status, StatusCode::OK);
+    assert!(body["isPublished"].as_bool().unwrap_or(false));
+    assert!(body["publishedAt"].as_str().is_some());
 }
 
 #[tokio::test]
-async fn update_status_unauthorized() {
+async fn publish_document_unauthorized() {
     let (app, _pool) = common::setup().await;
     let (token, _) = common::register_user(app.clone(), &common::uid()).await;
     let ws_id = common::create_workspace(app.clone(), &token, &common::wname()).await;
@@ -132,10 +141,10 @@ async fn update_status_unauthorized() {
     // No token provided.
     let (status, _body) = common::req(
         app,
-        "PUT",
-        &format!("/api/v1/workspaces/{ws_id}/documents/{doc_id}/status"),
+        "POST",
+        &format!("/api/v1/workspaces/{ws_id}/documents/{doc_id}/publish"),
         None,
-        Some(json!({ "status": "published" })),
+        None,
     )
     .await;
 
@@ -143,7 +152,7 @@ async fn update_status_unauthorized() {
 }
 
 #[tokio::test]
-async fn update_status_not_found() {
+async fn publish_document_not_found() {
     let (app, _pool) = common::setup().await;
     let (token, _) = common::register_user(app.clone(), &common::uid()).await;
     let ws_id = common::create_workspace(app.clone(), &token, &common::wname()).await;
@@ -152,10 +161,10 @@ async fn update_status_not_found() {
 
     let (status, _body) = common::req(
         app,
-        "PUT",
-        &format!("/api/v1/workspaces/{ws_id}/documents/{nonexistent_id}/status"),
+        "POST",
+        &format!("/api/v1/workspaces/{ws_id}/documents/{nonexistent_id}/publish"),
         Some(&token),
-        Some(json!({ "status": "published" })),
+        None,
     )
     .await;
 

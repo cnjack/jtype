@@ -3,6 +3,7 @@ pub mod error;
 pub mod handlers;
 pub mod hub;
 pub mod middleware;
+pub mod themes;
 pub mod util;
 
 use axum::{
@@ -182,10 +183,6 @@ pub fn build_router_with_hub(
             get(handlers::document::get_document).delete(handlers::document::delete_document),
         )
         .route(
-            "/api/v1/workspaces/:workspace_id/documents/:document_id/status",
-            put(handlers::document::update_status),
-        )
-        .route(
             "/api/v1/workspaces/:workspace_id/documents/:document_id/versions",
             get(handlers::document::list_versions),
         )
@@ -236,6 +233,33 @@ pub fn build_router_with_hub(
         .route(
             "/api/v1/domains/:domain_id/certificate",
             post(handlers::domain::upload_certificate),
+        )
+        // Publish & site settings API
+        .route(
+            "/api/themes",
+            get(handlers::publish::list_themes),
+        )
+        .route(
+            "/api/v1/workspaces/:workspace_id/site",
+            get(handlers::publish::get_site_settings).put(handlers::publish::update_site_settings),
+        )
+        .route(
+            "/api/v1/workspaces/:workspace_id/published",
+            get(handlers::publish::list_published),
+        )
+        .route(
+            "/api/v1/workspaces/:workspace_id/publish-batch",
+            post(handlers::publish::publish_batch),
+        )
+        .route(
+            "/api/v1/workspaces/:workspace_id/preview",
+            post(handlers::publish::preview),
+        )
+        .route(
+            "/api/v1/workspaces/:workspace_id/documents/:document_id/publish",
+            get(handlers::publish::get_publish_status)
+                .post(handlers::publish::publish_document)
+                .delete(handlers::publish::unpublish_document),
         )
         // Public sites
         .route("/u/:site_user", get(handlers::site::user_site_index))
@@ -300,12 +324,8 @@ mod tests {
     }
 
     #[test]
-    fn hides_drafts() {
-        assert_eq!(
-            normalize_status("published", "---\nstatus: draft\n---\n# A"),
-            "draft"
-        );
-        assert_eq!(normalize_status("", "# A"), "published");
+    fn hides_drafts_removed() {
+        // normalize_status removed in migration 0005; is_published flag is used instead
     }
 
     #[test]

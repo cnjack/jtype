@@ -6,6 +6,7 @@ pub mod folder;
 pub mod live;
 pub mod member;
 pub mod oauth;
+pub mod publish;
 pub mod site;
 pub mod sync;
 pub mod trash;

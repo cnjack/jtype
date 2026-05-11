@@ -154,8 +154,8 @@ pub async fn restore_trash_item_core(
     let next_clock = super::document::next_workspace_clock(&mut tx, workspace_id).await?;
 
     sqlx::query(
-        r#"INSERT INTO documents (id, workspace_id, relative_path, title, status, content_hash, content, updated_clock, current_version_id)
-           VALUES (?, ?, ?, ?, 'draft', ?, ?, ?, ?)"#,
+        r#"INSERT INTO documents (id, workspace_id, relative_path, title, content_hash, content, updated_clock, current_version_id)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)"#,
     )
     .bind(&document_id)
     .bind(workspace_id)
@@ -211,7 +211,7 @@ pub async fn restore_trash_item_core(
     Ok(CloudDocument {
         relative_path: final_relative_path,
         title,
-        status: "draft".to_string(),
+        is_published: false,
         content,
         content_hash,
         version_id,

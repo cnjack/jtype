@@ -11,8 +11,8 @@ async fn save_document_creates_new() {
 
     let (status, body) = common::req(
         app,
-        "PUT",
-        &format!("/api/v1/workspaces/{ws_id}/documents"),
+        "POST",
+        &format!("/api/v1/workspaces/{ws_id}/documents/save"),
         Some(&token),
         Some(json!({ "relativePath": "notes.md", "content": "# Hello\n\nWorld" })),
     )
@@ -36,8 +36,8 @@ async fn save_document_updates_existing() {
 
     let (status, body) = common::req(
         app,
-        "PUT",
-        &format!("/api/v1/workspaces/{ws_id}/documents"),
+        "POST",
+        &format!("/api/v1/workspaces/{ws_id}/documents/save"),
         Some(&token),
         Some(json!({ "relativePath": "update.md", "content": "updated content" })),
     )
@@ -57,8 +57,8 @@ async fn save_document_extracts_title_from_h1() {
 
     let (status, body) = common::req(
         app,
-        "PUT",
-        &format!("/api/v1/workspaces/{ws_id}/documents"),
+        "POST",
+        &format!("/api/v1/workspaces/{ws_id}/documents/save"),
         Some(&token),
         Some(json!({ "relativePath": "titled.md", "content": "# My Title\n\nBody" })),
     )
@@ -77,8 +77,8 @@ async fn save_document_with_explicit_title() {
 
     let (status, body) = common::req(
         app,
-        "PUT",
-        &format!("/api/v1/workspaces/{ws_id}/documents"),
+        "POST",
+        &format!("/api/v1/workspaces/{ws_id}/documents/save"),
         Some(&token),
         Some(json!({
             "relativePath": "override.md",
@@ -101,8 +101,8 @@ async fn save_document_unauthorized() {
 
     let (status, _body) = common::req(
         app,
-        "PUT",
-        &format!("/api/v1/workspaces/{ws_id}/documents"),
+        "POST",
+        &format!("/api/v1/workspaces/{ws_id}/documents/save"),
         None,
         Some(json!({ "relativePath": "notes.md", "content": "hello" })),
     )
@@ -373,11 +373,11 @@ async fn save_document_viewer_forbidden() {
     .await;
     assert_eq!(accept_status, StatusCode::OK, "invite accept failed");
 
-    // User2 (viewer) tries to PUT a document
+    // User2 (viewer) tries to save a document
     let (status, _body) = common::req(
         app,
-        "PUT",
-        &format!("/api/v1/workspaces/{ws_id}/documents"),
+        "POST",
+        &format!("/api/v1/workspaces/{ws_id}/documents/save"),
         Some(&token2),
         Some(json!({ "relativePath": "viewer-doc.md", "content": "should fail" })),
     )

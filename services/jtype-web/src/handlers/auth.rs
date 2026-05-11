@@ -60,14 +60,14 @@ pub async fn login(
 ) -> Result<Json<AuthResponse>, AppError> {
     let username = normalize_username(&payload.username)?;
     let row =
-        sqlx::query("SELECT id, password_hash, role, disabled_at FROM users WHERE username = ?")
+        sqlx::query("SELECT id, password_hash, role, CASE WHEN disabled_at IS NOT NULL THEN 1 ELSE 0 END AS is_disabled FROM users WHERE username = ?")
             .bind(&username)
             .fetch_optional(&state.pool)
             .await?
             .ok_or(AppError::Unauthorized)?;
 
-    let disabled_at: Option<String> = row.try_get("disabled_at").unwrap_or(None);
-    if disabled_at.is_some() {
+    let is_disabled: i8 = row.try_get("is_disabled").unwrap_or(0);
+    if is_disabled != 0 {
         return Err(AppError::Forbidden);
     }
 

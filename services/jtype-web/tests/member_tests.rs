@@ -556,7 +556,7 @@ async fn owner_can_transfer_ownership() {
         "POST",
         &format!("/api/v1/workspaces/{ws_id}/transfer"),
         Some(&token1),
-        Some(json!({ "new_owner_user_id": user2_id })),
+        Some(json!({ "newOwnerUserId": user2_id })),
     )
     .await;
     assert_eq!(status, StatusCode::NO_CONTENT);
@@ -600,7 +600,7 @@ async fn non_owner_cannot_transfer() {
         "POST",
         &format!("/api/v1/workspaces/{ws_id}/transfer"),
         Some(&token2),
-        Some(json!({ "new_owner_user_id": user3_id })),
+        Some(json!({ "newOwnerUserId": user3_id })),
     )
     .await;
 
