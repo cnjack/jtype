@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useCallback, useMemo, memo } from 'react'
 import { Menu, MenuButton, MenuItems, MenuItem, Dialog, DialogPanel } from '@headlessui/react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
-import { api, getStoredUsername, setSessionId, type WorkspaceSummary, type DocumentListItem, type FolderListItem, type DomainResponse, type TrashItem, type MemberInfo, type InviteListItem, type InviteResponse } from '../api'
+import { api, getStoredUsername, setSessionId, type WorkspaceSummary, type DocumentListItem, type FolderListItem, type DomainResponse, type TrashItem, type MemberInfo, type InviteListItem, type InviteResponse, type PublishStatusResponse } from '../api'
 import { renderToContainer } from '../lib/markdown'
 import { parseFrontmatter, writeFrontmatter } from '../lib/frontmatter'
 import type { EditorMode } from '../lib/utils'
@@ -58,6 +58,7 @@ export function Workspace() {
   const navigate = useNavigate()
   const location = useLocation()
   const prompt = usePrompt()
+  const confirm = useConfirm()
   const initialSection = ((location.state as { section?: WorkspaceSection } | null)?.section) ?? 'documents'
   const [workspace, setWorkspace] = useState<WorkspaceSummary | null>(null)
   const [workspaces, setWorkspaces] = useState<WorkspaceSummary[]>([])
@@ -85,6 +86,7 @@ export function Workspace() {
   const [editorContextMenu, setEditorContextMenu] = useState<{ x: number; y: number } | null>(null)
   const [treeContextMenu, setTreeContextMenu] = useState<{ node: WebTreeNode; x: number; y: number } | null>(null)
   const [dirty, setDirty] = useState(false)
+  const [publishState, setPublishState] = useState<PublishStatusResponse | null>(null)
   const sidebarCollapsed = false
   const [loadedContentHash, setLoadedContentHash] = useState<string | null>(null)
   const [loadedContent, setLoadedContent] = useState<string | null>(null)
@@ -239,6 +241,12 @@ export function Workspace() {
           api.listDocuments(workspace.id).then(setDocuments)
           api.listTrash(workspace.id).then(setTrashItems)
           break
+        case 'document:publish-changed':
+          api.listDocuments(workspace.id).then(setDocuments)
+          if (selectedDoc && event.documentId === selectedDoc) {
+            api.getPublishStatus(workspace.id, selectedDoc).then(setPublishState).catch(() => undefined)
+          }
+          break
       }
     })
   }, [wsSubscribe, wsSessionId, workspace?.id, selectedDoc, documents, dirty])
@@ -277,11 +285,15 @@ export function Workspace() {
 
   async function openDocument(docId: string) {
     if (!workspaceId) return
-    const doc = await api.getDocument(workspaceId, docId)
+    const [doc, publish] = await Promise.all([
+      api.getDocument(workspaceId, docId),
+      api.getPublishStatus(workspaceId, docId).catch(() => null),
+    ])
     setSelectedDoc(docId)
     setDocContent(doc.content)
     setLoadedContentHash(doc.contentHash)
     setLoadedContent(doc.content)
+    setPublishState(publish)
     setDirty(false)
   }
 
@@ -417,26 +429,47 @@ export function Workspace() {
     await reloadDomains()
   }
 
-  async function setDocumentPublishStatus(status: 'published' | 'draft' | 'archived') {
+  async function publishSelectedDocument() {
+    if (!workspaceId || !selectedDoc) return
+    if (!canEditContent) {
+      setStatusMessage('Viewer access is read-only.')
+      setTimeout(() => setStatusMessage(''), 3000)
+      return
+    }
+    if (dirty) await saveDocument()
+    setSaving(true)
+    try {
+      const result = await api.publishDocument(workspaceId, selectedDoc)
+      setPublishState(await api.getPublishStatus(workspaceId, selectedDoc).catch(() => ({
+        documentId: selectedDoc,
+        isPublished: result.isPublished,
+        publishedAt: result.publishedAt,
+        currentHash: result.contentHash,
+        publishedHash: result.contentHash,
+        hasUnpublishedChanges: false,
+      })))
+      setDocuments(await api.listDocuments(workspaceId))
+      setStatusMessage(result.isPublished ? 'Document published.' : 'Publish state updated.')
+      setTimeout(() => setStatusMessage(''), 3000)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function unpublishSelectedDocument() {
     if (!workspaceId || !selectedDoc) return
     if (!canEditContent) return
     const doc = documents.find(d => d.id === selectedDoc)
     if (!doc) return
-    const nextContent = writeFrontmatter(docContent, { status })
+    const confirmed = await confirm('Unpublish document', `Remove "${doc.relativePath}" from the public site?`, true)
+    if (!confirmed) return
     setSaving(true)
     try {
-      const result = await api.saveDocument(workspaceId, {
-        relativePath: doc.relativePath,
-        content: nextContent,
-        title: parseFrontmatter(nextContent).data.title || undefined,
-        baseContentHash: loadedContentHash || undefined,
-        baseContent: loadedContent || undefined,
-      })
-      setDocContent(nextContent)
-      setLoadedContentHash(result.contentHash)
-      setLoadedContent(nextContent)
-      setDirty(false)
+      await api.unpublishDocument(workspaceId, selectedDoc)
+      setPublishState(await api.getPublishStatus(workspaceId, selectedDoc).catch(() => null))
       setDocuments(await api.listDocuments(workspaceId))
+      setStatusMessage('Document unpublished.')
+      setTimeout(() => setStatusMessage(''), 3000)
     } finally {
       setSaving(false)
     }
@@ -531,8 +564,6 @@ export function Workspace() {
     return () => document.removeEventListener('click', handler)
   }, [treeContextMenu])
 
-  const parsed = parseFrontmatter(docContent)
-  const publishStatus = parsed.data.status || 'draft'
   const selectedDocument = selectedDoc ? documents.find(d => d.id === selectedDoc) ?? null : null
   const documentLocation = selectedDocument?.relativePath && selectedDocument.relativePath.includes('/') ? selectedDocument.relativePath.replace(/\/[^/]+$/, '') : ''
   const fileName = selectedDocument?.relativePath ? selectedDocument.relativePath.split('/').pop() || '' : ''
@@ -542,6 +573,12 @@ export function Workspace() {
     return ids.includes(selectedDoc)
   })() : false
   const publicUrl = workspace ? `/u/${getStoredUsername() || 'me'}/${workspace.slug}` : ''
+  const documentPublicPath = selectedDocument
+    ? selectedDocument.relativePath.replace(/\\/g, '/').replace(/\.(md|markdown|mdown|mkd)$/i, '')
+    : ''
+  const documentPublicUrl = publicUrl && documentPublicPath ? `${publicUrl}/${documentPublicPath}` : publicUrl
+  const isPublished = publishState?.isPublished ?? selectedDocument?.isPublished ?? false
+  const hasUnpublishedChanges = Boolean(isPublished && (dirty || publishState?.hasUnpublishedChanges))
   const boundDomains = workspace ? domains.filter(domain => domain.workspaceId === workspace.id) : []
   const availableDomains = workspace ? domains.filter(domain => !domain.workspaceId || domain.workspaceId === workspace.id) : []
   const verifiedDomains = boundDomains.filter(domain => domain.status === 'verified')
@@ -699,7 +736,35 @@ export function Workspace() {
                 </div>
                 <div className="flex shrink-0 items-center gap-1">
                   <span className={`status-chip ${dirty ? 'status-chip-warning' : 'status-chip-neutral'}`}>{dirty ? 'Unsaved' : 'Saved'}</span>
-                  <span className="status-chip status-chip-neutral">{publishStatus}</span>
+                  {isPublished && !hasUnpublishedChanges && <span className="status-chip status-chip-success">Published</span>}
+                  {selectedDoc && canEditContent && (
+                    <button
+                      className={`sidebar-action px-3 disabled:opacity-50 ${
+                        hasUnpublishedChanges
+                          ? 'bg-amber-500 text-white hover:bg-amber-600 hover:text-white'
+                          : !isPublished
+                            ? 'bg-[#008884] text-white hover:bg-[#006f6b] hover:text-white'
+                            : ''
+                      }`}
+                      type="button"
+                      title={hasUnpublishedChanges ? 'Republish' : isPublished ? 'Publish current version' : 'Publish'}
+                      disabled={saving}
+                      onClick={() => { void publishSelectedDocument() }}
+                    >
+                      {hasUnpublishedChanges ? <ArrowPathIcon className="h-4 w-4" /> : <ArrowUpTrayIcon className="h-4 w-4" />}
+                    </button>
+                  )}
+                  {isPublished && canEditContent && (
+                    <button
+                      className="editor-tool h-8 w-8 px-0 hover:text-red-700"
+                      type="button"
+                      title="Unpublish"
+                      disabled={saving}
+                      onClick={() => { void unpublishSelectedDocument() }}
+                    >
+                      <LinkSlashIcon className="h-4 w-4" />
+                    </button>
+                  )}
                   {!canEditContent && <span className="status-chip status-chip-neutral">Read-only</span>}
                   {selectedDoc && (
                     <button
@@ -820,16 +885,16 @@ export function Workspace() {
                       <button className="subtle-button aspect-square px-0" type="button" title="Hide" onClick={() => setInfoPanel(false)}><XMarkIcon className="h-4 w-4" /></button>
                     </div>
                     {selectedDocument && (
-                      <section className="document-info-section">
-                        <p className="text-sm font-semibold text-stone-950">Publish</p>
-                        <p className="mt-1 text-xs text-stone-500">Current status: {publishStatus}</p>
-                        <div className="mt-3">
-                          <StatusSelect
-                            value={publishStatus}
-                            onChange={(value) => setDocumentPublishStatus(value as 'draft' | 'published' | 'archived')}
-                          />
-                        </div>
-                      </section>
+                      <WebPublishSection
+                        publishState={publishState}
+                        isPublished={isPublished}
+                        hasUnpublishedChanges={Boolean(hasUnpublishedChanges)}
+                        publishedUrl={documentPublicUrl}
+                        canEdit={canEditContent}
+                        saving={saving}
+                        onPublish={publishSelectedDocument}
+                        onUnpublish={unpublishSelectedDocument}
+                      />
                     )}
                     <WebPropertiesSection
                       content={docContent}
@@ -1970,7 +2035,7 @@ function EditorToolbarButton({ title, disabled = false, onClick, children }: { t
 
 function WebPropertiesSection({ content, onChange }: { content: string; onChange: (c: string) => void }) {
   const parsed = parseFrontmatter(content)
-  const fields = ['title', 'description', 'tags', 'slug', 'status']
+  const fields = ['title', 'description', 'tags', 'slug']
 
   const updateField = (field: string, value: string) => {
     const newContent = writeFrontmatter(content, { [field]: value.trim() })
@@ -1985,19 +2050,12 @@ function WebPropertiesSection({ content, onChange }: { content: string; onChange
         {fields.map((field) => (
           <label key={field} className="block">
             <span className="field-label">{field}</span>
-            {field === 'status' ? (
-              <StatusSelect
-                value={parsed.data[field] ?? ''}
-                onChange={(value) => updateField(field, value)}
-              />
-            ) : (
-              <input
-                className="field-input"
-                defaultValue={parsed.data[field] ?? ''}
-                aria-label={field}
-                onBlur={(e) => updateField(field, e.target.value)}
-              />
-            )}
+            <input
+              className="field-input"
+              defaultValue={parsed.data[field] ?? ''}
+              aria-label={field}
+              onBlur={(e) => updateField(field, e.target.value)}
+            />
           </label>
         ))}
       </div>
@@ -2005,41 +2063,66 @@ function WebPropertiesSection({ content, onChange }: { content: string; onChange
   )
 }
 
-function StatusSelect({ value, onChange }: { value: string; onChange: (value: string) => void }) {
-  const options = [
-    { label: '—', value: '' },
-    { label: 'Draft', value: 'draft' },
-    { label: 'Published', value: 'published' },
-    { label: 'Archived', value: 'archived' },
-  ]
-  const active = options.find(o => o.value === value) ?? options[0]!
-
+function WebPublishSection({
+  publishState,
+  isPublished,
+  hasUnpublishedChanges,
+  publishedUrl,
+  canEdit,
+  saving,
+  onPublish,
+  onUnpublish,
+}: {
+  publishState: PublishStatusResponse | null
+  isPublished: boolean
+  hasUnpublishedChanges: boolean
+  publishedUrl: string
+  canEdit: boolean
+  saving: boolean
+  onPublish: () => Promise<void>
+  onUnpublish: () => Promise<void>
+}) {
   return (
-    <Menu as="div" className="relative mt-1 w-full">
-      <MenuButton className="compact-select flex w-full items-center justify-between text-left">
-        <span>{active.label}</span>
-        <ChevronDownIcon className="h-3 w-3 text-stone-400" />
-      </MenuButton>
-      <MenuItems
-        transition
-        className="absolute left-0 z-50 mt-1 w-full origin-top rounded-lg border border-black/[0.06] bg-white p-1 shadow-lg shadow-stone-900/10 outline-none transition focus:outline-none data-[closed]:scale-95 data-[closed]:opacity-0"
-      >
-        {options.map((option) => (
-          <MenuItem key={option.value}>
-            {({ focus }) => (
-              <button
-                className={`flex w-full items-center rounded-md px-3 py-2 text-sm transition ${
-                  focus ? 'bg-[#e8f6f2] text-brand' : 'text-stone-700'
-                } ${active.value === option.value ? 'font-semibold' : ''}`}
-                onClick={() => onChange(option.value)}
-              >
-                {option.label}
-              </button>
-            )}
-          </MenuItem>
-        ))}
-      </MenuItems>
-    </Menu>
+    <section className="document-info-section">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm font-semibold text-stone-950">Publish</p>
+        <span className={`status-chip ${isPublished ? (hasUnpublishedChanges ? 'status-chip-warning' : 'status-chip-success') : 'status-chip-neutral'}`}>
+          {isPublished ? (hasUnpublishedChanges ? 'Changed' : 'Published') : 'Not published'}
+        </span>
+      </div>
+      {publishState?.publishedAt && (
+        <p className="mt-2 text-xs text-stone-500">Published {new Date(publishState.publishedAt).toLocaleString()}</p>
+      )}
+      {hasUnpublishedChanges && (
+        <p className="mt-2 text-xs text-amber-700">The public snapshot is behind the current document.</p>
+      )}
+      {isPublished && (
+        <a className="mt-3 block truncate text-xs font-semibold text-teal-700" href={publishedUrl} target="_blank" rel="noreferrer">
+          View public page
+        </a>
+      )}
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <button
+          className={`sidebar-action ${hasUnpublishedChanges ? 'bg-amber-500 text-white hover:bg-amber-600 hover:text-white' : ''}`}
+          type="button"
+          title={hasUnpublishedChanges ? 'Republish' : 'Publish'}
+          disabled={!canEdit || saving}
+          onClick={() => { void onPublish() }}
+        >
+          {hasUnpublishedChanges ? <ArrowPathIcon className="h-4 w-4" /> : <ArrowUpTrayIcon className="h-4 w-4" />}
+        </button>
+        <button
+          className="sidebar-action hover:text-red-700"
+          type="button"
+          title="Unpublish"
+          disabled={!canEdit || saving || !isPublished}
+          onClick={() => { void onUnpublish() }}
+        >
+          <LinkSlashIcon className="h-4 w-4" />
+        </button>
+      </div>
+      <p className="mt-3 text-xs text-stone-500">Publishing uses a server snapshot; frontmatter status is treated as user metadata.</p>
+    </section>
   )
 }
 
@@ -2175,7 +2258,7 @@ function allFolderPaths(nodes: WebTreeNode[]): Set<string> {
 function readFavorites(workspaceId?: string): DocumentListItem[] {
   const key = `web-favorites:${workspaceId || 'global'}`
   const ids: string[] = JSON.parse(localStorage.getItem(key) || '[]')
-  return ids.map(id => ({ id, relativePath: id, title: '', status: 'draft', contentHash: '', updatedClock: 0, versionId: null }))
+  return ids.map(id => ({ id, relativePath: id, title: '', isPublished: false, contentHash: '', updatedClock: 0, versionId: null }))
 }
 
 function toggleFavoriteDoc(docId: string, workspaceId?: string) {
@@ -2620,6 +2703,9 @@ const WebTreeNodeRow = memo(function WebTreeNodeRow({
           {isFolder ? <FolderIcon className="h-3.5 w-3.5" /> : <DocumentTextIcon className="h-3.5 w-3.5" />}
         </span>
         <span className={`truncate ${isFolder ? 'font-semibold text-[#4b5753]' : ''}`}>{node.name}</span>
+        {!isFolder && node.doc?.isPublished && (
+          <span className="ml-auto h-1.5 w-1.5 shrink-0 rounded-full bg-[#008884]" title="Published" />
+        )}
       </button>
       {isFolder && isExpanded && node.children.length > 0 && (
         <ul className="mt-0.5 space-y-0.5">

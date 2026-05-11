@@ -237,7 +237,6 @@ export function useCloudSync() {
             return {
               relativePath: d.relativePath,
               title: d.title,
-              status: d.status,
               content: d.content,
               baseContentHash: baseHash,
               baseContent: base,

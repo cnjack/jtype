@@ -7,7 +7,8 @@ import { basename, normalizePath } from "../../lib/utils";
 import { useCommandsList } from "../../app/App";
 import { addMarkdownTableColumn, addMarkdownTableRow, formatMarkdownTable, insertBlockAtSafeCursor, insertOrEditTable } from "../../hooks/useCommands";
 import { useEagerSync } from "../../hooks/useEagerSync";
-import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/react";
+import { useConfirm } from "../modals/ConfirmDialogContext";
+import { httpRequest } from "../../lib/http";
 import type { EditorMode } from "../../lib/types";
 import {
   BoldIcon,
@@ -24,23 +25,36 @@ import {
   InformationCircleIcon,
   ArrowsPointingOutIcon,
   XMarkIcon,
-  ShieldCheckIcon,
   CheckCircleIcon,
   StarIcon,
   TrashIcon,
+  ArrowUpTrayIcon,
+  ArrowPathIcon,
+  LinkSlashIcon,
 } from "@heroicons/react/24/outline";
+
+type PublishStatusResponse = {
+  documentId: string;
+  isPublished: boolean;
+  publishedAt: string | null;
+  currentHash: string;
+  publishedHash: string | null;
+  hasUnpublishedChanges: boolean;
+};
 
 export function EditorShell() {
   const state = useAppState();
   const dispatch = useAppDispatch();
   const fs = useFileSystem();
   const commands = useCommandsList();
+  const confirm = useConfirm();
   const { pushSingleDocument } = useEagerSync();
   const editorRef = useRef<HTMLTextAreaElement>(null);
   const previewRef = useRef<HTMLElement>(null);
   const isSyncingScroll = useRef(false);
   const previewTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
+  const [publishState, setPublishState] = useState<PublishStatusResponse | null>(null);
 
   useEffect(() => {
     if (editorRef.current) {
@@ -80,8 +94,6 @@ export function EditorShell() {
   };
 
   const fileStateLabel = state.isDirty ? "Unsaved changes" : state.currentPath ? "Saved" : "Ready";
-  const parsed = isMarkdown ? parseFrontmatter(state.editorContent) : null;
-  const publishStatus = state.currentPath && parsed ? parsed.data.status || (parsed.data.publish ? "published" : "draft") : "";
   const currentVaultSettings = state.workspace ? state.vaultSettings[state.workspace.rootPath] : undefined;
   const currentVaultBinding = state.workspace
     ? state.vaultBindings.find((binding) => binding.localVaultPath === state.workspace?.rootPath)
@@ -89,6 +101,14 @@ export function EditorShell() {
   const cloudSyncEnabled = Boolean(currentVaultBinding && currentVaultSettings?.cloudSyncEnabled !== false);
   const isCloudViewer = Boolean(currentVaultBinding?.workspaceRole === "viewer" && currentVaultSettings?.cloudSyncEnabled !== false);
   const canEditMarkdown = isMarkdown && !isCloudViewer;
+  const canPublishToCloud = Boolean(isMarkdown && state.mode === "workspace" && currentVaultBinding && state.syncToken && state.cloudProfile?.token && currentVaultSettings?.cloudSyncEnabled !== false);
+  const isPublished = Boolean(publishState?.isPublished);
+  const hasUnpublishedChanges = Boolean(isPublished && (state.isDirty || publishState?.hasUnpublishedChanges));
+  const cloudWs = currentVaultBinding ? state.cloudWorkspaces.find((w) => w.id === currentVaultBinding.workspaceId) : undefined;
+  const wsSlug = cloudWs?.slug || currentVaultBinding?.workspaceSlug || "";
+  const publishedUrl = (state.syncSiteUrl || state.cloudProfile?.siteUrl) && wsSlug && state.currentRelativePath
+    ? `${(state.syncSiteUrl || state.cloudProfile?.siteUrl || "").replace(/\/$/, "")}/${wsSlug}/${normalizePath(state.currentRelativePath).replace(/\.(md|markdown|mdown|mkd)$/i, "")}`
+    : "";
 
   const handleInput = useCallback(() => {
     if (isCloudViewer) return;
@@ -132,6 +152,103 @@ export function EditorShell() {
     document.addEventListener("click", handler);
     return () => document.removeEventListener("click", handler);
   }, [contextMenu]);
+
+  const cloudPublishRequest = useCallback(async <T,>(path: string, init: RequestInit = {}) => {
+    if (!currentVaultBinding || !state.syncToken || !state.cloudProfile?.token) return null;
+    const serviceUrl = (state.serviceUrl || state.cloudProfile?.serverUrl || "http://localhost:13345").trim().replace(/\/$/, "");
+    const response = await httpRequest(`${serviceUrl}/api/v1/workspaces/${currentVaultBinding.workspaceId}${path}`, {
+      ...init,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${state.syncToken}`,
+        "x-device-id": state.cloudProfile?.deviceId ?? "desktop",
+        "x-client-type": "desktop",
+        ...(state.wsSessionId ? { "x-session-id": state.wsSessionId } : {}),
+        ...(init.headers || {}),
+      },
+    });
+    if (!response.ok) throw new Error(await response.text());
+    if (response.status === 204) return null;
+    return (await response.json()) as T;
+  }, [currentVaultBinding, state.cloudProfile, state.serviceUrl, state.syncToken, state.wsSessionId]);
+
+  const findCloudDocumentId = useCallback(async () => {
+    if (!state.currentRelativePath) return "";
+    const docs = await cloudPublishRequest<Array<{ id: string; relativePath: string }>>("/documents");
+    const relativePath = normalizePath(state.currentRelativePath);
+    return docs?.find((doc) => normalizePath(doc.relativePath) === relativePath)?.id ?? "";
+  }, [cloudPublishRequest, state.currentRelativePath]);
+
+  const refreshPublishState = useCallback(async () => {
+    if (!canPublishToCloud || !state.currentRelativePath) {
+      setPublishState(null);
+      return;
+    }
+    try {
+      const documentId = await findCloudDocumentId();
+      if (!documentId) {
+        setPublishState(null);
+        return;
+      }
+      const next = await cloudPublishRequest<PublishStatusResponse>(`/documents/${documentId}/publish`);
+      setPublishState(next);
+    } catch {
+      setPublishState(null);
+    }
+  }, [canPublishToCloud, cloudPublishRequest, findCloudDocumentId, state.currentRelativePath]);
+
+  useEffect(() => {
+    void refreshPublishState();
+  }, [refreshPublishState]);
+
+  const publishCurrentDocument = useCallback(async () => {
+    if (!canPublishToCloud || !state.currentRelativePath) {
+      dispatch({ type: "SET_STATUS", message: "Connect this vault to a cloud workspace before publishing." });
+      return;
+    }
+    try {
+      dispatch({ type: "SET_LOADING", isLoading: true });
+      const relativePath = state.currentRelativePath;
+      const content = state.editorContent;
+      if (state.isDirty) await fs.saveCurrentFile();
+      await pushSingleDocument(relativePath, content);
+      const documentId = await findCloudDocumentId();
+      if (!documentId) throw new Error("Sync this document before publishing.");
+      const result = await cloudPublishRequest<{ isPublished: boolean; publishedAt: string; contentHash: string }>(`/documents/${documentId}/publish`, { method: "POST", body: "{}" });
+      const next = await cloudPublishRequest<PublishStatusResponse>(`/documents/${documentId}/publish`);
+      setPublishState(next ?? (result ? {
+        documentId,
+        isPublished: result.isPublished,
+        publishedAt: result.publishedAt,
+        currentHash: result.contentHash,
+        publishedHash: result.contentHash,
+        hasUnpublishedChanges: false,
+      } : null));
+      dispatch({ type: "SET_STATUS", message: "Document published." });
+    } catch (error) {
+      dispatch({ type: "SET_STATUS", message: String(error) });
+    } finally {
+      dispatch({ type: "SET_LOADING", isLoading: false });
+    }
+  }, [canPublishToCloud, cloudPublishRequest, dispatch, findCloudDocumentId, fs, pushSingleDocument, state.currentRelativePath, state.editorContent, state.isDirty]);
+
+  const unpublishCurrentDocument = useCallback(async () => {
+    if (!canPublishToCloud || !state.currentRelativePath) return;
+    const ok = await confirm("Remove this document from the public site?", { destructive: true, confirmLabel: "Unpublish" });
+    if (!ok) return;
+    try {
+      dispatch({ type: "SET_LOADING", isLoading: true });
+      const documentId = await findCloudDocumentId();
+      if (!documentId) throw new Error("Cloud document not found.");
+      await cloudPublishRequest(`/documents/${documentId}/publish`, { method: "DELETE" });
+      await refreshPublishState();
+      dispatch({ type: "SET_STATUS", message: "Document unpublished." });
+    } catch (error) {
+      dispatch({ type: "SET_STATUS", message: String(error) });
+    } finally {
+      dispatch({ type: "SET_LOADING", isLoading: false });
+    }
+  }, [canPublishToCloud, cloudPublishRequest, confirm, dispatch, findCloudDocumentId, refreshPublishState, state.currentRelativePath]);
 
   useEffect(() => {
     if (!state.currentPath || state.currentKind !== "markdown") return;
@@ -206,7 +323,35 @@ export function EditorShell() {
         </div>
         <div className="flex shrink-0 items-center gap-1">
           <span id="file-state" className={`status-chip ${state.isDirty ? "status-chip-warning" : "status-chip-neutral"}`}>{fileStateLabel}</span>
-          {isMarkdown && state.mode === "workspace" && <span className="status-chip status-chip-neutral">{publishStatus}</span>}
+          {isPublished && !hasUnpublishedChanges && <span className="status-chip status-chip-success">Published</span>}
+          {canPublishToCloud && canEditMarkdown && (
+            <button
+              className={`sidebar-action px-3 disabled:opacity-50 ${
+                hasUnpublishedChanges
+                  ? "bg-amber-500 text-white hover:bg-amber-600 hover:text-white"
+                  : !isPublished
+                    ? "bg-[#008884] text-white hover:bg-[#006f6b] hover:text-white"
+                    : ""
+              }`}
+              type="button"
+              title={hasUnpublishedChanges ? "Republish" : isPublished ? "Publish current version" : "Publish"}
+              disabled={state.isLoading}
+              onClick={() => { void publishCurrentDocument(); }}
+            >
+              {hasUnpublishedChanges ? <ArrowPathIcon className="h-4 w-4" /> : <ArrowUpTrayIcon className="h-4 w-4" />}
+            </button>
+          )}
+          {isPublished && canEditMarkdown && (
+            <button
+              className="editor-tool h-8 w-8 px-0 hover:text-red-700"
+              type="button"
+              title="Unpublish"
+              disabled={state.isLoading}
+              onClick={() => { void unpublishCurrentDocument(); }}
+            >
+              <LinkSlashIcon className="h-4 w-4" />
+            </button>
+          )}
           {cloudSyncEnabled && state.syncSiteUrl && isMarkdown && state.mode === "workspace" && <span className="status-chip status-chip-info">Synced</span>}
           {isCloudViewer && <span className="status-chip status-chip-neutral">Read-only</span>}
           {state.activeConflicts.length > 0 && (
@@ -339,7 +484,18 @@ export function EditorShell() {
             </div>
             <PropertiesSection />
             <OutlineSection />
-            {state.currentKind === "markdown" && <PublishSection />}
+            {state.currentKind === "markdown" && (
+              <PublishSection
+                publishState={publishState}
+                isPublished={isPublished}
+                hasUnpublishedChanges={hasUnpublishedChanges}
+                publishedUrl={publishedUrl}
+                canPublish={canPublishToCloud && canEditMarkdown}
+                isLoading={state.isLoading}
+                onPublish={publishCurrentDocument}
+                onUnpublish={unpublishCurrentDocument}
+              />
+            )}
             <LinksSection />
           </aside>
         )}
@@ -389,8 +545,8 @@ function PropertiesSection() {
     );
   }
   const parsed = parseFrontmatter(state.editorContent);
-  const basicFields = ["title", "description", "tags", "slug", "status"];
-  const advancedFields = ["publish", "createdAt", "updatedAt"];
+  const basicFields = ["title", "description", "tags", "slug"];
+  const advancedFields = ["createdAt", "updatedAt"];
 
   const updateField = (field: string, value: string) => {
     if (readOnly) return;
@@ -422,9 +578,7 @@ function PropertyField({ field, value, disabled, onUpdate }: { field: string; va
   return (
     <label className="block">
       <span className="field-label">{field}</span>
-      {field === "status" ? (
-        <StatusDropdown value={value} disabled={disabled} onChange={(v) => onUpdate(field, v)} />
-      ) : field === "description" ? (
+      {field === "description" ? (
         <textarea
           className="field-textarea"
           defaultValue={value}
@@ -480,35 +634,57 @@ function OutlineSection() {
   );
 }
 
-function PublishSection() {
-  const state = useAppState();
-  const commands = useCommandsList();
-  const parsed = state.currentKind === "markdown" ? parseFrontmatter(state.editorContent) : null;
-  const status = parsed?.data.status || "draft";
-  const slug = parsed?.data.slug || "";
-  const binding = state.vaultBindings.find((b) => b.localVaultPath === state.workspace?.rootPath);
-  const cloudWs = binding ? state.cloudWorkspaces.find((w) => w.id === binding.workspaceId) : undefined;
-  const wsSlug = cloudWs?.slug || binding?.workspaceSlug || "";
-  const publishedUrl = state.syncSiteUrl && wsSlug && state.currentRelativePath
-    ? `${state.syncSiteUrl.replace(/\/$/, "")}/${wsSlug}/${normalizePath(state.currentRelativePath).replace(/\.(md|markdown|mdown|mkd)$/i, "")}`
-    : "";
+function PublishSection({
+  publishState,
+  isPublished,
+  hasUnpublishedChanges,
+  publishedUrl,
+  canPublish,
+  isLoading,
+  onPublish,
+  onUnpublish,
+}: {
+  publishState: PublishStatusResponse | null;
+  isPublished: boolean;
+  hasUnpublishedChanges: boolean;
+  publishedUrl: string;
+  canPublish: boolean;
+  isLoading: boolean;
+  onPublish: () => Promise<void>;
+  onUnpublish: () => Promise<void>;
+}) {
   return (
     <section id="publish-panel" className="document-info-section">
-      <p className="text-sm font-semibold text-stone-950">Publish flow</p>
-      <p className="mt-1 text-xs text-stone-500">Status: {status}</p>
-      {slug && <p className="text-xs text-stone-500">Slug: {slug}</p>}
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm font-semibold text-stone-950">Publish</p>
+        <span className={`status-chip ${isPublished ? (hasUnpublishedChanges ? "status-chip-warning" : "status-chip-success") : "status-chip-neutral"}`}>
+          {isPublished ? (hasUnpublishedChanges ? "Changed" : "Published") : "Not published"}
+        </span>
+      </div>
+      {publishState?.publishedAt && (
+        <p className="mt-2 text-xs text-stone-500">Published {new Date(publishState.publishedAt).toLocaleString()}</p>
+      )}
+      {hasUnpublishedChanges && (
+        <p className="mt-2 text-xs text-amber-700">The public snapshot is behind the current document.</p>
+      )}
       <div className="mt-3 grid grid-cols-2 gap-2">
-        <button className="sidebar-action" type="button" title="Run checks" onClick={() => {
-          const cmd = commands.find((c) => c.id === "publish.check");
-          if (cmd) cmd.run();
-        }}>
-          <ShieldCheckIcon className="h-4 w-4" />
+        <button
+          className={`sidebar-action ${hasUnpublishedChanges ? "bg-amber-500 text-white hover:bg-amber-600 hover:text-white" : ""}`}
+          type="button"
+          title={hasUnpublishedChanges ? "Republish" : "Publish"}
+          disabled={!canPublish || isLoading}
+          onClick={() => { void onPublish(); }}
+        >
+          {hasUnpublishedChanges ? <ArrowPathIcon className="h-4 w-4" /> : <ArrowUpTrayIcon className="h-4 w-4" />}
         </button>
-        <button className="sidebar-action" type="button" title="Export preview" onClick={() => {
-          const cmd = commands.find((c) => c.id === "publish.export");
-          if (cmd) cmd.run();
-        }}>
-          <EyeIcon className="h-4 w-4" />
+        <button
+          className="sidebar-action hover:text-red-700"
+          type="button"
+          title="Unpublish"
+          disabled={!canPublish || isLoading || !isPublished}
+          onClick={() => { void onUnpublish(); }}
+        >
+          <LinkSlashIcon className="h-4 w-4" />
         </button>
       </div>
       {publishedUrl && (
@@ -521,47 +697,8 @@ function PublishSection() {
           View published page
         </a>
       )}
+      <p className="mt-3 text-xs text-stone-500">Publishing uses a cloud snapshot; frontmatter status is treated as user metadata.</p>
     </section>
-  );
-}
-
-function StatusDropdown({ value, disabled, onChange }: { value: string; disabled: boolean; onChange: (value: string) => void }) {
-  const options = [
-    { label: "—", value: "" },
-    { label: "Draft", value: "draft" },
-    { label: "Published", value: "published" },
-    { label: "Archived", value: "archived" },
-  ];
-  const active = options.find((o) => o.value === value) || options[0];
-
-  return (
-    <Menu as="div" className="relative mt-1 w-full">
-      <MenuButton className="compact-select flex w-full items-center justify-between text-left disabled:opacity-60" disabled={disabled}>
-        <span>{active.label}</span>
-        <svg className="h-3 w-3 text-stone-400" viewBox="0 0 20 20" fill="currentColor">
-          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-        </svg>
-      </MenuButton>
-      <MenuItems
-        transition
-        className="absolute left-0 z-50 mt-1 w-full origin-top rounded-lg border border-black/[0.06] bg-white p-1 shadow-lg shadow-stone-900/10 outline-none transition focus:outline-none data-[closed]:scale-95 data-[closed]:opacity-0"
-      >
-        {options.map((option) => (
-          <MenuItem key={option.value}>
-            {({ focus }) => (
-              <button
-                className={`flex w-full items-center rounded-md px-3 py-2 text-sm transition ${
-                  focus ? "bg-[#e8f6f2] text-[#006f6b]" : "text-stone-700"
-                } ${active.value === option.value ? "font-semibold" : ""}`}
-                onClick={() => onChange(option.value)}
-              >
-                {option.label}
-              </button>
-            )}
-          </MenuItem>
-        ))}
-      </MenuItems>
-    </Menu>
   );
 }
 

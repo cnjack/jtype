@@ -8,7 +8,7 @@ import { useConfirm } from "../components/modals/ConfirmDialogContext";
 import { tauri } from "../lib/tauri";
 import { httpRequest } from "../lib/http";
 import { basename, isMarkdownPath, relativePathFromWorkspace, normalizePath } from "../lib/utils";
-import { parseFrontmatter, writeFrontmatter, titleFromMarkdown } from "../lib/frontmatter";
+import { writeFrontmatter, titleFromMarkdown } from "../lib/frontmatter";
 import type { RecentItem } from "../lib/types";
 import { markdownNodes, extractMarkdownLinks } from "../lib/utils";
 import { appStorage } from "../lib/storage";
@@ -181,7 +181,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
       if (tauri.isAvailable && getCloudContext()) {
         try {
           const content = await tauri.readFile(`${workspace.rootPath}/${trimmed}`);
-          await cloudRest("/documents/save", "POST", { relativePath: trimmed, title: "", status: "", content });
+          await cloudRest("/documents/save", "POST", { relativePath: trimmed, title: "", content });
         } catch { /* non-critical */ }
       }
     } catch (error) {
@@ -480,7 +480,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     if (!state.currentPath || state.currentKind !== "markdown") return;
     const current = state.editorContent;
     const title = titleFromMarkdown(current, basename(state.currentPath).replace(/\.(md|markdown|mdown|mkd)$/i, ""));
-    const next = writeFrontmatter(current, { title, status: parseFrontmatter(current).data.status || "draft" });
+    const next = writeFrontmatter(current, { title });
     const proposal: AICommandProposal = {
       id: "proposal.titleFrontmatter",
       name: "Propose title frontmatter",
