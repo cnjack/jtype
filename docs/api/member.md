@@ -2,6 +2,8 @@
 
 Workspace 成员管理: 邀请、加入、角色变更、移除、离开、所有权转移。
 
+Role invariant: every workspace should have one active `owner`. If historical data has active `admin` members but no active `owner`, migration/seed repair promotes the first active admin to `owner` and syncs `workspaces.owner_user_id`.
+
 ---
 
 ## REST API
@@ -30,11 +32,11 @@ Workspace 成员管理: 邀请、加入、角色变更、移除、离开、所�
 变更成员角色。
 
 - **Auth**: bearer
-- **Required role**: `owner`
+- **Required role**: `owner` / `admin`
 - **Request**: `{ role: "admin" | "editor" | "viewer" }`
-- **Constraints**: owner 不能改自己角色
+- **Constraints**: cannot change own role; cannot set `owner`; admin cannot change an `owner` or another `admin`
 - **Response**: member object
-- **WS 事件**: 应发送 `member:role-changed` (**⚠️ 当前缺失**)
+- **WS 事件**: broadcasts `member:role-changed` when the role changes
 
 ### `POST /api/v1/workspaces/:workspace_id/leave`
 
@@ -55,7 +57,7 @@ Workspace 成员管理: 邀请、加入、角色变更、移除、离开、所�
 - **Request**: `{ newOwnerUserId: string }`
 - **Semantics**: 目标用户变为 `owner`, 原 owner 变为 `admin`
 - **Response**: `204 No Content`
-- **WS 事件**: 应发送 `member:role-changed` (双方角色变化) (**⚠️ 当前缺失**)
+- **WS 事件**: broadcasts two `member:role-changed` events
 
 ---
 
@@ -254,7 +256,7 @@ POST /api/v1/workspaces/:id/leave
 
 ---
 
-### `member:role-changed` ⚠️ NEW
+### `member:role-changed`
 
 成员角色被变更。
 

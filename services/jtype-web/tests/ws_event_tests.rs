@@ -52,6 +52,25 @@ fn drain_events(
     events
 }
 
+async fn subscribe_for_test(
+    hub: &jtype_web::hub::ConnectionHub,
+    workspace_id: &str,
+) -> (
+    String,
+    tokio::sync::mpsc::Receiver<jtype_web::hub::WorkspaceEvent>,
+) {
+    let session_id = format!("test-{}", uuid::Uuid::new_v4());
+    let (tx, rx) = tokio::sync::mpsc::channel(256);
+    hub.register(
+        session_id.clone(),
+        format!("test-user-{}", uuid::Uuid::new_v4()),
+        vec![workspace_id.to_string()],
+        tx,
+    )
+    .await;
+    (session_id, rx)
+}
+
 // ══════════════════════════════════════════════════════════════════════════════
 // WORKSPACE EVENTS
 // ══════════════════════════════════════════════════════════════════════════════
@@ -62,7 +81,7 @@ async fn update_workspace_publishes_workspace_updated() {
     let (token, _) = common::register_user(app.clone(), &common::uid()).await;
     let ws_id = common::create_workspace(app.clone(), &token, &common::wname()).await;
 
-    let (_sid, mut rx) = hub.subscribe_for_test(&ws_id).await;
+    let (_sid, mut rx) = subscribe_for_test(&hub, &ws_id).await;
 
     let (status, _) = common::req(
         app,
@@ -88,7 +107,7 @@ async fn delete_workspace_publishes_workspace_deleted() {
     let (token, _) = common::register_user(app.clone(), &common::uid()).await;
     let ws_id = common::create_workspace(app.clone(), &token, &common::wname()).await;
 
-    let (_sid, mut rx) = hub.subscribe_for_test(&ws_id).await;
+    let (_sid, mut rx) = subscribe_for_test(&hub, &ws_id).await;
 
     let (status, _) = common::req(
         app,
@@ -118,7 +137,7 @@ async fn accept_invite_publishes_member_joined() {
     let (token2, _) = common::register_user(app.clone(), &common::uid()).await;
     let ws_id = common::create_workspace(app.clone(), &token1, &common::wname()).await;
 
-    let (_sid, mut rx) = hub.subscribe_for_test(&ws_id).await;
+    let (_sid, mut rx) = subscribe_for_test(&hub, &ws_id).await;
 
     // Create invite
     let (_, invite_body) = common::req(
@@ -165,7 +184,7 @@ async fn remove_member_publishes_member_removed() {
     let member_user_id = invite_and_accept(app.clone(), &ws_id, &token1, &token2, "editor").await;
 
     // Subscribe after join to avoid capturing the member:joined event
-    let (_sid, mut rx) = hub.subscribe_for_test(&ws_id).await;
+    let (_sid, mut rx) = subscribe_for_test(&hub, &ws_id).await;
 
     let (status, _) = common::req(
         app,
@@ -199,7 +218,7 @@ async fn leave_workspace_publishes_member_left() {
 
     invite_and_accept(app.clone(), &ws_id, &token1, &token2, "editor").await;
 
-    let (_sid, mut rx) = hub.subscribe_for_test(&ws_id).await;
+    let (_sid, mut rx) = subscribe_for_test(&hub, &ws_id).await;
 
     let (status, _) = common::req(
         app,
@@ -232,7 +251,7 @@ async fn update_member_role_publishes_role_changed() {
 
     let member_user_id = invite_and_accept(app.clone(), &ws_id, &token1, &token2, "editor").await;
 
-    let (_sid, mut rx) = hub.subscribe_for_test(&ws_id).await;
+    let (_sid, mut rx) = subscribe_for_test(&hub, &ws_id).await;
 
     let (status, _) = common::req(
         app,
@@ -259,6 +278,43 @@ async fn update_member_role_publishes_role_changed() {
 }
 
 #[tokio::test]
+async fn admin_update_member_role_publishes_role_changed() {
+    let (app, _pool, hub) = common::setup_with_hub().await;
+    let (token1, _) = common::register_user(app.clone(), &common::uid()).await;
+    let (token2, _) = common::register_user(app.clone(), &common::uid()).await;
+    let (token3, _) = common::register_user(app.clone(), &common::uid()).await;
+    let ws_id = common::create_workspace(app.clone(), &token1, &common::wname()).await;
+
+    invite_and_accept(app.clone(), &ws_id, &token1, &token2, "admin").await;
+    let member_user_id = invite_and_accept(app.clone(), &ws_id, &token1, &token3, "editor").await;
+
+    let (_sid, mut rx) = subscribe_for_test(&hub, &ws_id).await;
+
+    let (status, _) = common::req(
+        app,
+        "PUT",
+        &format!("/api/v1/workspaces/{ws_id}/members/{member_user_id}"),
+        Some(&token2),
+        Some(json!({ "role": "viewer" })),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+
+    let events = drain_events(&mut rx);
+    let role_events: Vec<_> = events
+        .iter()
+        .filter(|e| e["type"] == "member:role-changed")
+        .collect();
+    assert_eq!(
+        role_events.len(),
+        1,
+        "expected exactly one member:role-changed event"
+    );
+    assert_eq!(role_events[0]["previousRole"], "editor");
+    assert_eq!(role_events[0]["newRole"], "viewer");
+}
+
+#[tokio::test]
 async fn transfer_ownership_publishes_two_role_changed() {
     let (app, _pool, hub) = common::setup_with_hub().await;
     let (token1, _) = common::register_user(app.clone(), &common::uid()).await;
@@ -267,7 +323,7 @@ async fn transfer_ownership_publishes_two_role_changed() {
 
     let member_user_id = invite_and_accept(app.clone(), &ws_id, &token1, &token2, "editor").await;
 
-    let (_sid, mut rx) = hub.subscribe_for_test(&ws_id).await;
+    let (_sid, mut rx) = subscribe_for_test(&hub, &ws_id).await;
 
     let (status, _) = common::req(
         app,

@@ -1,0 +1,1 @@
+-- Data repair migration; no safe automatic rollback.

@@ -42,6 +42,7 @@ export function Sidebar() {
     : null;
   const currentVaultSettings = state.workspace ? state.vaultSettings[state.workspace.rootPath] : undefined;
   const activeCloudBinding = currentVaultSettings?.cloudSyncEnabled === false ? null : currentBinding;
+  const isCloudViewer = activeCloudBinding?.workspaceRole === "viewer";
   const workspaceName = activeCloudBinding?.workspaceName || state.workspace?.name || "No vault";
   const docCount = state.workspace ? markdownNodes(state.workspace.entries).length : 0;
 
@@ -151,7 +152,7 @@ export function Sidebar() {
             className="sidebar-action flex-1"
             type="button"
             title="New Document"
-            disabled={!state.workspace || state.isLoading}
+            disabled={!state.workspace || state.isLoading || isCloudViewer}
             onClick={() => dispatch({ type: "SET_CREATE_NOTE_DIALOG", open: true })}
           >
             <DocumentPlusIcon className="h-4 w-4" />
@@ -179,6 +180,11 @@ function ExplorerPanel() {
   const [deleteFolderTarget, setDeleteFolderTarget] = useState<{ path: string; name: string } | null>(null);
   const [moveFolderTarget, setMoveFolderTarget] = useState<{ path: string; name: string; kind: "folder" | "markdown" } | null>(null);
   const favorites = useMemo(() => readFavorites(state.workspace?.rootPath), [state.workspace?.rootPath, state.currentPath, state.favoriteVersion]);
+  const currentVaultSettings = state.workspace ? state.vaultSettings[state.workspace.rootPath] : undefined;
+  const currentBinding = state.workspace
+    ? state.vaultBindings.find((binding) => binding.localVaultPath === state.workspace?.rootPath)
+    : null;
+  const isCloudViewer = Boolean(currentBinding?.workspaceRole === "viewer" && currentVaultSettings?.cloudSyncEnabled !== false);
 
   // Persist expand state
   useEffect(() => {
@@ -223,6 +229,10 @@ function ExplorerPanel() {
 
   const handleDrop = useCallback(async (targetFolder: string, sourceRelativePath: string) => {
     if (!state.workspace) return;
+    if (isCloudViewer) {
+      dispatch({ type: "SET_STATUS", message: "Viewer access is read-only." });
+      return;
+    }
     const sourceName = sourceRelativePath.split("/").pop() ?? sourceRelativePath;
     const destPath = targetFolder ? `${targetFolder}/${sourceName}` : sourceName;
     if (destPath === sourceRelativePath) return;
@@ -241,7 +251,7 @@ function ExplorerPanel() {
     } catch (error) {
       dispatch({ type: "SET_STATUS", message: String(error) });
     }
-  }, [state.workspace, dispatch, fs]);
+  }, [isCloudViewer, state.workspace, dispatch, fs]);
 
   const filteredResults = useMemo(() => {
     if (!query) return null;
@@ -493,54 +503,58 @@ function ExplorerPanel() {
         >
           {contextMenu.node.kind === "folder" && (
             <>
-              <button
-                type="button"
-                className="context-menu-button"
-                onClick={async () => {
-                  const name = await prompt("New document name (e.g. note.md):");
-                  if (name) void fs.createDocument(`${contextMenu.node.relativePath}/${name.trim()}`);
-                  setContextMenu(null);
-                }}
-              >
-                <DocumentPlusIcon className="mr-2 h-3.5 w-3.5" />New document
-              </button>
-              <button
-                type="button"
-                className="context-menu-button"
-                onClick={async () => {
-                  const name = await prompt("New folder name:");
-                  if (name && state.workspace) {
-                    try {
-                      await fs.createFolder(`${contextMenu.node.relativePath}/${name.trim()}`);
-                      dispatch({ type: "SET_STATUS", message: `Created folder ${name.trim()}.` });
-                    } catch (error) {
-                      dispatch({ type: "SET_STATUS", message: String(error) });
-                    }
-                  }
-                  setContextMenu(null);
-                }}
-              >
-                <FolderPlusIcon className="mr-2 h-3.5 w-3.5" />New folder
-              </button>
-              <button
-                type="button"
-                className="context-menu-button"
-                onClick={async () => {
-                  const newName = await prompt("Rename folder to:", contextMenu.node.name);
-                  if (newName && newName !== contextMenu.node.name && state.workspace) {
-                    const parentPath = contextMenu.node.relativePath.split("/").slice(0, -1).join("/");
-                    const newRelative = parentPath ? `${parentPath}/${newName.trim()}` : newName.trim();
-                    try {
-                      await fs.renameFolder(contextMenu.node.relativePath, newRelative);
-                    } catch (error) {
-                      dispatch({ type: "SET_STATUS", message: String(error) });
-                    }
-                  }
-                  setContextMenu(null);
-                }}
-              >
-                <PencilIcon className="mr-2 h-3.5 w-3.5" />Rename
-              </button>
+              {!isCloudViewer && (
+                <>
+                  <button
+                    type="button"
+                    className="context-menu-button"
+                    onClick={async () => {
+                      const name = await prompt("New document name (e.g. note.md):");
+                      if (name) void fs.createDocument(`${contextMenu.node.relativePath}/${name.trim()}`);
+                      setContextMenu(null);
+                    }}
+                  >
+                    <DocumentPlusIcon className="mr-2 h-3.5 w-3.5" />New document
+                  </button>
+                  <button
+                    type="button"
+                    className="context-menu-button"
+                    onClick={async () => {
+                      const name = await prompt("New folder name:");
+                      if (name && state.workspace) {
+                        try {
+                          await fs.createFolder(`${contextMenu.node.relativePath}/${name.trim()}`);
+                          dispatch({ type: "SET_STATUS", message: `Created folder ${name.trim()}.` });
+                        } catch (error) {
+                          dispatch({ type: "SET_STATUS", message: String(error) });
+                        }
+                      }
+                      setContextMenu(null);
+                    }}
+                  >
+                    <FolderPlusIcon className="mr-2 h-3.5 w-3.5" />New folder
+                  </button>
+                  <button
+                    type="button"
+                    className="context-menu-button"
+                    onClick={async () => {
+                      const newName = await prompt("Rename folder to:", contextMenu.node.name);
+                      if (newName && newName !== contextMenu.node.name && state.workspace) {
+                        const parentPath = contextMenu.node.relativePath.split("/").slice(0, -1).join("/");
+                        const newRelative = parentPath ? `${parentPath}/${newName.trim()}` : newName.trim();
+                        try {
+                          await fs.renameFolder(contextMenu.node.relativePath, newRelative);
+                        } catch (error) {
+                          dispatch({ type: "SET_STATUS", message: String(error) });
+                        }
+                      }
+                      setContextMenu(null);
+                    }}
+                  >
+                    <PencilIcon className="mr-2 h-3.5 w-3.5" />Rename
+                  </button>
+                </>
+              )}
             </>
           )}
           {contextMenu.node.kind === "markdown" && (
@@ -555,42 +569,46 @@ function ExplorerPanel() {
               >
                 <FolderOpenIcon className="mr-2 h-3.5 w-3.5" />Open
               </button>
-              <button
-                type="button"
-                className="context-menu-button"
-                onClick={async () => {
-                  const newName = await prompt("Rename to:", contextMenu.node.name);
-                  if (newName && newName !== contextMenu.node.name && state.workspace) {
-                    const parentPath = contextMenu.node.relativePath.split("/").slice(0, -1).join("/");
-                    const newRelative = parentPath ? `${parentPath}/${newName.trim()}` : newName.trim();
-                    try {
-                      await fs.renameEntry(contextMenu.node.relativePath, newRelative, true);
-                    } catch (error) {
-                      dispatch({ type: "SET_STATUS", message: String(error) });
+              {!isCloudViewer && (
+                <button
+                  type="button"
+                  className="context-menu-button"
+                  onClick={async () => {
+                    const newName = await prompt("Rename to:", contextMenu.node.name);
+                    if (newName && newName !== contextMenu.node.name && state.workspace) {
+                      const parentPath = contextMenu.node.relativePath.split("/").slice(0, -1).join("/");
+                      const newRelative = parentPath ? `${parentPath}/${newName.trim()}` : newName.trim();
+                      try {
+                        await fs.renameEntry(contextMenu.node.relativePath, newRelative, true);
+                      } catch (error) {
+                        dispatch({ type: "SET_STATUS", message: String(error) });
+                      }
                     }
-                  }
-                  setContextMenu(null);
-                }}
-              >
-                <PencilIcon className="mr-2 h-3.5 w-3.5" />Rename
-              </button>
+                    setContextMenu(null);
+                  }}
+                >
+                  <PencilIcon className="mr-2 h-3.5 w-3.5" />Rename
+                </button>
+              )}
             </>
           )}
           <div className="my-1 border-t border-stone-200" />
-          <button
-            type="button"
-            className="context-menu-button"
-            onClick={() => {
-              setMoveFolderTarget({
-                path: contextMenu.node.relativePath,
-                name: contextMenu.node.name,
-                kind: contextMenu.node.kind === "folder" ? "folder" : "markdown",
-              });
-              setContextMenu(null);
-            }}
-          >
-            <ArrowRightIcon className="mr-2 h-3.5 w-3.5" />Move to...
-          </button>
+          {!isCloudViewer && (
+            <button
+              type="button"
+              className="context-menu-button"
+              onClick={() => {
+                setMoveFolderTarget({
+                  path: contextMenu.node.relativePath,
+                  name: contextMenu.node.name,
+                  kind: contextMenu.node.kind === "folder" ? "folder" : "markdown",
+                });
+                setContextMenu(null);
+              }}
+            >
+              <ArrowRightIcon className="mr-2 h-3.5 w-3.5" />Move to...
+            </button>
+          )}
           <button
             type="button"
             className="context-menu-button"
@@ -621,29 +639,33 @@ function ExplorerPanel() {
               <FolderOpenIcon className="mr-2 h-3.5 w-3.5" />Show in Explorer
             </button>
           )}
-          <div className="my-1 border-t border-stone-200" />
-          {contextMenu.node.kind === "folder" ? (
-            <button
-              type="button"
-              className="context-menu-button text-red-700 hover:text-red-800"
-              onClick={() => {
-                setDeleteFolderTarget({ path: contextMenu.node.relativePath, name: contextMenu.node.name });
-                setContextMenu(null);
-              }}
-            >
-              <TrashIcon className="mr-2 h-3.5 w-3.5" />Delete folder
-            </button>
-          ) : (
-            <button
-              type="button"
-              className="context-menu-button text-red-700 hover:text-red-800"
-              onClick={() => {
-                void fs.deleteEntry(contextMenu.node.relativePath);
-                setContextMenu(null);
-              }}
-            >
-              <TrashIcon className="mr-2 h-3.5 w-3.5" />Move to trash
-            </button>
+          {!isCloudViewer && (
+            <>
+              <div className="my-1 border-t border-stone-200" />
+              {contextMenu.node.kind === "folder" ? (
+                <button
+                  type="button"
+                  className="context-menu-button text-red-700 hover:text-red-800"
+                  onClick={() => {
+                    setDeleteFolderTarget({ path: contextMenu.node.relativePath, name: contextMenu.node.name });
+                    setContextMenu(null);
+                  }}
+                >
+                  <TrashIcon className="mr-2 h-3.5 w-3.5" />Delete folder
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="context-menu-button text-red-700 hover:text-red-800"
+                  onClick={() => {
+                    void fs.deleteEntry(contextMenu.node.relativePath);
+                    setContextMenu(null);
+                  }}
+                >
+                  <TrashIcon className="mr-2 h-3.5 w-3.5" />Move to trash
+                </button>
+              )}
+            </>
           )}
         </div>
       )}

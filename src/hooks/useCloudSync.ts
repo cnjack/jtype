@@ -123,10 +123,23 @@ export function useCloudSync() {
       if (!response.ok) throw new Error(await response.text());
       const result = (await response.json()) as { workspaces: CloudWorkspace[] };
       dispatch({ type: "SET_CLOUD_WORKSPACES", workspaces: result.workspaces });
+      const roleByWorkspaceId = new Map(result.workspaces.map((workspace) => [workspace.id, workspace.role]));
+      const nextBindings = state.vaultBindings.map((binding) => {
+        const workspaceRole = roleByWorkspaceId.get(binding.workspaceId);
+        return workspaceRole && binding.workspaceRole !== workspaceRole ? { ...binding, workspaceRole } : binding;
+      });
+      if (nextBindings.some((binding, index) => binding !== state.vaultBindings[index])) {
+        dispatch({ type: "SET_VAULT_BINDINGS", bindings: nextBindings });
+        if (tauri.isAvailable) {
+          for (const binding of nextBindings) {
+            await tauri.bindCloudWorkspace(binding);
+          }
+        }
+      }
     } catch {
       // silently ignore — cloud workspaces are non-critical
     }
-  }, [dispatch, state.syncToken, getServiceUrl]);
+  }, [dispatch, state.syncToken, state.vaultBindings, getServiceUrl]);
 
   const handleWorkspaceAccessLoss = useCallback(async (binding: VaultBinding, statusCode: number) => {
     if (!state.workspace) return;
@@ -172,6 +185,12 @@ export function useCloudSync() {
       const binding = options.bindingOverride ?? currentVaultBinding(state.vaultBindings, state.workspace.rootPath);
 
       if (binding) {
+        if (binding.workspaceRole === "viewer") {
+          await pullCloudWorkspace(binding, options.skipRelativePath, undefined, new Set(), { reason: "viewer-read-only-sync" });
+          dispatch({ type: "SET_STATUS", message: `Pulled cloud workspace ${binding.workspaceName}. Viewer access is read-only.` });
+          dispatch({ type: "SET_SYNC_STATUS", status: "idle", success: true });
+          return;
+        }
         // 1. Collect local documents BEFORE pull overwrites them
         const documents = await tauri.collectSyncDocuments(state.workspace.rootPath);
         const folders = await tauri.collectSyncFolders(state.workspace.rootPath);
@@ -700,6 +719,7 @@ export function useCloudSync() {
       workspaceId: workspace.id,
       workspaceName,
       workspaceSlug: workspace.slug,
+      workspaceRole: workspace.role,
       localVaultPath: state.workspace.rootPath,
       lastPulledClock: 0,
     };
@@ -769,6 +789,7 @@ export function useCloudSync() {
         workspaceId: workspace.id,
         workspaceName: workspace.name,
         workspaceSlug: workspace.slug,
+        workspaceRole: workspace.role,
         localVaultPath: state.workspace.rootPath,
         lastPulledClock: 0,
       };
@@ -806,6 +827,7 @@ export function useCloudSync() {
       workspaceId: workspace.id,
       workspaceName: workspace.name,
       workspaceSlug: workspace.slug,
+      workspaceRole: workspace.role,
       localVaultPath: selectedPath,
       lastPulledClock: 0,
     };

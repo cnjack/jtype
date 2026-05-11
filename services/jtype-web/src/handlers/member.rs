@@ -211,7 +211,7 @@ pub async fn leave_workspace(
 }
 
 /// PUT /api/v1/workspaces/:workspace_id/members/:user_id
-/// Only the owner can change a member's role.
+/// Owners and admins can change a member's role.
 pub async fn update_member_role(
     State(state): State<AppState>,
     headers: HeaderMap,
@@ -219,7 +219,8 @@ pub async fn update_member_role(
     Json(payload): Json<UpdateRoleRequest>,
 ) -> Result<Json<MemberInfo>, AppError> {
     let user = extract_user(&state.pool, &headers).await?;
-    require_workspace_role(&state.pool, &workspace_id, &user.id, &["owner"]).await?;
+    let caller_role =
+        require_workspace_role(&state.pool, &workspace_id, &user.id, &["owner", "admin"]).await?;
 
     // Cannot change own role
     if target_user_id == user.id {
@@ -247,6 +248,10 @@ pub async fn update_member_role(
 
     let _status: String = target.try_get("status")?;
     let previous_role: String = target.try_get("role")?;
+
+    if previous_role == "owner" || (caller_role == "admin" && previous_role == "admin") {
+        return Err(AppError::Forbidden);
+    }
 
     // No-op guard: skip update and event if role is unchanged (M4)
     if role == previous_role {

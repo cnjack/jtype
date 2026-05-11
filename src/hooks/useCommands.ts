@@ -19,6 +19,7 @@ export function useCommands(fs: ReturnType<typeof import("./useFileSystem").useF
   const currentVaultBinding = state.workspace
     ? state.vaultBindings.find((binding) => binding.localVaultPath === state.workspace?.rootPath)
     : null;
+  const isCloudViewer = Boolean(currentVaultBinding?.workspaceRole === "viewer" && currentVaultSettings?.cloudSyncEnabled !== false);
 
   const commands: CommandDef[] = [
     {
@@ -45,8 +46,8 @@ export function useCommands(fs: ReturnType<typeof import("./useFileSystem").useF
       aliases: ["write"],
       shortcut: "Ctrl+S",
       scope: ["file"],
-      isEnabled: () => state.currentKind === "markdown" && state.isDirty,
-      disabledReason: () => "No unsaved changes",
+      isEnabled: () => state.currentKind === "markdown" && state.isDirty && !isCloudViewer,
+      disabledReason: () => isCloudViewer ? "Viewer access is read-only" : "No unsaved changes",
       run: () => fs.saveCurrentFile(),
     },
     {
@@ -54,24 +55,24 @@ export function useCommands(fs: ReturnType<typeof import("./useFileSystem").useF
       title: "Create new document",
       aliases: ["create"],
       scope: ["workspace"],
-      isEnabled: () => Boolean(state.workspace),
-      disabledReason: () => "Open a vault first",
+      isEnabled: () => Boolean(state.workspace) && !isCloudViewer,
+      disabledReason: () => isCloudViewer ? "Viewer access is read-only" : "Open a vault first",
       run: () => dispatch({ type: "SET_CREATE_NOTE_DIALOG", open: true }),
     },
     {
       id: "file.rename",
       title: "Rename current entry",
       scope: ["file"],
-      isEnabled: () => Boolean(state.workspace && state.currentRelativePath),
-      disabledReason: () => "No entry selected",
+      isEnabled: () => Boolean(state.workspace && state.currentRelativePath) && !isCloudViewer,
+      disabledReason: () => isCloudViewer ? "Viewer access is read-only" : "No entry selected",
       run: () => fs.renameCurrentEntry(),
     },
     {
       id: "file.delete",
       title: "Delete current entry",
       scope: ["file"],
-      isEnabled: () => Boolean(state.workspace && state.currentRelativePath),
-      disabledReason: () => "No entry selected",
+      isEnabled: () => Boolean(state.workspace && state.currentRelativePath) && !isCloudViewer,
+      disabledReason: () => isCloudViewer ? "Viewer access is read-only" : "No entry selected",
       run: () => fs.deleteCurrentEntry(),
     },
     {
@@ -181,8 +182,8 @@ export function useCommands(fs: ReturnType<typeof import("./useFileSystem").useF
       title: "Bold selection",
       shortcut: "Ctrl+B",
       scope: ["editor", "selection"],
-      isEnabled: () => state.currentKind === "markdown",
-      disabledReason: () => "Open a Markdown file",
+      isEnabled: () => state.currentKind === "markdown" && !isCloudViewer,
+      disabledReason: () => isCloudViewer ? "Viewer access is read-only" : "Open a Markdown file",
       run: () => wrapSelection("**", "**", "bold text"),
     },
     {
@@ -190,8 +191,8 @@ export function useCommands(fs: ReturnType<typeof import("./useFileSystem").useF
       title: "Italic selection",
       shortcut: "Ctrl+I",
       scope: ["editor", "selection"],
-      isEnabled: () => state.currentKind === "markdown",
-      disabledReason: () => "Open a Markdown file",
+      isEnabled: () => state.currentKind === "markdown" && !isCloudViewer,
+      disabledReason: () => isCloudViewer ? "Viewer access is read-only" : "Open a Markdown file",
       run: () => wrapSelection("_", "_", "italic text"),
     },
     {
@@ -199,15 +200,15 @@ export function useCommands(fs: ReturnType<typeof import("./useFileSystem").useF
       title: "Insert link",
       shortcut: "Ctrl+K",
       scope: ["editor", "selection"],
-      isEnabled: () => state.currentKind === "markdown",
-      disabledReason: () => "Open a Markdown file",
+      isEnabled: () => state.currentKind === "markdown" && !isCloudViewer,
+      disabledReason: () => isCloudViewer ? "Viewer access is read-only" : "Open a Markdown file",
       run: () => wrapSelection("[", "](url)", "link text"),
     },
     {
       id: "editor.code",
       title: "Inline code",
       scope: ["editor", "selection"],
-      isEnabled: () => state.currentKind === "markdown",
+      isEnabled: () => state.currentKind === "markdown" && !isCloudViewer,
       run: () => wrapSelection("`", "`", "code"),
     },
     {
@@ -216,7 +217,7 @@ export function useCommands(fs: ReturnType<typeof import("./useFileSystem").useF
       aliases: ["table"],
       shortcut: "Ctrl+Shift+T",
       scope: ["editor"],
-      isEnabled: () => state.currentKind === "markdown",
+      isEnabled: () => state.currentKind === "markdown" && !isCloudViewer,
       run: () => insertOrEditTable(),
     },
     {
@@ -224,7 +225,7 @@ export function useCommands(fs: ReturnType<typeof import("./useFileSystem").useF
       title: "Insert formula block",
       aliases: ["latex", "katex", "equation"],
       scope: ["editor"],
-      isEnabled: () => state.currentKind === "markdown",
+      isEnabled: () => state.currentKind === "markdown" && !isCloudViewer,
       run: () => insertBlockAtSafeCursor("\n$$\nE = mc^2\n$$\n"),
     },
     {
@@ -232,14 +233,14 @@ export function useCommands(fs: ReturnType<typeof import("./useFileSystem").useF
       title: "Insert Mermaid diagram",
       aliases: ["diagram", "flowchart"],
       scope: ["editor"],
-      isEnabled: () => state.currentKind === "markdown",
+      isEnabled: () => state.currentKind === "markdown" && !isCloudViewer,
       run: () => insertBlockAtSafeCursor("\n```mermaid\nflowchart TD\n  A[Start] --> B[Write Markdown]\n  B --> C[Preview]\n```\n"),
     },
     {
       id: "insert.task",
       title: "Insert task list",
       scope: ["editor"],
-      isEnabled: () => state.currentKind === "markdown",
+      isEnabled: () => state.currentKind === "markdown" && !isCloudViewer,
       run: () => insertBlockAtSafeCursor("\n- [ ] Task\n"),
     },
   ];
