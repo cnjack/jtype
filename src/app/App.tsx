@@ -61,6 +61,8 @@ function AppContent() {
     }
   }, [state.workspace, state.syncToken, state.vaultBindings, state.vaultSettings, state.currentRelativePath, state.currentPath, state.currentKind, state.isDirty, sync, dispatch]);
   const fs = useFileSystem(autoSync);
+  const openMarkdownFileRef = useRef(fs.openMarkdownFile);
+  openMarkdownFileRef.current = fs.openMarkdownFile;
   const { commands, findCommand } = useCommands(fs, sync);
   useFileWatcher();
 
@@ -245,6 +247,17 @@ function AppContent() {
       unlistenActivity.then((fn) => fn());
       unlistenWorkspaceGone.then((fn) => fn());
       unlistenMemberKicked.then((fn) => fn());
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isTauriRuntime()) return;
+    const unlistenOpenMarkdown = listen<string[]>("open-markdown-files", (event) => {
+      const targetFile = event.payload.find((path) => /\.(md|markdown|mdown|mkd)$/i.test(path));
+      if (targetFile) void openMarkdownFileRef.current(targetFile);
+    });
+    return () => {
+      unlistenOpenMarkdown.then((fn) => fn());
     };
   }, []);
 

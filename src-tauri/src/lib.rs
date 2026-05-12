@@ -10,7 +10,7 @@ use std::{
     path::{Path, PathBuf},
     sync::Mutex,
 };
-use tauri::{AppHandle, Emitter};
+use tauri::{AppHandle, Emitter, Manager};
 
 use workspace::{
     AiIndexResult, EntryKind, FolderContentsSummary, PublishResult, SyncBaseEntry, SyncDocument,
@@ -29,6 +29,7 @@ struct WsOutbox(tokio::sync::broadcast::Sender<String>);
 
 struct AppState {
     watcher_state: Mutex<WatcherState>,
+    pending_open_paths: Mutex<Vec<String>>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
@@ -77,11 +78,58 @@ struct CloudSyncFolder {
 }
 
 #[tauri::command]
-fn initial_open_paths() -> Vec<String> {
-    env::args()
+fn initial_open_paths(state: tauri::State<'_, AppState>) -> Vec<String> {
+    let mut paths: Vec<String> = env::args()
         .skip(1)
-        .filter(|arg| workspace::is_markdown_path(&PathBuf::from(arg)))
-        .collect()
+        .filter_map(|arg| normalize_open_path_arg(&arg))
+        .collect();
+    paths.extend(state.pending_open_paths.lock().unwrap().drain(..));
+    paths
+}
+
+fn normalize_open_path_arg(arg: &str) -> Option<String> {
+    if let Some(path) = arg.strip_prefix("file://") {
+        let decoded = percent_decode_path(path);
+        if workspace::is_markdown_path(&PathBuf::from(&decoded)) {
+            return Some(decoded);
+        }
+        return None;
+    }
+
+    if workspace::is_markdown_path(&PathBuf::from(arg)) {
+        Some(arg.to_string())
+    } else {
+        None
+    }
+}
+
+fn percent_decode_path(path: &str) -> String {
+    let bytes = path.as_bytes();
+    let mut decoded = Vec::with_capacity(bytes.len());
+    let mut index = 0;
+    while index < bytes.len() {
+        if bytes[index] == b'%' && index + 2 < bytes.len() {
+            if let (Some(high), Some(low)) =
+                (hex_value(bytes[index + 1]), hex_value(bytes[index + 2]))
+            {
+                decoded.push((high << 4) | low);
+                index += 3;
+                continue;
+            }
+        }
+        decoded.push(bytes[index]);
+        index += 1;
+    }
+    String::from_utf8_lossy(&decoded).into_owned()
+}
+
+fn hex_value(byte: u8) -> Option<u8> {
+    match byte {
+        b'0'..=b'9' => Some(byte - b'0'),
+        b'a'..=b'f' => Some(byte - b'a' + 10),
+        b'A'..=b'F' => Some(byte - b'A' + 10),
+        _ => None,
+    }
 }
 
 #[tauri::command]
@@ -744,9 +792,31 @@ pub fn run() {
         ])
         .manage(AppState {
             watcher_state: Mutex::new(WatcherState { watcher: None }),
+            pending_open_paths: Mutex::new(Vec::new()),
         })
         .manage(WsListenerHandle(Mutex::new(None)))
         .manage(WsOutbox(tokio::sync::broadcast::channel::<String>(64).0))
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app, event| {
+            #[cfg(any(target_os = "macos", target_os = "ios", target_os = "android"))]
+            if let tauri::RunEvent::Opened { urls } = event {
+                let paths: Vec<String> = urls
+                    .into_iter()
+                    .filter_map(|url| url.to_file_path().ok())
+                    .filter(|path| workspace::is_markdown_path(path))
+                    .map(|path| path_to_string(&path))
+                    .collect();
+
+                if !paths.is_empty() {
+                    let state = app.state::<AppState>();
+                    state
+                        .pending_open_paths
+                        .lock()
+                        .unwrap()
+                        .extend(paths.clone());
+                    let _ = app.emit("open-markdown-files", paths);
+                }
+            }
+        });
 }

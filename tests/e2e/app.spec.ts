@@ -93,7 +93,9 @@ test.beforeEach(async ({ page }) => {
         unregisterCallback: () => undefined,
         convertFileSrc: (path: string) => path,
         invoke: async (cmd: string, args: Record<string, unknown>) => {
-          if (cmd === "initial_open_paths") return [];
+          if (cmd === "initial_open_paths") {
+            return JSON.parse((window as unknown as { __INITIAL_OPEN_PATHS_JSON__?: string }).__INITIAL_OPEN_PATHS_JSON__ ?? "[]");
+          }
           if (cmd === "load_cloud_profile") {
             return { serverUrl: "http://localhost:13345", username: "", siteUrl: "", token: "", deviceId: "dev_e2e" };
           }
@@ -375,6 +377,18 @@ test("opens a workspace and renders a markdown file", async ({ page }) => {
 
   await page.locator("#workspace-sidebar").getByRole("button", { name: /intro\.md/ }).click();
 
+  await expect(page.getByLabel("Markdown editor")).toHaveValue("# Intro\n\nHello from workspace.");
+  await expect(page.locator("#preview")).toContainText("Hello from workspace.");
+});
+
+test("opens an initial markdown file passed by the OS", async ({ page }) => {
+  await page.addInitScript(() => {
+    (window as unknown as { __INITIAL_OPEN_PATHS_JSON__?: string }).__INITIAL_OPEN_PATHS_JSON__ = JSON.stringify(["C:/workspace/intro.md"]);
+  });
+  await page.reload();
+
+  await expect(page.locator("#workspace-sidebar")).toBeHidden();
+  await expect(page.locator("#app-context-title")).toHaveText("Markdown file");
   await expect(page.getByLabel("Markdown editor")).toHaveValue("# Intro\n\nHello from workspace.");
   await expect(page.locator("#preview")).toContainText("Hello from workspace.");
 });
