@@ -316,12 +316,9 @@ function AppContent() {
             <span className="flex shrink-0 items-center gap-3">
               {isSyncEnabled && (
                 state.wsConnected ? (
-                  <span className="flex items-center gap-1.5 font-medium text-green-600" title={state.lastWsEventType ? `Last event: ${state.lastWsEventType}` : "Connected"}>
+                  <span className="flex items-center gap-1.5 font-medium text-green-600" title="Connected">
                     <span className="w-2 h-2 rounded-full bg-green-500" />
                     Connected
-                    {state.lastWsEventType && (
-                      <span className="font-normal text-green-700 opacity-70">{state.lastWsEventType.replace("document:", "")}</span>
-                    )}
                   </span>
                 ) : (
                   <span className="flex items-center gap-1.5 font-medium text-stone-500" title="Cloud workspace connection is offline">

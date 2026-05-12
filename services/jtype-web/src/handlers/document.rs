@@ -30,7 +30,7 @@ pub async fn list_documents(
     .await?;
 
     let rows = sqlx::query(
-        r#"SELECT id, relative_path, title, status, content_hash, updated_clock, current_version_id
+        r#"SELECT id, relative_path, title, is_published, content_hash, updated_clock, current_version_id
            FROM documents WHERE workspace_id = ? ORDER BY relative_path"#,
     )
     .bind(&workspace_id)
@@ -43,7 +43,7 @@ pub async fn list_documents(
             id: row.try_get("id").unwrap_or_default(),
             relative_path: row.try_get("relative_path").unwrap_or_default(),
             title: row.try_get("title").unwrap_or_default(),
-            status: row.try_get("status").unwrap_or_default(),
+            is_published: row.try_get::<i8, _>("is_published").unwrap_or(0) != 0,
             content_hash: row.try_get("content_hash").unwrap_or_default(),
             updated_clock: row.try_get("updated_clock").unwrap_or(0),
             version_id: row.try_get("current_version_id").unwrap_or(None),
@@ -68,7 +68,7 @@ pub async fn get_document(
     .await?;
 
     let row = sqlx::query(
-        r#"SELECT relative_path, title, status, content, content_hash,
+        r#"SELECT relative_path, title, is_published, content, content_hash,
                   COALESCE(current_version_id, id) AS version_id, updated_clock
            FROM documents WHERE id = ? AND workspace_id = ?"#,
     )
@@ -81,97 +81,11 @@ pub async fn get_document(
     Ok(Json(CloudDocument {
         relative_path: row.try_get("relative_path")?,
         title: row.try_get("title")?,
-        status: row.try_get("status")?,
+        is_published: row.try_get::<i8, _>("is_published").unwrap_or(0) != 0,
         content: row.try_get("content")?,
         content_hash: row.try_get("content_hash")?,
         version_id: row.try_get("version_id")?,
         updated_clock: row.try_get("updated_clock")?,
-    }))
-}
-
-pub async fn update_status(
-    State(state): State<AppState>,
-    headers: HeaderMap,
-    Path((workspace_id, document_id)): Path<(String, String)>,
-    Json(payload): Json<UpdateDocumentStatusRequest>,
-) -> Result<Json<DocumentListItem>, AppError> {
-    let user = extract_user(&state.pool, &headers).await?;
-    require_workspace_role(
-        &state.pool,
-        &workspace_id,
-        &user.id,
-        &["owner", "admin", "editor"],
-    )
-    .await?;
-
-    let status = match payload.status.trim().to_ascii_lowercase().as_str() {
-        "draft" => "draft",
-        "published" => "published",
-        "archived" => "archived",
-        _ => {
-            return Err(AppError::BadRequest(
-                "status must be draft, published, or archived".to_string(),
-            ))
-        }
-    };
-
-    // Fetch previous status before updating
-    let prev_row = sqlx::query(
-        "SELECT status, relative_path FROM documents WHERE id = ? AND workspace_id = ?",
-    )
-    .bind(&document_id)
-    .bind(&workspace_id)
-    .fetch_optional(&state.pool)
-    .await?
-    .ok_or(AppError::NotFound)?;
-    let previous_status: String = prev_row.try_get("status")?;
-    let relative_path: String = prev_row.try_get("relative_path")?;
-
-    let result = sqlx::query("UPDATE documents SET status = ? WHERE id = ? AND workspace_id = ?")
-        .bind(status)
-        .bind(&document_id)
-        .bind(&workspace_id)
-        .execute(&state.pool)
-        .await?;
-
-    if result.rows_affected() == 0 {
-        return Err(AppError::NotFound);
-    }
-
-    let row = sqlx::query(
-        r#"SELECT id, relative_path, title, status, content_hash, updated_clock, current_version_id
-           FROM documents WHERE id = ? AND workspace_id = ?"#,
-    )
-    .bind(&document_id)
-    .bind(&workspace_id)
-    .fetch_one(&state.pool)
-    .await?;
-
-    let session_id = super::extract_session_id(&headers);
-    state
-        .hub
-        .publish_to_workspace(
-            &workspace_id,
-            WorkspaceEvent::DocumentStatusChanged {
-                workspace_id: workspace_id.clone(),
-                source_session_id: session_id.clone(),
-                relative_path,
-                document_id: document_id.clone(),
-                status: status.to_string(),
-                previous_status,
-            },
-            session_id.as_deref(),
-        )
-        .await;
-
-    Ok(Json(DocumentListItem {
-        id: row.try_get("id")?,
-        relative_path: row.try_get("relative_path")?,
-        title: row.try_get("title")?,
-        status: row.try_get("status")?,
-        content_hash: row.try_get("content_hash")?,
-        updated_clock: row.try_get("updated_clock")?,
-        version_id: row.try_get("current_version_id").unwrap_or(None),
     }))
 }
 
@@ -312,8 +226,12 @@ pub async fn save_document(
 
             Ok(Json(serde_json::json!({
                 "relativePath": doc.relative_path,
+                "title": doc.title,
+                "content": doc.content,
                 "contentHash": doc.content_hash,
+                "versionId": doc.version_id,
                 "updatedClock": doc.updated_clock,
+                "isPublished": doc.is_published,
                 "mergeStatus": merge_status,
             }))
             .into_response())
@@ -404,7 +322,6 @@ pub async fn save_document_version(
         .map(str::to_string)
         .or_else(|| extract_title(&payload.content))
         .unwrap_or_else(|| relative_path.clone());
-    let status = normalize_status(payload.status.as_deref().unwrap_or(""), &payload.content);
 
     let current = sqlx::query(
         r#"SELECT id, content, content_hash, current_version_id, updated_clock
@@ -437,7 +354,6 @@ pub async fn save_document_version(
                             &document_id,
                             &relative_path,
                             &title,
-                            status,
                             &merged,
                             parent_version_id.as_deref(),
                             None,
@@ -479,7 +395,7 @@ pub async fn save_document_version(
                 CloudDocument {
                     relative_path,
                     title,
-                    status: status.to_string(),
+                    is_published: false,
                     content: payload.content,
                     content_hash,
                     version_id: parent_version_id.unwrap_or_default(),
@@ -495,7 +411,6 @@ pub async fn save_document_version(
             &document_id,
             &relative_path,
             &title,
-            status,
             &payload.content,
             parent_version_id.as_deref(),
             None,
@@ -511,11 +426,10 @@ pub async fn save_document_version(
     let version_id = Uuid::new_v4().to_string();
     let next_clock = next_workspace_clock(&mut tx, workspace_id).await?;
     sqlx::query(
-        r#"INSERT INTO documents (id, workspace_id, relative_path, title, status, content_hash, content, updated_clock, current_version_id)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        r#"INSERT INTO documents (id, workspace_id, relative_path, title, content_hash, content, updated_clock, current_version_id)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)
            ON DUPLICATE KEY UPDATE
              title = VALUES(title),
-             status = VALUES(status),
              content_hash = VALUES(content_hash),
              content = VALUES(content),
              updated_clock = VALUES(updated_clock),
@@ -525,7 +439,6 @@ pub async fn save_document_version(
     .bind(workspace_id)
     .bind(&relative_path)
     .bind(&title)
-    .bind(status)
     .bind(&content_hash)
     .bind(&payload.content)
     .bind(next_clock)
@@ -551,7 +464,7 @@ pub async fn save_document_version(
         CloudDocument {
             relative_path,
             title,
-            status: status.to_string(),
+            is_published: false,
             content: payload.content,
             content_hash,
             version_id,
@@ -568,7 +481,6 @@ pub async fn save_merged_document(
     document_id: &str,
     relative_path: &str,
     title: &str,
-    status: &str,
     content: &str,
     parent_version_id: Option<&str>,
     base_version_id: Option<&str>,
@@ -580,11 +492,10 @@ pub async fn save_merged_document(
     let version_id = Uuid::new_v4().to_string();
     let next_clock = next_workspace_clock(&mut tx, workspace_id).await?;
     sqlx::query(
-        r#"UPDATE documents SET title = ?, status = ?, content_hash = ?, content = ?, updated_clock = ?, current_version_id = ?
+        r#"UPDATE documents SET title = ?, content_hash = ?, content = ?, updated_clock = ?, current_version_id = ?
            WHERE id = ? AND workspace_id = ?"#,
     )
     .bind(title)
-    .bind(status)
     .bind(&content_hash)
     .bind(content)
     .bind(next_clock)
@@ -611,7 +522,7 @@ pub async fn save_merged_document(
     Ok(CloudDocument {
         relative_path: relative_path.to_string(),
         title: title.to_string(),
-        status: status.to_string(),
+        is_published: false,
         content: content.to_string(),
         content_hash,
         version_id,

@@ -135,8 +135,6 @@ export const api = {
     request<DocumentListItem[]>(`/api/v1/workspaces/${workspaceId}/documents`),
   getDocument: (workspaceId: string, docId: string) =>
     request<CloudDocument>(`/api/v1/workspaces/${workspaceId}/documents/${docId}`),
-  updateDocumentStatus: (workspaceId: string, docId: string, status: string) =>
-    request<DocumentListItem>(`/api/v1/workspaces/${workspaceId}/documents/${docId}/status`, { method: 'PUT', body: JSON.stringify({ status }) }),
   deleteDocument: (workspaceId: string, docId: string) =>
     request<void>(`/api/v1/workspaces/${workspaceId}/documents/${docId}`, { method: 'DELETE' }),
   saveDocument: (workspaceId: string, data: SaveDocumentRequest) =>
@@ -144,6 +142,12 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(data),
     }),
+  getPublishStatus: (workspaceId: string, docId: string) =>
+    request<PublishStatusResponse>(`/api/v1/workspaces/${workspaceId}/documents/${docId}/publish`),
+  publishDocument: (workspaceId: string, docId: string) =>
+    request<PublishDocumentResponse>(`/api/v1/workspaces/${workspaceId}/documents/${docId}/publish`, { method: 'POST', body: '{}' }),
+  unpublishDocument: (workspaceId: string, docId: string) =>
+    request<void>(`/api/v1/workspaces/${workspaceId}/documents/${docId}/publish`, { method: 'DELETE' }),
   listVersions: (workspaceId: string, docId: string) =>
     request<DocumentVersion[]>(`/api/v1/workspaces/${workspaceId}/documents/${docId}/versions`),
   listTrash: (workspaceId: string) =>
@@ -269,7 +273,7 @@ export interface DocumentListItem {
   id: string
   relativePath: string
   title: string
-  status: string
+  isPublished: boolean
   contentHash: string
   updatedClock: number
   versionId: string | null
@@ -284,7 +288,7 @@ export interface FolderListItem {
 export interface CloudDocument {
   relativePath: string
   title: string
-  status: string
+  isPublished: boolean
   content: string
   contentHash: string
   versionId: string
@@ -336,10 +340,27 @@ export interface SyncConflictItem {
 export interface SaveDocumentRequest {
   relativePath: string
   title?: string
-  status?: string
   content: string
   baseContentHash?: string
   baseContent?: string
+}
+
+export interface PublishDocumentResponse {
+  documentId: string
+  relativePath: string
+  title: string
+  contentHash: string
+  publishedAt: string
+  isPublished: boolean
+}
+
+export interface PublishStatusResponse {
+  documentId: string
+  isPublished: boolean
+  publishedAt: string | null
+  currentHash: string
+  publishedHash: string | null
+  hasUnpublishedChanges: boolean
 }
 
 export interface SaveDocumentResponse {

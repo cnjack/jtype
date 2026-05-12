@@ -39,6 +39,9 @@ help: ## Show this help message
 app: ## Start Tauri desktop app in dev mode
 	npm run tauri dev
 
+app-build: ## Build Tauri desktop app
+	npm run tauri build
+
 dev: ## Start frontend only (Vite dev server)
 	npm run dev
 

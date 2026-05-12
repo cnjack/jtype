@@ -52,7 +52,6 @@ export function useEagerSync() {
                 {
                   relativePath,
                   title: "",
-                  status: "",
                   content,
                   baseContentHash: baseHash,
                   baseContent: base,

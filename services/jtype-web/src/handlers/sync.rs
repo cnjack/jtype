@@ -335,7 +335,6 @@ pub async fn resolve_conflict(
             let save = CloudSaveDocumentRequest {
                 relative_path: sibling_path,
                 title: None,
-                status: Some("draft".to_string()),
                 content: local_content,
                 base_content_hash: None,
                 base_content: None,
@@ -394,7 +393,6 @@ pub async fn resolve_conflict(
         &document_id,
         &relative_path,
         &title,
-        normalize_status("", &content),
         &content,
         None,
         None,
@@ -437,7 +435,7 @@ async fn load_documents_since(
     since_clock: i64,
 ) -> Result<Vec<CloudDocument>, AppError> {
     let rows = sqlx::query(
-        r#"SELECT relative_path, title, status, content, content_hash,
+        r#"SELECT relative_path, title, is_published, content, content_hash,
                   COALESCE(current_version_id, id) AS version_id, updated_clock
            FROM documents WHERE workspace_id = ? AND updated_clock > ?
            ORDER BY relative_path"#,
@@ -451,7 +449,7 @@ async fn load_documents_since(
             Ok(CloudDocument {
                 relative_path: row.try_get("relative_path")?,
                 title: row.try_get("title")?,
-                status: row.try_get("status")?,
+                is_published: row.try_get::<i8, _>("is_published").unwrap_or(0) != 0,
                 content: row.try_get("content")?,
                 content_hash: row.try_get("content_hash")?,
                 version_id: row.try_get("version_id")?,

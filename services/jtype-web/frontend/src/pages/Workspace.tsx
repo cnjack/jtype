@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useCallback, useMemo, memo } from 'react'
 import { Menu, MenuButton, MenuItems, MenuItem, Dialog, DialogPanel } from '@headlessui/react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
-import { api, getStoredUsername, setSessionId, type WorkspaceSummary, type DocumentListItem, type FolderListItem, type DomainResponse, type TrashItem, type MemberInfo, type InviteListItem, type InviteResponse } from '../api'
+import { api, getStoredUsername, setSessionId, type WorkspaceSummary, type DocumentListItem, type FolderListItem, type DomainResponse, type TrashItem, type MemberInfo, type InviteListItem, type InviteResponse, type PublishStatusResponse } from '../api'
 import { renderToContainer } from '../lib/markdown'
 import { parseFrontmatter, writeFrontmatter } from '../lib/frontmatter'
 import type { EditorMode } from '../lib/utils'
@@ -52,12 +52,18 @@ import {
 
 type WorkspaceSection = 'documents' | 'trash' | 'publishing' | 'domains'
 type WorkspaceSettingsSection = 'general' | 'trash' | 'domains' | 'members'
+type FloatingTooltipState = {
+  label: string
+  x: number
+  y: number
+}
 
 export function Workspace() {
   const { workspaceId } = useParams<{ workspaceId: string }>()
   const navigate = useNavigate()
   const location = useLocation()
   const prompt = usePrompt()
+  const confirm = useConfirm()
   const initialSection = ((location.state as { section?: WorkspaceSection } | null)?.section) ?? 'documents'
   const [workspace, setWorkspace] = useState<WorkspaceSummary | null>(null)
   const [workspaces, setWorkspaces] = useState<WorkspaceSummary[]>([])
@@ -82,9 +88,12 @@ export function Workspace() {
   const [domainMessage, setDomainMessage] = useState('')
   const [editorMode, setEditorMode] = useState<EditorMode>('split')
   const [infoPanel, setInfoPanel] = useState(false)
+  const [focusMode, setFocusMode] = useState(false)
   const [editorContextMenu, setEditorContextMenu] = useState<{ x: number; y: number } | null>(null)
   const [treeContextMenu, setTreeContextMenu] = useState<{ node: WebTreeNode; x: number; y: number } | null>(null)
+  const [floatingTooltip, setFloatingTooltip] = useState<FloatingTooltipState | null>(null)
   const [dirty, setDirty] = useState(false)
+  const [publishState, setPublishState] = useState<PublishStatusResponse | null>(null)
   const sidebarCollapsed = false
   const [loadedContentHash, setLoadedContentHash] = useState<string | null>(null)
   const [loadedContent, setLoadedContent] = useState<string | null>(null)
@@ -98,6 +107,24 @@ export function Workspace() {
   const { hasPending, pendingCount, reconciling, saveOffline, reconcile } = useOfflineSync(workspace?.id)
   const canEditContent = workspace?.role !== 'viewer'
   const canManageWorkspace = workspace?.role === 'owner' || workspace?.role === 'admin'
+
+  const showTooltip = useCallback((label: string, element: HTMLElement) => {
+    const rect = element.getBoundingClientRect()
+    setFloatingTooltip({
+      label,
+      x: Math.min(Math.max(rect.left + rect.width / 2, 12), window.innerWidth - 12),
+      y: rect.bottom + 8,
+    })
+  }, [])
+
+  const hideTooltip = useCallback(() => setFloatingTooltip(null), [])
+
+  const tooltipProps = useCallback((label: string) => ({
+    onMouseEnter: (event: React.MouseEvent<HTMLElement>) => showTooltip(label, event.currentTarget),
+    onMouseLeave: hideTooltip,
+    onFocus: (event: React.FocusEvent<HTMLElement>) => showTooltip(label, event.currentTarget),
+    onBlur: hideTooltip,
+  }), [hideTooltip, showTooltip])
 
   // Keep the REST client's session ID in sync with the WS connection
   useEffect(() => { setSessionId(wsSessionId) }, [wsSessionId])
@@ -239,6 +266,12 @@ export function Workspace() {
           api.listDocuments(workspace.id).then(setDocuments)
           api.listTrash(workspace.id).then(setTrashItems)
           break
+        case 'document:publish-changed':
+          api.listDocuments(workspace.id).then(setDocuments)
+          if (selectedDoc && event.documentId === selectedDoc) {
+            api.getPublishStatus(workspace.id, selectedDoc).then(setPublishState).catch(() => undefined)
+          }
+          break
       }
     })
   }, [wsSubscribe, wsSessionId, workspace?.id, selectedDoc, documents, dirty])
@@ -277,11 +310,15 @@ export function Workspace() {
 
   async function openDocument(docId: string) {
     if (!workspaceId) return
-    const doc = await api.getDocument(workspaceId, docId)
+    const [doc, publish] = await Promise.all([
+      api.getDocument(workspaceId, docId),
+      api.getPublishStatus(workspaceId, docId).catch(() => null),
+    ])
     setSelectedDoc(docId)
     setDocContent(doc.content)
     setLoadedContentHash(doc.contentHash)
     setLoadedContent(doc.content)
+    setPublishState(publish)
     setDirty(false)
   }
 
@@ -417,29 +454,75 @@ export function Workspace() {
     await reloadDomains()
   }
 
-  async function setDocumentPublishStatus(status: 'published' | 'draft' | 'archived') {
-    if (!workspaceId || !selectedDoc) return
-    if (!canEditContent) return
-    const doc = documents.find(d => d.id === selectedDoc)
-    if (!doc) return
-    const nextContent = writeFrontmatter(docContent, { status })
+  async function refreshPublishState(docId: string, fallback?: { isPublished: boolean; publishedAt: string; contentHash: string }) {
+    if (!workspaceId) return
+    setPublishState(await api.getPublishStatus(workspaceId, docId).catch(() => fallback ? ({
+      documentId: docId,
+      isPublished: fallback.isPublished,
+      publishedAt: fallback.publishedAt,
+      currentHash: fallback.contentHash,
+      publishedHash: fallback.contentHash,
+      hasUnpublishedChanges: false,
+    }) : null))
+  }
+
+  async function publishDocumentsByIds(docIds: string[]) {
+    if (!workspaceId || docIds.length === 0) return
+    if (!canEditContent) {
+      setStatusMessage('Viewer access is read-only.')
+      setTimeout(() => setStatusMessage(''), 3000)
+      return
+    }
+    const uniqueIds = Array.from(new Set(docIds))
+    if (selectedDoc && uniqueIds.includes(selectedDoc) && dirty) await saveDocument()
     setSaving(true)
     try {
-      const result = await api.saveDocument(workspaceId, {
-        relativePath: doc.relativePath,
-        content: nextContent,
-        title: parseFrontmatter(nextContent).data.title || undefined,
-        baseContentHash: loadedContentHash || undefined,
-        baseContent: loadedContent || undefined,
-      })
-      setDocContent(nextContent)
-      setLoadedContentHash(result.contentHash)
-      setLoadedContent(nextContent)
-      setDirty(false)
+      let selectedResult: { isPublished: boolean; publishedAt: string; contentHash: string } | undefined
+      for (const docId of uniqueIds) {
+        const result = await api.publishDocument(workspaceId, docId)
+        if (docId === selectedDoc) selectedResult = result
+      }
+      if (selectedDoc && uniqueIds.includes(selectedDoc)) await refreshPublishState(selectedDoc, selectedResult)
       setDocuments(await api.listDocuments(workspaceId))
+      setStatusMessage(uniqueIds.length === 1 ? 'Document published.' : `${uniqueIds.length} documents published.`)
+      setTimeout(() => setStatusMessage(''), 3000)
     } finally {
       setSaving(false)
     }
+  }
+
+  async function unpublishDocumentsByIds(docIds: string[]) {
+    if (!workspaceId || docIds.length === 0) return
+    if (!canEditContent) return
+    const uniqueIds = Array.from(new Set(docIds))
+    const doc = uniqueIds.length === 1 ? documents.find(d => d.id === uniqueIds[0]) : null
+    const message = doc
+      ? `Remove "${doc.relativePath}" from the public site?`
+      : `Remove ${uniqueIds.length} documents from the public site?`
+    const confirmed = await confirm(uniqueIds.length === 1 ? 'Unpublish document' : 'Unpublish documents', message, true)
+    if (!confirmed) return
+    setSaving(true)
+    try {
+      for (const docId of uniqueIds) {
+        await api.unpublishDocument(workspaceId, docId)
+      }
+      if (selectedDoc && uniqueIds.includes(selectedDoc)) await refreshPublishState(selectedDoc)
+      setDocuments(await api.listDocuments(workspaceId))
+      setStatusMessage(uniqueIds.length === 1 ? 'Document unpublished.' : `${uniqueIds.length} documents unpublished.`)
+      setTimeout(() => setStatusMessage(''), 3000)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function publishSelectedDocument() {
+    if (!selectedDoc) return
+    await publishDocumentsByIds([selectedDoc])
+  }
+
+  async function unpublishSelectedDocument() {
+    if (!selectedDoc) return
+    await unpublishDocumentsByIds([selectedDoc])
   }
 
   async function deleteDocument(docId: string) {
@@ -531,8 +614,6 @@ export function Workspace() {
     return () => document.removeEventListener('click', handler)
   }, [treeContextMenu])
 
-  const parsed = parseFrontmatter(docContent)
-  const publishStatus = parsed.data.status || 'draft'
   const selectedDocument = selectedDoc ? documents.find(d => d.id === selectedDoc) ?? null : null
   const documentLocation = selectedDocument?.relativePath && selectedDocument.relativePath.includes('/') ? selectedDocument.relativePath.replace(/\/[^/]+$/, '') : ''
   const fileName = selectedDocument?.relativePath ? selectedDocument.relativePath.split('/').pop() || '' : ''
@@ -542,6 +623,14 @@ export function Workspace() {
     return ids.includes(selectedDoc)
   })() : false
   const publicUrl = workspace ? `/u/${getStoredUsername() || 'me'}/${workspace.slug}` : ''
+  const documentPublicPath = selectedDocument
+    ? selectedDocument.relativePath.replace(/\\/g, '/').replace(/\.(md|markdown|mdown|mkd)$/i, '')
+    : ''
+  const documentPublicUrl = publicUrl && documentPublicPath ? `${publicUrl}/${documentPublicPath}` : publicUrl
+  const isPublished = publishState?.isPublished ?? selectedDocument?.isPublished ?? false
+  const hasUnpublishedChanges = Boolean(isPublished && (dirty || publishState?.hasUnpublishedChanges))
+  const publishedDocuments = useMemo(() => documents.filter(doc => doc.isPublished), [documents])
+  const unpublishedDocuments = useMemo(() => documents.filter(doc => !doc.isPublished), [documents])
   const boundDomains = workspace ? domains.filter(domain => domain.workspaceId === workspace.id) : []
   const availableDomains = workspace ? domains.filter(domain => !domain.workspaceId || domain.workspaceId === workspace.id) : []
   const verifiedDomains = boundDomains.filter(domain => domain.status === 'verified')
@@ -595,8 +684,8 @@ export function Workspace() {
       )}
 
       {activeSection === 'documents' && (
-        <div className="grid grid-cols-[272px_minmax(0,1fr)] overflow-hidden">
-          {!sidebarCollapsed && (
+        <div className={`grid overflow-hidden ${focusMode ? 'grid-cols-[minmax(0,1fr)]' : 'grid-cols-[272px_minmax(0,1fr)]'}`}>
+          {!sidebarCollapsed && !focusMode && (
             <aside className="flex min-h-0 flex-col border-r border-black/[0.04] bg-[#f7faf8]">
               <div className="p-5 pb-4">
                 <CloudWorkspaceSwitcher
@@ -632,6 +721,8 @@ export function Workspace() {
                   selectedDoc={selectedDoc}
                   onOpen={openDocument}
                   onDelete={deleteDocument}
+                  onPublish={docId => publishDocumentsByIds([docId])}
+                  onUnpublish={docId => unpublishDocumentsByIds([docId])}
                   onDocumentsChange={setDocuments}
                   onFoldersChange={setFolders}
                   onSaveDocument={async (data) => {
@@ -697,20 +788,61 @@ export function Workspace() {
                     )}
                   </div>
                 </div>
-                <div className="flex shrink-0 items-center gap-1">
-                  <span className={`status-chip ${dirty ? 'status-chip-warning' : 'status-chip-neutral'}`}>{dirty ? 'Unsaved' : 'Saved'}</span>
-                  <span className="status-chip status-chip-neutral">{publishStatus}</span>
+                <div className="header-action-group">
+                  {!dirty || <span className="status-chip status-chip-warning">Unsaved</span>}
+                  {selectedDoc && canEditContent && (!isPublished || hasUnpublishedChanges) && (
+                    <span className="header-tooltip header-tooltip-end group">
+                      <button
+                        className={`header-icon-button ${
+                          hasUnpublishedChanges
+                            ? 'header-icon-button-warning'
+                            : 'header-icon-button-primary'
+                        }`}
+                        type="button"
+                        aria-label={hasUnpublishedChanges ? 'Republish' : 'Publish'}
+                        aria-disabled={saving}
+                        {...tooltipProps(hasUnpublishedChanges ? 'Republish' : 'Publish')}
+                        onClick={() => {
+                          if (saving) return
+                          void publishSelectedDocument()
+                        }}
+                      >
+                        {hasUnpublishedChanges ? <ArrowPathIcon className="h-4 w-4" /> : <ArrowUpTrayIcon className="h-4 w-4" />}
+                      </button>
+                    </span>
+                  )}
+                  {isPublished && canEditContent && (
+                    <button
+                      className="header-icon-button header-icon-button-danger"
+                      type="button"
+                      aria-label="Unpublish"
+                      aria-disabled={saving}
+                      {...tooltipProps('Unpublish')}
+                      onClick={() => {
+                        if (saving) return
+                        void unpublishSelectedDocument()
+                      }}
+                    >
+                      <LinkSlashIcon className="h-4 w-4" />
+                    </button>
+                  )}
                   {!canEditContent && <span className="status-chip status-chip-neutral">Read-only</span>}
                   {selectedDoc && (
-                    <button
-                      className="sidebar-action bg-[#008884] px-3 text-white hover:bg-[#006f6b] hover:text-white disabled:opacity-50"
-                      type="button"
-                      title="Save"
-                      disabled={!dirty || !canEditContent}
-                      onClick={() => { void saveDocument() }}
-                    >
-                      <CheckCircleIcon className="h-4 w-4" />
-                    </button>
+                    <span className="header-tooltip header-tooltip-end group">
+                      <button
+                        className={`header-icon-button ${dirty ? 'header-icon-button-primary' : ''}`}
+                        type="button"
+                        aria-label={dirty ? 'Save' : 'No unsaved changes'}
+                        aria-disabled={!dirty || !canEditContent}
+                        {...tooltipProps(dirty ? 'Save' : 'No unsaved changes')}
+                        onClick={() => {
+                          if (!dirty || !canEditContent) return
+                          void saveDocument()
+                        }}
+                      >
+                        <CheckCircleIcon className="h-4 w-4" />
+                      </button>
+                    </span>
                   )}
                 </div>
               </div>
@@ -733,35 +865,36 @@ export function Workspace() {
                 </div>
               )}
               <div className="flex min-h-12 items-center gap-1 border-b border-black/[0.04] bg-[#fbfdfb] px-5">
-                <EditorToolbarButton title="Bold (Ctrl+B)" disabled={!canEditContent} onClick={() => wrapSelection('**', '**', 'bold text')}>
+                <EditorToolbarButton title="Bold (Ctrl+B)" disabled={!canEditContent} tooltipProps={tooltipProps('Bold (Ctrl+B)')} onClick={() => wrapSelection('**', '**', 'bold text')}>
                   <BoldIcon className="h-4 w-4" />
                 </EditorToolbarButton>
-                <EditorToolbarButton title="Italic (Ctrl+I)" disabled={!canEditContent} onClick={() => wrapSelection('_', '_', 'italic text')}>
+                <EditorToolbarButton title="Italic (Ctrl+I)" disabled={!canEditContent} tooltipProps={tooltipProps('Italic (Ctrl+I)')} onClick={() => wrapSelection('_', '_', 'italic text')}>
                   <ItalicIcon className="h-4 w-4" />
                 </EditorToolbarButton>
-                <EditorToolbarButton title="Link (Ctrl+K)" disabled={!canEditContent} onClick={() => wrapSelection('[', '](url)', 'link text')}>
+                <EditorToolbarButton title="Link (Ctrl+K)" disabled={!canEditContent} tooltipProps={tooltipProps('Link (Ctrl+K)')} onClick={() => wrapSelection('[', '](url)', 'link text')}>
                   <LinkIcon className="h-4 w-4" />
                 </EditorToolbarButton>
-                <EditorToolbarButton title="Inline code" disabled={!canEditContent} onClick={() => wrapSelection('`', '`', 'code')}>
+                <EditorToolbarButton title="Inline code" disabled={!canEditContent} tooltipProps={tooltipProps('Inline code')} onClick={() => wrapSelection('`', '`', 'code')}>
                   <CodeBracketIcon className="h-4 w-4" />
                 </EditorToolbarButton>
-                <EditorToolbarButton title="Insert table (Ctrl+Shift+T)" disabled={!canEditContent} onClick={() => insertOrEditTable()}>
+                <EditorToolbarButton title="Insert table (Ctrl+Shift+T)" disabled={!canEditContent} tooltipProps={tooltipProps('Insert table (Ctrl+Shift+T)')} onClick={() => insertOrEditTable()}>
                   <TableCellsIcon className="h-4 w-4" />
                 </EditorToolbarButton>
-                <EditorToolbarButton title="Insert formula" disabled={!canEditContent} onClick={() => insertAtCursor('\n$$\nE = mc^2\n$$\n')}>
+                <EditorToolbarButton title="Insert formula" disabled={!canEditContent} tooltipProps={tooltipProps('Insert formula')} onClick={() => insertAtCursor('\n$$\nE = mc^2\n$$\n')}>
                   <VariableIcon className="h-4 w-4" />
                 </EditorToolbarButton>
-                <EditorToolbarButton title="Insert Mermaid diagram" disabled={!canEditContent} onClick={() => insertAtCursor('\n```mermaid\nflowchart TD\n  A --> B\n```\n')}>
+                <EditorToolbarButton title="Insert Mermaid diagram" disabled={!canEditContent} tooltipProps={tooltipProps('Insert Mermaid diagram')} onClick={() => insertAtCursor('\n```mermaid\nflowchart TD\n  A --> B\n```\n')}>
                   <ShareIcon className="h-4 w-4" />
                 </EditorToolbarButton>
-                <EditorToolbarButton title="Task list" disabled={!canEditContent} onClick={() => insertAtCursor('\n- [ ] Task\n')}>
+                <EditorToolbarButton title="Task list" disabled={!canEditContent} tooltipProps={tooltipProps('Task list')} onClick={() => insertAtCursor('\n- [ ] Task\n')}>
                   <ClipboardDocumentCheckIcon className="h-4 w-4" />
                 </EditorToolbarButton>
                 <div className="ml-auto flex items-center gap-1 rounded-full bg-[#eef5f1] p-1">
                   <button
                     type="button"
                     className={`view-mode-button ${editorMode === 'write' ? 'view-mode-button-active' : ''}`}
-                    title="Write"
+                    aria-label="Write"
+                    {...tooltipProps('Write')}
                     onClick={() => setEditorMode('write')}
                   >
                     <PencilSquareIcon className="h-4 w-4" />
@@ -769,7 +902,8 @@ export function Workspace() {
                   <button
                     type="button"
                     className={`view-mode-button ${editorMode === 'split' ? 'view-mode-button-active' : ''}`}
-                    title="Split"
+                    aria-label="Split"
+                    {...tooltipProps('Split')}
                     onClick={() => setEditorMode('split')}
                   >
                     <ViewColumnsIcon className="h-4 w-4" />
@@ -777,14 +911,18 @@ export function Workspace() {
                   <button
                     type="button"
                     className={`view-mode-button ${editorMode === 'preview' ? 'view-mode-button-active' : ''}`}
-                    title="Preview"
+                    aria-label="Preview"
+                    {...tooltipProps('Preview')}
                     onClick={() => setEditorMode('preview')}
                   >
                     <EyeIcon className="h-4 w-4" />
                   </button>
                 </div>
-                <button className="editor-tool" type="button" title="Document info" onClick={() => setInfoPanel(p => !p)}>
+                <button className="editor-tool" type="button" aria-label="Document info" {...tooltipProps('Document info')} onClick={() => setInfoPanel(p => !p)}>
                   <InformationCircleIcon className="h-4 w-4" />
+                </button>
+                <button className="editor-tool" type="button" aria-label={focusMode ? 'Exit focus mode' : 'Focus mode'} {...tooltipProps(focusMode ? 'Exit focus mode' : 'Focus mode')} onClick={() => setFocusMode(p => !p)}>
+                  {focusMode ? <ArrowsPointingInIcon className="h-4 w-4" /> : <ArrowsPointingOutIcon className="h-4 w-4" />}
                 </button>
               </div>
 
@@ -820,16 +958,16 @@ export function Workspace() {
                       <button className="subtle-button aspect-square px-0" type="button" title="Hide" onClick={() => setInfoPanel(false)}><XMarkIcon className="h-4 w-4" /></button>
                     </div>
                     {selectedDocument && (
-                      <section className="document-info-section">
-                        <p className="text-sm font-semibold text-stone-950">Publish</p>
-                        <p className="mt-1 text-xs text-stone-500">Current status: {publishStatus}</p>
-                        <div className="mt-3">
-                          <StatusSelect
-                            value={publishStatus}
-                            onChange={(value) => setDocumentPublishStatus(value as 'draft' | 'published' | 'archived')}
-                          />
-                        </div>
-                      </section>
+                      <WebPublishSection
+                        publishState={publishState}
+                        isPublished={isPublished}
+                        hasUnpublishedChanges={Boolean(hasUnpublishedChanges)}
+                        publishedUrl={documentPublicUrl}
+                        canEdit={canEditContent}
+                        saving={saving}
+                        onPublish={publishSelectedDocument}
+                        onUnpublish={unpublishSelectedDocument}
+                      />
                     )}
                     <WebPropertiesSection
                       content={docContent}
@@ -898,6 +1036,62 @@ export function Workspace() {
                     </div>
                   </section>
 
+                  <aside className="panel-card p-5">
+                    <div className="mb-4 flex items-center justify-between gap-3">
+                      <p className="text-sm font-semibold text-stone-950">Publishing</p>
+                      <span className="status-chip status-chip-success">{publishedDocuments.length} live</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-xs text-[#5f6d68]">
+                      <div className="rounded-lg bg-[#f4f8f6] p-3">
+                        <p className="font-semibold text-stone-900">{publishedDocuments.length}</p>
+                        <p className="mt-1">Published</p>
+                      </div>
+                      <div className="rounded-lg bg-[#f4f8f6] p-3">
+                        <p className="font-semibold text-stone-900">{unpublishedDocuments.length}</p>
+                        <p className="mt-1">Draft only</p>
+                      </div>
+                    </div>
+                    <div className="mt-4 space-y-2">
+                      <button
+                        type="button"
+                        className="toolbar-button toolbar-button-primary w-full justify-center gap-2"
+                        disabled={!canEditContent || unpublishedDocuments.length === 0 || saving}
+                        onClick={() => { void publishDocumentsByIds(unpublishedDocuments.map(doc => doc.id)) }}
+                      >
+                        <ArrowUpTrayIcon className="h-4 w-4" />
+                        Publish drafts
+                      </button>
+                      <button
+                        type="button"
+                        className="toolbar-button w-full justify-center gap-2"
+                        disabled={!canEditContent || publishedDocuments.length === 0 || saving}
+                        onClick={() => { void publishDocumentsByIds(publishedDocuments.map(doc => doc.id)) }}
+                      >
+                        <ArrowPathIcon className="h-4 w-4" />
+                        Republish live docs
+                      </button>
+                      <button
+                        type="button"
+                        className="toolbar-button w-full justify-center gap-2 text-red-700 hover:text-red-800"
+                        disabled={!canEditContent || publishedDocuments.length === 0 || saving}
+                        onClick={() => { void unpublishDocumentsByIds(publishedDocuments.map(doc => doc.id)) }}
+                      >
+                        <LinkSlashIcon className="h-4 w-4" />
+                        Unpublish live docs
+                      </button>
+                    </div>
+                    <button
+                      type="button"
+                      className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-brand hover:text-brand-dark"
+                      onClick={() => {
+                        setSettingsSection('general')
+                        setSettingsOpen(true)
+                      }}
+                    >
+                      <Cog6ToothIcon className="h-4 w-4" />
+                      Site settings
+                    </button>
+                  </aside>
 
                 </div>
               </div>
@@ -935,6 +1129,11 @@ export function Workspace() {
           <button type="button" className="context-menu-button" onClick={() => { addMarkdownTableRow(); setEditorContextMenu(null) }}><TableCellsIcon className="mr-2 h-3.5 w-3.5" />Add table row below</button>
           <button type="button" className="context-menu-button" onClick={() => { insertAtCursor('\n$$\nE = mc^2\n$$\n'); setEditorContextMenu(null) }}><VariableIcon className="mr-2 h-3.5 w-3.5" />Insert formula</button>
           <button type="button" className="context-menu-button" onClick={() => { insertAtCursor('\n```mermaid\nflowchart TD\n  A --> B\n```\n'); setEditorContextMenu(null) }}><ShareIcon className="mr-2 h-3.5 w-3.5" />Insert Mermaid diagram</button>
+        </div>
+      )}
+      {floatingTooltip && (
+        <div className="floating-tooltip" style={{ left: floatingTooltip.x, top: floatingTooltip.y }}>
+          {floatingTooltip.label}
         </div>
       )}
     </div>
@@ -1960,9 +2159,9 @@ function formatDateTime(value: string): string {
   return date.toLocaleString()
 }
 
-function EditorToolbarButton({ title, disabled = false, onClick, children }: { title: string; disabled?: boolean; onClick: () => void; children: React.ReactNode }) {
+function EditorToolbarButton({ title, disabled = false, onClick, tooltipProps, children }: { title: string; disabled?: boolean; onClick: () => void; tooltipProps?: React.HTMLAttributes<HTMLButtonElement>; children: React.ReactNode }) {
   return (
-    <button className="editor-tool" type="button" title={title} disabled={disabled} onClick={onClick}>
+    <button className="editor-tool" type="button" aria-label={title} aria-disabled={disabled} {...tooltipProps} onClick={() => { if (!disabled) onClick() }}>
       {children}
     </button>
   )
@@ -1970,7 +2169,7 @@ function EditorToolbarButton({ title, disabled = false, onClick, children }: { t
 
 function WebPropertiesSection({ content, onChange }: { content: string; onChange: (c: string) => void }) {
   const parsed = parseFrontmatter(content)
-  const fields = ['title', 'description', 'tags', 'slug', 'status']
+  const fields = ['title', 'description', 'tags', 'slug']
 
   const updateField = (field: string, value: string) => {
     const newContent = writeFrontmatter(content, { [field]: value.trim() })
@@ -1985,19 +2184,12 @@ function WebPropertiesSection({ content, onChange }: { content: string; onChange
         {fields.map((field) => (
           <label key={field} className="block">
             <span className="field-label">{field}</span>
-            {field === 'status' ? (
-              <StatusSelect
-                value={parsed.data[field] ?? ''}
-                onChange={(value) => updateField(field, value)}
-              />
-            ) : (
-              <input
-                className="field-input"
-                defaultValue={parsed.data[field] ?? ''}
-                aria-label={field}
-                onBlur={(e) => updateField(field, e.target.value)}
-              />
-            )}
+            <input
+              className="field-input"
+              defaultValue={parsed.data[field] ?? ''}
+              aria-label={field}
+              onBlur={(e) => updateField(field, e.target.value)}
+            />
           </label>
         ))}
       </div>
@@ -2005,41 +2197,66 @@ function WebPropertiesSection({ content, onChange }: { content: string; onChange
   )
 }
 
-function StatusSelect({ value, onChange }: { value: string; onChange: (value: string) => void }) {
-  const options = [
-    { label: '—', value: '' },
-    { label: 'Draft', value: 'draft' },
-    { label: 'Published', value: 'published' },
-    { label: 'Archived', value: 'archived' },
-  ]
-  const active = options.find(o => o.value === value) ?? options[0]!
-
+function WebPublishSection({
+  publishState,
+  isPublished,
+  hasUnpublishedChanges,
+  publishedUrl,
+  canEdit,
+  saving,
+  onPublish,
+  onUnpublish,
+}: {
+  publishState: PublishStatusResponse | null
+  isPublished: boolean
+  hasUnpublishedChanges: boolean
+  publishedUrl: string
+  canEdit: boolean
+  saving: boolean
+  onPublish: () => Promise<void>
+  onUnpublish: () => Promise<void>
+}) {
   return (
-    <Menu as="div" className="relative mt-1 w-full">
-      <MenuButton className="compact-select flex w-full items-center justify-between text-left">
-        <span>{active.label}</span>
-        <ChevronDownIcon className="h-3 w-3 text-stone-400" />
-      </MenuButton>
-      <MenuItems
-        transition
-        className="absolute left-0 z-50 mt-1 w-full origin-top rounded-lg border border-black/[0.06] bg-white p-1 shadow-lg shadow-stone-900/10 outline-none transition focus:outline-none data-[closed]:scale-95 data-[closed]:opacity-0"
-      >
-        {options.map((option) => (
-          <MenuItem key={option.value}>
-            {({ focus }) => (
-              <button
-                className={`flex w-full items-center rounded-md px-3 py-2 text-sm transition ${
-                  focus ? 'bg-[#e8f6f2] text-brand' : 'text-stone-700'
-                } ${active.value === option.value ? 'font-semibold' : ''}`}
-                onClick={() => onChange(option.value)}
-              >
-                {option.label}
-              </button>
-            )}
-          </MenuItem>
-        ))}
-      </MenuItems>
-    </Menu>
+    <section className="document-info-section">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm font-semibold text-stone-950">Publish</p>
+        <span className={`status-chip ${isPublished ? (hasUnpublishedChanges ? 'status-chip-warning' : 'status-chip-success') : 'status-chip-neutral'}`}>
+          {isPublished ? (hasUnpublishedChanges ? 'Changed' : 'Published') : 'Not published'}
+        </span>
+      </div>
+      {publishState?.publishedAt && (
+        <p className="mt-2 text-xs text-stone-500">Published {new Date(publishState.publishedAt).toLocaleString()}</p>
+      )}
+      {hasUnpublishedChanges && (
+        <p className="mt-2 text-xs text-amber-700">The public snapshot is behind the current document.</p>
+      )}
+      {isPublished && (
+        <a className="mt-3 block truncate text-xs font-semibold text-teal-700" href={publishedUrl} target="_blank" rel="noreferrer">
+          View public page
+        </a>
+      )}
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <button
+          className={`sidebar-action ${hasUnpublishedChanges ? 'bg-amber-500 text-white hover:bg-amber-600 hover:text-white' : ''}`}
+          type="button"
+          title={hasUnpublishedChanges ? 'Republish' : 'Publish'}
+          disabled={!canEdit || saving}
+          onClick={() => { void onPublish() }}
+        >
+          {hasUnpublishedChanges ? <ArrowPathIcon className="h-4 w-4" /> : <ArrowUpTrayIcon className="h-4 w-4" />}
+        </button>
+        <button
+          className="sidebar-action hover:text-red-700"
+          type="button"
+          title="Unpublish"
+          disabled={!canEdit || saving || !isPublished}
+          onClick={() => { void onUnpublish() }}
+        >
+          <LinkSlashIcon className="h-4 w-4" />
+        </button>
+      </div>
+      <p className="mt-3 text-xs text-stone-500">Publishing uses a server snapshot; frontmatter status is treated as user metadata.</p>
+    </section>
   )
 }
 
@@ -2175,7 +2392,7 @@ function allFolderPaths(nodes: WebTreeNode[]): Set<string> {
 function readFavorites(workspaceId?: string): DocumentListItem[] {
   const key = `web-favorites:${workspaceId || 'global'}`
   const ids: string[] = JSON.parse(localStorage.getItem(key) || '[]')
-  return ids.map(id => ({ id, relativePath: id, title: '', status: 'draft', contentHash: '', updatedClock: 0, versionId: null }))
+  return ids.map(id => ({ id, relativePath: id, title: '', isPublished: false, contentHash: '', updatedClock: 0, versionId: null }))
 }
 
 function toggleFavoriteDoc(docId: string, workspaceId?: string) {
@@ -2192,6 +2409,8 @@ function WebDocExplorer({
   selectedDoc,
   onOpen,
   onDelete,
+  onPublish,
+  onUnpublish,
   onDocumentsChange,
   onFoldersChange,
   trashItems,
@@ -2215,6 +2434,8 @@ function WebDocExplorer({
   selectedDoc: string | null
   onOpen: (docId: string) => void
   onDelete: (docId: string) => void
+  onPublish: (docId: string) => Promise<void> | void
+  onUnpublish: (docId: string) => Promise<void> | void
   onDocumentsChange: (docs: DocumentListItem[]) => void
   onFoldersChange: (folders: FolderListItem[]) => void
   onSaveDocument: (data: { relativePath: string; content: string; title?: string }) => Promise<void>
@@ -2546,6 +2767,28 @@ function WebDocExplorer({
                   <PencilIcon className="mr-2 h-3.5 w-3.5" />Rename
                 </button>
               )}
+              {!readOnly && (
+                <>
+                  <div className="my-1 border-t border-stone-200" />
+                  <button
+                    type="button"
+                    className="context-menu-button"
+                    onClick={() => { void onPublish(treeContextMenu.node.doc!.id); setTreeContextMenu(null) }}
+                  >
+                    {treeContextMenu.node.doc.isPublished ? <ArrowPathIcon className="mr-2 h-3.5 w-3.5" /> : <ArrowUpTrayIcon className="mr-2 h-3.5 w-3.5" />}
+                    {treeContextMenu.node.doc.isPublished ? 'Republish' : 'Publish'}
+                  </button>
+                  {treeContextMenu.node.doc.isPublished && (
+                    <button
+                      type="button"
+                      className="context-menu-button text-red-700 hover:text-red-800"
+                      onClick={() => { void onUnpublish(treeContextMenu.node.doc!.id); setTreeContextMenu(null) }}
+                    >
+                      <LinkSlashIcon className="mr-2 h-3.5 w-3.5" />Unpublish
+                    </button>
+                  )}
+                </>
+              )}
               <div className="my-1 border-t border-stone-200" />
               <button
                 type="button"
@@ -2620,6 +2863,9 @@ const WebTreeNodeRow = memo(function WebTreeNodeRow({
           {isFolder ? <FolderIcon className="h-3.5 w-3.5" /> : <DocumentTextIcon className="h-3.5 w-3.5" />}
         </span>
         <span className={`truncate ${isFolder ? 'font-semibold text-[#4b5753]' : ''}`}>{node.name}</span>
+        {!isFolder && node.doc?.isPublished && (
+          <span className="ml-auto h-1.5 w-1.5 shrink-0 rounded-full bg-[#008884]" title="Published" />
+        )}
       </button>
       {isFolder && isExpanded && node.children.length > 0 && (
         <ul className="mt-0.5 space-y-0.5">

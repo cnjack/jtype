@@ -160,24 +160,6 @@ pub fn is_markdown_path(path: &str) -> bool {
         || lower.ends_with(".mkd")
 }
 
-pub fn normalize_status(status: &str, content: &str) -> &'static str {
-    let frontmatter = parse_frontmatter(content);
-    if status.eq_ignore_ascii_case("draft")
-        || frontmatter
-            .get("status")
-            .map(|v| v.eq_ignore_ascii_case("draft"))
-            .unwrap_or(false)
-        || frontmatter
-            .get("publish")
-            .map(|v| v.eq_ignore_ascii_case("false"))
-            .unwrap_or(false)
-    {
-        "draft"
-    } else {
-        "published"
-    }
-}
-
 pub fn extract_title(content: &str) -> Option<String> {
     parse_frontmatter(content)
         .get("title")

@@ -73,6 +73,42 @@
     @apply bg-[#d9f2ed] text-brand;
   }
 
+  .header-action-group {
+    @apply flex shrink-0 items-center gap-1 rounded-full border border-black/[0.04] bg-white/80 p-1 shadow-sm shadow-emerald-950/5 ring-1 ring-white/70;
+  }
+
+  .header-icon-button {
+    @apply inline-flex h-8 w-8 items-center justify-center rounded-full text-[#5f6d68] transition hover:bg-[#e8f6f2] hover:text-[#006f6b] aria-disabled:cursor-not-allowed aria-disabled:opacity-40;
+  }
+
+  .header-icon-button-primary {
+    @apply text-[#006f6b] hover:bg-[#e8f6f2] hover:text-[#006f6b];
+  }
+
+  .header-icon-button-warning {
+    @apply text-[#006f6b] hover:bg-[#e8f6f2] hover:text-[#006f6b];
+  }
+
+  .header-icon-button-danger {
+    @apply hover:bg-red-50 hover:text-red-700;
+  }
+
+  .header-tooltip {
+    @apply relative inline-flex;
+  }
+
+  .header-tooltip-label {
+    @apply pointer-events-none absolute left-1/2 top-full z-50 mt-2 -translate-x-1/2 whitespace-nowrap rounded-md bg-stone-950 px-2 py-1 text-[11px] font-medium text-white opacity-0 shadow-lg shadow-stone-950/15 transition group-hover:opacity-100 group-focus-within:opacity-100;
+  }
+
+  .header-tooltip-end .header-tooltip-label {
+    @apply left-auto right-0 translate-x-0;
+  }
+
+  .floating-tooltip {
+    @apply pointer-events-none fixed z-[100] -translate-x-1/2 whitespace-nowrap rounded-md bg-stone-950 px-2 py-1 text-[11px] font-medium text-white opacity-100 shadow-lg shadow-stone-950/15;
+  }
+
   .field-label {
     @apply text-xs font-semibold uppercase text-stone-500;
   }

@@ -159,7 +159,7 @@ pub async fn get_workspace_manifest(
     )
     .await?;
     let rows = sqlx::query(
-        r#"SELECT relative_path, title, status, content_hash,
+        r#"SELECT relative_path, title, is_published, content_hash,
                   COALESCE(current_version_id, id) AS version_id, updated_clock
            FROM documents WHERE workspace_id = ? ORDER BY relative_path"#,
     )
@@ -172,7 +172,7 @@ pub async fn get_workspace_manifest(
             Ok(ManifestDocument {
                 relative_path: row.try_get("relative_path")?,
                 title: row.try_get("title")?,
-                status: row.try_get("status")?,
+                is_published: row.try_get::<i8, _>("is_published").unwrap_or(0) != 0,
                 content_hash: row.try_get("content_hash")?,
                 version_id: row.try_get("version_id")?,
                 updated_clock: row.try_get("updated_clock")?,

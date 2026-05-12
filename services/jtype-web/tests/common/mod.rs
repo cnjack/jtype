@@ -161,8 +161,8 @@ pub async fn save_doc(
 ) -> Value {
     let (status, body) = req(
         app,
-        "PUT",
-        &format!("/api/v1/workspaces/{workspace_id}/documents"),
+        "POST",
+        &format!("/api/v1/workspaces/{workspace_id}/documents/save"),
         Some(token),
         Some(json!({
             "relativePath": path,
