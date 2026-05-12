@@ -11,10 +11,24 @@ on:
 
 jobs:
   build-desktop:
-    name: Build Windows desktop app
-    runs-on: windows-latest
+    name: Build ${{ matrix.name }} desktop app
+    runs-on: ${{ matrix.os }}
     permissions:
       contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows
+            os: windows-latest
+            bundle: nsis
+            artifact-name: jtype-windows-desktop
+            artifact-path: src-tauri/target/release/bundle/nsis/*
+          - name: macOS
+            os: macos-latest
+            bundle: dmg
+            artifact-name: jtype-macos-desktop
+            artifact-path: src-tauri/target/release/bundle/dmg/*
 
     steps:
       - name: Checkout
@@ -38,7 +52,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          args: --bundles nsis
+          args: --bundles ${{ matrix.bundle }}
 
       - name: Build and upload desktop app to release
         if: github.event_name == 'release'
@@ -46,13 +60,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          args: --bundles nsis
+          args: --bundles ${{ matrix.bundle }}
           releaseId: ${{ github.event.release.id }}
 
       - name: Upload desktop build artifact
         if: github.event_name != 'release'
         uses: actions/upload-artifact@v4
         with:
-          name: jtype-windows-desktop
-          path: src-tauri/target/release/bundle/nsis/*
+          name: ${{ matrix.artifact-name }}
+          path: ${{ matrix.artifact-path }}
           if-no-files-found: error
