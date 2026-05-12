@@ -92,6 +92,26 @@
     @apply bg-red-300 text-red-950;
   }
 
+  .header-action-group {
+    @apply flex shrink-0 items-center gap-1 rounded-full border border-black/[0.04] bg-white/80 p-1 shadow-sm shadow-emerald-950/5 ring-1 ring-white/70;
+  }
+
+  .header-icon-button {
+    @apply inline-flex h-8 w-8 items-center justify-center rounded-full text-[#5f6d68] transition hover:bg-[#e8f6f2] hover:text-[#006f6b] disabled:cursor-not-allowed disabled:opacity-40;
+  }
+
+  .header-icon-button-primary {
+    @apply bg-[#008884] text-white shadow-sm shadow-[#008884]/20 hover:bg-[#006f6b] hover:text-white;
+  }
+
+  .header-icon-button-warning {
+    @apply bg-amber-500 text-white shadow-sm shadow-amber-500/20 hover:bg-amber-600 hover:text-white;
+  }
+
+  .header-icon-button-danger {
+    @apply hover:bg-red-50 hover:text-red-700;
+  }
+
   .editor-tool {
     @apply inline-flex h-8 items-center justify-center rounded-lg px-2.5 text-xs font-semibold text-[#5f6d68] transition hover:bg-[#e8f6f2] hover:text-[#006f6b] disabled:cursor-not-allowed disabled:opacity-40;
   }

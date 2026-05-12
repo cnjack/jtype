@@ -321,16 +321,16 @@ export function EditorShell() {
             )}
           </div>
         </div>
-        <div className="flex shrink-0 items-center gap-1">
+        <div className="header-action-group">
           <span id="file-state" className={`status-chip ${state.isDirty ? "status-chip-warning" : "status-chip-neutral"}`}>{fileStateLabel}</span>
           {isPublished && !hasUnpublishedChanges && <span className="status-chip status-chip-success">Published</span>}
           {canPublishToCloud && canEditMarkdown && (
             <button
-              className={`sidebar-action px-3 disabled:opacity-50 ${
+              className={`header-icon-button ${
                 hasUnpublishedChanges
-                  ? "bg-amber-500 text-white hover:bg-amber-600 hover:text-white"
+                  ? "header-icon-button-warning"
                   : !isPublished
-                    ? "bg-[#008884] text-white hover:bg-[#006f6b] hover:text-white"
+                    ? "header-icon-button-primary"
                     : ""
               }`}
               type="button"
@@ -343,7 +343,7 @@ export function EditorShell() {
           )}
           {isPublished && canEditMarkdown && (
             <button
-              className="editor-tool h-8 w-8 px-0 hover:text-red-700"
+              className="header-icon-button header-icon-button-danger"
               type="button"
               title="Unpublish"
               disabled={state.isLoading}
@@ -366,7 +366,7 @@ export function EditorShell() {
           )}
           {state.currentPath && (
             <button
-              className="sidebar-action bg-[#008884] px-3 text-white hover:bg-[#006f6b] hover:text-white disabled:opacity-50"
+              className={`header-icon-button ${state.isDirty ? "header-icon-button-primary" : ""}`}
               type="button"
               title="Save"
               disabled={!canEditMarkdown || !state.isDirty}
