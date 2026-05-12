@@ -46,6 +46,7 @@ Tests
 - Header actions must be mode-aware: empty (product identity + account entry only), vault with no document (quick open + account/cloud), document (save when dirty), single file (open file + save).
 - User-facing copy: say "vault" for local folders, "cloud workspace" for server-side collaboration.
 - Avoid exposing AI UI until real AI functionality is enabled.
+- Remind to keep the same experience between desktop and web — no web-only features that aren't planned for desktop.
 
 ## Domain Agent Files
 

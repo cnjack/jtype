@@ -1,7 +1,7 @@
 [package]
-name = "markdown-viewer"
+name = "jtype"
 version = "0.1.0"
-description = "A Tauri Markdown Viewer"
+description = "jtype"
 authors = ["you"]
 edition = "2021"
 

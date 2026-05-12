@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "JType",
+  "productName": "jtype",
   "version": "0.1.0",
   "identifier": "com.markdownviewer.viewer",
   "build": {
@@ -13,7 +13,7 @@
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "JType",
+        "title": "jtype",
         "width": 1280,
         "height": 820
       }
@@ -24,7 +24,7 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["nsis"],
+    "targets": "all",
     "fileAssociations": [
       {
         "ext": ["md", "markdown", "mdown", "mkd"],

@@ -52,6 +52,11 @@ import {
 
 type WorkspaceSection = 'documents' | 'trash' | 'publishing' | 'domains'
 type WorkspaceSettingsSection = 'general' | 'trash' | 'domains' | 'members'
+type FloatingTooltipState = {
+  label: string
+  x: number
+  y: number
+}
 
 export function Workspace() {
   const { workspaceId } = useParams<{ workspaceId: string }>()
@@ -83,8 +88,10 @@ export function Workspace() {
   const [domainMessage, setDomainMessage] = useState('')
   const [editorMode, setEditorMode] = useState<EditorMode>('split')
   const [infoPanel, setInfoPanel] = useState(false)
+  const [focusMode, setFocusMode] = useState(false)
   const [editorContextMenu, setEditorContextMenu] = useState<{ x: number; y: number } | null>(null)
   const [treeContextMenu, setTreeContextMenu] = useState<{ node: WebTreeNode; x: number; y: number } | null>(null)
+  const [floatingTooltip, setFloatingTooltip] = useState<FloatingTooltipState | null>(null)
   const [dirty, setDirty] = useState(false)
   const [publishState, setPublishState] = useState<PublishStatusResponse | null>(null)
   const sidebarCollapsed = false
@@ -100,6 +107,24 @@ export function Workspace() {
   const { hasPending, pendingCount, reconciling, saveOffline, reconcile } = useOfflineSync(workspace?.id)
   const canEditContent = workspace?.role !== 'viewer'
   const canManageWorkspace = workspace?.role === 'owner' || workspace?.role === 'admin'
+
+  const showTooltip = useCallback((label: string, element: HTMLElement) => {
+    const rect = element.getBoundingClientRect()
+    setFloatingTooltip({
+      label,
+      x: Math.min(Math.max(rect.left + rect.width / 2, 12), window.innerWidth - 12),
+      y: rect.bottom + 8,
+    })
+  }, [])
+
+  const hideTooltip = useCallback(() => setFloatingTooltip(null), [])
+
+  const tooltipProps = useCallback((label: string) => ({
+    onMouseEnter: (event: React.MouseEvent<HTMLElement>) => showTooltip(label, event.currentTarget),
+    onMouseLeave: hideTooltip,
+    onFocus: (event: React.FocusEvent<HTMLElement>) => showTooltip(label, event.currentTarget),
+    onBlur: hideTooltip,
+  }), [hideTooltip, showTooltip])
 
   // Keep the REST client's session ID in sync with the WS connection
   useEffect(() => { setSessionId(wsSessionId) }, [wsSessionId])
@@ -659,8 +684,8 @@ export function Workspace() {
       )}
 
       {activeSection === 'documents' && (
-        <div className="grid grid-cols-[272px_minmax(0,1fr)] overflow-hidden">
-          {!sidebarCollapsed && (
+        <div className={`grid overflow-hidden ${focusMode ? 'grid-cols-[minmax(0,1fr)]' : 'grid-cols-[272px_minmax(0,1fr)]'}`}>
+          {!sidebarCollapsed && !focusMode && (
             <aside className="flex min-h-0 flex-col border-r border-black/[0.04] bg-[#f7faf8]">
               <div className="p-5 pb-4">
                 <CloudWorkspaceSwitcher
@@ -764,47 +789,60 @@ export function Workspace() {
                   </div>
                 </div>
                 <div className="header-action-group">
-                  <span className={`status-chip ${dirty ? 'status-chip-warning' : 'status-chip-neutral'}`}>{dirty ? 'Unsaved' : 'Saved'}</span>
-                  {isPublished && !hasUnpublishedChanges && <span className="status-chip status-chip-success">Published</span>}
-                  {selectedDoc && canEditContent && (
-                    <button
-                      className={`header-icon-button ${
-                        hasUnpublishedChanges
-                          ? 'header-icon-button-warning'
-                          : !isPublished
-                            ? 'header-icon-button-primary'
-                            : ''
-                      }`}
-                      type="button"
-                      title={hasUnpublishedChanges ? 'Republish' : isPublished ? 'Publish current version' : 'Publish'}
-                      disabled={saving}
-                      onClick={() => { void publishSelectedDocument() }}
-                    >
-                      {hasUnpublishedChanges ? <ArrowPathIcon className="h-4 w-4" /> : <ArrowUpTrayIcon className="h-4 w-4" />}
-                    </button>
+                  {!dirty || <span className="status-chip status-chip-warning">Unsaved</span>}
+                  {selectedDoc && canEditContent && (!isPublished || hasUnpublishedChanges) && (
+                    <span className="header-tooltip header-tooltip-end group">
+                      <button
+                        className={`header-icon-button ${
+                          hasUnpublishedChanges
+                            ? 'header-icon-button-warning'
+                            : 'header-icon-button-primary'
+                        }`}
+                        type="button"
+                        aria-label={hasUnpublishedChanges ? 'Republish' : 'Publish'}
+                        aria-disabled={saving}
+                        {...tooltipProps(hasUnpublishedChanges ? 'Republish' : 'Publish')}
+                        onClick={() => {
+                          if (saving) return
+                          void publishSelectedDocument()
+                        }}
+                      >
+                        {hasUnpublishedChanges ? <ArrowPathIcon className="h-4 w-4" /> : <ArrowUpTrayIcon className="h-4 w-4" />}
+                      </button>
+                    </span>
                   )}
                   {isPublished && canEditContent && (
                     <button
                       className="header-icon-button header-icon-button-danger"
                       type="button"
-                      title="Unpublish"
-                      disabled={saving}
-                      onClick={() => { void unpublishSelectedDocument() }}
+                      aria-label="Unpublish"
+                      aria-disabled={saving}
+                      {...tooltipProps('Unpublish')}
+                      onClick={() => {
+                        if (saving) return
+                        void unpublishSelectedDocument()
+                      }}
                     >
                       <LinkSlashIcon className="h-4 w-4" />
                     </button>
                   )}
                   {!canEditContent && <span className="status-chip status-chip-neutral">Read-only</span>}
                   {selectedDoc && (
-                    <button
-                      className={`header-icon-button ${dirty ? 'header-icon-button-primary' : ''}`}
-                      type="button"
-                      title="Save"
-                      disabled={!dirty || !canEditContent}
-                      onClick={() => { void saveDocument() }}
-                    >
-                      <CheckCircleIcon className="h-4 w-4" />
-                    </button>
+                    <span className="header-tooltip header-tooltip-end group">
+                      <button
+                        className={`header-icon-button ${dirty ? 'header-icon-button-primary' : ''}`}
+                        type="button"
+                        aria-label={dirty ? 'Save' : 'No unsaved changes'}
+                        aria-disabled={!dirty || !canEditContent}
+                        {...tooltipProps(dirty ? 'Save' : 'No unsaved changes')}
+                        onClick={() => {
+                          if (!dirty || !canEditContent) return
+                          void saveDocument()
+                        }}
+                      >
+                        <CheckCircleIcon className="h-4 w-4" />
+                      </button>
+                    </span>
                   )}
                 </div>
               </div>
@@ -827,35 +865,36 @@ export function Workspace() {
                 </div>
               )}
               <div className="flex min-h-12 items-center gap-1 border-b border-black/[0.04] bg-[#fbfdfb] px-5">
-                <EditorToolbarButton title="Bold (Ctrl+B)" disabled={!canEditContent} onClick={() => wrapSelection('**', '**', 'bold text')}>
+                <EditorToolbarButton title="Bold (Ctrl+B)" disabled={!canEditContent} tooltipProps={tooltipProps('Bold (Ctrl+B)')} onClick={() => wrapSelection('**', '**', 'bold text')}>
                   <BoldIcon className="h-4 w-4" />
                 </EditorToolbarButton>
-                <EditorToolbarButton title="Italic (Ctrl+I)" disabled={!canEditContent} onClick={() => wrapSelection('_', '_', 'italic text')}>
+                <EditorToolbarButton title="Italic (Ctrl+I)" disabled={!canEditContent} tooltipProps={tooltipProps('Italic (Ctrl+I)')} onClick={() => wrapSelection('_', '_', 'italic text')}>
                   <ItalicIcon className="h-4 w-4" />
                 </EditorToolbarButton>
-                <EditorToolbarButton title="Link (Ctrl+K)" disabled={!canEditContent} onClick={() => wrapSelection('[', '](url)', 'link text')}>
+                <EditorToolbarButton title="Link (Ctrl+K)" disabled={!canEditContent} tooltipProps={tooltipProps('Link (Ctrl+K)')} onClick={() => wrapSelection('[', '](url)', 'link text')}>
                   <LinkIcon className="h-4 w-4" />
                 </EditorToolbarButton>
-                <EditorToolbarButton title="Inline code" disabled={!canEditContent} onClick={() => wrapSelection('`', '`', 'code')}>
+                <EditorToolbarButton title="Inline code" disabled={!canEditContent} tooltipProps={tooltipProps('Inline code')} onClick={() => wrapSelection('`', '`', 'code')}>
                   <CodeBracketIcon className="h-4 w-4" />
                 </EditorToolbarButton>
-                <EditorToolbarButton title="Insert table (Ctrl+Shift+T)" disabled={!canEditContent} onClick={() => insertOrEditTable()}>
+                <EditorToolbarButton title="Insert table (Ctrl+Shift+T)" disabled={!canEditContent} tooltipProps={tooltipProps('Insert table (Ctrl+Shift+T)')} onClick={() => insertOrEditTable()}>
                   <TableCellsIcon className="h-4 w-4" />
                 </EditorToolbarButton>
-                <EditorToolbarButton title="Insert formula" disabled={!canEditContent} onClick={() => insertAtCursor('\n$$\nE = mc^2\n$$\n')}>
+                <EditorToolbarButton title="Insert formula" disabled={!canEditContent} tooltipProps={tooltipProps('Insert formula')} onClick={() => insertAtCursor('\n$$\nE = mc^2\n$$\n')}>
                   <VariableIcon className="h-4 w-4" />
                 </EditorToolbarButton>
-                <EditorToolbarButton title="Insert Mermaid diagram" disabled={!canEditContent} onClick={() => insertAtCursor('\n```mermaid\nflowchart TD\n  A --> B\n```\n')}>
+                <EditorToolbarButton title="Insert Mermaid diagram" disabled={!canEditContent} tooltipProps={tooltipProps('Insert Mermaid diagram')} onClick={() => insertAtCursor('\n```mermaid\nflowchart TD\n  A --> B\n```\n')}>
                   <ShareIcon className="h-4 w-4" />
                 </EditorToolbarButton>
-                <EditorToolbarButton title="Task list" disabled={!canEditContent} onClick={() => insertAtCursor('\n- [ ] Task\n')}>
+                <EditorToolbarButton title="Task list" disabled={!canEditContent} tooltipProps={tooltipProps('Task list')} onClick={() => insertAtCursor('\n- [ ] Task\n')}>
                   <ClipboardDocumentCheckIcon className="h-4 w-4" />
                 </EditorToolbarButton>
                 <div className="ml-auto flex items-center gap-1 rounded-full bg-[#eef5f1] p-1">
                   <button
                     type="button"
                     className={`view-mode-button ${editorMode === 'write' ? 'view-mode-button-active' : ''}`}
-                    title="Write"
+                    aria-label="Write"
+                    {...tooltipProps('Write')}
                     onClick={() => setEditorMode('write')}
                   >
                     <PencilSquareIcon className="h-4 w-4" />
@@ -863,7 +902,8 @@ export function Workspace() {
                   <button
                     type="button"
                     className={`view-mode-button ${editorMode === 'split' ? 'view-mode-button-active' : ''}`}
-                    title="Split"
+                    aria-label="Split"
+                    {...tooltipProps('Split')}
                     onClick={() => setEditorMode('split')}
                   >
                     <ViewColumnsIcon className="h-4 w-4" />
@@ -871,14 +911,18 @@ export function Workspace() {
                   <button
                     type="button"
                     className={`view-mode-button ${editorMode === 'preview' ? 'view-mode-button-active' : ''}`}
-                    title="Preview"
+                    aria-label="Preview"
+                    {...tooltipProps('Preview')}
                     onClick={() => setEditorMode('preview')}
                   >
                     <EyeIcon className="h-4 w-4" />
                   </button>
                 </div>
-                <button className="editor-tool" type="button" title="Document info" onClick={() => setInfoPanel(p => !p)}>
+                <button className="editor-tool" type="button" aria-label="Document info" {...tooltipProps('Document info')} onClick={() => setInfoPanel(p => !p)}>
                   <InformationCircleIcon className="h-4 w-4" />
+                </button>
+                <button className="editor-tool" type="button" aria-label={focusMode ? 'Exit focus mode' : 'Focus mode'} {...tooltipProps(focusMode ? 'Exit focus mode' : 'Focus mode')} onClick={() => setFocusMode(p => !p)}>
+                  {focusMode ? <ArrowsPointingInIcon className="h-4 w-4" /> : <ArrowsPointingOutIcon className="h-4 w-4" />}
                 </button>
               </div>
 
@@ -1085,6 +1129,11 @@ export function Workspace() {
           <button type="button" className="context-menu-button" onClick={() => { addMarkdownTableRow(); setEditorContextMenu(null) }}><TableCellsIcon className="mr-2 h-3.5 w-3.5" />Add table row below</button>
           <button type="button" className="context-menu-button" onClick={() => { insertAtCursor('\n$$\nE = mc^2\n$$\n'); setEditorContextMenu(null) }}><VariableIcon className="mr-2 h-3.5 w-3.5" />Insert formula</button>
           <button type="button" className="context-menu-button" onClick={() => { insertAtCursor('\n```mermaid\nflowchart TD\n  A --> B\n```\n'); setEditorContextMenu(null) }}><ShareIcon className="mr-2 h-3.5 w-3.5" />Insert Mermaid diagram</button>
+        </div>
+      )}
+      {floatingTooltip && (
+        <div className="floating-tooltip" style={{ left: floatingTooltip.x, top: floatingTooltip.y }}>
+          {floatingTooltip.label}
         </div>
       )}
     </div>
@@ -2110,9 +2159,9 @@ function formatDateTime(value: string): string {
   return date.toLocaleString()
 }
 
-function EditorToolbarButton({ title, disabled = false, onClick, children }: { title: string; disabled?: boolean; onClick: () => void; children: React.ReactNode }) {
+function EditorToolbarButton({ title, disabled = false, onClick, tooltipProps, children }: { title: string; disabled?: boolean; onClick: () => void; tooltipProps?: React.HTMLAttributes<HTMLButtonElement>; children: React.ReactNode }) {
   return (
-    <button className="editor-tool" type="button" title={title} disabled={disabled} onClick={onClick}>
+    <button className="editor-tool" type="button" aria-label={title} aria-disabled={disabled} {...tooltipProps} onClick={() => { if (!disabled) onClick() }}>
       {children}
     </button>
   )

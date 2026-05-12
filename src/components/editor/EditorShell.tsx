@@ -42,6 +42,12 @@ type PublishStatusResponse = {
   hasUnpublishedChanges: boolean;
 };
 
+type FloatingTooltipState = {
+  label: string;
+  x: number;
+  y: number;
+};
+
 export function EditorShell() {
   const state = useAppState();
   const dispatch = useAppDispatch();
@@ -55,6 +61,25 @@ export function EditorShell() {
   const previewTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
   const [publishState, setPublishState] = useState<PublishStatusResponse | null>(null);
+  const [floatingTooltip, setFloatingTooltip] = useState<FloatingTooltipState | null>(null);
+
+  const showTooltip = useCallback((label: string, element: HTMLElement) => {
+    const rect = element.getBoundingClientRect();
+    setFloatingTooltip({
+      label,
+      x: Math.min(Math.max(rect.left + rect.width / 2, 12), window.innerWidth - 12),
+      y: rect.bottom + 8,
+    });
+  }, []);
+
+  const hideTooltip = useCallback(() => setFloatingTooltip(null), []);
+
+  const tooltipProps = useCallback((label: string) => ({
+    onMouseEnter: (event: React.MouseEvent<HTMLElement>) => showTooltip(label, event.currentTarget),
+    onMouseLeave: hideTooltip,
+    onFocus: (event: React.FocusEvent<HTMLElement>) => showTooltip(label, event.currentTarget),
+    onBlur: hideTooltip,
+  }), [hideTooltip, showTooltip]);
 
   useEffect(() => {
     if (editorRef.current) {
@@ -93,12 +118,11 @@ export function EditorShell() {
     return "editor-preview-grid view-mode-split";
   };
 
-  const fileStateLabel = state.isDirty ? "Unsaved changes" : state.currentPath ? "Saved" : "Ready";
+  const fileStateLabel = state.isDirty ? "Unsaved changes" : "";
   const currentVaultSettings = state.workspace ? state.vaultSettings[state.workspace.rootPath] : undefined;
   const currentVaultBinding = state.workspace
     ? state.vaultBindings.find((binding) => binding.localVaultPath === state.workspace?.rootPath)
     : null;
-  const cloudSyncEnabled = Boolean(currentVaultBinding && currentVaultSettings?.cloudSyncEnabled !== false);
   const isCloudViewer = Boolean(currentVaultBinding?.workspaceRole === "viewer" && currentVaultSettings?.cloudSyncEnabled !== false);
   const canEditMarkdown = isMarkdown && !isCloudViewer;
   const canPublishToCloud = Boolean(isMarkdown && state.mode === "workspace" && currentVaultBinding && state.syncToken && state.cloudProfile?.token && currentVaultSettings?.cloudSyncEnabled !== false);
@@ -322,37 +346,43 @@ export function EditorShell() {
           </div>
         </div>
         <div className="header-action-group">
-          <span id="file-state" className={`status-chip ${state.isDirty ? "status-chip-warning" : "status-chip-neutral"}`}>{fileStateLabel}</span>
-          {isPublished && !hasUnpublishedChanges && <span className="status-chip status-chip-success">Published</span>}
-          {canPublishToCloud && canEditMarkdown && (
-            <button
-              className={`header-icon-button ${
-                hasUnpublishedChanges
-                  ? "header-icon-button-warning"
-                  : !isPublished
-                    ? "header-icon-button-primary"
-                    : ""
-              }`}
-              type="button"
-              title={hasUnpublishedChanges ? "Republish" : isPublished ? "Publish current version" : "Publish"}
-              disabled={state.isLoading}
-              onClick={() => { void publishCurrentDocument(); }}
-            >
-              {hasUnpublishedChanges ? <ArrowPathIcon className="h-4 w-4" /> : <ArrowUpTrayIcon className="h-4 w-4" />}
-            </button>
+          {!state.isDirty || <span id="file-state" className="status-chip status-chip-warning">{fileStateLabel}</span>}
+          {canPublishToCloud && canEditMarkdown && (!isPublished || hasUnpublishedChanges) && (
+            <span className="header-tooltip header-tooltip-end group">
+              <button
+                className={`header-icon-button ${
+                  hasUnpublishedChanges
+                    ? "header-icon-button-warning"
+                    : "header-icon-button-primary"
+                }`}
+                type="button"
+                aria-label={hasUnpublishedChanges ? "Republish" : "Publish"}
+                aria-disabled={state.isLoading}
+                {...tooltipProps(hasUnpublishedChanges ? "Republish" : "Publish")}
+                onClick={() => {
+                  if (state.isLoading) return;
+                  void publishCurrentDocument();
+                }}
+              >
+                {hasUnpublishedChanges ? <ArrowPathIcon className="h-4 w-4" /> : <ArrowUpTrayIcon className="h-4 w-4" />}
+              </button>
+            </span>
           )}
           {isPublished && canEditMarkdown && (
             <button
               className="header-icon-button header-icon-button-danger"
               type="button"
-              title="Unpublish"
-              disabled={state.isLoading}
-              onClick={() => { void unpublishCurrentDocument(); }}
+              aria-label="Unpublish"
+              aria-disabled={state.isLoading}
+              {...tooltipProps("Unpublish")}
+              onClick={() => {
+                if (state.isLoading) return;
+                void unpublishCurrentDocument();
+              }}
             >
               <LinkSlashIcon className="h-4 w-4" />
             </button>
           )}
-          {cloudSyncEnabled && state.syncSiteUrl && isMarkdown && state.mode === "workspace" && <span className="status-chip status-chip-info">Synced</span>}
           {isCloudViewer && <span className="status-chip status-chip-neutral">Read-only</span>}
           {state.activeConflicts.length > 0 && (
             <button
@@ -365,57 +395,62 @@ export function EditorShell() {
             </button>
           )}
           {state.currentPath && (
-            <button
-              className={`header-icon-button ${state.isDirty ? "header-icon-button-primary" : ""}`}
-              type="button"
-              title="Save"
-              disabled={!canEditMarkdown || !state.isDirty}
-              onClick={() => {
-                const relPath = state.currentRelativePath;
-                const content = state.editorContent;
-                fs.saveCurrentFile().then(() => {
-                  if (relPath && state.mode === "workspace") {
-                    pushSingleDocument(relPath, content);
-                  }
-                });
-              }}
-            >
-              <CheckCircleIcon className="h-4 w-4" />
-            </button>
+            <span className="header-tooltip header-tooltip-end group">
+              <button
+                className={`header-icon-button ${state.isDirty ? "header-icon-button-primary" : ""}`}
+                type="button"
+                aria-label={state.isDirty ? "Save" : "No unsaved changes"}
+                aria-disabled={!canEditMarkdown || !state.isDirty}
+                {...tooltipProps(state.isDirty ? "Save" : "No unsaved changes")}
+                onClick={() => {
+                  if (!canEditMarkdown || !state.isDirty) return;
+                  const relPath = state.currentRelativePath;
+                  const content = state.editorContent;
+                  fs.saveCurrentFile().then(() => {
+                    if (relPath && state.mode === "workspace") {
+                      pushSingleDocument(relPath, content);
+                    }
+                  });
+                }}
+              >
+                <CheckCircleIcon className="h-4 w-4" />
+              </button>
+            </span>
           )}
         </div>
       </div>
 
       <div className="flex min-h-12 items-center gap-1 border-b border-black/[0.04] bg-[#fbfdfb] px-5">
-        <EditorToolbarButton command="editor.bold" title="Bold - Ctrl+B" disabled={!canEditMarkdown} runCommand={runCommand}>
+        <EditorToolbarButton command="editor.bold" title="Bold - Ctrl+B" disabled={!canEditMarkdown} runCommand={runCommand} tooltipProps={tooltipProps("Bold - Ctrl+B")}>
           <BoldIcon className="h-4 w-4" />
         </EditorToolbarButton>
-        <EditorToolbarButton command="editor.italic" title="Italic - Ctrl+I" disabled={!canEditMarkdown} runCommand={runCommand}>
+        <EditorToolbarButton command="editor.italic" title="Italic - Ctrl+I" disabled={!canEditMarkdown} runCommand={runCommand} tooltipProps={tooltipProps("Italic - Ctrl+I")}>
           <ItalicIcon className="h-4 w-4" />
         </EditorToolbarButton>
-        <EditorToolbarButton command="editor.link" title="Link - Ctrl+K" disabled={!canEditMarkdown} runCommand={runCommand}>
+        <EditorToolbarButton command="editor.link" title="Link - Ctrl+K" disabled={!canEditMarkdown} runCommand={runCommand} tooltipProps={tooltipProps("Link - Ctrl+K")}>
           <LinkIcon className="h-4 w-4" />
         </EditorToolbarButton>
-        <EditorToolbarButton command="editor.code" title="Inline code" disabled={!canEditMarkdown} runCommand={runCommand}>
+        <EditorToolbarButton command="editor.code" title="Inline code" disabled={!canEditMarkdown} runCommand={runCommand} tooltipProps={tooltipProps("Inline code")}>
           <CodeBracketIcon className="h-4 w-4" />
         </EditorToolbarButton>
-        <EditorToolbarButton command="insert.table" title="Insert or edit table - Ctrl+Shift+T" disabled={!canEditMarkdown} runCommand={runCommand}>
+        <EditorToolbarButton command="insert.table" title="Insert or edit table - Ctrl+Shift+T" disabled={!canEditMarkdown} runCommand={runCommand} tooltipProps={tooltipProps("Insert or edit table - Ctrl+Shift+T")}>
           <TableCellsIcon className="h-4 w-4" />
         </EditorToolbarButton>
-        <EditorToolbarButton command="insert.math" title="Insert formula block" disabled={!canEditMarkdown} runCommand={runCommand}>
+        <EditorToolbarButton command="insert.math" title="Insert formula block" disabled={!canEditMarkdown} runCommand={runCommand} tooltipProps={tooltipProps("Insert formula block")}>
           <VariableIcon className="h-4 w-4" />
         </EditorToolbarButton>
-        <EditorToolbarButton command="insert.mermaid" title="Insert Mermaid diagram" disabled={!canEditMarkdown} runCommand={runCommand}>
+        <EditorToolbarButton command="insert.mermaid" title="Insert Mermaid diagram" disabled={!canEditMarkdown} runCommand={runCommand} tooltipProps={tooltipProps("Insert Mermaid diagram")}>
           <ShareIcon className="h-4 w-4" />
         </EditorToolbarButton>
-        <EditorToolbarButton command="insert.task" title="Task list" disabled={!canEditMarkdown} runCommand={runCommand}>
+        <EditorToolbarButton command="insert.task" title="Task list" disabled={!canEditMarkdown} runCommand={runCommand} tooltipProps={tooltipProps("Task list")}>
           <ClipboardDocumentCheckIcon className="h-4 w-4" />
         </EditorToolbarButton>
         <div className="ml-auto flex items-center gap-1 rounded-full bg-[#eef5f1] p-1">
           <button
             type="button"
             className={`view-mode-button ${state.editorMode === "write" ? "view-mode-button-active" : ""}`}
-            title="Write"
+            aria-label="Write"
+            {...tooltipProps("Write")}
             onClick={() => dispatch({ type: "SET_EDITOR_MODE", mode: "write" })}
           >
             <PencilSquareIcon className="h-4 w-4" />
@@ -423,7 +458,8 @@ export function EditorShell() {
           <button
             type="button"
             className={`view-mode-button ${state.editorMode === "split" ? "view-mode-button-active" : ""}`}
-            title="Split"
+            aria-label="Split"
+            {...tooltipProps("Split")}
             onClick={() => dispatch({ type: "SET_EDITOR_MODE", mode: "split" })}
           >
             <ViewColumnsIcon className="h-4 w-4" />
@@ -431,16 +467,17 @@ export function EditorShell() {
           <button
             type="button"
             className={`view-mode-button ${state.editorMode === "preview" ? "view-mode-button-active" : ""}`}
-            title="Preview"
+            aria-label="Preview"
+            {...tooltipProps("Preview")}
             onClick={() => dispatch({ type: "SET_EDITOR_MODE", mode: "preview" })}
           >
             <EyeIcon className="h-4 w-4" />
           </button>
         </div>
-        <button className={`editor-tool ${state.documentPanelOpen ? "bg-[#e8f6f2] text-[#006f6b] ring-1 ring-[#008884]/15 hover:bg-[#e8f6f2] hover:text-[#006f6b]" : ""}`} type="button" title="Document info" onClick={() => dispatch({ type: "TOGGLE_DOCUMENT_PANEL" })}>
+        <button className={`editor-tool ${state.documentPanelOpen ? "bg-[#e8f6f2] text-[#006f6b] ring-1 ring-[#008884]/15 hover:bg-[#e8f6f2] hover:text-[#006f6b]" : ""}`} type="button" aria-label="Document info" {...tooltipProps("Document info")} onClick={() => dispatch({ type: "TOGGLE_DOCUMENT_PANEL" })}>
           <InformationCircleIcon className="h-4 w-4" />
         </button>
-        <button className="editor-tool" type="button" title="Focus mode" onClick={() => dispatch({ type: "TOGGLE_FOCUS_MODE" })}>
+        <button className="editor-tool" type="button" aria-label="Focus mode" {...tooltipProps("Focus mode")} onClick={() => dispatch({ type: "TOGGLE_FOCUS_MODE" })}>
           <ArrowsPointingOutIcon className="h-4 w-4" />
         </button>
       </div>
@@ -517,13 +554,18 @@ export function EditorShell() {
           <button type="button" className="context-menu-button" disabled={!canEditMarkdown} onClick={() => { insertBlockAtSafeCursor("\n```mermaid\nflowchart TD\n  A --> B\n```\n"); setContextMenu(null); }}><ShareIcon className="mr-2 h-3.5 w-3.5" />Insert Mermaid diagram</button>
         </div>
       )}
+      {floatingTooltip && (
+        <div className="floating-tooltip" style={{ left: floatingTooltip.x, top: floatingTooltip.y }}>
+          {floatingTooltip.label}
+        </div>
+      )}
     </section>
   );
 }
 
-function EditorToolbarButton({ title, disabled, runCommand, command, children }: { title: string; disabled: boolean; runCommand: (id: string) => void; command: string; children: React.ReactNode }) {
+function EditorToolbarButton({ title, disabled, runCommand, command, tooltipProps, children }: { title: string; disabled: boolean; runCommand: (id: string) => void; command: string; tooltipProps?: React.HTMLAttributes<HTMLButtonElement>; children: React.ReactNode }) {
   return (
-    <button className="editor-tool" type="button" title={title} disabled={disabled} onClick={() => runCommand(command)}>
+    <button className="editor-tool" type="button" aria-label={title} aria-disabled={disabled} {...tooltipProps} onClick={() => { if (!disabled) runCommand(command); }}>
       {children}
     </button>
   );
