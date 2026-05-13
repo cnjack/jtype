@@ -1,0 +1,122 @@
+/* Shared Markdown preview styles for Desktop and Web frontends.
+ * Uses CSS variables from tokens.css for brand colors.
+ */
+
+.preview.empty {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  color: var(--color-brand-gray);
+}
+
+.preview h1,
+.preview h2,
+.preview h3 {
+  margin: 1.6em 0 0.45em;
+  color: #111827;
+  line-height: 1.15;
+  font-weight: 700;
+}
+
+.preview h1 {
+  font-size: 2rem;
+}
+
+.preview h2 {
+  font-size: 1.5rem;
+}
+
+.preview h3 {
+  font-size: 1.2rem;
+}
+
+.preview h1:first-child,
+.preview h2:first-child,
+.preview h3:first-child {
+  margin-top: 0;
+}
+
+.preview p,
+.preview li {
+  max-width: 78ch;
+  overflow-wrap: anywhere;
+}
+
+.preview p {
+  margin: 0.9em 0;
+}
+
+.preview ul,
+.preview ol {
+  margin: 0.9em 0;
+  padding-left: 1.5rem;
+}
+
+.preview ul {
+  list-style: disc;
+}
+
+.preview ol {
+  list-style: decimal;
+}
+
+.preview a {
+  color: var(--color-brand);
+  text-decoration: underline;
+}
+
+.preview code {
+  padding: 0.1em 0.35em;
+  color: #0d0d0c;
+  background: var(--color-brand-soft);
+  border-radius: 6px;
+  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+}
+
+.preview pre {
+  max-width: 100%;
+  overflow: auto;
+  padding: 16px;
+  color: #f8fafc;
+  background: #101816;
+  border-radius: 14px;
+}
+
+.preview pre code {
+  padding: 0;
+  color: inherit;
+  background: transparent;
+}
+
+.preview blockquote {
+  margin-left: 0;
+  padding-left: 18px;
+  color: var(--color-brand-gray);
+  border-left: 4px solid var(--color-brand);
+}
+
+.preview table {
+  width: 100%;
+  max-width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+}
+
+.preview th,
+.preview td {
+  padding: 10px 12px;
+  border: 1px solid rgb(13 13 12 / 0.08);
+  text-align: left;
+  vertical-align: top;
+}
+
+.preview .math-block,
+.preview .mermaid {
+  max-width: 100%;
+  overflow: auto;
+  margin: 1rem 0;
+  padding: 12px;
+  border: 1px solid var(--color-line);
+  border-radius: 16px;
+  background: #ffffff;
+}

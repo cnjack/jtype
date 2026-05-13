@@ -1,4 +1,4 @@
-import { httpRequest } from './lib/http'
+import { httpRequest } from '@shared/lib/http'
 
 const API_BASE = ''
 const TOKEN_STORAGE_KEY = 'jtype.token'

@@ -1,14 +1,8 @@
 @import "tailwindcss";
+@import "@shared/styles/tokens.css";
+@import "@shared/styles/components.css";
 
 @layer base {
-  :root {
-    --jtype-green: #008884;
-    --jtype-green-dark: #006f6b;
-    --jtype-green-soft: #e8f6f2;
-    --jtype-green-gray: #6f817a;
-    --jtype-line: rgb(13 13 12 / 0.06);
-  }
-
   html,
   body {
     background: #f5f8f6;
@@ -16,128 +10,16 @@
 }
 
 @layer components {
-  .toolbar-button {
-    @apply inline-flex h-9 items-center justify-center rounded-lg border border-black/[0.06] bg-white/80 px-3.5 text-sm font-semibold text-stone-800 shadow-sm shadow-emerald-950/5 transition hover:border-emerald-700/20 hover:bg-white hover:text-stone-950 disabled:cursor-not-allowed disabled:opacity-50;
-  }
-
-  .toolbar-button-primary {
-    @apply border-[#008884] bg-[#008884] text-white shadow-[#008884]/15 hover:border-[#006f6b] hover:bg-[#006f6b];
-  }
-
   .account-button {
-    @apply inline-flex h-9 min-w-9 items-center justify-center rounded-full border border-black/[0.06] bg-white px-3 text-sm font-semibold text-stone-700 shadow-sm shadow-emerald-950/5 transition hover:border-[#008884]/30 hover:bg-[#e8f6f2] hover:text-[#006f6b] disabled:cursor-not-allowed disabled:opacity-50;
-  }
-
-  .sidebar-action {
-    @apply inline-flex h-9 items-center justify-center rounded-lg border border-black/[0.06] bg-white/80 px-3 text-xs font-semibold text-stone-800 shadow-sm shadow-emerald-950/5 transition hover:border-[#008884]/25 hover:bg-white hover:text-[#006f6b] disabled:cursor-not-allowed disabled:opacity-50;
-  }
-
-  .workspace-row {
-    @apply flex w-full items-center justify-between gap-3 rounded-lg border border-black/[0.06] bg-white/80 px-3 py-2 text-left text-sm text-stone-800 transition hover:border-[#008884]/30 hover:bg-[#e8f6f2];
-  }
-
-  .workspace-row-bound {
-    @apply border-[#008884]/30 bg-[#e8f6f2] ring-1 ring-[#008884]/10;
-  }
-
-  .sync-input {
-    @apply h-9 w-full rounded-lg border border-black/[0.06] bg-white/80 px-3 text-xs text-stone-800 outline-none transition placeholder:text-[#9aa6a1] focus:border-[#008884]/45 focus:bg-white focus:ring-4 focus:ring-[#008884]/10;
-  }
-
-  .tree-button {
-    @apply flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm text-[#4b5753] transition hover:bg-white/80 hover:text-stone-950;
-  }
-
-  .tree-button-active {
-    @apply bg-[#e8f6f2] font-semibold text-[#006f6b] ring-1 ring-[#008884]/15;
+    @apply inline-flex h-9 min-w-9 items-center justify-center rounded-full border border-black/[0.06] bg-white px-3 text-sm font-semibold text-stone-700 shadow-sm shadow-emerald-950/5 transition hover:border-brand/30 hover:bg-brand-soft hover:text-brand-dark disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .activity-button {
-    @apply flex h-9 items-center justify-center rounded-lg px-3 text-xs font-semibold text-[#65736e] transition hover:bg-white/80 hover:text-stone-950;
+    @apply flex h-9 items-center justify-center rounded-lg px-3 text-xs font-semibold text-brand-gray transition hover:bg-white/80 hover:text-stone-950;
   }
 
   .activity-button-active {
-    @apply bg-white text-[#006f6b] shadow-sm shadow-emerald-950/5 ring-1 ring-[#008884]/10 hover:bg-white hover:text-[#006f6b];
-  }
-
-  .subtle-button {
-    @apply inline-flex h-7 items-center justify-center rounded-md px-2 text-xs font-semibold text-[#6f817a] transition hover:bg-[#e8f6f2] hover:text-[#006f6b] disabled:cursor-not-allowed disabled:opacity-50;
-  }
-
-  .compact-select {
-    @apply h-8 rounded-lg border border-black/[0.08] bg-white px-2 text-xs font-semibold text-stone-700 outline-none focus:border-[#008884]/45 focus:ring-4 focus:ring-[#008884]/10;
-  }
-
-  .status-chip {
-    @apply inline-flex h-6 items-center rounded-full px-2.5 text-[11px] font-semibold uppercase tracking-[0.04em];
-  }
-
-  .status-chip-neutral {
-    @apply bg-[#edf1ef] text-[#5f6d68];
-  }
-
-  .status-chip-warning {
-    @apply bg-amber-300 text-amber-950;
-  }
-
-  .status-chip-success {
-    @apply bg-[#d9f2ed] text-[#006f6b];
-  }
-
-  .status-chip-info {
-    @apply bg-[#d9f2ed] text-[#006f6b];
-  }
-
-  .status-chip-error {
-    @apply bg-red-300 text-red-950;
-  }
-
-  .header-action-group {
-    @apply flex shrink-0 items-center gap-1 rounded-full border border-black/[0.04] bg-white/80 p-1 shadow-sm shadow-emerald-950/5 ring-1 ring-white/70;
-  }
-
-  .header-icon-button {
-    @apply inline-flex h-8 w-8 items-center justify-center rounded-full text-[#5f6d68] transition hover:bg-[#e8f6f2] hover:text-[#006f6b] aria-disabled:cursor-not-allowed aria-disabled:opacity-40;
-  }
-
-  .header-icon-button-primary {
-    @apply text-[#006f6b] hover:bg-[#e8f6f2] hover:text-[#006f6b];
-  }
-
-  .header-icon-button-warning {
-    @apply text-[#006f6b] hover:bg-[#e8f6f2] hover:text-[#006f6b];
-  }
-
-  .header-icon-button-danger {
-    @apply hover:bg-red-50 hover:text-red-700;
-  }
-
-  .header-tooltip {
-    @apply relative inline-flex;
-  }
-
-  .header-tooltip-label {
-    @apply pointer-events-none absolute left-1/2 top-full z-50 mt-2 -translate-x-1/2 whitespace-nowrap rounded-md bg-stone-950 px-2 py-1 text-[11px] font-medium text-white opacity-0 shadow-lg shadow-stone-950/15 transition group-hover:opacity-100 group-focus-within:opacity-100;
-  }
-
-  .header-tooltip-end .header-tooltip-label {
-    @apply left-auto right-0 translate-x-0;
-  }
-
-  .floating-tooltip {
-    @apply pointer-events-none fixed z-[100] -translate-x-1/2 whitespace-nowrap rounded-md bg-stone-950 px-2 py-1 text-[11px] font-medium text-white opacity-100 shadow-lg shadow-stone-950/15;
-  }
-
-  .editor-tool {
-    @apply inline-flex h-8 items-center justify-center rounded-lg px-2.5 text-xs font-semibold text-[#5f6d68] transition hover:bg-[#e8f6f2] hover:text-[#006f6b] disabled:cursor-not-allowed disabled:opacity-40 aria-disabled:cursor-not-allowed aria-disabled:opacity-40;
-  }
-
-  .view-mode-button {
-    @apply inline-flex h-7 items-center justify-center rounded-full px-3 text-[11px] font-semibold text-[#66746f] transition hover:bg-white/70 hover:text-stone-900;
-  }
-
-  .view-mode-button-active {
-    @apply bg-white text-[#006f6b] shadow-sm shadow-emerald-950/5 hover:bg-white hover:text-[#006f6b];
+    @apply bg-white text-brand-dark shadow-sm shadow-emerald-950/5 ring-1 ring-brand/10 hover:bg-white hover:text-brand-dark;
   }
 
   .icon-text-button {
@@ -161,43 +43,19 @@
   }
 
   .command-input {
-    @apply h-12 w-full border-b border-black/[0.06] bg-white/70 px-4 text-sm font-medium outline-none placeholder:text-[#9aa6a1] focus:border-[#008884]/40;
-  }
-
-  .command-row {
-    @apply flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition hover:bg-[#e8f6f2] disabled:cursor-not-allowed disabled:opacity-50;
+    @apply h-12 w-full border-b border-black/[0.06] bg-white/70 px-4 text-sm font-medium outline-none placeholder:text-brand-gray focus:border-brand/40;
   }
 
   .user-avatar {
-    @apply flex h-9 w-9 items-center justify-center rounded-full bg-[#008884] text-sm font-semibold text-white shadow-sm shadow-[#008884]/20 transition hover:bg-[#006f6b];
+    @apply flex h-9 w-9 items-center justify-center rounded-full bg-brand text-sm font-semibold text-white shadow-sm shadow-brand/20 transition hover:bg-brand-dark;
   }
 
-  .context-menu {
-    @apply fixed z-50 min-w-52 rounded-md border border-[#e7e5e4] bg-[#fafaf9] p-1 shadow-[0_20px_25px_-5px_rgb(0_0_0/0.1)];
+  .status-chip-info {
+    @apply bg-brand-soft text-brand-dark;
   }
 
-  .context-menu-button {
-    @apply flex w-full items-center rounded-sm px-3 py-2 text-left text-sm text-stone-700 hover:bg-[#e8f6f2] hover:text-[#006f6b] disabled:cursor-not-allowed disabled:opacity-50;
-  }
-
-  .field-label {
-    @apply text-xs font-semibold uppercase text-stone-500;
-  }
-
-  .field-input {
-    @apply mt-1 h-9 w-full rounded-lg border border-black/[0.08] bg-white/90 px-3 text-sm text-stone-800 outline-none focus:border-[#008884]/45 focus:ring-4 focus:ring-[#008884]/10;
-  }
-
-  .field-textarea {
-    @apply mt-1 min-h-20 w-full rounded-lg border border-black/[0.08] bg-white/90 p-3 text-sm text-stone-800 outline-none focus:border-[#008884]/45 focus:ring-4 focus:ring-[#008884]/10;
-  }
-
-  .panel-card {
-    @apply rounded-2xl border border-white/80 bg-white/80 p-3 shadow-sm shadow-emerald-950/5 ring-1 ring-black/[0.03];
-  }
-
-  .document-info-section {
-    @apply mb-4 rounded-2xl border border-white/80 bg-white/80 p-4 shadow-sm shadow-emerald-950/5 ring-1 ring-black/[0.03];
+  .status-chip-error {
+    @apply bg-red-300 text-red-950;
   }
 }
 

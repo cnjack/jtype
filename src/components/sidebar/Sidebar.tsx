@@ -8,7 +8,7 @@ import { useCallback, useEffect, useState, useMemo } from "react";
 import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/react";
 import { DeleteFolderDialog } from "../modals/DeleteFolderDialog";
 import { MoveFolderDialog } from "../modals/MoveFolderDialog";
-import { usePrompt } from "../modals/PromptDialogContext";
+import { usePrompt } from "@shared/components/PromptDialogContext";
 import {
   DocumentPlusIcon,
   Cog6ToothIcon,

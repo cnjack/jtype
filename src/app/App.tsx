@@ -16,8 +16,7 @@ import { CreateNoteDialog } from "../components/modals/CreateNoteDialog";
 import { AccountDialog } from "../components/modals/AccountDialog";
 import { ConflictDialog } from "../components/modals/ConflictDialog";
 import { ExclamationTriangleIcon, SignalSlashIcon } from "@heroicons/react/24/outline";
-import { PromptDialogProvider } from "../components/modals/PromptDialogContext";
-import { ConfirmDialogProvider } from "../components/modals/ConfirmDialogContext";
+import { PromptDialogProvider } from "@shared/components/PromptDialogContext";
 import { isTauriRuntime, relativePathFromWorkspace } from "../lib/utils";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
@@ -34,11 +33,9 @@ export function App() {
   return (
     <AppStateContext.Provider value={state}>
       <AppDispatchContext.Provider value={dispatch}>
-        <ConfirmDialogProvider>
-          <PromptDialogProvider>
-            <AppContent />
-          </PromptDialogProvider>
-        </ConfirmDialogProvider>
+        <PromptDialogProvider>
+          <AppContent />
+        </PromptDialogProvider>
       </AppDispatchContext.Provider>
     </AppStateContext.Provider>
   );

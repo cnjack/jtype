@@ -164,11 +164,59 @@ Trash SQL logic lives in `services/jtype-web/src/handlers/trash.rs` as reusable 
 
 The sync handler (`sync.rs` `process_trash_operation`) calls these core functions. **Never duplicate trash SQL in sync.rs** — add new logic to `trash.rs` core functions instead.
 
-## Known Shared Code Duplication
+## Shared UI Component Layer
 
-The following files are near-identical copies between desktop and web frontends. Keep them in sync manually until a shared package is created:
+Desktop (`src/`) and Web (`services/jtype-web/frontend/src/`) share a common UI component layer via path alias `@shared` pointing to `shared/`.
 
-| Desktop (`src/lib/`) | Web (`services/jtype-web/frontend/src/lib/`) |
-|-----------------------|----------------------------------------------|
-| `markdown.ts` | `markdown.ts` |
-| `frontmatter.ts` | `frontmatter.ts` (has inline `FrontmatterParse` instead of importing) |
+### Directory Structure
+
+```text
+shared/
+├── components/     # Shared React components (dialogs, editor, toolbar, tree)
+├── hooks/          # Shared React hooks (scroll sync, tooltip, prompt, confirm)
+├── lib/            # Shared utilities (markdown, frontmatter, http, types)
+└── styles/         # Shared CSS (design tokens, component classes, preview)
+```
+
+### Vite Alias
+
+Both frontends resolve `@shared` via `vite.config.ts`:
+- Desktop: `'@shared': path.resolve(__dirname, 'shared')`
+- Web: `'@shared': path.resolve(__dirname, '../../../shared')`
+
+Both `tsconfig.json` have matching `paths` entries.
+
+### Shared Component Design Principles
+
+1. **Props-in, Callbacks-out** — Shared components only accept props and callbacks. Never import `@tauri-apps/api`, `invoke()`, or platform-specific `fetch`/`api.ts` inside `shared/`.
+2. **Data adaptation in platform layer** — Shared components define interfaces (e.g. `FileTreeNodeData`). Platform code converts Tauri IPC or REST API data to those interfaces before passing as props.
+3. **Semantic Tailwind classes only** — Use `text-brand`, `bg-brand-soft`, etc. from `shared/styles/tokens.css`. Never hardcode hex values (`#008884`) in shared components.
+4. **Extend via slots, not branches** — When a feature is platform-specific, use `extraActions` / `renderProps` slots instead of `if (isTauri)` branches.
+5. **No state management coupling** — Shared components must not depend on `useReducer`, `useState`, or any specific state pattern. Accept state via props.
+
+### Design Token Rules
+
+- All brand colors are defined as `@theme` CSS variables in `shared/styles/tokens.css`.
+- Desktop and Web CSS entry files `@import '@shared/styles/tokens.css'`.
+- Replace all hardcoded hex references (`text-[#008884]`, `bg-[#006f6b]`, etc.) with semantic classes (`text-brand`, `bg-brand-dark`, `bg-brand-soft`).
+- Token mapping: `--color-brand: #008884`, `--color-brand-dark: #006f6b`, `--color-brand-soft: #e8f6f2`, `--color-brand-gray: #6f817a`, `--color-brand-light: #22b8ad`, `--color-line: rgb(13 13 12 / 0.06)`.
+
+### Known Shared Code (Former Duplication)
+
+The following files live in `shared/lib/` and are imported by both frontends:
+
+| Shared (`shared/lib/`) | Former Desktop | Former Web |
+|------------------------|----------------|------------|
+| `markdown.ts` | `src/lib/markdown.ts` | `services/jtype-web/frontend/src/lib/markdown.ts` |
+| `frontmatter.ts` | `src/lib/frontmatter.ts` | `services/jtype-web/frontend/src/lib/frontmatter.ts` |
+| `http.ts` | `src/lib/http.ts` | `services/jtype-web/frontend/src/lib/http.ts` |
+
+### Shared CSS Component Classes
+
+Shared component CSS classes live in `shared/styles/components.css`. Both frontends import this file. Platform-specific classes remain in their respective CSS entry files.
+
+### When Modifying Shared Code
+
+- Changes to `shared/` affect both Desktop and Web. Verify both builds pass.
+- When adding a new shared component, follow the Props-in/Callbacks-out pattern.
+- When a shared component needs platform-specific behavior, add a slot prop — do not add platform detection.

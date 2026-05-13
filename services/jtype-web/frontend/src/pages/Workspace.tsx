@@ -2,10 +2,10 @@ import { useEffect, useState, useRef, useCallback, useMemo, memo } from 'react'
 import { Menu, MenuButton, MenuItems, MenuItem, Dialog, DialogPanel } from '@headlessui/react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { api, getStoredUsername, setSessionId, type WorkspaceSummary, type DocumentListItem, type FolderListItem, type DomainResponse, type TrashItem, type MemberInfo, type InviteListItem, type InviteResponse, type PublishStatusResponse } from '../api'
-import { renderToContainer } from '../lib/markdown'
-import { parseFrontmatter, writeFrontmatter } from '../lib/frontmatter'
-import type { EditorMode } from '../lib/utils'
-import { usePrompt, useConfirm } from '../components/PromptDialogContext'
+import { renderToContainer } from '@shared/lib/markdown'
+import { parseFrontmatter, writeFrontmatter } from '@shared/lib/frontmatter'
+import type { EditorMode } from '@shared/lib/types'
+import { usePrompt, useConfirm } from '@shared/components/PromptDialogContext'
 import { useWorkspaceSocket } from '../hooks/useWorkspaceSocket'
 import { useOfflineSync } from '../hooks/useOfflineSync'
 import { ConflictResolver } from '../components/ConflictResolver'
@@ -499,7 +499,7 @@ export function Workspace() {
     const message = doc
       ? `Remove "${doc.relativePath}" from the public site?`
       : `Remove ${uniqueIds.length} documents from the public site?`
-    const confirmed = await confirm(uniqueIds.length === 1 ? 'Unpublish document' : 'Unpublish documents', message, true)
+    const confirmed = await confirm(message, { title: uniqueIds.length === 1 ? 'Unpublish document' : 'Unpublish documents', destructive: true })
     if (!confirmed) return
     setSaving(true)
     try {
@@ -1477,7 +1477,7 @@ function MembersPanel({
   }
 
   async function handleRemove(userId: string) {
-    const ok = await confirm('Remove member', 'Remove this member from the workspace?')
+    const ok = await confirm('Remove this member from the workspace?', { title: 'Remove member' })
     if (!ok) return
     await api.removeMember(workspace.id, userId)
     setMembers(ms => ms.filter(m => m.userId !== userId))
@@ -1701,8 +1701,8 @@ function MembersPanel({
                       return
                     }
                     const ok = await confirm(
-                      'Transfer ownership',
                       `Transfer ownership to ${firstAdmin.username}? You will become an admin.`,
+                      { title: 'Transfer ownership' },
                     )
                     if (!ok) return
                     try {
@@ -2516,7 +2516,7 @@ function WebDocExplorer({
   const handleDeleteFolder = async (folderPath: string) => {
     if (!workspaceId) return
     if (readOnly) return
-    const confirmed = await confirmDialog('Delete folder', `Delete folder "${folderPath}" and all its contents?`, true)
+    const confirmed = await confirmDialog(`Delete folder "${folderPath}" and all its contents?`, { title: 'Delete folder', destructive: true })
     if (!confirmed) return
     try {
       const children = documents.filter(d => d.relativePath.startsWith(folderPath + '/'))
@@ -2668,7 +2668,7 @@ function WebDocExplorer({
                   type="button"
                   title="Empty trash"
                   disabled={readOnly}
-                  onClick={async () => { if (await confirmDialog('Empty trash', 'Permanently delete all items in trash?', true)) onEmptyTrash() }}
+                  onClick={async () => { if (await confirmDialog('Permanently delete all items in trash?', { title: 'Empty trash', destructive: true })) onEmptyTrash() }}
                 >
                   <TrashIcon className="h-4 w-4" />
                 </button>
@@ -2698,7 +2698,7 @@ function WebDocExplorer({
                           type="button"
                           title="Permanently delete"
                           disabled={readOnly}
-                          onClick={async () => { if (await confirmDialog('Permanently delete', 'Permanently delete this item?', true)) onDeleteTrash(item.id) }}
+                          onClick={async () => { if (await confirmDialog('Permanently delete this item?', { title: 'Permanently delete', destructive: true })) onDeleteTrash(item.id) }}
                         >
                           <XMarkIcon className="h-4 w-4" />
                         </button>

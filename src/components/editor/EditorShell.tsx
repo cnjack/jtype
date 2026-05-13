@@ -1,15 +1,17 @@
 import { useRef, useEffect, useCallback, useState } from "react";
 import { useAppDispatch, useAppState } from "../../app/AppState";
 import { useFileSystem } from "../../hooks";
-import { renderToContainer } from "../../lib/markdown";
-import { parseFrontmatter, writeFrontmatter } from "../../lib/frontmatter";
+import { renderToContainer } from "@shared/lib/markdown";
+import { parseFrontmatter, writeFrontmatter } from "@shared/lib/frontmatter";
 import { basename, normalizePath } from "../../lib/utils";
 import { useCommandsList } from "../../app/App";
 import { addMarkdownTableColumn, addMarkdownTableRow, formatMarkdownTable, insertBlockAtSafeCursor, insertOrEditTable } from "../../hooks/useCommands";
 import { useEagerSync } from "../../hooks/useEagerSync";
-import { useConfirm } from "../modals/ConfirmDialogContext";
-import { httpRequest } from "../../lib/http";
-import type { EditorMode } from "../../lib/types";
+import { useConfirm } from "@shared/components/PromptDialogContext";
+import { httpRequest } from "@shared/lib/http";
+import type { EditorMode } from "@shared/lib/types";
+import { useScrollSync, useFloatingTooltip } from "@shared/hooks";
+import { ViewModeToggle, FloatingTooltip } from "@shared/components";
 import {
   BoldIcon,
   ItalicIcon,
@@ -19,9 +21,6 @@ import {
   VariableIcon,
   ShareIcon,
   ClipboardDocumentCheckIcon,
-  PencilSquareIcon,
-  ViewColumnsIcon,
-  EyeIcon,
   InformationCircleIcon,
   ArrowsPointingOutIcon,
   XMarkIcon,
@@ -42,12 +41,6 @@ type PublishStatusResponse = {
   hasUnpublishedChanges: boolean;
 };
 
-type FloatingTooltipState = {
-  label: string;
-  x: number;
-  y: number;
-};
-
 export function EditorShell() {
   const state = useAppState();
   const dispatch = useAppDispatch();
@@ -57,29 +50,10 @@ export function EditorShell() {
   const { pushSingleDocument } = useEagerSync();
   const editorRef = useRef<HTMLTextAreaElement>(null);
   const previewRef = useRef<HTMLElement>(null);
-  const isSyncingScroll = useRef(false);
   const previewTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
   const [publishState, setPublishState] = useState<PublishStatusResponse | null>(null);
-  const [floatingTooltip, setFloatingTooltip] = useState<FloatingTooltipState | null>(null);
-
-  const showTooltip = useCallback((label: string, element: HTMLElement) => {
-    const rect = element.getBoundingClientRect();
-    setFloatingTooltip({
-      label,
-      x: Math.min(Math.max(rect.left + rect.width / 2, 12), window.innerWidth - 12),
-      y: rect.bottom + 8,
-    });
-  }, []);
-
-  const hideTooltip = useCallback(() => setFloatingTooltip(null), []);
-
-  const tooltipProps = useCallback((label: string) => ({
-    onMouseEnter: (event: React.MouseEvent<HTMLElement>) => showTooltip(label, event.currentTarget),
-    onMouseLeave: hideTooltip,
-    onFocus: (event: React.FocusEvent<HTMLElement>) => showTooltip(label, event.currentTarget),
-    onBlur: hideTooltip,
-  }), [hideTooltip, showTooltip]);
+  const { tooltip: floatingTooltip, tooltipProps } = useFloatingTooltip();
 
   useEffect(() => {
     if (editorRef.current) {
@@ -274,35 +248,7 @@ export function EditorShell() {
     }
   }, [canPublishToCloud, cloudPublishRequest, confirm, dispatch, findCloudDocumentId, refreshPublishState, state.currentRelativePath]);
 
-  useEffect(() => {
-    if (!state.currentPath || state.currentKind !== "markdown") return;
-    const editor = editorRef.current;
-    const preview = previewRef.current;
-    if (!editor || !preview) return;
-
-    const syncScroll = (source: HTMLElement, target: HTMLElement) => {
-      if (isSyncingScroll.current) return;
-      isSyncingScroll.current = true;
-      const sourceRange = Math.max(1, source.scrollHeight - source.clientHeight);
-      const targetRange = Math.max(1, target.scrollHeight - target.clientHeight);
-      const ratio = source.scrollTop / sourceRange;
-      target.scrollTop = ratio * targetRange;
-      requestAnimationFrame(() => {
-        isSyncingScroll.current = false;
-      });
-    };
-
-    const onEditorScroll = () => syncScroll(editor, preview);
-    const onPreviewScroll = () => syncScroll(preview, editor);
-
-    editor.addEventListener("scroll", onEditorScroll);
-    preview.addEventListener("scroll", onPreviewScroll);
-
-    return () => {
-      editor.removeEventListener("scroll", onEditorScroll);
-      preview.removeEventListener("scroll", onPreviewScroll);
-    };
-  }, [state.currentPath, state.currentKind, state.editorMode, state.documentPanelOpen]);
+  useScrollSync(editorRef, previewRef, !!state.currentPath && state.currentKind === "markdown");
 
   return (
     <section className="flex min-h-0 flex-col bg-[#fbfdfb]">
@@ -445,34 +391,12 @@ export function EditorShell() {
         <EditorToolbarButton command="insert.task" title="Task list" disabled={!canEditMarkdown} runCommand={runCommand} tooltipProps={tooltipProps("Task list")}>
           <ClipboardDocumentCheckIcon className="h-4 w-4" />
         </EditorToolbarButton>
-        <div className="ml-auto flex items-center gap-1 rounded-full bg-[#eef5f1] p-1">
-          <button
-            type="button"
-            className={`view-mode-button ${state.editorMode === "write" ? "view-mode-button-active" : ""}`}
-            aria-label="Write"
-            {...tooltipProps("Write")}
-            onClick={() => dispatch({ type: "SET_EDITOR_MODE", mode: "write" })}
-          >
-            <PencilSquareIcon className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            className={`view-mode-button ${state.editorMode === "split" ? "view-mode-button-active" : ""}`}
-            aria-label="Split"
-            {...tooltipProps("Split")}
-            onClick={() => dispatch({ type: "SET_EDITOR_MODE", mode: "split" })}
-          >
-            <ViewColumnsIcon className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            className={`view-mode-button ${state.editorMode === "preview" ? "view-mode-button-active" : ""}`}
-            aria-label="Preview"
-            {...tooltipProps("Preview")}
-            onClick={() => dispatch({ type: "SET_EDITOR_MODE", mode: "preview" })}
-          >
-            <EyeIcon className="h-4 w-4" />
-          </button>
+        <div className="ml-auto">
+          <ViewModeToggle
+            mode={state.editorMode}
+            onModeChange={(mode) => dispatch({ type: "SET_EDITOR_MODE", mode })}
+            tooltipProps={tooltipProps}
+          />
         </div>
         <button className={`editor-tool ${state.documentPanelOpen ? "bg-[#e8f6f2] text-[#006f6b] ring-1 ring-[#008884]/15 hover:bg-[#e8f6f2] hover:text-[#006f6b]" : ""}`} type="button" aria-label="Document info" {...tooltipProps("Document info")} onClick={() => dispatch({ type: "TOGGLE_DOCUMENT_PANEL" })}>
           <InformationCircleIcon className="h-4 w-4" />
@@ -555,9 +479,7 @@ export function EditorShell() {
         </div>
       )}
       {floatingTooltip && (
-        <div className="floating-tooltip" style={{ left: floatingTooltip.x, top: floatingTooltip.y }}>
-          {floatingTooltip.label}
-        </div>
+        <FloatingTooltip label={floatingTooltip.label} x={floatingTooltip.x} y={floatingTooltip.y} />
       )}
     </section>
   );

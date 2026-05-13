@@ -10,7 +10,7 @@ import {
   findPendingSave,
 } from '../lib/offlineDb'
 import type { PendingSave } from '../lib/offlineDb'
-import { httpRequest } from '../lib/http'
+import { httpRequest } from '@shared/lib/http'
 
 export interface ReconcileResult {
   pushed: number

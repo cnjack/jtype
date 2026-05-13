@@ -7,8 +7,8 @@ import katex from "katex";
 import "katex/dist/katex.min.css";
 import { marked } from "marked";
 import { createLineDiff, type AICommandProposal } from "./aiCommands";
-import { parseFrontmatter, writeFrontmatter, titleFromMarkdown } from "./lib/frontmatter";
-import { httpRequest } from "./lib/http";
+import { parseFrontmatter, writeFrontmatter, titleFromMarkdown } from "@shared/lib/frontmatter";
+import { httpRequest } from "@shared/lib/http";
 import type {
   EntryKind,
   InspectorTab,

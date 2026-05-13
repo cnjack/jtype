@@ -1,6 +1,6 @@
 import { useAppDispatch, useAppState } from "../../app/AppState";
 import { useCloudSync } from "../../hooks";
-import { useConfirm } from "./ConfirmDialogContext";
+import { useConfirm } from "@shared/components/PromptDialogContext";
 import type { CloudWorkspace } from "../../lib/types";
 import { useEffect, useState } from "react";
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";

@@ -1,0 +1,168 @@
+/* Shared component classes for Desktop and Web frontends.
+ * Both frontends import this file via @import "@shared/styles/components.css".
+ * Uses semantic Tailwind tokens from tokens.css — never hardcode hex colors here.
+ */
+
+@layer components {
+  .toolbar-button {
+    @apply inline-flex h-9 items-center justify-center rounded-lg border border-black/[0.06] bg-white/80 px-3.5 text-sm font-semibold text-stone-800 shadow-sm shadow-emerald-950/5 transition hover:border-emerald-700/20 hover:bg-white hover:text-stone-950 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .toolbar-button-primary {
+    @apply border-brand bg-brand text-white shadow-brand/15 hover:border-brand-dark hover:bg-brand-dark;
+  }
+
+  .sidebar-action {
+    @apply inline-flex h-9 items-center justify-center rounded-lg border border-black/[0.06] bg-white/80 px-3 text-xs font-semibold text-stone-800 shadow-sm shadow-emerald-950/5 transition hover:border-brand/25 hover:bg-white hover:text-brand-dark disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .sync-input {
+    @apply h-9 w-full rounded-lg border border-black/[0.06] bg-white/80 px-3 text-xs text-stone-800 outline-none transition placeholder:text-brand-gray focus:border-brand/45 focus:bg-white focus:ring-4 focus:ring-brand/10;
+  }
+
+  .workspace-row {
+    @apply flex w-full items-center justify-between gap-3 rounded-lg border border-black/[0.06] bg-white/80 px-3 py-2 text-left text-sm text-stone-800 transition hover:border-brand/30 hover:bg-brand-soft;
+  }
+
+  .workspace-row-bound {
+    @apply border-brand/30 bg-brand-soft ring-1 ring-brand/10;
+  }
+
+  .editor-tool {
+    @apply inline-flex h-8 items-center justify-center rounded-lg px-2.5 text-xs font-semibold text-brand-gray transition hover:bg-brand-soft hover:text-brand-dark disabled:cursor-not-allowed disabled:opacity-40 aria-disabled:cursor-not-allowed aria-disabled:opacity-40;
+  }
+
+  .view-mode-button {
+    @apply inline-flex h-7 items-center justify-center rounded-full px-3 text-[11px] font-semibold text-brand-gray transition hover:bg-white/70 hover:text-stone-900;
+  }
+
+  .view-mode-button-active {
+    @apply bg-white text-brand-dark shadow-sm shadow-emerald-950/5 hover:bg-white hover:text-brand-dark;
+  }
+
+  .subtle-button {
+    @apply inline-flex h-7 items-center justify-center rounded-md px-2 text-xs font-semibold text-brand-gray transition hover:bg-brand-soft hover:text-brand-dark disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .compact-select {
+    @apply h-8 rounded-lg border border-black/[0.08] bg-white px-2 text-xs font-semibold text-stone-700 outline-none focus:border-brand/45 focus:ring-4 focus:ring-brand/10;
+  }
+
+  .status-chip {
+    @apply inline-flex h-6 items-center rounded-full px-2.5 text-[11px] font-semibold uppercase tracking-[0.04em];
+  }
+
+  .status-chip-neutral {
+    @apply bg-[#edf1ef] text-brand-gray;
+  }
+
+  .status-chip-warning {
+    @apply bg-amber-300 text-amber-950;
+  }
+
+  .status-chip-success {
+    @apply bg-brand-soft text-brand-dark;
+  }
+
+  .header-action-group {
+    @apply flex shrink-0 items-center gap-1 rounded-full border border-black/[0.04] bg-white/80 p-1 shadow-sm shadow-emerald-950/5 ring-1 ring-white/70;
+  }
+
+  .header-icon-button {
+    @apply inline-flex h-8 w-8 items-center justify-center rounded-full text-brand-gray transition hover:bg-brand-soft hover:text-brand-dark aria-disabled:cursor-not-allowed aria-disabled:opacity-40;
+  }
+
+  .header-icon-button-primary {
+    @apply text-brand-dark hover:bg-brand-soft hover:text-brand-dark;
+  }
+
+  .header-icon-button-warning {
+    @apply text-brand-dark hover:bg-brand-soft hover:text-brand-dark;
+  }
+
+  .header-icon-button-danger {
+    @apply hover:bg-red-50 hover:text-red-700;
+  }
+
+  .header-tooltip {
+    @apply relative inline-flex;
+  }
+
+  .header-tooltip-label {
+    @apply pointer-events-none absolute left-1/2 top-full z-50 mt-2 -translate-x-1/2 whitespace-nowrap rounded-md bg-stone-950 px-2 py-1 text-[11px] font-medium text-white opacity-0 shadow-lg shadow-stone-950/15 transition group-hover:opacity-100 group-focus-within:opacity-100;
+  }
+
+  .header-tooltip-end .header-tooltip-label {
+    @apply left-auto right-0 translate-x-0;
+  }
+
+  .floating-tooltip {
+    @apply pointer-events-none fixed z-[100] -translate-x-1/2 whitespace-nowrap rounded-md bg-stone-950 px-2 py-1 text-[11px] font-medium text-white opacity-100 shadow-lg shadow-stone-950/15;
+  }
+
+  .field-label {
+    @apply text-xs font-semibold uppercase text-stone-500;
+  }
+
+  .field-input {
+    @apply mt-1 h-9 w-full rounded-lg border border-black/[0.08] bg-white/90 px-3 text-sm text-stone-800 outline-none focus:border-brand/45 focus:ring-4 focus:ring-brand/10;
+  }
+
+  .field-textarea {
+    @apply mt-1 min-h-20 w-full rounded-lg border border-black/[0.08] bg-white/90 p-3 text-sm text-stone-800 outline-none focus:border-brand/45 focus:ring-4 focus:ring-brand/10;
+  }
+
+  .tree-button {
+    @apply flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm text-brand-gray transition hover:bg-white/80 hover:text-stone-950;
+  }
+
+  .tree-button-active {
+    @apply bg-brand-soft font-semibold text-brand-dark ring-1 ring-brand/15;
+  }
+
+  .document-info-section {
+    @apply mb-4 rounded-2xl border border-white/80 bg-white/80 p-4 shadow-sm shadow-emerald-950/5 ring-1 ring-black/[0.03];
+  }
+
+  .context-menu {
+    @apply fixed z-50 min-w-52 rounded-md border border-stone-200 bg-stone-50 p-1 shadow-xl;
+  }
+
+  .context-menu-button {
+    @apply flex w-full items-center rounded-sm px-3 py-2 text-left text-sm text-stone-700 hover:bg-brand-soft hover:text-brand-dark disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .panel-card {
+    @apply rounded-2xl border border-white/80 bg-white/80 p-3 shadow-sm shadow-emerald-950/5 ring-1 ring-black/[0.03];
+  }
+
+  .command-row {
+    @apply flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition hover:bg-brand-soft disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .soft-scrollbar {
+    scrollbar-color: rgb(95 109 104 / 0.42) transparent;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+  }
+
+  .soft-scrollbar::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  .soft-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .soft-scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgb(95 109 104 / 0.36);
+    background-clip: padding-box;
+    border: 3px solid transparent;
+    border-radius: 999px;
+  }
+
+  .soft-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: rgb(0 136 132 / 0.48);
+  }
+}

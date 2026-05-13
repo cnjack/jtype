@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useAppDispatch, useAppState } from "../../app/AppState";
 import { useFileSystem } from "../../hooks";
-import { fuzzyMatch } from "../../lib/utils";
+import { fuzzyMatch } from "@shared/lib/utils";
 import { PaletteModal } from "./PaletteModal";
 
 export function QuickSwitcher() {

@@ -2,7 +2,7 @@ import { useCallback, useRef } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useAppDispatch, useAppState } from "../app/AppState";
 import { tauri } from "../lib/tauri";
-import { httpRequest } from "../lib/http";
+import { httpRequest } from "@shared/lib/http";
 import { sha256Hex } from "../lib/utils";
 import type { AuthResponse, CloudProfile, VaultBinding, CloudDocument, CloudFolder, CloudWorkspace, DeletedFolder, DeletedPath, DeletedPathInput, EntryKind, SyncPushDocument, SyncPushResponse, TrashSyncPayload, VaultSettings } from "../lib/types";
 import { parseSyncConflicts } from "../lib/types";

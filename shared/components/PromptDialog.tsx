@@ -6,6 +6,7 @@ export interface PromptDialogProps {
   open: boolean;
   title: string;
   defaultValue?: string;
+  placeholder?: string;
   confirmLabel?: string;
   onConfirm: (value: string) => void;
   onClose: () => void;
@@ -15,6 +16,7 @@ export function PromptDialog({
   open,
   title,
   defaultValue = "",
+  placeholder,
   confirmLabel = "OK",
   onConfirm,
   onClose,
@@ -45,12 +47,13 @@ export function PromptDialog({
       <div className="fixed inset-0 flex items-center justify-center p-4">
         <DialogPanel className="w-full max-w-sm rounded-xl bg-white p-6 shadow-2xl">
           <DialogTitle className="flex items-center gap-2 text-base font-semibold text-stone-900">
-            <ChatBubbleLeftRightIcon className="h-5 w-5 text-[#006f6b]" />
+            <ChatBubbleLeftRightIcon className="h-5 w-5 text-brand-dark" />
             {title}
           </DialogTitle>
           <input
-            className="mt-3 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-[#008884] focus:outline-none focus:ring-1 focus:ring-[#008884]"
+            className="mt-3 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
             value={value}
+            placeholder={placeholder}
             onChange={(e) => { setValue(e.target.value); setError(""); }}
             onKeyDown={(e) => { if (e.key === "Enter") void handleConfirm(); }}
             autoFocus
@@ -66,7 +69,7 @@ export function PromptDialog({
             </button>
             <button
               type="button"
-              className="rounded-lg bg-[#006f6b] px-3 py-1.5 text-sm font-medium text-white hover:bg-[#005854]"
+              className="rounded-lg bg-brand-dark px-3 py-1.5 text-sm font-medium text-white hover:bg-brand"
               onClick={() => void handleConfirm()}
               disabled={!value.trim()}
             >
