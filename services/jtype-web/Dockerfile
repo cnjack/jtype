@@ -2,6 +2,7 @@ FROM node:22-slim AS frontend
 WORKDIR /app/frontend
 COPY services/jtype-web/frontend/package.json services/jtype-web/frontend/package-lock.json* ./
 RUN npm ci
+COPY shared/ /shared/
 COPY services/jtype-web/frontend/ .
 RUN npm run build
 
