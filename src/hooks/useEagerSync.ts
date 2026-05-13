@@ -45,6 +45,8 @@ export function useEagerSync() {
             headers: {
               "Content-Type": "application/json",
               Authorization: `Bearer ${state.syncToken}`,
+              ...(state.wsSessionId ? { "x-session-id": state.wsSessionId } : {}),
+              ...(state.cloudProfile?.deviceId ? { "x-device-id": state.cloudProfile.deviceId } : {}),
             },
             body: JSON.stringify({
               deviceId: state.cloudProfile?.deviceId ?? "desktop",

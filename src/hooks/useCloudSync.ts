@@ -4,6 +4,7 @@ import { useAppDispatch, useAppState } from "../app/AppState";
 import { tauri } from "../lib/tauri";
 import { httpRequest } from "@shared/lib/http";
 import { sha256Hex } from "../lib/utils";
+import { markCloudWrite, markCloudWriteBatch } from "../lib/cloudWriteHashes";
 import type { AuthResponse, CloudProfile, VaultBinding, CloudDocument, CloudFolder, CloudWorkspace, DeletedFolder, DeletedPath, DeletedPathInput, EntryKind, SyncPushDocument, SyncPushResponse, TrashSyncPayload, VaultSettings } from "../lib/types";
 import { parseSyncConflicts } from "../lib/types";
 
@@ -221,11 +222,23 @@ export function useCloudSync() {
         const locallyDeletedFolders = syncFolderBases
           .filter((relativePath) => !localFolderPaths.has(relativePath));
 
+        const syncId = Math.random().toString(36).slice(2, 7);
+        console.log(`[sync:${syncId}] ▶ START`, {
+          skip: options.skipRelativePath,
+          localDocs: documents.map((d) => d.relativePath),
+          syncBaseKeys: Object.keys(syncBases),
+          locallyDeletedPaths: [...locallyDeletedPaths],
+        });
+
         // 3. Pull cloud changes and apply to disk (only overwrites files not locally modified)
-        const pullResult = await pullCloudWorkspace(binding, options.skipRelativePath, syncBases, locallyDeletedPaths);
+        const pullResult = await pullCloudWorkspace(binding, options.skipRelativePath, syncBases, locallyDeletedPaths, { syncId });
         const remoteDeletedPaths = new Set(pullResult.deletedPaths);
         const remoteDeletedFolders = new Set(pullResult.deletedFolders);
-        const pulledDocumentPaths = new Set(pullResult.documentPaths);
+        // Use receivedDocumentPaths (all docs the server returned) to protect against
+        // incorrectly sending a deletion for a file the server actively has.
+        // This prevents the bug where a locally-deleted file that was re-created on
+        // the server gets re-deleted by the push.
+        const serverActiveDocumentPaths = new Set(pullResult.receivedDocumentPaths);
         const documentsForPush = documents.filter((d) => !remoteDeletedPaths.has(d.relativePath));
         const foldersForPush = folders.filter((f) => !remoteDeletedFolders.has(f.relativePath));
 
@@ -247,13 +260,25 @@ export function useCloudSync() {
         const deletedPaths: DeletedPathInput[] = Object.keys(syncBases)
           .filter((relativePath) => !localPaths.has(relativePath))
           .filter((relativePath) => !remoteDeletedPaths.has(relativePath))
-          .filter((relativePath) => !pulledDocumentPaths.has(relativePath))
+          .filter((relativePath) => !serverActiveDocumentPaths.has(relativePath))
           .filter((relativePath) => !options.skipRelativePath || relativePath !== options.skipRelativePath)
           .map((relativePath) => ({ relativePath }));
 
+        console.log(`[sync:${syncId}] ▶ PUSH INPUT`, {
+          documentsForPush: documentsForPush.map((d) => d.relativePath),
+          deletedPathsToSend: deletedPaths.map((d) => d.relativePath),
+          serverActiveDocs: [...serverActiveDocumentPaths],
+          remoteDeletedPaths: [...remoteDeletedPaths],
+        });
+
         const push = await httpRequest(`${getServiceUrl()}/api/v1/workspaces/${binding.workspaceId}/sync/push`, {
           method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${state.syncToken}` },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${state.syncToken}`,
+            ...(state.wsSessionId ? { "x-session-id": state.wsSessionId } : {}),
+            ...(state.cloudProfile?.deviceId ? { "x-device-id": state.cloudProfile.deviceId } : {}),
+          },
           body: JSON.stringify({
             deviceId: state.cloudProfile?.deviceId ?? "desktop",
             folders: foldersForPush,
@@ -270,10 +295,18 @@ export function useCloudSync() {
         }
         if (!push.ok) throw new Error(await push.text());
         const pushData = (await push.json()) as SyncPushResponse;
+        console.log(`[sync:${syncId}] ▶ PUSH RESPONSE`, {
+          accepted: pushData.accepted,
+          documents: pushData.documents.map((d) => `${d.relativePath}:${d.mergeStatus}`),
+          serverDeletedPaths: pushData.deletedPaths?.map((d) => d.relativePath) ?? [],
+        });
         dispatch({ type: "SET_CONFLICTS", conflicts: parseSyncConflicts(pushData.conflicts ?? []) });
         const snapshot = `${Date.now()}:${documents.map((d) => `${d.relativePath}:${d.content.length}`).join("|")}`;
         dispatch({ type: "SET_SYNC_SNAPSHOT", snapshot });
-        await applyCloudDocumentsRef.current(pushData.documents, pushData.folders ?? [], options.skipRelativePath);
+        // Only apply documents that were merged by the server (not unchanged echoes)
+        // to avoid unnecessary disk writes and file watcher churn.
+        const mergedPushDocs = pushData.documents.filter((d) => d.mergeStatus !== "unchanged");
+        await applyCloudDocumentsRef.current(mergedPushDocs, pushData.folders ?? [], options.skipRelativePath);
         if (tauri.isAvailable && deletedPaths.length > 0) {
           try {
             await tauri.deleteSyncBases(state.workspace.rootPath, deletedPaths.map((d) => d.relativePath));
@@ -338,10 +371,10 @@ export function useCloudSync() {
     skipRelativePath?: string,
     syncBases?: Record<string, string>,
     locallyDeletedPaths: Set<string> = new Set(),
-    options: { sinceClock?: number; sinceTrashEventClock?: number; reason?: string } = {},
-  ): Promise<{ deletedPaths: string[]; deletedFolders: string[]; documentPaths: string[] }> => {
+    options: { sinceClock?: number; sinceTrashEventClock?: number; reason?: string; syncId?: string } = {},
+  ): Promise<{ deletedPaths: string[]; deletedFolders: string[]; documentPaths: string[]; receivedDocumentPaths: string[] }> => {
     if (!state.workspace || !state.syncToken) {
-      return { deletedPaths: [], deletedFolders: [], documentPaths: [] };
+      return { deletedPaths: [], deletedFolders: [], documentPaths: [], receivedDocumentPaths: [] };
     }
 
     // Load trash metadata to get the last synced cursor
@@ -358,6 +391,7 @@ export function useCloudSync() {
       trashClock = options.sinceTrashEventClock;
     }
     console.log("[cloud:pull] request", {
+      syncId: options.syncId,
       vaultPath: state.workspace.rootPath,
       workspaceId: binding.workspaceId,
       sinceClock,
@@ -379,7 +413,7 @@ export function useCloudSync() {
     });
     if (response.status === 403 || response.status === 404) {
       await handleWorkspaceAccessLoss(binding, response.status);
-      return { deletedPaths: [], deletedFolders: [], documentPaths: [] };
+      return { deletedPaths: [], deletedFolders: [], documentPaths: [], receivedDocumentPaths: [] };
     }
     if (!response.ok) throw new Error(await response.text());
     const pullData = (await response.json()) as {
@@ -390,10 +424,17 @@ export function useCloudSync() {
       conflicts: Array<Record<string, unknown>>;
       trash?: TrashSyncPayload;
     };
+    const pulledDocPaths = new Set(pullData.documents.map((d) => d.relativePath));
+    const deletedInPull = (pullData.deletedPaths ?? []).map((d) => d.relativePath);
+    // Hypothesis A detector: same path in BOTH documents and deletedPaths (zombie conflict)
+    const zombiePaths = deletedInPull.filter((p) => pulledDocPaths.has(p));
     console.log("[cloud:pull] response", {
+      syncId: options.syncId,
       documentsCount: pullData.documents.length,
-      deletedPathsCount: pullData.deletedPaths?.length ?? 0,
-      deletedPaths: pullData.deletedPaths?.map(d => d.relativePath) ?? [],
+      documents: pullData.documents.map((d) => `${d.relativePath}@clock=${d.updatedClock ?? "?"}`),
+      deletedPathsCount: deletedInPull.length,
+      deletedPaths: deletedInPull,
+      zombiePaths,  // HYPOTHESIS A: non-empty = path is both alive on server AND in trash
       foldersCount: pullData.folders?.length ?? 0,
       deletedFoldersCount: pullData.deletedFolders?.length ?? 0,
     });
@@ -402,7 +443,10 @@ export function useCloudSync() {
     // During pull, only apply cloud documents for files that haven't been locally modified.
     // A file is "locally modified" if its current content differs from the sync base.
     // Locally modified files are skipped here; the push step will handle merge via the server.
-    let pullDocsToApply = pullData.documents.filter((cloudDoc) => !locallyDeletedPaths.has(cloudDoc.relativePath));
+    // Note: we do NOT filter by locallyDeletedPaths here. If the server returns a document
+    // in the pull, it means its clock advanced since our last sync (someone modified or
+    // re-created it). We should apply it to respect the newer server state.
+    let pullDocsToApply = [...pullData.documents];
     if (syncBases && Object.keys(syncBases).length > 0 && tauri.isAvailable) {
       const localDocs = await tauri.collectSyncDocuments(state.workspace.rootPath);
       const localContentMap = new Map(localDocs.map((d) => [d.relativePath, d.content]));
@@ -419,12 +463,10 @@ export function useCloudSync() {
     }
 
     console.log("[cloud:apply] candidates", {
+      syncId: options.syncId,
       receivedDocumentPaths: pullData.documents.map((d) => d.relativePath),
       applyDocumentPaths: pullDocsToApply.map((d) => d.relativePath),
       folderPaths: (pullData.folders ?? []).map((f) => f.relativePath),
-      skippedLocallyDeletedPaths: pullData.documents
-        .filter((d) => locallyDeletedPaths.has(d.relativePath))
-        .map((d) => d.relativePath),
       skipRelativePath,
     });
     await applyCloudDocumentsRef.current(pullDocsToApply, pullData.folders ?? [], skipRelativePath);
@@ -447,9 +489,19 @@ export function useCloudSync() {
       } catch { /* non-critical */ }
     }
     if (pullData.deletedPaths && pullData.deletedPaths.length > 0 && tauri.isAvailable) {
-      console.log("[cloud:pull] processing deletedPaths:", pullData.deletedPaths.map(d => d.relativePath));
+      // Collect local file list to check which paths actually exist before trashing
+      const localDocsNow = await tauri.collectSyncDocuments(state.workspace.rootPath);
+      const localPathsNow = new Set(localDocsNow.map((d) => d.relativePath));
+      console.log("[cloud:pull] processing deletedPaths:", pullData.deletedPaths.map((d) => ({
+        relativePath: d.relativePath,
+        deletedClock: d.deletedClock,
+        existsLocally: localPathsNow.has(d.relativePath),
+        inSyncBases: syncBases ? (d.relativePath in syncBases) : "n/a",
+      })));
       for (const dp of pullData.deletedPaths) {
         try {
+          const fullPath = `${state.workspace.rootPath}/${dp.relativePath}`;
+          markCloudWrite(fullPath, "DELETED_BY_CLOUD_PULL");
           console.log("[cloud:pull] trashing entry:", dp.relativePath);
           await tauri.trashEntry(state.workspace.rootPath, dp.relativePath);
         } catch (error) {
@@ -575,6 +627,9 @@ export function useCloudSync() {
       deletedPaths: (pullData.deletedPaths ?? []).map((d) => d.relativePath),
       deletedFolders: (pullData.deletedFolders ?? []).map((d) => d.relativePath),
       documentPaths: pullDocsToApply.map((d) => d.relativePath),
+      // All documents the server returned in this pull response.
+      // Used to prevent push from re-deleting files that the server actively has.
+      receivedDocumentPaths: pullData.documents.map((d) => d.relativePath),
     };
   }, [dispatch, state.workspace, state.syncToken, state.cloudProfile, getServiceUrl, handleWorkspaceAccessLoss]);
 
@@ -608,6 +663,13 @@ export function useCloudSync() {
       isDirty: state.isDirty,
       currentRelativePath: state.currentRelativePath,
     });
+    const hashEntries = await Promise.all(
+      filtered.map(async (d) => ({
+        fullPath: `${state.workspace!.rootPath}/${d.relativePath}`,
+        contentHash: await sha256Hex(d.content),
+      }))
+    );
+    markCloudWriteBatch(hashEntries);
     const workspace = await tauri.applyCloudDocuments(
       state.workspace.rootPath,
       filtered.map((d) => ({ relativePath: d.relativePath, content: d.content })),
@@ -638,7 +700,12 @@ export function useCloudSync() {
       }
       const response = await httpRequest(`${getServiceUrl()}/api/v1/workspaces/${binding.workspaceId}/conflicts/${conflictId}/resolve`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${state.syncToken}` },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${state.syncToken}`,
+          ...(state.wsSessionId ? { "x-session-id": state.wsSessionId } : {}),
+          ...(state.cloudProfile?.deviceId ? { "x-device-id": state.cloudProfile.deviceId } : {}),
+        },
         body: JSON.stringify(body),
       });
       if (!response.ok) throw new Error(await response.text());

@@ -174,14 +174,19 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     try {
       dispatch({ type: "SET_LOADING", isLoading: true });
       const workspace = await tauri.createEntry(state.workspace.rootPath, trimmed, "markdown");
+      console.log("[createDoc] file created locally:", trimmed);
       dispatch({ type: "UPDATE_WORKSPACE", workspace });
       await openMarkdownFile(`${workspace.rootPath}/${trimmed}`, trimmed);
       // Notify cloud via REST so web clients see the new document immediately.
       if (tauri.isAvailable && getCloudContext()) {
         try {
           const content = await tauri.readFile(`${workspace.rootPath}/${trimmed}`);
+          console.log("[createDoc] calling /documents/save for:", trimmed);
           await cloudRest("/documents/save", "POST", { relativePath: trimmed, title: "", content });
-        } catch { /* non-critical */ }
+          console.log("[createDoc] /documents/save completed for:", trimmed);
+        } catch (e) {
+          console.log("[createDoc] /documents/save failed for:", trimmed, e);
+        }
       }
     } catch (error) {
       dispatch({ type: "SET_STATUS", message: String(error) });
@@ -208,12 +213,14 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
         dispatch({ type: "SET_STATUS", message: `Renamed entry to ${toRelativePath}.` });
       }
       window.dispatchEvent(new CustomEvent("jtype:vault-folder-changed"));
+      // Cloud hook: notify rename so web clients see the move immediately
+      cloudRest("/documents/rename", "POST", { fromRelativePath, toRelativePath });
     } catch (error) {
       dispatch({ type: "SET_STATUS", message: String(error) });
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, isCloudViewer, state.workspace, openMarkdownFile]);
+  }, [dispatch, isCloudViewer, state.workspace, openMarkdownFile, getCloudContext, cloudRest]);
 
   const renameCurrentEntry = useCallback(async () => {
     if (!state.workspace || !state.currentRelativePath) return;

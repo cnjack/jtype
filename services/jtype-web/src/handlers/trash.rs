@@ -203,6 +203,8 @@ pub async fn restore_trash_item_core(
             relative_path,
             action: "restored".to_string(),
             event_clock: next_clock,
+            source: "api".to_string(),
+            device_id: device_id.map(|s| s.to_string()),
         },
         exclude_session,
     )
@@ -295,6 +297,8 @@ pub async fn permanent_delete_core(
                 source_session_id: exclude_session.map(|s| s.to_string()),
                 relative_path: rp,
                 deleted_clock: next_clock,
+                source: "api".to_string(),
+                device_id: None,
             },
             exclude_session,
         )
@@ -374,6 +378,8 @@ pub async fn empty_trash_core(
                 source_session_id: exclude_session.map(|s| s.to_string()),
                 relative_path: rp,
                 deleted_clock: next_clock,
+                source: "api".to_string(),
+                device_id: None,
             },
             exclude_session,
         )

@@ -197,6 +197,8 @@ pub async fn push(
                         relative_path: deleted_path.relative_path.clone(),
                         action: "trashed".to_string(),
                         event_clock: deleted_path.deleted_clock,
+                        source: "desktop".to_string(),
+                        device_id: device_id.clone(),
                     },
                     session_id.as_deref(),
                 )

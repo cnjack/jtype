@@ -61,7 +61,14 @@ function AppContent() {
   const openMarkdownFileRef = useRef(fs.openMarkdownFile);
   openMarkdownFileRef.current = fs.openMarkdownFile;
   const { commands, findCommand } = useCommands(fs, sync);
-  useFileWatcher();
+
+  const isSyncEnabledRef = useRef(false);
+  const onExternalFileChange = useCallback(async (_changedPaths: string[]) => {
+    if (!isSyncEnabledRef.current) return;
+    sync.syncWorkspaceToWeb({ silent: true }).catch(() => {});
+  }, [sync]);
+
+  useFileWatcher(onExternalFileChange);
 
   const handleAction = useCallback((action: string) => {
     if (action === "quickSwitcher.create") {
@@ -88,6 +95,7 @@ function AppContent() {
     currentBinding &&
     currentVaultSettings?.cloudSyncEnabled !== false
   );
+  isSyncEnabledRef.current = isSyncEnabled;
   const openedVaultPullKeyRef = useRef<string | null>(null);
   const currentVaultSettingsLoaded = state.workspace
     ? Object.prototype.hasOwnProperty.call(state.vaultSettings, state.workspace.rootPath)

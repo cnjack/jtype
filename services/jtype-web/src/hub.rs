@@ -22,6 +22,8 @@ pub enum WorkspaceEvent {
         source_session_id: Option<String>,
         relative_path: String,
         deleted_clock: i64,
+        source: String,
+        device_id: Option<String>,
     },
     #[serde(rename = "document:trashed", rename_all = "camelCase")]
     DocumentTrashed {
@@ -30,6 +32,8 @@ pub enum WorkspaceEvent {
         relative_path: String,
         action: String,
         event_clock: i64,
+        source: String,
+        device_id: Option<String>,
     },
     #[serde(rename = "sync:required", rename_all = "camelCase")]
     SyncRequired {

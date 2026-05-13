@@ -122,8 +122,9 @@ pub async fn start_ws_listener(
                                                     continue;
                                                 }
                                                 eprintln!(
-                                                    "[ws_client] remote change: {} {:?}",
-                                                    parsed.msg_type, parsed.relative_path
+                                                    "[ws_client] remote change: {} {:?} (eventDeviceId={:?}, localDeviceId={}, eventSource={:?})",
+                                                    parsed.msg_type, parsed.relative_path,
+                                                    parsed.device_id_field, device_id, parsed.source
                                                 );
                                                 let _ = app.emit("cloud:remote-change", &text);
                                             }

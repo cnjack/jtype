@@ -2,13 +2,17 @@ import { useEffect, useRef } from "react";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { tauri } from "../lib/tauri";
 import { useAppState, useAppDispatch } from "../app/AppState";
+import { sha256Hex } from "../lib/utils";
+import { consumeCloudWrite } from "../lib/cloudWriteHashes";
 
-export function useFileWatcher() {
+export function useFileWatcher(onExternalChange?: (changedPaths: string[]) => void) {
   const state = useAppState();
   const dispatch = useAppDispatch();
   const unlistenRef = useRef<UnlistenFn | null>(null);
   const debounceRef = useRef<number | null>(null);
   const lastSaveTimeRef = useRef<number>(0);
+  const onExternalChangeRef = useRef(onExternalChange);
+  onExternalChangeRef.current = onExternalChange;
   const latestStateRef = useRef({
     currentPath: "",
     currentRelativePath: "",
@@ -54,6 +58,32 @@ export function useFileWatcher() {
           dispatch({ type: "UPDATE_WORKSPACE", workspace });
 
           const changedPaths = event.payload;
+
+          // Content hash gate: filter out cloud-originated changes
+          const externalChanges: string[] = [];
+          for (const p of changedPaths) {
+            const expectedHash = consumeCloudWrite(p);
+            if (expectedHash) {
+              if (expectedHash === "DELETED_BY_CLOUD_PULL") {
+                continue;
+              }
+              try {
+                const content = await t.readFile(p);
+                const actualHash = await sha256Hex(content);
+                if (actualHash === expectedHash) {
+                  continue;
+                }
+              } catch {
+                continue;
+              }
+            }
+            externalChanges.push(p);
+          }
+
+          if (externalChanges.length > 0 && onExternalChangeRef.current) {
+            onExternalChangeRef.current(externalChanges);
+          }
+
           if (currentPath && changedPaths.some((p) => p === currentPath) && !isDirty) {
             try {
               const content = await t.readFile(currentPath);

@@ -167,6 +167,8 @@ pub async fn delete_document(
                 relative_path,
                 action: "trashed".to_string(),
                 event_clock: next_clock,
+                source: "desktop".to_string(),
+                device_id: device_id.clone(),
             },
             session_id.as_deref(),
         )

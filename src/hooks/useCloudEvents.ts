@@ -71,6 +71,22 @@ export function useCloudEvents(pullOnly: PullOnly) {
             return;
           }
 
+          // Log why self-change filter did NOT match (helps debug echo issues)
+          if (parsed.deviceId || parsed.source) {
+            console.log("[useCloudEvents] self-change check PASSED (not self):", {
+              parsedDeviceId: parsed.deviceId,
+              localDeviceId: s.cloudProfile?.deviceId,
+              parsedSource: parsed.source,
+              deviceMatch: parsed.deviceId === s.cloudProfile?.deviceId,
+              sourceMatch: parsed.source === "desktop",
+            });
+          } else {
+            console.warn("[useCloudEvents] ⚠️ event has NO deviceId/source — cannot filter self-change!", {
+              eventType: parsed.type,
+              relativePath,
+            });
+          }
+
           // Handle delete/trash events immediately without relying on pull
           if (parsed.type === "document:deleted" && s.workspace) {
             // document:deleted means permanent delete from trash, not from document list
@@ -104,7 +120,12 @@ export function useCloudEvents(pullOnly: PullOnly) {
                 console.log("[useCloudEvents] permanent delete processed", { deletedLocalTrashCount });
                 return;
               } else {
-                console.log("[useCloudEvents] trash item not found locally, removing visible document if present");
+                console.warn("[useCloudEvents] ⚠️ trash item not found locally for document:deleted event, will remove visible document:", {
+                  relativePath,
+                  trashMetadataCount: trashMetadata.items.length,
+                  eventDeviceId: parsed.deviceId,
+                  eventSource: parsed.source,
+                });
                 try {
                   await tauri.trashEntry(s.workspace.rootPath, relativePath);
                   const workspace = await tauri.openWorkspace(s.workspace.rootPath);
@@ -127,7 +148,11 @@ export function useCloudEvents(pullOnly: PullOnly) {
 
           if (parsed.type === "document:trashed") {
             const action = parsed.action || "trashed";
-            console.log("[useCloudEvents] handling document:trashed, action:", action);
+            console.log("[useCloudEvents] handling document:trashed, action:", action, {
+              relativePath,
+              eventDeviceId: parsed.deviceId,
+              eventSource: parsed.source,
+            });
 
             if (action === "trashed" && s.workspace) {
               // Move to trash
