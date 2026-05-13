@@ -10,6 +10,8 @@ marked.use({ gfm: true, breaks: false });
 let mermaidRenderer: Awaited<typeof import("mermaid")>["default"] | null = null;
 let mermaidRenderCounter = 0;
 let renderVersion = 0;
+const PLANTUML_SERVER_BASE = "https://www.plantuml.com/plantuml/svg/";
+const PLANTUML_ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_";
 
 function renderMath(content: string) {
   const withBlocks = content.replace(/\$\$([\s\S]+?)\$\$/g, (_match, expression: string) => {
@@ -31,6 +33,44 @@ function renderMath(content: string) {
 
 function escapeHtmlSimple(value: string) {
   return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function encodePlantuml6Bit(value: number) {
+  return PLANTUML_ALPHABET[value & 0x3f] ?? "";
+}
+
+function encodePlantumlBytes(bytes: Uint8Array) {
+  let encoded = "";
+  for (let index = 0; index < bytes.length; index += 3) {
+    const first = bytes[index] ?? 0;
+    const second = bytes[index + 1] ?? 0;
+    const third = bytes[index + 2] ?? 0;
+    encoded += encodePlantuml6Bit(first >> 2);
+    encoded += encodePlantuml6Bit(((first & 0x3) << 4) | (second >> 4));
+    encoded += encodePlantuml6Bit(((second & 0xf) << 2) | (third >> 6));
+    encoded += encodePlantuml6Bit(third & 0x3f);
+  }
+  return encoded;
+}
+
+async function deflatePlantumlSource(source: string) {
+  if (typeof CompressionStream === "undefined") return null;
+  const compressed = await new Response(
+    new Blob([new TextEncoder().encode(source)]).stream().pipeThrough(new CompressionStream("deflate")),
+  ).arrayBuffer();
+  const bytes = new Uint8Array(compressed);
+  if (bytes.length <= 6) return bytes;
+  return bytes.slice(2, -4);
+}
+
+async function plantumlImageUrl(source: string) {
+  const compressed = await deflatePlantumlSource(source);
+  if (!compressed) return null;
+  return `${PLANTUML_SERVER_BASE}${encodePlantumlBytes(compressed)}`;
+}
+
+function plantumlTitle(source: string) {
+  return source.match(/^\s*@start\w*\s+([^\r\n]+)/i)?.[1]?.trim();
 }
 
 function prepareMermaidPreview(container: HTMLElement) {
@@ -62,6 +102,31 @@ async function renderMermaidPreview(container: HTMLElement, version: number) {
   } catch {
     // Mermaid rendering errors are non-critical
   }
+}
+
+async function renderPlantumlPreview(container: HTMLElement, version: number) {
+  const codes = Array.from(container.querySelectorAll<HTMLElement>("pre > code.language-plantuml"));
+  if (codes.length === 0) return;
+
+  await Promise.all(
+    codes.map(async (code) => {
+      const source = code.textContent ?? "";
+      const src = await plantumlImageUrl(source);
+      if (!src || version !== renderVersion) return;
+
+      const figure = document.createElement("figure");
+      figure.className = "plantuml";
+
+      const image = document.createElement("img");
+      image.src = src;
+      image.alt = plantumlTitle(source) || "PlantUML diagram";
+      image.loading = "lazy";
+      image.referrerPolicy = "no-referrer";
+      figure.append(image);
+
+      code.parentElement?.replaceWith(figure);
+    }),
+  );
 }
 
 export async function renderMarkdownToHtml(content: string): Promise<string> {
@@ -102,6 +167,7 @@ export async function renderToContainer(content: string, container: HTMLElement)
   virtualContainer.innerHTML = html;
   morphdom(container, virtualContainer, { childrenOnly: true });
 
+  await renderPlantumlPreview(container, thisVersion);
   prepareMermaidPreview(container);
   await renderMermaidPreview(container, thisVersion);
   return true;

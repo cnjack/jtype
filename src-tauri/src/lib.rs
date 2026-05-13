@@ -10,7 +10,9 @@ use std::{
     path::{Path, PathBuf},
     sync::Mutex,
 };
-use tauri::{AppHandle, Emitter, Manager};
+#[cfg(any(target_os = "macos", target_os = "ios", target_os = "android"))]
+use tauri::Manager;
+use tauri::{AppHandle, Emitter};
 
 use workspace::{
     AiIndexResult, EntryKind, FolderContentsSummary, PublishResult, SyncBaseEntry, SyncDocument,
@@ -798,9 +800,9 @@ pub fn run() {
         .manage(WsOutbox(tokio::sync::broadcast::channel::<String>(64).0))
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
-        .run(|app, event| {
+        .run(|_app, _event| {
             #[cfg(any(target_os = "macos", target_os = "ios", target_os = "android"))]
-            if let tauri::RunEvent::Opened { urls } = event {
+            if let tauri::RunEvent::Opened { urls } = _event {
                 let paths: Vec<String> = urls
                     .into_iter()
                     .filter_map(|url| url.to_file_path().ok())
@@ -809,13 +811,13 @@ pub fn run() {
                     .collect();
 
                 if !paths.is_empty() {
-                    let state = app.state::<AppState>();
+                    let state = _app.state::<AppState>();
                     state
                         .pending_open_paths
                         .lock()
                         .unwrap()
                         .extend(paths.clone());
-                    let _ = app.emit("open-markdown-files", paths);
+                    let _ = _app.emit("open-markdown-files", paths);
                 }
             }
         });

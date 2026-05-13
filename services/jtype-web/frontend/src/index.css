@@ -145,7 +145,8 @@
 }
 
 .preview .math-block,
-.preview .mermaid {
+.preview .mermaid,
+.preview .plantuml {
   max-width: 100%;
   overflow: auto;
   margin: 1rem 0;
@@ -153,6 +154,12 @@
   border: 1px solid #e7e5e4;
   border-radius: 8px;
   background: #ffffff;
+}
+
+.preview .plantuml img {
+  display: block;
+  max-width: 100%;
+  height: auto;
 }
 
 .landing-page-grid {
