@@ -231,7 +231,8 @@
 }
 
 .preview .math-block,
-.preview .mermaid {
+.preview .mermaid,
+.preview .plantuml {
   max-width: 100%;
   overflow: auto;
   margin: 1rem 0;
@@ -239,6 +240,12 @@
   border: 1px solid rgb(13 13 12 / 0.06);
   border-radius: 16px;
   background: #ffffff;
+}
+
+.preview .plantuml img {
+  display: block;
+  max-width: 100%;
+  height: auto;
 }
 
 @media (max-width: 980px) {

@@ -1,16 +1,18 @@
 FROM node:22-slim AS frontend
-WORKDIR /app/frontend
-COPY services/jtype-web/frontend/package.json services/jtype-web/frontend/package-lock.json* ./
-RUN npm ci
-COPY services/jtype-web/frontend/ .
-RUN npm run build
+WORKDIR /app
+COPY services/jtype-web/frontend/package.json services/jtype-web/frontend/package-lock.json* ./services/jtype-web/frontend/
+RUN cd services/jtype-web/frontend && npm ci
+RUN ln -s /app/services/jtype-web/frontend/node_modules /app/node_modules
+COPY shared/ ./shared/
+COPY services/jtype-web/frontend/ ./services/jtype-web/frontend/
+RUN cd services/jtype-web/frontend && npm run build
 
 FROM rust:1.89 AS builder
 WORKDIR /app
 COPY services/jtype-web/Cargo.toml ./Cargo.toml
 COPY services/jtype-web/src ./src
 COPY services/jtype-web/migrations ./migrations
-COPY --from=frontend /app/frontend/dist ./frontend/dist
+COPY --from=frontend /app/services/jtype-web/frontend/dist ./frontend/dist
 RUN cargo build --release
 
 FROM debian:bookworm-slim
