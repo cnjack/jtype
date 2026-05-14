@@ -4,7 +4,7 @@ export function WelcomeScreen() {
   const fs = useFileSystem();
 
   const recentItems = readRecentItems();
-  const defaultVaultPath = "~/Documents/.jtype";
+  const defaultVaultPath = "~/Documents/Jtype Vaullt";
 
   return (
     <section id="welcome-screen" className="welcome-screen min-h-0 overflow-y-auto bg-[#fbfaf7]">

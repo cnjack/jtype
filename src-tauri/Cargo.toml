@@ -1,7 +1,7 @@
 [package]
 name = "jtype"
 version = "0.1.0"
-description = "jtype"
+description = "JType"
 authors = ["you"]
 edition = "2021"
 

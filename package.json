@@ -22,6 +22,8 @@
     "@tauri-apps/plugin-fs": "^2.5.0",
     "@tauri-apps/plugin-opener": "^2",
     "dompurify": "^3.4.2",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.2.1",
     "katex": "^0.16.45",
     "marked": "^18.0.2",
     "mermaid": "^11.14.0",

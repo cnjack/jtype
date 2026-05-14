@@ -16,11 +16,17 @@ import type {
 } from "./types";
 
 export const tauri = {
+  appReady() {
+    return invoke<void>("app_ready");
+  },
   readFile(path: string) {
     return invoke<string>("read_markdown_file", { path });
   },
   writeFile(path: string, content: string) {
     return invoke("write_markdown_file", { path, content });
+  },
+  writeBinaryFile(path: string, content: number[]) {
+    return invoke("write_binary_file", { path, content });
   },
   openWorkspace(path: string) {
     return invoke<WorkspaceSnapshot>("open_workspace", { path });

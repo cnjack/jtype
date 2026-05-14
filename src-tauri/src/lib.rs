@@ -9,6 +9,7 @@ use std::{
     hash::{Hash, Hasher},
     path::{Path, PathBuf},
     sync::Mutex,
+    time::Duration,
 };
 use tauri::{AppHandle, Emitter, Manager};
 
@@ -152,6 +153,11 @@ fn read_markdown_file(path: String) -> Result<String, String> {
 #[tauri::command]
 fn write_markdown_file(path: String, content: String) -> Result<(), String> {
     workspace::write_markdown(&PathBuf::from(path), &content)
+}
+
+#[tauri::command]
+fn write_binary_file(path: String, content: Vec<u8>) -> Result<(), String> {
+    fs::write(PathBuf::from(path), content).map_err(|error| error.to_string())
 }
 
 #[tauri::command]
@@ -490,7 +496,7 @@ fn default_vault_dir() -> Result<PathBuf, String> {
         .or_else(|| env::var_os("HOME"))
         .map(PathBuf::from)
         .ok_or_else(|| "Could not find the user home directory.".to_string())?;
-    Ok(home.join("Documents").join(".jtype"))
+    Ok(home.join("Documents").join("Jtype Vaullt"))
 }
 
 fn config_dir() -> Result<PathBuf, String> {
@@ -734,18 +740,43 @@ async fn stop_cloud_listener(state: tauri::State<'_, WsListenerHandle>) -> Resul
     Ok(())
 }
 
+#[tauri::command]
+fn app_ready(app: AppHandle) -> Result<(), String> {
+    show_main_window(&app)
+}
+
+fn show_main_window(app: &AppHandle) -> Result<(), String> {
+    if let Some(splash_window) = app.get_webview_window("splashscreen") {
+        let _ = splash_window.close();
+    }
+    if let Some(main_window) = app.get_webview_window("main") {
+        main_window.show().map_err(|error| error.to_string())?;
+        let _ = main_window.set_focus();
+    }
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
+        .setup(|app| {
+            let app_handle = app.handle().clone();
+            std::thread::spawn(move || {
+                std::thread::sleep(Duration::from_secs(3));
+                let _ = show_main_window(&app_handle);
+            });
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             initial_open_paths,
             default_vault_path,
             open_default_vault,
             read_markdown_file,
             write_markdown_file,
+            write_binary_file,
             open_workspace,
             detect_vault_root,
             create_workspace_entry,
@@ -788,7 +819,8 @@ pub fn run() {
             unbind_cloud_workspace,
             clear_sync_bases,
             save_vault_settings,
-            load_vault_settings
+            load_vault_settings,
+            app_ready
         ])
         .manage(AppState {
             watcher_state: Mutex::new(WatcherState { watcher: None }),

@@ -1,14 +1,17 @@
 import { useRef, useEffect, useCallback, useState } from "react";
+import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
+import { save } from "@tauri-apps/plugin-dialog";
 import { useAppDispatch, useAppState } from "../../app/AppState";
 import { useFileSystem } from "../../hooks";
-import { renderToContainer } from "@shared/lib/markdown";
+import { renderMarkdownToHtml, renderToContainer } from "@shared/lib/markdown";
 import { parseFrontmatter, writeFrontmatter } from "@shared/lib/frontmatter";
-import { basename, normalizePath } from "../../lib/utils";
+import { basename, escapeHtml, isTauriRuntime, normalizePath } from "../../lib/utils";
 import { useCommandsList } from "../../app/App";
 import { addMarkdownTableColumn, addMarkdownTableRow, formatMarkdownTable, insertBlockAtSafeCursor, insertOrEditTable } from "../../hooks/useCommands";
 import { useEagerSync } from "../../hooks/useEagerSync";
 import { useConfirm } from "@shared/components/PromptDialogContext";
 import { httpRequest } from "@shared/lib/http";
+import { tauri } from "../../lib/tauri";
 import type { EditorMode } from "@shared/lib/types";
 import { useScrollSync, useFloatingTooltip } from "@shared/hooks";
 import { ViewModeToggle, FloatingTooltip } from "@shared/components";
@@ -29,7 +32,9 @@ import {
   TrashIcon,
   ArrowUpTrayIcon,
   ArrowPathIcon,
+  DocumentTextIcon,
   LinkSlashIcon,
+  PrinterIcon,
 } from "@heroicons/react/24/outline";
 
 type PublishStatusResponse = {
@@ -40,6 +45,137 @@ type PublishStatusResponse = {
   publishedHash: string | null;
   hasUnpublishedChanges: boolean;
 };
+
+function applyPdfColorFallback(root: HTMLElement) {
+  const applyBaseColors = (element: Element) => {
+    if (!(element instanceof HTMLElement || element instanceof SVGElement)) return;
+    const style = element.style;
+    style.color = "#1c1917";
+    style.backgroundColor = "transparent";
+    style.borderColor = "transparent";
+    style.outlineColor = "transparent";
+    style.textDecorationColor = "currentColor";
+    style.boxShadow = "none";
+  };
+
+  applyBaseColors(root);
+  root.querySelectorAll("*").forEach(applyBaseColors);
+
+  root.style.backgroundColor = "#f8fbf9";
+  root.querySelectorAll<HTMLElement>("a").forEach((element) => {
+    element.style.color = "#008884";
+  });
+  root.querySelectorAll<HTMLElement>("code").forEach((element) => {
+    element.style.backgroundColor = "#e8f6f2";
+    element.style.color = "#1c1917";
+  });
+  root.querySelectorAll<HTMLElement>("pre").forEach((element) => {
+    element.style.backgroundColor = "#f5f5f4";
+    element.style.borderColor = "rgba(13, 13, 12, 0.08)";
+  });
+  root.querySelectorAll<HTMLElement>("blockquote").forEach((element) => {
+    element.style.color = "#6f817a";
+    element.style.borderLeftColor = "#008884";
+  });
+  root.querySelectorAll<HTMLElement>("th, td").forEach((element) => {
+    element.style.borderColor = "#e7e5e4";
+  });
+  root.querySelectorAll<HTMLElement>(".math-block, .mermaid").forEach((element) => {
+    element.style.backgroundColor = "rgba(255, 255, 255, 0.55)";
+    element.style.borderColor = "rgba(13, 13, 12, 0.06)";
+  });
+}
+
+async function renderPreviewPdfBytes(content: string): Promise<Uint8Array> {
+  const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
+    import("html2canvas"),
+    import("jspdf"),
+  ]);
+  const host = document.createElement("div");
+  host.style.position = "fixed";
+  host.style.left = "-10000px";
+  host.style.top = "0";
+  host.style.width = "794px";
+  host.style.background = "#f8fbf9";
+  host.style.pointerEvents = "none";
+  host.style.zIndex = "-1";
+
+  const article = document.createElement("article");
+  article.className = "preview";
+  article.dataset.pdfExportRoot = "true";
+  article.style.boxSizing = "border-box";
+  article.style.width = "794px";
+  article.style.minHeight = "1123px";
+  article.style.padding = "40px";
+  article.style.background = "#f8fbf9";
+  article.style.color = "#1c1917";
+  host.appendChild(article);
+  document.body.appendChild(host);
+
+  try {
+    await renderToContainer(content, article);
+    applyPdfColorFallback(article);
+    await new Promise((resolve) => requestAnimationFrame(() => resolve(undefined)));
+
+    const canvas = await html2canvas(article, {
+      backgroundColor: "#f8fbf9",
+      scale: Math.min(2, window.devicePixelRatio || 1),
+      useCORS: true,
+      windowWidth: article.scrollWidth,
+      windowHeight: article.scrollHeight,
+      onclone: (clonedDocument) => {
+        clonedDocument.documentElement.style.backgroundColor = "#f8fbf9";
+        clonedDocument.body.style.backgroundColor = "#f8fbf9";
+        const clonedArticle = clonedDocument.querySelector<HTMLElement>("[data-pdf-export-root='true']");
+        if (clonedArticle) applyPdfColorFallback(clonedArticle);
+      },
+    });
+
+    const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const margin = 28;
+    const imageWidth = pageWidth - margin * 2;
+    const imageHeight = (canvas.height * imageWidth) / canvas.width;
+    const pageImageHeight = pageHeight - margin * 2;
+    const sourcePageHeight = Math.floor((pageImageHeight * canvas.width) / imageWidth);
+
+    let sourceY = 0;
+    let pageIndex = 0;
+    while (sourceY < canvas.height) {
+      const pageCanvas = document.createElement("canvas");
+      const chunkHeight = Math.min(sourcePageHeight, canvas.height - sourceY);
+      pageCanvas.width = canvas.width;
+      pageCanvas.height = chunkHeight;
+
+      const ctx = pageCanvas.getContext("2d");
+      if (!ctx) throw new Error("Could not prepare PDF page.");
+      ctx.fillStyle = "#f8fbf9";
+      ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+      ctx.drawImage(
+        canvas,
+        0,
+        sourceY,
+        canvas.width,
+        chunkHeight,
+        0,
+        0,
+        pageCanvas.width,
+        pageCanvas.height,
+      );
+
+      if (pageIndex > 0) pdf.addPage();
+      const chunkImageHeight = Math.min(imageHeight - pageIndex * pageImageHeight, pageImageHeight);
+      pdf.addImage(pageCanvas.toDataURL("image/png"), "PNG", margin, margin, imageWidth, chunkImageHeight);
+      sourceY += chunkHeight;
+      pageIndex += 1;
+    }
+
+    return new Uint8Array(pdf.output("arraybuffer"));
+  } finally {
+    host.remove();
+  }
+}
 
 export function EditorShell() {
   const state = useAppState();
@@ -100,6 +236,8 @@ export function EditorShell() {
   const isCloudViewer = Boolean(currentVaultBinding?.workspaceRole === "viewer" && currentVaultSettings?.cloudSyncEnabled !== false);
   const canEditMarkdown = isMarkdown && !isCloudViewer;
   const canPublishToCloud = Boolean(isMarkdown && state.mode === "workspace" && currentVaultBinding && state.syncToken && state.cloudProfile?.token && currentVaultSettings?.cloudSyncEnabled !== false);
+  const showVaultDocumentTools = state.mode === "workspace";
+  const showDocumentPanel = showVaultDocumentTools && state.documentPanelOpen;
   const isPublished = Boolean(publishState?.isPublished);
   const hasUnpublishedChanges = Boolean(isPublished && (state.isDirty || publishState?.hasUnpublishedChanges));
   const cloudWs = currentVaultBinding ? state.cloudWorkspaces.find((w) => w.id === currentVaultBinding.workspaceId) : undefined;
@@ -150,6 +288,38 @@ export function EditorShell() {
     document.addEventListener("click", handler);
     return () => document.removeEventListener("click", handler);
   }, [contextMenu]);
+
+  const handlePreviewClick = useCallback((event: React.MouseEvent<HTMLElement>) => {
+    const anchor = (event.target as HTMLElement).closest("a[href]") as HTMLAnchorElement | null;
+    if (!anchor) return;
+    const href = anchor.getAttribute("href") ?? "";
+    if (!href || href.startsWith("#")) return;
+
+    let url: URL;
+    try {
+      url = new URL(href, window.location.href);
+    } catch {
+      return;
+    }
+
+    if (!["http:", "https:", "mailto:", "tel:"].includes(url.protocol)) {
+      event.preventDefault();
+      dispatch({ type: "SET_STATUS", message: "Only web, email, and phone links can be opened from preview." });
+      return;
+    }
+
+    event.preventDefault();
+    if (!isTauriRuntime()) {
+      window.open(url.href, "_blank", "noopener,noreferrer");
+      return;
+    }
+
+    void import("@tauri-apps/plugin-opener")
+      .then(({ openUrl }) => openUrl(url.href))
+      .catch(() => {
+        window.open(url.href, "_blank", "noopener,noreferrer");
+      });
+  }, [dispatch]);
 
   const cloudPublishRequest = useCallback(async <T,>(path: string, init: RequestInit = {}) => {
     if (!currentVaultBinding || !state.syncToken || !state.cloudProfile?.token) return null;
@@ -247,6 +417,91 @@ export function EditorShell() {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
   }, [canPublishToCloud, cloudPublishRequest, confirm, dispatch, findCloudDocumentId, refreshPublishState, state.currentRelativePath]);
+
+  const exportCurrentPdf = useCallback(async () => {
+    if (!state.currentPath || state.currentKind !== "markdown") return;
+    const title = basename(state.currentPath).replace(/\.(md|markdown|mdown|mkd)$/i, "");
+
+    try {
+      if (isTauriRuntime()) {
+        const selected = await save({
+          defaultPath: `${title}.pdf`,
+          filters: [{ name: "PDF", extensions: ["pdf"] }],
+        });
+        if (!selected) return;
+        const outputPath = selected.toLowerCase().endsWith(".pdf") ? selected : `${selected}.pdf`;
+
+        dispatch({ type: "SET_LOADING", isLoading: true });
+        dispatch({ type: "SET_STATUS", message: "Exporting PDF..." });
+        const pdfBytes = await renderPreviewPdfBytes(state.editorContent);
+        await tauri.writeBinaryFile(outputPath, Array.from(pdfBytes));
+        dispatch({ type: "SET_STATUS", message: `Exported PDF to ${outputPath}.` });
+        return;
+      }
+
+      dispatch({ type: "SET_STATUS", message: "Preparing PDF export..." });
+      const html = await renderMarkdownToHtml(state.editorContent);
+      const printHtml = `<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>${escapeHtml(title)}</title>
+    <style>
+      body { margin: 0; background: white; color: #1c1917; font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif; }
+      main { max-width: 760px; margin: 0 auto; padding: 48px 42px; }
+      h1, h2, h3 { font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.2; }
+      pre, code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+      pre { overflow: auto; padding: 14px; background: #f5f5f4; border-radius: 8px; }
+      img { max-width: 100%; }
+      blockquote { margin-left: 0; padding-left: 18px; border-left: 3px solid #d6d3d1; color: #57534e; }
+      table { width: 100%; border-collapse: collapse; }
+      th, td { border: 1px solid #e7e5e4; padding: 8px; text-align: left; }
+      @page { margin: 18mm; }
+      @media print { main { max-width: none; padding: 0; } }
+    </style>
+  </head>
+  <body>
+    <main class="preview">${html}</main>
+    <script>
+      window.addEventListener("load", () => {
+        window.focus();
+        setTimeout(() => window.print(), 120);
+      });
+    </script>
+  </body>
+</html>`;
+
+      const existingFrame = document.getElementById("jtype-pdf-export-frame");
+      existingFrame?.remove();
+
+      const printFrame = document.createElement("iframe");
+      printFrame.id = "jtype-pdf-export-frame";
+      printFrame.title = "PDF export";
+      printFrame.style.position = "fixed";
+      printFrame.style.right = "0";
+      printFrame.style.bottom = "0";
+      printFrame.style.width = "0";
+      printFrame.style.height = "0";
+      printFrame.style.border = "0";
+      printFrame.style.opacity = "0";
+      printFrame.setAttribute("aria-hidden", "true");
+      document.body.appendChild(printFrame);
+
+      const printDocument = printFrame.contentDocument;
+      if (!printDocument || !printFrame.contentWindow) {
+        throw new Error("Could not prepare PDF export.");
+      }
+
+      printDocument.open();
+      printDocument.write(printHtml);
+      printDocument.close();
+      dispatch({ type: "SET_STATUS", message: "Use the print dialog to save as PDF." });
+    } catch (error) {
+      dispatch({ type: "SET_STATUS", message: String(error) });
+    } finally {
+      dispatch({ type: "SET_LOADING", isLoading: false });
+    }
+  }, [dispatch, state.currentKind, state.currentPath, state.editorContent]);
 
   useScrollSync(editorRef, previewRef, !!state.currentPath && state.currentKind === "markdown");
 
@@ -363,6 +618,47 @@ export function EditorShell() {
               </button>
             </span>
           )}
+          {state.currentPath && state.currentKind === "markdown" && (
+            <Menu as="div" className="relative inline-block text-left">
+              <MenuButton
+                className="header-icon-button"
+                type="button"
+                aria-label="Export"
+                title="Export"
+              >
+                <ArrowUpTrayIcon className="h-4 w-4" />
+              </MenuButton>
+              <MenuItems
+                transition
+                className="absolute right-0 z-50 mt-2 w-44 origin-top-right rounded-lg border border-black/[0.06] bg-white p-1 shadow-lg shadow-stone-900/10 outline-none transition focus:outline-none data-[closed]:scale-95 data-[closed]:opacity-0"
+              >
+                <MenuItem>
+                  {({ focus }) => (
+                    <button
+                      className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-stone-700 transition ${focus ? "bg-[#e8f6f2] text-[#006f6b]" : ""}`}
+                      type="button"
+                      onClick={() => void exportCurrentPdf()}
+                    >
+                      <PrinterIcon className="h-4 w-4" />
+                      PDF
+                    </button>
+                  )}
+                </MenuItem>
+                <MenuItem>
+                  {({ focus }) => (
+                    <button
+                      className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-stone-700 transition ${focus ? "bg-[#e8f6f2] text-[#006f6b]" : ""}`}
+                      type="button"
+                      onClick={() => void fs.exportCurrentMarkdown()}
+                    >
+                      <DocumentTextIcon className="h-4 w-4" />
+                      Markdown
+                    </button>
+                  )}
+                </MenuItem>
+              </MenuItems>
+            </Menu>
+          )}
         </div>
       </div>
 
@@ -398,15 +694,19 @@ export function EditorShell() {
             tooltipProps={tooltipProps}
           />
         </div>
-        <button className={`editor-tool ${state.documentPanelOpen ? "bg-[#e8f6f2] text-[#006f6b] ring-1 ring-[#008884]/15 hover:bg-[#e8f6f2] hover:text-[#006f6b]" : ""}`} type="button" aria-label="Document info" {...tooltipProps("Document info")} onClick={() => dispatch({ type: "TOGGLE_DOCUMENT_PANEL" })}>
-          <InformationCircleIcon className="h-4 w-4" />
-        </button>
-        <button className="editor-tool" type="button" aria-label="Focus mode" {...tooltipProps("Focus mode")} onClick={() => dispatch({ type: "TOGGLE_FOCUS_MODE" })}>
-          <ArrowsPointingOutIcon className="h-4 w-4" />
-        </button>
+        {showVaultDocumentTools && (
+          <>
+            <button className={`editor-tool ${state.documentPanelOpen ? "bg-[#e8f6f2] text-[#006f6b] ring-1 ring-[#008884]/15 hover:bg-[#e8f6f2] hover:text-[#006f6b]" : ""}`} type="button" aria-label="Document info" {...tooltipProps("Document info")} onClick={() => dispatch({ type: "TOGGLE_DOCUMENT_PANEL" })}>
+              <InformationCircleIcon className="h-4 w-4" />
+            </button>
+            <button className="editor-tool" type="button" aria-label="Focus mode" {...tooltipProps("Focus mode")} onClick={() => dispatch({ type: "TOGGLE_FOCUS_MODE" })}>
+              <ArrowsPointingOutIcon className="h-4 w-4" />
+            </button>
+          </>
+        )}
       </div>
 
-      <div id="workbench-body" className={`workbench-body grid min-h-0 flex-1 bg-[#fbfdfb] ${state.documentPanelOpen ? "grid-cols-[minmax(0,1fr)_340px]" : "grid-cols-[minmax(0,1fr)]"}`}>
+      <div id="workbench-body" className={`workbench-body grid min-h-0 flex-1 bg-[#fbfdfb] ${showDocumentPanel ? "grid-cols-[minmax(0,1fr)_340px]" : "grid-cols-[minmax(0,1fr)]"}`}>
         <div className={getGridClass(state.editorMode)} style={{ position: "relative" }}>
           <textarea
             id="editor"
@@ -426,13 +726,14 @@ export function EditorShell() {
             ref={previewRef}
             className="preview empty min-h-0 overflow-y-auto overflow-x-hidden border-l border-black/[0.04] bg-[#f8fbf9] p-10"
             style={{ position: "relative", zIndex: 1 }}
+            onClick={handlePreviewClick}
           >
             <h2>Select a Markdown file</h2>
             <p>Your rendered document will appear here.</p>
           </article>
         </div>
 
-        {state.documentPanelOpen && (
+        {showDocumentPanel && (
           <aside id="document-panel" className="min-h-0 overflow-y-auto border-l border-black/[0.04] bg-[#f6faf7] p-5">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>

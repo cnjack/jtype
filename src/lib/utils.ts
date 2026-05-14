@@ -57,7 +57,11 @@ export async function sha256Hex(value: string): Promise<string> {
 }
 
 export function isTauriRuntime() {
-  return Boolean((window as Window & { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__);
+  const runtime = globalThis as typeof globalThis & {
+    isTauri?: boolean;
+    __TAURI_INTERNALS__?: unknown;
+  };
+  return Boolean(runtime.isTauri || runtime.__TAURI_INTERNALS__);
 }
 
 export function flattenNodes(entries: import("./types").FileTreeNode[] = []): import("./types").FileTreeNode[] {

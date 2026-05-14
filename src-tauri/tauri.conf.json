@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "jtype",
+  "productName": "JType",
   "version": "0.1.0",
   "identifier": "com.markdownviewer.viewer",
   "build": {
@@ -13,9 +13,21 @@
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "jtype",
+        "label": "main",
+        "title": "JType",
+        "visible": false,
         "width": 1280,
         "height": 820
+      },
+      {
+        "label": "splashscreen",
+        "title": "JType",
+        "url": "/splashscreen.html",
+        "width": 420,
+        "height": 300,
+        "center": true,
+        "decorations": false,
+        "resizable": false
       }
     ],
     "security": {

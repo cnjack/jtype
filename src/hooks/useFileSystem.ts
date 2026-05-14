@@ -1,5 +1,5 @@
 import { useCallback, useRef } from "react";
-import { open } from "@tauri-apps/plugin-dialog";
+import { open, save } from "@tauri-apps/plugin-dialog";
 import { openPath } from "@tauri-apps/plugin-opener";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { useAppDispatch, useAppState } from "../app/AppState";
@@ -159,6 +159,25 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
   }, [dispatch, isCloudViewer, state.currentPath, state.currentKind, state.editorContent, state.currentRelativePath]);
+
+  const exportCurrentMarkdown = useCallback(async () => {
+    if (!state.currentPath || state.currentKind !== "markdown") return;
+    try {
+      dispatch({ type: "SET_LOADING", isLoading: true });
+      const defaultName = basename(state.currentPath).replace(/\.(md|markdown|mdown|mkd)$/i, ".md");
+      const selected = await save({
+        defaultPath: defaultName,
+        filters: [{ name: "Markdown", extensions: ["md", "markdown", "mdown", "mkd"] }],
+      });
+      if (!selected) return;
+      await tauri.writeFile(selected, state.editorContent);
+      dispatch({ type: "SET_STATUS", message: `Exported Markdown to ${selected}.` });
+    } catch (error) {
+      dispatch({ type: "SET_STATUS", message: String(error) });
+    } finally {
+      dispatch({ type: "SET_LOADING", isLoading: false });
+    }
+  }, [dispatch, state.currentPath, state.currentKind, state.editorContent]);
 
   const createDocument = useCallback(async (relativePath: string) => {
     if (!state.workspace) return;
@@ -662,6 +681,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     openWorkspace,
     openDefaultVault,
     saveCurrentFile,
+    exportCurrentMarkdown,
     createDocument,
     renameCurrentEntry,
     deleteEntry,
