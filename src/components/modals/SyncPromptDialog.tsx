@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
 import { CloudArrowUpIcon } from "@heroicons/react/24/outline";
-import { t, Trans } from "@lingui/macro";
+import { t } from "@lingui/core/macro";
+import { Trans } from "@lingui/react/macro";
 import { useAppDispatch, useAppState } from "../../app/AppState";
 import { useCloudSync } from "../../hooks";
 import type { VaultSettings } from "../../lib/types";

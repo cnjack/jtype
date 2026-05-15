@@ -1,7 +1,8 @@
 import { useState, useCallback } from "react";
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
 import { ChatBubbleLeftRightIcon } from "@heroicons/react/24/outline";
-import { t, Trans } from "@lingui/macro";
+import { t } from "@lingui/core/macro";
+import { Trans } from "@lingui/react/macro";
 
 export interface PromptDialogProps {
   open: boolean;

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Trans } from "@lingui/macro";
+import { Trans } from "@lingui/react/macro";
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
 import { ArrowRightIcon, ChevronDownIcon, ChevronRightIcon, FolderIcon } from "@heroicons/react/24/outline";
 import { useAppDispatch, useAppState } from "../../app/AppState";

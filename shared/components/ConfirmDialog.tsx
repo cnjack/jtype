@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
-import { t } from "@lingui/macro";
+import { t } from "@lingui/core/macro";
 
 export interface ConfirmDialogProps {
   open: boolean;

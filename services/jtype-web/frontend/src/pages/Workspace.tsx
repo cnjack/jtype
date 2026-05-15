@@ -49,7 +49,8 @@ import {
   ArrowPathIcon,
   Cog6ToothIcon,
 } from '@heroicons/react/24/outline'
-import { t, Trans } from '@lingui/macro'
+import { t } from '@lingui/core/macro'
+import { Trans } from '@lingui/react/macro'
 
 type WorkspaceSection = 'documents' | 'trash' | 'publishing' | 'domains'
 type WorkspaceSettingsSection = 'general' | 'trash' | 'domains' | 'members'

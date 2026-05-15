@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { t, Trans } from '@lingui/macro'
+import { t } from '@lingui/core/macro'
+import { Trans } from '@lingui/react/macro'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { CheckCircleIcon, ExclamationCircleIcon, UserGroupIcon } from '@heroicons/react/24/outline'
 import { api, getStoredToken, type InvitePreview } from '../api'

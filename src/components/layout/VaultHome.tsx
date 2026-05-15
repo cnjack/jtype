@@ -1,4 +1,4 @@
-import { Trans, Plural } from "@lingui/macro";
+import { Trans, Plural } from "@lingui/react/macro";
 import { useMemo } from "react";
 import { useAppDispatch, useAppState } from "../../app/AppState";
 import { useFileSystem } from "../../hooks";

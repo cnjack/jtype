@@ -1,4 +1,4 @@
-import { t } from "@lingui/macro";
+import { t } from "@lingui/core/macro";
 import { PencilSquareIcon, ViewColumnsIcon, EyeIcon } from "@heroicons/react/24/outline";
 
 export type EditorMode = "write" | "split" | "preview";

@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { t, Trans } from "@lingui/macro";
+import { t } from "@lingui/core/macro";
+import { Trans } from "@lingui/react/macro";
 
 export type ConflictResolution = "accept_local" | "accept_cloud" | "manual_merge";
 

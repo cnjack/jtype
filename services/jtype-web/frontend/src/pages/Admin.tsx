@@ -2,7 +2,8 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Dialog, DialogPanel } from '@headlessui/react'
 import { api, type AdminUser, type AdminWorkspace, type AdminDomain, type AdminStats } from '../api'
-import { t, Trans } from '@lingui/macro'
+import { t } from '@lingui/core/macro'
+import { Trans } from '@lingui/react/macro'
 
 type AdminTab = 'users' | 'workspaces' | 'domains'
 

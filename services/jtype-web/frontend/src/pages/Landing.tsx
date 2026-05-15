@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
-import { t, Trans, msg } from '@lingui/macro'
+import { t, msg } from '@lingui/core/macro'
+import { Trans } from '@lingui/react/macro'
 import { useLingui } from '@lingui/react'
 import {
   ArrowLeftOnRectangleIcon,

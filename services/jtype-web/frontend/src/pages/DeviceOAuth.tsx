@@ -1,5 +1,6 @@
 import { useState, useEffect, type FormEvent } from 'react'
-import { t, Trans } from '@lingui/macro'
+import { t } from '@lingui/core/macro'
+import { Trans } from '@lingui/react/macro'
 import { useSearchParams } from 'react-router-dom'
 import { api, setToken, setStoredUsername } from '../api'
 

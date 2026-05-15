@@ -5,7 +5,8 @@ import type { CloudWorkspace } from "../../lib/types";
 import { useEffect, useState } from "react";
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
 import { CloudArrowUpIcon, LinkSlashIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { t, Trans } from "@lingui/macro";
+import { t } from "@lingui/core/macro";
+import { Trans } from "@lingui/react/macro";
 
 export function AccountDialog() {
   const state = useAppState();

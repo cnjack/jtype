@@ -1,5 +1,6 @@
 import { useMemo } from "react";
-import { t, Trans } from "@lingui/macro";
+import { t } from "@lingui/core/macro";
+import { Trans } from "@lingui/react/macro";
 import { useAppDispatch, useAppState } from "../../app/AppState";
 import { useCommandsList } from "../../app/App";
 import { fuzzyMatch } from "@shared/lib/utils";
