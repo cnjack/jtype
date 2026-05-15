@@ -1,0 +1,127 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"POT-Creation-Date: 2026-05-14\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: @lingui/cli\n"
+"Language: zh\n"
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Plural-Forms: \n"
+
+#: ../../../shared/components/ConflictResolver.tsx
+msgid "← Back to list"
+msgstr "← 返回列表"
+
+#. placeholder {0}: conflicts.length
+#. placeholder {1}: conflicts.length > 1 ? "s" : ""
+#: ../../../shared/components/ConflictResolver.tsx
+msgid "⚠ {0} Conflict{1} to Resolve"
+msgstr "⚠ {0} 个冲突{1}待解决"
+
+#: ../../../shared/components/ConflictResolver.tsx
+msgid "Accept cloud"
+msgstr "接受云端"
+
+#: ../../../shared/components/ConflictResolver.tsx
+msgid "Accept local"
+msgstr "接受本地"
+
+#: ../../../shared/components/EditorToolbar.tsx
+msgid "Bold"
+msgstr "粗体"
+
+#: ../../../shared/components/EditorToolbar.tsx
+msgid "Bold (Ctrl+B)"
+msgstr "粗体 (Ctrl+B)"
+
+#: ../../../shared/components/ConfirmDialog.tsx
+#: ../../../shared/components/PromptDialog.tsx
+msgid "Cancel"
+msgstr "取消"
+
+#: ../../../shared/components/ConflictResolver.tsx
+msgid "Cloud (remote)"
+msgstr "云端（远程）"
+
+#: ../../../shared/components/EditorToolbar.tsx
+msgid "Code"
+msgstr "代码"
+
+#: ../../../shared/components/ConfirmDialog.tsx
+msgid "Confirm"
+msgstr "确认"
+
+#: ../../../shared/components/EditorToolbar.tsx
+msgid "Inline Code"
+msgstr "行内代码"
+
+#: ../../../shared/components/EditorToolbar.tsx
+msgid "Italic"
+msgstr "斜体"
+
+#: ../../../shared/components/EditorToolbar.tsx
+msgid "Italic (Ctrl+I)"
+msgstr "斜体 (Ctrl+I)"
+
+#: ../../../shared/components/EditorToolbar.tsx
+msgid "Link"
+msgstr "链接"
+
+#: ../../../shared/components/EditorToolbar.tsx
+msgid "Link (Ctrl+K)"
+msgstr "链接 (Ctrl+K)"
+
+#: ../../../shared/components/ConflictResolver.tsx
+msgid "Local (yours)"
+msgstr "本地（我的）"
+
+#: ../../../shared/components/ConfirmDialog.tsx
+#: ../../../shared/components/PromptDialog.tsx
+msgid "OK"
+msgstr "确定"
+
+#: ../../../shared/components/PromptDialog.tsx
+msgid "Please enter a value."
+msgstr "请输入内容。"
+
+#: ../../../shared/components/ViewModeToggle.tsx
+msgid "Preview"
+msgstr "预览"
+
+#: ../../../shared/components/ConflictResolver.tsx
+msgid "Result (editable)"
+msgstr "结果（可编辑）"
+
+#: ../../../shared/components/ConflictResolver.tsx
+msgid "Save merged result"
+msgstr "保存合并结果"
+
+#: ../../../shared/components/ConflictResolver.tsx
+msgid "Saving…"
+msgstr "保存中…"
+
+#: ../../../shared/components/ViewModeToggle.tsx
+msgid "Split"
+msgstr "分栏"
+
+#: ../../../shared/components/EditorToolbar.tsx
+msgid "Table"
+msgstr "表格"
+
+#: ../../../shared/components/ConflictResolver.tsx
+msgid "Use this"
+msgstr "使用此版本"
+
+#: ../../../shared/components/ViewModeToggle.tsx
+msgid "Write"
+msgstr "写作"

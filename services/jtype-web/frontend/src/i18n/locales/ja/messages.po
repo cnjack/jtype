@@ -1,0 +1,1442 @@
+msgid ""
+msgstr ""
+"POT-Creation-Date: 2026-05-14\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: @lingui/cli\n"
+"Language: ja\n"
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Plural-Forms: \n"
+
+#: src/pages/Workspace.tsx
+msgid "-----BEGIN CERTIFICATE-----"
+msgstr "-----BEGIN CERTIFICATE-----"
+
+#: src/pages/Workspace.tsx
+msgid "-----BEGIN PRIVATE KEY-----"
+msgstr "-----BEGIN PRIVATE KEY-----"
+
+#: src/pages/Workspace.tsx
+msgid "(you)"
+msgstr "（あなた）"
+
+#. placeholder {0}: workspace.documentCount
+#. placeholder {0}: ws.documentCount
+#: src/pages/Workspace.tsx
+msgid "{0} documents"
+msgstr "{0} 件のドキュメント"
+
+#. placeholder {0}: uniqueIds.length
+#: src/pages/Workspace.tsx
+msgid "{0} documents published."
+msgstr "{0} 件のドキュメントを公開しました。"
+
+#. placeholder {0}: uniqueIds.length
+#: src/pages/Workspace.tsx
+msgid "{0} documents unpublished."
+msgstr "{0} 件のドキュメントの公開を取り消しました。"
+
+#. placeholder {0}: publishedDocuments.length
+#: src/pages/Workspace.tsx
+msgid "{0} live"
+msgstr "{0} 件公開中"
+
+#. placeholder {0}: documents.length
+#. placeholder {1}: documents.length === 1 ? '' : 's'
+#: src/pages/Workspace.tsx
+msgid "{0} Markdown file{1}"
+msgstr "{0} 個の Markdown ファイル{1}"
+
+#. placeholder {0}: formatBytes(storage.totalBudgetBytes)
+#: src/components/Layout.tsx
+msgid "{0} total"
+msgstr "合計 {0}"
+
+#. placeholder {0}: formatBytes(storage.totalUsedBytes)
+#: src/components/Layout.tsx
+msgid "{0} used"
+msgstr "{0} 使用済み"
+
+#. placeholder {0}: new Date().getFullYear()
+#: src/pages/Login.tsx
+msgid "© {0} JType"
+msgstr "© {0} JType"
+
+#. placeholder {0}: preview.invitedByUsername
+#. placeholder {1}: preview.workspaceName
+#. placeholder {2}: preview.role
+#: src/pages/InviteAccept.tsx
+msgid "<0>{0}</0> has invited you to join <1>{1}</1> as <2>{2}</2>."
+msgstr "<0>{0}</0> があなたを <2>{2}</2> として <1>{1}</1> に招待しました。"
+
+#. placeholder {0}: staleWarning.editedBy
+#. placeholder {1}: staleWarning.wasDirty ? '. You have unsaved changes.' : ''
+#: src/pages/Workspace.tsx
+msgid "⚠ Modified by {0}{1}"
+msgstr "⚠ {0} によって変更{1}"
+
+#: src/pages/InviteAccept.tsx
+msgid "Accept invitation"
+msgstr "招待を受け入れる"
+
+#: src/components/Layout.tsx
+msgid "Account"
+msgstr "アカウント"
+
+#: src/pages/Admin.tsx
+msgid "Actions"
+msgstr "操作"
+
+#: src/pages/Admin.tsx
+msgid "Active"
+msgstr "アクティブ"
+
+#: src/pages/Workspace.tsx
+msgid "Add domain"
+msgstr "ドメインを追加"
+
+#: src/pages/Workspace.tsx
+msgid "Add domains, verify DNS ownership, bind them to this workspace, and manage SSL certificates from one place."
+msgstr "ドメインの追加、DNS 所有権の確認、ワークスペースへのバインド、SSL 証書の管理を一か所で行います。"
+
+#: src/pages/Workspace.tsx
+msgid "Add table row below"
+msgstr "下に行を追加"
+
+#: src/pages/Workspace.tsx
+msgid "Add to favorites"
+msgstr "お気に入りに追加"
+
+#. placeholder {0}: domain.dnsTxtRecord
+#: src/pages/Workspace.tsx
+msgid "Add TXT record <0>{0}</0>, then verify DNS."
+msgstr "TXT レコード <0>{0}</0> を追加して DNS を確認します。"
+
+#: src/components/Layout.tsx
+#: src/pages/Admin.tsx
+msgid "Admin"
+msgstr "管理"
+
+#: src/pages/Login.tsx
+msgid "AI-Ready"
+msgstr "AI 対応"
+
+#: src/pages/InviteAccept.tsx
+msgid "Already accepted"
+msgstr "承諾済み"
+
+#: src/pages/DeviceOAuth.tsx
+#: src/pages/Login.tsx
+msgid "Already have an account?"
+msgstr "すでにアカウントをお持ちですか？"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Authentication failed"
+msgstr "認証に失敗しました"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Authorization failed"
+msgstr "承認に失敗しました"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Authorize Desktop"
+msgstr "デスクトップを承認"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Authorize Device"
+msgstr "デバイスを承認"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Authorizing..."
+msgstr "承認中..."
+
+#: src/pages/Workspace.tsx
+msgid "Bind custom domains and manage certificates."
+msgstr "カスタムドメインをバインドし、証明書を管理します。"
+
+#: src/pages/Workspace.tsx
+msgid "Bind here"
+msgstr "ここにバインド"
+
+#: src/pages/Landing.tsx
+msgid "Bind to a cloud workspace"
+msgstr "クラウドワークスペースにバインド"
+
+#: src/pages/Workspace.tsx
+msgid "Bold"
+msgstr "太字"
+
+#: src/pages/Workspace.tsx
+msgid "Bold (Ctrl+B)"
+msgstr "太字 (Ctrl+B)"
+
+#: src/pages/Workspace.tsx
+msgid "bound"
+msgstr "バインド済み"
+
+#: src/pages/Workspace.tsx
+msgid "Bound here"
+msgstr "ここにバインド済み"
+
+#. placeholder {0}: domain.workspaceName
+#: src/pages/Workspace.tsx
+msgid "Bound to {0}"
+msgstr "{0} にバインド済み"
+
+#: src/pages/Landing.tsx
+msgid "Calm desktop writing, workspace-scoped sync, and public Markdown publishing in one product flow. Your notes stay local until a cloud workspace has a job to do."
+msgstr "落ち着いたデスクトップ執筆、ワークスペーススコープの同期、パブリック Markdown 公開が 1 つの製品フローに。クラウドワークスペースが必要になるまで、ノートはローカルに保たれます。"
+
+#: src/pages/Workspace.tsx
+msgid "Cancel"
+msgstr "キャンセル"
+
+#: src/pages/Workspace.tsx
+msgid "Certificate management"
+msgstr "証明書管理"
+
+#: src/pages/Workspace.tsx
+msgid "Changed"
+msgstr "変更済み"
+
+#: src/pages/Landing.tsx
+msgid "Checking session"
+msgstr "セッションを確認中"
+
+#: src/pages/Workspace.tsx
+msgid "Choose a cloud workspace"
+msgstr "クラウドワークスペースを選択"
+
+#: src/pages/Workspace.tsx
+msgid "Choose a note or create a new one."
+msgstr "ノートを選択するか、新規作成してください。"
+
+#: src/pages/Landing.tsx
+msgid "Clean read-only output for notes, docs, releases, and guides."
+msgstr "ノート、ドキュメント、リリース、ガイドのためのクリーンな読み取り専用出力。"
+
+#: src/components/Layout.tsx
+#: src/pages/Admin.tsx
+#: src/pages/Workspace.tsx
+msgid "Close"
+msgstr "閉じる"
+
+#: src/pages/Login.tsx
+msgid "Cloud Sync"
+msgstr "クラウド同期"
+
+#: src/pages/Landing.tsx
+#: src/pages/Workspace.tsx
+msgid "Cloud workspace"
+msgstr "クラウドワークスペース"
+
+#: src/pages/Landing.tsx
+msgid "Cloud workspace admin, devices, sync, and publishing controls."
+msgstr "クラウドワークスペースの管理、デバイス、同期、公開コントロール。"
+
+#: src/pages/Workspace.tsx
+msgid "Cloud workspace settings"
+msgstr "クラウドワークスペース設定"
+
+#: src/pages/Admin.tsx
+msgid "Cloud workspaces"
+msgstr "クラウドワークスペース"
+
+#: src/pages/Workspace.tsx
+msgid "Collapse all"
+msgstr "すべて折りたたむ"
+
+#: src/pages/Workspace.tsx
+msgid "Connected"
+msgstr "接続済み"
+
+#: src/components/Layout.tsx
+msgid "Connected devices"
+msgstr "接続済みデバイス"
+
+#: src/pages/Workspace.tsx
+msgid "Connecting..."
+msgstr "接続中..."
+
+#: src/pages/Workspace.tsx
+msgid "Copy link"
+msgstr "リンクをコピー"
+
+#: src/pages/Workspace.tsx
+msgid "Copy path"
+msgstr "パスをコピー"
+
+#: src/pages/Landing.tsx
+msgid "Create a workspace for sync, publishing, and account settings. Local vault copy stays precise: folders are vaults, server-side collaboration is a cloud workspace."
+msgstr "同期、公開、アカウント設定のためのワークスペースを作成します。ローカルボルトのコピーは正確に保たれます：フォルダーはボルト、サーバーサイドのコラボレーションはクラウドワークスペースです。"
+
+#: src/pages/Login.tsx
+msgid "Create account"
+msgstr "アカウントを作成"
+
+#: src/pages/Workspace.tsx
+msgid "Create your first Markdown note."
+msgstr "最初の Markdown ノートを作成します。"
+
+#: src/pages/Workspace.tsx
+msgid "Custom domains"
+msgstr "カスタムドメイン"
+
+#: src/pages/Workspace.tsx
+msgid "Custom domains and SSL"
+msgstr "カスタムドメインと SSL"
+
+#: src/pages/Workspace.tsx
+msgid "Danger zone"
+msgstr "危険ゾーン"
+
+#: src/pages/Workspace.tsx
+msgid "Delete"
+msgstr "削除"
+
+#: src/pages/Workspace.tsx
+msgid "Delete folder"
+msgstr "フォルダーを削除"
+
+#: src/pages/Workspace.tsx
+msgid "Delete folder \"{folderPath}\" and all its contents?"
+msgstr "\"{folderPath}\" フォルダーとその全コンテンツを削除しますか？"
+
+#: src/pages/Workspace.tsx
+msgid "Delete forever"
+msgstr "完全に削除"
+
+#: src/pages/Workspace.tsx
+msgid "Delete workspace"
+msgstr "ワークスペースを削除"
+
+#: src/pages/Workspace.tsx
+msgid "Delete workspace?"
+msgstr "ワークスペースを削除しますか？"
+
+#. placeholder {0}: formatDateTime(item.deletedAt)
+#. placeholder {1}: formatDateTime(item.expiresAt)
+#: src/pages/Workspace.tsx
+msgid "Deleted {0} / Expires {1}"
+msgstr "削除: {0} / 有効期限: {1}"
+
+#: src/pages/Workspace.tsx
+msgid "Deleted documents"
+msgstr "削除済みドキュメント"
+
+#: src/pages/Landing.tsx
+msgid "Desktop app"
+msgstr "デスクトップアプリ"
+
+#: src/pages/Landing.tsx
+msgid "Detected save, queued push."
+msgstr "保存を検出し、プッシュをキューに入れました。"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Device authorized! You can return to the JType desktop app."
+msgstr "デバイスが承認されました！JType デスクトップアプリに戻れます。"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Device Code"
+msgstr "デバイスコード"
+
+#: src/pages/Landing.tsx
+msgid "Dirty"
+msgstr "未同期の変更あり"
+
+#: src/pages/Admin.tsx
+msgid "Disable"
+msgstr "無効化"
+
+#: src/pages/Admin.tsx
+msgid "Disabled"
+msgstr "無効"
+
+#: src/components/Layout.tsx
+msgid "Display name"
+msgstr "表示名"
+
+#: src/pages/Workspace.tsx
+msgid "DNS pending"
+msgstr "DNS 保留中"
+
+#: src/pages/Workspace.tsx
+msgid "DNS verified"
+msgstr "DNS 確認済み"
+
+#: src/pages/Workspace.tsx
+msgid "docs.example.com"
+msgstr "docs.example.com"
+
+#: src/pages/Workspace.tsx
+msgid "Document info"
+msgstr "ドキュメント情報"
+
+#: src/pages/Workspace.tsx
+msgid "Document Info"
+msgstr "ドキュメント情報"
+
+#: src/pages/Workspace.tsx
+msgid "Document path (e.g. notes/hello.md):"
+msgstr "ドキュメントパス（例：notes/hello.md）："
+
+#: src/pages/Workspace.tsx
+msgid "Document published."
+msgstr "ドキュメントを公開しました。"
+
+#: src/pages/Workspace.tsx
+msgid "Document unpublished."
+msgstr "ドキュメントの公開を取り消しました。"
+
+#: src/pages/Admin.tsx
+#: src/pages/Workspace.tsx
+msgid "Documents"
+msgstr "ドキュメント"
+
+#: src/pages/Admin.tsx
+msgid "Domain"
+msgstr "ドメイン"
+
+#: src/pages/Admin.tsx
+#: src/pages/Workspace.tsx
+msgid "Domains"
+msgstr "ドメイン"
+
+#: src/pages/DeviceOAuth.tsx
+#: src/pages/Login.tsx
+msgid "Don't have an account?"
+msgstr "アカウントをお持ちでないですか？"
+
+#: src/pages/InviteAccept.tsx
+msgid "Don't have an account? <0>Sign up</0>"
+msgstr "アカウントをお持ちでないですか？ <0>サインアップ</0>"
+
+#: src/pages/Workspace.tsx
+msgid "Draft only"
+msgstr "下書きのみ"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "e.g. 456478"
+msgstr "例：456478"
+
+#: src/pages/Workspace.tsx
+msgid "Edits are written back to YAML frontmatter."
+msgstr "編集内容は YAML フロントマターに書き戻されます。"
+
+#: src/components/Layout.tsx
+msgid "Email"
+msgstr "メール"
+
+#: src/pages/Workspace.tsx
+msgid "Email (optional)"
+msgstr "メール（任意）"
+
+#: src/pages/Workspace.tsx
+msgid "Empty trash"
+msgstr "ゴミ箱を空にする"
+
+#: src/pages/Admin.tsx
+msgid "Enable"
+msgstr "有効化"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Enter the code shown in your JType desktop app"
+msgstr "JType デスクトップアプリに表示されたコードを入力"
+
+#: src/pages/Login.tsx
+msgid "Enter your password"
+msgstr "パスワードを入力"
+
+#: src/pages/Login.tsx
+msgid "Enter your username"
+msgstr "ユーザー名を入力"
+
+#: src/pages/Workspace.tsx
+msgid "Exit focus mode"
+msgstr "フォーカスモードを終了"
+
+#: src/pages/Workspace.tsx
+msgid "Expand all"
+msgstr "すべて展開"
+
+#: src/pages/InviteAccept.tsx
+msgid "Failed to accept invite."
+msgstr "招待の承諾に失敗しました。"
+
+#: src/pages/Workspace.tsx
+msgid "Failed to create invite."
+msgstr "招待の作成に失敗しました。"
+
+#: src/pages/Workspace.tsx
+msgid "Failed to delete workspace."
+msgstr "ワークスペースの削除に失敗しました。"
+
+#: src/pages/Workspace.tsx
+msgid "Failed to leave workspace."
+msgstr "ワークスペースの退出に失敗しました。"
+
+#: src/pages/Workspace.tsx
+msgid "Favorite"
+msgstr "お気に入り"
+
+#: src/pages/Workspace.tsx
+msgid "Favorites"
+msgstr "お気に入り"
+
+#: src/pages/Landing.tsx
+msgid "Flow"
+msgstr "フロー"
+
+#: src/pages/Workspace.tsx
+msgid "Focus mode"
+msgstr "フォーカスモード"
+
+#: src/pages/Workspace.tsx
+msgid "General"
+msgstr "一般"
+
+#: src/pages/Landing.tsx
+msgid "GitHub"
+msgstr "GitHub"
+
+#: src/pages/InviteAccept.tsx
+msgid "Go to home"
+msgstr "ホームへ"
+
+#: src/pages/Landing.tsx
+msgid "Go to JType Cloud"
+msgstr "JType Cloud へ"
+
+#: src/pages/InviteAccept.tsx
+msgid "Go to workspaces"
+msgstr "ワークスペースへ"
+
+#: src/pages/Workspace.tsx
+msgid "Hide"
+msgstr "非表示"
+
+#: src/pages/Login.tsx
+msgid "Indexed and ready for intelligent assistance."
+msgstr "インデックス済み。インテリジェントアシスタンスの準備完了。"
+
+#: src/pages/Workspace.tsx
+msgid "Inline code"
+msgstr "インラインコード"
+
+#: src/pages/Workspace.tsx
+msgid "Insert formula"
+msgstr "数式を挿入"
+
+#: src/pages/Workspace.tsx
+msgid "Insert link"
+msgstr "リンクを挿入"
+
+#: src/pages/Workspace.tsx
+msgid "Insert Mermaid diagram"
+msgstr "Mermaid 図を挿入"
+
+#: src/pages/Workspace.tsx
+msgid "Insert table"
+msgstr "表を挿入"
+
+#: src/pages/Workspace.tsx
+msgid "Insert table (Ctrl+Shift+T)"
+msgstr "表を挿入 (Ctrl+Shift+T)"
+
+#: src/pages/Admin.tsx
+msgid "Inspect cloud workspace ownership and document counts."
+msgstr "クラウドワークスペースの所有権とドキュメント数を確認します。"
+
+#: src/pages/InviteAccept.tsx
+msgid "Invalid invite"
+msgstr "無効な招待"
+
+#: src/pages/Workspace.tsx
+msgid "Invite"
+msgstr "招待"
+
+#: src/pages/Workspace.tsx
+msgid "Invite created."
+msgstr "招待を作成しました。"
+
+#: src/pages/Workspace.tsx
+msgid "Invite people"
+msgstr "メンバーを招待"
+
+#: src/pages/InviteAccept.tsx
+msgid "Invite revoked"
+msgstr "招待を取り消しました"
+
+#: src/pages/Workspace.tsx
+msgid "Italic"
+msgstr "斜体"
+
+#: src/pages/Workspace.tsx
+msgid "Italic (Ctrl+I)"
+msgstr "斜体 (Ctrl+I)"
+
+#: src/pages/InviteAccept.tsx
+msgid "Joining…"
+msgstr "参加中…"
+
+#: src/pages/Workspace.tsx
+msgid "Keep the publish name and workspace name here. The workspace slug and storage limit are assigned by the service."
+msgstr "ここで公開名とワークスペース名を管理します。ワークスペーススラッグとストレージ制限はサービスによって割り当てられます。"
+
+#: src/pages/Login.tsx
+msgid "Keep your vaults in sync across all devices."
+msgstr "すべてのデバイスでボルトを同期させます。"
+
+#: src/components/Layout.tsx
+msgid "Language"
+msgstr "言語"
+
+#: src/components/Layout.tsx
+msgid "Last seen recently"
+msgstr "最近アクティブ"
+
+#: src/pages/Workspace.tsx
+msgid "Leave"
+msgstr "退出"
+
+#: src/pages/Workspace.tsx
+msgid "Leave workspace"
+msgstr "ワークスペースを退出"
+
+#: src/pages/Workspace.tsx
+msgid "Leave workspace?"
+msgstr "ワークスペースを退出しますか？"
+
+#: src/pages/Workspace.tsx
+msgid "Link (Ctrl+K)"
+msgstr "リンク (Ctrl+K)"
+
+#: src/pages/Workspace.tsx
+msgid "Link copied!"
+msgstr "リンクをコピーしました！"
+
+#: src/pages/Landing.tsx
+msgid "Live preview"
+msgstr "ライブプレビュー"
+
+#: src/pages/InviteAccept.tsx
+msgid "Loading invite…"
+msgstr "招待を読み込み中…"
+
+#: src/pages/Admin.tsx
+msgid "Loading..."
+msgstr "読み込み中..."
+
+#: src/pages/Landing.tsx
+msgid "Local watcher"
+msgstr "ローカルウォッチャー"
+
+#: src/pages/Login.tsx
+msgid "Local-First"
+msgstr "ローカルファースト"
+
+#: src/pages/Landing.tsx
+msgid "Local-first Markdown vault"
+msgstr "ローカルファースト Markdown ボルト"
+
+#: src/pages/Login.tsx
+msgid "Local-first notes with cloud sync, publishing, and AI-ready indexing."
+msgstr "クラウド同期、公開、AI 対応インデックスを備えたローカルファーストノート。"
+
+#: src/pages/InviteAccept.tsx
+msgid "Log in to accept"
+msgstr "ログインして承諾"
+
+#: src/pages/Workspace.tsx
+msgid "Manage cloud workspace name, publishing title, and storage."
+msgstr "クラウドワークスペース名、公開タイトル、ストレージを管理します。"
+
+#: src/pages/Workspace.tsx
+msgid "Manage custom domains"
+msgstr "カスタムドメインを管理"
+
+#: src/pages/Workspace.tsx
+msgid "Manage team members, invitations, and access."
+msgstr "チームメンバー、招待、アクセスを管理します。"
+
+#: src/pages/Admin.tsx
+msgid "Manage users, cloud workspaces, domains, and service activity."
+msgstr "ユーザー、クラウドワークスペース、ドメイン、サービスアクティビティを管理します。"
+
+#: src/components/Layout.tsx
+msgid "Manage your JType Cloud account and connected devices."
+msgstr "JType Cloud アカウントと接続デバイスを管理します。"
+
+#: src/pages/Workspace.tsx
+msgid "Markdown"
+msgstr "Markdown"
+
+#: src/pages/Workspace.tsx
+msgid "Markdown editor"
+msgstr "Markdown エディター"
+
+#: src/pages/Workspace.tsx
+msgid "Member removed."
+msgstr "メンバーを削除しました。"
+
+#: src/pages/Admin.tsx
+#: src/pages/Workspace.tsx
+msgid "Members"
+msgstr "メンバー"
+
+#. placeholder {0}: members.length
+#: src/pages/Workspace.tsx
+msgid "Members ({0})"
+msgstr "メンバー（{0}）"
+
+#: src/pages/Workspace.tsx
+msgid "Members, domains, publishing"
+msgstr "メンバー、ドメイン、公開"
+
+#: src/pages/Workspace.tsx
+msgid "Move to trash"
+msgstr "ゴミ箱に移動"
+
+#: src/pages/Admin.tsx
+msgid "Name"
+msgstr "名前"
+
+#: src/pages/Workspace.tsx
+msgid "Name, publishing identity, and storage"
+msgstr "名前、公開 ID、ストレージ"
+
+#: src/pages/Workspace.tsx
+msgid "New"
+msgstr "新規"
+
+#: src/pages/Workspace.tsx
+msgid "New cloud workspace"
+msgstr "新規クラウドワークスペース"
+
+#: src/pages/Workspace.tsx
+msgid "New document"
+msgstr "新規ドキュメント"
+
+#: src/pages/Workspace.tsx
+msgid "New Document"
+msgstr "新規ドキュメント"
+
+#: src/pages/Workspace.tsx
+msgid "New document name (e.g. note.md):"
+msgstr "新規ドキュメント名（例：note.md）："
+
+#: src/pages/Workspace.tsx
+msgid "New folder"
+msgstr "新規フォルダー"
+
+#: src/pages/Workspace.tsx
+msgid "New folder name:"
+msgstr "新規フォルダー名："
+
+#: src/pages/Workspace.tsx
+msgid "No cloud workspaces yet."
+msgstr "クラウドワークスペースがまだありません。"
+
+#: src/pages/Workspace.tsx
+msgid "No deleted documents."
+msgstr "削除済みドキュメントはありません。"
+
+#: src/pages/Workspace.tsx
+msgid "No documents yet."
+msgstr "ドキュメントがまだありません。"
+
+#: src/pages/Workspace.tsx
+msgid "No domains yet."
+msgstr "ドメインがまだありません。"
+
+#: src/pages/Workspace.tsx
+msgid "no email"
+msgstr "メールなし"
+
+#: src/pages/Workspace.tsx
+msgid "No headings found."
+msgstr "見出しが見つかりません。"
+
+#: src/pages/InviteAccept.tsx
+msgid "No invite token provided."
+msgstr "招待トークンが提供されていません。"
+
+#: src/pages/Workspace.tsx
+msgid "No matches."
+msgstr "一致なし。"
+
+#: src/pages/Workspace.tsx
+msgid "No notes yet."
+msgstr "ノートがまだありません。"
+
+#: src/pages/Workspace.tsx
+msgid "No outgoing links."
+msgstr "発信リンクがありません。"
+
+#: src/pages/Admin.tsx
+msgid "No records."
+msgstr "レコードがありません。"
+
+#: src/pages/Workspace.tsx
+msgid "No unsaved changes"
+msgstr "未保存の変更はありません"
+
+#: src/pages/Workspace.tsx
+msgid "Not published"
+msgstr "未公開"
+
+#: src/pages/Workspace.tsx
+msgid "Offline"
+msgstr "オフライン"
+
+#: src/pages/Workspace.tsx
+msgid "Offline ({pendingCount} saved)"
+msgstr "オフライン（{pendingCount} 件保存済み）"
+
+#: src/pages/Landing.tsx
+msgid "One Markdown source, three calm surfaces."
+msgstr "1 つの Markdown ソース、3 つの落ち着いたサーフェス。"
+
+#: src/pages/Workspace.tsx
+msgid "Only owners and admins can change workspace settings"
+msgstr "オーナーと管理者のみがワークスペース設定を変更できます"
+
+#: src/pages/Workspace.tsx
+msgid "Open"
+msgstr "開く"
+
+#: src/pages/Landing.tsx
+msgid "Open a local Markdown vault, keep normal folders, and edit without turning notes into remote-only data."
+msgstr "ローカル Markdown ボルトを開き、通常のフォルダー構造を保ち、ノートをリモート専用データにせずに編集します。"
+
+#: src/pages/Landing.tsx
+msgid "Open dashboard"
+msgstr "ダッシュボードを開く"
+
+#: src/pages/Landing.tsx
+msgid "Open GitHub"
+msgstr "GitHub を開く"
+
+#: src/pages/Landing.tsx
+msgid "Open JType Cloud"
+msgstr "JType Cloud を開く"
+
+#: src/pages/Landing.tsx
+msgid "Open JType Cloud dashboard"
+msgstr "JType Cloud ダッシュボードを開く"
+
+#: src/pages/Workspace.tsx
+msgid "Outgoing links"
+msgstr "発信リンク"
+
+#: src/pages/Workspace.tsx
+msgid "Outline"
+msgstr "アウトライン"
+
+#: src/pages/Admin.tsx
+msgid "Owner"
+msgstr "オーナー"
+
+#: src/pages/Workspace.tsx
+msgid "Ownership transferred."
+msgstr "所有権を移転しました。"
+
+#: src/pages/Workspace.tsx
+msgid "Pass ownership to another admin member."
+msgstr "別の管理者メンバーに所有権を渡します。"
+
+#: src/pages/DeviceOAuth.tsx
+#: src/pages/Login.tsx
+msgid "Password"
+msgstr "パスワード"
+
+#: src/pages/Workspace.tsx
+msgid "Pending invites"
+msgstr "保留中の招待"
+
+#: src/pages/Workspace.tsx
+msgid "Permanently delete"
+msgstr "完全に削除"
+
+#: src/pages/Workspace.tsx
+msgid "Permanently delete all items in trash?"
+msgstr "ゴミ箱のすべてのアイテムを完全に削除しますか？"
+
+#: src/pages/Workspace.tsx
+msgid "Permanently delete this item?"
+msgstr "このアイテムを完全に削除しますか？"
+
+#: src/pages/Workspace.tsx
+msgid "Permanently remove this workspace and all documents."
+msgstr "このワークスペースとすべてのドキュメントを完全に削除します。"
+
+#: src/pages/DeviceOAuth.tsx
+#: src/pages/Login.tsx
+msgid "Please wait..."
+msgstr "しばらくお待ちください..."
+
+#: src/pages/Landing.tsx
+#: src/pages/Workspace.tsx
+msgid "Preview"
+msgstr "プレビュー"
+
+#: src/pages/Landing.tsx
+msgid "Product flow"
+msgstr "製品フロー"
+
+#: src/components/Layout.tsx
+msgid "Profile"
+msgstr "プロフィール"
+
+#: src/components/Layout.tsx
+msgid "Profile updated"
+msgstr "プロフィールを更新しました"
+
+#: src/pages/Workspace.tsx
+msgid "Promote a member to admin first before transferring ownership."
+msgstr "所有権を移転する前に、まずメンバーを管理者に昇格させてください。"
+
+#: src/pages/Workspace.tsx
+msgid "Properties"
+msgstr "プロパティ"
+
+#: src/pages/Landing.tsx
+msgid "Public site"
+msgstr "公開サイト"
+
+#: src/pages/Landing.tsx
+#: src/pages/Workspace.tsx
+msgid "Publish"
+msgstr "公開"
+
+#: src/pages/Workspace.tsx
+msgid "Publish drafts"
+msgstr "下書きを公開"
+
+#: src/pages/Workspace.tsx
+msgid "Publish title"
+msgstr "公開タイトル"
+
+#: src/pages/Workspace.tsx
+msgid "Published"
+msgstr "公開済み"
+
+#. placeholder {0}: new Date(publishState.publishedAt).toLocaleString()
+#: src/pages/Workspace.tsx
+msgid "Published {0}"
+msgstr "{0} に公開"
+
+#: src/pages/Landing.tsx
+msgid "Published pages"
+msgstr "公開済みページ"
+
+#: src/pages/Workspace.tsx
+msgid "Publishing"
+msgstr "公開"
+
+#: src/pages/Workspace.tsx
+msgid "Publishing details saved"
+msgstr "公開詳細を保存しました"
+
+#: src/pages/Workspace.tsx
+msgid "Publishing uses a server snapshot; frontmatter status is treated as user metadata."
+msgstr "公開はサーバースナップショットを使用します。フロントマターのステータスはユーザーメタデータとして扱われます。"
+
+#: src/pages/Landing.tsx
+msgid "Push and pull versions, resolve conflicts, and keep collaboration scoped to the workspace you choose."
+msgstr "バージョンのプッシュ/プル、競合の解決、コラボレーションを選択したワークスペースに限定します。"
+
+#: src/pages/Workspace.tsx
+msgid "Quick open"
+msgstr "クイックオープン"
+
+#: src/pages/Workspace.tsx
+msgid "Read-only"
+msgstr "読み取り専用"
+
+#: src/pages/Landing.tsx
+msgid "Ready for the cloud layer"
+msgstr "クラウドレイヤーの準備完了"
+
+#: src/pages/DeviceOAuth.tsx
+#: src/pages/Login.tsx
+msgid "Register"
+msgstr "登録"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Register & Authorize"
+msgstr "登録して承認"
+
+#. placeholder {0}: staleWarning.wasDirty ? ' (discard)' : ''
+#: src/pages/Workspace.tsx
+msgid "Reload{0}"
+msgstr "再読み込み{0}"
+
+#. placeholder {0}: doc.relativePath
+#: src/pages/Workspace.tsx
+msgid "Remove \"{0}\" from the public site?"
+msgstr "\"{0}\" を公開サイトから削除しますか？"
+
+#. placeholder {0}: uniqueIds.length
+#: src/pages/Workspace.tsx
+msgid "Remove {0} documents from the public site?"
+msgstr "{0} 件のドキュメントを公開サイトから削除しますか？"
+
+#: src/pages/Workspace.tsx
+msgid "Remove from favorites"
+msgstr "お気に入りから削除"
+
+#: src/pages/Workspace.tsx
+msgid "Remove member"
+msgstr "メンバーを削除"
+
+#: src/pages/Workspace.tsx
+msgid "Remove this member from the workspace?"
+msgstr "このメンバーをワークスペースから削除しますか？"
+
+#: src/pages/Workspace.tsx
+msgid "Rename"
+msgstr "名前を変更"
+
+#: src/pages/Workspace.tsx
+msgid "Rename to:"
+msgstr "次の名前に変更："
+
+#: src/pages/Workspace.tsx
+msgid "Republish"
+msgstr "再公開"
+
+#: src/pages/Workspace.tsx
+msgid "Republish live docs"
+msgstr "公開済みドキュメントを再公開"
+
+#: src/pages/Workspace.tsx
+msgid "Restore"
+msgstr "復元"
+
+#: src/pages/Workspace.tsx
+msgid "Restore cloud workspace documents or permanently remove them from trash."
+msgstr "クラウドワークスペースドキュメントをゴミ箱から復元するか、完全に削除します。"
+
+#: src/pages/Workspace.tsx
+msgid "Restore deleted documents or remove them permanently."
+msgstr "削除済みドキュメントを復元するか、完全に削除します。"
+
+#: src/pages/Workspace.tsx
+msgid "Restore or delete cloud documents"
+msgstr "クラウドドキュメントを復元または削除"
+
+#: src/pages/Admin.tsx
+msgid "Review accounts, roles, and enabled status."
+msgstr "アカウント、ロール、有効ステータスを確認します。"
+
+#: src/pages/Admin.tsx
+msgid "Review published custom domains and SSL state."
+msgstr "公開済みのカスタムドメインと SSL の状態を確認します。"
+
+#: src/pages/Workspace.tsx
+msgid "Revoke invite"
+msgstr "招待を取り消し"
+
+#: src/pages/Admin.tsx
+msgid "Role"
+msgstr "ロール"
+
+#: src/pages/Workspace.tsx
+msgid "Save"
+msgstr "保存"
+
+#: src/pages/Workspace.tsx
+msgid "Save mine"
+msgstr "自分のを保存"
+
+#: src/components/Layout.tsx
+msgid "Save profile"
+msgstr "プロフィールを保存"
+
+#: src/pages/Workspace.tsx
+msgid "Saved offline. Will sync when reconnected."
+msgstr "オフラインで保存しました。再接続時に同期されます。"
+
+#: src/pages/Workspace.tsx
+msgid "Saving..."
+msgstr "保存中..."
+
+#: src/pages/Workspace.tsx
+msgid "Search files..."
+msgstr "ファイルを検索..."
+
+#: src/pages/Landing.tsx
+msgid "See product flow"
+msgstr "製品フローを見る"
+
+#: src/pages/Workspace.tsx
+msgid "Select a document to edit."
+msgstr "編集するドキュメントを選択してください。"
+
+#: src/pages/Workspace.tsx
+msgid "Select a domain"
+msgstr "ドメインを選択"
+
+#: src/pages/Workspace.tsx
+msgid "Select a Markdown file"
+msgstr "Markdown ファイルを選択"
+
+#: src/components/Layout.tsx
+msgid "Settings"
+msgstr "設定"
+
+#: src/pages/Landing.tsx
+msgid "Ship a readable site"
+msgstr "読みやすいサイトを公開"
+
+#: src/pages/DeviceOAuth.tsx
+#: src/pages/Landing.tsx
+#: src/pages/Login.tsx
+msgid "Sign in"
+msgstr "サインイン"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Sign in & Authorize"
+msgstr "サインインして承認"
+
+#: src/pages/Login.tsx
+msgid "Sign in to your JType Cloud account."
+msgstr "JType Cloud アカウントにサインインします。"
+
+#: src/components/Layout.tsx
+#: src/pages/Landing.tsx
+msgid "Sign out"
+msgstr "サインアウト"
+
+#: src/pages/Login.tsx
+msgid "Sign up to start syncing your vaults."
+msgstr "サインアップしてボルトの同期を開始します。"
+
+#. placeholder {0}: user.username
+#: src/pages/Landing.tsx
+msgid "Signed in as {0}"
+msgstr "{0} としてサインイン済み"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Signed in. Ready to authorize device."
+msgstr "サインイン済み。デバイスを承認する準備ができています。"
+
+#: src/pages/Workspace.tsx
+msgid "Site settings"
+msgstr "サイト設定"
+
+#: src/pages/Login.tsx
+msgid "Something went wrong"
+msgstr "エラーが発生しました"
+
+#: src/pages/Landing.tsx
+#: src/pages/Workspace.tsx
+msgid "Split"
+msgstr "分割"
+
+#: src/pages/Admin.tsx
+#: src/pages/Workspace.tsx
+msgid "SSL"
+msgstr "SSL"
+
+#. placeholder {0}: domain.sslStatus
+#: src/pages/Workspace.tsx
+msgid "SSL {0}"
+msgstr "SSL {0}"
+
+#: src/pages/Workspace.tsx
+msgid "SSL certificate uploaded"
+msgstr "SSL 証明書をアップロードしました"
+
+#. placeholder {0}: domain.sslExpiresAt
+#: src/pages/Workspace.tsx
+msgid "SSL expires at {0}"
+msgstr "SSL の有効期限: {0}"
+
+#: src/pages/Workspace.tsx
+msgid "SSL not configured"
+msgstr "SSL が設定されていません"
+
+#: src/pages/Landing.tsx
+msgid "Start with a private cloud workspace."
+msgstr "プライベートクラウドワークスペースで始める。"
+
+#: src/pages/Landing.tsx
+msgid "Start with JType Cloud"
+msgstr "JType Cloud で始める"
+
+#: src/pages/Landing.tsx
+msgid "Start writing"
+msgstr "書き始める"
+
+#: src/pages/Workspace.tsx
+msgid "Start writing Markdown..."
+msgstr "Markdown を書き始める..."
+
+#: src/pages/Admin.tsx
+msgid "Status"
+msgstr "ステータス"
+
+#: src/components/Layout.tsx
+msgid "Storage"
+msgstr "ストレージ"
+
+#: src/pages/Workspace.tsx
+msgid "Storage used"
+msgstr "使用ストレージ"
+
+#: src/pages/Landing.tsx
+msgid "Surfaces"
+msgstr "サーフェス"
+
+#: src/pages/Landing.tsx
+msgid "Sync"
+msgstr "同期"
+
+#: src/pages/Landing.tsx
+msgid "Synced"
+msgstr "同期済み"
+
+#: src/pages/Workspace.tsx
+msgid "Syncing..."
+msgstr "同期中..."
+
+#: src/pages/Workspace.tsx
+msgid "Task list"
+msgstr "タスクリスト"
+
+#: src/pages/Landing.tsx
+msgid "Tauri vault editing with write, split, and preview modes."
+msgstr "書き込み、分割、プレビューモードを備えた Tauri ボルト編集。"
+
+#: src/pages/Workspace.tsx
+msgid "Team members and invitations"
+msgstr "チームメンバーと招待"
+
+#: src/pages/Landing.tsx
+msgid "The landing story follows the real JType loop."
+msgstr "ランディングページのストーリーは実際の JType ループに従います。"
+
+#: src/pages/Landing.tsx
+msgid "The page borrows getdesign.app's strongest move: show the actual system doing the explaining. For JType, that means local files, sync state, and published output all visible at once."
+msgstr "このページは getdesign.app の最強の手法を借用しています：実際のシステムが説明を行う様子を示す。JType では、ローカルファイル、同期状態、公開済み出力がすべて一度に表示されます。"
+
+#: src/pages/Workspace.tsx
+msgid "The public snapshot is behind the current document."
+msgstr "公開スナップショットが現在のドキュメントより古くなっています。"
+
+#: src/pages/Workspace.tsx
+msgid "This document was deleted by another user."
+msgstr "このドキュメントは別のユーザーによって削除されました。"
+
+#: src/pages/InviteAccept.tsx
+msgid "This invite has already been accepted. You can go to your workspaces."
+msgstr "この招待はすでに承諾されています。ワークスペースに移動できます。"
+
+#: src/pages/InviteAccept.tsx
+msgid "This invite link has been revoked and is no longer valid."
+msgstr "この招待リンクは取り消されており、無効です。"
+
+#: src/pages/InviteAccept.tsx
+msgid "This invite link is invalid or has expired."
+msgstr "この招待リンクは無効か期限切れです。"
+
+#. placeholder {0}: workspace.name
+#: src/pages/Workspace.tsx
+msgid "This will permanently delete <0>{0}</0> and all its documents. This cannot be undone."
+msgstr "<0>{0}</0> とそのすべてのドキュメントが完全に削除されます。この操作は取り消せません。"
+
+#: src/pages/Workspace.tsx
+msgid "Toggle favorite"
+msgstr "お気に入りの切り替え"
+
+#: src/pages/Workspace.tsx
+msgid "Transfer"
+msgstr "移転"
+
+#: src/pages/Workspace.tsx
+msgid "Transfer failed."
+msgstr "移転に失敗しました。"
+
+#: src/pages/Workspace.tsx
+msgid "Transfer ownership"
+msgstr "所有権を移転"
+
+#: src/pages/Workspace.tsx
+msgid "Transfer ownership (select a member above)"
+msgstr "所有権を移転（上からメンバーを選択）"
+
+#. placeholder {0}: firstAdmin.username
+#: src/pages/Workspace.tsx
+msgid "Transfer ownership to {0}? You will become an admin."
+msgstr "{0} に所有権を移転しますか？あなたは管理者になります。"
+
+#: src/pages/Workspace.tsx
+msgid "Trash"
+msgstr "ゴミ箱"
+
+#: src/pages/Workspace.tsx
+msgid "Trash is empty."
+msgstr "ゴミ箱は空です。"
+
+#: src/pages/Landing.tsx
+msgid "Turn selected documents into a public `/u/:username` site while your source stays Markdown."
+msgstr "選択したドキュメントをパブリック `/u/:username` サイトにしながら、ソースは Markdown のまま保ちます。"
+
+#: src/pages/Workspace.tsx
+msgid "Type the workspace name to confirm:"
+msgstr "確認のためワークスペース名を入力："
+
+#: src/pages/Workspace.tsx
+msgid "Unbind"
+msgstr "バインド解除"
+
+#: src/pages/Workspace.tsx
+msgid "Unbound"
+msgstr "バインドなし"
+
+#: src/pages/Workspace.tsx
+msgid "Unpublish"
+msgstr "公開取り消し"
+
+#: src/pages/Workspace.tsx
+msgid "Unpublish document"
+msgstr "ドキュメントの公開を取り消し"
+
+#: src/pages/Workspace.tsx
+msgid "Unpublish documents"
+msgstr "ドキュメントの公開を取り消し"
+
+#: src/pages/Workspace.tsx
+msgid "Unpublish live docs"
+msgstr "公開済みドキュメントの公開を取り消し"
+
+#: src/pages/Workspace.tsx
+msgid "Unsaved"
+msgstr "未保存"
+
+#: src/pages/Workspace.tsx
+msgid "Untitled document"
+msgstr "無題のドキュメント"
+
+#: src/pages/Workspace.tsx
+msgid "Upload a PEM certificate for a verified domain. The private key is stored as a hash in the current backend model."
+msgstr "確認済みドメインの PEM 証明書をアップロードします。秘密鍵は現在のバックエンドモデルでハッシュとして保存されます。"
+
+#: src/pages/Admin.tsx
+msgid "User"
+msgstr "ユーザー"
+
+#: src/components/Layout.tsx
+msgid "User menu"
+msgstr "ユーザーメニュー"
+
+#: src/components/Layout.tsx
+#: src/pages/Admin.tsx
+#: src/pages/DeviceOAuth.tsx
+#: src/pages/Login.tsx
+msgid "Username"
+msgstr "ユーザー名"
+
+#: src/pages/Admin.tsx
+msgid "Users"
+msgstr "ユーザー"
+
+#: src/pages/Landing.tsx
+msgid "Vault"
+msgstr "ボルト"
+
+#: src/pages/Workspace.tsx
+msgid "Vault ready"
+msgstr "ボルト準備完了"
+
+#: src/pages/Workspace.tsx
+msgid "Vault space"
+msgstr "ボルトスペース"
+
+#: src/pages/Workspace.tsx
+msgid "Verified domain"
+msgstr "確認済みドメイン"
+
+#: src/pages/Workspace.tsx
+msgid "Verify DNS"
+msgstr "DNS を確認"
+
+#: src/pages/Workspace.tsx
+msgid "View public page"
+msgstr "公開ページを表示"
+
+#: src/pages/Workspace.tsx
+msgid "Viewer access is read-only."
+msgstr "ビューアーアクセスは読み取り専用です。"
+
+#: src/pages/Landing.tsx
+msgid "Watch the flow"
+msgstr "フローを見る"
+
+#: src/pages/Landing.tsx
+msgid "Web dashboard"
+msgstr "ウェブダッシュボード"
+
+#: src/pages/Login.tsx
+msgid "Welcome back"
+msgstr "おかえりなさい"
+
+#: src/pages/Workspace.tsx
+msgid "Workspace files"
+msgstr "ワークスペースファイル"
+
+#: src/pages/Workspace.tsx
+msgid "Workspace identity"
+msgstr "ワークスペース ID"
+
+#: src/pages/Workspace.tsx
+msgid "Workspace name"
+msgstr "ワークスペース名"
+
+#: src/pages/Workspace.tsx
+msgid "Workspace settings"
+msgstr "ワークスペース設定"
+
+#: src/pages/Workspace.tsx
+msgid "Workspace slug"
+msgstr "ワークスペーススラッグ"
+
+#: src/pages/Landing.tsx
+#: src/pages/Workspace.tsx
+msgid "Write"
+msgstr "記述"
+
+#: src/pages/Landing.tsx
+msgid "Write where your files live"
+msgstr "ファイルのある場所で書く"
+
+#: src/pages/Workspace.tsx
+msgid "You will lose access to all cloud documents."
+msgstr "すべてのクラウドドキュメントへのアクセスを失います。"
+
+#: src/pages/Workspace.tsx
+msgid "You will lose access to all cloud documents. Your local files are unaffected."
+msgstr "すべてのクラウドドキュメントへのアクセスを失います。ローカルファイルは影響を受けません。"
+
+#: src/pages/InviteAccept.tsx
+msgid "You're invited"
+msgstr "招待されました"
+
+#: src/pages/Login.tsx
+msgid "Your files stay on your machine. Always."
+msgstr "ファイルは常にあなたのマシンに。"
+
+#: src/pages/Login.tsx
+msgid "Your Markdown workspace,<0/>synced to the cloud."
+msgstr "あなたの Markdown ワークスペース、<0/>クラウドに同期。"
+
+#: src/pages/Workspace.tsx
+msgid "Your rendered document will appear here."
+msgstr "レンダリングされたドキュメントがここに表示されます。"

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { t, Trans } from "@lingui/macro";
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
 import { DocumentPlusIcon } from "@heroicons/react/24/outline";
 import { useAppDispatch, useAppState } from "../../app/AppState";
@@ -30,11 +31,11 @@ export function CreateNoteDialog() {
         <DialogPanel className="w-full max-w-sm rounded-xl bg-white p-6 shadow-2xl">
           <DialogTitle className="flex items-center gap-2 text-base font-semibold text-stone-900">
             <DocumentPlusIcon className="h-5 w-5 text-[#006f6b]" />
-            New Document
+            <Trans>New Document</Trans>
           </DialogTitle>
           <input
             className="mt-3 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-[#008884] focus:outline-none focus:ring-1 focus:ring-[#008884]"
-            placeholder="Note name..."
+            placeholder={t`Note name...`}
             value={value}
             onChange={(e) => setValue(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") handleCreate(); }}
@@ -46,7 +47,7 @@ export function CreateNoteDialog() {
               className="rounded-lg px-3 py-1.5 text-sm text-stone-600 hover:bg-stone-100"
               onClick={handleClose}
             >
-              Cancel
+              <Trans>Cancel</Trans>
             </button>
             <button
               type="button"
@@ -54,7 +55,7 @@ export function CreateNoteDialog() {
               onClick={handleCreate}
               disabled={!value.trim()}
             >
-              Create
+              <Trans>Create</Trans>
             </button>
           </div>
         </DialogPanel>

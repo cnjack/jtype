@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
+import { lingui } from "@lingui/vite-plugin";
 import path from "path";
 
 // @ts-expect-error process is a nodejs global
@@ -10,7 +11,11 @@ const devPort = Number(process.env.VITE_DEV_PORT ?? 1420);
 
 // https://vite.dev/config/
 export default defineConfig(async () => ({
-  plugins: [tailwindcss(), react()],
+  plugins: [
+    tailwindcss(),
+    react({ babel: { plugins: ["@lingui/babel-plugin-lingui-macro"] } }),
+    lingui(),
+  ],
   resolve: {
     alias: {
       '@shared': path.resolve(__dirname, 'shared'),

@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { t, Trans } from "@lingui/macro";
 import { useAppDispatch, useAppState } from "../../app/AppState";
 import { useCommandsList } from "../../app/App";
 import { fuzzyMatch } from "@shared/lib/utils";
@@ -17,9 +18,9 @@ export function CommandPalette() {
     <PaletteModal
       open={state.commandPaletteOpen}
       onClose={() => dispatch({ type: "SET_COMMAND_PALETTE", open: false })}
-      ariaLabel="Command palette"
-      inputPlaceholder="Search commands..."
-      inputAriaLabel="Search commands"
+      ariaLabel={t`Command palette`}
+      inputPlaceholder={t`Search commands...`}
+      inputAriaLabel={t`Search commands`}
       resultsId="command-results"
     >
       {(query) => {
@@ -29,12 +30,12 @@ export function CommandPalette() {
           .slice(0, 40);
 
         if (filtered.length === 0) {
-          return <p className="p-3 text-sm text-stone-500">No commands found.</p>;
+          return <p className="p-3 text-sm text-stone-500"><Trans>No commands found.</Trans></p>;
         }
 
         return filtered.map((command) => {
           const disabled = !command.isEnabled();
-          const reason = disabled ? (command.disabledReason?.() ?? "Unavailable") : command.scope?.join(", ") ?? "";
+          const reason = disabled ? (command.disabledReason?.() ?? t`Unavailable`) : command.scope?.join(", ") ?? "";
           return (
             <button
               key={command.id}

@@ -1,0 +1,127 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"POT-Creation-Date: 2026-05-14\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: @lingui/cli\n"
+"Language: ko\n"
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Plural-Forms: \n"
+
+#: ../../../shared/components/ConflictResolver.tsx
+msgid "← Back to list"
+msgstr "← 목록으로"
+
+#. placeholder {0}: conflicts.length
+#. placeholder {1}: conflicts.length > 1 ? "s" : ""
+#: ../../../shared/components/ConflictResolver.tsx
+msgid "⚠ {0} Conflict{1} to Resolve"
+msgstr "⚠ 해결할 충돌 {0}건{1}"
+
+#: ../../../shared/components/ConflictResolver.tsx
+msgid "Accept cloud"
+msgstr "클라우드 수낙"
+
+#: ../../../shared/components/ConflictResolver.tsx
+msgid "Accept local"
+msgstr "로컈 수낙"
+
+#: ../../../shared/components/EditorToolbar.tsx
+msgid "Bold"
+msgstr "굵게"
+
+#: ../../../shared/components/EditorToolbar.tsx
+msgid "Bold (Ctrl+B)"
+msgstr "굵게 (Ctrl+B)"
+
+#: ../../../shared/components/ConfirmDialog.tsx
+#: ../../../shared/components/PromptDialog.tsx
+msgid "Cancel"
+msgstr "취소"
+
+#: ../../../shared/components/ConflictResolver.tsx
+msgid "Cloud (remote)"
+msgstr "클라우드 (원격)"
+
+#: ../../../shared/components/EditorToolbar.tsx
+msgid "Code"
+msgstr "코드"
+
+#: ../../../shared/components/ConfirmDialog.tsx
+msgid "Confirm"
+msgstr "확인"
+
+#: ../../../shared/components/EditorToolbar.tsx
+msgid "Inline Code"
+msgstr "인라인 코드"
+
+#: ../../../shared/components/EditorToolbar.tsx
+msgid "Italic"
+msgstr "기울임꼴"
+
+#: ../../../shared/components/EditorToolbar.tsx
+msgid "Italic (Ctrl+I)"
+msgstr "기울임꼴 (Ctrl+I)"
+
+#: ../../../shared/components/EditorToolbar.tsx
+msgid "Link"
+msgstr "링크"
+
+#: ../../../shared/components/EditorToolbar.tsx
+msgid "Link (Ctrl+K)"
+msgstr "링크 (Ctrl+K)"
+
+#: ../../../shared/components/ConflictResolver.tsx
+msgid "Local (yours)"
+msgstr "로컈 (내 것)"
+
+#: ../../../shared/components/ConfirmDialog.tsx
+#: ../../../shared/components/PromptDialog.tsx
+msgid "OK"
+msgstr "확인"
+
+#: ../../../shared/components/PromptDialog.tsx
+msgid "Please enter a value."
+msgstr "값을 입력해 주세요."
+
+#: ../../../shared/components/ViewModeToggle.tsx
+msgid "Preview"
+msgstr "미리보기"
+
+#: ../../../shared/components/ConflictResolver.tsx
+msgid "Result (editable)"
+msgstr "결과 (편집 가능)"
+
+#: ../../../shared/components/ConflictResolver.tsx
+msgid "Save merged result"
+msgstr "병합 결과 저장"
+
+#: ../../../shared/components/ConflictResolver.tsx
+msgid "Saving…"
+msgstr "저장 중…"
+
+#: ../../../shared/components/ViewModeToggle.tsx
+msgid "Split"
+msgstr "스플릿"
+
+#: ../../../shared/components/EditorToolbar.tsx
+msgid "Table"
+msgstr "테이블"
+
+#: ../../../shared/components/ConflictResolver.tsx
+msgid "Use this"
+msgstr "이것 사용"
+
+#: ../../../shared/components/ViewModeToggle.tsx
+msgid "Write"
+msgstr "작성"

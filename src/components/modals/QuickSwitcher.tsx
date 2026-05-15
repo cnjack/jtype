@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { t, Trans } from "@lingui/macro";
 import { useAppDispatch, useAppState } from "../../app/AppState";
 import { useFileSystem } from "../../hooks";
 import { fuzzyMatch } from "@shared/lib/utils";
@@ -18,14 +19,14 @@ export function QuickSwitcher() {
     <PaletteModal
       open={state.quickSwitcherOpen}
       onClose={() => dispatch({ type: "SET_QUICK_SWITCHER", open: false })}
-      ariaLabel="Quick switcher"
-      inputPlaceholder="Open or create Document..."
-      inputAriaLabel="Open or create Document"
+      ariaLabel={t`Quick switcher`}
+      inputPlaceholder={t`Open or create Document...`}
+      inputAriaLabel={t`Open or create Document`}
       resultsId="quick-results"
     >
       {(query) => {
         if (!state.workspace) {
-          return <p className="p-3 text-sm text-stone-500">Open a vault to quick switch files.</p>;
+          return <p className="p-3 text-sm text-stone-500"><Trans>Open a vault to quick switch files.</Trans></p>;
         }
 
         const raw = query.trim();
@@ -51,7 +52,7 @@ export function QuickSwitcher() {
             <button className="command-row" type="button" onClick={() => {
               dispatch({ type: "SET_QUICK_SWITCHER", open: false });
             }}>
-              <span>Create "{query}.md"</span>
+              <span><Trans>Create "{query}.md"</Trans></span>
               <span className="text-xs text-stone-500">Shift+Enter</span>
             </button>
           );
@@ -71,7 +72,7 @@ export function QuickSwitcher() {
               <span className="block font-semibold">{node.name}</span>
               <span className="block truncate text-xs text-stone-500">{node.relativePath}</span>
             </span>
-            <span className="text-xs text-stone-500">Open</span>
+            <span className="text-xs text-stone-500"><Trans>Open</Trans></span>
           </button>
         ));
       }}

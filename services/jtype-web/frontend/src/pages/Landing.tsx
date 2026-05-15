@@ -1,4 +1,6 @@
 import { Link } from 'react-router-dom'
+import { t, Trans, msg } from '@lingui/macro'
+import { useLingui } from '@lingui/react'
 import {
   ArrowLeftOnRectangleIcon,
   ArrowRightIcon,
@@ -33,47 +35,48 @@ const markdownLines = [
 const flowSteps = [
   {
     icon: FolderOpenIcon,
-    eyebrow: 'Vault',
-    title: 'Write where your files live',
-    body: 'Open a local Markdown vault, keep normal folders, and edit without turning notes into remote-only data.',
+    eyebrow: msg`Vault`,
+    title: msg`Write where your files live`,
+    body: msg`Open a local Markdown vault, keep normal folders, and edit without turning notes into remote-only data.`,
   },
   {
     icon: CloudArrowUpIcon,
-    eyebrow: 'Sync',
-    title: 'Bind to a cloud workspace',
-    body: 'Push and pull versions, resolve conflicts, and keep collaboration scoped to the workspace you choose.',
+    eyebrow: msg`Sync`,
+    title: msg`Bind to a cloud workspace`,
+    body: msg`Push and pull versions, resolve conflicts, and keep collaboration scoped to the workspace you choose.`,
   },
   {
     icon: GlobeAltIcon,
-    eyebrow: 'Publish',
-    title: 'Ship a readable site',
-    body: 'Turn selected documents into a public `/u/:username` site while your source stays Markdown.',
+    eyebrow: msg`Publish`,
+    title: msg`Ship a readable site`,
+    body: msg`Turn selected documents into a public \`/u/:username\` site while your source stays Markdown.`,
   },
 ]
 
 const surfaces = [
   {
     icon: ComputerDesktopIcon,
-    name: 'Desktop app',
-    detail: 'Tauri vault editing with write, split, and preview modes.',
+    name: msg`Desktop app`,
+    detail: msg`Tauri vault editing with write, split, and preview modes.`,
   },
   {
     icon: CommandLineIcon,
-    name: 'Web dashboard',
-    detail: 'Cloud workspace admin, devices, sync, and publishing controls.',
+    name: msg`Web dashboard`,
+    detail: msg`Cloud workspace admin, devices, sync, and publishing controls.`,
   },
   {
     icon: DocumentTextIcon,
-    name: 'Published pages',
-    detail: 'Clean read-only output for notes, docs, releases, and guides.',
+    name: msg`Published pages`,
+    detail: msg`Clean read-only output for notes, docs, releases, and guides.`,
   },
 ]
 
 export function Landing() {
   const { user, loading, logout } = useAuth()
+  const { _ } = useLingui()
   const appLink = user ? '/workspaces' : '/login'
-  const appCtaLabel = user ? 'Open dashboard' : 'Start writing'
-  const appCtaTitle = user ? 'Open JType Cloud dashboard' : 'Start with JType Cloud'
+  const appCtaLabel = user ? t`Open dashboard` : t`Start writing`
+  const appCtaTitle = user ? t`Open JType Cloud dashboard` : t`Start with JType Cloud`
 
   return (
     <div className="min-h-screen overflow-hidden bg-[#f5f8f6] text-[#0d0d0c]">
@@ -93,37 +96,37 @@ export function Landing() {
             <span className="text-[#8d939d]">]</span>
           </Link>
           <div className="hidden items-center gap-1 text-sm font-medium text-[#5f6d68] md:flex">
-            <a className="rounded-lg px-3 py-2 transition hover:bg-[#e8f6f2] hover:text-brand-dark" href="#flow">Flow</a>
-            <a className="rounded-lg px-3 py-2 transition hover:bg-[#e8f6f2] hover:text-brand-dark" href="#surfaces">Surfaces</a>
-            <a className="rounded-lg px-3 py-2 transition hover:bg-[#e8f6f2] hover:text-brand-dark" href="#publish">Publish</a>
+            <a className="rounded-lg px-3 py-2 transition hover:bg-[#e8f6f2] hover:text-brand-dark" href="#flow"><Trans>Flow</Trans></a>
+            <a className="rounded-lg px-3 py-2 transition hover:bg-[#e8f6f2] hover:text-brand-dark" href="#surfaces"><Trans>Surfaces</Trans></a>
+            <a className="rounded-lg px-3 py-2 transition hover:bg-[#e8f6f2] hover:text-brand-dark" href="#publish"><Trans>Publish</Trans></a>
           </div>
           <div className="flex items-center gap-2">
             <a
               href="https://github.com/cnjack/jtype"
               target="_blank"
               className="hidden h-9 items-center justify-center rounded-lg border border-black/[0.06] bg-white/80 px-3 text-sm font-semibold text-[#4b5753] shadow-sm shadow-emerald-950/5 transition hover:border-brand/30 hover:bg-white hover:text-brand-dark sm:inline-flex"
-              title="Open GitHub"
+              title={t`Open GitHub`}
             >
-              GitHub
+              <Trans>GitHub</Trans>
             </a>
             {loading ? (
               <span className="inline-flex h-9 items-center rounded-lg border border-black/[0.06] bg-white/70 px-3 text-sm font-semibold text-[#6b7773]">
-                Checking session
+                <Trans>Checking session</Trans>
               </span>
             ) : user ? (
               <>
                 <Link
                   to="/workspaces"
                   className="inline-flex h-9 items-center rounded-lg border border-brand/20 bg-[#e8f6f2] px-3 text-sm font-semibold text-brand-dark transition hover:border-brand/30 hover:bg-white"
-                  title="Open JType Cloud dashboard"
+                  title={t`Open JType Cloud dashboard`}
                 >
                   {user.username}
                 </Link>
                 <button
                   type="button"
                   className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-black/[0.06] bg-white/80 text-[#4b5753] shadow-sm shadow-emerald-950/5 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700"
-                  title="Sign out"
-                  aria-label="Sign out"
+                  title={t`Sign out`}
+                  aria-label={t`Sign out`}
                   onClick={logout}
                 >
                   <ArrowLeftOnRectangleIcon className="h-4 w-4" />
@@ -133,9 +136,9 @@ export function Landing() {
               <Link
                 to="/login"
                 className="inline-flex h-9 items-center gap-2 rounded-lg border border-brand bg-brand px-3 text-sm font-semibold text-white shadow-sm shadow-brand/15 transition hover:border-brand-dark hover:bg-brand-dark"
-                title="Sign in"
+                title={t`Sign in`}
               >
-                Sign in
+                <Trans>Sign in</Trans>
                 <ArrowRightIcon className="h-4 w-4" />
               </Link>
             )}
@@ -145,14 +148,14 @@ export function Landing() {
         <div className="relative mx-auto flex max-w-7xl flex-col items-center pt-12 text-center sm:pt-16">
           <div className="inline-flex items-center gap-2 rounded-full border border-brand/15 bg-white/75 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-brand-dark shadow-sm shadow-emerald-950/5 backdrop-blur">
             <SparklesIcon className="h-4 w-4" />
-            {user ? `Signed in as ${user.username}` : 'Local-first Markdown vault'}
+            {user ? <Trans>Signed in as {user.username}</Trans> : <Trans>Local-first Markdown vault</Trans>}
           </div>
           <h1 className="mt-6 max-w-5xl text-5xl font-semibold leading-[0.98] tracking-tight text-[#0d0d0c] sm:text-6xl lg:text-7xl">
             JType
           </h1>
           <p className="mt-5 max-w-3xl text-balance text-base leading-7 text-[#4b5753] sm:text-lg">
-            Calm desktop writing, workspace-scoped sync, and public Markdown publishing in one product flow.
-            Your notes stay local until a cloud workspace has a job to do.
+            <Trans>Calm desktop writing, workspace-scoped sync, and public Markdown publishing in one product flow.
+            Your notes stay local until a cloud workspace has a job to do.</Trans>
           </p>
           <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
             <Link
@@ -166,9 +169,9 @@ export function Landing() {
             <a
               href="#flow"
               className="inline-flex h-11 items-center gap-2 rounded-lg border border-black/[0.06] bg-white/80 px-5 text-sm font-semibold text-[#4b5753] shadow-sm shadow-emerald-950/5 transition hover:border-brand/30 hover:bg-white hover:text-brand-dark"
-              title="See product flow"
+              title={t`See product flow`}
             >
-              Watch the flow
+              <Trans>Watch the flow</Trans>
               <BoltIcon className="h-4 w-4" />
             </a>
           </div>
@@ -183,18 +186,18 @@ export function Landing() {
         <section id="flow" className="px-4 py-16 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-7xl">
             <div className="max-w-3xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-dark">Product flow</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-dark"><Trans>Product flow</Trans></p>
               <h2 className="mt-3 text-3xl font-semibold tracking-tight text-[#0d0d0c] sm:text-4xl">
-                The landing story follows the real JType loop.
+                <Trans>The landing story follows the real JType loop.</Trans>
               </h2>
             </div>
             <div className="mt-8 grid gap-4 md:grid-cols-3">
-              {flowSteps.map(step => (
-                <article key={step.title} className="rounded-xl border border-white/80 bg-white/80 p-5 shadow-sm shadow-emerald-950/5 ring-1 ring-black/[0.03]">
+              {flowSteps.map((step, i) => (
+                <article key={i} className="rounded-xl border border-white/80 bg-white/80 p-5 shadow-sm shadow-emerald-950/5 ring-1 ring-black/[0.03]">
                   <step.icon className="h-6 w-6 text-brand" />
-                  <p className="mt-5 text-xs font-semibold uppercase tracking-[0.14em] text-[#6b7773]">{step.eyebrow}</p>
-                  <h3 className="mt-2 text-xl font-semibold text-[#0d0d0c]">{step.title}</h3>
-                  <p className="mt-3 text-sm leading-6 text-[#5f6d68]">{step.body}</p>
+                  <p className="mt-5 text-xs font-semibold uppercase tracking-[0.14em] text-[#6b7773]">{_(step.eyebrow)}</p>
+                  <h3 className="mt-2 text-xl font-semibold text-[#0d0d0c]">{_(step.title)}</h3>
+                  <p className="mt-3 text-sm leading-6 text-[#5f6d68]">{_(step.body)}</p>
                 </article>
               ))}
             </div>
@@ -204,24 +207,24 @@ export function Landing() {
         <section id="surfaces" className="border-y border-black/[0.04] bg-[#fbfdfb] px-4 py-16 sm:px-6 lg:px-8">
           <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-dark">Surfaces</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-dark"><Trans>Surfaces</Trans></p>
               <h2 className="mt-3 text-3xl font-semibold tracking-tight text-[#0d0d0c] sm:text-4xl">
-                One Markdown source, three calm surfaces.
+                <Trans>One Markdown source, three calm surfaces.</Trans>
               </h2>
               <p className="mt-4 text-sm leading-7 text-[#5f6d68]">
-                The page borrows getdesign.app's strongest move: show the actual system doing the explaining.
-                For JType, that means local files, sync state, and published output all visible at once.
+                <Trans>The page borrows getdesign.app's strongest move: show the actual system doing the explaining.
+                For JType, that means local files, sync state, and published output all visible at once.</Trans>
               </p>
             </div>
             <div className="grid gap-3">
-              {surfaces.map(surface => (
-                <article key={surface.name} className="flex items-start gap-4 rounded-xl border border-black/[0.06] bg-white/75 p-4 shadow-sm shadow-emerald-950/5">
+              {surfaces.map((surface, i) => (
+                <article key={i} className="flex items-start gap-4 rounded-xl border border-black/[0.06] bg-white/75 p-4 shadow-sm shadow-emerald-950/5">
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[#e8f6f2] text-brand-dark">
                     <surface.icon className="h-5 w-5" />
                   </div>
                   <div>
-                    <h3 className="text-base font-semibold text-[#0d0d0c]">{surface.name}</h3>
-                    <p className="mt-1 text-sm leading-6 text-[#5f6d68]">{surface.detail}</p>
+                    <h3 className="text-base font-semibold text-[#0d0d0c]">{_(surface.name)}</h3>
+                    <p className="mt-1 text-sm leading-6 text-[#5f6d68]">{_(surface.detail)}</p>
                   </div>
                 </article>
               ))}
@@ -232,13 +235,13 @@ export function Landing() {
         <section id="publish" className="px-4 py-16 sm:px-6 lg:px-8">
           <div className="mx-auto grid max-w-7xl gap-6 rounded-2xl border border-white/80 bg-white/75 p-6 shadow-sm shadow-emerald-950/5 ring-1 ring-black/[0.03] md:grid-cols-[1fr_auto] md:items-center">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-dark">Ready for the cloud layer</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-dark"><Trans>Ready for the cloud layer</Trans></p>
               <h2 className="mt-3 text-3xl font-semibold tracking-tight text-[#0d0d0c]">
-                Start with a private cloud workspace.
+                <Trans>Start with a private cloud workspace.</Trans>
               </h2>
               <p className="mt-3 max-w-2xl text-sm leading-7 text-[#5f6d68]">
-                Create a workspace for sync, publishing, and account settings. Local vault copy stays precise:
-                folders are vaults, server-side collaboration is a cloud workspace.
+                <Trans>Create a workspace for sync, publishing, and account settings. Local vault copy stays precise:
+                folders are vaults, server-side collaboration is a cloud workspace.</Trans>
               </p>
             </div>
             <Link
@@ -246,7 +249,7 @@ export function Landing() {
               className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-brand bg-brand px-5 text-sm font-semibold text-white shadow-sm shadow-brand/15 transition hover:border-brand-dark hover:bg-brand-dark"
               title={appCtaTitle}
             >
-              {user ? 'Open JType Cloud' : 'Go to JType Cloud'}
+              {user ? <Trans>Open JType Cloud</Trans> : <Trans>Go to JType Cloud</Trans>}
               <ArrowRightIcon className="h-4 w-4" />
             </Link>
           </div>
@@ -266,7 +269,7 @@ function ProductFilm() {
           <span className="h-2.5 w-2.5 rounded-full bg-brand/70" />
         </div>
         <p className="hidden text-xs font-semibold text-[#6b7773] sm:block">vault / field-guide / spring-release.md</p>
-        <span className="rounded-full bg-[#d9f2ed] px-2 py-1 text-[11px] font-semibold uppercase text-brand-dark">Synced</span>
+        <span className="rounded-full bg-[#d9f2ed] px-2 py-1 text-[11px] font-semibold uppercase text-brand-dark"><Trans>Synced</Trans></span>
       </div>
 
       <div className="landing-packet landing-packet-one" />
@@ -276,7 +279,7 @@ function ProductFilm() {
         <aside className="landing-panel min-h-[330px] rounded-xl border border-black/[0.05] bg-[#f7faf8] p-3">
           <div className="mb-3 flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-dark">Vault</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-dark"><Trans>Vault</Trans></p>
               <p className="text-[11px] text-[#8a9691]">~/notes/field-guide</p>
             </div>
             <FolderOpenIcon className="h-5 w-5 text-brand" />
@@ -293,22 +296,22 @@ function ProductFilm() {
             ))}
           </div>
           <div className="mt-5 rounded-xl border border-black/[0.04] bg-white/70 p-3">
-            <p className="text-xs font-semibold text-[#0d0d0c]">Local watcher</p>
+            <p className="text-xs font-semibold text-[#0d0d0c]"><Trans>Local watcher</Trans></p>
             <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#edf1ef]">
               <div className="landing-progress h-full rounded-full bg-brand" />
             </div>
-            <p className="mt-2 text-[11px] text-[#6b7773]">Detected save, queued push.</p>
+            <p className="mt-2 text-[11px] text-[#6b7773]"><Trans>Detected save, queued push.</Trans></p>
           </div>
         </aside>
 
         <section className="landing-panel min-h-[330px] rounded-xl border border-black/[0.05] bg-white/75">
           <div className="flex min-h-12 items-center justify-between border-b border-black/[0.04] px-4">
             <div className="flex items-center gap-2">
-              <span className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold text-brand-dark shadow-sm">Write</span>
-              <span className="rounded-full px-3 py-1 text-[11px] font-semibold text-[#6b7773]">Split</span>
-              <span className="rounded-full px-3 py-1 text-[11px] font-semibold text-[#6b7773]">Preview</span>
+              <span className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold text-brand-dark shadow-sm"><Trans>Write</Trans></span>
+              <span className="rounded-full px-3 py-1 text-[11px] font-semibold text-[#6b7773]"><Trans>Split</Trans></span>
+              <span className="rounded-full px-3 py-1 text-[11px] font-semibold text-[#6b7773]"><Trans>Preview</Trans></span>
             </div>
-            <span className="rounded-full bg-amber-200 px-2 py-1 text-[11px] font-semibold uppercase text-amber-950">Dirty</span>
+            <span className="rounded-full bg-amber-200 px-2 py-1 text-[11px] font-semibold uppercase text-amber-950"><Trans>Dirty</Trans></span>
           </div>
           <div className="grid min-h-[278px] md:grid-cols-[minmax(0,1fr)_42%]">
             <div className="relative p-4 font-mono text-[12px] leading-5 text-[#27312e]">
@@ -321,7 +324,7 @@ function ProductFilm() {
               <span className="landing-cursor absolute left-[118px] top-[146px] h-5 w-px bg-brand" />
             </div>
             <article className="hidden border-l border-black/[0.04] bg-[#f8fbf9] p-5 md:block">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#6b7773]">Live preview</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#6b7773]"><Trans>Live preview</Trans></p>
               <h3 className="mt-5 text-2xl font-bold leading-tight text-[#0d0d0c]">Spring release notes</h3>
               <p className="mt-4 text-sm leading-6 text-[#4b5753]">
                 A quieter editor, faster preview, and a public site that stays in sync with the vault on your machine.
@@ -336,7 +339,7 @@ function ProductFilm() {
         <aside className="landing-panel min-h-[330px] rounded-xl border border-black/[0.05] bg-[#f6faf7] p-3">
           <div className="rounded-xl border border-black/[0.04] bg-white/75 p-4">
             <div className="flex items-center justify-between">
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-dark">Cloud workspace</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-dark"><Trans>Cloud workspace</Trans></p>
               <CloudArrowUpIcon className="h-5 w-5 text-brand" />
             </div>
             <div className="mt-4 space-y-3">
@@ -351,7 +354,7 @@ function ProductFilm() {
 
           <div className="mt-3 overflow-hidden rounded-xl border border-black/[0.04] bg-white">
             <div className="border-b border-black/[0.04] bg-[#fbfdfb] px-4 py-3">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#6b7773]">Public site</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#6b7773]"><Trans>Public site</Trans></p>
               <p className="mt-1 truncate text-xs text-brand-dark">/u/jack/field-guide</p>
             </div>
             <div className="landing-publish-body p-4">

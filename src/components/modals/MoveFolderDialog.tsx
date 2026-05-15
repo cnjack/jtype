@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Trans } from "@lingui/macro";
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
 import { ArrowRightIcon, ChevronDownIcon, ChevronRightIcon, FolderIcon } from "@heroicons/react/24/outline";
 import { useAppDispatch, useAppState } from "../../app/AppState";
@@ -63,9 +64,9 @@ export function MoveFolderDialog({
         <DialogPanel className="w-full max-w-sm rounded-xl border border-white/70 bg-[#fbfdfb] p-6 shadow-[0_25px_50px_-12px_rgb(28_25_23/0.2)]">
           <DialogTitle className="flex items-center gap-2 text-base font-semibold text-stone-900">
             <ArrowRightIcon className="h-5 w-5 text-[#006f6b]" />
-            Move to Folder
+            <Trans>Move to Folder</Trans>
           </DialogTitle>
-          <p className="mt-1 text-xs text-stone-500">Select destination for "{sourceName}"</p>
+          <p className="mt-1 text-xs text-stone-500"><Trans>Select destination for "{sourceName}"</Trans></p>
 
           <div className="mt-3 max-h-64 overflow-y-auto rounded-lg border border-stone-200 p-2">
             <button
@@ -74,7 +75,7 @@ export function MoveFolderDialog({
               onClick={() => setSelected("")}
             >
               <FolderIcon className="h-3.5 w-3.5" />
-              <span>/ (root)</span>
+              <span><Trans>/ (root)</Trans></span>
             </button>
             {folders.map((f) => (
               <FolderPickerNode
@@ -92,7 +93,7 @@ export function MoveFolderDialog({
 
           {selected !== "" && (
             <p className="mt-2 text-xs text-stone-500">
-              Destination: <span className="font-mono">{destPath}</span>
+              <Trans>Destination: <span className="font-mono">{destPath}</span></Trans>
             </p>
           )}
 
@@ -102,7 +103,7 @@ export function MoveFolderDialog({
               className="rounded-lg px-3 py-1.5 text-sm text-stone-600 hover:bg-stone-100"
               onClick={onClose}
             >
-              Cancel
+              <Trans>Cancel</Trans>
             </button>
             <button
               type="button"
@@ -110,7 +111,7 @@ export function MoveFolderDialog({
               onClick={() => void handleMove()}
               disabled={!isValid}
             >
-              Move
+              <Trans>Move</Trans>
             </button>
           </div>
         </DialogPanel>

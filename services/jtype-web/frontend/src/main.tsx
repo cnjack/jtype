@@ -2,9 +2,18 @@ import { StrictMode } from 'react'
 import { useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom'
+import { I18nProvider } from '@lingui/react'
 import './index.css'
 import { AuthProvider } from './components/AuthContext'
 import { PromptDialogProvider } from '@shared/components/PromptDialogContext'
+import {
+  i18n,
+  activateLocale,
+  ensureLocaleActivated,
+  getDefaultLocale,
+  setLocaleMessagesLoader,
+  type SupportedLocale,
+} from '@shared/i18n'
 import { Layout } from './components/Layout'
 import { Landing } from './pages/Landing'
 import { Login } from './pages/Login'
@@ -14,28 +23,61 @@ import { DeviceOAuth } from './pages/DeviceOAuth'
 import { InviteAccept } from './pages/InviteAccept'
 import { api } from './api'
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <AuthProvider>
-      <PromptDialogProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Landing />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/oauth/device" element={<DeviceOAuth />} />
-            <Route path="/invites/:token" element={<InviteAccept />} />
-            <Route element={<Layout />}>
-              <Route path="/dashboard" element={<WorkspaceRedirect />} />
-              <Route path="/workspaces" element={<WorkspaceRedirect />} />
-              <Route path="/admin" element={<Admin />} />
-              <Route path="/workspaces/:workspaceId" element={<Workspace />} />
-            </Route>
-          </Routes>
-        </BrowserRouter>
-      </PromptDialogProvider>
-    </AuthProvider>
-  </StrictMode>,
-)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function loadPlatformMessages(locale: SupportedLocale): Promise<Record<string, unknown>> {
+  const platformMod: any = await import(`./i18n/locales/${locale}/messages.mjs`)
+  const platformMessages =
+    platformMod.messages ?? platformMod.default?.messages ?? platformMod.default ?? {}
+  return platformMessages
+}
+
+function renderApp() {
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <I18nProvider i18n={i18n}>
+        <AuthProvider>
+          <PromptDialogProvider>
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Landing />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/oauth/device" element={<DeviceOAuth />} />
+                <Route path="/invites/:token" element={<InviteAccept />} />
+                <Route element={<Layout />}>
+                  <Route path="/dashboard" element={<WorkspaceRedirect />} />
+                  <Route path="/workspaces" element={<WorkspaceRedirect />} />
+                  <Route path="/admin" element={<Admin />} />
+                  <Route path="/workspaces/:workspaceId" element={<Workspace />} />
+                </Route>
+              </Routes>
+            </BrowserRouter>
+          </PromptDialogProvider>
+        </AuthProvider>
+      </I18nProvider>
+    </StrictMode>,
+  )
+}
+
+async function bootstrap() {
+  ensureLocaleActivated('en')
+  setLocaleMessagesLoader(loadPlatformMessages)
+
+  const locale = getDefaultLocale()
+
+  try {
+    await activateLocale(locale)
+  } catch (error) {
+    console.error('Failed to initialize web locale, falling back to English.', error)
+    await activateLocale('en')
+  }
+
+  renderApp()
+}
+
+void bootstrap().catch(error => {
+  console.error('Failed to bootstrap web app i18n.', error)
+  renderApp()
+})
 
 function WorkspaceRedirect() {
   const navigate = useNavigate()

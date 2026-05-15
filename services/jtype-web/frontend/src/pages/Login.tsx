@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { t, Trans } from '@lingui/macro'
 import { useAuth } from '../components/AuthContext'
 import {
   CloudArrowUpIcon,
@@ -34,7 +35,7 @@ export function Login() {
       }
       navigate('/workspaces')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong')
+      setError(err instanceof Error ? err.message : t`Something went wrong`)
     } finally {
       setSubmitting(false)
     }
@@ -72,12 +73,10 @@ export function Login() {
 
         <div className="max-w-md">
           <h1 className="mb-4 text-4xl font-bold tracking-tight">
-            Your Markdown workspace,
-            <br />
-            synced to the cloud.
+            <Trans>Your Markdown workspace,<br />synced to the cloud.</Trans>
           </h1>
           <p className="text-base leading-relaxed text-white/80">
-            Local-first notes with cloud sync, publishing, and AI-ready indexing.
+            <Trans>Local-first notes with cloud sync, publishing, and AI-ready indexing.</Trans>
           </p>
 
           <div className="mt-8 space-y-4">
@@ -86,9 +85,9 @@ export function Login() {
                 <CloudArrowUpIcon className="h-5 w-5 text-white" />
               </div>
               <div>
-                <p className="text-sm font-semibold">Cloud Sync</p>
+                <p className="text-sm font-semibold"><Trans>Cloud Sync</Trans></p>
                 <p className="text-sm text-white/70">
-                  Keep your vaults in sync across all devices.
+                  <Trans>Keep your vaults in sync across all devices.</Trans>
                 </p>
               </div>
             </div>
@@ -97,9 +96,9 @@ export function Login() {
                 <BoltIcon className="h-5 w-5 text-white" />
               </div>
               <div>
-                <p className="text-sm font-semibold">AI-Ready</p>
+                <p className="text-sm font-semibold"><Trans>AI-Ready</Trans></p>
                 <p className="text-sm text-white/70">
-                  Indexed and ready for intelligent assistance.
+                  <Trans>Indexed and ready for intelligent assistance.</Trans>
                 </p>
               </div>
             </div>
@@ -108,16 +107,16 @@ export function Login() {
                 <LockClosedIcon className="h-5 w-5 text-white" />
               </div>
               <div>
-                <p className="text-sm font-semibold">Local-First</p>
+                <p className="text-sm font-semibold"><Trans>Local-First</Trans></p>
                 <p className="text-sm text-white/70">
-                  Your files stay on your machine. Always.
+                  <Trans>Your files stay on your machine. Always.</Trans>
                 </p>
               </div>
             </div>
           </div>
         </div>
 
-        <p className="text-xs text-white/50">© {new Date().getFullYear()} JType</p>
+        <p className="text-xs text-white/50"><Trans>© {new Date().getFullYear()} JType</Trans></p>
       </div>
 
       {/* Right: form panel */}
@@ -144,12 +143,12 @@ export function Login() {
 
           <div className="rounded-2xl border border-black/[0.06] bg-white p-8 shadow-sm shadow-emerald-950/5">
             <h2 className="mb-1 text-2xl font-bold text-stone-900">
-              {isRegister ? 'Create account' : 'Welcome back'}
+              {isRegister ? <Trans>Create account</Trans> : <Trans>Welcome back</Trans>}
             </h2>
             <p className="mb-6 text-sm text-stone-500">
               {isRegister
-                ? 'Sign up to start syncing your vaults.'
-                : 'Sign in to your JType Cloud account.'}
+                ? <Trans>Sign up to start syncing your vaults.</Trans>
+                : <Trans>Sign in to your JType Cloud account.</Trans>}
             </p>
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -158,7 +157,7 @@ export function Login() {
                   htmlFor="login-username"
                   className="field-label mb-1.5 block"
                 >
-                  Username
+                  <Trans>Username</Trans>
                 </label>
                 <input
                   id="login-username"
@@ -167,7 +166,7 @@ export function Login() {
                   onChange={(e) => setUsername(e.target.value)}
                   required
                   className="sync-input h-10"
-                  placeholder="Enter your username"
+                  placeholder={t`Enter your username`}
                 />
               </div>
               <div>
@@ -175,7 +174,7 @@ export function Login() {
                   htmlFor="login-password"
                   className="field-label mb-1.5 block"
                 >
-                  Password
+                  <Trans>Password</Trans>
                 </label>
                 <input
                   id="login-password"
@@ -184,7 +183,7 @@ export function Login() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   className="sync-input h-10"
-                  placeholder="Enter your password"
+                  placeholder={t`Enter your password`}
                 />
               </div>
 
@@ -200,23 +199,23 @@ export function Login() {
                 className="toolbar-button toolbar-button-primary mt-1 h-10 justify-center"
               >
                 {submitting
-                  ? 'Please wait...'
+                  ? <Trans>Please wait...</Trans>
                   : isRegister
-                    ? 'Create account'
-                    : 'Sign in'}
+                    ? <Trans>Create account</Trans>
+                    : <Trans>Sign in</Trans>}
               </button>
             </form>
 
             <p className="mt-5 text-center text-sm text-stone-500">
               {isRegister
-                ? 'Already have an account?'
-                : "Don't have an account?"}{' '}
+                ? <Trans>Already have an account?</Trans>
+                : <Trans>Don't have an account?</Trans>}{' '}
               <button
                 type="button"
                 onClick={() => setIsRegister(!isRegister)}
                 className="font-semibold text-brand hover:underline"
               >
-                {isRegister ? 'Sign in' : 'Register'}
+                {isRegister ? <Trans>Sign in</Trans> : <Trans>Register</Trans>}
               </button>
             </p>
           </div>

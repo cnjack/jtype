@@ -17,6 +17,7 @@ export { EditorToolbar } from "./EditorToolbar";
 export type { EditorToolbarProps } from "./EditorToolbar";
 export { StatusChip } from "./StatusChip";
 export type { StatusChipVariant } from "./StatusChip";
+export { LanguageSwitcher, LanguageSwitcherMenuPanel, LanguageMenuTriggerRow } from "./LanguageSwitcher";
 
 export { ContextMenu } from "./ContextMenu";
 export type { ContextMenuItem, ContextMenuProps } from "./ContextMenu";

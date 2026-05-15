@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
 import { CloudArrowUpIcon } from "@heroicons/react/24/outline";
+import { t, Trans } from "@lingui/macro";
 import { useAppDispatch, useAppState } from "../../app/AppState";
 import { useCloudSync } from "../../hooks";
 import type { VaultSettings } from "../../lib/types";
@@ -44,7 +45,7 @@ export function SyncPromptDialog({ open }: SyncPromptDialogProps) {
   };
 
   return (
-    <Dialog open={open} onClose={() => saveSettings(laterSettings, "Cloud sync reminder snoozed.")} className="relative z-50">
+    <Dialog open={open} onClose={() => saveSettings(laterSettings, t`Cloud sync reminder snoozed.`)} className="relative z-50">
       <div className="fixed inset-0 bg-stone-950/25 backdrop-blur-sm" aria-hidden="true" />
       <div className="fixed inset-0 flex items-center justify-center px-4 py-6 sm:p-8">
         <DialogPanel className="w-full max-w-xl rounded-xl border border-white/70 bg-[#fbfdfb] p-5 shadow-2xl shadow-stone-900/20 sm:p-6">
@@ -53,9 +54,9 @@ export function SyncPromptDialog({ open }: SyncPromptDialogProps) {
               <CloudArrowUpIcon className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <DialogTitle className="text-xl font-semibold text-stone-950 sm:text-2xl">Sync "{vaultName}" to cloud?</DialogTitle>
+              <DialogTitle className="text-xl font-semibold text-stone-950 sm:text-2xl"><Trans>Sync "{vaultName}" to cloud?</Trans></DialogTitle>
               <p className="mt-2 text-sm leading-6 text-[#5f6d68]">
-                Back up this local vault to a cloud workspace, keep devices in sync, and open the same notes from the web.
+                <Trans>Back up this local vault to a cloud workspace, keep devices in sync, and open the same notes from the web.</Trans>
               </p>
               {vaultPath && <p className="mt-2 truncate font-mono text-xs text-stone-500">{vaultPath}</p>}
             </div>
@@ -63,13 +64,13 @@ export function SyncPromptDialog({ open }: SyncPromptDialogProps) {
 
           {pendingStart && !state.syncToken && (
             <div className="mt-5 rounded-lg border border-teal-100 bg-teal-50 px-3 py-2 text-sm text-teal-800">
-              Browser authorization is open. This sync will continue after sign-in completes.
+              <Trans>Browser authorization is open. This sync will continue after sign-in completes.</Trans>
             </div>
           )}
 
           <div className="mt-6 flex flex-col-reverse gap-2 sm:grid sm:grid-cols-[auto_auto_minmax(12rem,1fr)]">
-            <button className="toolbar-button justify-center" type="button" onClick={() => saveSettings(laterSettings, "Cloud sync reminder snoozed.")}>
-              Later
+            <button className="toolbar-button justify-center" type="button" onClick={() => saveSettings(laterSettings, t`Cloud sync reminder snoozed.`)}>
+              <Trans>Later</Trans>
             </button>
             <button
               className="toolbar-button justify-center"
@@ -78,12 +79,12 @@ export function SyncPromptDialog({ open }: SyncPromptDialogProps) {
                 cloudSyncEnabled: false,
                 syncPromptDismissedAt: null,
                 syncDisabledPermanently: true,
-              }, "This vault is now local-only.")}
+              }, t`This vault is now local-only.`)}
             >
-              Local only
+              <Trans>Local only</Trans>
             </button>
             <button className="toolbar-button toolbar-button-primary justify-center" type="button" disabled={state.isLoading} onClick={startSync}>
-              Start sync
+              <Trans>Start sync</Trans>
             </button>
           </div>
         </DialogPanel>

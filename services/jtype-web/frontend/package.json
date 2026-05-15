@@ -11,6 +11,8 @@
   "dependencies": {
     "@headlessui/react": "^2.2.10",
     "@heroicons/react": "^2.2.0",
+    "@lingui/core": "^6.0.1",
+    "@lingui/react": "^6.0.1",
     "dompurify": "^3.4.2",
     "katex": "^0.16.45",
     "marked": "^18.0.3",
@@ -21,6 +23,11 @@
     "react-router-dom": "^7.6.0"
   },
   "devDependencies": {
+    "@lingui/babel-plugin-lingui-macro": "^6.0.1",
+    "@lingui/cli": "^6.0.1",
+    "@lingui/format-po": "^6.0.1",
+    "@lingui/macro": "^5.9.5",
+    "@lingui/vite-plugin": "^6.0.1",
     "@tailwindcss/vite": "^4.3.0",
     "@types/morphdom": "^2.3.0",
     "@types/react": "^19.2.14",

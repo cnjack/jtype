@@ -1,3 +1,4 @@
+import { t } from "@lingui/macro";
 import type { ReactNode } from "react";
 import {
   BoldIcon,
@@ -26,8 +27,8 @@ export function EditorToolbar({ onInsert, disabled, tooltipProps, extraActions }
         className="editor-tool"
         disabled={disabled}
         onClick={() => onInsert("**", "**")}
-        title="Bold"
-        {...tp("Bold (Ctrl+B)")}
+        title={t`Bold`}
+        {...tp(t`Bold (Ctrl+B)`)}
       >
         <BoldIcon className="h-4 w-4" />
       </button>
@@ -36,8 +37,8 @@ export function EditorToolbar({ onInsert, disabled, tooltipProps, extraActions }
         className="editor-tool"
         disabled={disabled}
         onClick={() => onInsert("_", "_")}
-        title="Italic"
-        {...tp("Italic (Ctrl+I)")}
+        title={t`Italic`}
+        {...tp(t`Italic (Ctrl+I)`)}
       >
         <ItalicIcon className="h-4 w-4" />
       </button>
@@ -46,8 +47,8 @@ export function EditorToolbar({ onInsert, disabled, tooltipProps, extraActions }
         className="editor-tool"
         disabled={disabled}
         onClick={() => onInsert("[", "](url)")}
-        title="Link"
-        {...tp("Link (Ctrl+K)")}
+        title={t`Link`}
+        {...tp(t`Link (Ctrl+K)`)}
       >
         <LinkIcon className="h-4 w-4" />
       </button>
@@ -56,8 +57,8 @@ export function EditorToolbar({ onInsert, disabled, tooltipProps, extraActions }
         className="editor-tool"
         disabled={disabled}
         onClick={() => onInsert("`", "`")}
-        title="Inline Code"
-        {...tp("Code")}
+        title={t`Inline Code`}
+        {...tp(t`Code`)}
       >
         <CodeBracketIcon className="h-4 w-4" />
       </button>
@@ -66,8 +67,8 @@ export function EditorToolbar({ onInsert, disabled, tooltipProps, extraActions }
         className="editor-tool"
         disabled={disabled}
         onClick={() => onInsert("\n| Column 1 | Column 2 |\n| --- | --- |\n| cell | cell |\n")}
-        title="Table"
-        {...tp("Table")}
+        title={t`Table`}
+        {...tp(t`Table`)}
       >
         <TableCellsIcon className="h-4 w-4" />
       </button>

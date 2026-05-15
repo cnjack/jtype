@@ -8,6 +8,8 @@ import {
   Dialog,
   DialogPanel,
 } from '@headlessui/react'
+import { t, Trans } from '@lingui/macro'
+import { useLingui } from '@lingui/react'
 import {
   api,
   type DeviceInfo,
@@ -18,16 +20,21 @@ import { useAuth } from './AuthContext'
 import { AdminDialog } from '../pages/Admin'
 import {
   Cog6ToothIcon,
+  GlobeAltIcon,
   ShieldCheckIcon,
   ArrowLeftOnRectangleIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline'
+import { LanguageSwitcherMenuPanel } from '@shared/components/LanguageSwitcher'
+import { activateLocale, type SupportedLocale } from '@shared/i18n'
 
 export function Layout() {
   const { user, loading, logout } = useAuth()
+  const { i18n } = useLingui()
   const navigate = useNavigate()
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [adminOpen, setAdminOpen] = useState(false)
+  const [showLangPanel, setShowLangPanel] = useState(false)
 
   useEffect(() => {
     if (!loading && !user) {
@@ -81,7 +88,7 @@ export function Layout() {
           <MenuButton
             type="button"
             className="flex h-10 w-10 items-center justify-center rounded-full bg-brand text-sm font-semibold text-white shadow-sm shadow-brand/20 transition hover:bg-brand-dark"
-            aria-label="User menu"
+            aria-label={t`User menu`}
           >
             {userInitial}
           </MenuButton>
@@ -97,7 +104,7 @@ export function Layout() {
                 onClick={() => setSettingsOpen(true)}
               >
                 <Cog6ToothIcon className="h-4 w-4" />
-                Settings
+                <Trans>Settings</Trans>
               </button>
             </MenuItem>
             {user?.role === 'admin' && (
@@ -108,14 +115,32 @@ export function Layout() {
                   onClick={() => setAdminOpen(true)}
                 >
                   <ShieldCheckIcon className="h-4 w-4" />
-                  Admin
+                  <Trans>Admin</Trans>
                 </button>
               </MenuItem>
             )}
+            <div className="my-1 h-px bg-black/[0.06]" />
+            <div>
+              <button
+                className="menu-row"
+                type="button"
+                onClick={() => setShowLangPanel((v) => !v)}
+              >
+                <GlobeAltIcon className="h-4 w-4" />
+                <span className="flex-1 text-left">{t`Language`}</span>
+                <span className="text-xs text-stone-400">{showLangPanel ? '▲' : '▼'}</span>
+              </button>
+              {showLangPanel && (
+                <LanguageSwitcherMenuPanel
+                  currentLocale={i18n.locale as SupportedLocale}
+                  onSelect={(locale) => activateLocale(locale)}
+                />
+              )}
+            </div>
             <MenuItem>
               <button className="menu-row text-red-700 hover:text-red-800" type="button" onClick={handleLogout}>
                 <ArrowLeftOnRectangleIcon className="h-4 w-4" />
-                Sign out
+                <Trans>Sign out</Trans>
               </button>
             </MenuItem>
           </MenuItems>
@@ -153,26 +178,26 @@ function UserSettingsDialog({ onClose }: { onClose: () => void }) {
   async function handleProfileSubmit(e: FormEvent) {
     e.preventDefault()
     await api.updateProfile({ displayName: displayName || undefined, email: email || undefined })
-    setMessage('Profile updated')
+    setMessage(t`Profile updated`)
     setTimeout(() => setMessage(''), 2500)
   }
 
   return (
-    <Dialog open onClose={onClose} className="relative z-50" aria-label="Settings">
+    <Dialog open onClose={onClose} className="relative z-50" aria-label={t`Settings`}>
       <div className="fixed inset-0 bg-stone-950/35 backdrop-blur-sm" aria-hidden="true" />
       <div className="fixed inset-0 z-50 flex items-center justify-center px-5 py-6">
         <DialogPanel className="grid h-[min(720px,92vh)] w-full max-w-5xl overflow-hidden rounded-2xl border border-white/70 bg-[#fbfdfb] shadow-2xl shadow-stone-900/25 md:grid-cols-[220px_minmax(0,1fr)]">
         <aside className="border-r border-black/[0.04] bg-[#f7faf8] p-4">
-          <p className="mb-2 text-xs font-semibold uppercase text-stone-500">Account</p>
-          <div className="rounded-lg bg-white px-3 py-2 text-sm font-semibold text-brand shadow-sm shadow-emerald-950/5 ring-1 ring-brand/10">Profile</div>
+          <p className="mb-2 text-xs font-semibold uppercase text-stone-500"><Trans>Account</Trans></p>
+          <div className="rounded-lg bg-white px-3 py-2 text-sm font-semibold text-brand shadow-sm shadow-emerald-950/5 ring-1 ring-brand/10"><Trans>Profile</Trans></div>
         </aside>
         <main className="soft-scrollbar min-h-0 overflow-y-auto p-8">
           <div className="mb-7 flex items-start justify-between gap-4">
             <div>
-              <h2 className="text-3xl font-semibold text-zinc-950">Settings</h2>
-              <p className="mt-1 text-sm text-zinc-500">Manage your JType Cloud account and connected devices.</p>
+              <h2 className="text-3xl font-semibold text-zinc-950"><Trans>Settings</Trans></h2>
+              <p className="mt-1 text-sm text-zinc-500"><Trans>Manage your JType Cloud account and connected devices.</Trans></p>
             </div>
-            <button className="subtle-button aspect-square px-0" type="button" title="Close" onClick={onClose}><XMarkIcon className="h-4 w-4" /></button>
+            <button className="subtle-button aspect-square px-0" type="button" title={t`Close`} onClick={onClose}><XMarkIcon className="h-4 w-4" /></button>
           </div>
 
           {!profile ? (
@@ -181,19 +206,19 @@ function UserSettingsDialog({ onClose }: { onClose: () => void }) {
             <div className="max-w-3xl space-y-8">
               {message && <p className="rounded-lg bg-[#e8f6f2] px-3 py-2 text-sm font-semibold text-brand">{message}</p>}
               <form onSubmit={handleProfileSubmit} className="space-y-4">
-                <SettingsField label="Username" value={profile.username} disabled />
-                <SettingsField label="Display name" value={displayName} onChange={setDisplayName} />
-                <SettingsField label="Email" value={email} onChange={setEmail} type="email" />
-                <button type="submit" className="sidebar-action bg-brand text-white hover:bg-brand-dark hover:text-white">Save profile</button>
+                <SettingsField label={t`Username`} value={profile.username} disabled />
+                <SettingsField label={t`Display name`} value={displayName} onChange={setDisplayName} />
+                <SettingsField label={t`Email`} value={email} onChange={setEmail} type="email" />
+                <button type="submit" className="sidebar-action bg-brand text-white hover:bg-brand-dark hover:text-white"><Trans>Save profile</Trans></button>
               </form>
 
               {storage && (
                 <section>
-                  <h3 className="text-sm font-semibold text-zinc-950">Storage</h3>
+                  <h3 className="text-sm font-semibold text-zinc-950"><Trans>Storage</Trans></h3>
                   <div className="mt-3 rounded-2xl bg-[#f7faf8] p-5 ring-1 ring-black/[0.04]">
                     <div className="mb-2 flex justify-between text-sm text-zinc-500">
-                      <span>{formatBytes(storage.totalUsedBytes)} used</span>
-                      <span>{formatBytes(storage.totalBudgetBytes)} total</span>
+                      <span><Trans>{formatBytes(storage.totalUsedBytes)} used</Trans></span>
+                      <span><Trans>{formatBytes(storage.totalBudgetBytes)} total</Trans></span>
                     </div>
                     <div className="h-2 rounded-full bg-white">
                       <div className="h-2 rounded-full bg-brand" style={{ width: `${Math.min(100, (storage.totalUsedBytes / Math.max(1, storage.totalBudgetBytes)) * 100)}%` }} />
@@ -204,7 +229,7 @@ function UserSettingsDialog({ onClose }: { onClose: () => void }) {
 
               {devices.length > 0 && (
                 <section>
-                  <h3 className="text-sm font-semibold text-zinc-950">Connected devices</h3>
+                  <h3 className="text-sm font-semibold text-zinc-950"><Trans>Connected devices</Trans></h3>
                   <div className="mt-3 space-y-2">
                     {devices.map(device => (
                       <div key={device.deviceId} className="flex items-center justify-between rounded-xl bg-white/80 px-4 py-3 text-sm ring-1 ring-black/[0.04]">
@@ -257,14 +282,14 @@ function formatBytes(bytes: number): string {
 
 function formatDeviceUpdatedAt(value: string): string {
   const trimmed = value?.trim()
-  if (!trimmed) return 'Last seen recently'
+  if (!trimmed) return t`Last seen recently`
 
   const normalized = trimmed.includes('T')
     ? trimmed
     : trimmed.replace(' ', 'T')
   const date = new Date(normalized)
 
-  if (Number.isNaN(date.getTime())) return 'Last seen recently'
+  if (Number.isNaN(date.getTime())) return t`Last seen recently`
 
   return date.toLocaleDateString(undefined, {
     month: 'short',

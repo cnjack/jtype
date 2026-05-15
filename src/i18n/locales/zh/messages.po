@@ -1,0 +1,934 @@
+msgid ""
+msgstr ""
+"POT-Creation-Date: 2026-05-14\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: @lingui/cli\n"
+"Language: zh\n"
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Plural-Forms: \n"
+
+#. placeholder {0}: documents.length
+#: src/components/layout/VaultHome.tsx
+msgid "{0, plural, one {# Markdown file} other {# Markdown files}}"
+msgstr "{0,plural,other{# 个 Markdown 文件}}"
+
+#. placeholder {0}: isPublished ? (hasUnpublishedChanges ? "Changed" : "Published") : "Not published"
+#: src/components/editor/EditorShell.tsx
+msgid "{0}"
+msgstr "{0}"
+
+#. placeholder {0}: state.activeConflicts.length
+#. placeholder {1}: state.activeConflicts.length > 1 ? "s" : ""
+#: src/components/editor/EditorShell.tsx
+msgid "{0} conflict{1}"
+msgstr "{0} 个冲突{1}"
+
+#. placeholder {0}: state.activeConflicts.length
+#. placeholder {1}: state.activeConflicts.length > 1 ? "s" : ""
+#: src/components/editor/EditorShell.tsx
+msgid "{0} conflict{1} to resolve"
+msgstr "{0} 个冲突{1}待解决"
+
+#. placeholder {0}: ws.documentCount ?? 0
+#. placeholder {1}: formatBytes(ws.storageBudgetBytes)
+#: src/components/modals/AccountDialog.tsx
+msgid "{0} documents - {1} budget"
+msgstr "{0} 个文档 - {1} 预算"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "{docCount} documents"
+msgstr "{docCount} 个文档"
+
+#: src/components/modals/MoveFolderDialog.tsx
+msgid "/ (root)"
+msgstr "/ （根目录）"
+
+#. placeholder {0}: summary.totalSubfolders
+#. placeholder {1}: summary.totalSubfolders !== 1 ? "s" : ""
+#: src/components/modals/DeleteFolderDialog.tsx
+msgid "📁 {0} subfolder{1}"
+msgstr "📁 {0} 个子文件夹{1}"
+
+#. placeholder {0}: summary.totalDocuments
+#. placeholder {1}: summary.totalDocuments !== 1 ? "s" : ""
+#: src/components/modals/DeleteFolderDialog.tsx
+msgid "📄 {0} document{1}"
+msgstr "📄 {0} 个文档{1}"
+
+#: src/components/layout/WelcomeScreen.tsx
+msgid "A vault is a local folder for notes, sync, and publishing. A single file opens JType as a focused Markdown editor."
+msgstr "库是用于笔记、同步和发布的本地文件夹。单个文件会以专注的 Markdown 编辑器模式打开 JType。"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Account"
+msgstr "账户"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Account service URL"
+msgstr "账户服务 URL"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Add table column right"
+msgstr "在右侧添加列"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Add table row below"
+msgstr "在下方添加行"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Add to favorites"
+msgstr "添加到收藏"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Added to favorites."
+msgstr "已添加到收藏。"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Advanced"
+msgstr "高级"
+
+#: src/components/layout/Header.tsx
+msgid "Back to home"
+msgstr "返回主页"
+
+#: src/components/modals/SyncPromptDialog.tsx
+msgid "Back up this local vault to a cloud workspace, keep devices in sync, and open the same notes from the web."
+msgstr "将此本地库备份到云工作区，保持设备同步，并可在网页端访问相同的笔记。"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Bind the current local vault to one cloud workspace."
+msgstr "将当前本地库绑定到一个云工作区。"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Bold"
+msgstr "粗体"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Bold - Ctrl+B"
+msgstr "粗体 - Ctrl+B"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Bound"
+msgstr "已绑定"
+
+#. placeholder {0}: activeVaultBinding.workspaceName
+#: src/components/modals/AccountDialog.tsx
+msgid "Bound to {0}. Sync will push and pull this vault."
+msgstr "已绑定到 {0}。同步将推送和拉取此库。"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Browser authorization is open. Sync will continue after sign-in completes."
+msgstr "浏览器授权页面已打开。登录完成后同步将继续。"
+
+#: src/components/modals/SyncPromptDialog.tsx
+msgid "Browser authorization is open. This sync will continue after sign-in completes."
+msgstr "浏览器授权页面已打开。登录完成后同步将继续。"
+
+#: src/components/modals/CreateFolderDialog.tsx
+#: src/components/modals/CreateNoteDialog.tsx
+#: src/components/modals/DeleteFolderDialog.tsx
+#: src/components/modals/MoveFolderDialog.tsx
+msgid "Cancel"
+msgstr "取消"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Cannot move folder into itself."
+msgstr "无法将文件夹移动到自身内。"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Choose a local folder"
+msgstr "选择本地文件夹"
+
+#. placeholder {0}: state.workspace?.rootPath
+#: src/components/layout/VaultHome.tsx
+msgid "Choose a note or create a new one. This vault lives at <0>{0}</0>."
+msgstr "选择一篇笔记或新建。此库位于 <0>{0}</0>。"
+
+#: src/components/modals/AccountDialog.tsx
+#: src/components/modals/ConflictDialog.tsx
+msgid "Close"
+msgstr "关闭"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Close account dialog"
+msgstr "关闭账户对话框"
+
+#: src/components/modals/ConflictDialog.tsx
+msgid "Close conflicts dialog"
+msgstr "关闭冲突对话框"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Close vault"
+msgstr "关闭库"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Cloud document not found."
+msgstr "未找到云端文档。"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Cloud sync"
+msgstr "云同步"
+
+#: src/components/modals/SyncPromptDialog.tsx
+msgid "Cloud sync reminder snoozed."
+msgstr "云同步提醒已推迟。"
+
+#: src/components/layout/Header.tsx
+#: src/components/modals/AccountDialog.tsx
+msgid "Cloud workspace"
+msgstr "云工作区"
+
+#. placeholder {0}: currentBinding?.workspaceName
+#: src/components/layout/Header.tsx
+msgid "Cloud workspace: {0}"
+msgstr "云工作区：{0}"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Cloud workspaces"
+msgstr "云工作区"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Collapse all"
+msgstr "全部折叠"
+
+#: src/components/modals/CommandPalette.tsx
+msgid "Command palette"
+msgstr "命令面板"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Connect desktop sync through the browser and choose the service endpoint."
+msgstr "通过浏览器连接桌面同步并选择服务端点。"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Connect in browser"
+msgstr "在浏览器中连接"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Connect in the browser. Desktop never asks for your password."
+msgstr "在浏览器中连接。桌面端不会要求输入密码。"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Connect this vault to a cloud workspace before publishing."
+msgstr "发布前请先将此库连接到云工作区。"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Connect to load workspaces."
+msgstr "连接以加载工作区。"
+
+#. placeholder {0}: state.syncUsername || t`your account`
+#: src/components/modals/AccountDialog.tsx
+msgid "Connected as {0}. Sync vaults with cloud workspaces."
+msgstr "已以 {0} 身份连接。将库与云工作区同步。"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Copy path"
+msgstr "复制路径"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Could not prepare PDF export."
+msgstr "无法准备 PDF 导出。"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Could not prepare PDF page."
+msgstr "无法准备 PDF 页面。"
+
+#: src/components/modals/CreateFolderDialog.tsx
+#: src/components/modals/CreateNoteDialog.tsx
+msgid "Create"
+msgstr "创建"
+
+#: src/components/modals/QuickSwitcher.tsx
+msgid "Create \"{query}.md\""
+msgstr "新建 \"{query}.md\""
+
+#: src/components/layout/WelcomeScreen.tsx
+msgid "Create a vault or edit one Markdown file."
+msgstr "创建一个库或编辑一个 Markdown 文件。"
+
+#: src/components/layout/VaultHome.tsx
+msgid "Create your first Markdown note or drop files into this vault."
+msgstr "创建第一篇 Markdown 笔记，或将文件拖入此库。"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Create your first Markdown note."
+msgstr "创建第一篇 Markdown 笔记。"
+
+#. placeholder {0}: name.trim()
+#: src/components/sidebar/Sidebar.tsx
+msgid "Created folder {0}."
+msgstr "已创建文件夹 {0}。"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Current vault"
+msgstr "当前库"
+
+#: src/components/layout/WelcomeScreen.tsx
+msgid "Default vault path: <0>{defaultVaultPath}</0>"
+msgstr "默认库路径：<0>{defaultVaultPath}</0>"
+
+#: src/components/modals/DeleteFolderDialog.tsx
+msgid "Delete"
+msgstr "删除"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Delete folder"
+msgstr "删除文件夹"
+
+#: src/components/modals/DeleteFolderDialog.tsx
+msgid "Delete Folder"
+msgstr "删除文件夹"
+
+#: src/components/modals/DeleteFolderDialog.tsx
+msgid "Delete folder and contents (move to trash)"
+msgstr "删除文件夹及内容（移入回收站）"
+
+#: src/components/modals/DeleteFolderDialog.tsx
+msgid "Delete folder only (keep documents in parent)"
+msgstr "仅删除文件夹（保留文档到上级目录）"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Deleted"
+msgstr "已删除"
+
+#: src/components/modals/MoveFolderDialog.tsx
+msgid "Destination: <0>{destPath}</0>"
+msgstr "目标位置：<0>{destPath}</0>"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Disconnect"
+msgstr "断开连接"
+
+#. placeholder {0}: currentVaultBinding.workspaceName
+#: src/components/modals/AccountDialog.tsx
+msgid ""
+"Disconnect \"{0}\" from this vault?\n"
+"\n"
+"Local files will stay on disk. Cloud data and workspace membership are not changed."
+msgstr "将\"{0}\"从此库断开连接？\n\n本地文件将保留在磁盘上。云端数据和工作区成员资格不会改变。"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Disconnect cloud sync"
+msgstr "断开云同步"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Disconnect workspace"
+msgstr "断开工作区"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Document info"
+msgstr "文档信息"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Document Info"
+msgstr "文档信息"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Document published."
+msgstr "文档已发布。"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Document unpublished."
+msgstr "文档已取消发布。"
+
+#: src/components/layout/VaultHome.tsx
+msgid "Documents"
+msgstr "文档"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Drop a folder here to open it as a vault."
+msgstr "将文件夹拖到此处以作为库打开。"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Edits are written back to YAML frontmatter."
+msgstr "编辑内容将写回 YAML frontmatter。"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Empty trash"
+msgstr "清空回收站"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Enable cloud sync"
+msgstr "启用云同步"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Enable cloud sync for this vault first"
+msgstr "请先为此库启用云同步"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Expand all"
+msgstr "全部展开"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Export"
+msgstr "导出"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Exported PDF to {outputPath}."
+msgstr "PDF 已导出到 {outputPath}。"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Exporting PDF..."
+msgstr "正在导出 PDF…"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Favorite"
+msgstr "收藏"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Favorites"
+msgstr "收藏"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Focus mode"
+msgstr "专注模式"
+
+#: src/components/modals/DeleteFolderDialog.tsx
+msgid "Folder <0>\"{folderName}\"</0>"
+msgstr "文件夹 <0>\"{folderName}\"</0>"
+
+#: src/components/modals/CreateFolderDialog.tsx
+msgid "Folder name"
+msgstr "文件夹名称"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Format table"
+msgstr "格式化表格"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "General"
+msgstr "通用"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Hide"
+msgstr "隐藏"
+
+#: src/components/modals/CreateFolderDialog.tsx
+msgid "in {parentPath}/"
+msgstr "位于 {parentPath}/"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Inline code"
+msgstr "行内代码"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Insert formula"
+msgstr "插入公式"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Insert formula block"
+msgstr "插入公式块"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Insert link"
+msgstr "插入链接"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Insert Mermaid diagram"
+msgstr "插入 Mermaid 图表"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Insert or edit table - Ctrl+Shift+T"
+msgstr "插入或编辑表格 - Ctrl+Shift+T"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Insert or format table"
+msgstr "插入或格式化表格"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Italic - Ctrl+I"
+msgstr "斜体 - Ctrl+I"
+
+#: src/components/layout/Header.tsx
+msgid "Language"
+msgstr "语言"
+
+#: src/components/modals/SyncPromptDialog.tsx
+msgid "Later"
+msgstr "稍后"
+
+#. placeholder {0}: l.line + 1
+#: src/components/editor/EditorShell.tsx
+msgid "line {0}"
+msgstr "第 {0} 行"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Link - Ctrl+K"
+msgstr "链接 - Ctrl+K"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Local mode"
+msgstr "本地模式"
+
+#: src/components/modals/SyncPromptDialog.tsx
+msgid "Local only"
+msgstr "仅本地"
+
+#: src/components/layout/Header.tsx
+msgid "Local vault mode"
+msgstr "本地库模式"
+
+#: src/components/layout/Header.tsx
+msgid "Log out"
+msgstr "退出登录"
+
+#: src/components/editor/EditorShell.tsx
+#: src/components/layout/VaultHome.tsx
+msgid "Markdown"
+msgstr "Markdown"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Markdown editor"
+msgstr "Markdown 编辑器"
+
+#: src/components/layout/Header.tsx
+#: src/components/layout/VaultHome.tsx
+#: src/components/layout/WelcomeScreen.tsx
+msgid "Markdown file"
+msgstr "Markdown 文件"
+
+#: src/components/modals/MoveFolderDialog.tsx
+msgid "Move"
+msgstr "移动"
+
+#: src/components/modals/MoveFolderDialog.tsx
+msgid "Move to Folder"
+msgstr "移动到文件夹"
+
+#: src/components/editor/EditorShell.tsx
+#: src/components/sidebar/Sidebar.tsx
+msgid "Move to trash"
+msgstr "移入回收站"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Move to..."
+msgstr "移动到…"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "New document"
+msgstr "新建文档"
+
+#: src/components/layout/VaultHome.tsx
+#: src/components/modals/CreateNoteDialog.tsx
+#: src/components/sidebar/Sidebar.tsx
+msgid "New Document"
+msgstr "新建文档"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "New document name (e.g. note.md):"
+msgstr "新文档名称（如 note.md）："
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "New folder"
+msgstr "新建文件夹"
+
+#: src/components/modals/CreateFolderDialog.tsx
+msgid "New Folder"
+msgstr "新建文件夹"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "New folder name:"
+msgstr "新文件夹名称："
+
+#: src/components/modals/AccountDialog.tsx
+msgid "No cloud workspaces yet. Sync this vault to create one."
+msgstr "暂无云工作区。同步此库以创建一个。"
+
+#: src/components/modals/CommandPalette.tsx
+msgid "No commands found."
+msgstr "未找到命令。"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "No deleted notes."
+msgstr "没有已删除的笔记。"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "No documents yet."
+msgstr "暂无文档。"
+
+#: src/components/editor/EditorShell.tsx
+msgid "No file selected"
+msgstr "未选择文件"
+
+#: src/components/editor/EditorShell.tsx
+msgid "No headings found."
+msgstr "未找到标题。"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "No matches."
+msgstr "无匹配结果。"
+
+#: src/components/layout/VaultHome.tsx
+msgid "No notes yet."
+msgstr "暂无笔记。"
+
+#: src/components/editor/EditorShell.tsx
+msgid "No outgoing links."
+msgstr "无出站链接。"
+
+#: src/components/layout/WelcomeScreen.tsx
+msgid "No recent vaults or Markdown files yet."
+msgstr "暂无最近的库或 Markdown 文件。"
+
+#: src/components/editor/EditorShell.tsx
+msgid "No unsaved changes"
+msgstr "无未保存的更改"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "No vault"
+msgstr "无库"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Not bound to a cloud workspace yet. Binding starts bidirectional sync for this vault."
+msgstr "尚未绑定到云工作区。绑定后将开始此库的双向同步。"
+
+#: src/components/modals/CreateNoteDialog.tsx
+msgid "Note name..."
+msgstr "笔记名称…"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Only web, email, and phone links can be opened from preview."
+msgstr "预览中只能打开网页、邮件和电话链接。"
+
+#: src/components/modals/QuickSwitcher.tsx
+#: src/components/sidebar/Sidebar.tsx
+msgid "Open"
+msgstr "打开"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Open a Markdown file to edit frontmatter properties."
+msgstr "打开 Markdown 文件以编辑 frontmatter 属性。"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Open a Markdown file to inspect links."
+msgstr "打开 Markdown 文件以查看链接。"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Open a Markdown file to see its outline."
+msgstr "打开 Markdown 文件以查看大纲。"
+
+#: src/components/layout/VaultHome.tsx
+msgid "Open a note and it will appear here."
+msgstr "打开一篇笔记，它将显示在这里。"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Open a vault or Markdown file."
+msgstr "打开一个库或 Markdown 文件。"
+
+#: src/components/modals/QuickSwitcher.tsx
+msgid "Open a vault to quick switch files."
+msgstr "打开一个库以快速切换文件。"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Open another vault"
+msgstr "打开其他库"
+
+#: src/components/layout/Header.tsx
+msgid "Open file"
+msgstr "打开文件"
+
+#: src/components/layout/WelcomeScreen.tsx
+msgid "Open Markdown file"
+msgstr "打开 Markdown 文件"
+
+#: src/components/modals/QuickSwitcher.tsx
+msgid "Open or create Document"
+msgstr "打开或新建文档"
+
+#: src/components/modals/QuickSwitcher.tsx
+msgid "Open or create Document..."
+msgstr "打开或新建文档…"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Open or drop a Markdown file to start editing."
+msgstr "打开或拖入 Markdown 文件以开始编辑。"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Open site: {displaySiteUrl}"
+msgstr "打开站点：{displaySiteUrl}"
+
+#: src/components/layout/WelcomeScreen.tsx
+msgid "Open vault"
+msgstr "打开库"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Outgoing links"
+msgstr "出站链接"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Path copied to clipboard."
+msgstr "路径已复制到剪贴板。"
+
+#: src/components/editor/EditorShell.tsx
+msgid "PDF"
+msgstr "PDF"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Permanent delete queued. Will sync on next push."
+msgstr "永久删除已排队。下次推送时同步。"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Permanently delete"
+msgstr "永久删除"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Preparing PDF export..."
+msgstr "正在准备 PDF 导出…"
+
+#: src/components/layout/Header.tsx
+#: src/components/modals/AccountDialog.tsx
+msgid "Profile"
+msgstr "个人资料"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Properties"
+msgstr "属性"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Properties, outline, links, and publish."
+msgstr "属性、大纲、链接和发布。"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Public URL"
+msgstr "公开链接"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Publish"
+msgstr "发布"
+
+#. placeholder {0}: new Date(publishState.publishedAt).toLocaleString()
+#: src/components/editor/EditorShell.tsx
+msgid "Published {0}"
+msgstr "发布于 {0}"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Publishing uses a cloud snapshot; frontmatter status is treated as user metadata."
+msgstr "发布使用云端快照；frontmatter 状态被视为用户元数据。"
+
+#: src/components/layout/Header.tsx
+#: src/components/layout/VaultHome.tsx
+msgid "Quick open"
+msgstr "快速打开"
+
+#: src/components/modals/QuickSwitcher.tsx
+msgid "Quick switcher"
+msgstr "快速切换"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Read-only"
+msgstr "只读"
+
+#: src/components/layout/VaultHome.tsx
+#: src/components/layout/WelcomeScreen.tsx
+msgid "Recent"
+msgstr "最近"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Remove from favorites"
+msgstr "取消收藏"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Remove this document from the public site?"
+msgstr "从公开站点移除此文档？"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Removed from favorites."
+msgstr "已从收藏中移除。"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Rename"
+msgstr "重命名"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Rename folder to:"
+msgstr "重命名文件夹为："
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Rename to:"
+msgstr "重命名为："
+
+#: src/components/editor/EditorShell.tsx
+msgid "Republish"
+msgstr "重新发布"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Restore"
+msgstr "恢复"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Restore queued. Will sync on next push."
+msgstr "恢复已排队。下次推送时同步。"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Save"
+msgstr "保存"
+
+#: src/components/modals/CommandPalette.tsx
+msgid "Search commands"
+msgstr "搜索命令"
+
+#: src/components/modals/CommandPalette.tsx
+msgid "Search commands..."
+msgstr "搜索命令…"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Search files..."
+msgstr "搜索文件…"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Select a Markdown file"
+msgstr "选择 Markdown 文件"
+
+#: src/components/modals/MoveFolderDialog.tsx
+msgid "Select destination for \"{sourceName}\""
+msgstr "为\"{sourceName}\"选择目标位置"
+
+#: src/components/modals/AccountDialog.tsx
+#: src/components/sidebar/Sidebar.tsx
+msgid "Settings"
+msgstr "设置"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Show in Explorer"
+msgstr "在资源管理器中显示"
+
+#: src/components/layout/Header.tsx
+msgid "Sign in"
+msgstr "登录"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Start cloud sync"
+msgstr "开始云同步"
+
+#: src/components/modals/AccountDialog.tsx
+#: src/components/modals/SyncPromptDialog.tsx
+msgid "Start sync"
+msgstr "开始同步"
+
+#: src/components/modals/SyncPromptDialog.tsx
+msgid "Sync \"{vaultName}\" to cloud?"
+msgstr "将\"{vaultName}\"同步到云端？"
+
+#. placeholder {0}: state.activeConflicts.length
+#: src/components/modals/ConflictDialog.tsx
+msgid "Sync Conflicts ({0})"
+msgstr "同步冲突（{0}）"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Sync current vault"
+msgstr "同步当前库"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Sync now"
+msgstr "立即同步"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Sync this document before publishing."
+msgstr "发布前请先同步此文档。"
+
+#. placeholder {0}: activeCloudBinding.workspaceName
+#: src/components/sidebar/Sidebar.tsx
+msgid "Syncing with {0}."
+msgstr "正在与 {0} 同步。"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Task list"
+msgstr "任务列表"
+
+#: src/components/editor/EditorShell.tsx
+msgid "The public snapshot is behind the current document."
+msgstr "公开快照落后于当前文档。"
+
+#: src/components/modals/DeleteFolderDialog.tsx
+msgid "This folder is empty."
+msgstr "此文件夹为空。"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "This vault is local-only. You can keep working without cloud sync or enable it below."
+msgstr "此库仅在本地。您可以在不使用云同步的情况下继续工作，或在下方启用云同步。"
+
+#: src/components/modals/SyncPromptDialog.tsx
+msgid "This vault is now local-only."
+msgstr "此库现在仅在本地。"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Toggle favorite"
+msgstr "切换收藏"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Trash"
+msgstr "回收站"
+
+#: src/components/modals/CommandPalette.tsx
+msgid "Unavailable"
+msgstr "不可用"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Unpublish"
+msgstr "取消发布"
+
+#: src/components/layout/Header.tsx
+msgid "Unsaved"
+msgstr "未保存"
+
+#: src/components/editor/EditorShell.tsx
+#: src/components/modals/AccountDialog.tsx
+msgid "Unsaved changes"
+msgstr "有未保存的更改"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Untitled workspace"
+msgstr "未命名工作区"
+
+#: src/components/layout/WelcomeScreen.tsx
+msgid "Use default vault"
+msgstr "使用默认库"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Use the print dialog to save as PDF."
+msgstr "使用打印对话框另存为 PDF。"
+
+#: src/components/layout/WelcomeScreen.tsx
+msgid "Vault"
+msgstr "库"
+
+#: src/components/layout/VaultHome.tsx
+msgid "Vault ready"
+msgstr "库已就绪"
+
+#: src/components/editor/EditorShell.tsx
+msgid "View published page"
+msgstr "查看已发布页面"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Viewer access is read-only."
+msgstr "查看者权限为只读。"
+
+#. placeholder {0}: state.oauthUserCode
+#: src/components/modals/AccountDialog.tsx
+msgid "Waiting for browser authorization (code {0})..."
+msgstr "等待浏览器授权（代码 {0}）…"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Workspace files"
+msgstr "工作区文件"
+
+#: src/components/modals/AccountDialog.tsx
+msgid ""
+"You have unsaved changes. Switching cloud workspace before saving may cause conflicts.\n"
+"\n"
+"Continue anyway?"
+msgstr "您有未保存的更改。在保存前切换云工作区可能导致冲突。\n\n仍要继续吗？"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "your account"
+msgstr "您的账户"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Your rendered document will appear here."
+msgstr "渲染后的文档将显示在此处。"

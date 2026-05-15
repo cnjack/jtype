@@ -49,6 +49,7 @@ import {
   ArrowPathIcon,
   Cog6ToothIcon,
 } from '@heroicons/react/24/outline'
+import { t, Trans } from '@lingui/macro'
 
 type WorkspaceSection = 'documents' | 'trash' | 'publishing' | 'domains'
 type WorkspaceSettingsSection = 'general' | 'trash' | 'domains' | 'members'
@@ -249,7 +250,7 @@ export function Workspace() {
           if (selectedDoc) {
             const curDoc = documents.find(d => d.id === selectedDoc)
             if (curDoc && event.relativePath === curDoc.relativePath) {
-              setStatusMessage('This document was deleted by another user.')
+              setStatusMessage(t`This document was deleted by another user.`)
               setTimeout(() => setStatusMessage(''), 4000)
               setSelectedDoc(null)
               setDocContent('')
@@ -331,7 +332,7 @@ export function Workspace() {
   async function saveDocument() {
     if (!workspaceId || !selectedDoc) return
     if (!canEditContent) {
-      setStatusMessage('Viewer access is read-only.')
+      setStatusMessage(t`Viewer access is read-only.`)
       setTimeout(() => setStatusMessage(''), 3000)
       return
     }
@@ -356,7 +357,7 @@ export function Workspace() {
       } catch { /* fall through to offline */ }
       await saveOffline(doc.relativePath, docContent, loadedContentHash || '', loadedContent || '')
       setDirty(false)
-      setStatusMessage('Saved offline. Will sync when reconnected.')
+      setStatusMessage(t`Saved offline. Will sync when reconnected.`)
       setTimeout(() => setStatusMessage(''), 3000)
     } finally {
       setSaving(false)
@@ -366,11 +367,11 @@ export function Workspace() {
   async function createDocument() {
     if (!workspaceId) return
     if (!canEditContent) {
-      setStatusMessage('Viewer access is read-only.')
+      setStatusMessage(t`Viewer access is read-only.`)
       setTimeout(() => setStatusMessage(''), 3000)
       return
     }
-    const path = await prompt('Document path (e.g. notes/hello.md):')
+    const path = await prompt(t`Document path (e.g. notes/hello.md):`)
     if (!path?.trim()) return
     await api.saveDocument(workspaceId, { relativePath: path.trim(), content: '' })
     const docs = await api.listDocuments(workspaceId)
@@ -399,7 +400,7 @@ export function Workspace() {
   async function saveWorkspaceSettings() {
     if (!workspaceId) return
     if (!canManageWorkspace) {
-      setSettingsMessage('Only owners and admins can change workspace settings')
+      setSettingsMessage(t`Only owners and admins can change workspace settings`)
       setTimeout(() => setSettingsMessage(''), 2500)
       return
     }
@@ -412,7 +413,7 @@ export function Workspace() {
       setWorkspace(updated)
       setWorkspaceName(updated.name)
       setPublishTitle(updated.publishTitle || updated.name)
-      setSettingsMessage('Publishing details saved')
+      setSettingsMessage(t`Publishing details saved`)
       setTimeout(() => setSettingsMessage(''), 2500)
     } finally {
       setSaving(false)
@@ -449,7 +450,7 @@ export function Workspace() {
     await api.uploadCertificate(certDomainId, certChainPem, privateKeyPem)
     setCertChainPem('')
     setPrivateKeyPem('')
-    setDomainMessage('SSL certificate uploaded')
+    setDomainMessage(t`SSL certificate uploaded`)
     setTimeout(() => setDomainMessage(''), 2500)
     await reloadDomains()
   }
@@ -469,7 +470,7 @@ export function Workspace() {
   async function publishDocumentsByIds(docIds: string[]) {
     if (!workspaceId || docIds.length === 0) return
     if (!canEditContent) {
-      setStatusMessage('Viewer access is read-only.')
+      setStatusMessage(t`Viewer access is read-only.`)
       setTimeout(() => setStatusMessage(''), 3000)
       return
     }
@@ -484,7 +485,7 @@ export function Workspace() {
       }
       if (selectedDoc && uniqueIds.includes(selectedDoc)) await refreshPublishState(selectedDoc, selectedResult)
       setDocuments(await api.listDocuments(workspaceId))
-      setStatusMessage(uniqueIds.length === 1 ? 'Document published.' : `${uniqueIds.length} documents published.`)
+      setStatusMessage(uniqueIds.length === 1 ? t`Document published.` : t`${uniqueIds.length} documents published.`)
       setTimeout(() => setStatusMessage(''), 3000)
     } finally {
       setSaving(false)
@@ -497,9 +498,9 @@ export function Workspace() {
     const uniqueIds = Array.from(new Set(docIds))
     const doc = uniqueIds.length === 1 ? documents.find(d => d.id === uniqueIds[0]) : null
     const message = doc
-      ? `Remove "${doc.relativePath}" from the public site?`
-      : `Remove ${uniqueIds.length} documents from the public site?`
-    const confirmed = await confirm(message, { title: uniqueIds.length === 1 ? 'Unpublish document' : 'Unpublish documents', destructive: true })
+      ? t`Remove "${doc.relativePath}" from the public site?`
+      : t`Remove ${uniqueIds.length} documents from the public site?`
+    const confirmed = await confirm(message, { title: uniqueIds.length === 1 ? t`Unpublish document` : t`Unpublish documents`, destructive: true })
     if (!confirmed) return
     setSaving(true)
     try {
@@ -508,7 +509,7 @@ export function Workspace() {
       }
       if (selectedDoc && uniqueIds.includes(selectedDoc)) await refreshPublishState(selectedDoc)
       setDocuments(await api.listDocuments(workspaceId))
-      setStatusMessage(uniqueIds.length === 1 ? 'Document unpublished.' : `${uniqueIds.length} documents unpublished.`)
+      setStatusMessage(uniqueIds.length === 1 ? t`Document unpublished.` : t`${uniqueIds.length} documents unpublished.`)
       setTimeout(() => setStatusMessage(''), 3000)
     } finally {
       setSaving(false)
@@ -528,7 +529,7 @@ export function Workspace() {
   async function deleteDocument(docId: string) {
     if (!workspaceId) return
     if (!canEditContent) {
-      setStatusMessage('Viewer access is read-only.')
+      setStatusMessage(t`Viewer access is read-only.`)
       setTimeout(() => setStatusMessage(''), 3000)
       return
     }
@@ -704,12 +705,12 @@ export function Workspace() {
                   <button
                     className="sidebar-action flex-1"
                     type="button"
-                    title="New Document"
+                    title={t`New Document`}
                     disabled={!workspace || !canEditContent}
                     onClick={createDocument}
                   >
                     <DocumentPlusIcon className="h-4 w-4" />
-                    <span className="ml-1.5">New Document</span>
+                    <span className="ml-1.5"><Trans>New Document</Trans></span>
                   </button>
                 </div>
               </div>
@@ -767,9 +768,9 @@ export function Workspace() {
                       <button
                         type="button"
                         className={`editor-tool h-8 w-8 px-0 ${isFavorite ? "text-amber-500 hover:text-amber-600" : ""}`}
-                        aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+                        aria-label={isFavorite ? t`Remove from favorites` : t`Add to favorites`}
                         aria-pressed={isFavorite}
-                        title={isFavorite ? "Remove from favorites" : "Add to favorites"}
+                        title={isFavorite ? t`Remove from favorites` : t`Add to favorites`}
                         onClick={toggleFavorite}
                       >
                         <StarIcon className="h-4 w-4" fill={isFavorite ? "currentColor" : "none"} />
@@ -779,8 +780,8 @@ export function Workspace() {
                       <button
                         type="button"
                         className="editor-tool h-8 w-8 px-0 hover:text-red-700"
-                        aria-label="Move to trash"
-                        title="Move to trash"
+                        aria-label={t`Move to trash`}
+                        title={t`Move to trash`}
                         onClick={() => { if (selectedDoc) { void deleteDocument(selectedDoc); setSelectedDoc(null) } }}
                       >
                         <TrashIcon className="h-4 w-4" />
@@ -789,7 +790,7 @@ export function Workspace() {
                   </div>
                 </div>
                 <div className="header-action-group">
-                  {!dirty || <span className="status-chip status-chip-warning">Unsaved</span>}
+                  {!dirty || <span className="status-chip status-chip-warning"><Trans>Unsaved</Trans></span>}
                   {selectedDoc && canEditContent && (!isPublished || hasUnpublishedChanges) && (
                     <span className="header-tooltip header-tooltip-end group">
                       <button
@@ -799,9 +800,9 @@ export function Workspace() {
                             : 'header-icon-button-primary'
                         }`}
                         type="button"
-                        aria-label={hasUnpublishedChanges ? 'Republish' : 'Publish'}
+                        aria-label={hasUnpublishedChanges ? t`Republish` : t`Publish`}
                         aria-disabled={saving}
-                        {...tooltipProps(hasUnpublishedChanges ? 'Republish' : 'Publish')}
+                        {...tooltipProps(hasUnpublishedChanges ? t`Republish` : t`Publish`)}
                         onClick={() => {
                           if (saving) return
                           void publishSelectedDocument()
@@ -815,9 +816,9 @@ export function Workspace() {
                     <button
                       className="header-icon-button header-icon-button-danger"
                       type="button"
-                      aria-label="Unpublish"
+                      aria-label={t`Unpublish`}
                       aria-disabled={saving}
-                      {...tooltipProps('Unpublish')}
+                      {...tooltipProps(t`Unpublish`)}
                       onClick={() => {
                         if (saving) return
                         void unpublishSelectedDocument()
@@ -826,15 +827,15 @@ export function Workspace() {
                       <LinkSlashIcon className="h-4 w-4" />
                     </button>
                   )}
-                  {!canEditContent && <span className="status-chip status-chip-neutral">Read-only</span>}
+                  {!canEditContent && <span className="status-chip status-chip-neutral"><Trans>Read-only</Trans></span>}
                   {selectedDoc && (
                     <span className="header-tooltip header-tooltip-end group">
                       <button
                         className={`header-icon-button ${dirty ? 'header-icon-button-primary' : ''}`}
                         type="button"
-                        aria-label={dirty ? 'Save' : 'No unsaved changes'}
+                        aria-label={dirty ? t`Save` : t`No unsaved changes`}
                         aria-disabled={!dirty || !canEditContent}
-                        {...tooltipProps(dirty ? 'Save' : 'No unsaved changes')}
+                        {...tooltipProps(dirty ? t`Save` : t`No unsaved changes`)}
                         onClick={() => {
                           if (!dirty || !canEditContent) return
                           void saveDocument()
@@ -849,7 +850,7 @@ export function Workspace() {
               {workspaceId && canEditContent && <ConflictResolver workspaceId={workspaceId} onResolved={reloadDocumentsAndTrash} />}
               {staleWarning && (
                 <div className="bg-yellow-50 border-b border-yellow-200 px-4 py-2 flex items-center justify-between text-sm">
-                  <span>&#x26A0; Modified by {staleWarning.editedBy}{staleWarning.wasDirty ? '. You have unsaved changes.' : ''}</span>
+                  <span><Trans>&#x26A0; Modified by {staleWarning.editedBy}{staleWarning.wasDirty ? '. You have unsaved changes.' : ''}</Trans></span>
                   <div className="flex gap-2">
                     <button onClick={async () => {
                       if (!workspaceId || !selectedDocument) return
@@ -859,42 +860,42 @@ export function Workspace() {
                       setLoadedContent(doc.content)
                       setDirty(false)
                       setStaleWarning(null)
-                    }} className="text-red-600 hover:underline">Reload{staleWarning.wasDirty ? ' (discard)' : ''}</button>
-                    {staleWarning.wasDirty && canEditContent && <button onClick={() => { saveDocument(); setStaleWarning(null) }} className="text-blue-600 hover:underline">Save mine</button>}
+                    }} className="text-red-600 hover:underline"><Trans>Reload{staleWarning.wasDirty ? ' (discard)' : ''}</Trans></button>
+                    {staleWarning.wasDirty && canEditContent && <button onClick={() => { saveDocument(); setStaleWarning(null) }} className="text-blue-600 hover:underline"><Trans>Save mine</Trans></button>}
                   </div>
                 </div>
               )}
               <div className="flex min-h-12 items-center gap-1 border-b border-black/[0.04] bg-[#fbfdfb] px-5">
-                <EditorToolbarButton title="Bold (Ctrl+B)" disabled={!canEditContent} tooltipProps={tooltipProps('Bold (Ctrl+B)')} onClick={() => wrapSelection('**', '**', 'bold text')}>
+                <EditorToolbarButton title={t`Bold (Ctrl+B)`} disabled={!canEditContent} tooltipProps={tooltipProps(t`Bold (Ctrl+B)`)} onClick={() => wrapSelection('**', '**', 'bold text')}>
                   <BoldIcon className="h-4 w-4" />
                 </EditorToolbarButton>
-                <EditorToolbarButton title="Italic (Ctrl+I)" disabled={!canEditContent} tooltipProps={tooltipProps('Italic (Ctrl+I)')} onClick={() => wrapSelection('_', '_', 'italic text')}>
+                <EditorToolbarButton title={t`Italic (Ctrl+I)`} disabled={!canEditContent} tooltipProps={tooltipProps(t`Italic (Ctrl+I)`)} onClick={() => wrapSelection('_', '_', 'italic text')}>
                   <ItalicIcon className="h-4 w-4" />
                 </EditorToolbarButton>
-                <EditorToolbarButton title="Link (Ctrl+K)" disabled={!canEditContent} tooltipProps={tooltipProps('Link (Ctrl+K)')} onClick={() => wrapSelection('[', '](url)', 'link text')}>
+                <EditorToolbarButton title={t`Link (Ctrl+K)`} disabled={!canEditContent} tooltipProps={tooltipProps(t`Link (Ctrl+K)`)} onClick={() => wrapSelection('[', '](url)', 'link text')}>
                   <LinkIcon className="h-4 w-4" />
                 </EditorToolbarButton>
-                <EditorToolbarButton title="Inline code" disabled={!canEditContent} tooltipProps={tooltipProps('Inline code')} onClick={() => wrapSelection('`', '`', 'code')}>
+                <EditorToolbarButton title={t`Inline code`} disabled={!canEditContent} tooltipProps={tooltipProps(t`Inline code`)} onClick={() => wrapSelection('`', '`', 'code')}>
                   <CodeBracketIcon className="h-4 w-4" />
                 </EditorToolbarButton>
-                <EditorToolbarButton title="Insert table (Ctrl+Shift+T)" disabled={!canEditContent} tooltipProps={tooltipProps('Insert table (Ctrl+Shift+T)')} onClick={() => insertOrEditTable()}>
+                <EditorToolbarButton title={t`Insert table (Ctrl+Shift+T)`} disabled={!canEditContent} tooltipProps={tooltipProps(t`Insert table (Ctrl+Shift+T)`)} onClick={() => insertOrEditTable()}>
                   <TableCellsIcon className="h-4 w-4" />
                 </EditorToolbarButton>
-                <EditorToolbarButton title="Insert formula" disabled={!canEditContent} tooltipProps={tooltipProps('Insert formula')} onClick={() => insertAtCursor('\n$$\nE = mc^2\n$$\n')}>
+                <EditorToolbarButton title={t`Insert formula`} disabled={!canEditContent} tooltipProps={tooltipProps(t`Insert formula`)} onClick={() => insertAtCursor('\n$$\nE = mc^2\n$$\n')}>
                   <VariableIcon className="h-4 w-4" />
                 </EditorToolbarButton>
-                <EditorToolbarButton title="Insert Mermaid diagram" disabled={!canEditContent} tooltipProps={tooltipProps('Insert Mermaid diagram')} onClick={() => insertAtCursor('\n```mermaid\nflowchart TD\n  A --> B\n```\n')}>
+                <EditorToolbarButton title={t`Insert Mermaid diagram`} disabled={!canEditContent} tooltipProps={tooltipProps(t`Insert Mermaid diagram`)} onClick={() => insertAtCursor('\n```mermaid\nflowchart TD\n  A --> B\n```\n')}>
                   <ShareIcon className="h-4 w-4" />
                 </EditorToolbarButton>
-                <EditorToolbarButton title="Task list" disabled={!canEditContent} tooltipProps={tooltipProps('Task list')} onClick={() => insertAtCursor('\n- [ ] Task\n')}>
+                <EditorToolbarButton title={t`Task list`} disabled={!canEditContent} tooltipProps={tooltipProps(t`Task list`)} onClick={() => insertAtCursor('\n- [ ] Task\n')}>
                   <ClipboardDocumentCheckIcon className="h-4 w-4" />
                 </EditorToolbarButton>
                 <div className="ml-auto flex items-center gap-1 rounded-full bg-[#eef5f1] p-1">
                   <button
                     type="button"
                     className={`view-mode-button ${editorMode === 'write' ? 'view-mode-button-active' : ''}`}
-                    aria-label="Write"
-                    {...tooltipProps('Write')}
+                    aria-label={t`Write`}
+                    {...tooltipProps(t`Write`)}
                     onClick={() => setEditorMode('write')}
                   >
                     <PencilSquareIcon className="h-4 w-4" />
@@ -902,8 +903,8 @@ export function Workspace() {
                   <button
                     type="button"
                     className={`view-mode-button ${editorMode === 'split' ? 'view-mode-button-active' : ''}`}
-                    aria-label="Split"
-                    {...tooltipProps('Split')}
+                    aria-label={t`Split`}
+                    {...tooltipProps(t`Split`)}
                     onClick={() => setEditorMode('split')}
                   >
                     <ViewColumnsIcon className="h-4 w-4" />
@@ -911,17 +912,17 @@ export function Workspace() {
                   <button
                     type="button"
                     className={`view-mode-button ${editorMode === 'preview' ? 'view-mode-button-active' : ''}`}
-                    aria-label="Preview"
-                    {...tooltipProps('Preview')}
+                    aria-label={t`Preview`}
+                    {...tooltipProps(t`Preview`)}
                     onClick={() => setEditorMode('preview')}
                   >
                     <EyeIcon className="h-4 w-4" />
                   </button>
                 </div>
-                <button className="editor-tool" type="button" aria-label="Document info" {...tooltipProps('Document info')} onClick={() => setInfoPanel(p => !p)}>
+                <button className="editor-tool" type="button" aria-label={t`Document info`} {...tooltipProps(t`Document info`)} onClick={() => setInfoPanel(p => !p)}>
                   <InformationCircleIcon className="h-4 w-4" />
                 </button>
-                <button className="editor-tool" type="button" aria-label={focusMode ? 'Exit focus mode' : 'Focus mode'} {...tooltipProps(focusMode ? 'Exit focus mode' : 'Focus mode')} onClick={() => setFocusMode(p => !p)}>
+                <button className="editor-tool" type="button" aria-label={focusMode ? t`Exit focus mode` : t`Focus mode`} {...tooltipProps(focusMode ? t`Exit focus mode` : t`Focus mode`)} onClick={() => setFocusMode(p => !p)}>
                   {focusMode ? <ArrowsPointingInIcon className="h-4 w-4" /> : <ArrowsPointingOutIcon className="h-4 w-4" />}
                 </button>
               </div>
@@ -938,24 +939,24 @@ export function Workspace() {
                     className="h-full w-full min-h-0 resize-none bg-white/40 p-8 font-mono text-[13px] leading-7 text-stone-800 outline-none placeholder:text-[#9aa6a1]"
                     style={{ position: 'relative', zIndex: 2 }}
                     spellCheck={false}
-                    aria-label="Markdown editor"
-                    placeholder="Start writing Markdown..."
+                    aria-label={t`Markdown editor`}
+                    placeholder={t`Start writing Markdown...`}
                   />
                   <article
                     ref={previewRef}
                     className="preview empty min-h-0 overflow-y-auto overflow-x-hidden border-l border-black/[0.04] bg-[#f8fbf9] p-10"
                     style={{ position: 'relative', zIndex: 1 }}
                   >
-                    <h2>Select a Markdown file</h2>
-                    <p>Your rendered document will appear here.</p>
+                    <h2><Trans>Select a Markdown file</Trans></h2>
+                    <p><Trans>Your rendered document will appear here.</Trans></p>
                   </article>
                 </div>
 
                 {infoPanel && (
                   <aside className="min-h-0 overflow-y-auto border-l border-black/[0.04] bg-[#f6faf7] p-5">
                     <div className="mb-4 flex items-center justify-between">
-                      <p className="text-sm font-semibold text-stone-950">Document Info</p>
-                      <button className="subtle-button aspect-square px-0" type="button" title="Hide" onClick={() => setInfoPanel(false)}><XMarkIcon className="h-4 w-4" /></button>
+                      <p className="text-sm font-semibold text-stone-950"><Trans>Document Info</Trans></p>
+                      <button className="subtle-button aspect-square px-0" type="button" title={t`Hide`} onClick={() => setInfoPanel(false)}><XMarkIcon className="h-4 w-4" /></button>
                     </div>
                     {selectedDocument && (
                       <WebPublishSection
@@ -983,10 +984,10 @@ export function Workspace() {
             <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
               <div className="mx-auto w-full max-w-6xl px-10 py-12">
                 <div className="max-w-3xl">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand">Vault ready</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand"><Trans>Vault ready</Trans></p>
                   <h2 className="mt-4 text-4xl font-semibold tracking-[-0.035em] text-stone-950">{displayWorkspaceName(workspace)}</h2>
                   <p className="mt-3 max-w-2xl text-sm leading-7 text-[#5f6d68]">
-                    Choose a note or create a new one.
+                    <Trans>Choose a note or create a new one.</Trans>
                   </p>
                   <div className="mt-6 flex flex-wrap gap-2">
                     <button
@@ -995,7 +996,7 @@ export function Workspace() {
                       onClick={createDocument}
                       disabled={!canEditContent}
                     >
-                      New Document
+                      <Trans>New Document</Trans>
                     </button>
                     <button
                       className="toolbar-button"
@@ -1005,7 +1006,7 @@ export function Workspace() {
                         if (first) openDocument(first.id)
                       }}
                     >
-                      Quick open
+                      <Trans>Quick open</Trans>
                     </button>
                   </div>
                 </div>
@@ -1013,14 +1014,14 @@ export function Workspace() {
                 <div className="mt-10 grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
                   <section className="panel-card p-5">
                     <div className="mb-3 flex items-center justify-between">
-                      <p className="text-sm font-semibold text-stone-950">Documents</p>
-                      <span className="text-xs text-[#6b7773]">{documents.length} Markdown file{documents.length === 1 ? '' : 's'}</span>
+                      <p className="text-sm font-semibold text-stone-950"><Trans>Documents</Trans></p>
+                      <span className="text-xs text-[#6b7773]">{t`${documents.length} Markdown file${documents.length === 1 ? '' : 's'}`}</span>
                     </div>
                     <div className="space-y-1">
                       {documents.length === 0 ? (
                         <div className="rounded-md border border-dashed border-stone-300 p-4">
-                          <p className="text-sm font-semibold text-stone-800">No notes yet.</p>
-                          <p className="mt-1 text-sm text-stone-500">Create your first Markdown note.</p>
+                          <p className="text-sm font-semibold text-stone-800"><Trans>No notes yet.</Trans></p>
+                          <p className="mt-1 text-sm text-stone-500"><Trans>Create your first Markdown note.</Trans></p>
                         </div>
                       ) : (
                         documents.slice(0, 12).map(doc => (
@@ -1029,7 +1030,7 @@ export function Workspace() {
                               <span className={`block truncate font-semibold ${selectedDoc === doc.id ? 'text-brand' : ''}`}>{doc.relativePath.replace(/\.(md|markdown|mdown|mkd)$/i, '')}</span>
                               <span className="block truncate text-xs text-stone-500">{doc.relativePath}</span>
                             </span>
-                            <span className={`shrink-0 text-xs ${selectedDoc === doc.id ? 'text-brand font-semibold' : 'text-stone-500'}`}>Markdown</span>
+                            <span className={`shrink-0 text-xs ${selectedDoc === doc.id ? 'text-brand font-semibold' : 'text-stone-500'}`}><Trans>Markdown</Trans></span>
                           </button>
                         ))
                       )}
@@ -1038,17 +1039,17 @@ export function Workspace() {
 
                   <aside className="panel-card p-5">
                     <div className="mb-4 flex items-center justify-between gap-3">
-                      <p className="text-sm font-semibold text-stone-950">Publishing</p>
-                      <span className="status-chip status-chip-success">{publishedDocuments.length} live</span>
+                      <p className="text-sm font-semibold text-stone-950"><Trans>Publishing</Trans></p>
+                      <span className="status-chip status-chip-success"><Trans>{publishedDocuments.length} live</Trans></span>
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-xs text-[#5f6d68]">
                       <div className="rounded-lg bg-[#f4f8f6] p-3">
                         <p className="font-semibold text-stone-900">{publishedDocuments.length}</p>
-                        <p className="mt-1">Published</p>
+                        <p className="mt-1"><Trans>Published</Trans></p>
                       </div>
                       <div className="rounded-lg bg-[#f4f8f6] p-3">
                         <p className="font-semibold text-stone-900">{unpublishedDocuments.length}</p>
-                        <p className="mt-1">Draft only</p>
+                        <p className="mt-1"><Trans>Draft only</Trans></p>
                       </div>
                     </div>
                     <div className="mt-4 space-y-2">
@@ -1059,7 +1060,7 @@ export function Workspace() {
                         onClick={() => { void publishDocumentsByIds(unpublishedDocuments.map(doc => doc.id)) }}
                       >
                         <ArrowUpTrayIcon className="h-4 w-4" />
-                        Publish drafts
+                        <Trans>Publish drafts</Trans>
                       </button>
                       <button
                         type="button"
@@ -1068,7 +1069,7 @@ export function Workspace() {
                         onClick={() => { void publishDocumentsByIds(publishedDocuments.map(doc => doc.id)) }}
                       >
                         <ArrowPathIcon className="h-4 w-4" />
-                        Republish live docs
+                        <Trans>Republish live docs</Trans>
                       </button>
                       <button
                         type="button"
@@ -1077,7 +1078,7 @@ export function Workspace() {
                         onClick={() => { void unpublishDocumentsByIds(publishedDocuments.map(doc => doc.id)) }}
                       >
                         <LinkSlashIcon className="h-4 w-4" />
-                        Unpublish live docs
+                        <Trans>Unpublish live docs</Trans>
                       </button>
                     </div>
                     <button
@@ -1089,7 +1090,7 @@ export function Workspace() {
                       }}
                     >
                       <Cog6ToothIcon className="h-4 w-4" />
-                      Site settings
+                      <Trans>Site settings</Trans>
                     </button>
                   </aside>
 
@@ -1102,16 +1103,16 @@ export function Workspace() {
       )}
 
       <div id="operation-log" className="col-span-full flex items-center justify-between border-t border-black/[0.04] bg-white/70 px-5 py-3 text-xs text-[#6b7773]">
-        <span>{statusMessage || (selectedDoc ? `Opened ${documents.find(d => d.id === selectedDoc)?.relativePath || 'document'}.` : 'Select a document to edit.')}</span>
+        <span>{statusMessage || (selectedDoc ? `Opened ${documents.find(d => d.id === selectedDoc)?.relativePath || 'document'}.` : t`Select a document to edit.`)}</span>
         <span className="flex shrink-0 items-center gap-1.5">
           {reconciling ? (
-            <span className="flex items-center gap-1.5 font-medium text-yellow-600"><span className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse" />Syncing...</span>
+            <span className="flex items-center gap-1.5 font-medium text-yellow-600"><span className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse" /><Trans>Syncing...</Trans></span>
           ) : wsStatus === 'connected' ? (
-            <span className="flex items-center gap-1.5 font-medium text-green-600"><span className="w-2 h-2 rounded-full bg-green-500" />Connected</span>
+            <span className="flex items-center gap-1.5 font-medium text-green-600"><span className="w-2 h-2 rounded-full bg-green-500" /><Trans>Connected</Trans></span>
           ) : wsStatus === 'connecting' ? (
-            <span className="flex items-center gap-1.5 font-medium text-yellow-600"><span className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse" />Connecting...</span>
+            <span className="flex items-center gap-1.5 font-medium text-yellow-600"><span className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse" /><Trans>Connecting...</Trans></span>
           ) : (
-            <span className="flex items-center gap-1.5 font-medium text-red-500"><span className="w-2 h-2 rounded-full bg-red-500" />{hasPending ? `Offline (${pendingCount} saved)` : 'Offline'}</span>
+            <span className="flex items-center gap-1.5 font-medium text-red-500"><span className="w-2 h-2 rounded-full bg-red-500" />{hasPending ? t`Offline (${pendingCount} saved)` : t`Offline`}</span>
           )}
         </span>
       </div>
@@ -1122,13 +1123,13 @@ export function Workspace() {
           className="context-menu"
           style={{ left: editorContextMenu.x, top: editorContextMenu.y }}
         >
-          <button type="button" className="context-menu-button" onClick={() => { wrapSelection('**', '**', 'bold text'); setEditorContextMenu(null) }}><BoldIcon className="mr-2 h-3.5 w-3.5" />Bold</button>
-          <button type="button" className="context-menu-button" onClick={() => { wrapSelection('_', '_', 'italic text'); setEditorContextMenu(null) }}><ItalicIcon className="mr-2 h-3.5 w-3.5" />Italic</button>
-          <button type="button" className="context-menu-button" onClick={() => { wrapSelection('[', '](url)', 'link text'); setEditorContextMenu(null) }}><LinkIcon className="mr-2 h-3.5 w-3.5" />Insert link</button>
-          <button type="button" className="context-menu-button" onClick={() => { insertOrEditTable(); setEditorContextMenu(null) }}><TableCellsIcon className="mr-2 h-3.5 w-3.5" />Insert table</button>
-          <button type="button" className="context-menu-button" onClick={() => { addMarkdownTableRow(); setEditorContextMenu(null) }}><TableCellsIcon className="mr-2 h-3.5 w-3.5" />Add table row below</button>
-          <button type="button" className="context-menu-button" onClick={() => { insertAtCursor('\n$$\nE = mc^2\n$$\n'); setEditorContextMenu(null) }}><VariableIcon className="mr-2 h-3.5 w-3.5" />Insert formula</button>
-          <button type="button" className="context-menu-button" onClick={() => { insertAtCursor('\n```mermaid\nflowchart TD\n  A --> B\n```\n'); setEditorContextMenu(null) }}><ShareIcon className="mr-2 h-3.5 w-3.5" />Insert Mermaid diagram</button>
+          <button type="button" className="context-menu-button" onClick={() => { wrapSelection('**', '**', 'bold text'); setEditorContextMenu(null) }}><BoldIcon className="mr-2 h-3.5 w-3.5" /><Trans>Bold</Trans></button>
+          <button type="button" className="context-menu-button" onClick={() => { wrapSelection('_', '_', 'italic text'); setEditorContextMenu(null) }}><ItalicIcon className="mr-2 h-3.5 w-3.5" /><Trans>Italic</Trans></button>
+          <button type="button" className="context-menu-button" onClick={() => { wrapSelection('[', '](url)', 'link text'); setEditorContextMenu(null) }}><LinkIcon className="mr-2 h-3.5 w-3.5" /><Trans>Insert link</Trans></button>
+          <button type="button" className="context-menu-button" onClick={() => { insertOrEditTable(); setEditorContextMenu(null) }}><TableCellsIcon className="mr-2 h-3.5 w-3.5" /><Trans>Insert table</Trans></button>
+          <button type="button" className="context-menu-button" onClick={() => { addMarkdownTableRow(); setEditorContextMenu(null) }}><TableCellsIcon className="mr-2 h-3.5 w-3.5" /><Trans>Add table row below</Trans></button>
+          <button type="button" className="context-menu-button" onClick={() => { insertAtCursor('\n$$\nE = mc^2\n$$\n'); setEditorContextMenu(null) }}><VariableIcon className="mr-2 h-3.5 w-3.5" /><Trans>Insert formula</Trans></button>
+          <button type="button" className="context-menu-button" onClick={() => { insertAtCursor('\n```mermaid\nflowchart TD\n  A --> B\n```\n'); setEditorContextMenu(null) }}><ShareIcon className="mr-2 h-3.5 w-3.5" /><Trans>Insert Mermaid diagram</Trans></button>
         </div>
       )}
       {floatingTooltip && (
@@ -1169,7 +1170,7 @@ function CloudWorkspaceSwitcher({
         <span className="min-w-0 flex-1">
           <span className="block truncate text-sm font-semibold text-stone-950">{displayWorkspaceName(workspace)}</span>
           <span className="block truncate text-xs text-[#6b7773]">
-            {workspace ? `${workspace.documentCount} documents` : 'Choose a cloud workspace'}
+            {workspace ? t`${workspace.documentCount} documents` : t`Choose a cloud workspace`}
           </span>
         </span>
         <ChevronDownIcon className="h-4 w-4 shrink-0 text-zinc-400" />
@@ -1178,7 +1179,7 @@ function CloudWorkspaceSwitcher({
       <MenuItems className="absolute left-0 top-12 z-[100] w-[320px] overflow-hidden rounded-xl border border-black/[0.06] bg-[#fbfdfb] shadow-2xl shadow-stone-900/15">
         <div className="max-h-64 overflow-y-auto p-2">
           {workspaces.length === 0 ? (
-            <p className="px-3 py-2 text-xs text-zinc-500">No cloud workspaces yet.</p>
+            <p className="px-3 py-2 text-xs text-zinc-500"><Trans>No cloud workspaces yet.</Trans></p>
           ) : (
             workspaces.map(ws => (
               <MenuItem key={ws.id}>
@@ -1191,7 +1192,7 @@ function CloudWorkspaceSwitcher({
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate">{displayWorkspaceName(ws)}</span>
-                    <span className="block truncate text-xs font-normal text-zinc-500">{ws.documentCount} documents</span>
+                    <span className="block truncate text-xs font-normal text-zinc-500"><Trans>{ws.documentCount} documents</Trans></span>
                   </span>
                   {ws.id === activeWorkspaceId && <CheckIcon className="h-4 w-4 shrink-0 text-brand" />}
                 </Link>
@@ -1205,12 +1206,12 @@ function CloudWorkspaceSwitcher({
               className="sync-input"
               value={newWorkspaceName}
               onChange={e => onNewWorkspaceNameChange(e.target.value)}
-              placeholder="New cloud workspace"
+              placeholder={t`New cloud workspace`}
               onKeyDown={e => e.key === 'Enter' && onCreateWorkspace()}
             />
             <button className="sidebar-action gap-1" type="button" onClick={onCreateWorkspace}>
               <PlusIcon className="h-3.5 w-3.5" />
-              New
+              <Trans>New</Trans>
             </button>
           </div>
         </div>
@@ -1224,8 +1225,8 @@ function CloudWorkspaceSwitcher({
             >
               <Cog6ToothIcon className="h-4 w-4 shrink-0 text-zinc-500" />
               <span className="min-w-0 text-left">
-                <span className="block truncate font-semibold">Workspace settings</span>
-                <span className="block truncate text-xs text-zinc-500">Members, domains, publishing</span>
+                <span className="block truncate font-semibold"><Trans>Workspace settings</Trans></span>
+                <span className="block truncate text-xs text-zinc-500"><Trans>Members, domains, publishing</Trans></span>
               </span>
             </button>
           </MenuItem>
@@ -1307,16 +1308,16 @@ function WorkspaceSettingsDialog({
   onUploadCertificate: () => void
 }) {
   const items: Array<{ id: WorkspaceSettingsSection; label: string; description: string }> = [
-    { id: 'general', label: 'General', description: 'Name, publishing identity, and storage' },
-    { id: 'members', label: 'Members', description: 'Team members and invitations' },
-    { id: 'domains', label: 'Domains', description: 'Custom domains and SSL' },
-    { id: 'trash', label: 'Trash', description: 'Restore or delete cloud documents' },
+    { id: 'general', label: t`General`, description: t`Name, publishing identity, and storage` },
+    { id: 'members', label: t`Members`, description: t`Team members and invitations` },
+    { id: 'domains', label: t`Domains`, description: t`Custom domains and SSL` },
+    { id: 'trash', label: t`Trash`, description: t`Restore or delete cloud documents` },
   ]
   return (
     <Dialog open={open} onClose={onClose} className="relative z-50">
       <div className="fixed inset-0 bg-stone-950/35 px-5 py-6 backdrop-blur-sm" aria-hidden="true" />
       <div className="fixed inset-0 flex items-center justify-center px-5 py-6">
-        <DialogPanel className="grid h-[min(760px,92vh)] w-full max-w-6xl overflow-hidden rounded-2xl border border-white/70 bg-[#fbfdfb] shadow-2xl shadow-stone-900/25 md:grid-cols-[240px_minmax(0,1fr)]" aria-label="Cloud workspace settings">
+        <DialogPanel className="grid h-[min(760px,92vh)] w-full max-w-6xl overflow-hidden rounded-2xl border border-white/70 bg-[#fbfdfb] shadow-2xl shadow-stone-900/25 md:grid-cols-[240px_minmax(0,1fr)]" aria-label={t`Cloud workspace settings`}>
           <aside className="border-r border-black/[0.04] bg-[#f7faf8] p-4">
             <div className="mb-5 flex items-center gap-2">
               <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-white text-sm font-semibold text-brand ring-1 ring-black/[0.04]">
@@ -1324,7 +1325,7 @@ function WorkspaceSettingsDialog({
               </span>
               <span className="min-w-0">
                 <span className="block truncate text-sm font-semibold text-zinc-950">{displayWorkspaceName(workspace)}</span>
-                <span className="block truncate text-xs text-zinc-500">Cloud workspace</span>
+                <span className="block truncate text-xs text-zinc-500"><Trans>Cloud workspace</Trans></span>
               </span>
             </div>
             <nav className="space-y-1">
@@ -1345,13 +1346,13 @@ function WorkspaceSettingsDialog({
             <div className="mb-7 flex items-start justify-between gap-4">
               <div>
                 <h2 className="text-3xl font-semibold text-zinc-950">
-                  {active === 'general' ? 'General' : active === 'domains' ? 'Domains' : active === 'members' ? 'Members' : 'Trash'}
+                  {active === 'general' ? t`General` : active === 'domains' ? t`Domains` : active === 'members' ? t`Members` : t`Trash`}
                 </h2>
                 <p className="mt-1 text-sm text-zinc-500">
-                  {active === 'general' ? 'Manage cloud workspace name, publishing title, and storage.' : active === 'domains' ? 'Bind custom domains and manage certificates.' : active === 'members' ? 'Manage team members, invitations, and access.' : 'Restore deleted documents or remove them permanently.'}
+                  {active === 'general' ? t`Manage cloud workspace name, publishing title, and storage.` : active === 'domains' ? t`Bind custom domains and manage certificates.` : active === 'members' ? t`Manage team members, invitations, and access.` : t`Restore deleted documents or remove them permanently.`}
                 </p>
               </div>
-              <button className="subtle-button aspect-square px-0" type="button" title="Close" onClick={onClose}><XMarkIcon className="h-4 w-4" /></button>
+              <button className="subtle-button aspect-square px-0" type="button" title={t`Close`} onClick={onClose}><XMarkIcon className="h-4 w-4" /></button>
             </div>
             {active === 'general' && (
               <WorkspacePublishingPanel
@@ -1456,13 +1457,13 @@ function MembersPanel({
       const link = `${window.location.origin}/invites/${result.inviteToken}`
       setInviteLink(link)
       setInviteEmail('')
-      setInviteMessage('Invite created.')
+      setInviteMessage(t`Invite created.`)
       if (canAdmin) {
         const invites = await api.listInvites(workspace.id)
         setPendingInvites(invites)
       }
     } catch (err) {
-      setInviteMessage(err instanceof Error ? err.message : 'Failed to create invite.')
+      setInviteMessage(err instanceof Error ? err.message : t`Failed to create invite.`)
     }
   }
 
@@ -1477,11 +1478,11 @@ function MembersPanel({
   }
 
   async function handleRemove(userId: string) {
-    const ok = await confirm('Remove this member from the workspace?', { title: 'Remove member' })
+    const ok = await confirm(t`Remove this member from the workspace?`, { title: t`Remove member` })
     if (!ok) return
     await api.removeMember(workspace.id, userId)
     setMembers(ms => ms.filter(m => m.userId !== userId))
-    setActionMessage('Member removed.')
+    setActionMessage(t`Member removed.`)
     setTimeout(() => setActionMessage(''), 3000)
   }
 
@@ -1491,7 +1492,7 @@ function MembersPanel({
       await api.leaveWorkspace(workspace.id)
       navigate('/workspaces', { replace: true })
     } catch (err) {
-      setActionMessage(err instanceof Error ? err.message : 'Failed to leave workspace.')
+      setActionMessage(err instanceof Error ? err.message : t`Failed to leave workspace.`)
       setTimeout(() => setActionMessage(''), 4000)
     }
   }
@@ -1504,7 +1505,7 @@ function MembersPanel({
       navigate('/workspaces', { replace: true })
       onWorkspaceDeleted?.()
     } catch (err) {
-      setActionMessage(err instanceof Error ? err.message : 'Failed to delete workspace.')
+      setActionMessage(err instanceof Error ? err.message : t`Failed to delete workspace.`)
       setTimeout(() => setActionMessage(''), 4000)
     }
   }
@@ -1521,12 +1522,12 @@ function MembersPanel({
     <div className="space-y-8">
       {/* Invite section */}
       <section>
-        <p className="mb-3 text-sm font-semibold text-zinc-950">Invite people</p>
+        <p className="mb-3 text-sm font-semibold text-zinc-950"><Trans>Invite people</Trans></p>
         <div className="flex gap-2">
           <input
             className="sync-input flex-1"
             type="email"
-            placeholder="Email (optional)"
+            placeholder={t`Email (optional)`}
             value={inviteEmail}
             onChange={e => setInviteEmail(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleInvite()}
@@ -1553,7 +1554,7 @@ function MembersPanel({
           </Menu>
           <button type="button" className="sidebar-action bg-brand text-white hover:bg-brand/90" onClick={handleInvite}>
             <UserGroupIcon className="h-4 w-4" />
-            <span className="ml-1">Invite</span>
+            <span className="ml-1"><Trans>Invite</Trans></span>
           </button>
         </div>
         {inviteMessage && (
@@ -1568,9 +1569,9 @@ function MembersPanel({
             />
             <button
               type="button"
-              title="Copy link"
+              title={t`Copy link`}
               className="shrink-0 text-brand hover:text-brand/80"
-              onClick={() => { navigator.clipboard.writeText(inviteLink); setInviteMessage('Link copied!') }}
+              onClick={() => { navigator.clipboard.writeText(inviteLink); setInviteMessage(t`Link copied!`) }}
             >
               <ClipboardIcon className="h-4 w-4" />
             </button>
@@ -1581,16 +1582,16 @@ function MembersPanel({
       {/* Pending invites */}
       {canAdmin && pendingInvites.length > 0 && (
         <section>
-          <p className="mb-3 text-sm font-semibold text-zinc-950">Pending invites</p>
+          <p className="mb-3 text-sm font-semibold text-zinc-950"><Trans>Pending invites</Trans></p>
           <div className="space-y-1">
             {pendingInvites.map(invite => (
               <div key={invite.inviteId} className="flex items-center gap-3 rounded-lg bg-[#f7faf8] px-3 py-2 text-sm">
-                <span className="min-w-0 flex-1 truncate text-zinc-600">{invite.email || <span className="text-zinc-400 italic">no email</span>}</span>
+                <span className="min-w-0 flex-1 truncate text-zinc-600">{invite.email || <span className="text-zinc-400 italic"><Trans>no email</Trans></span>}</span>
                 <span className="shrink-0 text-xs capitalize text-zinc-500">{invite.role}</span>
                 <span className="shrink-0 text-xs text-zinc-400">{new Date(invite.createdAt).toLocaleDateString()}</span>
                 <button
                   type="button"
-                  title="Revoke invite"
+                  title={t`Revoke invite`}
                   className="shrink-0 text-zinc-400 hover:text-red-600"
                   onClick={() => handleRevoke(invite.inviteId)}
                 >
@@ -1604,7 +1605,7 @@ function MembersPanel({
 
       {/* Members list */}
       <section>
-        <p className="mb-3 text-sm font-semibold text-zinc-950">Members ({members.length})</p>
+        <p className="mb-3 text-sm font-semibold text-zinc-950"><Trans>Members ({members.length})</Trans></p>
         <div className="space-y-1">
           {members.map(member => {
             const isMe = member.username === currentUsername
@@ -1615,7 +1616,7 @@ function MembersPanel({
                   {member.username.charAt(0).toUpperCase()}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate font-semibold text-zinc-950">{member.username}{isMe && <span className="ml-1 text-xs font-normal text-zinc-400">(you)</span>}</span>
+                  <span className="block truncate font-semibold text-zinc-950">{member.username}{isMe && <span className="ml-1 text-xs font-normal text-zinc-400"><Trans>(you)</Trans></span>}</span>
                 </span>
                 {canEdit && !isMe ? (
                   <Menu as="div" className="relative shrink-0">
@@ -1644,7 +1645,7 @@ function MembersPanel({
                 {canEdit && !isMe && (
                   <button
                     type="button"
-                    title="Remove member"
+                    title={t`Remove member`}
                     className="shrink-0 text-zinc-300 hover:text-red-600"
                     onClick={() => handleRemove(member.userId)}
                   >
@@ -1663,13 +1664,13 @@ function MembersPanel({
 
       {/* Danger zone */}
       <section className="rounded-xl border border-red-100 bg-red-50/40 p-5">
-        <p className="mb-4 text-sm font-semibold text-red-700">Danger zone</p>
+        <p className="mb-4 text-sm font-semibold text-red-700"><Trans>Danger zone</Trans></p>
         <div className="space-y-3">
           {!isOwner && (
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-semibold text-zinc-950">Leave workspace</p>
-                <p className="text-xs text-zinc-500">You will lose access to all cloud documents.</p>
+                <p className="text-sm font-semibold text-zinc-950"><Trans>Leave workspace</Trans></p>
+                <p className="text-xs text-zinc-500"><Trans>You will lose access to all cloud documents.</Trans></p>
               </div>
               <button
                 type="button"
@@ -1677,7 +1678,7 @@ function MembersPanel({
                 onClick={() => setShowLeaveConfirm(true)}
               >
                 <ArrowRightStartOnRectangleIcon className="h-4 w-4" />
-                Leave
+                <Trans>Leave</Trans>
               </button>
             </div>
           )}
@@ -1685,46 +1686,46 @@ function MembersPanel({
             <>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-zinc-950">Transfer ownership</p>
-                  <p className="text-xs text-zinc-500">Pass ownership to another admin member.</p>
+                  <p className="text-sm font-semibold text-zinc-950"><Trans>Transfer ownership</Trans></p>
+                  <p className="text-xs text-zinc-500"><Trans>Pass ownership to another admin member.</Trans></p>
                 </div>
                 <button
                   type="button"
-                  title="Transfer ownership (select a member above)"
+                  title={t`Transfer ownership (select a member above)`}
                   className="flex items-center gap-1.5 rounded-lg border border-zinc-200 px-3 py-1.5 text-sm text-zinc-700 transition hover:bg-zinc-100"
                   onClick={async () => {
                     const admins = members.filter(m => m.role === 'admin')
                     const firstAdmin = admins[0]
                     if (!firstAdmin) {
-                      setActionMessage('Promote a member to admin first before transferring ownership.')
+                      setActionMessage(t`Promote a member to admin first before transferring ownership.`)
                       setTimeout(() => setActionMessage(''), 4000)
                       return
                     }
                     const ok = await confirm(
-                      `Transfer ownership to ${firstAdmin.username}? You will become an admin.`,
-                      { title: 'Transfer ownership' },
+                      t`Transfer ownership to ${firstAdmin.username}? You will become an admin.`,
+                      { title: t`Transfer ownership` },
                     )
                     if (!ok) return
                     try {
                       await api.transferOwnership(workspace.id, firstAdmin.userId)
                       const updated = await api.listMembers(workspace.id)
                       setMembers(updated)
-                      setActionMessage('Ownership transferred.')
+                      setActionMessage(t`Ownership transferred.`)
                       setTimeout(() => setActionMessage(''), 3000)
                     } catch (err) {
-                      setActionMessage(err instanceof Error ? err.message : 'Transfer failed.')
+                      setActionMessage(err instanceof Error ? err.message : t`Transfer failed.`)
                       setTimeout(() => setActionMessage(''), 4000)
                     }
                   }}
                 >
                   <ArrowPathIcon className="h-4 w-4" />
-                  Transfer
+                  <Trans>Transfer</Trans>
                 </button>
               </div>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-zinc-950">Delete workspace</p>
-                  <p className="text-xs text-zinc-500">Permanently remove this workspace and all documents.</p>
+                  <p className="text-sm font-semibold text-zinc-950"><Trans>Delete workspace</Trans></p>
+                  <p className="text-xs text-zinc-500"><Trans>Permanently remove this workspace and all documents.</Trans></p>
                 </div>
                 <button
                   type="button"
@@ -1732,7 +1733,7 @@ function MembersPanel({
                   onClick={() => setShowDeleteConfirm(true)}
                 >
                   <ExclamationTriangleIcon className="h-4 w-4" />
-                  Delete
+                  <Trans>Delete</Trans>
                 </button>
               </div>
             </>
@@ -1748,13 +1749,13 @@ function MembersPanel({
             <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-red-50">
               <ArrowRightStartOnRectangleIcon className="h-6 w-6 text-red-600" />
             </div>
-            <h3 className="mb-2 text-xl font-semibold text-zinc-950">Leave workspace?</h3>
+            <h3 className="mb-2 text-xl font-semibold text-zinc-950"><Trans>Leave workspace?</Trans></h3>
             <p className="mb-6 text-sm text-zinc-500">
-              You will lose access to all cloud documents. Your local files are unaffected.
+              <Trans>You will lose access to all cloud documents. Your local files are unaffected.</Trans>
             </p>
             <div className="flex gap-3">
-              <button type="button" className="flex-1 rounded-xl border border-zinc-200 px-4 py-2.5 text-sm font-semibold text-zinc-700 hover:bg-zinc-50" onClick={() => setShowLeaveConfirm(false)}>Cancel</button>
-              <button type="button" className="flex-1 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700" onClick={handleLeave}>Leave</button>
+              <button type="button" className="flex-1 rounded-xl border border-zinc-200 px-4 py-2.5 text-sm font-semibold text-zinc-700 hover:bg-zinc-50" onClick={() => setShowLeaveConfirm(false)}><Trans>Cancel</Trans></button>
+              <button type="button" className="flex-1 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700" onClick={handleLeave}><Trans>Leave</Trans></button>
             </div>
           </DialogPanel>
         </div>
@@ -1768,11 +1769,11 @@ function MembersPanel({
             <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-red-50">
               <ExclamationTriangleIcon className="h-6 w-6 text-red-600" />
             </div>
-            <h3 className="mb-2 text-xl font-semibold text-zinc-950">Delete workspace?</h3>
+            <h3 className="mb-2 text-xl font-semibold text-zinc-950"><Trans>Delete workspace?</Trans></h3>
             <p className="mb-4 text-sm text-zinc-500">
-              This will permanently delete <strong>{workspace.name}</strong> and all its documents. This cannot be undone.
+              <Trans>This will permanently delete <strong>{workspace.name}</strong> and all its documents. This cannot be undone.</Trans>
             </p>
-            <p className="mb-2 text-xs font-semibold text-zinc-700">Type the workspace name to confirm:</p>
+            <p className="mb-2 text-xs font-semibold text-zinc-700"><Trans>Type the workspace name to confirm:</Trans></p>
             <input
               className="sync-input mb-4"
               placeholder={workspace.name}
@@ -1780,14 +1781,14 @@ function MembersPanel({
               onChange={e => setDeleteConfirmName(e.target.value)}
             />
             <div className="flex gap-3">
-              <button type="button" className="flex-1 rounded-xl border border-zinc-200 px-4 py-2.5 text-sm font-semibold text-zinc-700 hover:bg-zinc-50" onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmName('') }}>Cancel</button>
+              <button type="button" className="flex-1 rounded-xl border border-zinc-200 px-4 py-2.5 text-sm font-semibold text-zinc-700 hover:bg-zinc-50" onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmName('') }}><Trans>Cancel</Trans></button>
               <button
                 type="button"
                 disabled={deleteConfirmName !== workspace.name}
                 className="flex-1 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-40"
                 onClick={handleDelete}
               >
-                Delete
+                <Trans>Delete</Trans>
               </button>
             </div>
           </DialogPanel>
@@ -1814,14 +1815,14 @@ function WorkspaceTrashPanel({
     <section className={embedded ? "w-full" : "mx-auto mt-8 w-full max-w-5xl rounded-[32px] bg-white/85 p-8 shadow-sm shadow-emerald-950/5 ring-1 ring-black/[0.04] dark:bg-zinc-900/85"}>
       <div className="flex flex-wrap items-start justify-between gap-6">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand">Trash</p>
-          <h1 className="mt-2 text-3xl font-semibold text-zinc-950 dark:text-white">Deleted documents</h1>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand"><Trans>Trash</Trans></p>
+          <h1 className="mt-2 text-3xl font-semibold text-zinc-950 dark:text-white"><Trans>Deleted documents</Trans></h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-500">
-            Restore cloud workspace documents or permanently remove them from trash.
+            <Trans>Restore cloud workspace documents or permanently remove them from trash.</Trans>
           </p>
         </div>
         {items.length > 0 && (
-          <button className="workspace-card-link text-red-700 hover:text-red-800" type="button" title="Empty trash" onClick={onEmpty}>
+          <button className="workspace-card-link text-red-700 hover:text-red-800" type="button" title={t`Empty trash`} onClick={onEmpty}>
             <TrashIcon className="h-4 w-4" />
           </button>
         )}
@@ -1829,21 +1830,21 @@ function WorkspaceTrashPanel({
 
       <div className="mt-8 grid gap-3">
         {items.length === 0 ? (
-          <div className="rounded-3xl bg-[#f7faf8] p-8 text-center text-sm text-zinc-500">Trash is empty.</div>
+          <div className="rounded-3xl bg-[#f7faf8] p-8 text-center text-sm text-zinc-500"><Trans>Trash is empty.</Trans></div>
         ) : (
           items.map(item => (
             <article key={item.id} className="rounded-3xl bg-[#f7faf8] p-5 ring-1 ring-black/[0.04]">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div className="min-w-0">
                   <h3 className="truncate text-base font-semibold text-zinc-950">{item.relativePath}</h3>
-                  <p className="mt-1 text-sm text-zinc-500">{item.title || 'Untitled document'}</p>
-                  <p className="mt-2 text-xs text-zinc-400">Deleted {formatDateTime(item.deletedAt)} / Expires {formatDateTime(item.expiresAt)}</p>
+                  <p className="mt-1 text-sm text-zinc-500">{item.title || t`Untitled document`}</p>
+                  <p className="mt-2 text-xs text-zinc-400"><Trans>Deleted {formatDateTime(item.deletedAt)} / Expires {formatDateTime(item.expiresAt)}</Trans></p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <button className="workspace-card-link" type="button" title="Restore" onClick={() => onRestore(item.id)}>
+                  <button className="workspace-card-link" type="button" title={t`Restore`} onClick={() => onRestore(item.id)}>
                     <ArrowUturnLeftIcon className="h-4 w-4" />
                   </button>
-                  <button className="workspace-card-link text-red-700 hover:text-red-800" type="button" title="Delete forever" onClick={() => onDeleteForever(item.id)}>
+                  <button className="workspace-card-link text-red-700 hover:text-red-800" type="button" title={t`Delete forever`} onClick={() => onDeleteForever(item.id)}>
                     <TrashIcon className="h-4 w-4" />
                   </button>
                 </div>
@@ -1886,10 +1887,10 @@ function WorkspacePublishingPanel({
     <section className={embedded ? "w-full" : "mx-auto mt-8 w-full max-w-5xl rounded-[32px] bg-white/85 p-8 shadow-sm shadow-emerald-950/5 ring-1 ring-black/[0.04] dark:bg-zinc-900/85"}>
       <div className="flex flex-wrap items-start justify-between gap-6">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand">Publishing</p>
-          <h1 className="mt-2 text-3xl font-semibold text-zinc-950 dark:text-white">Workspace identity</h1>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand"><Trans>Publishing</Trans></p>
+          <h1 className="mt-2 text-3xl font-semibold text-zinc-950 dark:text-white"><Trans>Workspace identity</Trans></h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-500">
-            Keep the publish name and workspace name here. The workspace slug and storage limit are assigned by the service.
+            <Trans>Keep the publish name and workspace name here. The workspace slug and storage limit are assigned by the service.</Trans>
           </p>
         </div>
         <a className="rounded-full bg-brand/10 px-4 py-2 text-sm font-semibold text-brand" href={publicUrl} target="_blank" rel="noreferrer">
@@ -1898,15 +1899,15 @@ function WorkspacePublishingPanel({
       </div>
 
       <div className="mt-8 grid gap-5 md:grid-cols-2">
-        <WorkspaceField label="Workspace name" value={workspaceName} onChange={onNameChange} />
-        <WorkspaceField label="Publish title" value={publishTitle} onChange={onTitleChange} />
-        <ReadOnlyField label="Workspace slug" value={workspace.slug} />
-        <ReadOnlyField label="Vault space" value={`${formatBytes(workspace.storageBudgetBytes)} allocated`} />
+        <WorkspaceField label={t`Workspace name`} value={workspaceName} onChange={onNameChange} />
+        <WorkspaceField label={t`Publish title`} value={publishTitle} onChange={onTitleChange} />
+        <ReadOnlyField label={t`Workspace slug`} value={workspace.slug} />
+        <ReadOnlyField label={t`Vault space`} value={`${formatBytes(workspace.storageBudgetBytes)} allocated`} />
       </div>
 
       <div className="mt-7 rounded-3xl bg-[#f7faf8] p-5">
         <div className="mb-2 flex justify-between text-sm text-zinc-500">
-          <span>Storage used</span>
+          <span><Trans>Storage used</Trans></span>
           <span>{formatBytes(workspace.storageUsedBytes)} / {formatBytes(workspace.storageBudgetBytes)}</span>
         </div>
         <div className="h-2 rounded-full bg-white">
@@ -1915,11 +1916,11 @@ function WorkspacePublishingPanel({
       </div>
 
       <div className="mt-8 flex items-center justify-between gap-4">
-        <button className="workspace-card-link" type="button" onClick={onOpenDomains}>Manage custom domains</button>
+        <button className="workspace-card-link" type="button" onClick={onOpenDomains}><Trans>Manage custom domains</Trans></button>
         <div className="flex items-center gap-3">
           {message && <p className="text-sm font-semibold text-brand">{message}</p>}
           <button className="h-10 rounded-xl bg-brand px-5 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-50" onClick={onSave} disabled={saving}>
-            {saving ? 'Saving...' : 'Save'}
+            {saving ? t`Saving...` : t`Save`}
           </button>
         </div>
       </div>
@@ -1971,15 +1972,15 @@ function WorkspaceDomainsPanel({
       <section className="rounded-[32px] bg-white/85 p-8 shadow-sm shadow-emerald-950/5 ring-1 ring-black/[0.04] dark:bg-zinc-900/85">
         <div className="flex flex-wrap items-start justify-between gap-6">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand">Custom domains</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand"><Trans>Custom domains</Trans></p>
             <h1 className="mt-2 text-3xl font-semibold text-zinc-950 dark:text-white">{displayWorkspaceName(workspace)} domains</h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-500">
-              Add domains, verify DNS ownership, bind them to this workspace, and manage SSL certificates from one place.
+              <Trans>Add domains, verify DNS ownership, bind them to this workspace, and manage SSL certificates from one place.</Trans>
             </p>
           </div>
           <div className="rounded-2xl bg-[#f7faf8] px-4 py-3 text-sm">
             <span className="font-semibold text-zinc-950">{boundDomains.length}</span>
-            <span className="ml-1 text-zinc-500">bound</span>
+            <span className="ml-1 text-zinc-500"><Trans>bound</Trans></span>
           </div>
         </div>
 
@@ -1987,18 +1988,18 @@ function WorkspaceDomainsPanel({
           <input
             value={newDomain}
             onChange={e => onNewDomainChange(e.target.value)}
-            placeholder="docs.example.com"
+            placeholder={t`docs.example.com`}
             className="h-11 flex-1 border-0 bg-transparent px-3 text-sm outline-none placeholder:text-zinc-400"
             onKeyDown={e => e.key === 'Enter' && onAddDomain()}
           />
-          <button onClick={onAddDomain} className="h-11 rounded-xl bg-brand px-4 text-sm font-semibold text-white hover:bg-brand-dark" title="Add domain">
+          <button onClick={onAddDomain} className="h-11 rounded-xl bg-brand px-4 text-sm font-semibold text-white hover:bg-brand-dark" title={t`Add domain`}>
             <PlusIcon className="h-4 w-4" />
           </button>
         </div>
 
         <div className="mt-8 grid gap-4">
           {domains.length === 0 ? (
-            <div className="rounded-3xl bg-[#f7faf8] p-8 text-center text-sm text-zinc-500">No domains yet.</div>
+            <div className="rounded-3xl bg-[#f7faf8] p-8 text-center text-sm text-zinc-500"><Trans>No domains yet.</Trans></div>
           ) : (
             domains.map(domain => (
               <DomainRow
@@ -2017,10 +2018,10 @@ function WorkspaceDomainsPanel({
       <section className="mt-5 rounded-[32px] bg-white/85 p-8 shadow-sm shadow-emerald-950/5 ring-1 ring-black/[0.04] dark:bg-zinc-900/85">
         <div className="flex flex-wrap items-start justify-between gap-6">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand">SSL</p>
-            <h2 className="mt-2 text-2xl font-semibold text-zinc-950 dark:text-white">Certificate management</h2>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand"><Trans>SSL</Trans></p>
+            <h2 className="mt-2 text-2xl font-semibold text-zinc-950 dark:text-white"><Trans>Certificate management</Trans></h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-500">
-              Upload a PEM certificate for a verified domain. The private key is stored as a hash in the current backend model.
+              <Trans>Upload a PEM certificate for a verified domain. The private key is stored as a hash in the current backend model.</Trans>
             </p>
           </div>
           {message && <p className="rounded-full bg-brand/10 px-4 py-2 text-sm font-semibold text-brand">{message}</p>}
@@ -2029,13 +2030,13 @@ function WorkspaceDomainsPanel({
         <div className="mt-6 grid gap-4 lg:grid-cols-[280px_minmax(0,1fr)]">
           <div>
             <label className="block">
-              <span className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-400">Verified domain</span>
+              <span className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-400"><Trans>Verified domain</Trans></span>
               <select
                 value={certDomainId}
                 onChange={e => onCertDomainChange(e.target.value)}
                 className="mt-2 h-12 w-full rounded-2xl border-0 bg-[#f7faf8] px-4 text-sm outline-none ring-1 ring-black/[0.04]"
               >
-                <option value="">Select a domain</option>
+                <option value=""><Trans>Select a domain</Trans></option>
                 {verifiedDomains.map(domain => (
                   <option key={domain.id} value={domain.id}>{domain.domain}</option>
                 ))}
@@ -2053,13 +2054,13 @@ function WorkspaceDomainsPanel({
             <textarea
               value={certChainPem}
               onChange={e => onCertChainChange(e.target.value)}
-              placeholder="-----BEGIN CERTIFICATE-----"
+              placeholder={t`-----BEGIN CERTIFICATE-----`}
               className="min-h-44 rounded-2xl border-0 bg-[#f7faf8] p-4 font-mono text-xs outline-none ring-1 ring-black/[0.04]"
             />
             <textarea
               value={privateKeyPem}
               onChange={e => onPrivateKeyChange(e.target.value)}
-              placeholder="-----BEGIN PRIVATE KEY-----"
+              placeholder={t`-----BEGIN PRIVATE KEY-----`}
               className="min-h-44 rounded-2xl border-0 bg-[#f7faf8] p-4 font-mono text-xs outline-none ring-1 ring-black/[0.04]"
             />
           </div>
@@ -2089,26 +2090,26 @@ function DomainRow({
         <div>
           <h3 className="text-base font-semibold text-zinc-950">{domain.domain}</h3>
           <div className="mt-2 flex flex-wrap gap-2 text-xs">
-            <Status label={verified ? 'DNS verified' : 'DNS pending'} tone={verified ? 'success' : 'pending'} />
-            <Status label={isBound ? 'Bound here' : domain.workspaceName ? `Bound to ${domain.workspaceName}` : 'Unbound'} tone={isBound ? 'success' : 'neutral'} />
-            <Status label={domain.sslStatus ? `SSL ${domain.sslStatus}` : 'SSL not configured'} tone={domain.sslStatus ? 'success' : 'neutral'} />
+            <Status label={verified ? t`DNS verified` : t`DNS pending`} tone={verified ? 'success' : 'pending'} />
+            <Status label={isBound ? t`Bound here` : domain.workspaceName ? t`Bound to ${domain.workspaceName}` : t`Unbound`} tone={isBound ? 'success' : 'neutral'} />
+            <Status label={domain.sslStatus ? t`SSL ${domain.sslStatus}` : t`SSL not configured`} tone={domain.sslStatus ? 'success' : 'neutral'} />
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          {!verified && <button className="workspace-card-link" title="Verify DNS" onClick={onVerify}><CheckCircleIcon className="h-4 w-4" /></button>}
+          {!verified && <button className="workspace-card-link" title={t`Verify DNS`} onClick={onVerify}><CheckCircleIcon className="h-4 w-4" /></button>}
           {isBound ? (
-            <button className="workspace-card-link" title="Unbind" onClick={onUnbind}><LinkSlashIcon className="h-4 w-4" /></button>
+            <button className="workspace-card-link" title={t`Unbind`} onClick={onUnbind}><LinkSlashIcon className="h-4 w-4" /></button>
           ) : (
-            <button className="workspace-card-link" title="Bind here" onClick={onBind}><LinkIcon className="h-4 w-4" /></button>
+            <button className="workspace-card-link" title={t`Bind here`} onClick={onBind}><LinkIcon className="h-4 w-4" /></button>
           )}
         </div>
       </div>
       {!verified && (
         <div className="mt-4 rounded-2xl bg-white p-4 text-xs text-zinc-500">
-          Add TXT record <code className="rounded bg-[#eef3f1] px-1.5 py-1 font-mono text-zinc-800">{domain.dnsTxtRecord}</code>, then verify DNS.
+          <Trans>Add TXT record <code className="rounded bg-[#eef3f1] px-1.5 py-1 font-mono text-zinc-800">{domain.dnsTxtRecord}</code>, then verify DNS.</Trans>
         </div>
       )}
-      {domain.sslExpiresAt && <p className="mt-3 text-xs text-zinc-500">SSL expires at {domain.sslExpiresAt}</p>}
+      {domain.sslExpiresAt && <p className="mt-3 text-xs text-zinc-500"><Trans>SSL expires at {domain.sslExpiresAt}</Trans></p>}
     </article>
   )
 }
@@ -2178,8 +2179,8 @@ function WebPropertiesSection({ content, onChange }: { content: string; onChange
 
   return (
     <section className="document-info-section">
-      <p className="text-sm font-semibold text-stone-950">Properties</p>
-      <p className="mt-1 text-xs text-stone-500">Edits are written back to YAML frontmatter.</p>
+      <p className="text-sm font-semibold text-stone-950"><Trans>Properties</Trans></p>
+      <p className="mt-1 text-xs text-stone-500"><Trans>Edits are written back to YAML frontmatter.</Trans></p>
       <div className="mt-3 space-y-3">
         {fields.map((field) => (
           <label key={field} className="block">
@@ -2219,27 +2220,27 @@ function WebPublishSection({
   return (
     <section className="document-info-section">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-sm font-semibold text-stone-950">Publish</p>
+        <p className="text-sm font-semibold text-stone-950"><Trans>Publish</Trans></p>
         <span className={`status-chip ${isPublished ? (hasUnpublishedChanges ? 'status-chip-warning' : 'status-chip-success') : 'status-chip-neutral'}`}>
-          {isPublished ? (hasUnpublishedChanges ? 'Changed' : 'Published') : 'Not published'}
+          {isPublished ? (hasUnpublishedChanges ? t`Changed` : t`Published`) : t`Not published`}
         </span>
       </div>
       {publishState?.publishedAt && (
-        <p className="mt-2 text-xs text-stone-500">Published {new Date(publishState.publishedAt).toLocaleString()}</p>
+        <p className="mt-2 text-xs text-stone-500"><Trans>Published {new Date(publishState.publishedAt).toLocaleString()}</Trans></p>
       )}
       {hasUnpublishedChanges && (
-        <p className="mt-2 text-xs text-amber-700">The public snapshot is behind the current document.</p>
+        <p className="mt-2 text-xs text-amber-700"><Trans>The public snapshot is behind the current document.</Trans></p>
       )}
       {isPublished && (
         <a className="mt-3 block truncate text-xs font-semibold text-teal-700" href={publishedUrl} target="_blank" rel="noreferrer">
-          View public page
+          <Trans>View public page</Trans>
         </a>
       )}
       <div className="mt-3 grid grid-cols-2 gap-2">
         <button
           className={`sidebar-action ${hasUnpublishedChanges ? 'bg-amber-500 text-white hover:bg-amber-600 hover:text-white' : ''}`}
           type="button"
-          title={hasUnpublishedChanges ? 'Republish' : 'Publish'}
+          title={hasUnpublishedChanges ? t`Republish` : t`Publish`}
           disabled={!canEdit || saving}
           onClick={() => { void onPublish() }}
         >
@@ -2248,14 +2249,14 @@ function WebPublishSection({
         <button
           className="sidebar-action hover:text-red-700"
           type="button"
-          title="Unpublish"
+          title={t`Unpublish`}
           disabled={!canEdit || saving || !isPublished}
           onClick={() => { void onUnpublish() }}
         >
           <LinkSlashIcon className="h-4 w-4" />
         </button>
       </div>
-      <p className="mt-3 text-xs text-stone-500">Publishing uses a server snapshot; frontmatter status is treated as user metadata.</p>
+      <p className="mt-3 text-xs text-stone-500"><Trans>Publishing uses a server snapshot; frontmatter status is treated as user metadata.</Trans></p>
     </section>
   )
 }
@@ -2268,9 +2269,9 @@ function WebOutlineSection({ content }: { content: string }) {
 
   return (
     <section className="document-info-section">
-      <p className="text-sm font-semibold text-stone-950">Outline</p>
+      <p className="text-sm font-semibold text-stone-950"><Trans>Outline</Trans></p>
       {headings.length === 0 ? (
-        <p className="mt-2 text-xs text-stone-500">No headings found.</p>
+        <p className="mt-2 text-xs text-stone-500"><Trans>No headings found.</Trans></p>
       ) : (
         <div className="mt-2 space-y-1">
           {headings.map((h, i) => (
@@ -2297,10 +2298,10 @@ function WebLinksSection({ content }: { content: string }) {
 
   return (
     <section className="document-info-section">
-      <p className="text-sm font-semibold text-stone-950">Outgoing links</p>
+      <p className="text-sm font-semibold text-stone-950"><Trans>Outgoing links</Trans></p>
       <div className="mt-2 space-y-1">
         {links.length === 0 ? (
-          <p className="text-xs text-stone-500">No outgoing links.</p>
+          <p className="text-xs text-stone-500"><Trans>No outgoing links.</Trans></p>
         ) : (
           links.map((l, i) => (
             <div key={i} className="rounded-md border border-stone-200 px-2 py-1.5 text-xs">
@@ -2491,7 +2492,7 @@ function WebDocExplorer({
   const handleCreateFolder = async (parentPath = '') => {
     if (!workspaceId) return
     if (readOnly) return
-    const name = await prompt('New folder name:')
+    const name = await prompt(t`New folder name:`)
     if (!name?.trim()) return
     const relativePath = parentPath ? `${parentPath}/${name.trim()}` : name.trim()
     await api.createFolder(workspaceId, relativePath)
@@ -2503,7 +2504,7 @@ function WebDocExplorer({
   const handleCreateDocInFolder = async (folderPath: string) => {
     if (!workspaceId) return
     if (readOnly) return
-    const name = await prompt('New document name (e.g. note.md):')
+    const name = await prompt(t`New document name (e.g. note.md):`)
     if (!name?.trim()) return
     const relativePath = `${folderPath}/${name.trim()}`
     await onSaveDocument({ relativePath, content: '' })
@@ -2516,7 +2517,7 @@ function WebDocExplorer({
   const handleDeleteFolder = async (folderPath: string) => {
     if (!workspaceId) return
     if (readOnly) return
-    const confirmed = await confirmDialog(`Delete folder "${folderPath}" and all its contents?`, { title: 'Delete folder', destructive: true })
+    const confirmed = await confirmDialog(t`Delete folder "${folderPath}" and all its contents?`, { title: t`Delete folder`, destructive: true })
     if (!confirmed) return
     try {
       const children = documents.filter(d => d.relativePath.startsWith(folderPath + '/'))
@@ -2540,7 +2541,7 @@ function WebDocExplorer({
   const handleRenameDoc = async (doc: DocumentListItem) => {
     if (!workspaceId) return
     if (readOnly) return
-    const newName = await prompt('Rename to:', doc.relativePath)
+    const newName = await prompt(t`Rename to:`, doc.relativePath)
     if (!newName || newName === doc.relativePath) return
     try {
       const fullDoc = await api.getDocument(workspaceId, doc.id)
@@ -2562,7 +2563,7 @@ function WebDocExplorer({
     <div className="px-3 pb-4">
       <input
         className="sync-input"
-        placeholder="Search files..."
+        placeholder={t`Search files...`}
         value={query}
         onChange={e => setQuery(e.target.value)}
       />
@@ -2570,7 +2571,7 @@ function WebDocExplorer({
       {filteredResults ? (
         <div className="mt-3 space-y-1">
           {filteredResults.length === 0 ? (
-            <p className="text-xs text-stone-500">No matches.</p>
+            <p className="text-xs text-stone-500"><Trans>No matches.</Trans></p>
           ) : (
             filteredResults.map(doc => (
               <button key={doc.id} type="button" className="command-row" onClick={() => onOpen(doc.id)}>
@@ -2587,11 +2588,11 @@ function WebDocExplorer({
           {favorites.length > 0 && (
             <>
               <div className="mb-2 mt-4 flex items-center justify-between">
-                <p className="text-xs font-semibold uppercase text-stone-500">Favorites</p>
+                <p className="text-xs font-semibold uppercase text-stone-500"><Trans>Favorites</Trans></p>
                 <button
                   className="subtle-button aspect-square px-0"
                   type="button"
-                  title="Toggle favorite"
+                  title={t`Toggle favorite`}
                   disabled={!selectedDoc}
                   onClick={() => {
                     if (selectedDoc) {
@@ -2606,7 +2607,7 @@ function WebDocExplorer({
               <div id="favorite-list" className="space-y-1">
                 {favorites.map(doc => (
                   <button key={doc.id} type="button" className="tree-button text-xs" onClick={() => onOpen(doc.id)}>
-                    <span className="text-stone-500">Favorite</span>
+                    <span className="text-stone-500"><Trans>Favorite</Trans></span>
                     <span className="truncate font-semibold">{doc.relativePath.replace(/\.(md|markdown|mdown|mkd)$/i, '')}</span>
                   </button>
                 ))}
@@ -2614,12 +2615,12 @@ function WebDocExplorer({
             </>
           )}
 
-          <nav className="mt-2" aria-label="Workspace files">
+          <nav className="mt-2" aria-label={t`Workspace files`}>
             <div className="mb-1 flex items-center justify-end gap-0.5">
               <button
                 className="subtle-button aspect-square px-0"
                 type="button"
-                title="New folder"
+                title={t`New folder`}
                 disabled={readOnly}
                 onClick={() => handleCreateFolder()}
               >
@@ -2628,7 +2629,7 @@ function WebDocExplorer({
               <button
                 className="subtle-button aspect-square px-0"
                 type="button"
-                title={allExpanded ? 'Collapse all' : 'Expand all'}
+                title={allExpanded ? t`Collapse all` : t`Expand all`}
                 onClick={toggleExpandCollapse}
                 disabled={folderPaths.size === 0}
               >
@@ -2639,7 +2640,7 @@ function WebDocExplorer({
             </div>
             {tree.length === 0 ? (
               <p className="rounded-md border border-dashed border-stone-300 p-3 text-sm text-stone-500">
-                No documents yet.
+                <Trans>No documents yet.</Trans>
               </p>
             ) : (
               <ul className="space-y-1">
@@ -2661,14 +2662,14 @@ function WebDocExplorer({
 
           <section className="mt-5 border-t border-emerald-900/10 pt-4">
             <div className="mb-2 flex items-center justify-between gap-2">
-              <p className="text-xs font-semibold uppercase text-stone-500">Trash</p>
+              <p className="text-xs font-semibold uppercase text-stone-500"><Trans>Trash</Trans></p>
               {trashItems.length > 0 && (
                 <button
                   className="subtle-button aspect-square px-0"
                   type="button"
-                  title="Empty trash"
+                  title={t`Empty trash`}
                   disabled={readOnly}
-                  onClick={async () => { if (await confirmDialog('Permanently delete all items in trash?', { title: 'Empty trash', destructive: true })) onEmptyTrash() }}
+                  onClick={async () => { if (await confirmDialog(t`Permanently delete all items in trash?`, { title: t`Empty trash`, destructive: true })) onEmptyTrash() }}
                 >
                   <TrashIcon className="h-4 w-4" />
                 </button>
@@ -2676,7 +2677,7 @@ function WebDocExplorer({
             </div>
             <div className="space-y-1">
               {trashItems.length === 0 ? (
-                <p className="text-xs text-stone-500">No deleted documents.</p>
+                <p className="text-xs text-stone-500"><Trans>No deleted documents.</Trans></p>
               ) : (
                 trashItems.map(item => (
                   <div key={item.id} className="rounded-lg px-2.5 py-2 text-xs text-[#4b5753] hover:bg-white/80">
@@ -2687,7 +2688,7 @@ function WebDocExplorer({
                         <button
                           className="subtle-button aspect-square px-0"
                           type="button"
-                          title="Restore"
+                          title={t`Restore`}
                           disabled={readOnly}
                           onClick={() => onRestoreTrash(item.id)}
                         >
@@ -2696,9 +2697,9 @@ function WebDocExplorer({
                         <button
                           className="subtle-button aspect-square px-0 text-red-400 hover:text-red-600"
                           type="button"
-                          title="Permanently delete"
+                          title={t`Permanently delete`}
                           disabled={readOnly}
-                          onClick={async () => { if (await confirmDialog('Permanently delete this item?', { title: 'Permanently delete', destructive: true })) onDeleteTrash(item.id) }}
+                          onClick={async () => { if (await confirmDialog(t`Permanently delete this item?`, { title: t`Permanently delete`, destructive: true })) onDeleteTrash(item.id) }}
                         >
                           <XMarkIcon className="h-4 w-4" />
                         </button>
@@ -2728,14 +2729,14 @@ function WebDocExplorer({
                     className="context-menu-button"
                     onClick={() => { void handleCreateDocInFolder(treeContextMenu.node.path); setTreeContextMenu(null) }}
                   >
-                    <DocumentPlusIcon className="mr-2 h-3.5 w-3.5" />New document
+                    <DocumentPlusIcon className="mr-2 h-3.5 w-3.5" /><Trans>New document</Trans>
                   </button>
                   <button
                     type="button"
                     className="context-menu-button"
                     onClick={() => { void handleCreateFolder(treeContextMenu.node.path); setTreeContextMenu(null) }}
                   >
-                    <FolderPlusIcon className="mr-2 h-3.5 w-3.5" />New folder
+                    <FolderPlusIcon className="mr-2 h-3.5 w-3.5" /><Trans>New folder</Trans>
                   </button>
                   <div className="my-1 border-t border-stone-200" />
                   <button
@@ -2743,7 +2744,7 @@ function WebDocExplorer({
                     className="context-menu-button text-red-700 hover:text-red-800"
                     onClick={() => { void handleDeleteFolder(treeContextMenu.node.path); setTreeContextMenu(null) }}
                   >
-                    <TrashIcon className="mr-2 h-3.5 w-3.5" />Delete folder
+                    <TrashIcon className="mr-2 h-3.5 w-3.5" /><Trans>Delete folder</Trans>
                   </button>
                 </>
               )}
@@ -2756,7 +2757,7 @@ function WebDocExplorer({
                 className="context-menu-button"
                 onClick={() => { onOpen(treeContextMenu.node.doc!.id); setTreeContextMenu(null) }}
               >
-                <FolderOpenIcon className="mr-2 h-3.5 w-3.5" />Open
+                <FolderOpenIcon className="mr-2 h-3.5 w-3.5" /><Trans>Open</Trans>
               </button>
               {!readOnly && (
                 <button
@@ -2764,7 +2765,7 @@ function WebDocExplorer({
                   className="context-menu-button"
                   onClick={() => { void handleRenameDoc(treeContextMenu.node.doc!); }}
                 >
-                  <PencilIcon className="mr-2 h-3.5 w-3.5" />Rename
+                  <PencilIcon className="mr-2 h-3.5 w-3.5" /><Trans>Rename</Trans>
                 </button>
               )}
               {!readOnly && (
@@ -2776,7 +2777,7 @@ function WebDocExplorer({
                     onClick={() => { void onPublish(treeContextMenu.node.doc!.id); setTreeContextMenu(null) }}
                   >
                     {treeContextMenu.node.doc.isPublished ? <ArrowPathIcon className="mr-2 h-3.5 w-3.5" /> : <ArrowUpTrayIcon className="mr-2 h-3.5 w-3.5" />}
-                    {treeContextMenu.node.doc.isPublished ? 'Republish' : 'Publish'}
+                    {treeContextMenu.node.doc.isPublished ? t`Republish` : t`Publish`}
                   </button>
                   {treeContextMenu.node.doc.isPublished && (
                     <button
@@ -2784,7 +2785,7 @@ function WebDocExplorer({
                       className="context-menu-button text-red-700 hover:text-red-800"
                       onClick={() => { void onUnpublish(treeContextMenu.node.doc!.id); setTreeContextMenu(null) }}
                     >
-                      <LinkSlashIcon className="mr-2 h-3.5 w-3.5" />Unpublish
+                      <LinkSlashIcon className="mr-2 h-3.5 w-3.5" /><Trans>Unpublish</Trans>
                     </button>
                   )}
                 </>
@@ -2798,7 +2799,7 @@ function WebDocExplorer({
                   setTreeContextMenu(null)
                 }}
               >
-                <ClipboardIcon className="mr-2 h-3.5 w-3.5" />Copy path
+                <ClipboardIcon className="mr-2 h-3.5 w-3.5" /><Trans>Copy path</Trans>
               </button>
               {!readOnly && (
                 <button
@@ -2806,7 +2807,7 @@ function WebDocExplorer({
                   className="context-menu-button text-red-700 hover:text-red-800"
                   onClick={() => { onDelete(treeContextMenu.node.doc!.id); setTreeContextMenu(null) }}
                 >
-                  <TrashIcon className="mr-2 h-3.5 w-3.5" />Move to trash
+                  <TrashIcon className="mr-2 h-3.5 w-3.5" /><Trans>Move to trash</Trans>
                 </button>
               )}
             </>
@@ -2864,7 +2865,7 @@ const WebTreeNodeRow = memo(function WebTreeNodeRow({
         </span>
         <span className={`truncate ${isFolder ? 'font-semibold text-[#4b5753]' : ''}`}>{node.name}</span>
         {!isFolder && node.doc?.isPublished && (
-          <span className="ml-auto h-1.5 w-1.5 shrink-0 rounded-full bg-[#008884]" title="Published" />
+          <span className="ml-auto h-1.5 w-1.5 shrink-0 rounded-full bg-[#008884]" title={t`Published`} />
         )}
       </button>
       {isFolder && isExpanded && node.children.length > 0 && (

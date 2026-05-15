@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { t, Trans } from "@lingui/macro";
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
 import { FolderPlusIcon } from "@heroicons/react/24/outline";
 import { useAppDispatch, useAppState } from "../../app/AppState";
@@ -40,14 +41,14 @@ export function CreateFolderDialog({
         <DialogPanel className="w-full max-w-sm rounded-xl bg-white p-6 shadow-2xl">
           <DialogTitle className="flex items-center gap-2 text-base font-semibold text-stone-900">
             <FolderPlusIcon className="h-5 w-5 text-[#006f6b]" />
-            New Folder
+            <Trans>New Folder</Trans>
           </DialogTitle>
           {parentPath && (
-            <p className="mt-1 text-xs text-stone-500">in {parentPath}/</p>
+            <p className="mt-1 text-xs text-stone-500"><Trans>in {parentPath}/</Trans></p>
           )}
           <input
             className="mt-3 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-[#008884] focus:outline-none focus:ring-1 focus:ring-[#008884]"
-            placeholder="Folder name"
+            placeholder={t`Folder name`}
             value={name}
             onChange={(e) => { setName(e.target.value); setError(""); }}
             onKeyDown={(e) => { if (e.key === "Enter") void handleCreate(); }}
@@ -60,7 +61,7 @@ export function CreateFolderDialog({
               className="rounded-lg px-3 py-1.5 text-sm text-stone-600 hover:bg-stone-100"
               onClick={() => { setName(""); setError(""); onClose(); }}
             >
-              Cancel
+              <Trans>Cancel</Trans>
             </button>
             <button
               type="button"
@@ -68,7 +69,7 @@ export function CreateFolderDialog({
               onClick={() => void handleCreate()}
               disabled={!name.trim()}
             >
-              Create
+              <Trans>Create</Trans>
             </button>
           </div>
         </DialogPanel>

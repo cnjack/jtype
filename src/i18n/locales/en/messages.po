@@ -1,0 +1,940 @@
+msgid ""
+msgstr ""
+"POT-Creation-Date: 2026-05-14\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: @lingui/cli\n"
+"Language: en\n"
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Plural-Forms: \n"
+
+#. placeholder {0}: documents.length
+#: src/components/layout/VaultHome.tsx
+msgid "{0, plural, one {# Markdown file} other {# Markdown files}}"
+msgstr "{0, plural, one {# Markdown file} other {# Markdown files}}"
+
+#. placeholder {0}: isPublished ? (hasUnpublishedChanges ? "Changed" : "Published") : "Not published"
+#: src/components/editor/EditorShell.tsx
+msgid "{0}"
+msgstr "{0}"
+
+#. placeholder {0}: state.activeConflicts.length
+#. placeholder {1}: state.activeConflicts.length > 1 ? "s" : ""
+#: src/components/editor/EditorShell.tsx
+msgid "{0} conflict{1}"
+msgstr "{0} conflict{1}"
+
+#. placeholder {0}: state.activeConflicts.length
+#. placeholder {1}: state.activeConflicts.length > 1 ? "s" : ""
+#: src/components/editor/EditorShell.tsx
+msgid "{0} conflict{1} to resolve"
+msgstr "{0} conflict{1} to resolve"
+
+#. placeholder {0}: ws.documentCount ?? 0
+#. placeholder {1}: formatBytes(ws.storageBudgetBytes)
+#: src/components/modals/AccountDialog.tsx
+msgid "{0} documents - {1} budget"
+msgstr "{0} documents - {1} budget"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "{docCount} documents"
+msgstr "{docCount} documents"
+
+#: src/components/modals/MoveFolderDialog.tsx
+msgid "/ (root)"
+msgstr "/ (root)"
+
+#. placeholder {0}: summary.totalSubfolders
+#. placeholder {1}: summary.totalSubfolders !== 1 ? "s" : ""
+#: src/components/modals/DeleteFolderDialog.tsx
+msgid "📁 {0} subfolder{1}"
+msgstr "📁 {0} subfolder{1}"
+
+#. placeholder {0}: summary.totalDocuments
+#. placeholder {1}: summary.totalDocuments !== 1 ? "s" : ""
+#: src/components/modals/DeleteFolderDialog.tsx
+msgid "📄 {0} document{1}"
+msgstr "📄 {0} document{1}"
+
+#: src/components/layout/WelcomeScreen.tsx
+msgid "A vault is a local folder for notes, sync, and publishing. A single file opens JType as a focused Markdown editor."
+msgstr "A vault is a local folder for notes, sync, and publishing. A single file opens JType as a focused Markdown editor."
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Account"
+msgstr "Account"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Account service URL"
+msgstr "Account service URL"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Add table column right"
+msgstr "Add table column right"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Add table row below"
+msgstr "Add table row below"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Add to favorites"
+msgstr "Add to favorites"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Added to favorites."
+msgstr "Added to favorites."
+
+#: src/components/editor/EditorShell.tsx
+msgid "Advanced"
+msgstr "Advanced"
+
+#: src/components/layout/Header.tsx
+msgid "Back to home"
+msgstr "Back to home"
+
+#: src/components/modals/SyncPromptDialog.tsx
+msgid "Back up this local vault to a cloud workspace, keep devices in sync, and open the same notes from the web."
+msgstr "Back up this local vault to a cloud workspace, keep devices in sync, and open the same notes from the web."
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Bind the current local vault to one cloud workspace."
+msgstr "Bind the current local vault to one cloud workspace."
+
+#: src/components/editor/EditorShell.tsx
+msgid "Bold"
+msgstr "Bold"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Bold - Ctrl+B"
+msgstr "Bold - Ctrl+B"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Bound"
+msgstr "Bound"
+
+#. placeholder {0}: activeVaultBinding.workspaceName
+#: src/components/modals/AccountDialog.tsx
+msgid "Bound to {0}. Sync will push and pull this vault."
+msgstr "Bound to {0}. Sync will push and pull this vault."
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Browser authorization is open. Sync will continue after sign-in completes."
+msgstr "Browser authorization is open. Sync will continue after sign-in completes."
+
+#: src/components/modals/SyncPromptDialog.tsx
+msgid "Browser authorization is open. This sync will continue after sign-in completes."
+msgstr "Browser authorization is open. This sync will continue after sign-in completes."
+
+#: src/components/modals/CreateFolderDialog.tsx
+#: src/components/modals/CreateNoteDialog.tsx
+#: src/components/modals/DeleteFolderDialog.tsx
+#: src/components/modals/MoveFolderDialog.tsx
+msgid "Cancel"
+msgstr "Cancel"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Cannot move folder into itself."
+msgstr "Cannot move folder into itself."
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Choose a local folder"
+msgstr "Choose a local folder"
+
+#. placeholder {0}: state.workspace?.rootPath
+#: src/components/layout/VaultHome.tsx
+msgid "Choose a note or create a new one. This vault lives at <0>{0}</0>."
+msgstr "Choose a note or create a new one. This vault lives at <0>{0}</0>."
+
+#: src/components/modals/AccountDialog.tsx
+#: src/components/modals/ConflictDialog.tsx
+msgid "Close"
+msgstr "Close"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Close account dialog"
+msgstr "Close account dialog"
+
+#: src/components/modals/ConflictDialog.tsx
+msgid "Close conflicts dialog"
+msgstr "Close conflicts dialog"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Close vault"
+msgstr "Close vault"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Cloud document not found."
+msgstr "Cloud document not found."
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Cloud sync"
+msgstr "Cloud sync"
+
+#: src/components/modals/SyncPromptDialog.tsx
+msgid "Cloud sync reminder snoozed."
+msgstr "Cloud sync reminder snoozed."
+
+#: src/components/layout/Header.tsx
+#: src/components/modals/AccountDialog.tsx
+msgid "Cloud workspace"
+msgstr "Cloud workspace"
+
+#. placeholder {0}: currentBinding?.workspaceName
+#: src/components/layout/Header.tsx
+msgid "Cloud workspace: {0}"
+msgstr "Cloud workspace: {0}"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Cloud workspaces"
+msgstr "Cloud workspaces"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Collapse all"
+msgstr "Collapse all"
+
+#: src/components/modals/CommandPalette.tsx
+msgid "Command palette"
+msgstr "Command palette"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Connect desktop sync through the browser and choose the service endpoint."
+msgstr "Connect desktop sync through the browser and choose the service endpoint."
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Connect in browser"
+msgstr "Connect in browser"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Connect in the browser. Desktop never asks for your password."
+msgstr "Connect in the browser. Desktop never asks for your password."
+
+#: src/components/editor/EditorShell.tsx
+msgid "Connect this vault to a cloud workspace before publishing."
+msgstr "Connect this vault to a cloud workspace before publishing."
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Connect to load workspaces."
+msgstr "Connect to load workspaces."
+
+#. placeholder {0}: state.syncUsername || t`your account`
+#: src/components/modals/AccountDialog.tsx
+msgid "Connected as {0}. Sync vaults with cloud workspaces."
+msgstr "Connected as {0}. Sync vaults with cloud workspaces."
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Copy path"
+msgstr "Copy path"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Could not prepare PDF export."
+msgstr "Could not prepare PDF export."
+
+#: src/components/editor/EditorShell.tsx
+msgid "Could not prepare PDF page."
+msgstr "Could not prepare PDF page."
+
+#: src/components/modals/CreateFolderDialog.tsx
+#: src/components/modals/CreateNoteDialog.tsx
+msgid "Create"
+msgstr "Create"
+
+#: src/components/modals/QuickSwitcher.tsx
+msgid "Create \"{query}.md\""
+msgstr "Create \"{query}.md\""
+
+#: src/components/layout/WelcomeScreen.tsx
+msgid "Create a vault or edit one Markdown file."
+msgstr "Create a vault or edit one Markdown file."
+
+#: src/components/layout/VaultHome.tsx
+msgid "Create your first Markdown note or drop files into this vault."
+msgstr "Create your first Markdown note or drop files into this vault."
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Create your first Markdown note."
+msgstr "Create your first Markdown note."
+
+#. placeholder {0}: name.trim()
+#: src/components/sidebar/Sidebar.tsx
+msgid "Created folder {0}."
+msgstr "Created folder {0}."
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Current vault"
+msgstr "Current vault"
+
+#: src/components/layout/WelcomeScreen.tsx
+msgid "Default vault path: <0>{defaultVaultPath}</0>"
+msgstr "Default vault path: <0>{defaultVaultPath}</0>"
+
+#: src/components/modals/DeleteFolderDialog.tsx
+msgid "Delete"
+msgstr "Delete"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Delete folder"
+msgstr "Delete folder"
+
+#: src/components/modals/DeleteFolderDialog.tsx
+msgid "Delete Folder"
+msgstr "Delete Folder"
+
+#: src/components/modals/DeleteFolderDialog.tsx
+msgid "Delete folder and contents (move to trash)"
+msgstr "Delete folder and contents (move to trash)"
+
+#: src/components/modals/DeleteFolderDialog.tsx
+msgid "Delete folder only (keep documents in parent)"
+msgstr "Delete folder only (keep documents in parent)"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Deleted"
+msgstr "Deleted"
+
+#: src/components/modals/MoveFolderDialog.tsx
+msgid "Destination: <0>{destPath}</0>"
+msgstr "Destination: <0>{destPath}</0>"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Disconnect"
+msgstr "Disconnect"
+
+#. placeholder {0}: currentVaultBinding.workspaceName
+#: src/components/modals/AccountDialog.tsx
+msgid ""
+"Disconnect \"{0}\" from this vault?\n"
+"\n"
+"Local files will stay on disk. Cloud data and workspace membership are not changed."
+msgstr ""
+"Disconnect \"{0}\" from this vault?\n"
+"\n"
+"Local files will stay on disk. Cloud data and workspace membership are not changed."
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Disconnect cloud sync"
+msgstr "Disconnect cloud sync"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Disconnect workspace"
+msgstr "Disconnect workspace"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Document info"
+msgstr "Document info"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Document Info"
+msgstr "Document Info"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Document published."
+msgstr "Document published."
+
+#: src/components/editor/EditorShell.tsx
+msgid "Document unpublished."
+msgstr "Document unpublished."
+
+#: src/components/layout/VaultHome.tsx
+msgid "Documents"
+msgstr "Documents"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Drop a folder here to open it as a vault."
+msgstr "Drop a folder here to open it as a vault."
+
+#: src/components/editor/EditorShell.tsx
+msgid "Edits are written back to YAML frontmatter."
+msgstr "Edits are written back to YAML frontmatter."
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Empty trash"
+msgstr "Empty trash"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Enable cloud sync"
+msgstr "Enable cloud sync"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Enable cloud sync for this vault first"
+msgstr "Enable cloud sync for this vault first"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Expand all"
+msgstr "Expand all"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Export"
+msgstr "Export"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Exported PDF to {outputPath}."
+msgstr "Exported PDF to {outputPath}."
+
+#: src/components/editor/EditorShell.tsx
+msgid "Exporting PDF..."
+msgstr "Exporting PDF..."
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Favorite"
+msgstr "Favorite"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Favorites"
+msgstr "Favorites"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Focus mode"
+msgstr "Focus mode"
+
+#: src/components/modals/DeleteFolderDialog.tsx
+msgid "Folder <0>\"{folderName}\"</0>"
+msgstr "Folder <0>\"{folderName}\"</0>"
+
+#: src/components/modals/CreateFolderDialog.tsx
+msgid "Folder name"
+msgstr "Folder name"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Format table"
+msgstr "Format table"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "General"
+msgstr "General"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Hide"
+msgstr "Hide"
+
+#: src/components/modals/CreateFolderDialog.tsx
+msgid "in {parentPath}/"
+msgstr "in {parentPath}/"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Inline code"
+msgstr "Inline code"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Insert formula"
+msgstr "Insert formula"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Insert formula block"
+msgstr "Insert formula block"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Insert link"
+msgstr "Insert link"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Insert Mermaid diagram"
+msgstr "Insert Mermaid diagram"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Insert or edit table - Ctrl+Shift+T"
+msgstr "Insert or edit table - Ctrl+Shift+T"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Insert or format table"
+msgstr "Insert or format table"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Italic - Ctrl+I"
+msgstr "Italic - Ctrl+I"
+
+#: src/components/layout/Header.tsx
+msgid "Language"
+msgstr "Language"
+
+#: src/components/modals/SyncPromptDialog.tsx
+msgid "Later"
+msgstr "Later"
+
+#. placeholder {0}: l.line + 1
+#: src/components/editor/EditorShell.tsx
+msgid "line {0}"
+msgstr "line {0}"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Link - Ctrl+K"
+msgstr "Link - Ctrl+K"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Local mode"
+msgstr "Local mode"
+
+#: src/components/modals/SyncPromptDialog.tsx
+msgid "Local only"
+msgstr "Local only"
+
+#: src/components/layout/Header.tsx
+msgid "Local vault mode"
+msgstr "Local vault mode"
+
+#: src/components/layout/Header.tsx
+msgid "Log out"
+msgstr "Log out"
+
+#: src/components/editor/EditorShell.tsx
+#: src/components/layout/VaultHome.tsx
+msgid "Markdown"
+msgstr "Markdown"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Markdown editor"
+msgstr "Markdown editor"
+
+#: src/components/layout/Header.tsx
+#: src/components/layout/VaultHome.tsx
+#: src/components/layout/WelcomeScreen.tsx
+msgid "Markdown file"
+msgstr "Markdown file"
+
+#: src/components/modals/MoveFolderDialog.tsx
+msgid "Move"
+msgstr "Move"
+
+#: src/components/modals/MoveFolderDialog.tsx
+msgid "Move to Folder"
+msgstr "Move to Folder"
+
+#: src/components/editor/EditorShell.tsx
+#: src/components/sidebar/Sidebar.tsx
+msgid "Move to trash"
+msgstr "Move to trash"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Move to..."
+msgstr "Move to..."
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "New document"
+msgstr "New document"
+
+#: src/components/layout/VaultHome.tsx
+#: src/components/modals/CreateNoteDialog.tsx
+#: src/components/sidebar/Sidebar.tsx
+msgid "New Document"
+msgstr "New Document"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "New document name (e.g. note.md):"
+msgstr "New document name (e.g. note.md):"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "New folder"
+msgstr "New folder"
+
+#: src/components/modals/CreateFolderDialog.tsx
+msgid "New Folder"
+msgstr "New Folder"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "New folder name:"
+msgstr "New folder name:"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "No cloud workspaces yet. Sync this vault to create one."
+msgstr "No cloud workspaces yet. Sync this vault to create one."
+
+#: src/components/modals/CommandPalette.tsx
+msgid "No commands found."
+msgstr "No commands found."
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "No deleted notes."
+msgstr "No deleted notes."
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "No documents yet."
+msgstr "No documents yet."
+
+#: src/components/editor/EditorShell.tsx
+msgid "No file selected"
+msgstr "No file selected"
+
+#: src/components/editor/EditorShell.tsx
+msgid "No headings found."
+msgstr "No headings found."
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "No matches."
+msgstr "No matches."
+
+#: src/components/layout/VaultHome.tsx
+msgid "No notes yet."
+msgstr "No notes yet."
+
+#: src/components/editor/EditorShell.tsx
+msgid "No outgoing links."
+msgstr "No outgoing links."
+
+#: src/components/layout/WelcomeScreen.tsx
+msgid "No recent vaults or Markdown files yet."
+msgstr "No recent vaults or Markdown files yet."
+
+#: src/components/editor/EditorShell.tsx
+msgid "No unsaved changes"
+msgstr "No unsaved changes"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "No vault"
+msgstr "No vault"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Not bound to a cloud workspace yet. Binding starts bidirectional sync for this vault."
+msgstr "Not bound to a cloud workspace yet. Binding starts bidirectional sync for this vault."
+
+#: src/components/modals/CreateNoteDialog.tsx
+msgid "Note name..."
+msgstr "Note name..."
+
+#: src/components/editor/EditorShell.tsx
+msgid "Only web, email, and phone links can be opened from preview."
+msgstr "Only web, email, and phone links can be opened from preview."
+
+#: src/components/modals/QuickSwitcher.tsx
+#: src/components/sidebar/Sidebar.tsx
+msgid "Open"
+msgstr "Open"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Open a Markdown file to edit frontmatter properties."
+msgstr "Open a Markdown file to edit frontmatter properties."
+
+#: src/components/editor/EditorShell.tsx
+msgid "Open a Markdown file to inspect links."
+msgstr "Open a Markdown file to inspect links."
+
+#: src/components/editor/EditorShell.tsx
+msgid "Open a Markdown file to see its outline."
+msgstr "Open a Markdown file to see its outline."
+
+#: src/components/layout/VaultHome.tsx
+msgid "Open a note and it will appear here."
+msgstr "Open a note and it will appear here."
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Open a vault or Markdown file."
+msgstr "Open a vault or Markdown file."
+
+#: src/components/modals/QuickSwitcher.tsx
+msgid "Open a vault to quick switch files."
+msgstr "Open a vault to quick switch files."
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Open another vault"
+msgstr "Open another vault"
+
+#: src/components/layout/Header.tsx
+msgid "Open file"
+msgstr "Open file"
+
+#: src/components/layout/WelcomeScreen.tsx
+msgid "Open Markdown file"
+msgstr "Open Markdown file"
+
+#: src/components/modals/QuickSwitcher.tsx
+msgid "Open or create Document"
+msgstr "Open or create Document"
+
+#: src/components/modals/QuickSwitcher.tsx
+msgid "Open or create Document..."
+msgstr "Open or create Document..."
+
+#: src/components/editor/EditorShell.tsx
+msgid "Open or drop a Markdown file to start editing."
+msgstr "Open or drop a Markdown file to start editing."
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Open site: {displaySiteUrl}"
+msgstr "Open site: {displaySiteUrl}"
+
+#: src/components/layout/WelcomeScreen.tsx
+msgid "Open vault"
+msgstr "Open vault"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Outgoing links"
+msgstr "Outgoing links"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Path copied to clipboard."
+msgstr "Path copied to clipboard."
+
+#: src/components/editor/EditorShell.tsx
+msgid "PDF"
+msgstr "PDF"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Permanent delete queued. Will sync on next push."
+msgstr "Permanent delete queued. Will sync on next push."
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Permanently delete"
+msgstr "Permanently delete"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Preparing PDF export..."
+msgstr "Preparing PDF export..."
+
+#: src/components/layout/Header.tsx
+#: src/components/modals/AccountDialog.tsx
+msgid "Profile"
+msgstr "Profile"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Properties"
+msgstr "Properties"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Properties, outline, links, and publish."
+msgstr "Properties, outline, links, and publish."
+
+#: src/components/editor/EditorShell.tsx
+msgid "Public URL"
+msgstr "Public URL"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Publish"
+msgstr "Publish"
+
+#. placeholder {0}: new Date(publishState.publishedAt).toLocaleString()
+#: src/components/editor/EditorShell.tsx
+msgid "Published {0}"
+msgstr "Published {0}"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Publishing uses a cloud snapshot; frontmatter status is treated as user metadata."
+msgstr "Publishing uses a cloud snapshot; frontmatter status is treated as user metadata."
+
+#: src/components/layout/Header.tsx
+#: src/components/layout/VaultHome.tsx
+msgid "Quick open"
+msgstr "Quick open"
+
+#: src/components/modals/QuickSwitcher.tsx
+msgid "Quick switcher"
+msgstr "Quick switcher"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Read-only"
+msgstr "Read-only"
+
+#: src/components/layout/VaultHome.tsx
+#: src/components/layout/WelcomeScreen.tsx
+msgid "Recent"
+msgstr "Recent"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Remove from favorites"
+msgstr "Remove from favorites"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Remove this document from the public site?"
+msgstr "Remove this document from the public site?"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Removed from favorites."
+msgstr "Removed from favorites."
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Rename"
+msgstr "Rename"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Rename folder to:"
+msgstr "Rename folder to:"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Rename to:"
+msgstr "Rename to:"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Republish"
+msgstr "Republish"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Restore"
+msgstr "Restore"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Restore queued. Will sync on next push."
+msgstr "Restore queued. Will sync on next push."
+
+#: src/components/editor/EditorShell.tsx
+msgid "Save"
+msgstr "Save"
+
+#: src/components/modals/CommandPalette.tsx
+msgid "Search commands"
+msgstr "Search commands"
+
+#: src/components/modals/CommandPalette.tsx
+msgid "Search commands..."
+msgstr "Search commands..."
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Search files..."
+msgstr "Search files..."
+
+#: src/components/editor/EditorShell.tsx
+msgid "Select a Markdown file"
+msgstr "Select a Markdown file"
+
+#: src/components/modals/MoveFolderDialog.tsx
+msgid "Select destination for \"{sourceName}\""
+msgstr "Select destination for \"{sourceName}\""
+
+#: src/components/modals/AccountDialog.tsx
+#: src/components/sidebar/Sidebar.tsx
+msgid "Settings"
+msgstr "Settings"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Show in Explorer"
+msgstr "Show in Explorer"
+
+#: src/components/layout/Header.tsx
+msgid "Sign in"
+msgstr "Sign in"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Start cloud sync"
+msgstr "Start cloud sync"
+
+#: src/components/modals/AccountDialog.tsx
+#: src/components/modals/SyncPromptDialog.tsx
+msgid "Start sync"
+msgstr "Start sync"
+
+#: src/components/modals/SyncPromptDialog.tsx
+msgid "Sync \"{vaultName}\" to cloud?"
+msgstr "Sync \"{vaultName}\" to cloud?"
+
+#. placeholder {0}: state.activeConflicts.length
+#: src/components/modals/ConflictDialog.tsx
+msgid "Sync Conflicts ({0})"
+msgstr "Sync Conflicts ({0})"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Sync current vault"
+msgstr "Sync current vault"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Sync now"
+msgstr "Sync now"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Sync this document before publishing."
+msgstr "Sync this document before publishing."
+
+#. placeholder {0}: activeCloudBinding.workspaceName
+#: src/components/sidebar/Sidebar.tsx
+msgid "Syncing with {0}."
+msgstr "Syncing with {0}."
+
+#: src/components/editor/EditorShell.tsx
+msgid "Task list"
+msgstr "Task list"
+
+#: src/components/editor/EditorShell.tsx
+msgid "The public snapshot is behind the current document."
+msgstr "The public snapshot is behind the current document."
+
+#: src/components/modals/DeleteFolderDialog.tsx
+msgid "This folder is empty."
+msgstr "This folder is empty."
+
+#: src/components/modals/AccountDialog.tsx
+msgid "This vault is local-only. You can keep working without cloud sync or enable it below."
+msgstr "This vault is local-only. You can keep working without cloud sync or enable it below."
+
+#: src/components/modals/SyncPromptDialog.tsx
+msgid "This vault is now local-only."
+msgstr "This vault is now local-only."
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Toggle favorite"
+msgstr "Toggle favorite"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Trash"
+msgstr "Trash"
+
+#: src/components/modals/CommandPalette.tsx
+msgid "Unavailable"
+msgstr "Unavailable"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Unpublish"
+msgstr "Unpublish"
+
+#: src/components/layout/Header.tsx
+msgid "Unsaved"
+msgstr "Unsaved"
+
+#: src/components/editor/EditorShell.tsx
+#: src/components/modals/AccountDialog.tsx
+msgid "Unsaved changes"
+msgstr "Unsaved changes"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Untitled workspace"
+msgstr "Untitled workspace"
+
+#: src/components/layout/WelcomeScreen.tsx
+msgid "Use default vault"
+msgstr "Use default vault"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Use the print dialog to save as PDF."
+msgstr "Use the print dialog to save as PDF."
+
+#: src/components/layout/WelcomeScreen.tsx
+msgid "Vault"
+msgstr "Vault"
+
+#: src/components/layout/VaultHome.tsx
+msgid "Vault ready"
+msgstr "Vault ready"
+
+#: src/components/editor/EditorShell.tsx
+msgid "View published page"
+msgstr "View published page"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Viewer access is read-only."
+msgstr "Viewer access is read-only."
+
+#. placeholder {0}: state.oauthUserCode
+#: src/components/modals/AccountDialog.tsx
+msgid "Waiting for browser authorization (code {0})..."
+msgstr "Waiting for browser authorization (code {0})..."
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "Workspace files"
+msgstr "Workspace files"
+
+#: src/components/modals/AccountDialog.tsx
+msgid ""
+"You have unsaved changes. Switching cloud workspace before saving may cause conflicts.\n"
+"\n"
+"Continue anyway?"
+msgstr ""
+"You have unsaved changes. Switching cloud workspace before saving may cause conflicts.\n"
+"\n"
+"Continue anyway?"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "your account"
+msgstr "your account"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Your rendered document will appear here."
+msgstr "Your rendered document will appear here."

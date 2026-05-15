@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useAppDispatch, useAppState } from "../../app/AppState";
 import { useFileSystem, useCloudSync } from "../../hooks";
 import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/react";
@@ -8,15 +9,21 @@ import {
   CloudIcon,
   ArrowRightOnRectangleIcon,
   ArrowLeftOnRectangleIcon,
+  GlobeAltIcon,
 } from "@heroicons/react/24/outline";
+import { t, Trans } from "@lingui/macro";
+import { useLingui } from "@lingui/react";
+import { LanguageSwitcherMenuPanel } from "@shared/components/LanguageSwitcher";
 
 export function Header() {
   const state = useAppState();
   const dispatch = useAppDispatch();
   const fs = useFileSystem();
   const sync = useCloudSync();
+  const { i18n } = useLingui();
+  const [showLangPanel, setShowLangPanel] = useState(false);
 
-  const breadcrumbs = state.mode === "single-file" ? "Markdown file" : "";
+  const breadcrumbs = state.mode === "single-file" ? t`Markdown file` : "";
 
   const isSingleFile = state.mode === "single-file";
   const hasDocument = Boolean(state.currentPath);
@@ -41,7 +48,7 @@ export function Header() {
           className="-mx-1 select-none rounded-lg px-1 py-0.5 transition hover:bg-emerald-50"
           type="button"
           onClick={handleLogoClick}
-          title="Back to home"
+          title={t`Back to home`}
           style={{ fontFamily: "'Arial Black', 'Segoe UI', Arial, sans-serif", fontSize: 18, fontWeight: 900, letterSpacing: 0 }}
         >
           <span className="text-[#8d939d]">[</span>
@@ -61,7 +68,7 @@ export function Header() {
             <button
               className="toolbar-button aspect-square px-0"
               type="button"
-              title={cloudSyncEnabled ? `Cloud workspace: ${currentBinding?.workspaceName}` : "Local vault mode"}
+              title={cloudSyncEnabled ? t`Cloud workspace: ${currentBinding?.workspaceName ?? ""}` : t`Local vault mode`}
               onClick={() => dispatch({ type: "SET_ACCOUNT_DIALOG", open: true, section: "workspace" })}
             >
               {cloudSyncEnabled ? <CloudIcon className="h-4 w-4" /> : <FolderOpenIcon className="h-4 w-4" />}
@@ -69,7 +76,7 @@ export function Header() {
             <button
               className="toolbar-button aspect-square px-0"
               type="button"
-              title="Quick open"
+              title={t`Quick open`}
               onClick={() => dispatch({ type: "SET_QUICK_SWITCHER", open: true })}
             >
               <MagnifyingGlassIcon className="h-4 w-4" />
@@ -77,19 +84,19 @@ export function Header() {
           </>
         )}
         {isSingleFile && (
-          <button className="toolbar-button aspect-square px-0" type="button" title="Open file" onClick={() => fs.chooseMarkdownFile()}>
+          <button className="toolbar-button aspect-square px-0" type="button" title={t`Open file`} onClick={() => fs.chooseMarkdownFile()}>
             <FolderOpenIcon className="h-4 w-4" />
           </button>
         )}
         {hasDocument && state.isDirty && (
-          <span className="status-chip status-chip-warning">Unsaved</span>
+          <span className="status-chip status-chip-warning"><Trans>Unsaved</Trans></span>
         )}
         {!isSingleFile && (
           <Menu as="div" className="relative inline-block text-left">
             <MenuButton
               id="sync-panel-button"
               className="user-avatar"
-              title={state.syncToken ? state.syncUsername : "Sign in"}
+              title={state.syncToken ? state.syncUsername : t`Sign in`}
             >
               {userInitial}
             </MenuButton>
@@ -104,7 +111,7 @@ export function Header() {
                     onClick={() => dispatch({ type: "SET_ACCOUNT_DIALOG", open: true, section: "account" })}
                   >
                     <UserCircleIcon className="h-4 w-4" />
-                    Profile
+                    <Trans>Profile</Trans>
                   </button>
                 )}
               </MenuItem>
@@ -115,10 +122,29 @@ export function Header() {
                     onClick={() => dispatch({ type: "SET_ACCOUNT_DIALOG", open: true, section: "workspace" })}
                   >
                     <CloudIcon className="h-4 w-4" />
-                    Cloud workspace
+                    <Trans>Cloud workspace</Trans>
                   </button>
                 )}
               </MenuItem>
+              <div>
+                <button
+                  className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-stone-700 transition`}
+                  onClick={() => setShowLangPanel((v) => !v)}
+                >
+                  <GlobeAltIcon className="h-4 w-4" />
+                  <span className="flex-1 text-left">{t`Language`}</span>
+                  <span className="text-xs text-stone-400">{showLangPanel ? "▲" : "▼"}</span>
+                </button>
+                {showLangPanel && (
+                  <LanguageSwitcherMenuPanel
+                    currentLocale={i18n.locale as import("@shared/i18n").SupportedLocale}
+                    onSelect={async (locale) => {
+                      const { activateLocale } = await import("@shared/i18n");
+                      await activateLocale(locale);
+                    }}
+                  />
+                )}
+              </div>
               <div className="my-1 h-px bg-black/[0.06]" />
               <MenuItem>
                 {({ focus }) => (
@@ -133,7 +159,7 @@ export function Header() {
                     }}
                   >
                     {state.syncToken ? <ArrowLeftOnRectangleIcon className="h-4 w-4" /> : <ArrowRightOnRectangleIcon className="h-4 w-4" />}
-                    {state.syncToken ? "Log out" : "Sign in"}
+                    {state.syncToken ? <Trans>Log out</Trans> : <Trans>Sign in</Trans>}
                   </button>
                 )}
               </MenuItem>

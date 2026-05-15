@@ -1,0 +1,1442 @@
+msgid ""
+msgstr ""
+"POT-Creation-Date: 2026-05-14\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: @lingui/cli\n"
+"Language: zh\n"
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Plural-Forms: \n"
+
+#: src/pages/Workspace.tsx
+msgid "-----BEGIN CERTIFICATE-----"
+msgstr "-----BEGIN CERTIFICATE-----"
+
+#: src/pages/Workspace.tsx
+msgid "-----BEGIN PRIVATE KEY-----"
+msgstr "-----BEGIN PRIVATE KEY-----"
+
+#: src/pages/Workspace.tsx
+msgid "(you)"
+msgstr "（我）"
+
+#. placeholder {0}: workspace.documentCount
+#. placeholder {0}: ws.documentCount
+#: src/pages/Workspace.tsx
+msgid "{0} documents"
+msgstr "{0} 个文档"
+
+#. placeholder {0}: uniqueIds.length
+#: src/pages/Workspace.tsx
+msgid "{0} documents published."
+msgstr "{0} 个文档已发布。"
+
+#. placeholder {0}: uniqueIds.length
+#: src/pages/Workspace.tsx
+msgid "{0} documents unpublished."
+msgstr "{0} 个文档已取消发布。"
+
+#. placeholder {0}: publishedDocuments.length
+#: src/pages/Workspace.tsx
+msgid "{0} live"
+msgstr "{0} 项已发布"
+
+#. placeholder {0}: documents.length
+#. placeholder {1}: documents.length === 1 ? '' : 's'
+#: src/pages/Workspace.tsx
+msgid "{0} Markdown file{1}"
+msgstr "{0} 个 Markdown 文件{1}"
+
+#. placeholder {0}: formatBytes(storage.totalBudgetBytes)
+#: src/components/Layout.tsx
+msgid "{0} total"
+msgstr "共 {0}"
+
+#. placeholder {0}: formatBytes(storage.totalUsedBytes)
+#: src/components/Layout.tsx
+msgid "{0} used"
+msgstr "已用 {0}"
+
+#. placeholder {0}: new Date().getFullYear()
+#: src/pages/Login.tsx
+msgid "© {0} JType"
+msgstr "© {0} JType"
+
+#. placeholder {0}: preview.invitedByUsername
+#. placeholder {1}: preview.workspaceName
+#. placeholder {2}: preview.role
+#: src/pages/InviteAccept.tsx
+msgid "<0>{0}</0> has invited you to join <1>{1}</1> as <2>{2}</2>."
+msgstr "<0>{0}</0> 邀请您以 <2>{2}</2> 身份加入 <1>{1}</1>。"
+
+#. placeholder {0}: staleWarning.editedBy
+#. placeholder {1}: staleWarning.wasDirty ? '. You have unsaved changes.' : ''
+#: src/pages/Workspace.tsx
+msgid "⚠ Modified by {0}{1}"
+msgstr "⚠ 由 {0} 修改{1}"
+
+#: src/pages/InviteAccept.tsx
+msgid "Accept invitation"
+msgstr "接受邀请"
+
+#: src/components/Layout.tsx
+msgid "Account"
+msgstr "账户"
+
+#: src/pages/Admin.tsx
+msgid "Actions"
+msgstr "操作"
+
+#: src/pages/Admin.tsx
+msgid "Active"
+msgstr "活跃"
+
+#: src/pages/Workspace.tsx
+msgid "Add domain"
+msgstr "添加域名"
+
+#: src/pages/Workspace.tsx
+msgid "Add domains, verify DNS ownership, bind them to this workspace, and manage SSL certificates from one place."
+msgstr "在一处添加域名、验证 DNS 所有权、绑定到此工作区并管理 SSL 证书。"
+
+#: src/pages/Workspace.tsx
+msgid "Add table row below"
+msgstr "在下方添加行"
+
+#: src/pages/Workspace.tsx
+msgid "Add to favorites"
+msgstr "添加到收藏"
+
+#. placeholder {0}: domain.dnsTxtRecord
+#: src/pages/Workspace.tsx
+msgid "Add TXT record <0>{0}</0>, then verify DNS."
+msgstr "添加 TXT 记录 <0>{0}</0>，然后验证 DNS。"
+
+#: src/components/Layout.tsx
+#: src/pages/Admin.tsx
+msgid "Admin"
+msgstr "管理"
+
+#: src/pages/Login.tsx
+msgid "AI-Ready"
+msgstr "AI 就绪"
+
+#: src/pages/InviteAccept.tsx
+msgid "Already accepted"
+msgstr "已接受"
+
+#: src/pages/DeviceOAuth.tsx
+#: src/pages/Login.tsx
+msgid "Already have an account?"
+msgstr "已有账户？"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Authentication failed"
+msgstr "认证失败"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Authorization failed"
+msgstr "授权失败"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Authorize Desktop"
+msgstr "授权桌面端"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Authorize Device"
+msgstr "授权设备"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Authorizing..."
+msgstr "授权中…"
+
+#: src/pages/Workspace.tsx
+msgid "Bind custom domains and manage certificates."
+msgstr "绑定自定义域名并管理证书。"
+
+#: src/pages/Workspace.tsx
+msgid "Bind here"
+msgstr "在此绑定"
+
+#: src/pages/Landing.tsx
+msgid "Bind to a cloud workspace"
+msgstr "绑定到云工作区"
+
+#: src/pages/Workspace.tsx
+msgid "Bold"
+msgstr "粗体"
+
+#: src/pages/Workspace.tsx
+msgid "Bold (Ctrl+B)"
+msgstr "粗体 (Ctrl+B)"
+
+#: src/pages/Workspace.tsx
+msgid "bound"
+msgstr "已绑定"
+
+#: src/pages/Workspace.tsx
+msgid "Bound here"
+msgstr "已在此绑定"
+
+#. placeholder {0}: domain.workspaceName
+#: src/pages/Workspace.tsx
+msgid "Bound to {0}"
+msgstr "已绑定到 {0}"
+
+#: src/pages/Landing.tsx
+msgid "Calm desktop writing, workspace-scoped sync, and public Markdown publishing in one product flow. Your notes stay local until a cloud workspace has a job to do."
+msgstr "平静的桌面写作、工作区范围同步和公开 Markdown 发布集于一体。您的笔记保持本地，直到云工作区需要时才上云。"
+
+#: src/pages/Workspace.tsx
+msgid "Cancel"
+msgstr "取消"
+
+#: src/pages/Workspace.tsx
+msgid "Certificate management"
+msgstr "证书管理"
+
+#: src/pages/Workspace.tsx
+msgid "Changed"
+msgstr "已更改"
+
+#: src/pages/Landing.tsx
+msgid "Checking session"
+msgstr "检查会话中"
+
+#: src/pages/Workspace.tsx
+msgid "Choose a cloud workspace"
+msgstr "选择云工作区"
+
+#: src/pages/Workspace.tsx
+msgid "Choose a note or create a new one."
+msgstr "选择一篇笔记或新建。"
+
+#: src/pages/Landing.tsx
+msgid "Clean read-only output for notes, docs, releases, and guides."
+msgstr "为笔记、文档、发布说明和指南提供整洁的只读输出。"
+
+#: src/components/Layout.tsx
+#: src/pages/Admin.tsx
+#: src/pages/Workspace.tsx
+msgid "Close"
+msgstr "关闭"
+
+#: src/pages/Login.tsx
+msgid "Cloud Sync"
+msgstr "云同步"
+
+#: src/pages/Landing.tsx
+#: src/pages/Workspace.tsx
+msgid "Cloud workspace"
+msgstr "云工作区"
+
+#: src/pages/Landing.tsx
+msgid "Cloud workspace admin, devices, sync, and publishing controls."
+msgstr "云工作区管理、设备、同步和发布控制。"
+
+#: src/pages/Workspace.tsx
+msgid "Cloud workspace settings"
+msgstr "云工作区设置"
+
+#: src/pages/Admin.tsx
+msgid "Cloud workspaces"
+msgstr "云工作区"
+
+#: src/pages/Workspace.tsx
+msgid "Collapse all"
+msgstr "全部折叠"
+
+#: src/pages/Workspace.tsx
+msgid "Connected"
+msgstr "已连接"
+
+#: src/components/Layout.tsx
+msgid "Connected devices"
+msgstr "已连接设备"
+
+#: src/pages/Workspace.tsx
+msgid "Connecting..."
+msgstr "连接中…"
+
+#: src/pages/Workspace.tsx
+msgid "Copy link"
+msgstr "复制链接"
+
+#: src/pages/Workspace.tsx
+msgid "Copy path"
+msgstr "复制路径"
+
+#: src/pages/Landing.tsx
+msgid "Create a workspace for sync, publishing, and account settings. Local vault copy stays precise: folders are vaults, server-side collaboration is a cloud workspace."
+msgstr "创建工作区用于同步、发布和账户设置。本地库副本保持精确：文件夹是库，服务端协作是云工作区。"
+
+#: src/pages/Login.tsx
+msgid "Create account"
+msgstr "创建账户"
+
+#: src/pages/Workspace.tsx
+msgid "Create your first Markdown note."
+msgstr "创建第一篇 Markdown 笔记。"
+
+#: src/pages/Workspace.tsx
+msgid "Custom domains"
+msgstr "自定义域名"
+
+#: src/pages/Workspace.tsx
+msgid "Custom domains and SSL"
+msgstr "自定义域名和 SSL"
+
+#: src/pages/Workspace.tsx
+msgid "Danger zone"
+msgstr "危险区域"
+
+#: src/pages/Workspace.tsx
+msgid "Delete"
+msgstr "删除"
+
+#: src/pages/Workspace.tsx
+msgid "Delete folder"
+msgstr "删除文件夹"
+
+#: src/pages/Workspace.tsx
+msgid "Delete folder \"{folderPath}\" and all its contents?"
+msgstr "删除文件夹 \"{folderPath}\" 及其所有内容？"
+
+#: src/pages/Workspace.tsx
+msgid "Delete forever"
+msgstr "永久删除"
+
+#: src/pages/Workspace.tsx
+msgid "Delete workspace"
+msgstr "删除工作区"
+
+#: src/pages/Workspace.tsx
+msgid "Delete workspace?"
+msgstr "删除工作区？"
+
+#. placeholder {0}: formatDateTime(item.deletedAt)
+#. placeholder {1}: formatDateTime(item.expiresAt)
+#: src/pages/Workspace.tsx
+msgid "Deleted {0} / Expires {1}"
+msgstr "删除于 {0} / 过期于 {1}"
+
+#: src/pages/Workspace.tsx
+msgid "Deleted documents"
+msgstr "已删除文档"
+
+#: src/pages/Landing.tsx
+msgid "Desktop app"
+msgstr "桌面应用"
+
+#: src/pages/Landing.tsx
+msgid "Detected save, queued push."
+msgstr "检测到保存，已排队推送。"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Device authorized! You can return to the JType desktop app."
+msgstr "设备已授权！您可以返回 JType 桌面应用。"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Device Code"
+msgstr "设备代码"
+
+#: src/pages/Landing.tsx
+msgid "Dirty"
+msgstr "有未同步更改"
+
+#: src/pages/Admin.tsx
+msgid "Disable"
+msgstr "禁用"
+
+#: src/pages/Admin.tsx
+msgid "Disabled"
+msgstr "已禁用"
+
+#: src/components/Layout.tsx
+msgid "Display name"
+msgstr "显示名称"
+
+#: src/pages/Workspace.tsx
+msgid "DNS pending"
+msgstr "DNS 待验证"
+
+#: src/pages/Workspace.tsx
+msgid "DNS verified"
+msgstr "DNS 已验证"
+
+#: src/pages/Workspace.tsx
+msgid "docs.example.com"
+msgstr "docs.example.com"
+
+#: src/pages/Workspace.tsx
+msgid "Document info"
+msgstr "文档信息"
+
+#: src/pages/Workspace.tsx
+msgid "Document Info"
+msgstr "文档信息"
+
+#: src/pages/Workspace.tsx
+msgid "Document path (e.g. notes/hello.md):"
+msgstr "文档路径（如 notes/hello.md）："
+
+#: src/pages/Workspace.tsx
+msgid "Document published."
+msgstr "文档已发布。"
+
+#: src/pages/Workspace.tsx
+msgid "Document unpublished."
+msgstr "文档已取消发布。"
+
+#: src/pages/Admin.tsx
+#: src/pages/Workspace.tsx
+msgid "Documents"
+msgstr "文档"
+
+#: src/pages/Admin.tsx
+msgid "Domain"
+msgstr "域名"
+
+#: src/pages/Admin.tsx
+#: src/pages/Workspace.tsx
+msgid "Domains"
+msgstr "域名"
+
+#: src/pages/DeviceOAuth.tsx
+#: src/pages/Login.tsx
+msgid "Don't have an account?"
+msgstr "没有账户？"
+
+#: src/pages/InviteAccept.tsx
+msgid "Don't have an account? <0>Sign up</0>"
+msgstr "没有账户？<0>注册</0>"
+
+#: src/pages/Workspace.tsx
+msgid "Draft only"
+msgstr "仅草稿"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "e.g. 456478"
+msgstr "例如 456478"
+
+#: src/pages/Workspace.tsx
+msgid "Edits are written back to YAML frontmatter."
+msgstr "编辑内容将写回 YAML frontmatter。"
+
+#: src/components/Layout.tsx
+msgid "Email"
+msgstr "邮箱"
+
+#: src/pages/Workspace.tsx
+msgid "Email (optional)"
+msgstr "邮箱（可选）"
+
+#: src/pages/Workspace.tsx
+msgid "Empty trash"
+msgstr "清空回收站"
+
+#: src/pages/Admin.tsx
+msgid "Enable"
+msgstr "启用"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Enter the code shown in your JType desktop app"
+msgstr "输入 JType 桌面应用中显示的代码"
+
+#: src/pages/Login.tsx
+msgid "Enter your password"
+msgstr "输入密码"
+
+#: src/pages/Login.tsx
+msgid "Enter your username"
+msgstr "输入用户名"
+
+#: src/pages/Workspace.tsx
+msgid "Exit focus mode"
+msgstr "退出专注模式"
+
+#: src/pages/Workspace.tsx
+msgid "Expand all"
+msgstr "全部展开"
+
+#: src/pages/InviteAccept.tsx
+msgid "Failed to accept invite."
+msgstr "接受邀请失败。"
+
+#: src/pages/Workspace.tsx
+msgid "Failed to create invite."
+msgstr "创建邀请失败。"
+
+#: src/pages/Workspace.tsx
+msgid "Failed to delete workspace."
+msgstr "删除工作区失败。"
+
+#: src/pages/Workspace.tsx
+msgid "Failed to leave workspace."
+msgstr "离开工作区失败。"
+
+#: src/pages/Workspace.tsx
+msgid "Favorite"
+msgstr "收藏"
+
+#: src/pages/Workspace.tsx
+msgid "Favorites"
+msgstr "收藏"
+
+#: src/pages/Landing.tsx
+msgid "Flow"
+msgstr "流程"
+
+#: src/pages/Workspace.tsx
+msgid "Focus mode"
+msgstr "专注模式"
+
+#: src/pages/Workspace.tsx
+msgid "General"
+msgstr "通用"
+
+#: src/pages/Landing.tsx
+msgid "GitHub"
+msgstr "GitHub"
+
+#: src/pages/InviteAccept.tsx
+msgid "Go to home"
+msgstr "前往主页"
+
+#: src/pages/Landing.tsx
+msgid "Go to JType Cloud"
+msgstr "前往 JType Cloud"
+
+#: src/pages/InviteAccept.tsx
+msgid "Go to workspaces"
+msgstr "前往工作区"
+
+#: src/pages/Workspace.tsx
+msgid "Hide"
+msgstr "隐藏"
+
+#: src/pages/Login.tsx
+msgid "Indexed and ready for intelligent assistance."
+msgstr "已索引，可提供智能辅助。"
+
+#: src/pages/Workspace.tsx
+msgid "Inline code"
+msgstr "行内代码"
+
+#: src/pages/Workspace.tsx
+msgid "Insert formula"
+msgstr "插入公式"
+
+#: src/pages/Workspace.tsx
+msgid "Insert link"
+msgstr "插入链接"
+
+#: src/pages/Workspace.tsx
+msgid "Insert Mermaid diagram"
+msgstr "插入 Mermaid 图表"
+
+#: src/pages/Workspace.tsx
+msgid "Insert table"
+msgstr "插入表格"
+
+#: src/pages/Workspace.tsx
+msgid "Insert table (Ctrl+Shift+T)"
+msgstr "插入表格 (Ctrl+Shift+T)"
+
+#: src/pages/Admin.tsx
+msgid "Inspect cloud workspace ownership and document counts."
+msgstr "查看云工作区所有权和文档数量。"
+
+#: src/pages/InviteAccept.tsx
+msgid "Invalid invite"
+msgstr "无效邀请"
+
+#: src/pages/Workspace.tsx
+msgid "Invite"
+msgstr "邀请"
+
+#: src/pages/Workspace.tsx
+msgid "Invite created."
+msgstr "邀请已创建。"
+
+#: src/pages/Workspace.tsx
+msgid "Invite people"
+msgstr "邀请成员"
+
+#: src/pages/InviteAccept.tsx
+msgid "Invite revoked"
+msgstr "邀请已撤销"
+
+#: src/pages/Workspace.tsx
+msgid "Italic"
+msgstr "斜体"
+
+#: src/pages/Workspace.tsx
+msgid "Italic (Ctrl+I)"
+msgstr "斜体 (Ctrl+I)"
+
+#: src/pages/InviteAccept.tsx
+msgid "Joining…"
+msgstr "加入中…"
+
+#: src/pages/Workspace.tsx
+msgid "Keep the publish name and workspace name here. The workspace slug and storage limit are assigned by the service."
+msgstr "在此保留发布名称和工作区名称。工作区标识和存储限制由服务分配。"
+
+#: src/pages/Login.tsx
+msgid "Keep your vaults in sync across all devices."
+msgstr "在所有设备间保持库同步。"
+
+#: src/components/Layout.tsx
+msgid "Language"
+msgstr "语言"
+
+#: src/components/Layout.tsx
+msgid "Last seen recently"
+msgstr "最近活跃"
+
+#: src/pages/Workspace.tsx
+msgid "Leave"
+msgstr "离开"
+
+#: src/pages/Workspace.tsx
+msgid "Leave workspace"
+msgstr "离开工作区"
+
+#: src/pages/Workspace.tsx
+msgid "Leave workspace?"
+msgstr "离开工作区？"
+
+#: src/pages/Workspace.tsx
+msgid "Link (Ctrl+K)"
+msgstr "链接 (Ctrl+K)"
+
+#: src/pages/Workspace.tsx
+msgid "Link copied!"
+msgstr "链接已复制！"
+
+#: src/pages/Landing.tsx
+msgid "Live preview"
+msgstr "实时预览"
+
+#: src/pages/InviteAccept.tsx
+msgid "Loading invite…"
+msgstr "加载邀请中…"
+
+#: src/pages/Admin.tsx
+msgid "Loading..."
+msgstr "加载中…"
+
+#: src/pages/Landing.tsx
+msgid "Local watcher"
+msgstr "本地监视器"
+
+#: src/pages/Login.tsx
+msgid "Local-First"
+msgstr "本地优先"
+
+#: src/pages/Landing.tsx
+msgid "Local-first Markdown vault"
+msgstr "本地优先 Markdown 库"
+
+#: src/pages/Login.tsx
+msgid "Local-first notes with cloud sync, publishing, and AI-ready indexing."
+msgstr "本地优先笔记，支持云同步、发布和 AI 就绪索引。"
+
+#: src/pages/InviteAccept.tsx
+msgid "Log in to accept"
+msgstr "登录以接受"
+
+#: src/pages/Workspace.tsx
+msgid "Manage cloud workspace name, publishing title, and storage."
+msgstr "管理云工作区名称、发布标题和存储。"
+
+#: src/pages/Workspace.tsx
+msgid "Manage custom domains"
+msgstr "管理自定义域名"
+
+#: src/pages/Workspace.tsx
+msgid "Manage team members, invitations, and access."
+msgstr "管理团队成员、邀请和访问权限。"
+
+#: src/pages/Admin.tsx
+msgid "Manage users, cloud workspaces, domains, and service activity."
+msgstr "管理用户、云工作区、域名和服务活动。"
+
+#: src/components/Layout.tsx
+msgid "Manage your JType Cloud account and connected devices."
+msgstr "管理您的 JType Cloud 账户和已连接设备。"
+
+#: src/pages/Workspace.tsx
+msgid "Markdown"
+msgstr "Markdown"
+
+#: src/pages/Workspace.tsx
+msgid "Markdown editor"
+msgstr "Markdown 编辑器"
+
+#: src/pages/Workspace.tsx
+msgid "Member removed."
+msgstr "成员已移除。"
+
+#: src/pages/Admin.tsx
+#: src/pages/Workspace.tsx
+msgid "Members"
+msgstr "成员"
+
+#. placeholder {0}: members.length
+#: src/pages/Workspace.tsx
+msgid "Members ({0})"
+msgstr "成员（{0}）"
+
+#: src/pages/Workspace.tsx
+msgid "Members, domains, publishing"
+msgstr "成员、域名、发布"
+
+#: src/pages/Workspace.tsx
+msgid "Move to trash"
+msgstr "移入回收站"
+
+#: src/pages/Admin.tsx
+msgid "Name"
+msgstr "名称"
+
+#: src/pages/Workspace.tsx
+msgid "Name, publishing identity, and storage"
+msgstr "名称、发布标识和存储"
+
+#: src/pages/Workspace.tsx
+msgid "New"
+msgstr "新建"
+
+#: src/pages/Workspace.tsx
+msgid "New cloud workspace"
+msgstr "新建云工作区"
+
+#: src/pages/Workspace.tsx
+msgid "New document"
+msgstr "新建文档"
+
+#: src/pages/Workspace.tsx
+msgid "New Document"
+msgstr "新建文档"
+
+#: src/pages/Workspace.tsx
+msgid "New document name (e.g. note.md):"
+msgstr "新文档名称（如 note.md）："
+
+#: src/pages/Workspace.tsx
+msgid "New folder"
+msgstr "新建文件夹"
+
+#: src/pages/Workspace.tsx
+msgid "New folder name:"
+msgstr "新文件夹名称："
+
+#: src/pages/Workspace.tsx
+msgid "No cloud workspaces yet."
+msgstr "暂无云工作区。"
+
+#: src/pages/Workspace.tsx
+msgid "No deleted documents."
+msgstr "没有已删除的文档。"
+
+#: src/pages/Workspace.tsx
+msgid "No documents yet."
+msgstr "暂无文档。"
+
+#: src/pages/Workspace.tsx
+msgid "No domains yet."
+msgstr "暂无域名。"
+
+#: src/pages/Workspace.tsx
+msgid "no email"
+msgstr "无邮箱"
+
+#: src/pages/Workspace.tsx
+msgid "No headings found."
+msgstr "未找到标题。"
+
+#: src/pages/InviteAccept.tsx
+msgid "No invite token provided."
+msgstr "未提供邀请令牌。"
+
+#: src/pages/Workspace.tsx
+msgid "No matches."
+msgstr "无匹配结果。"
+
+#: src/pages/Workspace.tsx
+msgid "No notes yet."
+msgstr "暂无笔记。"
+
+#: src/pages/Workspace.tsx
+msgid "No outgoing links."
+msgstr "无出站链接。"
+
+#: src/pages/Admin.tsx
+msgid "No records."
+msgstr "暂无记录。"
+
+#: src/pages/Workspace.tsx
+msgid "No unsaved changes"
+msgstr "无未保存的更改"
+
+#: src/pages/Workspace.tsx
+msgid "Not published"
+msgstr "未发布"
+
+#: src/pages/Workspace.tsx
+msgid "Offline"
+msgstr "离线"
+
+#: src/pages/Workspace.tsx
+msgid "Offline ({pendingCount} saved)"
+msgstr "离线（已保存 {pendingCount} 项）"
+
+#: src/pages/Landing.tsx
+msgid "One Markdown source, three calm surfaces."
+msgstr "一个 Markdown 源，三个平静的界面。"
+
+#: src/pages/Workspace.tsx
+msgid "Only owners and admins can change workspace settings"
+msgstr "只有所有者和管理员可以更改工作区设置"
+
+#: src/pages/Workspace.tsx
+msgid "Open"
+msgstr "打开"
+
+#: src/pages/Landing.tsx
+msgid "Open a local Markdown vault, keep normal folders, and edit without turning notes into remote-only data."
+msgstr "打开本地 Markdown 库，保持普通文件夹结构，编辑笔记而不将其变为仅远程数据。"
+
+#: src/pages/Landing.tsx
+msgid "Open dashboard"
+msgstr "打开仪表板"
+
+#: src/pages/Landing.tsx
+msgid "Open GitHub"
+msgstr "打开 GitHub"
+
+#: src/pages/Landing.tsx
+msgid "Open JType Cloud"
+msgstr "打开 JType Cloud"
+
+#: src/pages/Landing.tsx
+msgid "Open JType Cloud dashboard"
+msgstr "打开 JType Cloud 仪表板"
+
+#: src/pages/Workspace.tsx
+msgid "Outgoing links"
+msgstr "出站链接"
+
+#: src/pages/Workspace.tsx
+msgid "Outline"
+msgstr "大纲"
+
+#: src/pages/Admin.tsx
+msgid "Owner"
+msgstr "所有者"
+
+#: src/pages/Workspace.tsx
+msgid "Ownership transferred."
+msgstr "所有权已转让。"
+
+#: src/pages/Workspace.tsx
+msgid "Pass ownership to another admin member."
+msgstr "将所有权转让给另一个管理员成员。"
+
+#: src/pages/DeviceOAuth.tsx
+#: src/pages/Login.tsx
+msgid "Password"
+msgstr "密码"
+
+#: src/pages/Workspace.tsx
+msgid "Pending invites"
+msgstr "待处理邀请"
+
+#: src/pages/Workspace.tsx
+msgid "Permanently delete"
+msgstr "永久删除"
+
+#: src/pages/Workspace.tsx
+msgid "Permanently delete all items in trash?"
+msgstr "永久删除回收站中的所有项目？"
+
+#: src/pages/Workspace.tsx
+msgid "Permanently delete this item?"
+msgstr "永久删除此项目？"
+
+#: src/pages/Workspace.tsx
+msgid "Permanently remove this workspace and all documents."
+msgstr "永久删除此工作区及所有文档。"
+
+#: src/pages/DeviceOAuth.tsx
+#: src/pages/Login.tsx
+msgid "Please wait..."
+msgstr "请稍候…"
+
+#: src/pages/Landing.tsx
+#: src/pages/Workspace.tsx
+msgid "Preview"
+msgstr "预览"
+
+#: src/pages/Landing.tsx
+msgid "Product flow"
+msgstr "产品流程"
+
+#: src/components/Layout.tsx
+msgid "Profile"
+msgstr "个人资料"
+
+#: src/components/Layout.tsx
+msgid "Profile updated"
+msgstr "资料已更新"
+
+#: src/pages/Workspace.tsx
+msgid "Promote a member to admin first before transferring ownership."
+msgstr "转让所有权前，请先将成员提升为管理员。"
+
+#: src/pages/Workspace.tsx
+msgid "Properties"
+msgstr "属性"
+
+#: src/pages/Landing.tsx
+msgid "Public site"
+msgstr "公开站点"
+
+#: src/pages/Landing.tsx
+#: src/pages/Workspace.tsx
+msgid "Publish"
+msgstr "发布"
+
+#: src/pages/Workspace.tsx
+msgid "Publish drafts"
+msgstr "发布草稿"
+
+#: src/pages/Workspace.tsx
+msgid "Publish title"
+msgstr "发布标题"
+
+#: src/pages/Workspace.tsx
+msgid "Published"
+msgstr "已发布"
+
+#. placeholder {0}: new Date(publishState.publishedAt).toLocaleString()
+#: src/pages/Workspace.tsx
+msgid "Published {0}"
+msgstr "发布于 {0}"
+
+#: src/pages/Landing.tsx
+msgid "Published pages"
+msgstr "已发布页面"
+
+#: src/pages/Workspace.tsx
+msgid "Publishing"
+msgstr "发布"
+
+#: src/pages/Workspace.tsx
+msgid "Publishing details saved"
+msgstr "发布详情已保存"
+
+#: src/pages/Workspace.tsx
+msgid "Publishing uses a server snapshot; frontmatter status is treated as user metadata."
+msgstr "发布使用服务器快照；frontmatter 状态被视为用户元数据。"
+
+#: src/pages/Landing.tsx
+msgid "Push and pull versions, resolve conflicts, and keep collaboration scoped to the workspace you choose."
+msgstr "推送和拉取版本、解决冲突，并将协作范围限定在您选择的工作区内。"
+
+#: src/pages/Workspace.tsx
+msgid "Quick open"
+msgstr "快速打开"
+
+#: src/pages/Workspace.tsx
+msgid "Read-only"
+msgstr "只读"
+
+#: src/pages/Landing.tsx
+msgid "Ready for the cloud layer"
+msgstr "已为云层做好准备"
+
+#: src/pages/DeviceOAuth.tsx
+#: src/pages/Login.tsx
+msgid "Register"
+msgstr "注册"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Register & Authorize"
+msgstr "注册并授权"
+
+#. placeholder {0}: staleWarning.wasDirty ? ' (discard)' : ''
+#: src/pages/Workspace.tsx
+msgid "Reload{0}"
+msgstr "重新加载{0}"
+
+#. placeholder {0}: doc.relativePath
+#: src/pages/Workspace.tsx
+msgid "Remove \"{0}\" from the public site?"
+msgstr "从公开站点移除 \"{0}\"？"
+
+#. placeholder {0}: uniqueIds.length
+#: src/pages/Workspace.tsx
+msgid "Remove {0} documents from the public site?"
+msgstr "从公开站点移除 {0} 个文档？"
+
+#: src/pages/Workspace.tsx
+msgid "Remove from favorites"
+msgstr "取消收藏"
+
+#: src/pages/Workspace.tsx
+msgid "Remove member"
+msgstr "移除成员"
+
+#: src/pages/Workspace.tsx
+msgid "Remove this member from the workspace?"
+msgstr "从工作区移除此成员？"
+
+#: src/pages/Workspace.tsx
+msgid "Rename"
+msgstr "重命名"
+
+#: src/pages/Workspace.tsx
+msgid "Rename to:"
+msgstr "重命名为："
+
+#: src/pages/Workspace.tsx
+msgid "Republish"
+msgstr "重新发布"
+
+#: src/pages/Workspace.tsx
+msgid "Republish live docs"
+msgstr "重新发布已发布文档"
+
+#: src/pages/Workspace.tsx
+msgid "Restore"
+msgstr "恢复"
+
+#: src/pages/Workspace.tsx
+msgid "Restore cloud workspace documents or permanently remove them from trash."
+msgstr "从回收站恢复云工作区文档或永久删除。"
+
+#: src/pages/Workspace.tsx
+msgid "Restore deleted documents or remove them permanently."
+msgstr "恢复已删除文档或永久删除。"
+
+#: src/pages/Workspace.tsx
+msgid "Restore or delete cloud documents"
+msgstr "恢复或删除云文档"
+
+#: src/pages/Admin.tsx
+msgid "Review accounts, roles, and enabled status."
+msgstr "查看账户、角色和启用状态。"
+
+#: src/pages/Admin.tsx
+msgid "Review published custom domains and SSL state."
+msgstr "查看已发布的自定义域名和 SSL 状态。"
+
+#: src/pages/Workspace.tsx
+msgid "Revoke invite"
+msgstr "撤销邀请"
+
+#: src/pages/Admin.tsx
+msgid "Role"
+msgstr "角色"
+
+#: src/pages/Workspace.tsx
+msgid "Save"
+msgstr "保存"
+
+#: src/pages/Workspace.tsx
+msgid "Save mine"
+msgstr "保存我的版本"
+
+#: src/components/Layout.tsx
+msgid "Save profile"
+msgstr "保存资料"
+
+#: src/pages/Workspace.tsx
+msgid "Saved offline. Will sync when reconnected."
+msgstr "已离线保存。重新连接后将同步。"
+
+#: src/pages/Workspace.tsx
+msgid "Saving..."
+msgstr "保存中…"
+
+#: src/pages/Workspace.tsx
+msgid "Search files..."
+msgstr "搜索文件…"
+
+#: src/pages/Landing.tsx
+msgid "See product flow"
+msgstr "查看产品流程"
+
+#: src/pages/Workspace.tsx
+msgid "Select a document to edit."
+msgstr "选择要编辑的文档。"
+
+#: src/pages/Workspace.tsx
+msgid "Select a domain"
+msgstr "选择域名"
+
+#: src/pages/Workspace.tsx
+msgid "Select a Markdown file"
+msgstr "选择 Markdown 文件"
+
+#: src/components/Layout.tsx
+msgid "Settings"
+msgstr "设置"
+
+#: src/pages/Landing.tsx
+msgid "Ship a readable site"
+msgstr "发布可读站点"
+
+#: src/pages/DeviceOAuth.tsx
+#: src/pages/Landing.tsx
+#: src/pages/Login.tsx
+msgid "Sign in"
+msgstr "登录"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Sign in & Authorize"
+msgstr "登录并授权"
+
+#: src/pages/Login.tsx
+msgid "Sign in to your JType Cloud account."
+msgstr "登录您的 JType Cloud 账户。"
+
+#: src/components/Layout.tsx
+#: src/pages/Landing.tsx
+msgid "Sign out"
+msgstr "退出登录"
+
+#: src/pages/Login.tsx
+msgid "Sign up to start syncing your vaults."
+msgstr "注册以开始同步您的库。"
+
+#. placeholder {0}: user.username
+#: src/pages/Landing.tsx
+msgid "Signed in as {0}"
+msgstr "已以 {0} 身份登录"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Signed in. Ready to authorize device."
+msgstr "已登录。准备授权设备。"
+
+#: src/pages/Workspace.tsx
+msgid "Site settings"
+msgstr "站点设置"
+
+#: src/pages/Login.tsx
+msgid "Something went wrong"
+msgstr "出现错误"
+
+#: src/pages/Landing.tsx
+#: src/pages/Workspace.tsx
+msgid "Split"
+msgstr "分栏"
+
+#: src/pages/Admin.tsx
+#: src/pages/Workspace.tsx
+msgid "SSL"
+msgstr "SSL"
+
+#. placeholder {0}: domain.sslStatus
+#: src/pages/Workspace.tsx
+msgid "SSL {0}"
+msgstr "SSL {0}"
+
+#: src/pages/Workspace.tsx
+msgid "SSL certificate uploaded"
+msgstr "SSL 证书已上传"
+
+#. placeholder {0}: domain.sslExpiresAt
+#: src/pages/Workspace.tsx
+msgid "SSL expires at {0}"
+msgstr "SSL 将于 {0} 过期"
+
+#: src/pages/Workspace.tsx
+msgid "SSL not configured"
+msgstr "SSL 未配置"
+
+#: src/pages/Landing.tsx
+msgid "Start with a private cloud workspace."
+msgstr "从私有云工作区开始。"
+
+#: src/pages/Landing.tsx
+msgid "Start with JType Cloud"
+msgstr "从 JType Cloud 开始"
+
+#: src/pages/Landing.tsx
+msgid "Start writing"
+msgstr "开始写作"
+
+#: src/pages/Workspace.tsx
+msgid "Start writing Markdown..."
+msgstr "开始写 Markdown…"
+
+#: src/pages/Admin.tsx
+msgid "Status"
+msgstr "状态"
+
+#: src/components/Layout.tsx
+msgid "Storage"
+msgstr "存储"
+
+#: src/pages/Workspace.tsx
+msgid "Storage used"
+msgstr "已用存储"
+
+#: src/pages/Landing.tsx
+msgid "Surfaces"
+msgstr "界面"
+
+#: src/pages/Landing.tsx
+msgid "Sync"
+msgstr "同步"
+
+#: src/pages/Landing.tsx
+msgid "Synced"
+msgstr "已同步"
+
+#: src/pages/Workspace.tsx
+msgid "Syncing..."
+msgstr "同步中…"
+
+#: src/pages/Workspace.tsx
+msgid "Task list"
+msgstr "任务列表"
+
+#: src/pages/Landing.tsx
+msgid "Tauri vault editing with write, split, and preview modes."
+msgstr "Tauri 库编辑，支持写作、分栏和预览模式。"
+
+#: src/pages/Workspace.tsx
+msgid "Team members and invitations"
+msgstr "团队成员和邀请"
+
+#: src/pages/Landing.tsx
+msgid "The landing story follows the real JType loop."
+msgstr "落地页故事遵循真实的 JType 循环。"
+
+#: src/pages/Landing.tsx
+msgid "The page borrows getdesign.app's strongest move: show the actual system doing the explaining. For JType, that means local files, sync state, and published output all visible at once."
+msgstr "该页面借鉴了 getdesign.app 最强的技巧：展示实际系统进行说明。对于 JType，这意味着本地文件、同步状态和已发布输出一目了然。"
+
+#: src/pages/Workspace.tsx
+msgid "The public snapshot is behind the current document."
+msgstr "公开快照落后于当前文档。"
+
+#: src/pages/Workspace.tsx
+msgid "This document was deleted by another user."
+msgstr "此文档已被另一个用户删除。"
+
+#: src/pages/InviteAccept.tsx
+msgid "This invite has already been accepted. You can go to your workspaces."
+msgstr "此邀请已被接受。您可以前往您的工作区。"
+
+#: src/pages/InviteAccept.tsx
+msgid "This invite link has been revoked and is no longer valid."
+msgstr "此邀请链接已被撤销，不再有效。"
+
+#: src/pages/InviteAccept.tsx
+msgid "This invite link is invalid or has expired."
+msgstr "此邀请链接无效或已过期。"
+
+#. placeholder {0}: workspace.name
+#: src/pages/Workspace.tsx
+msgid "This will permanently delete <0>{0}</0> and all its documents. This cannot be undone."
+msgstr "这将永久删除 <0>{0}</0> 及其所有文档。此操作无法撤销。"
+
+#: src/pages/Workspace.tsx
+msgid "Toggle favorite"
+msgstr "切换收藏"
+
+#: src/pages/Workspace.tsx
+msgid "Transfer"
+msgstr "转让"
+
+#: src/pages/Workspace.tsx
+msgid "Transfer failed."
+msgstr "转让失败。"
+
+#: src/pages/Workspace.tsx
+msgid "Transfer ownership"
+msgstr "转让所有权"
+
+#: src/pages/Workspace.tsx
+msgid "Transfer ownership (select a member above)"
+msgstr "转让所有权（从上方选择成员）"
+
+#. placeholder {0}: firstAdmin.username
+#: src/pages/Workspace.tsx
+msgid "Transfer ownership to {0}? You will become an admin."
+msgstr "将所有权转让给 {0}？您将成为管理员。"
+
+#: src/pages/Workspace.tsx
+msgid "Trash"
+msgstr "回收站"
+
+#: src/pages/Workspace.tsx
+msgid "Trash is empty."
+msgstr "回收站为空。"
+
+#: src/pages/Landing.tsx
+msgid "Turn selected documents into a public `/u/:username` site while your source stays Markdown."
+msgstr "将选定文档发布为公开的 `/u/:username` 站点，同时源文件保持 Markdown 格式。"
+
+#: src/pages/Workspace.tsx
+msgid "Type the workspace name to confirm:"
+msgstr "输入工作区名称以确认："
+
+#: src/pages/Workspace.tsx
+msgid "Unbind"
+msgstr "解除绑定"
+
+#: src/pages/Workspace.tsx
+msgid "Unbound"
+msgstr "未绑定"
+
+#: src/pages/Workspace.tsx
+msgid "Unpublish"
+msgstr "取消发布"
+
+#: src/pages/Workspace.tsx
+msgid "Unpublish document"
+msgstr "取消发布文档"
+
+#: src/pages/Workspace.tsx
+msgid "Unpublish documents"
+msgstr "取消发布文档"
+
+#: src/pages/Workspace.tsx
+msgid "Unpublish live docs"
+msgstr "取消发布已发布文档"
+
+#: src/pages/Workspace.tsx
+msgid "Unsaved"
+msgstr "未保存"
+
+#: src/pages/Workspace.tsx
+msgid "Untitled document"
+msgstr "未命名文档"
+
+#: src/pages/Workspace.tsx
+msgid "Upload a PEM certificate for a verified domain. The private key is stored as a hash in the current backend model."
+msgstr "为已验证域名上传 PEM 证书。私钥在当前后端模型中以哈希形式存储。"
+
+#: src/pages/Admin.tsx
+msgid "User"
+msgstr "用户"
+
+#: src/components/Layout.tsx
+msgid "User menu"
+msgstr "用户菜单"
+
+#: src/components/Layout.tsx
+#: src/pages/Admin.tsx
+#: src/pages/DeviceOAuth.tsx
+#: src/pages/Login.tsx
+msgid "Username"
+msgstr "用户名"
+
+#: src/pages/Admin.tsx
+msgid "Users"
+msgstr "用户"
+
+#: src/pages/Landing.tsx
+msgid "Vault"
+msgstr "库"
+
+#: src/pages/Workspace.tsx
+msgid "Vault ready"
+msgstr "库已就绪"
+
+#: src/pages/Workspace.tsx
+msgid "Vault space"
+msgstr "库空间"
+
+#: src/pages/Workspace.tsx
+msgid "Verified domain"
+msgstr "已验证域名"
+
+#: src/pages/Workspace.tsx
+msgid "Verify DNS"
+msgstr "验证 DNS"
+
+#: src/pages/Workspace.tsx
+msgid "View public page"
+msgstr "查看公开页面"
+
+#: src/pages/Workspace.tsx
+msgid "Viewer access is read-only."
+msgstr "查看者权限为只读。"
+
+#: src/pages/Landing.tsx
+msgid "Watch the flow"
+msgstr "查看流程"
+
+#: src/pages/Landing.tsx
+msgid "Web dashboard"
+msgstr "网页仪表板"
+
+#: src/pages/Login.tsx
+msgid "Welcome back"
+msgstr "欢迎回来"
+
+#: src/pages/Workspace.tsx
+msgid "Workspace files"
+msgstr "工作区文件"
+
+#: src/pages/Workspace.tsx
+msgid "Workspace identity"
+msgstr "工作区标识"
+
+#: src/pages/Workspace.tsx
+msgid "Workspace name"
+msgstr "工作区名称"
+
+#: src/pages/Workspace.tsx
+msgid "Workspace settings"
+msgstr "工作区设置"
+
+#: src/pages/Workspace.tsx
+msgid "Workspace slug"
+msgstr "工作区标识符"
+
+#: src/pages/Landing.tsx
+#: src/pages/Workspace.tsx
+msgid "Write"
+msgstr "写作"
+
+#: src/pages/Landing.tsx
+msgid "Write where your files live"
+msgstr "在文件所在处写作"
+
+#: src/pages/Workspace.tsx
+msgid "You will lose access to all cloud documents."
+msgstr "您将失去所有云文档的访问权限。"
+
+#: src/pages/Workspace.tsx
+msgid "You will lose access to all cloud documents. Your local files are unaffected."
+msgstr "您将失去所有云文档的访问权限。您的本地文件不受影响。"
+
+#: src/pages/InviteAccept.tsx
+msgid "You're invited"
+msgstr "您被邀请了"
+
+#: src/pages/Login.tsx
+msgid "Your files stay on your machine. Always."
+msgstr "您的文件始终保存在本地。"
+
+#: src/pages/Login.tsx
+msgid "Your Markdown workspace,<0/>synced to the cloud."
+msgstr "您的 Markdown 工作区，<0/>同步到云端。"
+
+#: src/pages/Workspace.tsx
+msgid "Your rendered document will appear here."
+msgstr "渲染后的文档将显示在此处。"

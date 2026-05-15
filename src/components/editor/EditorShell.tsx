@@ -1,3 +1,4 @@
+import { t, Trans } from "@lingui/macro";
 import { useRef, useEffect, useCallback, useState } from "react";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { save } from "@tauri-apps/plugin-dialog";
@@ -149,7 +150,7 @@ async function renderPreviewPdfBytes(content: string): Promise<Uint8Array> {
       pageCanvas.height = chunkHeight;
 
       const ctx = pageCanvas.getContext("2d");
-      if (!ctx) throw new Error("Could not prepare PDF page.");
+      if (!ctx) throw new Error(t`Could not prepare PDF page.`);
       ctx.fillStyle = "#f8fbf9";
       ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
       ctx.drawImage(
@@ -213,7 +214,7 @@ export function EditorShell() {
     };
   }, [state.editorContent, state.currentKind, state.editorMode]);
 
-  const fileName = state.currentPath ? basename(state.currentPath) : "No file selected";
+  const fileName = state.currentPath ? basename(state.currentPath) : t`No file selected`;
   const isMarkdown = state.currentKind === "markdown";
   const documentLocation = (() => {
     const sourcePath = state.currentRelativePath || state.currentPath;
@@ -228,7 +229,7 @@ export function EditorShell() {
     return "editor-preview-grid view-mode-split";
   };
 
-  const fileStateLabel = state.isDirty ? "Unsaved changes" : "";
+  const fileStateLabel = state.isDirty ? t`Unsaved changes` : "";
   const currentVaultSettings = state.workspace ? state.vaultSettings[state.workspace.rootPath] : undefined;
   const currentVaultBinding = state.workspace
     ? state.vaultBindings.find((binding) => binding.localVaultPath === state.workspace?.rootPath)
@@ -268,7 +269,7 @@ export function EditorShell() {
       : [state.currentPath, ...favorites];
     window.localStorage.setItem(key, JSON.stringify(next));
     dispatch({ type: "TOGGLE_FAVORITE" });
-    dispatch({ type: "SET_STATUS", message: next.includes(state.currentPath) ? "Added to favorites." : "Removed from favorites." });
+    dispatch({ type: "SET_STATUS", message: next.includes(state.currentPath) ? t`Added to favorites.` : t`Removed from favorites.` });
   }, [state.currentPath, state.workspace, state.editorContent, dispatch]);
 
   const runCommand = useCallback((id: string) => {
@@ -304,7 +305,7 @@ export function EditorShell() {
 
     if (!["http:", "https:", "mailto:", "tel:"].includes(url.protocol)) {
       event.preventDefault();
-      dispatch({ type: "SET_STATUS", message: "Only web, email, and phone links can be opened from preview." });
+      dispatch({ type: "SET_STATUS", message: t`Only web, email, and phone links can be opened from preview.` });
       return;
     }
 
@@ -371,7 +372,7 @@ export function EditorShell() {
 
   const publishCurrentDocument = useCallback(async () => {
     if (!canPublishToCloud || !state.currentRelativePath) {
-      dispatch({ type: "SET_STATUS", message: "Connect this vault to a cloud workspace before publishing." });
+      dispatch({ type: "SET_STATUS", message: t`Connect this vault to a cloud workspace before publishing.` });
       return;
     }
     try {
@@ -381,7 +382,7 @@ export function EditorShell() {
       if (state.isDirty) await fs.saveCurrentFile();
       await pushSingleDocument(relativePath, content);
       const documentId = await findCloudDocumentId();
-      if (!documentId) throw new Error("Sync this document before publishing.");
+      if (!documentId) throw new Error(t`Sync this document before publishing.`);
       const result = await cloudPublishRequest<{ isPublished: boolean; publishedAt: string; contentHash: string }>(`/documents/${documentId}/publish`, { method: "POST", body: "{}" });
       const next = await cloudPublishRequest<PublishStatusResponse>(`/documents/${documentId}/publish`);
       setPublishState(next ?? (result ? {
@@ -392,7 +393,7 @@ export function EditorShell() {
         publishedHash: result.contentHash,
         hasUnpublishedChanges: false,
       } : null));
-      dispatch({ type: "SET_STATUS", message: "Document published." });
+      dispatch({ type: "SET_STATUS", message: t`Document published.` });
     } catch (error) {
       dispatch({ type: "SET_STATUS", message: String(error) });
     } finally {
@@ -402,15 +403,15 @@ export function EditorShell() {
 
   const unpublishCurrentDocument = useCallback(async () => {
     if (!canPublishToCloud || !state.currentRelativePath) return;
-    const ok = await confirm("Remove this document from the public site?", { destructive: true, confirmLabel: "Unpublish" });
+    const ok = await confirm(t`Remove this document from the public site?`, { destructive: true, confirmLabel: t`Unpublish` });
     if (!ok) return;
     try {
       dispatch({ type: "SET_LOADING", isLoading: true });
       const documentId = await findCloudDocumentId();
-      if (!documentId) throw new Error("Cloud document not found.");
+      if (!documentId) throw new Error(t`Cloud document not found.`);
       await cloudPublishRequest(`/documents/${documentId}/publish`, { method: "DELETE" });
       await refreshPublishState();
-      dispatch({ type: "SET_STATUS", message: "Document unpublished." });
+      dispatch({ type: "SET_STATUS", message: t`Document unpublished.` });
     } catch (error) {
       dispatch({ type: "SET_STATUS", message: String(error) });
     } finally {
@@ -432,14 +433,14 @@ export function EditorShell() {
         const outputPath = selected.toLowerCase().endsWith(".pdf") ? selected : `${selected}.pdf`;
 
         dispatch({ type: "SET_LOADING", isLoading: true });
-        dispatch({ type: "SET_STATUS", message: "Exporting PDF..." });
+        dispatch({ type: "SET_STATUS", message: t`Exporting PDF...` });
         const pdfBytes = await renderPreviewPdfBytes(state.editorContent);
         await tauri.writeBinaryFile(outputPath, Array.from(pdfBytes));
-        dispatch({ type: "SET_STATUS", message: `Exported PDF to ${outputPath}.` });
+        dispatch({ type: "SET_STATUS", message: t`Exported PDF to ${outputPath}.` });
         return;
       }
 
-      dispatch({ type: "SET_STATUS", message: "Preparing PDF export..." });
+      dispatch({ type: "SET_STATUS", message: t`Preparing PDF export...` });
       const html = await renderMarkdownToHtml(state.editorContent);
       const printHtml = `<!doctype html>
 <html>
@@ -489,13 +490,13 @@ export function EditorShell() {
 
       const printDocument = printFrame.contentDocument;
       if (!printDocument || !printFrame.contentWindow) {
-        throw new Error("Could not prepare PDF export.");
+        throw new Error(t`Could not prepare PDF export.`);
       }
 
       printDocument.open();
       printDocument.write(printHtml);
       printDocument.close();
-      dispatch({ type: "SET_STATUS", message: "Use the print dialog to save as PDF." });
+      dispatch({ type: "SET_STATUS", message: t`Use the print dialog to save as PDF.` });
     } catch (error) {
       dispatch({ type: "SET_STATUS", message: String(error) });
     } finally {
@@ -524,9 +525,9 @@ export function EditorShell() {
               <button
                 type="button"
                 className={`editor-tool h-8 w-8 px-0 ${isFavorite ? "text-amber-500 hover:text-amber-600" : ""}`}
-                aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+                aria-label={isFavorite ? t`Remove from favorites` : t`Add to favorites`}
                 aria-pressed={isFavorite}
-                title={isFavorite ? "Remove from favorites" : "Add to favorites"}
+                title={isFavorite ? t`Remove from favorites` : t`Add to favorites`}
                 onClick={toggleFavorite}
               >
                 <StarIcon className="h-4 w-4" fill={isFavorite ? "currentColor" : "none"} />
@@ -536,8 +537,8 @@ export function EditorShell() {
               <button
                 type="button"
                 className="editor-tool h-8 w-8 px-0 hover:text-red-700"
-                aria-label="Move to trash"
-                title="Move to trash"
+                aria-label={t`Move to trash`}
+                title={t`Move to trash`}
                 disabled={isCloudViewer}
                 onClick={() => runCommand("file.delete")}
               >
@@ -557,9 +558,9 @@ export function EditorShell() {
                     : "header-icon-button-primary"
                 }`}
                 type="button"
-                aria-label={hasUnpublishedChanges ? "Republish" : "Publish"}
+                aria-label={hasUnpublishedChanges ? t`Republish` : t`Publish`}
                 aria-disabled={state.isLoading}
-                {...tooltipProps(hasUnpublishedChanges ? "Republish" : "Publish")}
+                {...tooltipProps(hasUnpublishedChanges ? t`Republish` : t`Publish`)}
                 onClick={() => {
                   if (state.isLoading) return;
                   void publishCurrentDocument();
@@ -573,9 +574,9 @@ export function EditorShell() {
             <button
               className="header-icon-button header-icon-button-danger"
               type="button"
-              aria-label="Unpublish"
+              aria-label={t`Unpublish`}
               aria-disabled={state.isLoading}
-              {...tooltipProps("Unpublish")}
+              {...tooltipProps(t`Unpublish`)}
               onClick={() => {
                 if (state.isLoading) return;
                 void unpublishCurrentDocument();
@@ -584,15 +585,15 @@ export function EditorShell() {
               <LinkSlashIcon className="h-4 w-4" />
             </button>
           )}
-          {isCloudViewer && <span className="status-chip status-chip-neutral">Read-only</span>}
+          {isCloudViewer && <span className="status-chip status-chip-neutral"><Trans>Read-only</Trans></span>}
           {state.activeConflicts.length > 0 && (
             <button
               type="button"
               className="status-chip status-chip-warning cursor-pointer"
               onClick={() => dispatch({ type: "SET_CONFLICT_DIALOG", open: true })}
-              title={`${state.activeConflicts.length} conflict${state.activeConflicts.length > 1 ? "s" : ""} to resolve`}
+              title={t`${state.activeConflicts.length} conflict${state.activeConflicts.length > 1 ? "s" : ""} to resolve`}
             >
-              {state.activeConflicts.length} conflict{state.activeConflicts.length > 1 ? "s" : ""}
+              <Trans>{state.activeConflicts.length} conflict{state.activeConflicts.length > 1 ? "s" : ""}</Trans>
             </button>
           )}
           {state.currentPath && (
@@ -600,9 +601,9 @@ export function EditorShell() {
               <button
                 className={`header-icon-button ${state.isDirty ? "header-icon-button-primary" : ""}`}
                 type="button"
-                aria-label={state.isDirty ? "Save" : "No unsaved changes"}
+                aria-label={state.isDirty ? t`Save` : t`No unsaved changes`}
                 aria-disabled={!canEditMarkdown || !state.isDirty}
-                {...tooltipProps(state.isDirty ? "Save" : "No unsaved changes")}
+                {...tooltipProps(state.isDirty ? t`Save` : t`No unsaved changes`)}
                 onClick={() => {
                   if (!canEditMarkdown || !state.isDirty) return;
                   const relPath = state.currentRelativePath;
@@ -623,8 +624,8 @@ export function EditorShell() {
               <MenuButton
                 className="header-icon-button"
                 type="button"
-                aria-label="Export"
-                title="Export"
+                aria-label={t`Export`}
+                title={t`Export`}
               >
                 <ArrowUpTrayIcon className="h-4 w-4" />
               </MenuButton>
@@ -640,7 +641,7 @@ export function EditorShell() {
                       onClick={() => void exportCurrentPdf()}
                     >
                       <PrinterIcon className="h-4 w-4" />
-                      PDF
+                      <Trans>PDF</Trans>
                     </button>
                   )}
                 </MenuItem>
@@ -652,7 +653,7 @@ export function EditorShell() {
                       onClick={() => void fs.exportCurrentMarkdown()}
                     >
                       <DocumentTextIcon className="h-4 w-4" />
-                      Markdown
+                      <Trans>Markdown</Trans>
                     </button>
                   )}
                 </MenuItem>
@@ -663,28 +664,28 @@ export function EditorShell() {
       </div>
 
       <div className="flex min-h-12 items-center gap-1 border-b border-black/[0.04] bg-[#fbfdfb] px-5">
-        <EditorToolbarButton command="editor.bold" title="Bold - Ctrl+B" disabled={!canEditMarkdown} runCommand={runCommand} tooltipProps={tooltipProps("Bold - Ctrl+B")}>
+        <EditorToolbarButton command="editor.bold" title={t`Bold - Ctrl+B`} disabled={!canEditMarkdown} runCommand={runCommand} tooltipProps={tooltipProps(t`Bold - Ctrl+B`)}>
           <BoldIcon className="h-4 w-4" />
         </EditorToolbarButton>
-        <EditorToolbarButton command="editor.italic" title="Italic - Ctrl+I" disabled={!canEditMarkdown} runCommand={runCommand} tooltipProps={tooltipProps("Italic - Ctrl+I")}>
+        <EditorToolbarButton command="editor.italic" title={t`Italic - Ctrl+I`} disabled={!canEditMarkdown} runCommand={runCommand} tooltipProps={tooltipProps(t`Italic - Ctrl+I`)}>
           <ItalicIcon className="h-4 w-4" />
         </EditorToolbarButton>
-        <EditorToolbarButton command="editor.link" title="Link - Ctrl+K" disabled={!canEditMarkdown} runCommand={runCommand} tooltipProps={tooltipProps("Link - Ctrl+K")}>
+        <EditorToolbarButton command="editor.link" title={t`Link - Ctrl+K`} disabled={!canEditMarkdown} runCommand={runCommand} tooltipProps={tooltipProps(t`Link - Ctrl+K`)}>
           <LinkIcon className="h-4 w-4" />
         </EditorToolbarButton>
-        <EditorToolbarButton command="editor.code" title="Inline code" disabled={!canEditMarkdown} runCommand={runCommand} tooltipProps={tooltipProps("Inline code")}>
+        <EditorToolbarButton command="editor.code" title={t`Inline code`} disabled={!canEditMarkdown} runCommand={runCommand} tooltipProps={tooltipProps(t`Inline code`)}>
           <CodeBracketIcon className="h-4 w-4" />
         </EditorToolbarButton>
-        <EditorToolbarButton command="insert.table" title="Insert or edit table - Ctrl+Shift+T" disabled={!canEditMarkdown} runCommand={runCommand} tooltipProps={tooltipProps("Insert or edit table - Ctrl+Shift+T")}>
+        <EditorToolbarButton command="insert.table" title={t`Insert or edit table - Ctrl+Shift+T`} disabled={!canEditMarkdown} runCommand={runCommand} tooltipProps={tooltipProps(t`Insert or edit table - Ctrl+Shift+T`)}>
           <TableCellsIcon className="h-4 w-4" />
         </EditorToolbarButton>
-        <EditorToolbarButton command="insert.math" title="Insert formula block" disabled={!canEditMarkdown} runCommand={runCommand} tooltipProps={tooltipProps("Insert formula block")}>
+        <EditorToolbarButton command="insert.math" title={t`Insert formula block`} disabled={!canEditMarkdown} runCommand={runCommand} tooltipProps={tooltipProps(t`Insert formula block`)}>
           <VariableIcon className="h-4 w-4" />
         </EditorToolbarButton>
-        <EditorToolbarButton command="insert.mermaid" title="Insert Mermaid diagram" disabled={!canEditMarkdown} runCommand={runCommand} tooltipProps={tooltipProps("Insert Mermaid diagram")}>
+        <EditorToolbarButton command="insert.mermaid" title={t`Insert Mermaid diagram`} disabled={!canEditMarkdown} runCommand={runCommand} tooltipProps={tooltipProps(t`Insert Mermaid diagram`)}>
           <ShareIcon className="h-4 w-4" />
         </EditorToolbarButton>
-        <EditorToolbarButton command="insert.task" title="Task list" disabled={!canEditMarkdown} runCommand={runCommand} tooltipProps={tooltipProps("Task list")}>
+        <EditorToolbarButton command="insert.task" title={t`Task list`} disabled={!canEditMarkdown} runCommand={runCommand} tooltipProps={tooltipProps(t`Task list`)}>
           <ClipboardDocumentCheckIcon className="h-4 w-4" />
         </EditorToolbarButton>
         <div className="ml-auto">
@@ -696,10 +697,10 @@ export function EditorShell() {
         </div>
         {showVaultDocumentTools && (
           <>
-            <button className={`editor-tool ${state.documentPanelOpen ? "bg-[#e8f6f2] text-[#006f6b] ring-1 ring-[#008884]/15 hover:bg-[#e8f6f2] hover:text-[#006f6b]" : ""}`} type="button" aria-label="Document info" {...tooltipProps("Document info")} onClick={() => dispatch({ type: "TOGGLE_DOCUMENT_PANEL" })}>
+            <button className={`editor-tool ${state.documentPanelOpen ? "bg-[#e8f6f2] text-[#006f6b] ring-1 ring-[#008884]/15 hover:bg-[#e8f6f2] hover:text-[#006f6b]" : ""}`} type="button" aria-label={t`Document info`} {...tooltipProps(t`Document info`)} onClick={() => dispatch({ type: "TOGGLE_DOCUMENT_PANEL" })}>
               <InformationCircleIcon className="h-4 w-4" />
             </button>
-            <button className="editor-tool" type="button" aria-label="Focus mode" {...tooltipProps("Focus mode")} onClick={() => dispatch({ type: "TOGGLE_FOCUS_MODE" })}>
+            <button className="editor-tool" type="button" aria-label={t`Focus mode`} {...tooltipProps(t`Focus mode`)} onClick={() => dispatch({ type: "TOGGLE_FOCUS_MODE" })}>
               <ArrowsPointingOutIcon className="h-4 w-4" />
             </button>
           </>
@@ -714,8 +715,8 @@ export function EditorShell() {
             className="h-full min-h-0 w-full resize-none bg-white/40 p-8 font-mono text-[13px] leading-7 text-stone-800 outline-none placeholder:text-[#9aa6a1]"
             style={{ position: "relative", zIndex: 2 }}
             spellCheck={false}
-            aria-label="Markdown editor"
-            placeholder="Open or drop a Markdown file to start editing."
+            aria-label={t`Markdown editor`}
+            placeholder={t`Open or drop a Markdown file to start editing.`}
             disabled={!isMarkdown}
             readOnly={isCloudViewer}
             onInput={handleInput}
@@ -728,8 +729,8 @@ export function EditorShell() {
             style={{ position: "relative", zIndex: 1 }}
             onClick={handlePreviewClick}
           >
-            <h2>Select a Markdown file</h2>
-            <p>Your rendered document will appear here.</p>
+            <h2><Trans>Select a Markdown file</Trans></h2>
+            <p><Trans>Your rendered document will appear here.</Trans></p>
           </article>
         </div>
 
@@ -737,10 +738,10 @@ export function EditorShell() {
           <aside id="document-panel" className="min-h-0 overflow-y-auto border-l border-black/[0.04] bg-[#f6faf7] p-5">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
-                <p className="text-sm font-semibold text-stone-950">Document Info</p>
-                <p className="text-xs text-[#6b7773]">Properties, outline, links, and publish.</p>
+                <p className="text-sm font-semibold text-stone-950"><Trans>Document Info</Trans></p>
+                <p className="text-xs text-[#6b7773]"><Trans>Properties, outline, links, and publish.</Trans></p>
               </div>
-              <button className="subtle-button aspect-square px-0" type="button" title="Hide" onClick={() => dispatch({ type: "TOGGLE_DOCUMENT_PANEL" })}>
+              <button className="subtle-button aspect-square px-0" type="button" title={t`Hide`} onClick={() => dispatch({ type: "TOGGLE_DOCUMENT_PANEL" })}>
                 <XMarkIcon className="h-4 w-4" />
               </button>
             </div>
@@ -769,14 +770,14 @@ export function EditorShell() {
           className="context-menu"
           style={{ left: contextMenu.x, top: contextMenu.y }}
         >
-          <button type="button" className="context-menu-button" disabled={!canEditMarkdown} onClick={() => { runCommand("editor.bold"); setContextMenu(null); }}><BoldIcon className="mr-2 h-3.5 w-3.5" />Bold</button>
-          <button type="button" className="context-menu-button" disabled={!canEditMarkdown} onClick={() => { runCommand("editor.link"); setContextMenu(null); }}><LinkIcon className="mr-2 h-3.5 w-3.5" />Insert link</button>
-          <button type="button" className="context-menu-button" disabled={!canEditMarkdown} onClick={() => { insertOrEditTable(); setContextMenu(null); }}><TableCellsIcon className="mr-2 h-3.5 w-3.5" />Insert or format table</button>
-          <button type="button" className="context-menu-button" disabled={!canEditMarkdown} onClick={() => { addMarkdownTableRow(); setContextMenu(null); }}><TableCellsIcon className="mr-2 h-3.5 w-3.5" />Add table row below</button>
-          <button type="button" className="context-menu-button" disabled={!canEditMarkdown} onClick={() => { addMarkdownTableColumn(); setContextMenu(null); }}><TableCellsIcon className="mr-2 h-3.5 w-3.5" />Add table column right</button>
-          <button type="button" className="context-menu-button" disabled={!canEditMarkdown} onClick={() => { formatMarkdownTable(); setContextMenu(null); }}><TableCellsIcon className="mr-2 h-3.5 w-3.5" />Format table</button>
-          <button type="button" className="context-menu-button" disabled={!canEditMarkdown} onClick={() => { insertBlockAtSafeCursor("\n$$\nE = mc^2\n$$\n"); setContextMenu(null); }}><VariableIcon className="mr-2 h-3.5 w-3.5" />Insert formula</button>
-          <button type="button" className="context-menu-button" disabled={!canEditMarkdown} onClick={() => { insertBlockAtSafeCursor("\n```mermaid\nflowchart TD\n  A --> B\n```\n"); setContextMenu(null); }}><ShareIcon className="mr-2 h-3.5 w-3.5" />Insert Mermaid diagram</button>
+          <button type="button" className="context-menu-button" disabled={!canEditMarkdown} onClick={() => { runCommand("editor.bold"); setContextMenu(null); }}><BoldIcon className="mr-2 h-3.5 w-3.5" /><Trans>Bold</Trans></button>
+          <button type="button" className="context-menu-button" disabled={!canEditMarkdown} onClick={() => { runCommand("editor.link"); setContextMenu(null); }}><LinkIcon className="mr-2 h-3.5 w-3.5" /><Trans>Insert link</Trans></button>
+          <button type="button" className="context-menu-button" disabled={!canEditMarkdown} onClick={() => { insertOrEditTable(); setContextMenu(null); }}><TableCellsIcon className="mr-2 h-3.5 w-3.5" /><Trans>Insert or format table</Trans></button>
+          <button type="button" className="context-menu-button" disabled={!canEditMarkdown} onClick={() => { addMarkdownTableRow(); setContextMenu(null); }}><TableCellsIcon className="mr-2 h-3.5 w-3.5" /><Trans>Add table row below</Trans></button>
+          <button type="button" className="context-menu-button" disabled={!canEditMarkdown} onClick={() => { addMarkdownTableColumn(); setContextMenu(null); }}><TableCellsIcon className="mr-2 h-3.5 w-3.5" /><Trans>Add table column right</Trans></button>
+          <button type="button" className="context-menu-button" disabled={!canEditMarkdown} onClick={() => { formatMarkdownTable(); setContextMenu(null); }}><TableCellsIcon className="mr-2 h-3.5 w-3.5" /><Trans>Format table</Trans></button>
+          <button type="button" className="context-menu-button" disabled={!canEditMarkdown} onClick={() => { insertBlockAtSafeCursor("\n$$\nE = mc^2\n$$\n"); setContextMenu(null); }}><VariableIcon className="mr-2 h-3.5 w-3.5" /><Trans>Insert formula</Trans></button>
+          <button type="button" className="context-menu-button" disabled={!canEditMarkdown} onClick={() => { insertBlockAtSafeCursor("\n```mermaid\nflowchart TD\n  A --> B\n```\n"); setContextMenu(null); }}><ShareIcon className="mr-2 h-3.5 w-3.5" /><Trans>Insert Mermaid diagram</Trans></button>
         </div>
       )}
       {floatingTooltip && (
@@ -805,7 +806,7 @@ function PropertiesSection() {
   if (state.currentKind !== "markdown") {
     return (
       <section id="properties-panel" className="document-info-section">
-        <p className="text-sm text-stone-500">Open a Markdown file to edit frontmatter properties.</p>
+        <p className="text-sm text-stone-500"><Trans>Open a Markdown file to edit frontmatter properties.</Trans></p>
       </section>
     );
   }
@@ -824,12 +825,12 @@ function PropertiesSection() {
 
   return (
     <section id="properties-panel" className="document-info-section">
-      <p className="text-sm font-semibold text-stone-950">Properties</p>
-      <p className="mt-1 text-xs text-stone-500">Edits are written back to YAML frontmatter.</p>
+      <p className="text-sm font-semibold text-stone-950"><Trans>Properties</Trans></p>
+      <p className="mt-1 text-xs text-stone-500"><Trans>Edits are written back to YAML frontmatter.</Trans></p>
       <div className="mt-3 space-y-3">
         {basicFields.map((field) => <PropertyField key={field} field={field} value={parsed.data[field] ?? ""} disabled={readOnly} onUpdate={updateField} />)}
         <details className="rounded-md border border-stone-200 bg-stone-50 p-2">
-          <summary className="cursor-pointer text-xs font-semibold uppercase text-stone-500">Advanced</summary>
+          <summary className="cursor-pointer text-xs font-semibold uppercase text-stone-500"><Trans>Advanced</Trans></summary>
           <div className="mt-3 space-y-3">
             {advancedFields.map((field) => <PropertyField key={field} field={field} value={parsed.data[field] ?? ""} disabled={readOnly} onUpdate={updateField} />)}
           </div>
@@ -871,7 +872,7 @@ function OutlineSection() {
   if (state.currentKind !== "markdown") {
     return (
       <section id="outline-panel" className="document-info-section">
-        <p className="text-sm text-stone-500">Open a Markdown file to see its outline.</p>
+        <p className="text-sm text-stone-500"><Trans>Open a Markdown file to see its outline.</Trans></p>
       </section>
     );
   }
@@ -882,7 +883,7 @@ function OutlineSection() {
   if (headings.length === 0) {
     return (
       <section id="outline-panel" className="document-info-section">
-        <p className="text-sm text-stone-500">No headings found.</p>
+        <p className="text-sm text-stone-500"><Trans>No headings found.</Trans></p>
       </section>
     );
   }
@@ -921,22 +922,22 @@ function PublishSection({
   return (
     <section id="publish-panel" className="document-info-section">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-sm font-semibold text-stone-950">Publish</p>
+        <p className="text-sm font-semibold text-stone-950"><Trans>Publish</Trans></p>
         <span className={`status-chip ${isPublished ? (hasUnpublishedChanges ? "status-chip-warning" : "status-chip-success") : "status-chip-neutral"}`}>
-          {isPublished ? (hasUnpublishedChanges ? "Changed" : "Published") : "Not published"}
+          <Trans>{isPublished ? (hasUnpublishedChanges ? "Changed" : "Published") : "Not published"}</Trans>
         </span>
       </div>
       {publishState?.publishedAt && (
-        <p className="mt-2 text-xs text-stone-500">Published {new Date(publishState.publishedAt).toLocaleString()}</p>
+        <p className="mt-2 text-xs text-stone-500"><Trans>Published {new Date(publishState.publishedAt).toLocaleString()}</Trans></p>
       )}
       {hasUnpublishedChanges && (
-        <p className="mt-2 text-xs text-amber-700">The public snapshot is behind the current document.</p>
+        <p className="mt-2 text-xs text-amber-700"><Trans>The public snapshot is behind the current document.</Trans></p>
       )}
       <div className="mt-3 grid grid-cols-2 gap-2">
         <button
           className={`sidebar-action ${hasUnpublishedChanges ? "bg-amber-500 text-white hover:bg-amber-600 hover:text-white" : ""}`}
           type="button"
-          title={hasUnpublishedChanges ? "Republish" : "Publish"}
+          title={hasUnpublishedChanges ? t`Republish` : t`Publish`}
           disabled={!canPublish || isLoading}
           onClick={() => { void onPublish(); }}
         >
@@ -945,7 +946,7 @@ function PublishSection({
         <button
           className="sidebar-action hover:text-red-700"
           type="button"
-          title="Unpublish"
+          title={t`Unpublish`}
           disabled={!canPublish || isLoading || !isPublished}
           onClick={() => { void onUnpublish(); }}
         >
@@ -959,10 +960,10 @@ function PublishSection({
           target="_blank"
           rel="noreferrer"
         >
-          View published page
+          <Trans>View published page</Trans>
         </a>
       )}
-      <p className="mt-3 text-xs text-stone-500">Publishing uses a cloud snapshot; frontmatter status is treated as user metadata.</p>
+      <p className="mt-3 text-xs text-stone-500"><Trans>Publishing uses a cloud snapshot; frontmatter status is treated as user metadata.</Trans></p>
     </section>
   );
 }
@@ -972,7 +973,7 @@ function LinksSection() {
   if (state.currentKind !== "markdown") {
     return (
       <section className="document-info-section">
-        <p className="text-sm text-stone-500">Open a Markdown file to inspect links.</p>
+        <p className="text-sm text-stone-500"><Trans>Open a Markdown file to inspect links.</Trans></p>
       </section>
     );
   }
@@ -995,22 +996,22 @@ function LinksSection() {
 
   return (
     <section className="document-info-section">
-      <p className="text-sm font-semibold text-stone-950">Outgoing links</p>
+      <p className="text-sm font-semibold text-stone-950"><Trans>Outgoing links</Trans></p>
       <div className="mt-2 space-y-1">
         {links.length === 0 ? (
-          <p className="text-xs text-stone-500">No outgoing links.</p>
+          <p className="text-xs text-stone-500"><Trans>No outgoing links.</Trans></p>
         ) : (
           links.map((l, i) => (
             <div key={i} className="rounded-md border border-stone-200 px-2 py-1.5 text-xs">
               <span className="font-semibold text-stone-800">{l.target}</span>
-              <span className="ml-2 text-stone-500">line {l.line + 1}</span>
+              <span className="ml-2 text-stone-500"><Trans>line {l.line + 1}</Trans></span>
             </div>
           ))
         )}
       </div>
       {publicUrl && (
         <>
-          <p className="mt-4 text-sm font-semibold text-stone-950">Public URL</p>
+          <p className="mt-4 text-sm font-semibold text-stone-950"><Trans>Public URL</Trans></p>
           <p className="mt-2 break-all text-xs text-stone-600">{publicUrl}</p>
         </>
       )}

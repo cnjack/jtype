@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
 import { ChatBubbleLeftRightIcon } from "@heroicons/react/24/outline";
+import { t, Trans } from "@lingui/macro";
 
 export interface PromptDialogProps {
   open: boolean;
@@ -17,7 +18,7 @@ export function PromptDialog({
   title,
   defaultValue = "",
   placeholder,
-  confirmLabel = "OK",
+  confirmLabel = t`OK`,
   onConfirm,
   onClose,
 }: PromptDialogProps) {
@@ -27,7 +28,7 @@ export function PromptDialog({
   const handleConfirm = () => {
     const trimmed = value.trim();
     if (!trimmed) {
-      setError("Please enter a value.");
+      setError(t`Please enter a value.`);
       return;
     }
     onConfirm(trimmed);
@@ -65,7 +66,7 @@ export function PromptDialog({
               className="rounded-lg px-3 py-1.5 text-sm text-stone-600 hover:bg-stone-100"
               onClick={handleClose}
             >
-              Cancel
+              <Trans>Cancel</Trans>
             </button>
             <button
               type="button"

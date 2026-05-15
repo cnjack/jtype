@@ -1,3 +1,4 @@
+import { t } from "@lingui/macro";
 import { PencilSquareIcon, ViewColumnsIcon, EyeIcon } from "@heroicons/react/24/outline";
 
 export type EditorMode = "write" | "split" | "preview";
@@ -16,8 +17,8 @@ export function ViewModeToggle({ mode, onModeChange, tooltipProps }: ViewModeTog
         type="button"
         className={`view-mode-button ${mode === "write" ? "view-mode-button-active" : ""}`}
         onClick={() => onModeChange("write")}
-        title="Write"
-        {...tp("Write")}
+        title={t`Write`}
+        {...tp(t`Write`)}
       >
         <PencilSquareIcon className="h-3.5 w-3.5" />
       </button>
@@ -25,8 +26,8 @@ export function ViewModeToggle({ mode, onModeChange, tooltipProps }: ViewModeTog
         type="button"
         className={`view-mode-button ${mode === "split" ? "view-mode-button-active" : ""}`}
         onClick={() => onModeChange("split")}
-        title="Split"
-        {...tp("Split")}
+        title={t`Split`}
+        {...tp(t`Split`)}
       >
         <ViewColumnsIcon className="h-3.5 w-3.5" />
       </button>
@@ -34,8 +35,8 @@ export function ViewModeToggle({ mode, onModeChange, tooltipProps }: ViewModeTog
         type="button"
         className={`view-mode-button ${mode === "preview" ? "view-mode-button-active" : ""}`}
         onClick={() => onModeChange("preview")}
-        title="Preview"
-        {...tp("Preview")}
+        title={t`Preview`}
+        {...tp(t`Preview`)}
       >
         <EyeIcon className="h-3.5 w-3.5" />
       </button>

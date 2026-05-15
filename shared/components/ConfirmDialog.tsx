@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
+import { t } from "@lingui/macro";
 
 export interface ConfirmDialogProps {
   open: boolean;
@@ -17,8 +18,8 @@ export function ConfirmDialog({
   open,
   title,
   message,
-  confirmLabel = "Confirm",
-  cancelLabel = "Cancel",
+  confirmLabel = t`Confirm`,
+  cancelLabel = t`Cancel`,
   danger = false,
   onConfirm,
   onClose,
@@ -91,10 +92,10 @@ export function useConfirmDialog() {
     return (
       <ConfirmDialog
         open={true}
-        title={options.title ?? "Confirm"}
+        title={options.title ?? t`Confirm`}
         message={message}
-        confirmLabel={options.confirmLabel ?? "OK"}
-        cancelLabel={options.cancelLabel ?? "Cancel"}
+        confirmLabel={options.confirmLabel ?? t`OK`}
+        cancelLabel={options.cancelLabel ?? t`Cancel`}
         danger={options.destructive}
         onConfirm={handleConfirm}
         onClose={handleCancel}

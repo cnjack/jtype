@@ -12,11 +12,18 @@
     "web:dev": "cargo run --manifest-path services/jtype-web/Cargo.toml",
     "web:test": "cargo test --manifest-path services/jtype-web/Cargo.toml",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "i18n:extract": "lingui extract",
+    "i18n:extract:web": "lingui extract --config services/jtype-web/frontend/lingui.config.ts",
+    "i18n:compile": "lingui compile",
+    "i18n:compile:web": "lingui compile --config services/jtype-web/frontend/lingui.config.ts"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.10",
     "@heroicons/react": "^2.2.0",
+    "@lingui/core": "^6.0.1",
+    "@lingui/macro": "^5.9.5",
+    "@lingui/react": "^6.0.1",
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-dialog": "^2.7.0",
     "@tauri-apps/plugin-fs": "^2.5.0",
@@ -32,6 +39,10 @@
     "react-dom": "^19.2.5"
   },
   "devDependencies": {
+    "@lingui/babel-plugin-lingui-macro": "^6.0.1",
+    "@lingui/cli": "^6.0.1",
+    "@lingui/format-po": "^6.0.1",
+    "@lingui/vite-plugin": "^6.0.1",
     "@playwright/test": "^1.59.1",
     "@tailwindcss/vite": "^4.2.4",
     "@tauri-apps/cli": "^2",

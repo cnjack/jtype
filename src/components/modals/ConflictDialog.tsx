@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { t, Trans } from '@lingui/macro';
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react';
 import { ExclamationTriangleIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useAppDispatch, useAppState } from '../../app/AppState';
@@ -39,13 +40,13 @@ export function ConflictDialog() {
           <div className="flex items-center justify-between border-b border-stone-200 px-5 py-3">
             <DialogTitle className="flex items-center gap-2 text-sm font-semibold text-stone-900">
               <ExclamationTriangleIcon className="h-5 w-5 text-amber-600" />
-              Sync Conflicts ({state.activeConflicts.length})
+              <Trans>Sync Conflicts ({state.activeConflicts.length})</Trans>
             </DialogTitle>
             <button
               type="button"
               className="rounded p-1 text-stone-400 hover:bg-stone-100 hover:text-stone-600"
-              aria-label="Close conflicts dialog"
-              title="Close"
+              aria-label={t`Close conflicts dialog`}
+              title={t`Close`}
               onClick={handleClose}
             >
               <XMarkIcon className="h-4 w-4" />

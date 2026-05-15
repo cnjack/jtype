@@ -1,3 +1,4 @@
+import { Trans, Plural } from "@lingui/macro";
 import { useMemo } from "react";
 import { useAppDispatch, useAppState } from "../../app/AppState";
 import { useFileSystem } from "../../hooks";
@@ -33,17 +34,17 @@ export function VaultHome() {
       <div className="min-h-0 flex-1 overflow-y-auto">
         <div className="mx-auto w-full max-w-6xl px-10 py-12">
           <div className="max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#008884]">Vault ready</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#008884]"><Trans>Vault ready</Trans></p>
             <h2 className="mt-4 text-4xl font-semibold tracking-[-0.035em] text-stone-950">{vaultName}</h2>
             <p className="mt-3 max-w-2xl text-sm leading-7 text-[#5f6d68]">
-              Choose a note or create a new one. This vault lives at <span className="font-mono text-stone-800">{state.workspace?.rootPath}</span>.
+              <Trans>Choose a note or create a new one. This vault lives at <span className="font-mono text-stone-800">{state.workspace?.rootPath}</span>.</Trans>
             </p>
             <div className="mt-6 flex flex-wrap gap-2">
               <button className="toolbar-button toolbar-button-primary" type="button" onClick={() => dispatch({ type: "SET_CREATE_NOTE_DIALOG", open: true })}>
-                New Document
+                <Trans>New Document</Trans>
               </button>
               <button className="toolbar-button" type="button" onClick={() => dispatch({ type: "SET_QUICK_SWITCHER", open: true })}>
-                Quick open
+                <Trans>Quick open</Trans>
               </button>
             </div>
           </div>
@@ -51,14 +52,14 @@ export function VaultHome() {
           <div className="mt-10 grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
             <section className="panel-card p-5">
               <div className="mb-3 flex items-center justify-between">
-                <p className="text-sm font-semibold text-stone-950">Documents</p>
-                <span className="text-xs text-[#6b7773]">{documents.length} Markdown file{documents.length === 1 ? "" : "s"}</span>
+                <p className="text-sm font-semibold text-stone-950"><Trans>Documents</Trans></p>
+                <span className="text-xs text-[#6b7773]"><Plural value={documents.length} one="# Markdown file" other="# Markdown files" /></span>
               </div>
               <div className="space-y-1">
                 {documents.length === 0 ? (
                   <div className="rounded-md border border-dashed border-stone-300 p-4">
-                    <p className="text-sm font-semibold text-stone-800">No notes yet.</p>
-                    <p className="mt-1 text-sm text-stone-500">Create your first Markdown note or drop files into this vault.</p>
+                    <p className="text-sm font-semibold text-stone-800"><Trans>No notes yet.</Trans></p>
+                    <p className="mt-1 text-sm text-stone-500"><Trans>Create your first Markdown note or drop files into this vault.</Trans></p>
                   </div>
                 ) : (
                   documents.slice(0, 12).map((node) => (
@@ -67,7 +68,7 @@ export function VaultHome() {
                         <span className="block truncate font-semibold">{basename(node.name).replace(/\.(md|markdown|mdown|mkd)$/i, "")}</span>
                         <span className="block truncate text-xs text-stone-500">{node.relativePath}</span>
                       </span>
-                      <span className="shrink-0 text-xs text-stone-500">Markdown</span>
+                      <span className="shrink-0 text-xs text-stone-500"><Trans>Markdown</Trans></span>
                     </button>
                   ))
                 )}
@@ -76,14 +77,14 @@ export function VaultHome() {
 
             <aside className="space-y-5">
               <section className="panel-card p-5">
-                <p className="text-sm font-semibold text-stone-950">Recent</p>
+                <p className="text-sm font-semibold text-stone-950"><Trans>Recent</Trans></p>
                 <div className="mt-3 space-y-1">
                   {recentDocs.length === 0 ? (
-                    <p className="text-sm text-stone-500">Open a note and it will appear here.</p>
+                    <p className="text-sm text-stone-500"><Trans>Open a note and it will appear here.</Trans></p>
                   ) : (
                     recentDocs.map((item) => (
                       <button key={item.path} type="button" className="tree-button text-sm" onClick={() => fs.openMarkdownFile(item.path)}>
-                        <span className="text-stone-500">Markdown file</span>
+                        <span className="text-stone-500"><Trans>Markdown file</Trans></span>
                         <span className="truncate font-semibold">{item.name}</span>
                       </button>
                     ))

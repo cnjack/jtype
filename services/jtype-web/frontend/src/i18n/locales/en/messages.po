@@ -1,0 +1,1442 @@
+msgid ""
+msgstr ""
+"POT-Creation-Date: 2026-05-14\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: @lingui/cli\n"
+"Language: en\n"
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Plural-Forms: \n"
+
+#: src/pages/Workspace.tsx
+msgid "-----BEGIN CERTIFICATE-----"
+msgstr "-----BEGIN CERTIFICATE-----"
+
+#: src/pages/Workspace.tsx
+msgid "-----BEGIN PRIVATE KEY-----"
+msgstr "-----BEGIN PRIVATE KEY-----"
+
+#: src/pages/Workspace.tsx
+msgid "(you)"
+msgstr "(you)"
+
+#. placeholder {0}: workspace.documentCount
+#. placeholder {0}: ws.documentCount
+#: src/pages/Workspace.tsx
+msgid "{0} documents"
+msgstr "{0} documents"
+
+#. placeholder {0}: uniqueIds.length
+#: src/pages/Workspace.tsx
+msgid "{0} documents published."
+msgstr "{0} documents published."
+
+#. placeholder {0}: uniqueIds.length
+#: src/pages/Workspace.tsx
+msgid "{0} documents unpublished."
+msgstr "{0} documents unpublished."
+
+#. placeholder {0}: publishedDocuments.length
+#: src/pages/Workspace.tsx
+msgid "{0} live"
+msgstr "{0} live"
+
+#. placeholder {0}: documents.length
+#. placeholder {1}: documents.length === 1 ? '' : 's'
+#: src/pages/Workspace.tsx
+msgid "{0} Markdown file{1}"
+msgstr "{0} Markdown file{1}"
+
+#. placeholder {0}: formatBytes(storage.totalBudgetBytes)
+#: src/components/Layout.tsx
+msgid "{0} total"
+msgstr "{0} total"
+
+#. placeholder {0}: formatBytes(storage.totalUsedBytes)
+#: src/components/Layout.tsx
+msgid "{0} used"
+msgstr "{0} used"
+
+#. placeholder {0}: new Date().getFullYear()
+#: src/pages/Login.tsx
+msgid "© {0} JType"
+msgstr "© {0} JType"
+
+#. placeholder {0}: preview.invitedByUsername
+#. placeholder {1}: preview.workspaceName
+#. placeholder {2}: preview.role
+#: src/pages/InviteAccept.tsx
+msgid "<0>{0}</0> has invited you to join <1>{1}</1> as <2>{2}</2>."
+msgstr "<0>{0}</0> has invited you to join <1>{1}</1> as <2>{2}</2>."
+
+#. placeholder {0}: staleWarning.editedBy
+#. placeholder {1}: staleWarning.wasDirty ? '. You have unsaved changes.' : ''
+#: src/pages/Workspace.tsx
+msgid "⚠ Modified by {0}{1}"
+msgstr "⚠ Modified by {0}{1}"
+
+#: src/pages/InviteAccept.tsx
+msgid "Accept invitation"
+msgstr "Accept invitation"
+
+#: src/components/Layout.tsx
+msgid "Account"
+msgstr "Account"
+
+#: src/pages/Admin.tsx
+msgid "Actions"
+msgstr "Actions"
+
+#: src/pages/Admin.tsx
+msgid "Active"
+msgstr "Active"
+
+#: src/pages/Workspace.tsx
+msgid "Add domain"
+msgstr "Add domain"
+
+#: src/pages/Workspace.tsx
+msgid "Add domains, verify DNS ownership, bind them to this workspace, and manage SSL certificates from one place."
+msgstr "Add domains, verify DNS ownership, bind them to this workspace, and manage SSL certificates from one place."
+
+#: src/pages/Workspace.tsx
+msgid "Add table row below"
+msgstr "Add table row below"
+
+#: src/pages/Workspace.tsx
+msgid "Add to favorites"
+msgstr "Add to favorites"
+
+#. placeholder {0}: domain.dnsTxtRecord
+#: src/pages/Workspace.tsx
+msgid "Add TXT record <0>{0}</0>, then verify DNS."
+msgstr "Add TXT record <0>{0}</0>, then verify DNS."
+
+#: src/components/Layout.tsx
+#: src/pages/Admin.tsx
+msgid "Admin"
+msgstr "Admin"
+
+#: src/pages/Login.tsx
+msgid "AI-Ready"
+msgstr "AI-Ready"
+
+#: src/pages/InviteAccept.tsx
+msgid "Already accepted"
+msgstr "Already accepted"
+
+#: src/pages/DeviceOAuth.tsx
+#: src/pages/Login.tsx
+msgid "Already have an account?"
+msgstr "Already have an account?"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Authentication failed"
+msgstr "Authentication failed"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Authorization failed"
+msgstr "Authorization failed"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Authorize Desktop"
+msgstr "Authorize Desktop"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Authorize Device"
+msgstr "Authorize Device"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Authorizing..."
+msgstr "Authorizing..."
+
+#: src/pages/Workspace.tsx
+msgid "Bind custom domains and manage certificates."
+msgstr "Bind custom domains and manage certificates."
+
+#: src/pages/Workspace.tsx
+msgid "Bind here"
+msgstr "Bind here"
+
+#: src/pages/Landing.tsx
+msgid "Bind to a cloud workspace"
+msgstr "Bind to a cloud workspace"
+
+#: src/pages/Workspace.tsx
+msgid "Bold"
+msgstr "Bold"
+
+#: src/pages/Workspace.tsx
+msgid "Bold (Ctrl+B)"
+msgstr "Bold (Ctrl+B)"
+
+#: src/pages/Workspace.tsx
+msgid "bound"
+msgstr "bound"
+
+#: src/pages/Workspace.tsx
+msgid "Bound here"
+msgstr "Bound here"
+
+#. placeholder {0}: domain.workspaceName
+#: src/pages/Workspace.tsx
+msgid "Bound to {0}"
+msgstr "Bound to {0}"
+
+#: src/pages/Landing.tsx
+msgid "Calm desktop writing, workspace-scoped sync, and public Markdown publishing in one product flow. Your notes stay local until a cloud workspace has a job to do."
+msgstr "Calm desktop writing, workspace-scoped sync, and public Markdown publishing in one product flow. Your notes stay local until a cloud workspace has a job to do."
+
+#: src/pages/Workspace.tsx
+msgid "Cancel"
+msgstr "Cancel"
+
+#: src/pages/Workspace.tsx
+msgid "Certificate management"
+msgstr "Certificate management"
+
+#: src/pages/Workspace.tsx
+msgid "Changed"
+msgstr "Changed"
+
+#: src/pages/Landing.tsx
+msgid "Checking session"
+msgstr "Checking session"
+
+#: src/pages/Workspace.tsx
+msgid "Choose a cloud workspace"
+msgstr "Choose a cloud workspace"
+
+#: src/pages/Workspace.tsx
+msgid "Choose a note or create a new one."
+msgstr "Choose a note or create a new one."
+
+#: src/pages/Landing.tsx
+msgid "Clean read-only output for notes, docs, releases, and guides."
+msgstr "Clean read-only output for notes, docs, releases, and guides."
+
+#: src/components/Layout.tsx
+#: src/pages/Admin.tsx
+#: src/pages/Workspace.tsx
+msgid "Close"
+msgstr "Close"
+
+#: src/pages/Login.tsx
+msgid "Cloud Sync"
+msgstr "Cloud Sync"
+
+#: src/pages/Landing.tsx
+#: src/pages/Workspace.tsx
+msgid "Cloud workspace"
+msgstr "Cloud workspace"
+
+#: src/pages/Landing.tsx
+msgid "Cloud workspace admin, devices, sync, and publishing controls."
+msgstr "Cloud workspace admin, devices, sync, and publishing controls."
+
+#: src/pages/Workspace.tsx
+msgid "Cloud workspace settings"
+msgstr "Cloud workspace settings"
+
+#: src/pages/Admin.tsx
+msgid "Cloud workspaces"
+msgstr "Cloud workspaces"
+
+#: src/pages/Workspace.tsx
+msgid "Collapse all"
+msgstr "Collapse all"
+
+#: src/pages/Workspace.tsx
+msgid "Connected"
+msgstr "Connected"
+
+#: src/components/Layout.tsx
+msgid "Connected devices"
+msgstr "Connected devices"
+
+#: src/pages/Workspace.tsx
+msgid "Connecting..."
+msgstr "Connecting..."
+
+#: src/pages/Workspace.tsx
+msgid "Copy link"
+msgstr "Copy link"
+
+#: src/pages/Workspace.tsx
+msgid "Copy path"
+msgstr "Copy path"
+
+#: src/pages/Landing.tsx
+msgid "Create a workspace for sync, publishing, and account settings. Local vault copy stays precise: folders are vaults, server-side collaboration is a cloud workspace."
+msgstr "Create a workspace for sync, publishing, and account settings. Local vault copy stays precise: folders are vaults, server-side collaboration is a cloud workspace."
+
+#: src/pages/Login.tsx
+msgid "Create account"
+msgstr "Create account"
+
+#: src/pages/Workspace.tsx
+msgid "Create your first Markdown note."
+msgstr "Create your first Markdown note."
+
+#: src/pages/Workspace.tsx
+msgid "Custom domains"
+msgstr "Custom domains"
+
+#: src/pages/Workspace.tsx
+msgid "Custom domains and SSL"
+msgstr "Custom domains and SSL"
+
+#: src/pages/Workspace.tsx
+msgid "Danger zone"
+msgstr "Danger zone"
+
+#: src/pages/Workspace.tsx
+msgid "Delete"
+msgstr "Delete"
+
+#: src/pages/Workspace.tsx
+msgid "Delete folder"
+msgstr "Delete folder"
+
+#: src/pages/Workspace.tsx
+msgid "Delete folder \"{folderPath}\" and all its contents?"
+msgstr "Delete folder \"{folderPath}\" and all its contents?"
+
+#: src/pages/Workspace.tsx
+msgid "Delete forever"
+msgstr "Delete forever"
+
+#: src/pages/Workspace.tsx
+msgid "Delete workspace"
+msgstr "Delete workspace"
+
+#: src/pages/Workspace.tsx
+msgid "Delete workspace?"
+msgstr "Delete workspace?"
+
+#. placeholder {0}: formatDateTime(item.deletedAt)
+#. placeholder {1}: formatDateTime(item.expiresAt)
+#: src/pages/Workspace.tsx
+msgid "Deleted {0} / Expires {1}"
+msgstr "Deleted {0} / Expires {1}"
+
+#: src/pages/Workspace.tsx
+msgid "Deleted documents"
+msgstr "Deleted documents"
+
+#: src/pages/Landing.tsx
+msgid "Desktop app"
+msgstr "Desktop app"
+
+#: src/pages/Landing.tsx
+msgid "Detected save, queued push."
+msgstr "Detected save, queued push."
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Device authorized! You can return to the JType desktop app."
+msgstr "Device authorized! You can return to the JType desktop app."
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Device Code"
+msgstr "Device Code"
+
+#: src/pages/Landing.tsx
+msgid "Dirty"
+msgstr "Dirty"
+
+#: src/pages/Admin.tsx
+msgid "Disable"
+msgstr "Disable"
+
+#: src/pages/Admin.tsx
+msgid "Disabled"
+msgstr "Disabled"
+
+#: src/components/Layout.tsx
+msgid "Display name"
+msgstr "Display name"
+
+#: src/pages/Workspace.tsx
+msgid "DNS pending"
+msgstr "DNS pending"
+
+#: src/pages/Workspace.tsx
+msgid "DNS verified"
+msgstr "DNS verified"
+
+#: src/pages/Workspace.tsx
+msgid "docs.example.com"
+msgstr "docs.example.com"
+
+#: src/pages/Workspace.tsx
+msgid "Document info"
+msgstr "Document info"
+
+#: src/pages/Workspace.tsx
+msgid "Document Info"
+msgstr "Document Info"
+
+#: src/pages/Workspace.tsx
+msgid "Document path (e.g. notes/hello.md):"
+msgstr "Document path (e.g. notes/hello.md):"
+
+#: src/pages/Workspace.tsx
+msgid "Document published."
+msgstr "Document published."
+
+#: src/pages/Workspace.tsx
+msgid "Document unpublished."
+msgstr "Document unpublished."
+
+#: src/pages/Admin.tsx
+#: src/pages/Workspace.tsx
+msgid "Documents"
+msgstr "Documents"
+
+#: src/pages/Admin.tsx
+msgid "Domain"
+msgstr "Domain"
+
+#: src/pages/Admin.tsx
+#: src/pages/Workspace.tsx
+msgid "Domains"
+msgstr "Domains"
+
+#: src/pages/DeviceOAuth.tsx
+#: src/pages/Login.tsx
+msgid "Don't have an account?"
+msgstr "Don't have an account?"
+
+#: src/pages/InviteAccept.tsx
+msgid "Don't have an account? <0>Sign up</0>"
+msgstr "Don't have an account? <0>Sign up</0>"
+
+#: src/pages/Workspace.tsx
+msgid "Draft only"
+msgstr "Draft only"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "e.g. 456478"
+msgstr "e.g. 456478"
+
+#: src/pages/Workspace.tsx
+msgid "Edits are written back to YAML frontmatter."
+msgstr "Edits are written back to YAML frontmatter."
+
+#: src/components/Layout.tsx
+msgid "Email"
+msgstr "Email"
+
+#: src/pages/Workspace.tsx
+msgid "Email (optional)"
+msgstr "Email (optional)"
+
+#: src/pages/Workspace.tsx
+msgid "Empty trash"
+msgstr "Empty trash"
+
+#: src/pages/Admin.tsx
+msgid "Enable"
+msgstr "Enable"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Enter the code shown in your JType desktop app"
+msgstr "Enter the code shown in your JType desktop app"
+
+#: src/pages/Login.tsx
+msgid "Enter your password"
+msgstr "Enter your password"
+
+#: src/pages/Login.tsx
+msgid "Enter your username"
+msgstr "Enter your username"
+
+#: src/pages/Workspace.tsx
+msgid "Exit focus mode"
+msgstr "Exit focus mode"
+
+#: src/pages/Workspace.tsx
+msgid "Expand all"
+msgstr "Expand all"
+
+#: src/pages/InviteAccept.tsx
+msgid "Failed to accept invite."
+msgstr "Failed to accept invite."
+
+#: src/pages/Workspace.tsx
+msgid "Failed to create invite."
+msgstr "Failed to create invite."
+
+#: src/pages/Workspace.tsx
+msgid "Failed to delete workspace."
+msgstr "Failed to delete workspace."
+
+#: src/pages/Workspace.tsx
+msgid "Failed to leave workspace."
+msgstr "Failed to leave workspace."
+
+#: src/pages/Workspace.tsx
+msgid "Favorite"
+msgstr "Favorite"
+
+#: src/pages/Workspace.tsx
+msgid "Favorites"
+msgstr "Favorites"
+
+#: src/pages/Landing.tsx
+msgid "Flow"
+msgstr "Flow"
+
+#: src/pages/Workspace.tsx
+msgid "Focus mode"
+msgstr "Focus mode"
+
+#: src/pages/Workspace.tsx
+msgid "General"
+msgstr "General"
+
+#: src/pages/Landing.tsx
+msgid "GitHub"
+msgstr "GitHub"
+
+#: src/pages/InviteAccept.tsx
+msgid "Go to home"
+msgstr "Go to home"
+
+#: src/pages/Landing.tsx
+msgid "Go to JType Cloud"
+msgstr "Go to JType Cloud"
+
+#: src/pages/InviteAccept.tsx
+msgid "Go to workspaces"
+msgstr "Go to workspaces"
+
+#: src/pages/Workspace.tsx
+msgid "Hide"
+msgstr "Hide"
+
+#: src/pages/Login.tsx
+msgid "Indexed and ready for intelligent assistance."
+msgstr "Indexed and ready for intelligent assistance."
+
+#: src/pages/Workspace.tsx
+msgid "Inline code"
+msgstr "Inline code"
+
+#: src/pages/Workspace.tsx
+msgid "Insert formula"
+msgstr "Insert formula"
+
+#: src/pages/Workspace.tsx
+msgid "Insert link"
+msgstr "Insert link"
+
+#: src/pages/Workspace.tsx
+msgid "Insert Mermaid diagram"
+msgstr "Insert Mermaid diagram"
+
+#: src/pages/Workspace.tsx
+msgid "Insert table"
+msgstr "Insert table"
+
+#: src/pages/Workspace.tsx
+msgid "Insert table (Ctrl+Shift+T)"
+msgstr "Insert table (Ctrl+Shift+T)"
+
+#: src/pages/Admin.tsx
+msgid "Inspect cloud workspace ownership and document counts."
+msgstr "Inspect cloud workspace ownership and document counts."
+
+#: src/pages/InviteAccept.tsx
+msgid "Invalid invite"
+msgstr "Invalid invite"
+
+#: src/pages/Workspace.tsx
+msgid "Invite"
+msgstr "Invite"
+
+#: src/pages/Workspace.tsx
+msgid "Invite created."
+msgstr "Invite created."
+
+#: src/pages/Workspace.tsx
+msgid "Invite people"
+msgstr "Invite people"
+
+#: src/pages/InviteAccept.tsx
+msgid "Invite revoked"
+msgstr "Invite revoked"
+
+#: src/pages/Workspace.tsx
+msgid "Italic"
+msgstr "Italic"
+
+#: src/pages/Workspace.tsx
+msgid "Italic (Ctrl+I)"
+msgstr "Italic (Ctrl+I)"
+
+#: src/pages/InviteAccept.tsx
+msgid "Joining…"
+msgstr "Joining…"
+
+#: src/pages/Workspace.tsx
+msgid "Keep the publish name and workspace name here. The workspace slug and storage limit are assigned by the service."
+msgstr "Keep the publish name and workspace name here. The workspace slug and storage limit are assigned by the service."
+
+#: src/pages/Login.tsx
+msgid "Keep your vaults in sync across all devices."
+msgstr "Keep your vaults in sync across all devices."
+
+#: src/components/Layout.tsx
+msgid "Language"
+msgstr "Language"
+
+#: src/components/Layout.tsx
+msgid "Last seen recently"
+msgstr "Last seen recently"
+
+#: src/pages/Workspace.tsx
+msgid "Leave"
+msgstr "Leave"
+
+#: src/pages/Workspace.tsx
+msgid "Leave workspace"
+msgstr "Leave workspace"
+
+#: src/pages/Workspace.tsx
+msgid "Leave workspace?"
+msgstr "Leave workspace?"
+
+#: src/pages/Workspace.tsx
+msgid "Link (Ctrl+K)"
+msgstr "Link (Ctrl+K)"
+
+#: src/pages/Workspace.tsx
+msgid "Link copied!"
+msgstr "Link copied!"
+
+#: src/pages/Landing.tsx
+msgid "Live preview"
+msgstr "Live preview"
+
+#: src/pages/InviteAccept.tsx
+msgid "Loading invite…"
+msgstr "Loading invite…"
+
+#: src/pages/Admin.tsx
+msgid "Loading..."
+msgstr "Loading..."
+
+#: src/pages/Landing.tsx
+msgid "Local watcher"
+msgstr "Local watcher"
+
+#: src/pages/Login.tsx
+msgid "Local-First"
+msgstr "Local-First"
+
+#: src/pages/Landing.tsx
+msgid "Local-first Markdown vault"
+msgstr "Local-first Markdown vault"
+
+#: src/pages/Login.tsx
+msgid "Local-first notes with cloud sync, publishing, and AI-ready indexing."
+msgstr "Local-first notes with cloud sync, publishing, and AI-ready indexing."
+
+#: src/pages/InviteAccept.tsx
+msgid "Log in to accept"
+msgstr "Log in to accept"
+
+#: src/pages/Workspace.tsx
+msgid "Manage cloud workspace name, publishing title, and storage."
+msgstr "Manage cloud workspace name, publishing title, and storage."
+
+#: src/pages/Workspace.tsx
+msgid "Manage custom domains"
+msgstr "Manage custom domains"
+
+#: src/pages/Workspace.tsx
+msgid "Manage team members, invitations, and access."
+msgstr "Manage team members, invitations, and access."
+
+#: src/pages/Admin.tsx
+msgid "Manage users, cloud workspaces, domains, and service activity."
+msgstr "Manage users, cloud workspaces, domains, and service activity."
+
+#: src/components/Layout.tsx
+msgid "Manage your JType Cloud account and connected devices."
+msgstr "Manage your JType Cloud account and connected devices."
+
+#: src/pages/Workspace.tsx
+msgid "Markdown"
+msgstr "Markdown"
+
+#: src/pages/Workspace.tsx
+msgid "Markdown editor"
+msgstr "Markdown editor"
+
+#: src/pages/Workspace.tsx
+msgid "Member removed."
+msgstr "Member removed."
+
+#: src/pages/Admin.tsx
+#: src/pages/Workspace.tsx
+msgid "Members"
+msgstr "Members"
+
+#. placeholder {0}: members.length
+#: src/pages/Workspace.tsx
+msgid "Members ({0})"
+msgstr "Members ({0})"
+
+#: src/pages/Workspace.tsx
+msgid "Members, domains, publishing"
+msgstr "Members, domains, publishing"
+
+#: src/pages/Workspace.tsx
+msgid "Move to trash"
+msgstr "Move to trash"
+
+#: src/pages/Admin.tsx
+msgid "Name"
+msgstr "Name"
+
+#: src/pages/Workspace.tsx
+msgid "Name, publishing identity, and storage"
+msgstr "Name, publishing identity, and storage"
+
+#: src/pages/Workspace.tsx
+msgid "New"
+msgstr "New"
+
+#: src/pages/Workspace.tsx
+msgid "New cloud workspace"
+msgstr "New cloud workspace"
+
+#: src/pages/Workspace.tsx
+msgid "New document"
+msgstr "New document"
+
+#: src/pages/Workspace.tsx
+msgid "New Document"
+msgstr "New Document"
+
+#: src/pages/Workspace.tsx
+msgid "New document name (e.g. note.md):"
+msgstr "New document name (e.g. note.md):"
+
+#: src/pages/Workspace.tsx
+msgid "New folder"
+msgstr "New folder"
+
+#: src/pages/Workspace.tsx
+msgid "New folder name:"
+msgstr "New folder name:"
+
+#: src/pages/Workspace.tsx
+msgid "No cloud workspaces yet."
+msgstr "No cloud workspaces yet."
+
+#: src/pages/Workspace.tsx
+msgid "No deleted documents."
+msgstr "No deleted documents."
+
+#: src/pages/Workspace.tsx
+msgid "No documents yet."
+msgstr "No documents yet."
+
+#: src/pages/Workspace.tsx
+msgid "No domains yet."
+msgstr "No domains yet."
+
+#: src/pages/Workspace.tsx
+msgid "no email"
+msgstr "no email"
+
+#: src/pages/Workspace.tsx
+msgid "No headings found."
+msgstr "No headings found."
+
+#: src/pages/InviteAccept.tsx
+msgid "No invite token provided."
+msgstr "No invite token provided."
+
+#: src/pages/Workspace.tsx
+msgid "No matches."
+msgstr "No matches."
+
+#: src/pages/Workspace.tsx
+msgid "No notes yet."
+msgstr "No notes yet."
+
+#: src/pages/Workspace.tsx
+msgid "No outgoing links."
+msgstr "No outgoing links."
+
+#: src/pages/Admin.tsx
+msgid "No records."
+msgstr "No records."
+
+#: src/pages/Workspace.tsx
+msgid "No unsaved changes"
+msgstr "No unsaved changes"
+
+#: src/pages/Workspace.tsx
+msgid "Not published"
+msgstr "Not published"
+
+#: src/pages/Workspace.tsx
+msgid "Offline"
+msgstr "Offline"
+
+#: src/pages/Workspace.tsx
+msgid "Offline ({pendingCount} saved)"
+msgstr "Offline ({pendingCount} saved)"
+
+#: src/pages/Landing.tsx
+msgid "One Markdown source, three calm surfaces."
+msgstr "One Markdown source, three calm surfaces."
+
+#: src/pages/Workspace.tsx
+msgid "Only owners and admins can change workspace settings"
+msgstr "Only owners and admins can change workspace settings"
+
+#: src/pages/Workspace.tsx
+msgid "Open"
+msgstr "Open"
+
+#: src/pages/Landing.tsx
+msgid "Open a local Markdown vault, keep normal folders, and edit without turning notes into remote-only data."
+msgstr "Open a local Markdown vault, keep normal folders, and edit without turning notes into remote-only data."
+
+#: src/pages/Landing.tsx
+msgid "Open dashboard"
+msgstr "Open dashboard"
+
+#: src/pages/Landing.tsx
+msgid "Open GitHub"
+msgstr "Open GitHub"
+
+#: src/pages/Landing.tsx
+msgid "Open JType Cloud"
+msgstr "Open JType Cloud"
+
+#: src/pages/Landing.tsx
+msgid "Open JType Cloud dashboard"
+msgstr "Open JType Cloud dashboard"
+
+#: src/pages/Workspace.tsx
+msgid "Outgoing links"
+msgstr "Outgoing links"
+
+#: src/pages/Workspace.tsx
+msgid "Outline"
+msgstr "Outline"
+
+#: src/pages/Admin.tsx
+msgid "Owner"
+msgstr "Owner"
+
+#: src/pages/Workspace.tsx
+msgid "Ownership transferred."
+msgstr "Ownership transferred."
+
+#: src/pages/Workspace.tsx
+msgid "Pass ownership to another admin member."
+msgstr "Pass ownership to another admin member."
+
+#: src/pages/DeviceOAuth.tsx
+#: src/pages/Login.tsx
+msgid "Password"
+msgstr "Password"
+
+#: src/pages/Workspace.tsx
+msgid "Pending invites"
+msgstr "Pending invites"
+
+#: src/pages/Workspace.tsx
+msgid "Permanently delete"
+msgstr "Permanently delete"
+
+#: src/pages/Workspace.tsx
+msgid "Permanently delete all items in trash?"
+msgstr "Permanently delete all items in trash?"
+
+#: src/pages/Workspace.tsx
+msgid "Permanently delete this item?"
+msgstr "Permanently delete this item?"
+
+#: src/pages/Workspace.tsx
+msgid "Permanently remove this workspace and all documents."
+msgstr "Permanently remove this workspace and all documents."
+
+#: src/pages/DeviceOAuth.tsx
+#: src/pages/Login.tsx
+msgid "Please wait..."
+msgstr "Please wait..."
+
+#: src/pages/Landing.tsx
+#: src/pages/Workspace.tsx
+msgid "Preview"
+msgstr "Preview"
+
+#: src/pages/Landing.tsx
+msgid "Product flow"
+msgstr "Product flow"
+
+#: src/components/Layout.tsx
+msgid "Profile"
+msgstr "Profile"
+
+#: src/components/Layout.tsx
+msgid "Profile updated"
+msgstr "Profile updated"
+
+#: src/pages/Workspace.tsx
+msgid "Promote a member to admin first before transferring ownership."
+msgstr "Promote a member to admin first before transferring ownership."
+
+#: src/pages/Workspace.tsx
+msgid "Properties"
+msgstr "Properties"
+
+#: src/pages/Landing.tsx
+msgid "Public site"
+msgstr "Public site"
+
+#: src/pages/Landing.tsx
+#: src/pages/Workspace.tsx
+msgid "Publish"
+msgstr "Publish"
+
+#: src/pages/Workspace.tsx
+msgid "Publish drafts"
+msgstr "Publish drafts"
+
+#: src/pages/Workspace.tsx
+msgid "Publish title"
+msgstr "Publish title"
+
+#: src/pages/Workspace.tsx
+msgid "Published"
+msgstr "Published"
+
+#. placeholder {0}: new Date(publishState.publishedAt).toLocaleString()
+#: src/pages/Workspace.tsx
+msgid "Published {0}"
+msgstr "Published {0}"
+
+#: src/pages/Landing.tsx
+msgid "Published pages"
+msgstr "Published pages"
+
+#: src/pages/Workspace.tsx
+msgid "Publishing"
+msgstr "Publishing"
+
+#: src/pages/Workspace.tsx
+msgid "Publishing details saved"
+msgstr "Publishing details saved"
+
+#: src/pages/Workspace.tsx
+msgid "Publishing uses a server snapshot; frontmatter status is treated as user metadata."
+msgstr "Publishing uses a server snapshot; frontmatter status is treated as user metadata."
+
+#: src/pages/Landing.tsx
+msgid "Push and pull versions, resolve conflicts, and keep collaboration scoped to the workspace you choose."
+msgstr "Push and pull versions, resolve conflicts, and keep collaboration scoped to the workspace you choose."
+
+#: src/pages/Workspace.tsx
+msgid "Quick open"
+msgstr "Quick open"
+
+#: src/pages/Workspace.tsx
+msgid "Read-only"
+msgstr "Read-only"
+
+#: src/pages/Landing.tsx
+msgid "Ready for the cloud layer"
+msgstr "Ready for the cloud layer"
+
+#: src/pages/DeviceOAuth.tsx
+#: src/pages/Login.tsx
+msgid "Register"
+msgstr "Register"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Register & Authorize"
+msgstr "Register & Authorize"
+
+#. placeholder {0}: staleWarning.wasDirty ? ' (discard)' : ''
+#: src/pages/Workspace.tsx
+msgid "Reload{0}"
+msgstr "Reload{0}"
+
+#. placeholder {0}: doc.relativePath
+#: src/pages/Workspace.tsx
+msgid "Remove \"{0}\" from the public site?"
+msgstr "Remove \"{0}\" from the public site?"
+
+#. placeholder {0}: uniqueIds.length
+#: src/pages/Workspace.tsx
+msgid "Remove {0} documents from the public site?"
+msgstr "Remove {0} documents from the public site?"
+
+#: src/pages/Workspace.tsx
+msgid "Remove from favorites"
+msgstr "Remove from favorites"
+
+#: src/pages/Workspace.tsx
+msgid "Remove member"
+msgstr "Remove member"
+
+#: src/pages/Workspace.tsx
+msgid "Remove this member from the workspace?"
+msgstr "Remove this member from the workspace?"
+
+#: src/pages/Workspace.tsx
+msgid "Rename"
+msgstr "Rename"
+
+#: src/pages/Workspace.tsx
+msgid "Rename to:"
+msgstr "Rename to:"
+
+#: src/pages/Workspace.tsx
+msgid "Republish"
+msgstr "Republish"
+
+#: src/pages/Workspace.tsx
+msgid "Republish live docs"
+msgstr "Republish live docs"
+
+#: src/pages/Workspace.tsx
+msgid "Restore"
+msgstr "Restore"
+
+#: src/pages/Workspace.tsx
+msgid "Restore cloud workspace documents or permanently remove them from trash."
+msgstr "Restore cloud workspace documents or permanently remove them from trash."
+
+#: src/pages/Workspace.tsx
+msgid "Restore deleted documents or remove them permanently."
+msgstr "Restore deleted documents or remove them permanently."
+
+#: src/pages/Workspace.tsx
+msgid "Restore or delete cloud documents"
+msgstr "Restore or delete cloud documents"
+
+#: src/pages/Admin.tsx
+msgid "Review accounts, roles, and enabled status."
+msgstr "Review accounts, roles, and enabled status."
+
+#: src/pages/Admin.tsx
+msgid "Review published custom domains and SSL state."
+msgstr "Review published custom domains and SSL state."
+
+#: src/pages/Workspace.tsx
+msgid "Revoke invite"
+msgstr "Revoke invite"
+
+#: src/pages/Admin.tsx
+msgid "Role"
+msgstr "Role"
+
+#: src/pages/Workspace.tsx
+msgid "Save"
+msgstr "Save"
+
+#: src/pages/Workspace.tsx
+msgid "Save mine"
+msgstr "Save mine"
+
+#: src/components/Layout.tsx
+msgid "Save profile"
+msgstr "Save profile"
+
+#: src/pages/Workspace.tsx
+msgid "Saved offline. Will sync when reconnected."
+msgstr "Saved offline. Will sync when reconnected."
+
+#: src/pages/Workspace.tsx
+msgid "Saving..."
+msgstr "Saving..."
+
+#: src/pages/Workspace.tsx
+msgid "Search files..."
+msgstr "Search files..."
+
+#: src/pages/Landing.tsx
+msgid "See product flow"
+msgstr "See product flow"
+
+#: src/pages/Workspace.tsx
+msgid "Select a document to edit."
+msgstr "Select a document to edit."
+
+#: src/pages/Workspace.tsx
+msgid "Select a domain"
+msgstr "Select a domain"
+
+#: src/pages/Workspace.tsx
+msgid "Select a Markdown file"
+msgstr "Select a Markdown file"
+
+#: src/components/Layout.tsx
+msgid "Settings"
+msgstr "Settings"
+
+#: src/pages/Landing.tsx
+msgid "Ship a readable site"
+msgstr "Ship a readable site"
+
+#: src/pages/DeviceOAuth.tsx
+#: src/pages/Landing.tsx
+#: src/pages/Login.tsx
+msgid "Sign in"
+msgstr "Sign in"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Sign in & Authorize"
+msgstr "Sign in & Authorize"
+
+#: src/pages/Login.tsx
+msgid "Sign in to your JType Cloud account."
+msgstr "Sign in to your JType Cloud account."
+
+#: src/components/Layout.tsx
+#: src/pages/Landing.tsx
+msgid "Sign out"
+msgstr "Sign out"
+
+#: src/pages/Login.tsx
+msgid "Sign up to start syncing your vaults."
+msgstr "Sign up to start syncing your vaults."
+
+#. placeholder {0}: user.username
+#: src/pages/Landing.tsx
+msgid "Signed in as {0}"
+msgstr "Signed in as {0}"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Signed in. Ready to authorize device."
+msgstr "Signed in. Ready to authorize device."
+
+#: src/pages/Workspace.tsx
+msgid "Site settings"
+msgstr "Site settings"
+
+#: src/pages/Login.tsx
+msgid "Something went wrong"
+msgstr "Something went wrong"
+
+#: src/pages/Landing.tsx
+#: src/pages/Workspace.tsx
+msgid "Split"
+msgstr "Split"
+
+#: src/pages/Admin.tsx
+#: src/pages/Workspace.tsx
+msgid "SSL"
+msgstr "SSL"
+
+#. placeholder {0}: domain.sslStatus
+#: src/pages/Workspace.tsx
+msgid "SSL {0}"
+msgstr "SSL {0}"
+
+#: src/pages/Workspace.tsx
+msgid "SSL certificate uploaded"
+msgstr "SSL certificate uploaded"
+
+#. placeholder {0}: domain.sslExpiresAt
+#: src/pages/Workspace.tsx
+msgid "SSL expires at {0}"
+msgstr "SSL expires at {0}"
+
+#: src/pages/Workspace.tsx
+msgid "SSL not configured"
+msgstr "SSL not configured"
+
+#: src/pages/Landing.tsx
+msgid "Start with a private cloud workspace."
+msgstr "Start with a private cloud workspace."
+
+#: src/pages/Landing.tsx
+msgid "Start with JType Cloud"
+msgstr "Start with JType Cloud"
+
+#: src/pages/Landing.tsx
+msgid "Start writing"
+msgstr "Start writing"
+
+#: src/pages/Workspace.tsx
+msgid "Start writing Markdown..."
+msgstr "Start writing Markdown..."
+
+#: src/pages/Admin.tsx
+msgid "Status"
+msgstr "Status"
+
+#: src/components/Layout.tsx
+msgid "Storage"
+msgstr "Storage"
+
+#: src/pages/Workspace.tsx
+msgid "Storage used"
+msgstr "Storage used"
+
+#: src/pages/Landing.tsx
+msgid "Surfaces"
+msgstr "Surfaces"
+
+#: src/pages/Landing.tsx
+msgid "Sync"
+msgstr "Sync"
+
+#: src/pages/Landing.tsx
+msgid "Synced"
+msgstr "Synced"
+
+#: src/pages/Workspace.tsx
+msgid "Syncing..."
+msgstr "Syncing..."
+
+#: src/pages/Workspace.tsx
+msgid "Task list"
+msgstr "Task list"
+
+#: src/pages/Landing.tsx
+msgid "Tauri vault editing with write, split, and preview modes."
+msgstr "Tauri vault editing with write, split, and preview modes."
+
+#: src/pages/Workspace.tsx
+msgid "Team members and invitations"
+msgstr "Team members and invitations"
+
+#: src/pages/Landing.tsx
+msgid "The landing story follows the real JType loop."
+msgstr "The landing story follows the real JType loop."
+
+#: src/pages/Landing.tsx
+msgid "The page borrows getdesign.app's strongest move: show the actual system doing the explaining. For JType, that means local files, sync state, and published output all visible at once."
+msgstr "The page borrows getdesign.app's strongest move: show the actual system doing the explaining. For JType, that means local files, sync state, and published output all visible at once."
+
+#: src/pages/Workspace.tsx
+msgid "The public snapshot is behind the current document."
+msgstr "The public snapshot is behind the current document."
+
+#: src/pages/Workspace.tsx
+msgid "This document was deleted by another user."
+msgstr "This document was deleted by another user."
+
+#: src/pages/InviteAccept.tsx
+msgid "This invite has already been accepted. You can go to your workspaces."
+msgstr "This invite has already been accepted. You can go to your workspaces."
+
+#: src/pages/InviteAccept.tsx
+msgid "This invite link has been revoked and is no longer valid."
+msgstr "This invite link has been revoked and is no longer valid."
+
+#: src/pages/InviteAccept.tsx
+msgid "This invite link is invalid or has expired."
+msgstr "This invite link is invalid or has expired."
+
+#. placeholder {0}: workspace.name
+#: src/pages/Workspace.tsx
+msgid "This will permanently delete <0>{0}</0> and all its documents. This cannot be undone."
+msgstr "This will permanently delete <0>{0}</0> and all its documents. This cannot be undone."
+
+#: src/pages/Workspace.tsx
+msgid "Toggle favorite"
+msgstr "Toggle favorite"
+
+#: src/pages/Workspace.tsx
+msgid "Transfer"
+msgstr "Transfer"
+
+#: src/pages/Workspace.tsx
+msgid "Transfer failed."
+msgstr "Transfer failed."
+
+#: src/pages/Workspace.tsx
+msgid "Transfer ownership"
+msgstr "Transfer ownership"
+
+#: src/pages/Workspace.tsx
+msgid "Transfer ownership (select a member above)"
+msgstr "Transfer ownership (select a member above)"
+
+#. placeholder {0}: firstAdmin.username
+#: src/pages/Workspace.tsx
+msgid "Transfer ownership to {0}? You will become an admin."
+msgstr "Transfer ownership to {0}? You will become an admin."
+
+#: src/pages/Workspace.tsx
+msgid "Trash"
+msgstr "Trash"
+
+#: src/pages/Workspace.tsx
+msgid "Trash is empty."
+msgstr "Trash is empty."
+
+#: src/pages/Landing.tsx
+msgid "Turn selected documents into a public `/u/:username` site while your source stays Markdown."
+msgstr "Turn selected documents into a public `/u/:username` site while your source stays Markdown."
+
+#: src/pages/Workspace.tsx
+msgid "Type the workspace name to confirm:"
+msgstr "Type the workspace name to confirm:"
+
+#: src/pages/Workspace.tsx
+msgid "Unbind"
+msgstr "Unbind"
+
+#: src/pages/Workspace.tsx
+msgid "Unbound"
+msgstr "Unbound"
+
+#: src/pages/Workspace.tsx
+msgid "Unpublish"
+msgstr "Unpublish"
+
+#: src/pages/Workspace.tsx
+msgid "Unpublish document"
+msgstr "Unpublish document"
+
+#: src/pages/Workspace.tsx
+msgid "Unpublish documents"
+msgstr "Unpublish documents"
+
+#: src/pages/Workspace.tsx
+msgid "Unpublish live docs"
+msgstr "Unpublish live docs"
+
+#: src/pages/Workspace.tsx
+msgid "Unsaved"
+msgstr "Unsaved"
+
+#: src/pages/Workspace.tsx
+msgid "Untitled document"
+msgstr "Untitled document"
+
+#: src/pages/Workspace.tsx
+msgid "Upload a PEM certificate for a verified domain. The private key is stored as a hash in the current backend model."
+msgstr "Upload a PEM certificate for a verified domain. The private key is stored as a hash in the current backend model."
+
+#: src/pages/Admin.tsx
+msgid "User"
+msgstr "User"
+
+#: src/components/Layout.tsx
+msgid "User menu"
+msgstr "User menu"
+
+#: src/components/Layout.tsx
+#: src/pages/Admin.tsx
+#: src/pages/DeviceOAuth.tsx
+#: src/pages/Login.tsx
+msgid "Username"
+msgstr "Username"
+
+#: src/pages/Admin.tsx
+msgid "Users"
+msgstr "Users"
+
+#: src/pages/Landing.tsx
+msgid "Vault"
+msgstr "Vault"
+
+#: src/pages/Workspace.tsx
+msgid "Vault ready"
+msgstr "Vault ready"
+
+#: src/pages/Workspace.tsx
+msgid "Vault space"
+msgstr "Vault space"
+
+#: src/pages/Workspace.tsx
+msgid "Verified domain"
+msgstr "Verified domain"
+
+#: src/pages/Workspace.tsx
+msgid "Verify DNS"
+msgstr "Verify DNS"
+
+#: src/pages/Workspace.tsx
+msgid "View public page"
+msgstr "View public page"
+
+#: src/pages/Workspace.tsx
+msgid "Viewer access is read-only."
+msgstr "Viewer access is read-only."
+
+#: src/pages/Landing.tsx
+msgid "Watch the flow"
+msgstr "Watch the flow"
+
+#: src/pages/Landing.tsx
+msgid "Web dashboard"
+msgstr "Web dashboard"
+
+#: src/pages/Login.tsx
+msgid "Welcome back"
+msgstr "Welcome back"
+
+#: src/pages/Workspace.tsx
+msgid "Workspace files"
+msgstr "Workspace files"
+
+#: src/pages/Workspace.tsx
+msgid "Workspace identity"
+msgstr "Workspace identity"
+
+#: src/pages/Workspace.tsx
+msgid "Workspace name"
+msgstr "Workspace name"
+
+#: src/pages/Workspace.tsx
+msgid "Workspace settings"
+msgstr "Workspace settings"
+
+#: src/pages/Workspace.tsx
+msgid "Workspace slug"
+msgstr "Workspace slug"
+
+#: src/pages/Landing.tsx
+#: src/pages/Workspace.tsx
+msgid "Write"
+msgstr "Write"
+
+#: src/pages/Landing.tsx
+msgid "Write where your files live"
+msgstr "Write where your files live"
+
+#: src/pages/Workspace.tsx
+msgid "You will lose access to all cloud documents."
+msgstr "You will lose access to all cloud documents."
+
+#: src/pages/Workspace.tsx
+msgid "You will lose access to all cloud documents. Your local files are unaffected."
+msgstr "You will lose access to all cloud documents. Your local files are unaffected."
+
+#: src/pages/InviteAccept.tsx
+msgid "You're invited"
+msgstr "You're invited"
+
+#: src/pages/Login.tsx
+msgid "Your files stay on your machine. Always."
+msgstr "Your files stay on your machine. Always."
+
+#: src/pages/Login.tsx
+msgid "Your Markdown workspace,<0/>synced to the cloud."
+msgstr "Your Markdown workspace,<0/>synced to the cloud."
+
+#: src/pages/Workspace.tsx
+msgid "Your rendered document will appear here."
+msgstr "Your rendered document will appear here."

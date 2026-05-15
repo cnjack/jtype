@@ -1,4 +1,5 @@
 import { useState, useEffect, type FormEvent } from 'react'
+import { t, Trans } from '@lingui/macro'
 import { useSearchParams } from 'react-router-dom'
 import { api, setToken, setStoredUsername } from '../api'
 
@@ -36,9 +37,9 @@ export function DeviceOAuth() {
       setToken(res.token)
       setStoredUsername(res.username)
       setIsLoggedIn(true)
-      setStatus('Signed in. Ready to authorize device.')
+      setStatus(t`Signed in. Ready to authorize device.`)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Authentication failed')
+      setError(err instanceof Error ? err.message : t`Authentication failed`)
     } finally {
       setLoading(false)
     }
@@ -50,9 +51,9 @@ export function DeviceOAuth() {
     setLoading(true)
     try {
       await api.approveDevice(userCode)
-      setStatus('Device authorized! You can return to the JType desktop app.')
+      setStatus(t`Device authorized! You can return to the JType desktop app.`)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Authorization failed')
+      setError(err instanceof Error ? err.message : t`Authorization failed`)
     } finally {
       setLoading(false)
     }
@@ -62,22 +63,22 @@ export function DeviceOAuth() {
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-zinc-900">
       <div className="w-full max-w-sm rounded-xl border border-zinc-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
         <h2 className="mb-2 text-center text-2xl font-bold text-zinc-900 dark:text-white">
-          Authorize Desktop
+          <Trans>Authorize Desktop</Trans>
         </h2>
         <p className="mb-6 text-center text-sm text-zinc-500">
-          Enter the code shown in your JType desktop app
+          <Trans>Enter the code shown in your JType desktop app</Trans>
         </p>
 
         <div className="mb-6">
           <label htmlFor="device-code" className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            Device Code
+            <Trans>Device Code</Trans>
           </label>
           <input
             id="device-code"
             type="text"
             value={userCode}
             onChange={e => setUserCode(e.target.value)}
-            placeholder="e.g. 456478"
+            placeholder={t`e.g. 456478`}
             className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
           />
         </div>
@@ -86,7 +87,7 @@ export function DeviceOAuth() {
           <form onSubmit={handleLogin} className="flex flex-col gap-4">
             <div>
               <label htmlFor="do-username" className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                Username
+                <Trans>Username</Trans>
               </label>
               <input
                 id="do-username"
@@ -99,7 +100,7 @@ export function DeviceOAuth() {
             </div>
             <div>
               <label htmlFor="do-password" className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                Password
+                <Trans>Password</Trans>
               </label>
               <input
                 id="do-password"
@@ -118,17 +119,17 @@ export function DeviceOAuth() {
               disabled={loading}
               className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-dark disabled:opacity-50"
             >
-              {loading ? 'Please wait...' : isRegister ? 'Register & Authorize' : 'Sign in & Authorize'}
+              {loading ? t`Please wait...` : isRegister ? t`Register & Authorize` : t`Sign in & Authorize`}
             </button>
 
             <p className="text-center text-sm text-zinc-500">
-              {isRegister ? 'Already have an account?' : "Don't have an account?"}{' '}
+              {isRegister ? t`Already have an account?` : t`Don't have an account?`}{' '}
               <button
                 type="button"
                 onClick={() => setIsRegister(!isRegister)}
                 className="font-medium text-brand hover:underline"
               >
-                {isRegister ? 'Sign in' : 'Register'}
+                {isRegister ? t`Sign in` : t`Register`}
               </button>
             </p>
           </form>
@@ -141,7 +142,7 @@ export function DeviceOAuth() {
               disabled={loading || !userCode}
               className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-dark disabled:opacity-50"
             >
-              {loading ? 'Authorizing...' : 'Authorize Device'}
+              {loading ? t`Authorizing...` : t`Authorize Device`}
             </button>
           </div>
         )}

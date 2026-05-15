@@ -5,6 +5,7 @@ import type { CloudWorkspace } from "../../lib/types";
 import { useEffect, useState } from "react";
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
 import { CloudArrowUpIcon, LinkSlashIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { t, Trans } from "@lingui/macro";
 
 export function AccountDialog() {
   const state = useAppState();
@@ -37,8 +38,8 @@ export function AccountDialog() {
     if (!state.workspace) return;
     if (state.isDirty) {
       const confirmed = await confirm(
-        "You have unsaved changes. Switching cloud workspace before saving may cause conflicts.\n\nContinue anyway?",
-        { title: "Unsaved changes" },
+        t`You have unsaved changes. Switching cloud workspace before saving may cause conflicts.\n\nContinue anyway?`,
+        { title: t`Unsaved changes` },
       );
       if (!confirmed) return;
     }
@@ -53,8 +54,8 @@ export function AccountDialog() {
   const disconnectCurrentVault = async () => {
     if (!currentVaultBinding) return;
     const confirmed = await confirm(
-      `Disconnect "${currentVaultBinding.workspaceName}" from this vault?\n\nLocal files will stay on disk. Cloud data and workspace membership are not changed.`,
-      { title: "Disconnect workspace" },
+      t`Disconnect "${currentVaultBinding.workspaceName}" from this vault?\n\nLocal files will stay on disk. Cloud data and workspace membership are not changed.`,
+      { title: t`Disconnect workspace` },
     );
     if (!confirmed) return;
     await sync.disconnectWorkspace();
@@ -74,44 +75,44 @@ export function AccountDialog() {
       <DialogPanel className="command-modal flex h-[min(720px,92vh)] max-w-5xl flex-col">
         <div className="flex items-start justify-between gap-3 border-b border-black/[0.06] bg-white/70 px-5 py-4">
           <div>
-            <DialogTitle className="text-2xl font-semibold text-stone-950">Settings</DialogTitle>
+            <DialogTitle className="text-2xl font-semibold text-stone-950"><Trans>Settings</Trans></DialogTitle>
             <p className="mt-1 text-xs text-[#6b7773]">
               {state.syncToken
-                ? `Connected as ${state.syncUsername || "your account"}. Sync vaults with cloud workspaces.`
+                ? t`Connected as ${state.syncUsername || t`your account`}. Sync vaults with cloud workspaces.`
                 : state.oauthUserCode
-                  ? `Waiting for browser authorization (code ${state.oauthUserCode})...`
-                  : "Connect in the browser. Desktop never asks for your password."}
+                  ? t`Waiting for browser authorization (code ${state.oauthUserCode})...`
+                  : t`Connect in the browser. Desktop never asks for your password.`}
             </p>
           </div>
-          <button className="subtle-button aspect-square px-0" type="button" aria-label="Close account dialog" title="Close" onClick={() => dispatch({ type: "SET_ACCOUNT_DIALOG", open: false })}>
+          <button className="subtle-button aspect-square px-0" type="button" aria-label={t`Close account dialog`} title={t`Close`} onClick={() => dispatch({ type: "SET_ACCOUNT_DIALOG", open: false })}>
             <XMarkIcon className="h-4 w-4" />
           </button>
         </div>
         <div className="grid min-h-0 flex-1 md:grid-cols-[220px_minmax(0,1fr)]">
           <aside className="border-r border-black/[0.04] bg-[#f7faf8] p-4">
-            <p className="mb-2 text-xs font-semibold uppercase text-stone-500">Account</p>
-            <SettingsNavButton active={activeSection === "account"} onClick={() => setActiveSection("account")} label="Profile" />
-            <p className="mb-2 mt-5 text-xs font-semibold uppercase text-stone-500">Cloud workspace</p>
-            <SettingsNavButton active={activeSection === "workspace"} onClick={() => setActiveSection("workspace")} label="General" />
+            <p className="mb-2 text-xs font-semibold uppercase text-stone-500"><Trans>Account</Trans></p>
+            <SettingsNavButton active={activeSection === "account"} onClick={() => setActiveSection("account")} label={t`Profile`} />
+            <p className="mb-2 mt-5 text-xs font-semibold uppercase text-stone-500"><Trans>Cloud workspace</Trans></p>
+            <SettingsNavButton active={activeSection === "workspace"} onClick={() => setActiveSection("workspace")} label={t`General`} />
           </aside>
 
           <main className="min-h-0 overflow-y-auto p-6">
             {activeSection === "account" && (
               <section className="max-w-2xl">
-                <h2 className="text-2xl font-semibold text-stone-950">Profile</h2>
-                <p className="mt-1 text-sm text-[#6b7773]">Connect desktop sync through the browser and choose the service endpoint.</p>
+                <h2 className="text-2xl font-semibold text-stone-950"><Trans>Profile</Trans></h2>
+                <p className="mt-1 text-sm text-[#6b7773]"><Trans>Connect desktop sync through the browser and choose the service endpoint.</Trans></p>
                 <div className="mt-6 space-y-3">
                   <input
                     className="sync-input"
                     value={state.serviceUrl}
                     onChange={(e) => dispatch({ type: "SET_SERVICE_URL", url: e.target.value })}
-                    aria-label="Account service URL"
+                    aria-label={t`Account service URL`}
                   />
                   <div className="grid grid-cols-2 gap-2">
                     {!state.syncToken ? (
-                      <button className="sidebar-action" type="button" onClick={() => sync.startBrowserOAuth()}>Connect in browser</button>
+                      <button className="sidebar-action" type="button" onClick={() => sync.startBrowserOAuth()}><Trans>Connect in browser</Trans></button>
                     ) : (
-                      <button className="sidebar-action" type="button" onClick={() => sync.disconnectAccount()}>Disconnect</button>
+                      <button className="sidebar-action" type="button" onClick={() => sync.disconnectAccount()}><Trans>Disconnect</Trans></button>
                     )}
                     <button
                       id="account-sync"
@@ -119,14 +120,14 @@ export function AccountDialog() {
                       type="button"
                       disabled={!canSyncCurrentVault || state.isLoading}
                       onClick={() => activeVaultBinding ? sync.syncWorkspaceToWeb() : sync.autoCreateAndBindWorkspace()}
-                      title={isLocalMode ? "Enable cloud sync for this vault first" : "Sync current vault"}
+                      title={isLocalMode ? t`Enable cloud sync for this vault first` : t`Sync current vault`}
                     >
-                      {activeVaultBinding ? "Sync now" : "Start sync"}
+                      {activeVaultBinding ? t`Sync now` : t`Start sync`}
                     </button>
                   </div>
                   {displaySiteUrl && (
                     <a id="account-site-link" className="block truncate text-xs font-semibold text-teal-700" href={displaySiteUrl} target="_blank" rel="noreferrer">
-                      Open site: {displaySiteUrl}
+                      <Trans>Open site: {displaySiteUrl}</Trans>
                     </a>
                   )}
                 </div>
@@ -135,69 +136,69 @@ export function AccountDialog() {
 
             {activeSection === "workspace" && (
               <section className="max-w-3xl">
-                <h2 className="text-2xl font-semibold text-stone-950">General</h2>
-                <p className="mt-1 text-sm text-[#6b7773]">Bind the current local vault to one cloud workspace.</p>
+                <h2 className="text-2xl font-semibold text-stone-950"><Trans>General</Trans></h2>
+                <p className="mt-1 text-sm text-[#6b7773]"><Trans>Bind the current local vault to one cloud workspace.</Trans></p>
                 {state.workspace && (
                   <div className="mt-6 rounded-2xl border border-white/80 bg-white/80 p-4 text-xs shadow-sm shadow-emerald-950/5 ring-1 ring-black/[0.03]">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <p className="font-semibold text-stone-900">Current vault</p>
+                        <p className="font-semibold text-stone-900"><Trans>Current vault</Trans></p>
                         <p className="mt-1 truncate text-stone-500">{state.workspace.rootPath}</p>
                       </div>
                       <span className={`shrink-0 rounded-full px-2 py-1 font-semibold ${activeVaultBinding ? "bg-teal-50 text-teal-700" : "bg-stone-100 text-stone-600"}`}>
-                        {activeVaultBinding ? "Cloud sync" : "Local mode"}
+                        {activeVaultBinding ? t`Cloud sync` : t`Local mode`}
                       </span>
                     </div>
                     <p className="mt-2 text-stone-600">
                       {activeVaultBinding
-                        ? `Bound to ${activeVaultBinding.workspaceName}. Sync will push and pull this vault.`
+                        ? t`Bound to ${activeVaultBinding.workspaceName}. Sync will push and pull this vault.`
                         : isLocalMode
-                          ? "This vault is local-only. You can keep working without cloud sync or enable it below."
-                          : "Not bound to a cloud workspace yet. Binding starts bidirectional sync for this vault."}
+                          ? t`This vault is local-only. You can keep working without cloud sync or enable it below.`
+                          : t`Not bound to a cloud workspace yet. Binding starts bidirectional sync for this vault.`}
                     </p>
                     <div className="mt-4 flex flex-wrap gap-2">
                       {activeVaultBinding && (
                         <>
-                          <button className="toolbar-button toolbar-button-primary" type="button" disabled={state.isLoading} onClick={() => sync.syncWorkspaceToWeb()} title="Sync now">
+                          <button className="toolbar-button toolbar-button-primary" type="button" disabled={state.isLoading} onClick={() => sync.syncWorkspaceToWeb()} title={t`Sync now`}>
                             <CloudArrowUpIcon className="h-4 w-4" />
-                            Sync now
+                            <Trans>Sync now</Trans>
                           </button>
-                          <button className="toolbar-button" type="button" onClick={disconnectCurrentVault} title="Disconnect cloud sync">
+                          <button className="toolbar-button" type="button" onClick={disconnectCurrentVault} title={t`Disconnect cloud sync`}>
                             <LinkSlashIcon className="h-4 w-4" />
-                            Disconnect
+                            <Trans>Disconnect</Trans>
                           </button>
                         </>
                       )}
                       {!activeVaultBinding && (
-                        <button className="toolbar-button toolbar-button-primary" type="button" disabled={state.isLoading} onClick={startWorkspaceSync} title={isLocalMode ? "Enable cloud sync" : "Start cloud sync"}>
+                        <button className="toolbar-button toolbar-button-primary" type="button" disabled={state.isLoading} onClick={startWorkspaceSync} title={isLocalMode ? t`Enable cloud sync` : t`Start cloud sync`}>
                           <CloudArrowUpIcon className="h-4 w-4" />
-                          {isLocalMode ? "Enable cloud sync" : "Start sync"}
+                          {isLocalMode ? t`Enable cloud sync` : t`Start sync`}
                         </button>
                       )}
                     </div>
                     {pendingWorkspaceSync && !state.syncToken && (
-                      <p className="mt-3 text-xs text-teal-700">Browser authorization is open. Sync will continue after sign-in completes.</p>
+                      <p className="mt-3 text-xs text-teal-700"><Trans>Browser authorization is open. Sync will continue after sign-in completes.</Trans></p>
                     )}
                   </div>
                 )}
                 <div className="mt-6">
-                  <p className="mb-2 text-xs font-semibold uppercase text-stone-500">Cloud workspaces</p>
+                  <p className="mb-2 text-xs font-semibold uppercase text-stone-500"><Trans>Cloud workspaces</Trans></p>
                   <div id="account-workspace-list" className="space-y-1">
                     {!state.syncToken ? (
-                      <p className="text-xs text-stone-500">Connect to load workspaces.</p>
+                      <p className="text-xs text-stone-500"><Trans>Connect to load workspaces.</Trans></p>
                     ) : state.cloudWorkspaces.length === 0 ? (
-                      <p className="text-xs text-stone-500">No cloud workspaces yet. Sync this vault to create one.</p>
+                      <p className="text-xs text-stone-500"><Trans>No cloud workspaces yet. Sync this vault to create one.</Trans></p>
                     ) : (
                       state.cloudWorkspaces.map((ws) => {
                         const isBound = activeVaultBinding?.workspaceId === ws.id;
-                        const workspaceName = (ws.name || ws.slug || "Untitled workspace").replace(/^:/, "");
+                        const workspaceName = (ws.name || ws.slug || t`Untitled workspace`).replace(/^:/, "");
                         return (
                         <button key={ws.id} className={`workspace-row ${isBound && !isLocalMode ? "workspace-row-bound" : ""}`} type="button" onClick={() => bindWorkspace(ws)}>
                           <span className="min-w-0">
                             <span className="block truncate font-semibold">{workspaceName}</span>
-                            <span className="block truncate text-xs text-stone-500">{ws.documentCount ?? 0} documents - {formatBytes(ws.storageBudgetBytes)} budget</span>
+                            <span className="block truncate text-xs text-stone-500"><Trans>{ws.documentCount ?? 0} documents - {formatBytes(ws.storageBudgetBytes)} budget</Trans></span>
                           </span>
-                          <span className="shrink-0 rounded-full bg-stone-100 px-2 py-1 text-xs font-semibold text-stone-600">{isBound && !isLocalMode ? "Bound" : ws.role}</span>
+                          <span className="shrink-0 rounded-full bg-stone-100 px-2 py-1 text-xs font-semibold text-stone-600">{isBound && !isLocalMode ? t`Bound` : ws.role}</span>
                         </button>
                         );
                       })
