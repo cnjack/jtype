@@ -49,21 +49,62 @@ jobs:
       - name: Resolve app version
         id: version
         shell: bash
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
           package_version="$(node -p "require('./package.json').version")"
-          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+          if [[ -n "${RELEASE_TAG}" ]]; then
+            version="${RELEASE_TAG#v}"
+            display_version="${version}"
+          elif [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
             version="${GITHUB_REF_NAME#v}"
+            display_version="${version}"
           else
-            version="${package_version}+${GITHUB_SHA::7}"
+            version="${package_version}"
+            display_version="${package_version}+${GITHUB_SHA::7}"
           fi
           echo "version=${version}" >> "$GITHUB_OUTPUT"
+          echo "display_version=${display_version}" >> "$GITHUB_OUTPUT"
+
+      - name: Sync desktop package version
+        shell: bash
+        env:
+          APP_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+
+          const version = process.env.APP_VERSION;
+          if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/.test(version)) {
+            throw new Error(`Invalid app version: ${version}`);
+          }
+
+          function writeJsonVersion(path, updateLockRoot = false) {
+            const data = JSON.parse(readFileSync(path, 'utf8'));
+            data.version = version;
+            if (updateLockRoot && data.packages?.['']) {
+              data.packages[''].version = version;
+            }
+            writeFileSync(path, `${JSON.stringify(data, null, 2)}\n`);
+          }
+
+          writeJsonVersion('package.json');
+          if (existsSync('package-lock.json')) {
+            writeJsonVersion('package-lock.json', true);
+          }
+          writeJsonVersion('src-tauri/tauri.conf.json');
+
+          const cargoPath = 'src-tauri/Cargo.toml';
+          const cargo = readFileSync(cargoPath, 'utf8');
+          writeFileSync(cargoPath, cargo.replace(/^version = ".*"$/m, `version = "${version}"`));
+          NODE
 
       - name: Build desktop app
         if: github.event_name != 'release'
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VITE_JTYPE_VERSION: ${{ steps.version.outputs.version }}
+          VITE_JTYPE_VERSION: ${{ steps.version.outputs.display_version }}
         with:
           args: --bundles ${{ matrix.bundle }}
 
@@ -72,7 +113,7 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VITE_JTYPE_VERSION: ${{ steps.version.outputs.version }}
+          VITE_JTYPE_VERSION: ${{ steps.version.outputs.display_version }}
         with:
           args: --bundles ${{ matrix.bundle }}
           releaseId: ${{ github.event.release.id }}
