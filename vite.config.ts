@@ -8,6 +8,10 @@ import path from "path";
 const host = process.env.TAURI_DEV_HOST;
 // @ts-expect-error process is a nodejs global
 const devPort = Number(process.env.VITE_DEV_PORT ?? 1420);
+// @ts-expect-error process is a nodejs global
+const appVersion = process.env.VITE_JTYPE_VERSION ?? process.env.JTYPE_VERSION ?? process.env.npm_package_version ?? "0.1.0";
+// @ts-expect-error process is a nodejs global
+const packageVersion = process.env.npm_package_version ?? "0.1.0";
 
 // https://vite.dev/config/
 export default defineConfig(async () => ({
@@ -20,6 +24,10 @@ export default defineConfig(async () => ({
     alias: {
       '@shared': path.resolve(__dirname, 'shared'),
     },
+  },
+  define: {
+    __JTYPE_VERSION__: JSON.stringify(appVersion),
+    __JTYPE_PACKAGE_VERSION__: JSON.stringify(packageVersion),
   },
 
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`

@@ -1,5 +1,7 @@
 FROM node:22-slim AS frontend
 WORKDIR /app
+ARG JTYPE_VERSION=0.1.0
+ENV VITE_JTYPE_VERSION=$JTYPE_VERSION
 COPY services/jtype-web/frontend/package.json services/jtype-web/frontend/package-lock.json* ./services/jtype-web/frontend/
 RUN cd services/jtype-web/frontend && npm ci
 RUN ln -s /app/services/jtype-web/frontend/node_modules /app/node_modules

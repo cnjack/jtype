@@ -25,7 +25,7 @@ import {
   TableCellsIcon,
   VariableIcon,
   ShareIcon,
-  ClipboardDocumentCheckIcon,
+  ClipboardDocumentListIcon,
   InformationCircleIcon,
   ArrowsPointingOutIcon,
   XMarkIcon,
@@ -33,7 +33,6 @@ import {
   StarIcon,
   TrashIcon,
   ArrowUpTrayIcon,
-  ArrowPathIcon,
   DocumentTextIcon,
   LinkSlashIcon,
   PrinterIcon,
@@ -509,8 +508,8 @@ export function EditorShell() {
 
   return (
     <section className="flex min-h-0 flex-col bg-[#fbfdfb]">
-      <div className="flex min-h-[56px] items-center justify-between gap-3 border-b border-black/[0.04] bg-white/60 px-5 backdrop-blur-xl">
-        <div className="min-w-0">
+      <div className="relative z-30 flex min-h-[56px] min-w-0 items-center justify-between gap-3 border-b border-black/[0.04] bg-white/60 px-5 backdrop-blur-xl">
+        <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <div className="flex min-w-0 items-baseline gap-1">
               {state.workspace && state.currentRelativePath && (
@@ -567,7 +566,7 @@ export function EditorShell() {
                   void publishCurrentDocument();
                 }}
               >
-                {hasUnpublishedChanges ? <ArrowPathIcon className="h-4 w-4" /> : <ArrowUpTrayIcon className="h-4 w-4" />}
+                <LinkIcon className="h-4 w-4" />
               </button>
             </span>
           )}
@@ -632,7 +631,7 @@ export function EditorShell() {
               </MenuButton>
               <MenuItems
                 transition
-                className="absolute right-0 z-50 mt-2 w-44 origin-top-right rounded-lg border border-black/[0.06] bg-white p-1 shadow-lg shadow-stone-900/10 outline-none transition focus:outline-none data-[closed]:scale-95 data-[closed]:opacity-0"
+                className="absolute right-0 z-[120] mt-2 w-44 origin-top-right rounded-lg border border-black/[0.06] bg-white p-1 shadow-lg shadow-stone-900/10 outline-none transition focus:outline-none data-[closed]:scale-95 data-[closed]:opacity-0"
               >
                 <MenuItem>
                   {({ focus }) => (
@@ -664,7 +663,7 @@ export function EditorShell() {
         </div>
       </div>
 
-      <div className="flex min-h-12 items-center gap-1 border-b border-black/[0.04] bg-[#fbfdfb] px-5">
+      <div className="flex min-h-12 min-w-0 items-center gap-1 overflow-x-auto border-b border-black/[0.04] bg-[#fbfdfb] px-5">
         <EditorToolbarButton command="editor.bold" title={t`Bold - Ctrl+B`} disabled={!canEditMarkdown} runCommand={runCommand} tooltipProps={tooltipProps(t`Bold - Ctrl+B`)}>
           <BoldIcon className="h-4 w-4" />
         </EditorToolbarButton>
@@ -687,9 +686,9 @@ export function EditorShell() {
           <ShareIcon className="h-4 w-4" />
         </EditorToolbarButton>
         <EditorToolbarButton command="insert.task" title={t`Task list`} disabled={!canEditMarkdown} runCommand={runCommand} tooltipProps={tooltipProps(t`Task list`)}>
-          <ClipboardDocumentCheckIcon className="h-4 w-4" />
+          <ClipboardDocumentListIcon className="h-4 w-4" />
         </EditorToolbarButton>
-        <div className="ml-auto">
+        <div className="ml-auto shrink-0">
           <ViewModeToggle
             mode={state.editorMode}
             onModeChange={(mode) => dispatch({ type: "SET_EDITOR_MODE", mode })}
@@ -698,10 +697,10 @@ export function EditorShell() {
         </div>
         {showVaultDocumentTools && (
           <>
-            <button className={`editor-tool ${state.documentPanelOpen ? "bg-[#e8f6f2] text-[#006f6b] ring-1 ring-[#008884]/15 hover:bg-[#e8f6f2] hover:text-[#006f6b]" : ""}`} type="button" aria-label={t`Document info`} {...tooltipProps(t`Document info`)} onClick={() => dispatch({ type: "TOGGLE_DOCUMENT_PANEL" })}>
+            <button className={`editor-tool shrink-0 ${state.documentPanelOpen ? "bg-[#e8f6f2] text-[#006f6b] ring-1 ring-[#008884]/15 hover:bg-[#e8f6f2] hover:text-[#006f6b]" : ""}`} type="button" aria-label={t`Document info`} {...tooltipProps(t`Document info`)} onClick={() => dispatch({ type: "TOGGLE_DOCUMENT_PANEL" })}>
               <InformationCircleIcon className="h-4 w-4" />
             </button>
-            <button className="editor-tool" type="button" aria-label={t`Focus mode`} {...tooltipProps(t`Focus mode`)} onClick={() => dispatch({ type: "TOGGLE_FOCUS_MODE" })}>
+            <button className="editor-tool shrink-0" type="button" aria-label={t`Focus mode`} {...tooltipProps(t`Focus mode`)} onClick={() => dispatch({ type: "TOGGLE_FOCUS_MODE" })}>
               <ArrowsPointingOutIcon className="h-4 w-4" />
             </button>
           </>
@@ -790,7 +789,7 @@ export function EditorShell() {
 
 function EditorToolbarButton({ title, disabled, runCommand, command, tooltipProps, children }: { title: string; disabled: boolean; runCommand: (id: string) => void; command: string; tooltipProps?: React.HTMLAttributes<HTMLButtonElement>; children: React.ReactNode }) {
   return (
-    <button className="editor-tool" type="button" aria-label={title} aria-disabled={disabled} {...tooltipProps} onClick={() => { if (!disabled) runCommand(command); }}>
+    <button className="editor-tool shrink-0" type="button" aria-label={title} aria-disabled={disabled} {...tooltipProps} onClick={() => { if (!disabled) runCommand(command); }}>
       {children}
     </button>
   );
@@ -817,7 +816,7 @@ function PropertiesSection() {
 
   const updateField = (field: string, value: string) => {
     if (readOnly) return;
-    const editor = document.querySelector<HTMLTextAreaElement>('textarea[aria-label="Markdown editor"]');
+    const editor = document.querySelector<HTMLTextAreaElement>("#editor");
     if (!editor) return;
     const newContent = writeFrontmatter(editor.value, { [field]: value.trim() });
     editor.value = newContent;
@@ -942,7 +941,7 @@ function PublishSection({
           disabled={!canPublish || isLoading}
           onClick={() => { void onPublish(); }}
         >
-          {hasUnpublishedChanges ? <ArrowPathIcon className="h-4 w-4" /> : <ArrowUpTrayIcon className="h-4 w-4" />}
+          <LinkIcon className="h-4 w-4" />
         </button>
         <button
           className="sidebar-action hover:text-red-700"

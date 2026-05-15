@@ -17,6 +17,7 @@ import { AccountDialog } from "../components/modals/AccountDialog";
 import { ConflictDialog } from "../components/modals/ConflictDialog";
 import { ExclamationTriangleIcon, SignalSlashIcon } from "@heroicons/react/24/outline";
 import { PromptDialogProvider } from "@shared/components/PromptDialogContext";
+import { AppVersion } from "@shared/components";
 import { isTauriRuntime, relativePathFromWorkspace } from "../lib/utils";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
@@ -72,7 +73,7 @@ function AppContent() {
 
   const handleAction = useCallback((action: string) => {
     if (action === "quickSwitcher.create") {
-      const input = document.querySelector<HTMLInputElement>('input[aria-label="Open or create Document"]');
+      const input = document.querySelector<HTMLInputElement>("#quick-switcher-input");
       if (input) fs.createDocument(`${input.value || "untitled"}.md`);
       dispatch({ type: "SET_QUICK_SWITCHER", open: false });
       return;
@@ -345,6 +346,7 @@ function AppContent() {
                   </span>
                 )
               )}
+              <AppVersion />
               {state.activeConflicts.length > 0 && (
                 <button
                   type="button"

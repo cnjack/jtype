@@ -23,6 +23,7 @@ export function QuickSwitcher() {
       ariaLabel={t`Quick switcher`}
       inputPlaceholder={t`Open or create Document...`}
       inputAriaLabel={t`Open or create Document`}
+      inputId="quick-switcher-input"
       resultsId="quick-results"
     >
       {(query) => {

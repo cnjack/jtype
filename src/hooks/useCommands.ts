@@ -251,7 +251,7 @@ export function useCommands(fs: ReturnType<typeof import("./useFileSystem").useF
 }
 
 function getEditor(): HTMLTextAreaElement | null {
-  return document.querySelector<HTMLTextAreaElement>('textarea[aria-label="Markdown editor"]');
+  return document.querySelector<HTMLTextAreaElement>("#editor");
 }
 
 function wrapSelection(prefix: string, suffix: string, fallback: string) {

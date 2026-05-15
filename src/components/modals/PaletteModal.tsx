@@ -7,12 +7,13 @@ interface PaletteModalProps {
   ariaLabel: string;
   inputPlaceholder: string;
   inputAriaLabel: string;
+  inputId?: string;
   resultsId?: string;
   onKeyDown?: (event: KeyboardEvent<HTMLInputElement>) => void;
   children: (query: string) => ReactNode;
 }
 
-export function PaletteModal({ open, onClose, ariaLabel, inputPlaceholder, inputAriaLabel, resultsId, onKeyDown, children }: PaletteModalProps) {
+export function PaletteModal({ open, onClose, ariaLabel, inputPlaceholder, inputAriaLabel, inputId, resultsId, onKeyDown, children }: PaletteModalProps) {
   const [query, setQuery] = useState("");
 
   useEffect(() => {
@@ -24,6 +25,7 @@ export function PaletteModal({ open, onClose, ariaLabel, inputPlaceholder, input
       <DialogPanel className="command-modal">
         <DialogTitle className="sr-only">{ariaLabel}</DialogTitle>
         <input
+          id={inputId}
           className="command-input"
           placeholder={inputPlaceholder}
           aria-label={inputAriaLabel}

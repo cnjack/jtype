@@ -6,6 +6,7 @@ import { renderToContainer } from '@shared/lib/markdown'
 import { parseFrontmatter, writeFrontmatter } from '@shared/lib/frontmatter'
 import type { EditorMode } from '@shared/lib/types'
 import { usePrompt, useConfirm } from '@shared/components/PromptDialogContext'
+import { AppVersion } from '@shared/components'
 import { useWorkspaceSocket } from '../hooks/useWorkspaceSocket'
 import { useOfflineSync } from '../hooks/useOfflineSync'
 import { ConflictResolver } from '../components/ConflictResolver'
@@ -17,7 +18,7 @@ import {
   TableCellsIcon,
   VariableIcon,
   ShareIcon,
-  ClipboardDocumentCheckIcon,
+  ClipboardDocumentListIcon,
   PencilSquareIcon,
   ViewColumnsIcon,
   EyeIcon,
@@ -809,7 +810,7 @@ export function Workspace() {
                           void publishSelectedDocument()
                         }}
                       >
-                        {hasUnpublishedChanges ? <ArrowPathIcon className="h-4 w-4" /> : <ArrowUpTrayIcon className="h-4 w-4" />}
+                        <LinkIcon className="h-4 w-4" />
                       </button>
                     </span>
                   )}
@@ -889,7 +890,7 @@ export function Workspace() {
                   <ShareIcon className="h-4 w-4" />
                 </EditorToolbarButton>
                 <EditorToolbarButton title={t`Task list`} disabled={!canEditContent} tooltipProps={tooltipProps(t`Task list`)} onClick={() => insertAtCursor('\n- [ ] Task\n')}>
-                  <ClipboardDocumentCheckIcon className="h-4 w-4" />
+                  <ClipboardDocumentListIcon className="h-4 w-4" />
                 </EditorToolbarButton>
                 <div className="ml-auto flex items-center gap-1 rounded-full bg-[#eef5f1] p-1">
                   <button
@@ -1060,7 +1061,7 @@ export function Workspace() {
                         disabled={!canEditContent || unpublishedDocuments.length === 0 || saving}
                         onClick={() => { void publishDocumentsByIds(unpublishedDocuments.map(doc => doc.id)) }}
                       >
-                        <ArrowUpTrayIcon className="h-4 w-4" />
+                        <LinkIcon className="h-4 w-4" />
                         <Trans>Publish drafts</Trans>
                       </button>
                       <button
@@ -1069,7 +1070,7 @@ export function Workspace() {
                         disabled={!canEditContent || publishedDocuments.length === 0 || saving}
                         onClick={() => { void publishDocumentsByIds(publishedDocuments.map(doc => doc.id)) }}
                       >
-                        <ArrowPathIcon className="h-4 w-4" />
+                        <LinkIcon className="h-4 w-4" />
                         <Trans>Republish live docs</Trans>
                       </button>
                       <button
@@ -1105,7 +1106,7 @@ export function Workspace() {
 
       <div id="operation-log" className="col-span-full flex items-center justify-between border-t border-black/[0.04] bg-white/70 px-5 py-3 text-xs text-[#6b7773]">
         <span>{statusMessage || (selectedDoc ? `Opened ${documents.find(d => d.id === selectedDoc)?.relativePath || 'document'}.` : t`Select a document to edit.`)}</span>
-        <span className="flex shrink-0 items-center gap-1.5">
+        <span className="flex shrink-0 items-center gap-3">
           {reconciling ? (
             <span className="flex items-center gap-1.5 font-medium text-yellow-600"><span className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse" /><Trans>Syncing...</Trans></span>
           ) : wsStatus === 'connected' ? (
@@ -1115,6 +1116,7 @@ export function Workspace() {
           ) : (
             <span className="flex items-center gap-1.5 font-medium text-red-500"><span className="w-2 h-2 rounded-full bg-red-500" />{hasPending ? t`Offline (${pendingCount} saved)` : t`Offline`}</span>
           )}
+          <AppVersion />
         </span>
       </div>
 
@@ -2245,7 +2247,7 @@ function WebPublishSection({
           disabled={!canEdit || saving}
           onClick={() => { void onPublish() }}
         >
-          {hasUnpublishedChanges ? <ArrowPathIcon className="h-4 w-4" /> : <ArrowUpTrayIcon className="h-4 w-4" />}
+          <LinkIcon className="h-4 w-4" />
         </button>
         <button
           className="sidebar-action hover:text-red-700"
@@ -2777,7 +2779,7 @@ function WebDocExplorer({
                     className="context-menu-button"
                     onClick={() => { void onPublish(treeContextMenu.node.doc!.id); setTreeContextMenu(null) }}
                   >
-                    {treeContextMenu.node.doc.isPublished ? <ArrowPathIcon className="mr-2 h-3.5 w-3.5" /> : <ArrowUpTrayIcon className="mr-2 h-3.5 w-3.5" />}
+                    <LinkIcon className="mr-2 h-3.5 w-3.5" />
                     {treeContextMenu.node.doc.isPublished ? t`Republish` : t`Publish`}
                   </button>
                   {treeContextMenu.node.doc.isPublished && (
@@ -2902,7 +2904,7 @@ function displayWorkspaceName(workspace: WorkspaceSummary | null): string {
 }
 
 function getEditor(): HTMLTextAreaElement | null {
-  return document.querySelector<HTMLTextAreaElement>('textarea[aria-label="Markdown editor"]')
+  return document.querySelector<HTMLTextAreaElement>('#editor')
 }
 
 function wrapSelection(prefix: string, suffix: string, fallback: string) {
