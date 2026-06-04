@@ -44,6 +44,12 @@ fn all_migrations() -> Vec<Migration> {
             up: include_str!("../../migrations/0005_sites.up.sql"),
             down: include_str!("../../migrations/0005_sites.down.sql"),
         },
+        Migration {
+            version: 7,
+            name: "kanban",
+            up: include_str!("../../migrations/0007_kanban.up.sql"),
+            down: include_str!("../../migrations/0007_kanban.down.sql"),
+        },
     ]
 }
 

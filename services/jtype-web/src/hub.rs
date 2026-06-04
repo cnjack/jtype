@@ -92,6 +92,99 @@ pub enum WorkspaceEvent {
         document_id: String,
         is_published: bool,
     },
+    // ── Kanban events ──
+    #[serde(rename = "kanban:board-updated", rename_all = "camelCase")]
+    KanbanBoardUpdated {
+        workspace_id: String,
+        source_session_id: Option<String>,
+        board_id: String,
+        name: String,
+        position: i32,
+        updated_clock: i64,
+        edited_by: String,
+        source: String,
+        device_id: Option<String>,
+    },
+    #[serde(rename = "kanban:board-deleted", rename_all = "camelCase")]
+    KanbanBoardDeleted {
+        workspace_id: String,
+        source_session_id: Option<String>,
+        board_id: String,
+        deleted_clock: i64,
+        source: String,
+        device_id: Option<String>,
+    },
+    #[serde(rename = "kanban:column-updated", rename_all = "camelCase")]
+    KanbanColumnUpdated {
+        workspace_id: String,
+        source_session_id: Option<String>,
+        board_id: String,
+        column_id: String,
+        name: String,
+        position: i32,
+        updated_clock: i64,
+        edited_by: String,
+        source: String,
+        device_id: Option<String>,
+    },
+    #[serde(rename = "kanban:column-deleted", rename_all = "camelCase")]
+    KanbanColumnDeleted {
+        workspace_id: String,
+        source_session_id: Option<String>,
+        board_id: String,
+        column_id: String,
+        deleted_clock: i64,
+        source: String,
+        device_id: Option<String>,
+    },
+    #[serde(rename = "kanban:card-updated", rename_all = "camelCase")]
+    KanbanCardUpdated {
+        workspace_id: String,
+        source_session_id: Option<String>,
+        board_id: String,
+        column_id: String,
+        card_id: String,
+        title: String,
+        position: i32,
+        priority: String,
+        updated_clock: i64,
+        edited_by: String,
+        source: String,
+        device_id: Option<String>,
+    },
+    #[serde(rename = "kanban:card-deleted", rename_all = "camelCase")]
+    KanbanCardDeleted {
+        workspace_id: String,
+        source_session_id: Option<String>,
+        board_id: String,
+        card_id: String,
+        column_id: String,
+        deleted_clock: i64,
+        source: String,
+        device_id: Option<String>,
+    },
+    #[serde(rename = "kanban:card-archived", rename_all = "camelCase")]
+    KanbanCardArchived {
+        workspace_id: String,
+        source_session_id: Option<String>,
+        board_id: String,
+        card_id: String,
+        column_id: String,
+        archived_clock: i64,
+        source: String,
+        device_id: Option<String>,
+    },
+    #[serde(rename = "kanban:card-restored", rename_all = "camelCase")]
+    KanbanCardRestored {
+        workspace_id: String,
+        source_session_id: Option<String>,
+        board_id: String,
+        card_id: String,
+        column_id: String,
+        restored_clock: i64,
+        source: String,
+        device_id: Option<String>,
+    },
 }
 
 #[allow(dead_code)]
@@ -293,7 +386,7 @@ impl ConnectionHub {
 
     /// For integration tests: subscribe a fake session to a workspace.
     /// Returns `(session_id, receiver)`.
-    #[cfg(test)]
+    /// Public (not gated by `#[cfg(test)]`) so /tests/ integration tests can use it.
     pub async fn subscribe_for_test(
         &self,
         workspace_id: &str,

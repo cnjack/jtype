@@ -3,13 +3,14 @@ pub mod error;
 pub mod handlers;
 pub mod hub;
 pub mod middleware;
+pub mod tasks;
 pub mod themes;
 pub mod util;
 
 use axum::{
     http::{header, StatusCode, Uri},
     response::{Html, IntoResponse, Response},
-    routing::{delete, get, post, put},
+    routing::{delete, get, patch, post, put},
     Router,
 };
 use rust_embed::Embed;
@@ -38,11 +39,13 @@ pub async fn run_from_env() -> Result<(), AppError> {
     let pool = db::connect().await.map_err(AppError::Database)?;
     db::migrations::run_all(&pool).await?;
 
-    let app = build_router(pool, public_base_url);
+    let app = build_router(pool.clone(), public_base_url);
     let listener = tokio::net::TcpListener::bind(&bind_addr)
         .await
         .map_err(|e| AppError::Server(e.to_string()))?;
     println!("jtype-web listening on http://{}", bind_addr);
+    // Spawn periodic trash cleanup (document_trash + kanban_card_trash)
+    tasks::cleanup_trash::spawn(pool);
     axum::serve(listener, app)
         .await
         .map_err(|e| AppError::Server(e.to_string()))
@@ -215,6 +218,67 @@ pub fn build_router_with_hub(
         .route(
             "/api/v1/workspaces/:workspace_id/trash/:trash_id",
             delete(handlers::trash::permanent_delete),
+        )
+        // Kanban API
+        // Boards
+        .route(
+            "/api/v1/workspaces/:workspace_id/kanban/boards",
+            get(handlers::kanban::board::list_boards).post(handlers::kanban::board::create_board),
+        )
+        .route(
+            "/api/v1/workspaces/:workspace_id/kanban/boards/reorder",
+            post(handlers::kanban::board::reorder_boards),
+        )
+        .route(
+            "/api/v1/workspaces/:workspace_id/kanban/boards/:board_id",
+            get(handlers::kanban::board::get_board)
+                .patch(handlers::kanban::board::patch_board)
+                .delete(handlers::kanban::board::delete_board),
+        )
+        // Columns
+        .route(
+            "/api/v1/workspaces/:workspace_id/kanban/boards/:board_id/columns",
+            post(handlers::kanban::column::create_column),
+        )
+        .route(
+            "/api/v1/workspaces/:workspace_id/kanban/columns/reorder",
+            post(handlers::kanban::column::reorder_columns),
+        )
+        .route(
+            "/api/v1/workspaces/:workspace_id/kanban/columns/:column_id",
+            patch(handlers::kanban::column::patch_column),
+        )
+        // Cards
+        .route(
+            "/api/v1/workspaces/:workspace_id/kanban/boards/:board_id/cards",
+            get(handlers::kanban::card::list_cards).post(handlers::kanban::card::create_card),
+        )
+        .route(
+            "/api/v1/workspaces/:workspace_id/kanban/boards/:board_id/cards/move",
+            post(handlers::kanban::card::move_card),
+        )
+        .route(
+            "/api/v1/workspaces/:workspace_id/kanban/cards/:card_id",
+            patch(handlers::kanban::card::patch_card)
+                .delete(handlers::kanban::card::delete_card),
+        )
+        .route(
+            "/api/v1/workspaces/:workspace_id/kanban/cards/:card_id/archive",
+            post(handlers::kanban::card::archive_card),
+        )
+        .route(
+            "/api/v1/workspaces/:workspace_id/kanban/cards/:card_id/restore",
+            post(handlers::kanban::card::restore_card),
+        )
+        // Labels
+        .route(
+            "/api/v1/workspaces/:workspace_id/kanban/boards/:board_id/labels",
+            get(handlers::kanban::label::list_labels).post(handlers::kanban::label::create_label),
+        )
+        .route(
+            "/api/v1/workspaces/:workspace_id/kanban/labels/:label_id",
+            patch(handlers::kanban::label::patch_label)
+                .delete(handlers::kanban::label::delete_label),
         )
         // Domains API
         .route(

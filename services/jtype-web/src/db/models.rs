@@ -625,3 +625,225 @@ pub struct PublishStatusResponse {
     pub published_hash: Option<String>,
     pub has_unpublished_changes: bool,
 }
+
+// ── Kanban ──
+//
+// Cloud-only Kanban boards inside a workspace.
+// Boards → Columns → Cards, with board-level Labels (M:N to Cards).
+// Soft delete: cards go to kanban_card_trash for 30 days, then hard-deleted by
+// the tokio cron cleanup task. Columns and boards have no archive state —
+// board deletion hard-cascades everything (including archived cards in trash).
+
+// ── Board ──
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateKanbanBoardRequest {
+    pub name: String,
+    pub description: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateKanbanBoardRequest {
+    pub name: Option<String>,
+    pub description: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ReorderKanbanBoardsRequest {
+    pub board_ids: Vec<String>,
+}
+
+#[derive(Debug, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct KanbanBoardSummary {
+    pub id: String,
+    pub workspace_id: String,
+    pub name: String,
+    pub description: Option<String>,
+    pub position: i32,
+    pub created_by_user_id: String,
+    pub updated_clock: i64,
+    pub created_at: String,
+    pub updated_at: String,
+    pub card_count: i64,
+    pub column_count: i64,
+}
+
+#[derive(Debug, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct KanbanBoard {
+    #[serde(flatten)]
+    pub summary: KanbanBoardSummary,
+    pub columns: Vec<KanbanColumn>,
+    pub cards: Vec<KanbanCard>,
+    pub labels: Vec<KanbanLabel>,
+}
+
+// ── Column ──
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateKanbanColumnRequest {
+    pub name: String,
+    pub wip_limit: Option<i32>,
+    pub color: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateKanbanColumnRequest {
+    pub name: Option<String>,
+    pub wip_limit: Option<Option<i32>>,
+    pub color: Option<Option<String>>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ReorderKanbanColumnsRequest {
+    pub board_id: String,
+    pub column_ids: Vec<String>,
+}
+
+#[derive(Debug, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct KanbanColumn {
+    pub id: String,
+    pub board_id: String,
+    pub name: String,
+    pub position: i32,
+    pub wip_limit: Option<i32>,
+    pub color: Option<String>,
+    pub card_count: i64,
+}
+
+// ── Card ──
+
+#[derive(Debug, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateKanbanCardRequest {
+    pub column_id: String,
+    pub title: String,
+    pub description: Option<String>,
+    pub priority: Option<String>,
+    pub due_at: Option<String>,
+    pub assignee_user_id: Option<String>,
+    pub label_ids: Option<Vec<String>>,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateKanbanCardRequest {
+    pub title: Option<String>,
+    pub description: Option<Option<String>>,
+    pub priority: Option<String>,
+    pub due_at: Option<Option<String>>,
+    pub assignee_user_id: Option<Option<String>>,
+    pub label_ids: Option<Vec<String>>,
+    pub base_updated_clock: Option<i64>,
+    pub force: Option<bool>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MoveKanbanCardRequest {
+    pub card_id: String,
+    pub target_column_id: String,
+    pub target_position: i32,
+    pub base_updated_clock: Option<i64>,
+    pub force: Option<bool>,
+}
+
+#[derive(Debug, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct KanbanCard {
+    pub id: String,
+    pub workspace_id: String,
+    pub board_id: String,
+    pub column_id: String,
+    pub title: String,
+    pub description: Option<String>,
+    pub position: i32,
+    pub priority: String,
+    pub due_at: Option<String>,
+    pub assignee_user_id: Option<String>,
+    pub properties_extra: Option<JsonValue>,
+    pub label_ids: Vec<String>,
+    pub created_by_user_id: String,
+    pub updated_clock: i64,
+    pub version_id: String,
+    pub archived_at: Option<String>,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+#[derive(Debug, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct KanbanCardTrashItem {
+    pub id: String,
+    pub card_id: String,
+    pub workspace_id: String,
+    pub board_id: String,
+    pub column_id: String,
+    pub title: String,
+    pub description: Option<String>,
+    pub priority: String,
+    pub position: i32,
+    pub due_at: Option<String>,
+    pub assignee_user_id: Option<String>,
+    pub label_ids: Vec<String>,
+    pub archived_by_user_id: String,
+    pub archived_by_device_id: Option<String>,
+    pub source_device_id: Option<String>,
+    pub source_user_id: Option<String>,
+    pub archived_clock: i64,
+    pub archived_at: String,
+    pub expires_at: String,
+    pub restored_at: Option<String>,
+    pub restored_by_user_id: Option<String>,
+    pub restored_by_device_id: Option<String>,
+    pub restored_clock: Option<i64>,
+}
+
+// ── Label ──
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateKanbanLabelRequest {
+    pub name: String,
+    pub color: String,
+    pub description: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateKanbanLabelRequest {
+    pub name: Option<String>,
+    pub color: Option<String>,
+    pub description: Option<Option<String>>,
+}
+
+#[derive(Debug, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct KanbanLabel {
+    pub id: String,
+    pub board_id: String,
+    pub name: String,
+    pub color: String,
+    pub description: Option<String>,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+// ── Conflict response ──
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct KanbanConflictResponse {
+    pub error: &'static str,
+    pub card_id: String,
+    pub latest: KanbanCard,
+    pub base_updated_clock: Option<i64>,
+}
