@@ -15,7 +15,8 @@ import { QuickSwitcher } from "../components/modals/QuickSwitcher";
 import { CreateNoteDialog } from "../components/modals/CreateNoteDialog";
 import { AccountDialog } from "../components/modals/AccountDialog";
 import { ConflictDialog } from "../components/modals/ConflictDialog";
-import { ExclamationTriangleIcon, SignalSlashIcon } from "@heroicons/react/24/outline";
+import { KanbanBoard } from "../components/KanbanBoard";
+import { ExclamationTriangleIcon, SignalSlashIcon, Squares2X2Icon } from "@heroicons/react/24/outline";
 import { PromptDialogProvider } from "@shared/components/PromptDialogContext";
 import { AppVersion } from "@shared/components";
 import { isTauriRuntime, relativePathFromWorkspace } from "../lib/utils";
@@ -45,6 +46,7 @@ export function App() {
 function AppContent() {
   const { state, dispatch } = useApp();
   const sync = useCloudSync();
+  const [kanbanOpen, setKanbanOpen] = React.useState(false);
   const autoSync = useCallback(async () => {
     const vaultSettings = state.workspace ? state.vaultSettings[state.workspace.rootPath] : undefined;
     const binding = state.vaultBindings.find((b) => b.localVaultPath === state.workspace?.rootPath);
@@ -347,6 +349,17 @@ function AppContent() {
                 )
               )}
               <AppVersion />
+              {state.mode === "workspace" && state.workspace && (
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold text-stone-500 transition hover:bg-stone-100"
+                  onClick={() => setKanbanOpen(true)}
+                  title="Open Kanban board"
+                >
+                  <Squares2X2Icon className="h-3.5 w-3.5" />
+                  Kanban
+                </button>
+              )}
               {state.activeConflicts.length > 0 && (
                 <button
                   type="button"
@@ -365,6 +378,21 @@ function AppContent() {
         <CreateNoteDialog />
         <AccountDialog />
         <ConflictDialog />
+        {kanbanOpen && state.workspace && (
+          <KanbanBoard
+            rootPath={state.workspace.rootPath}
+            sync={
+              state.cloudProfile?.serverUrl && state.cloudProfile?.token && currentBinding?.workspaceId
+                ? {
+                    serverUrl: state.cloudProfile.serverUrl,
+                    token: state.cloudProfile.token,
+                    workspaceId: currentBinding.workspaceId,
+                  }
+                : undefined
+            }
+            onClose={() => setKanbanOpen(false)}
+          />
+        )}
       </div>
     </CommandsContext.Provider>
   );

@@ -13,6 +13,9 @@ import type {
   VaultSettings,
   FolderContentsSummary,
   TrashMetadata,
+  LocalKanbanStore,
+  LocalKanbanBoard,
+  PendingKanbanOp,
 } from "./types";
 
 export const tauri = {
@@ -163,6 +166,45 @@ export const tauri = {
   cloudWsSend(message: string) {
     return invoke<void>("cloud_ws_send", { message });
   },
+
+  // ── Local-first Kanban (offline; persists to {vault}/.jtype/kanban.json) ──
+  kanbanLoad(rootPath: string) {
+    return invoke<LocalKanbanStore>("kanban_load", { rootPath });
+  },
+  kanbanCreateBoard(rootPath: string, id: string, name: string, description: string | null, columnIds: string[]) {
+    return invoke<LocalKanbanStore>("kanban_create_board", { rootPath, id, name, description, columnIds });
+  },
+  kanbanDeleteBoard(rootPath: string, boardId: string) {
+    return invoke<LocalKanbanStore>("kanban_delete_board", { rootPath, boardId });
+  },
+  kanbanCreateCard(
+    rootPath: string,
+    boardId: string,
+    columnId: string,
+    id: string,
+    title: string,
+    description?: string | null,
+    priority?: string | null,
+    labelIds?: string[],
+  ) {
+    return invoke<LocalKanbanStore>("kanban_create_card", { rootPath, boardId, columnId, id, title, description, priority, labelIds });
+  },
+  kanbanMoveCard(rootPath: string, boardId: string, cardId: string, targetColumnId: string, targetPosition: number) {
+    return invoke<LocalKanbanStore>("kanban_move_card", { rootPath, boardId, cardId, targetColumnId, targetPosition });
+  },
+  kanbanArchiveCard(rootPath: string, boardId: string, cardId: string, archivedAt: string) {
+    return invoke<LocalKanbanStore>("kanban_archive_card", { rootPath, boardId, cardId, archivedAt });
+  },
+  kanbanRestoreCard(rootPath: string, boardId: string, cardId: string) {
+    return invoke<LocalKanbanStore>("kanban_restore_card", { rootPath, boardId, cardId });
+  },
+  kanbanTakePendingOps(rootPath: string) {
+    return invoke<PendingKanbanOp[]>("kanban_take_pending_ops", { rootPath });
+  },
+  kanbanMergeRemoteBoard(rootPath: string, board: LocalKanbanBoard, cloudClock: number) {
+    return invoke<LocalKanbanStore>("kanban_merge_remote_board", { rootPath, board, cloudClock });
+  },
+
   get isAvailable() {
     return isTauriRuntime();
   },

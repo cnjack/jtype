@@ -290,3 +290,59 @@ export type AppCommand = {
   disabledReason?: () => string | undefined;
   run: () => Promise<void> | void;
 };
+
+// ── Local-first Kanban (mirrors src-tauri/src/kanban_local.rs serde) ──
+export type LocalKanbanColumn = {
+  id: string;
+  name: string;
+  position: number;
+  wipLimit?: number | null;
+  color?: string | null;
+};
+
+export type LocalKanbanCard = {
+  id: string;
+  columnId: string;
+  title: string;
+  description?: string | null;
+  position: number;
+  priority: string;
+  dueAt?: string | null;
+  assigneeUserId?: string | null;
+  labelIds: string[];
+  archivedAt?: string | null;
+  updatedClock: number;
+};
+
+export type LocalKanbanLabel = {
+  id: string;
+  name: string;
+  color: string;
+  description?: string | null;
+};
+
+export type LocalKanbanBoard = {
+  id: string;
+  name: string;
+  description?: string | null;
+  position: number;
+  updatedClock: number;
+  columns: LocalKanbanColumn[];
+  cards: LocalKanbanCard[];
+  labels: LocalKanbanLabel[];
+};
+
+export type PendingKanbanOp = {
+  type: string;
+  boardId: string;
+  cardId?: string | null;
+  payload: unknown;
+  localClock: number;
+};
+
+export type LocalKanbanStore = {
+  boards: LocalKanbanBoard[];
+  lastSyncedClock: number;
+  localClock: number;
+  pendingOps: PendingKanbanOp[];
+};
