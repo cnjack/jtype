@@ -127,16 +127,6 @@ pub enum WorkspaceEvent {
         source: String,
         device_id: Option<String>,
     },
-    #[serde(rename = "kanban:column-deleted", rename_all = "camelCase")]
-    KanbanColumnDeleted {
-        workspace_id: String,
-        source_session_id: Option<String>,
-        board_id: String,
-        column_id: String,
-        deleted_clock: i64,
-        source: String,
-        device_id: Option<String>,
-    },
     #[serde(rename = "kanban:card-updated", rename_all = "camelCase")]
     KanbanCardUpdated {
         workspace_id: String,
@@ -182,6 +172,19 @@ pub enum WorkspaceEvent {
         card_id: String,
         column_id: String,
         restored_clock: i64,
+        source: String,
+        device_id: Option<String>,
+    },
+    /// Board-scoped labels changed (created / updated / deleted). Subscribers
+    /// refetch the board's label set. Distinct from `kanban:board-updated` so a
+    /// label edit is never mistaken for a board rename.
+    #[serde(rename = "kanban:label-changed", rename_all = "camelCase")]
+    KanbanLabelChanged {
+        workspace_id: String,
+        source_session_id: Option<String>,
+        board_id: String,
+        updated_clock: i64,
+        edited_by: String,
         source: String,
         device_id: Option<String>,
     },

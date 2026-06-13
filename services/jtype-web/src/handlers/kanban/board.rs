@@ -23,7 +23,7 @@ use serde_json::json;
 use sqlx::Row;
 use uuid::Uuid;
 
-use super::{next_workspace_clock, validate_hex_color, clamp_str};
+use super::{clamp_str, next_workspace_clock, validate_uuid};
 use crate::db::models::*;
 use crate::error::AppError;
 use crate::handlers::workspace::require_workspace_role;
@@ -50,7 +50,8 @@ pub async fn list_boards(
 
     let rows = sqlx::query(
         r#"SELECT b.id, b.workspace_id, b.name, b.description, b.position,
-                  b.created_by_user_id, b.updated_clock, b.created_at, b.updated_at,
+                  b.created_by_user_id, b.updated_clock,
+                  CAST(b.created_at AS CHAR) AS created_at, CAST(b.updated_at AS CHAR) AS updated_at,
                   (SELECT COUNT(*) FROM kanban_cards c WHERE c.board_id = b.id AND c.archived_at IS NULL) AS card_count,
                   (SELECT COUNT(*) FROM kanban_columns col WHERE col.board_id = b.id) AS column_count
            FROM kanban_boards b
@@ -102,11 +103,32 @@ pub async fn create_board(
     }
     let description = payload.description.as_deref().map(|d| clamp_str(d.trim(), 65_535));
 
+    // Client-generated ids are reused on both ends (design §11.11) so a board
+    // created offline converges with its cloud twin; absent → server-generated.
+    let board_id = match payload.id.as_deref() {
+        Some(id) => { validate_uuid(id)?; id.to_string() }
+        None => Uuid::new_v4().to_string(),
+    };
+    let seed_column_ids: Vec<String> = match &payload.column_ids {
+        Some(ids) => {
+            if ids.len() != DEFAULT_COLUMNS.len() {
+                return Err(AppError::BadRequest(format!(
+                    "columnIds must contain exactly {} ids",
+                    DEFAULT_COLUMNS.len()
+                )));
+            }
+            for id in ids {
+                validate_uuid(id)?;
+            }
+            ids.clone()
+        }
+        None => DEFAULT_COLUMNS.iter().map(|_| Uuid::new_v4().to_string()).collect(),
+    };
+
     let device_id = header_device_id(&headers);
     let session_id = crate::handlers::extract_session_id(&headers);
 
     let mut tx = state.pool.begin().await?;
-    let board_id = Uuid::new_v4().to_string();
     let next_clock = next_workspace_clock(&mut tx, &workspace_id).await?;
 
     // Append to end: position = max + 1
@@ -130,17 +152,21 @@ pub async fn create_board(
     .bind(&user.id)
     .bind(next_clock)
     .execute(&mut *tx)
-    .await?;
+    .await
+    .map_err(|e| match &e {
+        sqlx::Error::Database(db_err) if db_err.message().contains("uniq_board_per_workspace") => {
+            AppError::BadRequest(format!("board name '{}' already exists in this workspace", name))
+        }
+        _ => AppError::Database(e),
+    })?;
 
-    // Seed 3 default columns
-    let mut column_ids: Vec<String> = Vec::with_capacity(DEFAULT_COLUMNS.len());
+    // Seed 3 default columns (reusing client-supplied ids when provided)
+    let column_ids: Vec<String> = seed_column_ids;
     for (i, col_name) in DEFAULT_COLUMNS.iter().enumerate() {
-        let col_id = Uuid::new_v4().to_string();
-        column_ids.push(col_id.clone());
         sqlx::query(
             r#"INSERT INTO kanban_columns (id, board_id, name, position) VALUES (?, ?, ?, ?)"#,
         )
-        .bind(&col_id)
+        .bind(&column_ids[i])
         .bind(&board_id)
         .bind(col_name)
         .bind(i as i32)
@@ -221,7 +247,8 @@ pub(crate) async fn get_board_inner(
     // Board summary
     let row = sqlx::query(
         r#"SELECT id, workspace_id, name, description, position, created_by_user_id,
-                  updated_clock, created_at, updated_at,
+                  updated_clock,
+                  CAST(created_at AS CHAR) AS created_at, CAST(updated_at AS CHAR) AS updated_at,
                   (SELECT COUNT(*) FROM kanban_cards c WHERE c.board_id = b.id AND c.archived_at IS NULL) AS card_count,
                   (SELECT COUNT(*) FROM kanban_columns col WHERE col.board_id = b.id) AS column_count
            FROM kanban_boards b
@@ -275,8 +302,10 @@ pub(crate) async fn get_board_inner(
     // Active cards (default: exclude archived)
     let card_rows = sqlx::query(
         r#"SELECT id, workspace_id, board_id, column_id, title, description, position, priority,
-                  due_at, assignee_user_id, properties_extra, created_by_user_id, updated_clock,
-                  version_id, archived_at, created_at, updated_at
+                  CAST(due_at AS CHAR) AS due_at, assignee_user_id, properties_extra,
+                  created_by_user_id, updated_clock, version_id,
+                  CAST(archived_at AS CHAR) AS archived_at,
+                  CAST(created_at AS CHAR) AS created_at, CAST(updated_at AS CHAR) AS updated_at
            FROM kanban_cards
            WHERE board_id = ? AND archived_at IS NULL
            ORDER BY column_id ASC, position ASC"#,
@@ -285,10 +314,15 @@ pub(crate) async fn get_board_inner(
     .fetch_all(&state.pool)
     .await?;
 
+    let card_ids: Vec<String> = card_rows
+        .iter()
+        .filter_map(|r| r.try_get::<String, _>("id").ok())
+        .collect();
+    let mut labels_by_card = load_label_ids_for_cards(&state.pool, &card_ids).await?;
     let mut cards: Vec<KanbanCard> = Vec::with_capacity(card_rows.len());
     for r in card_rows {
         let card_id: String = r.try_get("id")?;
-        let label_ids = load_card_label_ids(&state.pool, &card_id).await?;
+        let label_ids = labels_by_card.remove(&card_id).unwrap_or_default();
         cards.push(KanbanCard {
             id: card_id,
             workspace_id: r.try_get("workspace_id")?,
@@ -313,7 +347,8 @@ pub(crate) async fn get_board_inner(
 
     // Labels
     let label_rows = sqlx::query(
-        r#"SELECT id, board_id, name, color, description, created_at, updated_at
+        r#"SELECT id, board_id, name, color, description,
+                  CAST(created_at AS CHAR) AS created_at, CAST(updated_at AS CHAR) AS updated_at
            FROM kanban_labels
            WHERE board_id = ?
            ORDER BY name ASC"#,
@@ -396,7 +431,15 @@ pub async fn patch_board(
             .bind(n)
             .bind(&board_id)
             .execute(&mut *tx)
-            .await?;
+            .await
+            .map_err(|e| match &e {
+                sqlx::Error::Database(db_err)
+                    if db_err.message().contains("uniq_board_per_workspace") =>
+                {
+                    AppError::BadRequest(format!("board name '{}' already exists in this workspace", n))
+                }
+                _ => AppError::Database(e),
+            })?;
     }
     if let Some(d) = &new_desc {
         sqlx::query("UPDATE kanban_boards SET description = ? WHERE id = ?")
@@ -606,15 +649,37 @@ pub(crate) async fn load_card_label_ids(
         .collect())
 }
 
+/// Batch-load label ids for many cards in a single query (avoids N+1).
+/// Returns a map keyed by card_id; cards with no labels are absent from the map.
+pub(crate) async fn load_label_ids_for_cards(
+    pool: &sqlx::Pool<sqlx::MySql>,
+    card_ids: &[String],
+) -> Result<std::collections::HashMap<String, Vec<String>>, AppError> {
+    use std::collections::HashMap;
+    let mut map: HashMap<String, Vec<String>> = HashMap::new();
+    if card_ids.is_empty() {
+        return Ok(map);
+    }
+    let placeholders = vec!["?"; card_ids.len()].join(",");
+    let sql = format!(
+        "SELECT card_id, label_id FROM kanban_card_labels WHERE card_id IN ({placeholders})"
+    );
+    let mut q = sqlx::query(&sql);
+    for id in card_ids {
+        q = q.bind(id);
+    }
+    let rows = q.fetch_all(pool).await?;
+    for r in rows {
+        let cid: String = r.try_get("card_id")?;
+        let lid: String = r.try_get("label_id")?;
+        map.entry(cid).or_default().push(lid);
+    }
+    Ok(map)
+}
+
 pub(crate) fn header_device_id(headers: &HeaderMap) -> Option<String> {
     headers
         .get("x-device-id")
         .and_then(|v| v.to_str().ok())
         .map(|s| s.to_string())
-}
-
-// Silence unused warning for validate_hex_color (used in label module).
-#[allow(dead_code)]
-fn _validate_hex_color_re_export() {
-    let _ = validate_hex_color("#000000");
 }

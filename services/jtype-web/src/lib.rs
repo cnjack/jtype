@@ -254,6 +254,10 @@ pub fn build_router_with_hub(
             get(handlers::kanban::card::list_cards).post(handlers::kanban::card::create_card),
         )
         .route(
+            "/api/v1/workspaces/:workspace_id/kanban/boards/:board_id/trash",
+            get(handlers::kanban::card::list_card_trash),
+        )
+        .route(
             "/api/v1/workspaces/:workspace_id/kanban/boards/:board_id/cards/move",
             post(handlers::kanban::card::move_card),
         )

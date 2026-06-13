@@ -641,6 +641,11 @@ pub struct PublishStatusResponse {
 pub struct CreateKanbanBoardRequest {
     pub name: String,
     pub description: Option<String>,
+    /// Optional client-generated board id (reused local↔cloud; design §11.11).
+    pub id: Option<String>,
+    /// Optional client-generated ids for the seeded columns (must match the
+    /// default column count). Lets an offline-created board converge by id.
+    pub column_ids: Option<Vec<String>>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -724,6 +729,8 @@ pub struct KanbanColumn {
 #[derive(Debug, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct CreateKanbanCardRequest {
+    /// Optional client-generated card id (reused local↔cloud; design §11.11).
+    pub id: Option<String>,
     pub column_id: String,
     pub title: String,
     pub description: Option<String>,

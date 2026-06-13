@@ -7,6 +7,10 @@
 //!
 //! NO DELETE — columns are deleted only via board hard-delete cascade.
 //! Reorder is atomic (single transaction).
+//!
+//! `wip_limit` is advisory metadata for the UI to surface a warning; the server
+//! deliberately does NOT block card creation or moves into a full column, so a
+//! limit never makes the board unusable. Enforce client-side (or revisit here).
 
 use axum::{
     extract::{Path, State},
@@ -91,7 +95,13 @@ pub async fn create_column(
     .bind(payload.wip_limit)
     .bind(&payload.color)
     .execute(&mut *tx)
-    .await?;
+    .await
+    .map_err(|e| match &e {
+        sqlx::Error::Database(db_err) if db_err.message().contains("uniq_column_per_board") => {
+            AppError::BadRequest(format!("column name '{}' already exists on this board", name))
+        }
+        _ => AppError::Database(e),
+    })?;
 
     tx.commit().await?;
 
@@ -172,7 +182,13 @@ pub async fn patch_column(
         .bind(&column_id)
         .bind(&workspace_id)
         .execute(&mut *tx)
-        .await?;
+        .await
+        .map_err(|e| match &e {
+            sqlx::Error::Database(db_err) if db_err.message().contains("uniq_column_per_board") => {
+                AppError::BadRequest(format!("column name '{}' already exists on this board", n))
+            }
+            _ => AppError::Database(e),
+        })?;
     }
 
     if let Some(wip) = &payload.wip_limit {

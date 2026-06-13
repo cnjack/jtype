@@ -111,18 +111,12 @@ async fn patch_board_updates_name() {
 #[tokio::test]
 async fn delete_board_cascades_to_columns_and_cards_including_archived() {
     let (app, _pool) = common::setup().await;
+    // The workspace creator has the implicit "owner" role (see
+    // require_workspace_role: COALESCE(m.role, 'owner')), which satisfies the
+    // admin+ gate on board delete — no separate promotion needed.
     let (token, _) = common::register_user(app.clone(), &common::uid()).await;
     let ws_id = common::create_workspace(app.clone(), &token, &common::wname()).await;
 
-    // Need admin to delete; promote
-    let user_id = common::uid();
-    let (token, _uname) = common::register_user(app.clone(), &user_id).await;
-    // promote via direct SQL? No, use a separate admin helper if available. For now skip the user-promote step and
-    // assert that even an admin user (first registered) can delete.
-    let _ = ws_id;
-
-    // The first registered user is auto-promoted to admin (per seed_first_admin).
-    // So this test will pass; we rely on first-user-becomes-admin.
     let (_status, board) = common::req(
         app.clone(),
         "POST",
@@ -347,9 +341,10 @@ async fn reorder_columns_atomic() {
 }
 
 #[tokio::test]
-async fn delete_column_endpoint_returns_404() {
-    // There's no DELETE endpoint for columns (design 28C). The router doesn't
-    // register a handler, so the path falls through to 404.
+async fn delete_column_endpoint_returns_405() {
+    // There's no DELETE endpoint for columns (design 28C). The path IS registered
+    // (for PATCH), so DELETE returns 405 Method Not Allowed — the correct REST
+    // semantics for "route exists, method unsupported".
     let (app, _pool) = common::setup().await;
     let (token, _) = common::register_user(app.clone(), &common::uid()).await;
     let ws_id = common::create_workspace(app.clone(), &token, &common::wname()).await;
@@ -371,7 +366,7 @@ async fn delete_column_endpoint_returns_404() {
         None,
     )
     .await;
-    assert_eq!(status, StatusCode::NOT_FOUND);
+    assert_eq!(status, StatusCode::METHOD_NOT_ALLOWED);
 }
 
 // ── 3. Card CRUD + archive ──────────────────────────────────────────────────
@@ -1163,7 +1158,7 @@ async fn cleanup_runs_against_both_document_and_kanban_trash() {
 
     let _ = sqlx::query(
         r#"INSERT INTO document_trash (id, workspace_id, document_id, relative_path, title, content,
-           content_hash, version_id, deleted_by_user_id, deleted_clock, expires_at)
+           content_hash, version_id, deleted_by_user_id, expires_at)
            VALUES (?, ?, ?, 'x.md', 'x', '', 'h', ?, ?,
                    DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 1 DAY))"#,
     )

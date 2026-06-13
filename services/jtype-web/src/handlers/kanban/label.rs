@@ -56,7 +56,8 @@ pub async fn list_labels(
     }
 
     let rows = sqlx::query(
-        r#"SELECT id, board_id, name, color, description, created_at, updated_at
+        r#"SELECT id, board_id, name, color, description,
+                  CAST(created_at AS CHAR) AS created_at, CAST(updated_at AS CHAR) AS updated_at
            FROM kanban_labels
            WHERE board_id = ?
            ORDER BY name ASC"#,
@@ -160,7 +161,8 @@ pub async fn create_label(
 
     // Read final state
     let row = sqlx::query(
-        "SELECT id, board_id, name, color, description, created_at, updated_at
+        "SELECT id, board_id, name, color, description,
+                CAST(created_at AS CHAR) AS created_at, CAST(updated_at AS CHAR) AS updated_at
          FROM kanban_labels WHERE id = ?",
     )
     .bind(&label_id)
@@ -180,12 +182,10 @@ pub async fn create_label(
         .hub
         .publish_to_workspace(
             &workspace_id,
-            WorkspaceEvent::KanbanBoardUpdated {
+            WorkspaceEvent::KanbanLabelChanged {
                 workspace_id: workspace_id.clone(),
                 source_session_id: session_id.clone(),
                 board_id: board_id.clone(),
-                name: String::new(), // resolved by subscriber via get_board
-                position: 0,
                 updated_clock: next_clock,
                 edited_by: user.username.clone(),
                 source: "web".to_string(),
@@ -291,7 +291,8 @@ pub async fn patch_label(
 
     // Read final state
     let row = sqlx::query(
-        "SELECT id, board_id, name, color, description, created_at, updated_at
+        "SELECT id, board_id, name, color, description,
+                CAST(created_at AS CHAR) AS created_at, CAST(updated_at AS CHAR) AS updated_at
          FROM kanban_labels WHERE id = ?",
     )
     .bind(&label_id)
@@ -311,12 +312,10 @@ pub async fn patch_label(
         .hub
         .publish_to_workspace(
             &workspace_id,
-            WorkspaceEvent::KanbanBoardUpdated {
+            WorkspaceEvent::KanbanLabelChanged {
                 workspace_id: workspace_id.clone(),
                 source_session_id: session_id.clone(),
                 board_id,
-                name: String::new(),
-                position: 0,
                 updated_clock: next_clock,
                 edited_by: user.username.clone(),
                 source: "web".to_string(),
@@ -377,12 +376,10 @@ pub async fn delete_label(
         .hub
         .publish_to_workspace(
             &workspace_id,
-            WorkspaceEvent::KanbanBoardUpdated {
+            WorkspaceEvent::KanbanLabelChanged {
                 workspace_id: workspace_id.clone(),
                 source_session_id: session_id.clone(),
                 board_id,
-                name: String::new(),
-                position: 0,
                 updated_clock: next_clock,
                 edited_by: user.username.clone(),
                 source: "web".to_string(),

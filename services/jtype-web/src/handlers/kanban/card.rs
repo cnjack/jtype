@@ -23,8 +23,8 @@ use serde_json::json;
 use sqlx::Row;
 use uuid::Uuid;
 
-use super::board::{header_device_id, load_card_label_ids};
-use super::{next_workspace_clock, validate_priority, clamp_str};
+use super::board::{header_device_id, load_card_label_ids, load_label_ids_for_cards};
+use super::{clamp_str, next_workspace_clock, normalize_due_at, validate_assignee, validate_priority, validate_uuid};
 use crate::db::models::*;
 use crate::error::AppError;
 use crate::handlers::workspace::require_workspace_role;
@@ -80,8 +80,10 @@ pub async fn list_cards(
 
     let sql = format!(
         r#"SELECT id, workspace_id, board_id, column_id, title, description, position, priority,
-                  due_at, assignee_user_id, properties_extra, created_by_user_id, updated_clock,
-                  version_id, archived_at, created_at, updated_at
+                  CAST(due_at AS CHAR) AS due_at, assignee_user_id, properties_extra,
+                  created_by_user_id, updated_clock, version_id,
+                  CAST(archived_at AS CHAR) AS archived_at,
+                  CAST(created_at AS CHAR) AS created_at, CAST(updated_at AS CHAR) AS updated_at
            FROM kanban_cards
            WHERE board_id = ? {archived_filter}
            ORDER BY column_id ASC, position ASC"#,
@@ -92,10 +94,15 @@ pub async fn list_cards(
         .fetch_all(&state.pool)
         .await?;
 
+    let card_ids: Vec<String> = rows
+        .iter()
+        .filter_map(|r| r.try_get::<String, _>("id").ok())
+        .collect();
+    let mut labels_by_card = load_label_ids_for_cards(&state.pool, &card_ids).await?;
     let mut cards: Vec<KanbanCard> = Vec::with_capacity(rows.len());
     for r in rows {
         let card_id: String = r.try_get("id")?;
-        let label_ids = load_card_label_ids(&state.pool, &card_id).await?;
+        let label_ids = labels_by_card.remove(&card_id).unwrap_or_default();
         cards.push(KanbanCard {
             id: card_id,
             workspace_id: r.try_get("workspace_id")?,
@@ -150,6 +157,16 @@ pub async fn create_card(
         Some(p) => validate_priority(p)?.to_string(),
         None => "none".to_string(),
     };
+    let due_at = match payload.due_at.as_deref() {
+        Some(d) => Some(normalize_due_at(d)?),
+        None => None,
+    };
+    validate_assignee(&state.pool, &workspace_id, payload.assignee_user_id.as_deref()).await?;
+    // Client-generated id reused on both ends (design §11.11); absent → generated.
+    let card_id = match payload.id.as_deref() {
+        Some(id) => { validate_uuid(id)?; id.to_string() }
+        None => Uuid::new_v4().to_string(),
+    };
 
     let device_id = header_device_id(&headers);
     let session_id = crate::handlers::extract_session_id(&headers);
@@ -181,7 +198,6 @@ pub async fn create_card(
     .fetch_one(&mut *tx)
     .await?;
 
-    let card_id = Uuid::new_v4().to_string();
     let version_id = Uuid::new_v4().to_string();
 
     sqlx::query(
@@ -198,7 +214,7 @@ pub async fn create_card(
     .bind(&description)
     .bind(next_pos)
     .bind(&priority)
-    .bind(payload.due_at.as_deref())
+    .bind(due_at.as_deref())
     .bind(payload.assignee_user_id.as_deref())
     .bind(&user.id)
     .bind(next_clock)
@@ -234,28 +250,6 @@ pub async fn create_card(
     }
 
     tx.commit().await?;
-
-    let label_ids = load_card_label_ids(&state.pool, &card_id).await?;
-    let _card = KanbanCard {
-        id: card_id.clone(),
-        workspace_id: workspace_id.clone(),
-        board_id: board_id.clone(),
-        column_id: payload.column_id.clone(),
-        title: title.clone(),
-        description,
-        position: next_pos,
-        priority: priority.clone(),
-        due_at: payload.due_at.clone(),
-        assignee_user_id: payload.assignee_user_id.clone(),
-        properties_extra: None,
-        label_ids,
-        created_by_user_id: user.id.clone(),
-        updated_clock: next_clock,
-        version_id,
-        archived_at: None,
-        created_at: String::new(), // populated by DB
-        updated_at: String::new(),
-    };
 
     state
         .hub
@@ -303,18 +297,49 @@ pub async fn patch_card(
     let device_id = header_device_id(&headers);
     let session_id = crate::handlers::extract_session_id(&headers);
 
-    // Verify ownership and load current state
+    // Validate inputs before taking any lock (pure, no DB access).
+    let new_title = match payload.title.as_deref() {
+        Some(t) => {
+            let v = clamp_str(t.trim(), MAX_CARD_TITLE);
+            if v.is_empty() {
+                return Err(AppError::BadRequest("card title cannot be empty".into()));
+            }
+            Some(v)
+        }
+        None => None,
+    };
+    let new_priority = match payload.priority.as_deref() {
+        Some(p) => Some(validate_priority(p)?.to_string()),
+        None => None,
+    };
+    // Outer Some = field present in patch; inner Option = set-or-clear.
+    let new_due_at: Option<Option<String>> = match &payload.due_at {
+        Some(Some(d)) => Some(Some(normalize_due_at(d)?)),
+        Some(None) => Some(None),
+        None => None,
+    };
+    if let Some(Some(a)) = &payload.assignee_user_id {
+        validate_assignee(&state.pool, &workspace_id, Some(a)).await?;
+    }
+
+    let mut tx = state.pool.begin().await?;
+
+    // Lock the card row, verify ownership, and load current state inside the tx
+    // so the optimistic-lock check and the write are atomic (no TOCTOU window).
     let current_row = sqlx::query(
         r#"SELECT c.id, c.workspace_id, c.board_id, c.column_id, c.title, c.description, c.position,
-                  c.priority, c.due_at, c.assignee_user_id, c.properties_extra,
-                  c.created_by_user_id, c.updated_clock, c.version_id, c.archived_at, c.created_at, c.updated_at
+                  c.priority, CAST(c.due_at AS CHAR) AS due_at, c.assignee_user_id, c.properties_extra,
+                  c.created_by_user_id, c.updated_clock, c.version_id,
+                  CAST(c.archived_at AS CHAR) AS archived_at,
+                  CAST(c.created_at AS CHAR) AS created_at, CAST(c.updated_at AS CHAR) AS updated_at
            FROM kanban_cards c
            JOIN kanban_boards b ON b.id = c.board_id
-           WHERE c.id = ? AND b.workspace_id = ?"#,
+           WHERE c.id = ? AND b.workspace_id = ?
+           FOR UPDATE"#,
     )
     .bind(&card_id)
     .bind(&workspace_id)
-    .fetch_optional(&state.pool)
+    .fetch_optional(&mut *tx)
     .await?
     .ok_or(AppError::NotFound)?;
 
@@ -324,7 +349,7 @@ pub async fn patch_card(
     let current_board_id: String = current_row.try_get("board_id")?;
     let current_position: i32 = current_row.try_get("position")?;
 
-    // Optimistic lock check
+    // Optimistic lock check (inside the tx; an early return rolls it back).
     if let Some(base) = payload.base_updated_clock {
         if base != current_clock && !payload.force.unwrap_or(false) {
             // Build current snapshot
@@ -362,22 +387,6 @@ pub async fn patch_card(
         }
     }
 
-    let new_title = match payload.title.as_deref() {
-        Some(t) => {
-            let v = clamp_str(t.trim(), MAX_CARD_TITLE);
-            if v.is_empty() {
-                return Err(AppError::BadRequest("card title cannot be empty".into()));
-            }
-            Some(v)
-        }
-        None => None,
-    };
-    let new_priority = match payload.priority.as_deref() {
-        Some(p) => Some(validate_priority(p)?.to_string()),
-        None => None,
-    };
-
-    let mut tx = state.pool.begin().await?;
     let next_clock = next_workspace_clock(&mut tx, &workspace_id).await?;
     let new_version = Uuid::new_v4().to_string();
 
@@ -412,7 +421,7 @@ pub async fn patch_card(
             .execute(&mut *tx)
             .await?;
     }
-    if let Some(due_opt) = &payload.due_at {
+    if let Some(due_opt) = &new_due_at {
         match due_opt {
             Some(d) => {
                 sqlx::query("UPDATE kanban_cards SET due_at = ? WHERE id = ?")
@@ -533,30 +542,32 @@ pub async fn move_card(
     let device_id = header_device_id(&headers);
     let session_id = crate::handlers::extract_session_id(&headers);
 
-    // Load current card state
+    let mut tx = state.pool.begin().await?;
+
+    // Lock the card row and load current state inside the tx so the optimistic-lock
+    // check and the position rewrite are atomic (no TOCTOU window).
     let current = sqlx::query(
-        r#"SELECT c.id, c.board_id, c.column_id, c.title, c.position, c.priority, c.archived_at
+        r#"SELECT c.board_id, c.column_id, c.updated_clock,
+                  CAST(c.archived_at AS CHAR) AS archived_at
            FROM kanban_cards c
            JOIN kanban_boards b ON b.id = c.board_id
-           WHERE c.id = ? AND b.workspace_id = ?"#,
+           WHERE c.id = ? AND b.workspace_id = ?
+           FOR UPDATE"#,
     )
     .bind(&payload.card_id)
     .bind(&workspace_id)
-    .fetch_optional(&state.pool)
+    .fetch_optional(&mut *tx)
     .await?
     .ok_or(AppError::NotFound)?;
-    let current_clock: i64 = sqlx::query_scalar("SELECT updated_clock FROM kanban_cards WHERE id = ?")
-        .bind(&payload.card_id)
-        .fetch_one(&state.pool)
-        .await?;
     let current_board_id: String = current.try_get("board_id")?;
     let current_column_id: String = current.try_get("column_id")?;
+    let current_clock: i64 = current.try_get("updated_clock")?;
     let current_archived: Option<String> = current.try_get("archived_at")?;
     if current_archived.is_some() {
         return Err(AppError::BadRequest("cannot move archived card; restore first".into()));
     }
 
-    // Optional optimistic lock
+    // Optional optimistic lock (inside the tx; an early return rolls it back).
     if let Some(base) = payload.base_updated_clock {
         if base != current_clock && !payload.force.unwrap_or(false) {
             let latest = fetch_card_value(&state, &workspace_id, &payload.card_id).await?;
@@ -573,7 +584,7 @@ pub async fn move_card(
         }
     }
 
-    // Verify target column belongs to same board and same workspace
+    // Verify target column belongs to same board and same workspace.
     let target_col: Option<(String, String)> = sqlx::query_as(
         r#"SELECT c.id, c.board_id
            FROM kanban_columns c
@@ -582,7 +593,7 @@ pub async fn move_card(
     )
     .bind(&payload.target_column_id)
     .bind(&workspace_id)
-    .fetch_optional(&state.pool)
+    .fetch_optional(&mut *tx)
     .await?;
     let (_tcid, target_board_id) = target_col.ok_or(AppError::NotFound)?;
     if target_board_id != current_board_id {
@@ -591,7 +602,6 @@ pub async fn move_card(
         ));
     }
 
-    let mut tx = state.pool.begin().await?;
     let next_clock = next_workspace_clock(&mut tx, &workspace_id).await?;
     let new_version = Uuid::new_v4().to_string();
 
@@ -602,7 +612,8 @@ pub async fn move_card(
         let mut all_ids: Vec<(String, i32)> = sqlx::query_as(
             r#"SELECT id, position FROM kanban_cards
                WHERE column_id = ? AND archived_at IS NULL
-               ORDER BY position ASC"#,
+               ORDER BY position ASC
+               FOR UPDATE"#,
         )
         .bind(&payload.target_column_id)
         .fetch_all(&mut *tx)
@@ -625,7 +636,8 @@ pub async fn move_card(
         let source_cards: Vec<(String,)> = sqlx::query_as(
             r#"SELECT id FROM kanban_cards
                WHERE column_id = ? AND archived_at IS NULL AND id <> ?
-               ORDER BY position ASC"#,
+               ORDER BY position ASC
+               FOR UPDATE"#,
         )
         .bind(&current_column_id)
         .bind(&payload.card_id)
@@ -643,7 +655,8 @@ pub async fn move_card(
         let target_cards: Vec<(String,)> = sqlx::query_as(
             r#"SELECT id FROM kanban_cards
                WHERE column_id = ? AND archived_at IS NULL
-               ORDER BY position ASC"#,
+               ORDER BY position ASC
+               FOR UPDATE"#,
         )
         .bind(&payload.target_column_id)
         .fetch_all(&mut *tx)
@@ -726,7 +739,8 @@ pub async fn archive_card(
 
     let row = sqlx::query(
         r#"SELECT c.id, c.workspace_id, c.board_id, c.column_id, c.title, c.description, c.priority,
-                  c.position, c.due_at, c.assignee_user_id, c.properties_extra, c.created_by_user_id
+                  c.position, CAST(c.due_at AS CHAR) AS due_at, c.assignee_user_id,
+                  c.properties_extra, c.created_by_user_id
            FROM kanban_cards c
            JOIN kanban_boards b ON b.id = c.board_id
            WHERE c.id = ? AND b.workspace_id = ?
@@ -793,6 +807,24 @@ pub async fn archive_card(
         .execute(&mut *tx)
         .await?;
 
+    // Compact the source column so the archived card leaves no positional gap
+    // (keeps archive consistent with move_card's compaction).
+    let remaining: Vec<(String,)> = sqlx::query_as(
+        r#"SELECT id FROM kanban_cards
+           WHERE column_id = ? AND archived_at IS NULL
+           ORDER BY position ASC"#,
+    )
+    .bind(&column_id)
+    .fetch_all(&mut *tx)
+    .await?;
+    for (i, (id,)) in remaining.iter().enumerate() {
+        sqlx::query("UPDATE kanban_cards SET position = ? WHERE id = ?")
+            .bind(i as i32)
+            .bind(id)
+            .execute(&mut *tx)
+            .await?;
+    }
+
     tx.commit().await?;
 
     state
@@ -847,10 +879,15 @@ pub async fn restore_card(
 
     let mut tx = state.pool.begin().await?;
 
+    // Pick the current (un-restored) trash row deterministically. A card can be
+    // archived → restored → archived again, leaving several trash rows; only the
+    // most recent un-restored one represents the active archival to undo.
     let trash_row = sqlx::query(
         r#"SELECT id, column_id, label_ids
            FROM kanban_card_trash
-           WHERE card_id = ? AND workspace_id = ?
+           WHERE card_id = ? AND workspace_id = ? AND restored_at IS NULL
+           ORDER BY archived_clock DESC
+           LIMIT 1
            FOR UPDATE"#,
     )
     .bind(&card_id)
@@ -864,7 +901,22 @@ pub async fn restore_card(
     let label_ids_json: serde_json::Value = trash_row.try_get("label_ids")?;
     let label_ids: Vec<String> = serde_json::from_value(label_ids_json).unwrap_or_default();
 
-    // Verify card still exists in kanban_cards and target column still exists
+    // Lock the card row and confirm it is actually archived.
+    let card_row = sqlx::query(
+        r#"SELECT CAST(archived_at AS CHAR) AS archived_at FROM kanban_cards
+           WHERE id = ? AND workspace_id = ? FOR UPDATE"#,
+    )
+    .bind(&card_id)
+    .bind(&workspace_id)
+    .fetch_optional(&mut *tx)
+    .await?
+    .ok_or(AppError::NotFound)?;
+    let archived_at: Option<String> = card_row.try_get("archived_at")?;
+    if archived_at.is_none() {
+        return Err(AppError::BadRequest("card is not archived".into()));
+    }
+
+    // Verify the original column still exists.
     let column_exists: Option<String> = sqlx::query_scalar(
         r#"SELECT c.id FROM kanban_columns c
            JOIN kanban_boards b ON b.id = c.board_id
@@ -883,12 +935,23 @@ pub async fn restore_card(
     let next_clock = next_workspace_clock(&mut tx, &workspace_id).await?;
     let new_version = Uuid::new_v4().to_string();
 
+    // Append to the end of the target column (active cards only); the card's old
+    // frozen position may now collide with cards added while it was archived.
+    let new_pos: i32 = sqlx::query_scalar(
+        r#"SELECT COALESCE(MAX(position), -1) + 1 FROM kanban_cards
+           WHERE column_id = ? AND archived_at IS NULL"#,
+    )
+    .bind(&target_column_id)
+    .fetch_one(&mut *tx)
+    .await?;
+
     sqlx::query(
         r#"UPDATE kanban_cards
-           SET archived_at = NULL, column_id = ?, updated_clock = ?, version_id = ?
+           SET archived_at = NULL, column_id = ?, position = ?, updated_clock = ?, version_id = ?
            WHERE id = ?"#,
     )
     .bind(&target_column_id)
+    .bind(new_pos)
     .bind(next_clock)
     .bind(&new_version)
     .bind(&card_id)
@@ -1011,6 +1074,88 @@ pub async fn delete_card(
     Ok(StatusCode::NO_CONTENT.into_response())
 }
 
+// ── list_card_trash (archived cards with audit metadata) ──
+
+pub async fn list_card_trash(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Path((workspace_id, board_id)): Path<(String, String)>,
+) -> Result<Response, AppError> {
+    let user = extract_user(&state.pool, &headers).await?;
+    require_workspace_role(
+        &state.pool,
+        &workspace_id,
+        &user.id,
+        &["owner", "admin", "editor", "viewer"],
+    )
+    .await?;
+
+    // Verify board belongs to workspace
+    let exists: Option<String> = sqlx::query_scalar(
+        "SELECT id FROM kanban_boards WHERE id = ? AND workspace_id = ?",
+    )
+    .bind(&board_id)
+    .bind(&workspace_id)
+    .fetch_optional(&state.pool)
+    .await?;
+    if exists.is_none() {
+        return Err(AppError::NotFound);
+    }
+
+    // Only active (un-restored, not-yet-expired) archival rows.
+    let rows = sqlx::query(
+        r#"SELECT id, card_id, workspace_id, board_id, column_id, title, description, priority, position,
+                  CAST(due_at AS CHAR) AS due_at, assignee_user_id, label_ids,
+                  archived_by_user_id, archived_by_device_id, source_device_id, source_user_id,
+                  archived_clock, CAST(archived_at AS CHAR) AS archived_at,
+                  CAST(expires_at AS CHAR) AS expires_at,
+                  CAST(restored_at AS CHAR) AS restored_at, restored_by_user_id,
+                  restored_by_device_id, restored_clock
+           FROM kanban_card_trash
+           WHERE board_id = ? AND workspace_id = ?
+             AND restored_at IS NULL AND expires_at > CURRENT_TIMESTAMP
+           ORDER BY archived_at DESC"#,
+    )
+    .bind(&board_id)
+    .bind(&workspace_id)
+    .fetch_all(&state.pool)
+    .await?;
+
+    let mut items: Vec<KanbanCardTrashItem> = Vec::with_capacity(rows.len());
+    for r in rows {
+        let label_ids_json: serde_json::Value =
+            r.try_get("label_ids").unwrap_or_else(|_| serde_json::json!([]));
+        let label_ids: Vec<String> = serde_json::from_value(label_ids_json).unwrap_or_default();
+        items.push(KanbanCardTrashItem {
+            id: r.try_get("id")?,
+            card_id: r.try_get("card_id")?,
+            workspace_id: r.try_get("workspace_id")?,
+            board_id: r.try_get("board_id")?,
+            column_id: r.try_get("column_id")?,
+            title: r.try_get("title")?,
+            description: r.try_get("description")?,
+            priority: r.try_get("priority")?,
+            position: r.try_get("position")?,
+            due_at: r.try_get::<Option<String>, _>("due_at")?,
+            assignee_user_id: r.try_get("assignee_user_id")?,
+            label_ids,
+            archived_by_user_id: r.try_get("archived_by_user_id")?,
+            archived_by_device_id: r.try_get("archived_by_device_id")?,
+            source_device_id: r.try_get("source_device_id")?,
+            source_user_id: r.try_get("source_user_id")?,
+            archived_clock: r.try_get("archived_clock")?,
+            archived_at: r.try_get::<String, _>("archived_at")?,
+            expires_at: r.try_get::<String, _>("expires_at")?,
+            restored_at: r.try_get::<Option<String>, _>("restored_at")?,
+            restored_by_user_id: r.try_get("restored_by_user_id")?,
+            restored_by_device_id: r.try_get("restored_by_device_id")?,
+            restored_clock: r.try_get("restored_clock")?,
+        });
+    }
+
+    Ok(Json(items).into_response())
+}
+
 // ── Shared helpers ──
 
 pub(crate) async fn fetch_card_response(
@@ -1029,8 +1174,10 @@ pub(crate) async fn fetch_card_value(
 ) -> Result<KanbanCard, AppError> {
     let r = sqlx::query(
         r#"SELECT c.id, c.workspace_id, c.board_id, c.column_id, c.title, c.description, c.position,
-                  c.priority, c.due_at, c.assignee_user_id, c.properties_extra, c.created_by_user_id,
-                  c.updated_clock, c.version_id, c.archived_at, c.created_at, c.updated_at
+                  c.priority, CAST(c.due_at AS CHAR) AS due_at, c.assignee_user_id, c.properties_extra,
+                  c.created_by_user_id, c.updated_clock, c.version_id,
+                  CAST(c.archived_at AS CHAR) AS archived_at,
+                  CAST(c.created_at AS CHAR) AS created_at, CAST(c.updated_at AS CHAR) AS updated_at
            FROM kanban_cards c
            JOIN kanban_boards b ON b.id = c.board_id
            WHERE c.id = ? AND b.workspace_id = ?"#,
