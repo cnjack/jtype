@@ -3,6 +3,7 @@ pub mod auth;
 pub mod document;
 pub mod domain;
 pub mod folder;
+pub mod kanban;
 pub mod live;
 pub mod member;
 pub mod oauth;

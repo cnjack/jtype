@@ -44,6 +44,12 @@ fn all_migrations() -> Vec<Migration> {
             up: include_str!("../../migrations/0005_sites.up.sql"),
             down: include_str!("../../migrations/0005_sites.down.sql"),
         },
+        Migration {
+            version: 7,
+            name: "kanban",
+            up: include_str!("../../migrations/0007_kanban.up.sql"),
+            down: include_str!("../../migrations/0007_kanban.down.sql"),
+        },
     ]
 }
 
@@ -118,7 +124,34 @@ async fn exec_sql(pool: &Pool<MySql>, sql: &str) -> Result<(), AppError> {
 // ---------------------------------------------------------------------------
 
 /// Apply all pending UP migrations (like `migrate up`).
+///
+/// Serializes concurrent callers via a MySQL named lock so that multiple
+/// processes (or parallel integration tests, each with its own pool, sharing
+/// one database) apply the schema exactly once instead of racing on DDL
+/// ("Duplicate column" / "table already exists"). The lock is held on a single
+/// dedicated connection for the whole pass; everyone else waits, then sees the
+/// schema already current and skips.
 pub async fn run_all(pool: &Pool<MySql>) -> Result<(), AppError> {
+    let mut lock_conn = pool.acquire().await?;
+    let acquired: Option<i64> = sqlx::query_scalar("SELECT GET_LOCK('jtype_migrations', 60)")
+        .fetch_one(&mut *lock_conn)
+        .await?;
+    if acquired != Some(1) {
+        return Err(AppError::Server(
+            "timed out acquiring migration lock 'jtype_migrations'".into(),
+        ));
+    }
+
+    let result = run_all_locked(pool).await;
+
+    // Best-effort release; dropping the connection also frees the lock.
+    let _ = sqlx::query("SELECT RELEASE_LOCK('jtype_migrations')")
+        .execute(&mut *lock_conn)
+        .await;
+    result
+}
+
+async fn run_all_locked(pool: &Pool<MySql>) -> Result<(), AppError> {
     ensure_schema_table(pool).await?;
     let cur = current_version(pool).await?;
     let migrations = all_migrations();

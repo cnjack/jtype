@@ -104,6 +104,47 @@ pub async fn req(
     (status, json)
 }
 
+/// Same as `req` but attaches `X-Session-Id` header (used to test sender exclusion).
+pub async fn req_with_session(
+    app: Router,
+    method: &str,
+    uri: &str,
+    token: Option<&str>,
+    body: Option<Value>,
+    session_id: Option<&str>,
+) -> (StatusCode, Value) {
+    let body_bytes = match &body {
+        Some(v) => serde_json::to_vec(v).unwrap(),
+        None => vec![],
+    };
+
+    let mut builder = Request::builder()
+        .method(method)
+        .uri(uri)
+        .header("content-type", "application/json");
+
+    if let Some(t) = token {
+        builder = builder.header("authorization", format!("Bearer {t}"));
+    }
+    if let Some(s) = session_id {
+        builder = builder.header("x-session-id", s);
+    }
+
+    let request = builder.body(Body::from(body_bytes)).unwrap();
+    let response = app.oneshot(request).await.unwrap();
+    let status = response.status();
+    let bytes = axum::body::to_bytes(response.into_body(), 10 * 1024 * 1024)
+        .await
+        .unwrap();
+    let json = if bytes.is_empty() {
+        Value::Null
+    } else {
+        serde_json::from_slice(&bytes)
+            .unwrap_or_else(|_| Value::String(String::from_utf8_lossy(&bytes).into()))
+    };
+    (status, json)
+}
+
 // ── Seed helpers ──────────────────────────────────────────────────────────────
 
 /// Register a user. Returns (token, username).

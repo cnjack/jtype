@@ -19,6 +19,7 @@ import { Landing } from './pages/Landing'
 import { Login } from './pages/Login'
 import { Admin } from './pages/Admin'
 import { Workspace } from './pages/Workspace'
+import { Kanban } from './pages/Kanban'
 import { DeviceOAuth } from './pages/DeviceOAuth'
 import { InviteAccept } from './pages/InviteAccept'
 import { api } from './api'
@@ -48,6 +49,7 @@ function renderApp() {
                   <Route path="/workspaces" element={<WorkspaceRedirect />} />
                   <Route path="/admin" element={<Admin />} />
                   <Route path="/workspaces/:workspaceId" element={<Workspace />} />
+                  <Route path="/workspaces/:workspaceId/kanban" element={<Kanban />} />
                 </Route>
               </Routes>
             </BrowserRouter>

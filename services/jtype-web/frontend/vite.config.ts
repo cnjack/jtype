@@ -29,7 +29,9 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/api': 'http://localhost:13345',
+      // `ws: true` proxies the WebSocket upgrade for /api/v1/workspaces/:id/live
+      // so realtime kanban/document events work through the dev server too.
+      '/api': { target: 'http://localhost:13345', ws: true },
       '/health': 'http://localhost:13345',
     },
   },
