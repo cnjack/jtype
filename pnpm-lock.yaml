@@ -51,7 +51,7 @@ importers:
         specifier: ^18.0.2
         version: 18.0.5
       mermaid:
-        specifier: ^11.14.0
+        specifier: ^11.15.0
         version: 11.15.0
       morphdom:
         specifier: ^2.7.8
