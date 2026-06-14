@@ -46,8 +46,8 @@ msgstr "{0} documents unpublished."
 msgid "{0} live"
 msgstr "{0} live"
 
-#. placeholder {0}: documents.length
-#. placeholder {1}: documents.length === 1 ? '' : 's'
+#. placeholder {0}: markdownDocs.length
+#. placeholder {1}: markdownDocs.length === 1 ? '' : 's'
 #: src/pages/Workspace.tsx
 msgid "{0} Markdown file{1}"
 msgstr "{0} Markdown file{1}"
@@ -79,6 +79,22 @@ msgstr "<0>{0}</0> has invited you to join <1>{1}</1> as <2>{2}</2>."
 #: src/pages/Workspace.tsx
 msgid "⚠ Modified by {0}{1}"
 msgstr "⚠ Modified by {0}{1}"
+
+#: src/pages/Landing.tsx
+msgid "A jtype CLI and a local stdio MCP bridge."
+msgstr "A jtype CLI and a local stdio MCP bridge."
+
+#: src/components/NewResourceDialog.tsx
+msgid "A kanban board over your notes"
+msgstr "A kanban board over your notes"
+
+#: src/components/NewResourceDialog.tsx
+msgid "A Markdown document you write and preview"
+msgstr "A Markdown document you write and preview"
+
+#: src/components/NewResourceDialog.tsx
+msgid "A text document you write and preview"
+msgstr "A text document you write and preview"
 
 #: src/pages/InviteAccept.tsx
 msgid "Accept invitation"
@@ -122,6 +138,18 @@ msgstr "Add TXT record <0>{0}</0>, then verify DNS."
 msgid "Admin"
 msgstr "Admin"
 
+#: src/pages/Landing.tsx
+msgid "AI"
+msgstr "AI"
+
+#: src/components/Layout.tsx
+msgid "AI Connections"
+msgstr "AI Connections"
+
+#: src/pages/Landing.tsx
+msgid "AI-ready"
+msgstr "AI-ready"
+
 #: src/pages/Login.tsx
 msgid "AI-Ready"
 msgstr "AI-Ready"
@@ -155,6 +183,10 @@ msgstr "Authorize Device"
 msgid "Authorizing..."
 msgstr "Authorizing..."
 
+#: src/components/NewResourceDialog.tsx
+msgid "Back"
+msgstr "Back"
+
 #: src/pages/Workspace.tsx
 msgid "Bind custom domains and manage certificates."
 msgstr "Bind custom domains and manage certificates."
@@ -166,6 +198,10 @@ msgstr "Bind here"
 #: src/pages/Landing.tsx
 msgid "Bind to a cloud workspace"
 msgstr "Bind to a cloud workspace"
+
+#: src/components/NewResourceDialog.tsx
+msgid "Board name"
+msgstr "Board name"
 
 #: src/pages/Workspace.tsx
 msgid "Bold"
@@ -188,10 +224,19 @@ msgstr "Bound here"
 msgid "Bound to {0}"
 msgstr "Bound to {0}"
 
+#: src/components/NewResourceDialog.tsx
+msgid "Bring in an image or PDF from your computer"
+msgstr "Bring in an image or PDF from your computer"
+
+#: src/pages/Landing.tsx
+msgid "Bring your notes and kanban into any AI agent."
+msgstr "Bring your notes and kanban into any AI agent."
+
 #: src/pages/Landing.tsx
 msgid "Calm desktop writing, workspace-scoped sync, and public Markdown publishing in one product flow. Your notes stay local until a cloud workspace has a job to do."
 msgstr "Calm desktop writing, workspace-scoped sync, and public Markdown publishing in one product flow. Your notes stay local until a cloud workspace has a job to do."
 
+#: src/components/NewResourceDialog.tsx
 #: src/pages/Workspace.tsx
 msgid "Cancel"
 msgstr "Cancel"
@@ -216,9 +261,17 @@ msgstr "Choose a cloud workspace"
 msgid "Choose a note or create a new one."
 msgstr "Choose a note or create a new one."
 
+#: src/components/NewResourceDialog.tsx
+msgid "Choose what you want to create."
+msgstr "Choose what you want to create."
+
 #: src/pages/Landing.tsx
 msgid "Clean read-only output for notes, docs, releases, and guides."
 msgstr "Clean read-only output for notes, docs, releases, and guides."
+
+#: src/pages/Landing.tsx
+msgid "CLI + stdio"
+msgstr "CLI + stdio"
 
 #: src/components/Layout.tsx
 #: src/pages/Admin.tsx
@@ -251,6 +304,10 @@ msgstr "Cloud workspaces"
 msgid "Collapse all"
 msgstr "Collapse all"
 
+#: src/pages/Landing.tsx
+msgid "Connect your AI"
+msgstr "Connect your AI"
+
 #: src/pages/Workspace.tsx
 msgid "Connected"
 msgstr "Connected"
@@ -271,6 +328,10 @@ msgstr "Copy link"
 msgid "Copy path"
 msgstr "Copy path"
 
+#: src/components/NewResourceDialog.tsx
+msgid "Create"
+msgstr "Create"
+
 #: src/pages/Landing.tsx
 msgid "Create a workspace for sync, publishing, and account settings. Local vault copy stays precise: folders are vaults, server-side collaboration is a cloud workspace."
 msgstr "Create a workspace for sync, publishing, and account settings. Local vault copy stays precise: folders are vaults, server-side collaboration is a cloud workspace."
@@ -282,6 +343,10 @@ msgstr "Create account"
 #: src/pages/Workspace.tsx
 msgid "Create your first Markdown note."
 msgstr "Create your first Markdown note."
+
+#: src/components/NewResourceDialog.tsx
+msgid "Creates in"
+msgstr "Creates in"
 
 #: src/pages/Workspace.tsx
 msgid "Custom domains"
@@ -381,9 +446,13 @@ msgstr "Document info"
 msgid "Document Info"
 msgstr "Document Info"
 
+#: src/components/NewResourceDialog.tsx
+msgid "Document name"
+msgstr "Document name"
+
 #: src/pages/Workspace.tsx
-msgid "Document path (e.g. notes/hello.md):"
-msgstr "Document path (e.g. notes/hello.md):"
+#~ msgid "Document path (e.g. notes/hello.md):"
+#~ msgstr "Document path (e.g. notes/hello.md):"
 
 #: src/pages/Workspace.tsx
 msgid "Document published."
@@ -520,6 +589,10 @@ msgstr "Go to workspaces"
 msgid "Hide"
 msgstr "Hide"
 
+#: src/components/NewResourceDialog.tsx
+msgid "Import file"
+msgstr "Import file"
+
 #: src/pages/Login.tsx
 msgid "Indexed and ready for intelligent assistance."
 msgstr "Indexed and ready for intelligent assistance."
@@ -584,6 +657,18 @@ msgstr "Italic (Ctrl+I)"
 msgid "Joining…"
 msgstr "Joining…"
 
+#: src/pages/Landing.tsx
+msgid "JType ships a built-in MCP server. Connect Claude, Cursor, or any MCP client over a secure OAuth flow, then ask it to search your notes, draft a doc, or triage your board. Tokens are scoped, expiring, and revocable — and admin always stays off-limits."
+msgstr "JType ships a built-in MCP server. Connect Claude, Cursor, or any MCP client over a secure OAuth flow, then ask it to search your notes, draft a doc, or triage your board. Tokens are scoped, expiring, and revocable — and admin always stays off-limits."
+
+#: src/components/NewResourceDialog.tsx
+msgid "Kanban board"
+msgstr "Kanban board"
+
+#: src/pages/Landing.tsx
+msgid "Kanban tools"
+msgstr "Kanban tools"
+
 #: src/pages/Workspace.tsx
 msgid "Keep the publish name and workspace name here. The workspace slug and storage limit are assigned by the service."
 msgstr "Keep the publish name and workspace name here. The workspace slug and storage limit are assigned by the service."
@@ -619,6 +704,10 @@ msgstr "Link (Ctrl+K)"
 #: src/pages/Workspace.tsx
 msgid "Link copied!"
 msgstr "Link copied!"
+
+#: src/pages/Landing.tsx
+msgid "List, create, update, and move cards across columns."
+msgstr "List, create, update, and move cards across columns."
 
 #: src/pages/Landing.tsx
 msgid "Live preview"
@@ -676,6 +765,10 @@ msgstr "Manage your JType Cloud account and connected devices."
 msgid "Markdown"
 msgstr "Markdown"
 
+#: src/components/NewResourceDialog.tsx
+msgid "Markdown document"
+msgstr "Markdown document"
+
 #: src/pages/Workspace.tsx
 msgid "Markdown editor"
 msgstr "Markdown editor"
@@ -714,10 +807,15 @@ msgstr "Name, publishing identity, and storage"
 msgid "New"
 msgstr "New"
 
+#: src/components/NewResourceDialog.tsx
+msgid "New board"
+msgstr "New board"
+
 #: src/pages/Workspace.tsx
 msgid "New cloud workspace"
 msgstr "New cloud workspace"
 
+#: src/components/NewResourceDialog.tsx
 #: src/pages/Workspace.tsx
 msgid "New document"
 msgstr "New document"
@@ -727,8 +825,8 @@ msgid "New Document"
 msgstr "New Document"
 
 #: src/pages/Workspace.tsx
-msgid "New document name (e.g. note.md):"
-msgstr "New document name (e.g. note.md):"
+#~ msgid "New document name (e.g. note.md):"
+#~ msgstr "New document name (e.g. note.md):"
 
 #: src/pages/Workspace.tsx
 msgid "New folder"
@@ -737,6 +835,10 @@ msgstr "New folder"
 #: src/pages/Workspace.tsx
 msgid "New folder name:"
 msgstr "New folder name:"
+
+#: src/components/NewResourceDialog.tsx
+msgid "New resource"
+msgstr "New resource"
 
 #: src/pages/Workspace.tsx
 msgid "No cloud workspaces yet."
@@ -790,6 +892,14 @@ msgstr "No unsaved changes"
 msgid "Not published"
 msgstr "Not published"
 
+#: src/pages/Landing.tsx
+msgid "Notes tools"
+msgstr "Notes tools"
+
+#: src/pages/Landing.tsx
+msgid "OAuth + PKCE"
+msgstr "OAuth + PKCE"
+
 #: src/pages/Workspace.tsx
 msgid "Offline"
 msgstr "Offline"
@@ -799,8 +909,16 @@ msgid "Offline ({pendingCount} saved)"
 msgstr "Offline ({pendingCount} saved)"
 
 #: src/pages/Landing.tsx
+msgid "One Markdown source shows up everywhere it matters: local files on your machine, sync state in the cloud, and published output for readers — all visible at once."
+msgstr "One Markdown source shows up everywhere it matters: local files on your machine, sync state in the cloud, and published output for readers — all visible at once."
+
+#: src/pages/Landing.tsx
 msgid "One Markdown source, three calm surfaces."
 msgstr "One Markdown source, three calm surfaces."
+
+#: src/pages/Landing.tsx
+msgid "One-click browser approval — no token to paste."
+msgstr "One-click browser approval — no token to paste."
 
 #: src/pages/Workspace.tsx
 msgid "Only owners and admins can change workspace settings"
@@ -1072,6 +1190,10 @@ msgid "Search files..."
 msgstr "Search files..."
 
 #: src/pages/Landing.tsx
+msgid "Search, read, create, update, and append documents."
+msgstr "Search, read, create, update, and append documents."
+
+#: src/pages/Landing.tsx
 msgid "See product flow"
 msgstr "See product flow"
 
@@ -1224,8 +1346,8 @@ msgid "The landing story follows the real JType loop."
 msgstr "The landing story follows the real JType loop."
 
 #: src/pages/Landing.tsx
-msgid "The page borrows getdesign.app's strongest move: show the actual system doing the explaining. For JType, that means local files, sync state, and published output all visible at once."
-msgstr "The page borrows getdesign.app's strongest move: show the actual system doing the explaining. For JType, that means local files, sync state, and published output all visible at once."
+#~ msgid "The page borrows getdesign.app's strongest move: show the actual system doing the explaining. For JType, that means local files, sync state, and published output all visible at once."
+#~ msgstr "The page borrows getdesign.app's strongest move: show the actual system doing the explaining. For JType, that means local files, sync state, and published output all visible at once."
 
 #: src/pages/Workspace.tsx
 msgid "The public snapshot is behind the current document."
@@ -1255,6 +1377,10 @@ msgstr "This will permanently delete <0>{0}</0> and all its documents. This cann
 #: src/pages/Workspace.tsx
 msgid "Toggle favorite"
 msgstr "Toggle favorite"
+
+#: src/components/NewResourceDialog.tsx
+msgid "Track work in columns and cards"
+msgstr "Track work in columns and cards"
 
 #: src/pages/Workspace.tsx
 msgid "Transfer"
@@ -1355,6 +1481,10 @@ msgstr "Vault"
 #: src/pages/Workspace.tsx
 msgid "Vault ready"
 msgstr "Vault ready"
+
+#: src/components/NewResourceDialog.tsx
+msgid "vault root"
+msgstr "vault root"
 
 #: src/pages/Workspace.tsx
 msgid "Vault space"

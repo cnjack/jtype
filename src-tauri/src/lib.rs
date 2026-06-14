@@ -1,4 +1,3 @@
-mod kanban_local;
 mod workspace;
 mod ws_client;
 
@@ -163,6 +162,11 @@ fn write_binary_file(path: String, content: Vec<u8>) -> Result<(), String> {
 }
 
 #[tauri::command]
+fn read_binary_file(path: String) -> Result<Vec<u8>, String> {
+    fs::read(PathBuf::from(path)).map_err(|error| error.to_string())
+}
+
+#[tauri::command]
 fn open_workspace(path: String) -> Result<WorkspaceSnapshot, String> {
     workspace::open_workspace(&PathBuf::from(path))
 }
@@ -181,6 +185,54 @@ fn create_workspace_entry(
     let root = PathBuf::from(root_path);
     workspace::create_entry(&root, &relative_path, kind)?;
     workspace::open_workspace(&root)
+}
+
+/// Read a `.board` view file (plain text/JSON; bypasses the markdown-only gate).
+#[tauri::command]
+fn read_board_file(path: String) -> Result<String, String> {
+    fs::read_to_string(PathBuf::from(path)).map_err(|error| error.to_string())
+}
+
+/// Write a `.board` view file (plain text/JSON), creating parent dirs as needed.
+#[tauri::command]
+fn write_board_file(path: String, content: String) -> Result<(), String> {
+    let target = PathBuf::from(path);
+    if let Some(parent) = target.parent() {
+        fs::create_dir_all(parent).map_err(|error| error.to_string())?;
+    }
+    fs::write(target, content).map_err(|error| error.to_string())
+}
+
+/// Create a new `.board` file with the given JSON config and return the refreshed workspace.
+#[tauri::command]
+fn create_board(
+    root_path: String,
+    relative_path: String,
+    content: String,
+) -> Result<WorkspaceSnapshot, String> {
+    let root = PathBuf::from(&root_path);
+    workspace::create_entry(&root, &relative_path, EntryKind::Board)?;
+    let target = root.join(&relative_path);
+    fs::write(&target, content).map_err(|error| error.to_string())?;
+    workspace::open_workspace(&root)
+}
+
+/// Scan the vault for card-notes belonging to a board (frontmatter `board == board_id`).
+#[tauri::command]
+fn scan_board_cards(
+    root_path: String,
+    board_id: String,
+) -> Result<Vec<workspace::BoardCardInfo>, String> {
+    workspace::scan_board_cards(&PathBuf::from(root_path), &board_id)
+}
+
+/// List card templates (`.md` files in `<board_dir>/.templates/`).
+#[tauri::command]
+fn scan_card_templates(
+    root_path: String,
+    board_dir: String,
+) -> Result<Vec<workspace::CardTemplateInfo>, String> {
+    workspace::scan_card_templates(&PathBuf::from(root_path), &board_dir)
 }
 
 #[tauri::command]
@@ -625,122 +677,6 @@ fn save_trash_metadata_cmd(root_path: String, metadata: TrashMetadata) -> Result
     workspace::save_trash_metadata(&PathBuf::from(root_path), &metadata)
 }
 
-// ── Local-first Kanban commands ──
-//
-// Each command loads the on-disk store, applies one offline mutation (which also
-// queues a pending op for cloud replay), then persists. The full store is
-// returned so the frontend can re-render immediately — works with no network.
-
-#[tauri::command]
-fn kanban_load(root_path: String) -> Result<kanban_local::LocalKanbanStore, String> {
-    kanban_local::load_kanban_store(&PathBuf::from(root_path))
-}
-
-/// Apply a mutating closure to the store, persist, and return the new store.
-fn kanban_mutate<F>(root_path: &str, f: F) -> Result<kanban_local::LocalKanbanStore, String>
-where
-    F: FnOnce(&mut kanban_local::LocalKanbanStore) -> Result<(), String>,
-{
-    let root = PathBuf::from(root_path);
-    let mut store = kanban_local::load_kanban_store(&root)?;
-    f(&mut store)?;
-    kanban_local::save_kanban_store(&root, &store)?;
-    Ok(store)
-}
-
-#[tauri::command]
-fn kanban_create_board(
-    root_path: String,
-    id: String,
-    name: String,
-    description: Option<String>,
-    column_ids: Vec<String>,
-) -> Result<kanban_local::LocalKanbanStore, String> {
-    if column_ids.len() != 3 {
-        return Err("column_ids must contain exactly 3 ids".into());
-    }
-    let cols = [column_ids[0].as_str(), column_ids[1].as_str(), column_ids[2].as_str()];
-    kanban_mutate(&root_path, |s| s.create_board(&id, &name, description, cols).map(|_| ()))
-}
-
-#[tauri::command]
-fn kanban_delete_board(root_path: String, board_id: String) -> Result<kanban_local::LocalKanbanStore, String> {
-    kanban_mutate(&root_path, |s| s.delete_board(&board_id))
-}
-
-#[tauri::command]
-#[allow(clippy::too_many_arguments)]
-fn kanban_create_card(
-    root_path: String,
-    board_id: String,
-    column_id: String,
-    id: String,
-    title: String,
-    description: Option<String>,
-    priority: Option<String>,
-    label_ids: Option<Vec<String>>,
-) -> Result<kanban_local::LocalKanbanStore, String> {
-    let priority = priority.unwrap_or_else(|| "none".to_string());
-    let label_ids = label_ids.unwrap_or_default();
-    kanban_mutate(&root_path, |s| {
-        s.create_card(&board_id, &column_id, &id, &title, description, &priority, label_ids)
-            .map(|_| ())
-    })
-}
-
-#[tauri::command]
-fn kanban_move_card(
-    root_path: String,
-    board_id: String,
-    card_id: String,
-    target_column_id: String,
-    target_position: i32,
-) -> Result<kanban_local::LocalKanbanStore, String> {
-    kanban_mutate(&root_path, |s| s.move_card(&board_id, &card_id, &target_column_id, target_position))
-}
-
-#[tauri::command]
-fn kanban_archive_card(
-    root_path: String,
-    board_id: String,
-    card_id: String,
-    archived_at: String,
-) -> Result<kanban_local::LocalKanbanStore, String> {
-    kanban_mutate(&root_path, |s| s.archive_card(&board_id, &card_id, &archived_at))
-}
-
-#[tauri::command]
-fn kanban_restore_card(
-    root_path: String,
-    board_id: String,
-    card_id: String,
-) -> Result<kanban_local::LocalKanbanStore, String> {
-    kanban_mutate(&root_path, |s| s.restore_card(&board_id, &card_id))
-}
-
-/// Drain the pending-op queue (for the sync layer to replay to the cloud).
-#[tauri::command]
-fn kanban_take_pending_ops(root_path: String) -> Result<Vec<kanban_local::PendingKanbanOp>, String> {
-    let root = PathBuf::from(&root_path);
-    let mut store = kanban_local::load_kanban_store(&root)?;
-    let ops = store.take_pending_ops();
-    kanban_local::save_kanban_store(&root, &store)?;
-    Ok(ops)
-}
-
-/// Merge a board snapshot received from the cloud (multi-device convergence).
-#[tauri::command]
-fn kanban_merge_remote_board(
-    root_path: String,
-    board: kanban_local::LocalBoard,
-    cloud_clock: i64,
-) -> Result<kanban_local::LocalKanbanStore, String> {
-    kanban_mutate(&root_path, |s| {
-        s.merge_remote_board(board, cloud_clock);
-        Ok(())
-    })
-}
-
 // ── Vault settings types ──
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
@@ -895,9 +831,15 @@ pub fn run() {
             read_markdown_file,
             write_markdown_file,
             write_binary_file,
+            read_binary_file,
             open_workspace,
             detect_vault_root,
             create_workspace_entry,
+            read_board_file,
+            write_board_file,
+            create_board,
+            scan_board_cards,
+            scan_card_templates,
             rename_workspace_entry,
             delete_workspace_entry,
             export_static_site,
@@ -931,15 +873,6 @@ pub fn run() {
             list_folder_contents_cmd,
             load_trash_metadata_cmd,
             save_trash_metadata_cmd,
-            kanban_load,
-            kanban_create_board,
-            kanban_delete_board,
-            kanban_create_card,
-            kanban_move_card,
-            kanban_archive_card,
-            kanban_restore_card,
-            kanban_take_pending_ops,
-            kanban_merge_remote_board,
             start_cloud_listener,
             stop_cloud_listener,
             cloud_ws_send,

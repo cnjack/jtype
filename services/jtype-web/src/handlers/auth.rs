@@ -112,3 +112,44 @@ pub async fn create_session(
         .await?;
     Ok(token)
 }
+
+/// Create a scoped, optionally-expiring session token (e.g. an `mcp` token for
+/// an AI client). `ttl_seconds = None` means no expiry; `label` helps the user
+/// recognize the token in their token list.
+pub async fn create_scoped_session(
+    pool: &sqlx::Pool<sqlx::MySql>,
+    user_id: &str,
+    scope: &str,
+    ttl_seconds: Option<i64>,
+    label: Option<&str>,
+) -> Result<String, AppError> {
+    let token = random_token();
+    let token_hash = sha256_hex(&token);
+    match ttl_seconds {
+        Some(ttl) => {
+            sqlx::query(
+                r#"INSERT INTO sessions (token_hash, user_id, scope, label, expires_at)
+                   VALUES (?, ?, ?, ?, DATE_ADD(CURRENT_TIMESTAMP, INTERVAL ? SECOND))"#,
+            )
+            .bind(token_hash)
+            .bind(user_id)
+            .bind(scope)
+            .bind(label)
+            .bind(ttl)
+            .execute(pool)
+            .await?;
+        }
+        None => {
+            sqlx::query(
+                "INSERT INTO sessions (token_hash, user_id, scope, label) VALUES (?, ?, ?, ?)",
+            )
+            .bind(token_hash)
+            .bind(user_id)
+            .bind(scope)
+            .bind(label)
+            .execute(pool)
+            .await?;
+        }
+    }
+    Ok(token)
+}

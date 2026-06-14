@@ -22,6 +22,7 @@ import { Workspace } from './pages/Workspace'
 import { Kanban } from './pages/Kanban'
 import { DeviceOAuth } from './pages/DeviceOAuth'
 import { InviteAccept } from './pages/InviteAccept'
+import { AiConnections } from './pages/AiConnections'
 import { api } from './api'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -48,6 +49,7 @@ function renderApp() {
                   <Route path="/dashboard" element={<WorkspaceRedirect />} />
                   <Route path="/workspaces" element={<WorkspaceRedirect />} />
                   <Route path="/admin" element={<Admin />} />
+                  <Route path="/ai" element={<AiConnections />} />
                   <Route path="/workspaces/:workspaceId" element={<Workspace />} />
                   <Route path="/workspaces/:workspaceId/kanban" element={<Kanban />} />
                 </Route>

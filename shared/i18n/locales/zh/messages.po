@@ -36,6 +36,32 @@ msgstr "接受云端"
 msgid "Accept local"
 msgstr "接受本地"
 
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Add column"
+msgstr "添加列"
+
+#: ../../../shared/components/board/BoardPeek.tsx
+msgid "Add details..."
+msgstr "添加详情..."
+
+#: ../../../shared/components/board/controls.tsx
+msgid "Add labels"
+msgstr "添加标签"
+
+#: ../../../shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardTable.tsx
+msgid "Assignee"
+msgstr "负责人"
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Blank card"
+msgstr "空白卡片"
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Board"
+msgstr "看板"
+
 #: ../../../shared/components/EditorToolbar.tsx
 msgid "Bold"
 msgstr "粗体"
@@ -49,6 +75,26 @@ msgstr "粗体 (Ctrl+B)"
 msgid "Cancel"
 msgstr "取消"
 
+#: ../../../shared/components/board/BoardPeek.tsx
+msgid "Card"
+msgstr "卡片"
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Card title (Enter to add, Esc to cancel)"
+msgstr "卡片标题(回车添加,Esc 取消)"
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "cards"
+msgstr "张卡片"
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Clear filter"
+msgstr "清除筛选"
+
+#: ../../../shared/components/board/BoardPeek.tsx
+msgid "Close"
+msgstr "关闭"
+
 #: ../../../shared/components/ConflictResolver.tsx
 msgid "Cloud (remote)"
 msgstr "云端（远程）"
@@ -57,9 +103,82 @@ msgstr "云端（远程）"
 msgid "Code"
 msgstr "代码"
 
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Collapse column"
+msgstr "折叠列"
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Color"
+msgstr "颜色"
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Color columns"
+msgstr "彩色列"
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Column name"
+msgstr ""
+
+#: ../../../shared/components/board/BoardPeek.tsx
+msgid "comma, separated"
+msgstr "用逗号分隔"
+
 #: ../../../shared/components/ConfirmDialog.tsx
 msgid "Confirm"
 msgstr "确认"
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Copy link"
+msgstr "复制链接"
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Delete"
+msgstr "删除"
+
+#: ../../../shared/components/board/BoardPeek.tsx
+msgid "Delete card"
+msgstr "删除卡片"
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Done column"
+msgstr "完成列"
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Drag to resize"
+msgstr "拖动调整宽度"
+
+#: ../../../shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardTable.tsx
+msgid "Due"
+msgstr "截止日期"
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Duplicate"
+msgstr "复制卡片"
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Expand column"
+msgstr "展开列"
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Filter"
+msgstr "筛选"
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Group: Assignee"
+msgstr "分组:负责人"
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Group: Priority"
+msgstr "分组:优先级"
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Group: Status"
+msgstr "分组:状态"
+
+#: ../../../shared/components/board/BoardPeek.tsx
+msgid "Icon"
+msgstr "图标"
 
 #: ../../../shared/components/EditorToolbar.tsx
 msgid "Inline Code"
@@ -85,22 +204,73 @@ msgstr "链接 (Ctrl+K)"
 msgid "Local (yours)"
 msgstr "本地（我的）"
 
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "New card"
+msgstr "新建卡片"
+
+#: ../../../shared/components/board/BoardTable.tsx
+msgid "No cards"
+msgstr "暂无卡片"
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "No color"
+msgstr "无颜色"
+
+#: ../../../shared/components/board/controls.tsx
+msgid "No icon"
+msgstr "无图标"
+
+#: ../../../shared/components/board/controls.tsx
+msgid "No labels"
+msgstr "暂无标签"
+
+#: ../../../shared/components/board/BoardPeek.tsx
+msgid "Notes"
+msgstr "备注"
+
 #: ../../../shared/components/ConfirmDialog.tsx
 #: ../../../shared/components/PromptDialog.tsx
 msgid "OK"
 msgstr "确定"
 
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Open in editor"
+msgstr "在编辑器中打开"
+
+#: ../../../shared/components/board/BoardPeek.tsx
+msgid "Open in full editor"
+msgstr "在完整编辑器中打开"
+
 #: ../../../shared/components/PromptDialog.tsx
 msgid "Please enter a value."
 msgstr "请输入内容。"
 
+#: ../../../shared/components/board/BoardPeek.tsx
 #: ../../../shared/components/ViewModeToggle.tsx
 msgid "Preview"
 msgstr "预览"
 
+#: ../../../shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardTable.tsx
+msgid "Priority"
+msgstr "优先级"
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Refresh"
+msgstr "刷新"
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Rename"
+msgstr "重命名"
+
 #: ../../../shared/components/ConflictResolver.tsx
 msgid "Result (editable)"
 msgstr "结果（可编辑）"
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Save as template"
+msgstr "存为模板"
 
 #: ../../../shared/components/ConflictResolver.tsx
 msgid "Save merged result"
@@ -110,18 +280,84 @@ msgstr "保存合并结果"
 msgid "Saving…"
 msgstr "保存中…"
 
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Search cards"
+msgstr "搜索卡片"
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Set as done column"
+msgstr "设为完成列"
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Set WIP limit"
+msgstr "设置 WIP 限制"
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Sort: Due"
+msgstr "排序:截止"
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Sort: Manual"
+msgstr "排序:手动"
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Sort: Priority"
+msgstr "排序:优先级"
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Sort: Title"
+msgstr "排序:标题"
+
 #: ../../../shared/components/ViewModeToggle.tsx
 msgid "Split"
 msgstr "分栏"
 
+#: ../../../shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardTable.tsx
+msgid "Status"
+msgstr "状态"
+
+#: ../../../shared/components/board/BoardSurface.tsx
 #: ../../../shared/components/EditorToolbar.tsx
 msgid "Table"
 msgstr "表格"
+
+#: ../../../shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardTable.tsx
+msgid "Tags"
+msgstr "标签"
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Templates"
+msgstr "模板"
+
+#: ../../../shared/components/board/BoardTable.tsx
+msgid "Title"
+msgstr "标题"
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Unassigned"
+msgstr "未分配"
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Unset done column"
+msgstr "取消完成列"
+
+#: ../../../shared/components/board/BoardPeek.tsx
+msgid "Untitled card"
+msgstr "未命名卡片"
 
 #: ../../../shared/components/ConflictResolver.tsx
 msgid "Use this"
 msgstr "使用此版本"
 
+#. placeholder {0}: col.limit
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "WIP limit {0}"
+msgstr "WIP 限制 {0}"
+
+#: ../../../shared/components/board/BoardPeek.tsx
 #: ../../../shared/components/ViewModeToggle.tsx
 msgid "Write"
 msgstr "写作"

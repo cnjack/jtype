@@ -50,6 +50,12 @@ fn all_migrations() -> Vec<Migration> {
             up: include_str!("../../migrations/0007_kanban.up.sql"),
             down: include_str!("../../migrations/0007_kanban.down.sql"),
         },
+        Migration {
+            version: 8,
+            name: "mcp_oauth",
+            up: include_str!("../../migrations/0008_mcp_oauth.up.sql"),
+            down: include_str!("../../migrations/0008_mcp_oauth.down.sql"),
+        },
     ]
 }
 

@@ -103,7 +103,8 @@ export function Header() {
             </MenuButton>
             <MenuItems
               transition
-              className="absolute right-0 z-50 mt-2 w-48 origin-top-right rounded-lg border border-black/[0.06] bg-white p-1 shadow-lg shadow-stone-900/10 outline-none transition focus:outline-none data-[closed]:scale-95 data-[closed]:opacity-0"
+              anchor="bottom end"
+              className="z-[100] w-48 rounded-lg border border-black/[0.06] bg-white p-1 shadow-lg shadow-stone-900/10 outline-none transition [--anchor-gap:8px] focus:outline-none data-[closed]:scale-95 data-[closed]:opacity-0"
             >
               <MenuItem>
                 {({ focus }) => (

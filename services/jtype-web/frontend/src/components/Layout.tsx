@@ -23,6 +23,7 @@ import {
   Cog6ToothIcon,
   GlobeAltIcon,
   ShieldCheckIcon,
+  SparklesIcon,
   ArrowLeftOnRectangleIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline'
@@ -107,6 +108,12 @@ export function Layout() {
                 <Cog6ToothIcon className="h-4 w-4" />
                 <Trans>Settings</Trans>
               </button>
+            </MenuItem>
+            <MenuItem>
+              <Link className="menu-row" to="/ai">
+                <SparklesIcon className="h-4 w-4" />
+                <Trans>AI Connections</Trans>
+              </Link>
             </MenuItem>
             {user?.role === 'admin' && (
               <MenuItem>

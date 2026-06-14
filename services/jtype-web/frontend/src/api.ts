@@ -73,6 +73,12 @@ export const api = {
   getStorage: () => request<StorageUsageResponse>('/api/me/storage'),
   getDevices: () => request<DeviceInfo[]>('/api/me/devices'),
 
+  // MCP / AI tokens
+  listTokens: () => request<{ tokens: McpToken[] }>('/api/me/tokens'),
+  createToken: (data: { label?: string; ttlDays?: number }) =>
+    request<CreatedToken>('/api/me/tokens', { method: 'POST', body: JSON.stringify(data) }),
+  revokeToken: (id: string) => request<void>(`/api/me/tokens/${id}`, { method: 'DELETE' }),
+
   // Admin
   adminUsers: () => request<AdminUser[]>('/api/admin/users'),
   adminGetUser: (id: string) => request<AdminUser>(`/api/admin/users/${id}`),
@@ -264,6 +270,22 @@ export interface DeviceInfo {
   workspaceName: string
   lastSeenClock: number
   updatedAt: string
+}
+
+export interface McpToken {
+  id: string
+  scope: string
+  label: string | null
+  createdAt: string
+  expiresAt: string | null
+  current: boolean
+}
+
+export interface CreatedToken {
+  token: string
+  scope: string
+  label: string
+  ttlDays: number
 }
 
 export interface AdminUser {
@@ -542,6 +564,7 @@ export interface CreateKanbanCardRequest {
   dueAt?: string
   assigneeUserId?: string
   labelIds?: string[]
+  propertiesExtra?: Record<string, unknown> | null
 }
 
 export interface UpdateKanbanCardRequest {
@@ -551,6 +574,7 @@ export interface UpdateKanbanCardRequest {
   dueAt?: string | null
   assigneeUserId?: string | null
   labelIds?: string[]
+  propertiesExtra?: Record<string, unknown> | null
   baseUpdatedClock?: number
   force?: boolean
 }

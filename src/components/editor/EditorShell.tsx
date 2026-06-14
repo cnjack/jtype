@@ -7,7 +7,7 @@ import { useAppDispatch, useAppState } from "../../app/AppState";
 import { useFileSystem } from "../../hooks";
 import { renderMarkdownToHtml, renderToContainer } from "@shared/lib/markdown";
 import { parseFrontmatter, writeFrontmatter } from "@shared/lib/frontmatter";
-import { basename, escapeHtml, isTauriRuntime, normalizePath } from "../../lib/utils";
+import { basename, escapeHtml, isTauriRuntime, markdownNodes, normalizePath } from "../../lib/utils";
 import { useCommandsList } from "../../app/App";
 import { addMarkdownTableColumn, addMarkdownTableRow, formatMarkdownTable, insertBlockAtSafeCursor, insertOrEditTable } from "../../hooks/useCommands";
 import { useEagerSync } from "../../hooks/useEagerSync";
@@ -15,8 +15,29 @@ import { useConfirm } from "@shared/components/PromptDialogContext";
 import { httpRequest } from "@shared/lib/http";
 import { tauri } from "../../lib/tauri";
 import type { EditorMode } from "@shared/lib/types";
+import type { BoardConfig, BoardCard } from "../../lib/types";
+
+/** Build read-only HTML for an inline ```jtype-board``` embed in a document preview. */
+function renderBoardEmbedHtml(config: BoardConfig, cards: BoardCard[]): string {
+  const cols = config.columns
+    .map((col) => {
+      const colCards = cards.filter((c) => c.status === col.key).sort((a, b) => a.position - b.position);
+      const items = colCards
+        .map(
+          (c) =>
+            `<li style="background:#fff;border:0.5px solid rgba(0,0,0,0.06);border-radius:6px;padding:4px 8px;margin:4px 0;font-size:12px;list-style:none">${escapeHtml(c.title)}</li>`,
+        )
+        .join("");
+      return `<div style="min-width:140px;flex:1;background:#f6faf7;border:0.5px solid rgba(0,0,0,0.05);border-radius:8px;padding:6px"><div style="font-size:12px;font-weight:500;color:#4b5753;padding:2px 4px 6px">${escapeHtml(col.name)} <span style="color:#9aa6a1">${colCards.length}</span></div><ul style="margin:0;padding:0">${items}</ul></div>`;
+    })
+    .join("");
+  return `<div style="border:0.5px solid rgba(0,0,0,0.06);border-radius:10px;padding:8px;margin:8px 0;background:#fbfdfb"><div style="font-size:13px;font-weight:600;color:#1c1917;padding:2px 4px 8px">${escapeHtml(config.title)}</div><div style="display:flex;gap:8px;overflow-x:auto">${cols}</div></div>`;
+}
 import { useScrollSync, useFloatingTooltip } from "@shared/hooks";
 import { ViewModeToggle, FloatingTooltip } from "@shared/components";
+import { ResourceViewer } from "./ResourceViewer";
+import { BoardView } from "../BoardView";
+import { CardPropertyStrip } from "./CardPropertyStrip";
 import {
   BoldIcon,
   ItalicIcon,
@@ -198,6 +219,27 @@ export function EditorShell() {
     }
   }, [state.currentPath, state.editorContentVersion]);
 
+  const populateBoardEmbeds = useCallback(
+    async (container: HTMLElement) => {
+      const root = state.workspace?.rootPath;
+      if (!root || !tauri.isAvailable) return;
+      const embeds = Array.from(container.querySelectorAll<HTMLElement>(".jtype-board-embed[data-board]"));
+      for (const el of embeds) {
+        if (el.dataset.filled) continue;
+        el.dataset.filled = "1";
+        const ref = el.getAttribute("data-board") ?? "";
+        try {
+          const config = JSON.parse(await tauri.readBoardFile(`${root}/${ref}`)) as BoardConfig;
+          const cards = await tauri.scanBoardCards(root, config.id);
+          el.innerHTML = renderBoardEmbedHtml(config, cards);
+        } catch {
+          el.textContent = `Board not found: ${ref}`;
+        }
+      }
+    },
+    [state.workspace?.rootPath],
+  );
+
   useEffect(() => {
     if (!previewRef.current || state.currentKind !== "markdown") return;
     // Skip rendering when preview is not visible (write mode)
@@ -207,15 +249,17 @@ export function EditorShell() {
     const container = previewRef.current;
     const content = state.editorContent;
     previewTimerRef.current = setTimeout(() => {
-      void renderToContainer(content, container);
+      void renderToContainer(content, container).then(() => populateBoardEmbeds(container));
     }, 120);
     return () => {
       if (previewTimerRef.current) clearTimeout(previewTimerRef.current);
     };
-  }, [state.editorContent, state.currentKind, state.editorMode]);
+  }, [state.editorContent, state.currentKind, state.editorMode, populateBoardEmbeds]);
 
   const fileName = state.currentPath ? basename(state.currentPath) : t`No file selected`;
   const isMarkdown = state.currentKind === "markdown";
+  const isAssetView = state.currentKind === "asset" && !!state.currentPath;
+  const isBoardView = state.currentKind === "board" && !!state.currentPath;
   const documentLocation = (() => {
     const sourcePath = state.currentRelativePath || state.currentPath;
     if (!sourcePath) return "";
@@ -291,6 +335,20 @@ export function EditorShell() {
   }, [contextMenu]);
 
   const handlePreviewClick = useCallback((event: React.MouseEvent<HTMLElement>) => {
+    const wikilink = (event.target as HTMLElement).closest("[data-wikilink]") as HTMLElement | null;
+    if (wikilink) {
+      event.preventDefault();
+      const target = wikilink.getAttribute("data-wikilink") ?? "";
+      const norm = target.replace(/\.(md|markdown|mdown|mkd)$/i, "").toLowerCase();
+      const node = markdownNodes(state.workspace?.entries).find((n) => {
+        const base = n.name.replace(/\.(md|markdown|mdown|mkd)$/i, "").toLowerCase();
+        const rel = n.relativePath.replace(/\.(md|markdown|mdown|mkd)$/i, "").toLowerCase();
+        return base === norm || rel === norm;
+      });
+      if (node) void fs.openMarkdownFile(node.path, node.relativePath);
+      else dispatch({ type: "SET_STATUS", message: t`No note named "${target}".` });
+      return;
+    }
     const anchor = (event.target as HTMLElement).closest("a[href]") as HTMLAnchorElement | null;
     if (!anchor) return;
     const href = anchor.getAttribute("href") ?? "";
@@ -320,7 +378,7 @@ export function EditorShell() {
       .catch(() => {
         window.open(url.href, "_blank", "noopener,noreferrer");
       });
-  }, [dispatch]);
+  }, [dispatch, fs, state.workspace?.entries]);
 
   const cloudPublishRequest = useCallback(async <T,>(path: string, init: RequestInit = {}) => {
     if (!currentVaultBinding || !state.syncToken || !state.cloudProfile?.token) return null;
@@ -663,6 +721,7 @@ export function EditorShell() {
         </div>
       </div>
 
+      {isMarkdown && (
       <div className="flex min-h-12 min-w-0 items-center gap-1 overflow-x-auto border-b border-black/[0.04] bg-[#fbfdfb] px-5">
         <EditorToolbarButton command="editor.bold" title={t`Bold - Ctrl+B`} disabled={!canEditMarkdown} runCommand={runCommand} tooltipProps={tooltipProps(t`Bold - Ctrl+B`)}>
           <BoldIcon className="h-4 w-4" />
@@ -706,8 +765,16 @@ export function EditorShell() {
           </>
         )}
       </div>
+      )}
+
+      {isMarkdown && <CardPropertyStrip content={state.editorContent} />}
 
       <div id="workbench-body" className={`workbench-body grid min-h-0 flex-1 bg-[#fbfdfb] ${showDocumentPanel ? "grid-cols-[minmax(0,1fr)_340px]" : "grid-cols-[minmax(0,1fr)]"}`}>
+        {isBoardView ? (
+          <BoardView boardPath={state.currentPath} boardRelativePath={state.currentRelativePath} />
+        ) : isAssetView ? (
+          <ResourceViewer path={state.currentPath} relativePath={state.currentRelativePath} />
+        ) : (
         <div className={getGridClass(state.editorMode)} style={{ position: "relative" }}>
           <textarea
             id="editor"
@@ -733,6 +800,7 @@ export function EditorShell() {
             <p><Trans>Your rendered document will appear here.</Trans></p>
           </article>
         </div>
+        )}
 
         {showDocumentPanel && (
           <aside id="document-panel" className="min-h-0 overflow-y-auto border-l border-black/[0.04] bg-[#f6faf7] p-5">

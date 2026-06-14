@@ -6,10 +6,12 @@ import { renderToContainer } from '@shared/lib/markdown'
 import { parseFrontmatter, writeFrontmatter } from '@shared/lib/frontmatter'
 import type { EditorMode } from '@shared/lib/types'
 import { usePrompt, useConfirm } from '@shared/components/PromptDialogContext'
+import { WebBoardView } from './WebBoardView'
 import { AppVersion } from '@shared/components'
 import { useWorkspaceSocket } from '../hooks/useWorkspaceSocket'
 import { useOfflineSync } from '../hooks/useOfflineSync'
 import { ConflictResolver } from '../components/ConflictResolver'
+import { NewResourceDialog } from '../components/NewResourceDialog'
 import {
   BoldIcon,
   ItalicIcon,
@@ -65,7 +67,6 @@ export function Workspace() {
   const { workspaceId } = useParams<{ workspaceId: string }>()
   const navigate = useNavigate()
   const location = useLocation()
-  const prompt = usePrompt()
   const confirm = useConfirm()
   const initialSection = ((location.state as { section?: WorkspaceSection } | null)?.section) ?? 'documents'
   const [workspace, setWorkspace] = useState<WorkspaceSummary | null>(null)
@@ -106,6 +107,8 @@ export function Workspace() {
   const [favoriteVersion, setFavoriteVersion] = useState(0)
   const [staleWarning, setStaleWarning] = useState<{ editedBy: string; wasDirty: boolean } | null>(null)
   const [statusMessage, setStatusMessage] = useState('')
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [createDialogBaseDir, setCreateDialogBaseDir] = useState('')
   const { status: wsStatus, sessionId: wsSessionId, subscribe: wsSubscribe } = useWorkspaceSocket(workspace?.id)
   const { hasPending, pendingCount, reconciling, saveOffline, reconcile } = useOfflineSync(workspace?.id)
   const canEditContent = workspace?.role !== 'viewer'
@@ -366,18 +369,62 @@ export function Workspace() {
     }
   }
 
-  async function createDocument() {
-    if (!workspaceId) return
+  // Open the "New resource" picker (mirrors the desktop dialog) rooted at baseDir.
+  function createDocument() {
+    openCreateDialog('')
+  }
+
+  function openCreateDialog(baseDir = '') {
     if (!canEditContent) {
       setStatusMessage(t`Viewer access is read-only.`)
       setTimeout(() => setStatusMessage(''), 3000)
       return
     }
-    const path = await prompt(t`Document path (e.g. notes/hello.md):`)
-    if (!path?.trim()) return
-    await api.saveDocument(workspaceId, { relativePath: path.trim(), content: '' })
+    setCreateDialogBaseDir(baseDir)
+    setCreateDialogOpen(true)
+  }
+
+  async function createDocumentWeb(name: string, baseDir: string) {
+    if (!workspaceId || !canEditContent) return
+    let trimmed = name.trim()
+    if (!trimmed) return
+    if (!trimmed.toLowerCase().endsWith('.md')) trimmed = `${trimmed}.md`
+    const relativePath = baseDir ? `${baseDir.replace(/\/+$/, '')}/${trimmed}` : trimmed
+    await api.saveDocument(workspaceId, { relativePath, content: '' })
     const docs = await api.listDocuments(workspaceId)
     setDocuments(docs)
+    setFolders(await api.listFolders(workspaceId))
+    const created = docs.find((d) => d.relativePath === relativePath)
+    if (created) void openDocument(created.id)
+  }
+
+  // Seed a default kanban config so the web renders the new `.board` as a board.
+  async function createBoardWeb(name: string, baseDir: string) {
+    if (!workspaceId || !canEditContent) return
+    const base = name.trim().replace(/\.board$/i, '')
+    if (!base) return
+    const relativePath = (baseDir ? `${baseDir.replace(/\/+$/, '')}/` : '') + `${base}.board`
+    const content = JSON.stringify(
+      {
+        id: `b_${Math.random().toString(36).slice(2, 10)}`,
+        title: base,
+        groupBy: 'status',
+        columns: [
+          { key: 'todo', name: 'To do' },
+          { key: 'doing', name: 'Doing' },
+          { key: 'done', name: 'Done' },
+        ],
+        doneColumn: 'done',
+      },
+      null,
+      2,
+    )
+    await api.saveDocument(workspaceId, { relativePath, content })
+    const docs = await api.listDocuments(workspaceId)
+    setDocuments(docs)
+    setFolders(await api.listFolders(workspaceId))
+    const created = docs.find((d) => d.relativePath === relativePath)
+    if (created) void openDocument(created.id)
   }
 
   async function createCloudWorkspace() {
@@ -618,6 +665,7 @@ export function Workspace() {
   }, [treeContextMenu])
 
   const selectedDocument = selectedDoc ? documents.find(d => d.id === selectedDoc) ?? null : null
+  const isBoardFile = selectedDocument?.relativePath?.toLowerCase().endsWith('.board') ?? false
   const documentLocation = selectedDocument?.relativePath && selectedDocument.relativePath.includes('/') ? selectedDocument.relativePath.replace(/\/[^/]+$/, '') : ''
   const fileName = selectedDocument?.relativePath ? selectedDocument.relativePath.split('/').pop() || '' : ''
   const isFavorite = selectedDoc ? (() => {
@@ -634,6 +682,8 @@ export function Workspace() {
   const hasUnpublishedChanges = Boolean(isPublished && (dirty || publishState?.hasUnpublishedChanges))
   const publishedDocuments = useMemo(() => documents.filter(doc => doc.isPublished), [documents])
   const unpublishedDocuments = useMemo(() => documents.filter(doc => !doc.isPublished), [documents])
+  // `.board` files are board views, not Markdown documents — exclude from counts.
+  const markdownDocs = useMemo(() => documents.filter(doc => !doc.relativePath.toLowerCase().endsWith('.board')), [documents])
   const boundDomains = workspace ? domains.filter(domain => domain.workspaceId === workspace.id) : []
   const availableDomains = workspace ? domains.filter(domain => !domain.workspaceId || domain.workspaceId === workspace.id) : []
   const verifiedDomains = boundDomains.filter(domain => domain.status === 'verified')
@@ -686,6 +736,14 @@ export function Workspace() {
         />
       )}
 
+      <NewResourceDialog
+        open={createDialogOpen}
+        baseDir={createDialogBaseDir}
+        onClose={() => setCreateDialogOpen(false)}
+        onCreateDocument={(name, baseDir) => { void createDocumentWeb(name, baseDir) }}
+        onCreateBoard={(name, baseDir) => { void createBoardWeb(name, baseDir) }}
+      />
+
       {activeSection === 'documents' && (
         <div className={`grid overflow-hidden ${focusMode ? 'grid-cols-[minmax(0,1fr)]' : 'grid-cols-[272px_minmax(0,1fr)]'}`}>
           {!sidebarCollapsed && !focusMode && (
@@ -728,6 +786,7 @@ export function Workspace() {
                   onUnpublish={docId => unpublishDocumentsByIds([docId])}
                   onDocumentsChange={setDocuments}
                   onFoldersChange={setFolders}
+                  onRequestCreate={openCreateDialog}
                   onSaveDocument={async (data) => {
                     if (!workspaceId) throw new Error('No workspace')
                     await api.saveDocument(workspaceId, data)
@@ -752,6 +811,9 @@ export function Workspace() {
 
         <section className="flex min-w-0 flex-col overflow-hidden bg-[#fbfdfb]">
           {selectedDoc ? (
+            isBoardFile && selectedDocument && workspaceId ? (
+              <WebBoardView workspaceId={workspaceId} boardDocId={selectedDoc} boardRelativePath={selectedDocument.relativePath} />
+            ) : (
             <>
               <div className="flex min-h-[56px] items-center justify-between gap-3 border-b border-black/[0.04] bg-white/60 px-5 backdrop-blur-xl">
                 <div className="min-w-0">
@@ -982,6 +1044,7 @@ export function Workspace() {
                 )}
               </div>
             </>
+            )
           ) : (
             <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
               <div className="mx-auto w-full max-w-6xl px-10 py-12">
@@ -1017,7 +1080,7 @@ export function Workspace() {
                   <section className="panel-card p-5">
                     <div className="mb-3 flex items-center justify-between">
                       <p className="text-sm font-semibold text-stone-950"><Trans>Documents</Trans></p>
-                      <span className="text-xs text-[#6b7773]">{t`${documents.length} Markdown file${documents.length === 1 ? '' : 's'}`}</span>
+                      <span className="text-xs text-[#6b7773]">{t`${markdownDocs.length} Markdown file${markdownDocs.length === 1 ? '' : 's'}`}</span>
                     </div>
                     <div className="space-y-1">
                       {documents.length === 0 ? (
@@ -2323,7 +2386,10 @@ function WebLinksSection({ content }: { content: string }) {
 interface WebTreeNode {
   name: string
   path: string
-  kind: 'folder' | 'document'
+  // A `board` node is a `<name>.board` document unified with its sibling `<name>/`
+  // folder (the folder's card files become the board node's children) — mirrors the
+  // desktop sidebar, where a board shows as one expandable row with a kanban icon.
+  kind: 'folder' | 'document' | 'board'
   folder?: FolderListItem
   doc?: DocumentListItem
   children: WebTreeNode[]
@@ -2368,22 +2434,55 @@ function buildDocTree(folders: FolderListItem[], documents: DocumentListItem[]):
     }
   }
 
+  // Unify a `<name>.board` file with its sibling `<name>/` folder into a single
+  // expandable board node — the board is the surviving row and the folder's card
+  // files become its children. Mirrors the desktop sidebar's groupBoardsWithFolders
+  // (src/components/sidebar/Sidebar.tsx) so the two ends look the same.
+  const mergeBoards = (nodes: WebTreeNode[]): WebTreeNode[] => {
+    const boardBases = new Set<string>()
+    for (const n of nodes) {
+      if (n.kind === 'document' && n.name.toLowerCase().endsWith('.board')) {
+        boardBases.add(n.name.replace(/\.board$/i, ''))
+      }
+    }
+    const folderByName = new Map<string, WebTreeNode>()
+    for (const n of nodes) if (n.kind === 'folder') folderByName.set(n.name, n)
+    const out: WebTreeNode[] = []
+    for (const n of nodes) {
+      if (n.kind === 'folder' && boardBases.has(n.name)) continue // absorbed into its board
+      if (n.kind === 'document' && n.name.toLowerCase().endsWith('.board')) {
+        const folder = folderByName.get(n.name.replace(/\.board$/i, ''))
+        out.push({ ...n, kind: 'board', children: folder ? [...n.children, ...folder.children] : [...n.children] })
+      } else {
+        out.push(n)
+      }
+    }
+    for (const n of out) if (n.kind === 'folder' || n.kind === 'board') n.children = mergeBoards(n.children)
+    return out
+  }
+
+  // Folders and boards (containers) sort before plain documents, then alphabetically.
+  const sortRank = (kind: WebTreeNode['kind']) => (kind === 'document' ? 1 : 0)
   const sortNodes = (nodes: WebTreeNode[]) => {
     nodes.sort((a, b) => {
-      if (a.kind !== b.kind) return a.kind === 'folder' ? -1 : 1
+      const ra = sortRank(a.kind)
+      const rb = sortRank(b.kind)
+      if (ra !== rb) return ra - rb
       return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
     })
-    for (const n of nodes) if (n.kind === 'folder') sortNodes(n.children)
+    for (const n of nodes) if (n.kind === 'folder' || n.kind === 'board') sortNodes(n.children)
   }
-  sortNodes(root)
-  return root
+  const merged = mergeBoards(root)
+  sortNodes(merged)
+  return merged
 }
 
 function allFolderPaths(nodes: WebTreeNode[]): Set<string> {
   const paths = new Set<string>()
   const walk = (list: WebTreeNode[]) => {
     for (const n of list) {
-      if (n.kind === 'folder') {
+      // Folders and boards-with-children are the expandable rows.
+      if (n.kind === 'folder' || (n.kind === 'board' && n.children.length > 0)) {
         paths.add(n.path)
         walk(n.children)
       }
@@ -2430,6 +2529,7 @@ function WebDocExplorer({
   treeContextMenu,
   setTreeContextMenu,
   onSaveDocument,
+  onRequestCreate,
   readOnly,
 }: {
   workspaceId: string | undefined
@@ -2443,6 +2543,7 @@ function WebDocExplorer({
   onDocumentsChange: (docs: DocumentListItem[]) => void
   onFoldersChange: (folders: FolderListItem[]) => void
   onSaveDocument: (data: { relativePath: string; content: string; title?: string }) => Promise<void>
+  onRequestCreate: (baseDir: string) => void
   readOnly: boolean
   trashItems: TrashItem[]
   onRestoreTrash: (id: string) => void
@@ -2502,19 +2603,6 @@ function WebDocExplorer({
     const folderList = await api.listFolders(workspaceId)
     onFoldersChange(folderList)
     setExpanded(new Set(expanded).add(relativePath))
-  }
-
-  const handleCreateDocInFolder = async (folderPath: string) => {
-    if (!workspaceId) return
-    if (readOnly) return
-    const name = await prompt(t`New document name (e.g. note.md):`)
-    if (!name?.trim()) return
-    const relativePath = `${folderPath}/${name.trim()}`
-    await onSaveDocument({ relativePath, content: '' })
-    const docs = await api.listDocuments(workspaceId)
-    onDocumentsChange(docs)
-    onFoldersChange(await api.listFolders(workspaceId))
-    setExpanded(new Set(expanded).add(folderPath))
   }
 
   const handleDeleteFolder = async (folderPath: string) => {
@@ -2730,7 +2818,7 @@ function WebDocExplorer({
                   <button
                     type="button"
                     className="context-menu-button"
-                    onClick={() => { void handleCreateDocInFolder(treeContextMenu.node.path); setTreeContextMenu(null) }}
+                    onClick={() => { onRequestCreate(treeContextMenu.node.path); setTreeContextMenu(null) }}
                   >
                     <DocumentPlusIcon className="mr-2 h-3.5 w-3.5" /><Trans>New document</Trans>
                   </button>
@@ -2753,7 +2841,7 @@ function WebDocExplorer({
               )}
             </>
           )}
-          {treeContextMenu.node.kind === 'document' && treeContextMenu.node.doc && (
+          {(treeContextMenu.node.kind === 'document' || treeContextMenu.node.kind === 'board') && treeContextMenu.node.doc && (
             <>
               <button
                 type="button"
@@ -2839,7 +2927,10 @@ const WebTreeNodeRow = memo(function WebTreeNodeRow({
   onContextMenu: (node: WebTreeNode, x: number, y: number) => void
 }) {
   const isFolder = node.kind === 'folder'
-  const isExpanded = isFolder && expanded.has(node.path)
+  const isBoard = node.kind === 'board'
+  // A board with merged card children is expandable too (chevron toggles, row opens it).
+  const isExpandable = isFolder || (isBoard && node.children.length > 0)
+  const isExpanded = isExpandable && expanded.has(node.path)
   const isActive = !isFolder && node.doc?.id === selectedDoc
 
   return (
@@ -2858,20 +2949,23 @@ const WebTreeNodeRow = memo(function WebTreeNodeRow({
           onContextMenu(node, e.clientX, e.clientY)
         }}
       >
-        {isFolder ? (
-          <span className="shrink-0 text-[#8a9691]">
+        {isExpandable ? (
+          <span
+            className="shrink-0 cursor-pointer text-[#8a9691]"
+            onClick={e => { e.stopPropagation(); onToggle(node.path) }}
+          >
             {isExpanded ? <ChevronDownIcon className="h-3.5 w-3.5" /> : <ChevronRightIcon className="h-3.5 w-3.5" />}
           </span>
         ) : null}
         <span className="shrink-0 text-[#8a9691]">
-          {isFolder ? <FolderIcon className="h-3.5 w-3.5" /> : <DocumentTextIcon className="h-3.5 w-3.5" />}
+          {isFolder ? <FolderIcon className="h-3.5 w-3.5" /> : isBoard ? <ViewColumnsIcon className="h-3.5 w-3.5" /> : <DocumentTextIcon className="h-3.5 w-3.5" />}
         </span>
         <span className={`truncate ${isFolder ? 'font-semibold text-[#4b5753]' : ''}`}>{node.name}</span>
         {!isFolder && node.doc?.isPublished && (
           <span className="ml-auto h-1.5 w-1.5 shrink-0 rounded-full bg-[#008884]" title={t`Published`} />
         )}
       </button>
-      {isFolder && isExpanded && node.children.length > 0 && (
+      {isExpandable && isExpanded && node.children.length > 0 && (
         <ul className="mt-0.5 space-y-0.5">
           {node.children.map(child => (
             <WebTreeNodeRow

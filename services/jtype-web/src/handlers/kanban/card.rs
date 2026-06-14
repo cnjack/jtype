@@ -204,7 +204,7 @@ pub async fn create_card(
         r#"INSERT INTO kanban_cards
            (id, workspace_id, board_id, column_id, title, description, position, priority,
             due_at, assignee_user_id, properties_extra, created_by_user_id, updated_clock, version_id)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, ?)"#,
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"#,
     )
     .bind(&card_id)
     .bind(&workspace_id)
@@ -216,6 +216,7 @@ pub async fn create_card(
     .bind(&priority)
     .bind(due_at.as_deref())
     .bind(payload.assignee_user_id.as_deref())
+    .bind(payload.properties_extra.clone())
     .bind(&user.id)
     .bind(next_clock)
     .bind(&version_id)
@@ -454,6 +455,13 @@ pub async fn patch_card(
                     .await?;
             }
         }
+    }
+    if let Some(extra) = &payload.properties_extra {
+        sqlx::query("UPDATE kanban_cards SET properties_extra = ? WHERE id = ?")
+            .bind(extra.clone())
+            .bind(&card_id)
+            .execute(&mut *tx)
+            .await?;
     }
     if let Some(label_ids) = &payload.label_ids {
         // Replace label set

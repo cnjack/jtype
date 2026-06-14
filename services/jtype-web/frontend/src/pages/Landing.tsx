@@ -99,6 +99,7 @@ export function Landing() {
           <div className="hidden items-center gap-1 text-sm font-medium text-[#5f6d68] md:flex">
             <a className="rounded-lg px-3 py-2 transition hover:bg-[#e8f6f2] hover:text-brand-dark" href="#flow"><Trans>Flow</Trans></a>
             <a className="rounded-lg px-3 py-2 transition hover:bg-[#e8f6f2] hover:text-brand-dark" href="#surfaces"><Trans>Surfaces</Trans></a>
+            <a className="rounded-lg px-3 py-2 transition hover:bg-[#e8f6f2] hover:text-brand-dark" href="#ai"><Trans>AI</Trans></a>
             <a className="rounded-lg px-3 py-2 transition hover:bg-[#e8f6f2] hover:text-brand-dark" href="#publish"><Trans>Publish</Trans></a>
           </div>
           <div className="flex items-center gap-2">
@@ -213,8 +214,8 @@ export function Landing() {
                 <Trans>One Markdown source, three calm surfaces.</Trans>
               </h2>
               <p className="mt-4 text-sm leading-7 text-[#5f6d68]">
-                <Trans>The page borrows getdesign.app's strongest move: show the actual system doing the explaining.
-                For JType, that means local files, sync state, and published output all visible at once.</Trans>
+                <Trans>One Markdown source shows up everywhere it matters: local files on your machine,
+                sync state in the cloud, and published output for readers — all visible at once.</Trans>
               </p>
             </div>
             <div className="grid gap-3">
@@ -227,6 +228,51 @@ export function Landing() {
                     <h3 className="text-base font-semibold text-[#0d0d0c]">{_(surface.name)}</h3>
                     <p className="mt-1 text-sm leading-6 text-[#5f6d68]">{_(surface.detail)}</p>
                   </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="ai" className="px-4 py-16 sm:px-6 lg:px-8">
+          <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-dark"><Trans>AI-ready</Trans></p>
+              <h2 className="mt-3 text-3xl font-semibold tracking-tight text-[#0d0d0c] sm:text-4xl">
+                <Trans>Bring your notes and kanban into any AI agent.</Trans>
+              </h2>
+              <p className="mt-4 text-sm leading-7 text-[#5f6d68]">
+                <Trans>JType ships a built-in MCP server. Connect Claude, Cursor, or any MCP client over a secure
+                OAuth flow, then ask it to search your notes, draft a doc, or triage your board. Tokens are scoped,
+                expiring, and revocable — and admin always stays off-limits.</Trans>
+              </p>
+              <div className="mt-6 flex flex-wrap gap-2">
+                {['Claude', 'Cursor', 'Cline', 'jcode', 'MCP'].map((c) => (
+                  <span key={c} className="rounded-full border border-brand/30 bg-[#e8f6f2] px-3 py-1 text-xs font-semibold text-brand-dark">{c}</span>
+                ))}
+              </div>
+              <div className="mt-7">
+                <Link
+                  to={user ? '/ai' : '/login'}
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-brand bg-brand px-5 text-sm font-semibold text-white shadow-sm shadow-brand/15 transition hover:border-brand-dark hover:bg-brand-dark"
+                  title={t`Connect your AI`}
+                >
+                  <Trans>Connect your AI</Trans>
+                  <ArrowRightIcon className="h-4 w-4" />
+                </Link>
+              </div>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {[
+                { icon: SparklesIcon, name: t`Notes tools`, detail: t`Search, read, create, update, and append documents.` },
+                { icon: BoltIcon, name: t`Kanban tools`, detail: t`List, create, update, and move cards across columns.` },
+                { icon: CheckCircleIcon, name: t`OAuth + PKCE`, detail: t`One-click browser approval — no token to paste.` },
+                { icon: CommandLineIcon, name: t`CLI + stdio`, detail: t`A jtype CLI and a local stdio MCP bridge.` },
+              ].map((f, i) => (
+                <article key={i} className="rounded-xl border border-black/[0.06] bg-white/75 p-4 shadow-sm shadow-emerald-950/5">
+                  <f.icon className="h-5 w-5 text-brand" />
+                  <h3 className="mt-3 text-base font-semibold text-[#0d0d0c]">{f.name}</h3>
+                  <p className="mt-1 text-sm leading-6 text-[#5f6d68]">{f.detail}</p>
                 </article>
               ))}
             </div>

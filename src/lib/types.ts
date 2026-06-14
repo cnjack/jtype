@@ -1,4 +1,51 @@
-export type EntryKind = "folder" | "markdown" | "asset";
+export type EntryKind = "folder" | "markdown" | "asset" | "board";
+
+/** A column in a `.board` view (a status group). */
+export type BoardColumn = {
+  key: string;
+  name: string;
+  color?: string | null;
+  /** Optional WIP limit; the column flags when its card count exceeds this. */
+  limit?: number | null;
+};
+
+/** A `.board` file's JSON config: a kanban view over card-notes grouped by a property. */
+export type BoardConfig = {
+  id: string;
+  title: string;
+  groupBy: string;
+  columns: BoardColumn[];
+  /** Column key treated as terminal/done (suppresses overdue styling). Defaults to "done". */
+  doneColumn?: string;
+  /** When true, tint each column header by its column color. */
+  colorColumns?: boolean;
+  /** Which renderer this board shows: kanban columns or a flat table. Defaults to "board". */
+  viewType?: "board" | "table";
+};
+
+/** A card = a real `.md` note that belongs to a board (frontmatter `board == id`). */
+export type BoardCard = {
+  relativePath: string;
+  path: string;
+  title: string;
+  status: string;
+  position: number;
+  priority?: string | null;
+  assignee?: string | null;
+  due?: string | null;
+  tags?: string[];
+  taskDone?: number;
+  taskTotal?: number;
+  icon?: string | null;
+  excerpt?: string | null;
+};
+
+/** A reusable card template (`.md` in `<boardDir>/.templates/`). */
+export type CardTemplate = {
+  name: string;
+  relativePath: string;
+  path: string;
+};
 export type Activity = "explorer" | "trash" | "settings";
 export type InspectorTab = "preview" | "properties" | "outline" | "links" | "publish" | "ai";
 export type EditorMode = "write" | "split" | "preview";
@@ -291,58 +338,3 @@ export type AppCommand = {
   run: () => Promise<void> | void;
 };
 
-// ── Local-first Kanban (mirrors src-tauri/src/kanban_local.rs serde) ──
-export type LocalKanbanColumn = {
-  id: string;
-  name: string;
-  position: number;
-  wipLimit?: number | null;
-  color?: string | null;
-};
-
-export type LocalKanbanCard = {
-  id: string;
-  columnId: string;
-  title: string;
-  description?: string | null;
-  position: number;
-  priority: string;
-  dueAt?: string | null;
-  assigneeUserId?: string | null;
-  labelIds: string[];
-  archivedAt?: string | null;
-  updatedClock: number;
-};
-
-export type LocalKanbanLabel = {
-  id: string;
-  name: string;
-  color: string;
-  description?: string | null;
-};
-
-export type LocalKanbanBoard = {
-  id: string;
-  name: string;
-  description?: string | null;
-  position: number;
-  updatedClock: number;
-  columns: LocalKanbanColumn[];
-  cards: LocalKanbanCard[];
-  labels: LocalKanbanLabel[];
-};
-
-export type PendingKanbanOp = {
-  type: string;
-  boardId: string;
-  cardId?: string | null;
-  payload: unknown;
-  localClock: number;
-};
-
-export type LocalKanbanStore = {
-  boards: LocalKanbanBoard[];
-  lastSyncedClock: number;
-  localClock: number;
-  pendingOps: PendingKanbanOp[];
-};

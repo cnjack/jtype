@@ -35,6 +35,11 @@ msgstr "{0} conflict{1}"
 msgid "{0} conflict{1} to resolve"
 msgstr "{0} conflict{1} to resolve"
 
+#. placeholder {0}: card.title
+#: src/components/BoardView.tsx
+msgid "{0} copy"
+msgstr "{0} copy"
+
 #. placeholder {0}: ws.documentCount ?? 0
 #. placeholder {1}: formatBytes(ws.storageBudgetBytes)
 #: src/components/modals/AccountDialog.tsx
@@ -44,6 +49,10 @@ msgstr "{0} documents - {1} budget"
 #: src/components/sidebar/Sidebar.tsx
 msgid "{docCount} documents"
 msgstr "{docCount} documents"
+
+#: src/components/editor/ResourceViewer.tsx
+msgid "{label} files can not be previewed in JType yet."
+msgstr "{label} files can not be previewed in JType yet."
 
 #: src/components/modals/MoveFolderDialog.tsx
 msgid "/ (root)"
@@ -61,6 +70,18 @@ msgstr "📁 {0} subfolder{1}"
 msgid "📄 {0} document{1}"
 msgstr "📄 {0} document{1}"
 
+#: src/components/modals/NewResourceDialog.tsx
+msgid "A kanban board over your notes"
+msgstr "A kanban board over your notes"
+
+#: src/components/modals/NewResourceDialog.tsx
+msgid "A Markdown document you write and preview"
+msgstr "A Markdown document you write and preview"
+
+#: src/components/modals/NewResourceDialog.tsx
+msgid "A text document you write and preview"
+msgstr "A text document you write and preview"
+
 #: src/components/layout/WelcomeScreen.tsx
 msgid "A vault is a local folder for notes, sync, and publishing. A single file opens JType as a focused Markdown editor."
 msgstr "A vault is a local folder for notes, sync, and publishing. A single file opens JType as a focused Markdown editor."
@@ -72,6 +93,14 @@ msgstr "Account"
 #: src/components/modals/AccountDialog.tsx
 msgid "Account service URL"
 msgstr "Account service URL"
+
+#: src/components/BoardView.tsx
+#~ msgid "Add column"
+#~ msgstr "Add column"
+
+#: src/components/CardPeek.tsx
+#~ msgid "Add details..."
+#~ msgstr "Add details..."
 
 #: src/components/editor/EditorShell.tsx
 msgid "Add table column right"
@@ -93,6 +122,16 @@ msgstr "Added to favorites."
 msgid "Advanced"
 msgstr "Advanced"
 
+#: src/components/BoardTable.tsx
+#: src/components/BoardView.tsx
+#: src/components/CardPeek.tsx
+#~ msgid "Assignee"
+#~ msgstr "Assignee"
+
+#: src/components/modals/NewResourceDialog.tsx
+msgid "Back"
+msgstr "Back"
+
 #: src/components/layout/Header.tsx
 msgid "Back to home"
 msgstr "Back to home"
@@ -104,6 +143,18 @@ msgstr "Back up this local vault to a cloud workspace, keep devices in sync, and
 #: src/components/modals/AccountDialog.tsx
 msgid "Bind the current local vault to one cloud workspace."
 msgstr "Bind the current local vault to one cloud workspace."
+
+#: src/components/BoardView.tsx
+#~ msgid "Blank card"
+#~ msgstr "Blank card"
+
+#: src/components/BoardView.tsx
+#~ msgid "Board"
+#~ msgstr "Board"
+
+#: src/components/modals/NewResourceDialog.tsx
+msgid "Board name"
+msgstr "Board name"
 
 #: src/components/editor/EditorShell.tsx
 msgid "Bold"
@@ -122,6 +173,10 @@ msgstr "Bound"
 msgid "Bound to {0}. Sync will push and pull this vault."
 msgstr "Bound to {0}. Sync will push and pull this vault."
 
+#: src/components/modals/NewResourceDialog.tsx
+msgid "Bring in an image or PDF from your computer"
+msgstr "Bring in an image or PDF from your computer"
+
 #: src/components/modals/AccountDialog.tsx
 msgid "Browser authorization is open. Sync will continue after sign-in completes."
 msgstr "Browser authorization is open. Sync will continue after sign-in completes."
@@ -131,15 +186,31 @@ msgid "Browser authorization is open. This sync will continue after sign-in comp
 msgstr "Browser authorization is open. This sync will continue after sign-in completes."
 
 #: src/components/modals/CreateFolderDialog.tsx
-#: src/components/modals/CreateNoteDialog.tsx
 #: src/components/modals/DeleteFolderDialog.tsx
 #: src/components/modals/MoveFolderDialog.tsx
+#: src/components/modals/NewResourceDialog.tsx
 msgid "Cancel"
 msgstr "Cancel"
 
 #: src/components/sidebar/Sidebar.tsx
 msgid "Cannot move folder into itself."
 msgstr "Cannot move folder into itself."
+
+#: src/components/editor/CardPropertyStrip.tsx
+msgid "Card"
+msgstr "Card"
+
+#: src/components/BoardView.tsx
+#~ msgid "Card title — Enter to add, Esc to cancel"
+#~ msgstr "Card title — Enter to add, Esc to cancel"
+
+#: src/components/BoardView.tsx
+#~ msgid "Card title (Enter to add, Esc to cancel)"
+#~ msgstr "Card title (Enter to add, Esc to cancel)"
+
+#: src/components/BoardView.tsx
+#~ msgid "cards"
+#~ msgstr "cards"
 
 #: src/components/sidebar/Sidebar.tsx
 msgid "Choose a local folder"
@@ -149,6 +220,14 @@ msgstr "Choose a local folder"
 #: src/components/layout/VaultHome.tsx
 msgid "Choose a note or create a new one. This vault lives at <0>{0}</0>."
 msgstr "Choose a note or create a new one. This vault lives at <0>{0}</0>."
+
+#: src/components/modals/NewResourceDialog.tsx
+msgid "Choose what you want to create."
+msgstr "Choose what you want to create."
+
+#: src/components/BoardView.tsx
+#~ msgid "Clear filter"
+#~ msgstr "Clear filter"
 
 #: src/components/modals/AccountDialog.tsx
 #: src/components/modals/ConflictDialog.tsx
@@ -184,7 +263,7 @@ msgstr "Cloud sync reminder snoozed."
 msgid "Cloud workspace"
 msgstr "Cloud workspace"
 
-#. placeholder {0}: currentBinding?.workspaceName
+#. placeholder {0}: currentBinding?.workspaceName ?? ""
 #: src/components/layout/Header.tsx
 msgid "Cloud workspace: {0}"
 msgstr "Cloud workspace: {0}"
@@ -196,6 +275,22 @@ msgstr "Cloud workspaces"
 #: src/components/sidebar/Sidebar.tsx
 msgid "Collapse all"
 msgstr "Collapse all"
+
+#: src/components/BoardView.tsx
+#~ msgid "Collapse column"
+#~ msgstr "Collapse column"
+
+#: src/components/BoardView.tsx
+#~ msgid "Color"
+#~ msgstr "Color"
+
+#: src/components/BoardView.tsx
+#~ msgid "Color columns"
+#~ msgstr "Color columns"
+
+#: src/components/CardPeek.tsx
+#~ msgid "comma, separated"
+#~ msgstr "comma, separated"
 
 #: src/components/modals/CommandPalette.tsx
 msgid "Command palette"
@@ -226,9 +321,17 @@ msgstr "Connect to load workspaces."
 msgid "Connected as {0}. Sync vaults with cloud workspaces."
 msgstr "Connected as {0}. Sync vaults with cloud workspaces."
 
+#: src/components/BoardView.tsx
+#~ msgid "Copy link"
+#~ msgstr "Copy link"
+
 #: src/components/sidebar/Sidebar.tsx
 msgid "Copy path"
 msgstr "Copy path"
+
+#: src/components/editor/ResourceViewer.tsx
+msgid "Could not open this file."
+msgstr "Could not open this file."
 
 #: src/components/editor/EditorShell.tsx
 msgid "Could not prepare PDF export."
@@ -239,7 +342,7 @@ msgid "Could not prepare PDF page."
 msgstr "Could not prepare PDF page."
 
 #: src/components/modals/CreateFolderDialog.tsx
-#: src/components/modals/CreateNoteDialog.tsx
+#: src/components/modals/NewResourceDialog.tsx
 msgid "Create"
 msgstr "Create"
 
@@ -264,6 +367,10 @@ msgstr "Create your first Markdown note."
 msgid "Created folder {0}."
 msgstr "Created folder {0}."
 
+#: src/components/modals/NewResourceDialog.tsx
+msgid "Creates in"
+msgstr "Creates in"
+
 #: src/components/modals/AccountDialog.tsx
 msgid "Current vault"
 msgstr "Current vault"
@@ -275,6 +382,33 @@ msgstr "Default vault path: <0>{defaultVaultPath}</0>"
 #: src/components/modals/DeleteFolderDialog.tsx
 msgid "Delete"
 msgstr "Delete"
+
+#: src/components/CardPeek.tsx
+#~ msgid "Delete card"
+#~ msgstr "Delete card"
+
+#. placeholder {0}: card.title
+#: src/components/BoardView.tsx
+msgid "Delete card \"{0}\"? It moves to the trash."
+msgstr "Delete card \"{0}\"? It moves to the trash."
+
+#: src/components/BoardView.tsx
+#~ msgid "Delete column \"{0}\"?"
+#~ msgstr "Delete column \"{0}\"?"
+
+#: src/components/BoardView.tsx
+#~ msgid "Delete column \"{0}\"? Its {1} card(s) move to \"{2}\"."
+#~ msgstr "Delete column \"{0}\"? Its {1} card(s) move to \"{2}\"."
+
+#: src/components/BoardView.tsx
+msgid "Delete column \"{colName}\"?"
+msgstr "Delete column \"{colName}\"?"
+
+#. placeholder {0}: inCol.length
+#. placeholder {1}: fallback.name
+#: src/components/BoardView.tsx
+msgid "Delete column \"{colName}\"? Its {0} card(s) move to \"{1}\"."
+msgstr "Delete column \"{colName}\"? Its {0} card(s) move to \"{1}\"."
 
 #: src/components/sidebar/Sidebar.tsx
 msgid "Delete folder"
@@ -331,6 +465,10 @@ msgstr "Document info"
 msgid "Document Info"
 msgstr "Document Info"
 
+#: src/components/modals/NewResourceDialog.tsx
+msgid "Document name"
+msgstr "Document name"
+
 #: src/components/editor/EditorShell.tsx
 msgid "Document published."
 msgstr "Document published."
@@ -343,9 +481,30 @@ msgstr "Document unpublished."
 msgid "Documents"
 msgstr "Documents"
 
+#: src/components/BoardView.tsx
+#~ msgid "Done column"
+#~ msgstr "Done column"
+
+#: src/components/BoardView.tsx
+#~ msgid "Drag to resize"
+#~ msgstr "Drag to resize"
+
 #: src/components/sidebar/Sidebar.tsx
 msgid "Drop a folder here to open it as a vault."
 msgstr "Drop a folder here to open it as a vault."
+
+#: src/components/BoardTable.tsx
+#: src/components/CardPeek.tsx
+#~ msgid "Due"
+#~ msgstr "Due"
+
+#: src/components/BoardView.tsx
+#~ msgid "Duplicate"
+#~ msgstr "Duplicate"
+
+#: src/components/editor/CardPropertyStrip.tsx
+msgid "Edit properties in the board"
+msgstr "Edit properties in the board"
 
 #: src/components/editor/EditorShell.tsx
 msgid "Edits are written back to YAML frontmatter."
@@ -367,6 +526,10 @@ msgstr "Enable cloud sync for this vault first"
 msgid "Expand all"
 msgstr "Expand all"
 
+#: src/components/BoardView.tsx
+#~ msgid "Expand column"
+#~ msgstr "Expand column"
+
 #: src/components/editor/EditorShell.tsx
 msgid "Export"
 msgstr "Export"
@@ -386,6 +549,10 @@ msgstr "Favorite"
 #: src/components/sidebar/Sidebar.tsx
 msgid "Favorites"
 msgstr "Favorites"
+
+#: src/components/BoardView.tsx
+#~ msgid "Filter"
+#~ msgstr "Filter"
 
 #: src/components/editor/EditorShell.tsx
 msgid "Focus mode"
@@ -407,9 +574,29 @@ msgstr "Format table"
 msgid "General"
 msgstr "General"
 
+#: src/components/BoardView.tsx
+#~ msgid "Group: Assignee"
+#~ msgstr "Group: Assignee"
+
+#: src/components/BoardView.tsx
+#~ msgid "Group: Priority"
+#~ msgstr "Group: Priority"
+
+#: src/components/BoardView.tsx
+#~ msgid "Group: Status"
+#~ msgstr "Group: Status"
+
 #: src/components/editor/EditorShell.tsx
 msgid "Hide"
 msgstr "Hide"
+
+#: src/components/CardPeek.tsx
+#~ msgid "Icon"
+#~ msgstr "Icon"
+
+#: src/components/modals/NewResourceDialog.tsx
+msgid "Import file"
+msgstr "Import file"
 
 #: src/components/modals/CreateFolderDialog.tsx
 msgid "in {parentPath}/"
@@ -447,6 +634,10 @@ msgstr "Insert or format table"
 msgid "Italic - Ctrl+I"
 msgstr "Italic - Ctrl+I"
 
+#: src/components/modals/NewResourceDialog.tsx
+msgid "Kanban board"
+msgstr "Kanban board"
+
 #: src/components/layout/Header.tsx
 msgid "Language"
 msgstr "Language"
@@ -463,6 +654,18 @@ msgstr "line {0}"
 #: src/components/editor/EditorShell.tsx
 msgid "Link - Ctrl+K"
 msgstr "Link - Ctrl+K"
+
+#: src/components/editor/ResourceViewer.tsx
+msgid "Loading preview"
+msgstr "Loading preview"
+
+#: src/components/CardPeek.tsx
+#~ msgid "Loading…"
+#~ msgstr "Loading…"
+
+#: src/components/editor/ResourceViewer.tsx
+msgid "Local"
+msgstr "Local"
 
 #: src/components/modals/AccountDialog.tsx
 msgid "Local mode"
@@ -484,6 +687,10 @@ msgstr "Log out"
 #: src/components/layout/VaultHome.tsx
 msgid "Markdown"
 msgstr "Markdown"
+
+#: src/components/modals/NewResourceDialog.tsx
+msgid "Markdown document"
+msgstr "Markdown document"
 
 #: src/components/editor/EditorShell.tsx
 msgid "Markdown editor"
@@ -512,12 +719,24 @@ msgstr "Move to trash"
 msgid "Move to..."
 msgstr "Move to..."
 
+#: src/components/modals/NewResourceDialog.tsx
+msgid "New board"
+msgstr "New board"
+
+#: src/components/BoardView.tsx
+#~ msgid "New card"
+#~ msgstr "New card"
+
+#: src/components/BoardView.tsx
+msgid "New column name"
+msgstr "New column name"
+
+#: src/components/modals/NewResourceDialog.tsx
 #: src/components/sidebar/Sidebar.tsx
 msgid "New document"
 msgstr "New document"
 
 #: src/components/layout/VaultHome.tsx
-#: src/components/modals/CreateNoteDialog.tsx
 #: src/components/sidebar/Sidebar.tsx
 msgid "New Document"
 msgstr "New Document"
@@ -538,9 +757,21 @@ msgstr "New Folder"
 msgid "New folder name:"
 msgstr "New folder name:"
 
+#: src/components/modals/NewResourceDialog.tsx
+msgid "New resource"
+msgstr "New resource"
+
+#: src/components/BoardTable.tsx
+#~ msgid "No cards"
+#~ msgstr "No cards"
+
 #: src/components/modals/AccountDialog.tsx
 msgid "No cloud workspaces yet. Sync this vault to create one."
 msgstr "No cloud workspaces yet. Sync this vault to create one."
+
+#: src/components/BoardView.tsx
+#~ msgid "No color"
+#~ msgstr "No color"
 
 #: src/components/modals/CommandPalette.tsx
 msgid "No commands found."
@@ -562,9 +793,17 @@ msgstr "No file selected"
 msgid "No headings found."
 msgstr "No headings found."
 
+#: src/components/CardPeek.tsx
+#~ msgid "No icon"
+#~ msgstr "No icon"
+
 #: src/components/sidebar/Sidebar.tsx
 msgid "No matches."
 msgstr "No matches."
+
+#: src/components/editor/EditorShell.tsx
+msgid "No note named \"{target}\"."
+msgstr "No note named \"{target}\"."
 
 #: src/components/layout/VaultHome.tsx
 msgid "No notes yet."
@@ -591,8 +830,12 @@ msgid "Not bound to a cloud workspace yet. Binding starts bidirectional sync for
 msgstr "Not bound to a cloud workspace yet. Binding starts bidirectional sync for this vault."
 
 #: src/components/modals/CreateNoteDialog.tsx
-msgid "Note name..."
-msgstr "Note name..."
+#~ msgid "Note name..."
+#~ msgstr "Note name..."
+
+#: src/components/CardPeek.tsx
+#~ msgid "Notes"
+#~ msgstr "Notes"
 
 #: src/components/editor/EditorShell.tsx
 msgid "Only web, email, and phone links can be opened from preview."
@@ -634,6 +877,18 @@ msgstr "Open another vault"
 #: src/components/layout/Header.tsx
 msgid "Open file"
 msgstr "Open file"
+
+#: src/components/BoardView.tsx
+#~ msgid "Open in editor"
+#~ msgstr "Open in editor"
+
+#: src/components/CardPeek.tsx
+#~ msgid "Open in full editor"
+#~ msgstr "Open in full editor"
+
+#: src/components/editor/ResourceViewer.tsx
+msgid "Open in system app"
+msgstr "Open in system app"
 
 #: src/components/layout/WelcomeScreen.tsx
 msgid "Open Markdown file"
@@ -683,6 +938,20 @@ msgstr "Permanently delete"
 msgid "Preparing PDF export..."
 msgstr "Preparing PDF export..."
 
+#: src/components/CardPeek.tsx
+#~ msgid "Preview"
+#~ msgstr "Preview"
+
+#: src/components/editor/ResourceViewer.tsx
+msgid "Preview is available in the desktop app."
+msgstr "Preview is available in the desktop app."
+
+#: src/components/BoardTable.tsx
+#: src/components/BoardView.tsx
+#: src/components/CardPeek.tsx
+#~ msgid "Priority"
+#~ msgstr "Priority"
+
 #: src/components/layout/Header.tsx
 #: src/components/modals/AccountDialog.tsx
 msgid "Profile"
@@ -731,6 +1000,10 @@ msgstr "Read-only"
 msgid "Recent"
 msgstr "Recent"
 
+#: src/components/BoardView.tsx
+#~ msgid "Refresh"
+#~ msgstr "Refresh"
+
 #: src/components/editor/EditorShell.tsx
 msgid "Remove from favorites"
 msgstr "Remove from favorites"
@@ -746,6 +1019,10 @@ msgstr "Removed from favorites."
 #: src/components/sidebar/Sidebar.tsx
 msgid "Rename"
 msgstr "Rename"
+
+#: src/components/BoardView.tsx
+msgid "Rename column"
+msgstr "Rename column"
 
 #: src/components/sidebar/Sidebar.tsx
 msgid "Rename folder to:"
@@ -771,6 +1048,14 @@ msgstr "Restore queued. Will sync on next push."
 msgid "Save"
 msgstr "Save"
 
+#: src/components/BoardView.tsx
+#~ msgid "Save as template"
+#~ msgstr "Save as template"
+
+#: src/components/BoardView.tsx
+#~ msgid "Search cards"
+#~ msgstr "Search cards"
+
 #: src/components/modals/CommandPalette.tsx
 msgid "Search commands"
 msgstr "Search commands"
@@ -791,6 +1076,14 @@ msgstr "Select a Markdown file"
 msgid "Select destination for \"{sourceName}\""
 msgstr "Select destination for \"{sourceName}\""
 
+#: src/components/BoardView.tsx
+#~ msgid "Set as done column"
+#~ msgstr "Set as done column"
+
+#: src/components/BoardView.tsx
+#~ msgid "Set WIP limit"
+#~ msgstr "Set WIP limit"
+
 #: src/components/modals/AccountDialog.tsx
 #: src/components/sidebar/Sidebar.tsx
 msgid "Settings"
@@ -804,6 +1097,22 @@ msgstr "Show in Explorer"
 msgid "Sign in"
 msgstr "Sign in"
 
+#: src/components/BoardView.tsx
+#~ msgid "Sort: Due"
+#~ msgstr "Sort: Due"
+
+#: src/components/BoardView.tsx
+#~ msgid "Sort: Manual"
+#~ msgstr "Sort: Manual"
+
+#: src/components/BoardView.tsx
+#~ msgid "Sort: Priority"
+#~ msgstr "Sort: Priority"
+
+#: src/components/BoardView.tsx
+#~ msgid "Sort: Title"
+#~ msgstr "Sort: Title"
+
 #: src/components/modals/AccountDialog.tsx
 msgid "Start cloud sync"
 msgstr "Start cloud sync"
@@ -812,6 +1121,11 @@ msgstr "Start cloud sync"
 #: src/components/modals/SyncPromptDialog.tsx
 msgid "Start sync"
 msgstr "Start sync"
+
+#: src/components/BoardTable.tsx
+#: src/components/CardPeek.tsx
+#~ msgid "Status"
+#~ msgstr "Status"
 
 #: src/components/modals/SyncPromptDialog.tsx
 msgid "Sync \"{vaultName}\" to cloud?"
@@ -839,9 +1153,27 @@ msgstr "Sync this document before publishing."
 msgid "Syncing with {0}."
 msgstr "Syncing with {0}."
 
+#: src/components/BoardView.tsx
+#~ msgid "Table"
+#~ msgstr "Table"
+
+#: src/components/BoardTable.tsx
+#: src/components/BoardView.tsx
+#: src/components/CardPeek.tsx
+#~ msgid "Tags"
+#~ msgstr "Tags"
+
 #: src/components/editor/EditorShell.tsx
 msgid "Task list"
 msgstr "Task list"
+
+#: src/components/BoardView.tsx
+msgid "Template name"
+msgstr "Template name"
+
+#: src/components/BoardView.tsx
+#~ msgid "Templates"
+#~ msgstr "Templates"
 
 #: src/components/editor/EditorShell.tsx
 msgid "The public snapshot is behind the current document."
@@ -851,6 +1183,10 @@ msgstr "The public snapshot is behind the current document."
 msgid "This folder is empty."
 msgstr "This folder is empty."
 
+#: src/components/editor/ResourceViewer.tsx
+msgid "This PDF can not be previewed inline."
+msgstr "This PDF can not be previewed inline."
+
 #: src/components/modals/AccountDialog.tsx
 msgid "This vault is local-only. You can keep working without cloud sync or enable it below."
 msgstr "This vault is local-only. You can keep working without cloud sync or enable it below."
@@ -859,13 +1195,25 @@ msgstr "This vault is local-only. You can keep working without cloud sync or ena
 msgid "This vault is now local-only."
 msgstr "This vault is now local-only."
 
+#: src/components/BoardTable.tsx
+#~ msgid "Title"
+#~ msgstr "Title"
+
 #: src/components/sidebar/Sidebar.tsx
 msgid "Toggle favorite"
 msgstr "Toggle favorite"
 
+#: src/components/modals/NewResourceDialog.tsx
+msgid "Track work in columns and cards"
+msgstr "Track work in columns and cards"
+
 #: src/components/sidebar/Sidebar.tsx
 msgid "Trash"
 msgstr "Trash"
+
+#: src/components/BoardView.tsx
+#~ msgid "Unassigned"
+#~ msgstr "Unassigned"
 
 #: src/components/modals/CommandPalette.tsx
 msgid "Unavailable"
@@ -883,6 +1231,14 @@ msgstr "Unsaved"
 #: src/components/modals/AccountDialog.tsx
 msgid "Unsaved changes"
 msgstr "Unsaved changes"
+
+#: src/components/BoardView.tsx
+#~ msgid "Unset done column"
+#~ msgstr "Unset done column"
+
+#: src/components/CardPeek.tsx
+#~ msgid "Untitled card"
+#~ msgstr "Untitled card"
 
 #: src/components/modals/AccountDialog.tsx
 msgid "Untitled workspace"
@@ -904,6 +1260,10 @@ msgstr "Vault"
 msgid "Vault ready"
 msgstr "Vault ready"
 
+#: src/components/modals/NewResourceDialog.tsx
+msgid "vault root"
+msgstr "vault root"
+
 #: src/components/editor/EditorShell.tsx
 msgid "View published page"
 msgstr "View published page"
@@ -917,9 +1277,21 @@ msgstr "Viewer access is read-only."
 msgid "Waiting for browser authorization (code {0})..."
 msgstr "Waiting for browser authorization (code {0})..."
 
+#: src/components/BoardView.tsx
+msgid "WIP limit (blank to clear)"
+msgstr "WIP limit (blank to clear)"
+
+#: src/components/BoardView.tsx
+#~ msgid "WIP limit {0}"
+#~ msgstr "WIP limit {0}"
+
 #: src/components/sidebar/Sidebar.tsx
 msgid "Workspace files"
 msgstr "Workspace files"
+
+#: src/components/CardPeek.tsx
+#~ msgid "Write"
+#~ msgstr "Write"
 
 #: src/components/modals/AccountDialog.tsx
 msgid ""
