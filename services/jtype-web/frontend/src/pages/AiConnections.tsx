@@ -18,8 +18,8 @@ export function AiConnections() {
     try {
       const r = await api.listTokens()
       setTokens(r.tokens)
-    } catch (e: any) {
-      setError(e.message)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Request failed')
     } finally {
       setLoading(false)
     }
@@ -34,8 +34,8 @@ export function AiConnections() {
       setNewToken(r.token)
       setLabel('')
       load()
-    } catch (e: any) {
-      setError(e.message)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Request failed')
     } finally {
       setCreating(false)
     }
@@ -46,8 +46,8 @@ export function AiConnections() {
     try {
       await api.revokeToken(t.id)
       load()
-    } catch (e: any) {
-      setError(e.message)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Request failed')
     }
   }
 

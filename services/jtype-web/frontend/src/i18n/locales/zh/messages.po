@@ -146,7 +146,7 @@ msgstr "AI"
 
 #: src/components/Layout.tsx
 msgid "AI Connections"
-msgstr ""
+msgstr "AI 连接"
 
 #: src/pages/Landing.tsx
 msgid "AI-ready"

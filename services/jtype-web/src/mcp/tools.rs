@@ -352,6 +352,9 @@ async fn run(st: &McpState, token: &str, name: &str, args: &Value) -> Result<Str
             let card_id = req(args, "card_id")?;
             let target_col = req(args, "target_column_id")?;
             let position = args.get("target_position").and_then(|v| v.as_i64()).unwrap_or(0);
+            if position < 0 {
+                return Err("move_card: target_position must be >= 0".into());
+            }
             let card = api_post(
                 st,
                 token,

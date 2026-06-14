@@ -86,7 +86,10 @@ for step in range(1, 17):
 
 # 3. Optionally persist the transcript as Markdown.
 if "--save" in sys.argv:
-    path = sys.argv[sys.argv.index("--save") + 1]
+    i = sys.argv.index("--save")
+    if i + 1 >= len(sys.argv):
+        raise SystemExit("--save requires a file path")
+    path = sys.argv[i + 1]
     with open(path, "w") as f:
         f.write(f"# Live AI ↔ JType MCP transcript\n\nModel: `{CFG['model']}` · {len(oa_tools)} tools\n\n")
         for role, text in TRANSCRIPT:
