@@ -574,6 +574,9 @@ pub struct SiteSettingsResponse {
     pub name: String,
     pub footer_html: Option<String>,
     pub theme: String,
+    /// Stored custom-theme spec (only meaningful when `theme == "custom"`).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub custom_theme: Option<serde_json::Value>,
     pub created_at: String,
     pub updated_at: String,
 }
@@ -584,6 +587,8 @@ pub struct UpdateSiteSettingsRequest {
     pub name: Option<String>,
     pub footer_html: Option<String>,
     pub theme: Option<String>,
+    /// Custom theme spec; used when `theme == "custom"`.
+    pub custom_theme: Option<serde_json::Value>,
 }
 
 #[derive(Debug, Serialize)]
@@ -628,6 +633,8 @@ pub struct PublishBatchResponse {
 pub struct PreviewRequest {
     pub content: String,
     pub theme: Option<String>,
+    /// Inline custom theme spec for previewing before saving (theme == "custom").
+    pub custom_theme: Option<serde_json::Value>,
 }
 
 #[derive(Debug, Serialize)]
@@ -639,6 +646,20 @@ pub struct PublishStatusResponse {
     pub current_hash: String,
     pub published_hash: Option<String>,
     pub has_unpublished_changes: bool,
+}
+
+// ── Assets ──
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AssetResponse {
+    pub id: String,
+    /// Web-proxied URL to embed in Markdown (`/assets/:workspace_id/:id`).
+    pub url: String,
+    pub content_type: String,
+    pub byte_size: i64,
+    pub original_name: Option<String>,
+    pub created_at: String,
 }
 
 // ── Kanban ──

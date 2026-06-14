@@ -12,6 +12,7 @@ import { useWorkspaceSocket } from '../hooks/useWorkspaceSocket'
 import { useOfflineSync } from '../hooks/useOfflineSync'
 import { ConflictResolver } from '../components/ConflictResolver'
 import { NewResourceDialog } from '../components/NewResourceDialog'
+import { SiteThemePanel } from '../components/SiteThemePanel'
 import {
   BoldIcon,
   ItalicIcon,
@@ -31,6 +32,7 @@ import {
   CheckCircleIcon,
   LinkSlashIcon,
   ArrowUpTrayIcon,
+  PhotoIcon,
   PlusIcon,
   DocumentPlusIcon,
   ChevronDownIcon,
@@ -51,12 +53,13 @@ import {
   ArrowRightStartOnRectangleIcon,
   ArrowPathIcon,
   Cog6ToothIcon,
+  Bars3Icon,
 } from '@heroicons/react/24/outline'
-import { t } from '@lingui/core/macro'
+import { t, plural } from '@lingui/core/macro'
 import { Trans } from '@lingui/react/macro'
 
 type WorkspaceSection = 'documents' | 'trash' | 'publishing' | 'domains'
-type WorkspaceSettingsSection = 'general' | 'trash' | 'domains' | 'members'
+type WorkspaceSettingsSection = 'general' | 'site' | 'trash' | 'domains' | 'members'
 type FloatingTooltipState = {
   label: string
   x: number
@@ -93,6 +96,8 @@ export function Workspace() {
   const [editorMode, setEditorMode] = useState<EditorMode>('split')
   const [infoPanel, setInfoPanel] = useState(false)
   const [focusMode, setFocusMode] = useState(false)
+  // Mobile-only: the 272px sidebar becomes an off-canvas drawer below `md`.
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const [editorContextMenu, setEditorContextMenu] = useState<{ x: number; y: number } | null>(null)
   const [treeContextMenu, setTreeContextMenu] = useState<{ node: WebTreeNode; x: number; y: number } | null>(null)
   const [floatingTooltip, setFloatingTooltip] = useState<FloatingTooltipState | null>(null)
@@ -150,6 +155,8 @@ export function Workspace() {
   }, [workspaceId])
 
   const editorRef = useRef<HTMLTextAreaElement>(null)
+  const imageInputRef = useRef<HTMLInputElement>(null)
+  const [editorNotice, setEditorNotice] = useState('')
   const previewRef = useRef<HTMLElement>(null)
   const isSyncingScroll = useRef(false)
 
@@ -215,6 +222,12 @@ export function Workspace() {
       preview.removeEventListener('scroll', onPreviewScroll)
     }
   }, [activeSection, selectedDoc, editorMode, infoPanel])
+
+  // On mobile, picking a document from the drawer should close it so the
+  // editor takes the full width.
+  useEffect(() => {
+    setMobileSidebarOpen(false)
+  }, [selectedDoc])
 
   useEffect(() => {
     if (!previewRef.current) return
@@ -619,6 +632,57 @@ export function Workspace() {
     setDirty(true)
   }, [canEditContent])
 
+  // Replace the first occurrence of `find` in the editor, syncing React state.
+  const replaceInEditor = useCallback((find: string, replace: string) => {
+    const editor = editorRef.current
+    if (!editor) return
+    const idx = editor.value.indexOf(find)
+    if (idx === -1) return
+    editor.setRangeText(replace, idx, idx + find.length, 'preserve')
+    editor.dispatchEvent(new Event('input', { bubbles: true }))
+  }, [])
+
+  // Upload an image file and insert a Markdown image at the cursor. A
+  // placeholder link is shown while the upload is in flight.
+  const uploadImageFile = useCallback(async (file: File) => {
+    if (!workspaceId || !canEditContent) return
+    if (!file.type.startsWith('image/')) return
+    const nonce = Math.random().toString(36).slice(2, 10)
+    const safeName = (file.name || 'image').replace(/[[\]()]/g, '')
+    const placeholderUrl = `uploading-${nonce}`
+    const placeholder = `![${safeName}](${placeholderUrl})`
+    insertAtCursor(placeholder + '\n')
+    try {
+      const asset = await api.uploadAsset(workspaceId, file)
+      replaceInEditor(placeholderUrl, asset.url)
+    } catch (err) {
+      replaceInEditor(placeholder + '\n', '')
+      setEditorNotice(t`Image upload failed` + `: ${String((err as Error)?.message || err)}`)
+      window.setTimeout(() => setEditorNotice(''), 4000)
+    }
+  }, [workspaceId, canEditContent, replaceInEditor])
+
+  const handlePaste = useCallback((e: React.ClipboardEvent) => {
+    if (!canEditContent) return
+    const items = e.clipboardData?.items
+    if (!items) return
+    const images = [...items].filter(it => it.kind === 'file' && it.type.startsWith('image/'))
+    if (images.length === 0) return
+    e.preventDefault()
+    for (const it of images) {
+      const f = it.getAsFile()
+      if (f) void uploadImageFile(f)
+    }
+  }, [canEditContent, uploadImageFile])
+
+  const handleImageDrop = useCallback((e: React.DragEvent) => {
+    if (!canEditContent) return
+    const files = [...(e.dataTransfer?.files || [])].filter(f => f.type.startsWith('image/'))
+    if (files.length === 0) return
+    e.preventDefault()
+    for (const f of files) void uploadImageFile(f)
+  }, [canEditContent, uploadImageFile])
+
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (!canEditContent) return
     if (e.ctrlKey || e.metaKey) {
@@ -745,9 +809,18 @@ export function Workspace() {
       />
 
       {activeSection === 'documents' && (
-        <div className={`grid overflow-hidden ${focusMode ? 'grid-cols-[minmax(0,1fr)]' : 'grid-cols-[272px_minmax(0,1fr)]'}`}>
+        <div className={`grid overflow-hidden ${focusMode ? 'grid-cols-[minmax(0,1fr)]' : 'grid-cols-[minmax(0,1fr)] md:grid-cols-[272px_minmax(0,1fr)]'}`}>
+          {!sidebarCollapsed && !focusMode && mobileSidebarOpen && (
+            <div
+              className="fixed inset-x-0 bottom-0 top-16 z-40 bg-black/30 md:hidden"
+              aria-hidden="true"
+              onClick={() => setMobileSidebarOpen(false)}
+            />
+          )}
           {!sidebarCollapsed && !focusMode && (
-            <aside className="flex min-h-0 flex-col border-r border-black/[0.04] bg-[#f7faf8]">
+            <aside
+              className={`flex min-h-0 flex-col border-r border-black/[0.04] bg-[#f7faf8] max-md:fixed max-md:bottom-0 max-md:left-0 max-md:top-16 max-md:z-50 max-md:w-[min(86vw,300px)] max-md:shadow-2xl max-md:shadow-stone-900/20 max-md:transition-transform ${mobileSidebarOpen ? 'max-md:translate-x-0' : 'max-md:-translate-x-full'}`}
+            >
               <div className="p-5 pb-4">
                 <CloudWorkspaceSwitcher
                   workspace={workspace}
@@ -929,7 +1002,16 @@ export function Workspace() {
                   </div>
                 </div>
               )}
-              <div className="flex min-h-12 items-center gap-1 border-b border-black/[0.04] bg-[#fbfdfb] px-5">
+              <div className="editor-toolbar-row flex min-h-12 items-center gap-1 border-b border-black/[0.04] bg-[#fbfdfb] px-5">
+                <button
+                  type="button"
+                  className="editor-tool mr-1 shrink-0 md:hidden"
+                  aria-label={t`Open sidebar`}
+                  {...tooltipProps(t`Open sidebar`)}
+                  onClick={() => setMobileSidebarOpen(true)}
+                >
+                  <Bars3Icon className="h-4 w-4" />
+                </button>
                 <EditorToolbarButton title={t`Bold (Ctrl+B)`} disabled={!canEditContent} tooltipProps={tooltipProps(t`Bold (Ctrl+B)`)} onClick={() => wrapSelection('**', '**', 'bold text')}>
                   <BoldIcon className="h-4 w-4" />
                 </EditorToolbarButton>
@@ -950,6 +1032,9 @@ export function Workspace() {
                 </EditorToolbarButton>
                 <EditorToolbarButton title={t`Insert Mermaid diagram`} disabled={!canEditContent} tooltipProps={tooltipProps(t`Insert Mermaid diagram`)} onClick={() => insertAtCursor('\n```mermaid\nflowchart TD\n  A --> B\n```\n')}>
                   <ShareIcon className="h-4 w-4" />
+                </EditorToolbarButton>
+                <EditorToolbarButton title={t`Insert image`} disabled={!canEditContent} tooltipProps={tooltipProps(t`Insert image`)} onClick={() => imageInputRef.current?.click()}>
+                  <PhotoIcon className="h-4 w-4" />
                 </EditorToolbarButton>
                 <EditorToolbarButton title={t`Task list`} disabled={!canEditContent} tooltipProps={tooltipProps(t`Task list`)} onClick={() => insertAtCursor('\n- [ ] Task\n')}>
                   <ClipboardDocumentListIcon className="h-4 w-4" />
@@ -991,14 +1076,18 @@ export function Workspace() {
                 </button>
               </div>
 
-              <div className={`grid min-h-0 flex-1 ${infoPanel ? 'grid-cols-[minmax(0,1fr)_340px]' : 'grid-cols-[minmax(0,1fr)]'}`}>
+              <div className={`grid min-h-0 flex-1 ${infoPanel ? 'grid-cols-[minmax(0,1fr)] md:grid-cols-[minmax(0,1fr)_340px]' : 'grid-cols-[minmax(0,1fr)]'}`}>
                 <div className={getGridClass(editorMode)} style={{ position: 'relative' }}>
                   <textarea
                     ref={editorRef}
+                    id="editor"
                     value={docContent}
                     onChange={canEditContent ? handleEditorInput : undefined}
                     onKeyDown={handleKeyDown}
                     onContextMenu={canEditContent ? handleContextMenu : undefined}
+                    onPaste={canEditContent ? handlePaste : undefined}
+                    onDrop={canEditContent ? handleImageDrop : undefined}
+                    onDragOver={canEditContent ? (e) => { if (e.dataTransfer?.types?.includes('Files')) e.preventDefault() } : undefined}
                     readOnly={!canEditContent}
                     className="h-full w-full min-h-0 resize-none bg-white/40 p-8 font-mono text-[13px] leading-7 text-stone-800 outline-none placeholder:text-[#9aa6a1]"
                     style={{ position: 'relative', zIndex: 2 }}
@@ -1006,6 +1095,19 @@ export function Workspace() {
                     aria-label={t`Markdown editor`}
                     placeholder={t`Start writing Markdown...`}
                   />
+                  <input
+                    ref={imageInputRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/gif,image/webp,image/avif"
+                    multiple
+                    hidden
+                    onChange={(e) => { const files = e.target.files; if (files) for (const f of files) void uploadImageFile(f); e.target.value = '' }}
+                  />
+                  {editorNotice && (
+                    <div className="absolute bottom-3 left-1/2 z-10 -translate-x-1/2 rounded-lg bg-stone-900/90 px-3 py-1.5 text-xs text-white shadow-lg">
+                      {editorNotice}
+                    </div>
+                  )}
                   <article
                     ref={previewRef}
                     className="preview empty min-h-0 overflow-y-auto overflow-x-hidden border-l border-black/[0.04] bg-[#f8fbf9] p-10"
@@ -1017,7 +1119,14 @@ export function Workspace() {
                 </div>
 
                 {infoPanel && (
-                  <aside className="min-h-0 overflow-y-auto border-l border-black/[0.04] bg-[#f6faf7] p-5">
+                  <div
+                    className="fixed inset-x-0 bottom-0 top-16 z-40 bg-black/30 md:hidden"
+                    aria-hidden="true"
+                    onClick={() => setInfoPanel(false)}
+                  />
+                )}
+                {infoPanel && (
+                  <aside className="min-h-0 overflow-y-auto border-l border-black/[0.04] bg-[#f6faf7] p-5 max-md:fixed max-md:bottom-0 max-md:right-0 max-md:top-16 max-md:z-50 max-md:w-[min(86vw,340px)] max-md:shadow-2xl max-md:shadow-stone-900/20">
                     <div className="mb-4 flex items-center justify-between">
                       <p className="text-sm font-semibold text-stone-950"><Trans>Document Info</Trans></p>
                       <button className="subtle-button aspect-square px-0" type="button" title={t`Hide`} onClick={() => setInfoPanel(false)}><XMarkIcon className="h-4 w-4" /></button>
@@ -1047,7 +1156,15 @@ export function Workspace() {
             )
           ) : (
             <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-              <div className="mx-auto w-full max-w-6xl px-10 py-12">
+              <div className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-10 sm:py-12">
+                <button
+                  type="button"
+                  className="mb-5 inline-flex h-9 items-center gap-2 rounded-lg border border-black/[0.06] bg-white px-3 text-sm font-medium text-[#4b5753] md:hidden"
+                  onClick={() => setMobileSidebarOpen(true)}
+                >
+                  <Bars3Icon className="h-4 w-4" />
+                  <Trans>Files</Trans>
+                </button>
                 <div className="max-w-3xl">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand"><Trans>Vault ready</Trans></p>
                   <h2 className="mt-4 text-4xl font-semibold tracking-[-0.035em] text-stone-950">{displayWorkspaceName(workspace)}</h2>
@@ -1080,16 +1197,16 @@ export function Workspace() {
                   <section className="panel-card p-5">
                     <div className="mb-3 flex items-center justify-between">
                       <p className="text-sm font-semibold text-stone-950"><Trans>Documents</Trans></p>
-                      <span className="text-xs text-[#6b7773]">{t`${markdownDocs.length} Markdown file${markdownDocs.length === 1 ? '' : 's'}`}</span>
+                      <span className="text-xs text-[#6b7773]">{plural(markdownDocs.length, { one: '# Markdown file', other: '# Markdown files' })}</span>
                     </div>
                     <div className="space-y-1">
-                      {documents.length === 0 ? (
+                      {markdownDocs.length === 0 ? (
                         <div className="rounded-md border border-dashed border-stone-300 p-4">
                           <p className="text-sm font-semibold text-stone-800"><Trans>No notes yet.</Trans></p>
                           <p className="mt-1 text-sm text-stone-500"><Trans>Create your first Markdown note.</Trans></p>
                         </div>
                       ) : (
-                        documents.slice(0, 12).map(doc => (
+                        markdownDocs.slice(0, 12).map(doc => (
                           <button key={doc.id} type="button" className={`command-row ${selectedDoc === doc.id ? 'bg-[#e8f6f2] ring-1 ring-brand/15' : ''}`} onClick={() => openDocument(doc.id)}>
                             <span className="min-w-0">
                               <span className={`block truncate font-semibold ${selectedDoc === doc.id ? 'text-brand' : ''}`}>{doc.relativePath.replace(/\.(md|markdown|mdown|mkd)$/i, '')}</span>
@@ -1375,6 +1492,7 @@ function WorkspaceSettingsDialog({
 }) {
   const items: Array<{ id: WorkspaceSettingsSection; label: string; description: string }> = [
     { id: 'general', label: t`General`, description: t`Name, publishing identity, and storage` },
+    { id: 'site', label: t`Site & theme`, description: t`Theme, custom design, and footer` },
     { id: 'members', label: t`Members`, description: t`Team members and invitations` },
     { id: 'domains', label: t`Domains`, description: t`Custom domains and SSL` },
     { id: 'trash', label: t`Trash`, description: t`Restore or delete cloud documents` },
@@ -1412,10 +1530,10 @@ function WorkspaceSettingsDialog({
             <div className="mb-7 flex items-start justify-between gap-4">
               <div>
                 <h2 className="text-3xl font-semibold text-zinc-950">
-                  {active === 'general' ? t`General` : active === 'domains' ? t`Domains` : active === 'members' ? t`Members` : t`Trash`}
+                  {active === 'general' ? t`General` : active === 'site' ? t`Site & theme` : active === 'domains' ? t`Domains` : active === 'members' ? t`Members` : t`Trash`}
                 </h2>
                 <p className="mt-1 text-sm text-zinc-500">
-                  {active === 'general' ? t`Manage cloud workspace name, publishing title, and storage.` : active === 'domains' ? t`Bind custom domains and manage certificates.` : active === 'members' ? t`Manage team members, invitations, and access.` : t`Restore deleted documents or remove them permanently.`}
+                  {active === 'general' ? t`Manage cloud workspace name, publishing title, and storage.` : active === 'site' ? t`Choose a theme, design your own, and set the site footer.` : active === 'domains' ? t`Bind custom domains and manage certificates.` : active === 'members' ? t`Manage team members, invitations, and access.` : t`Restore deleted documents or remove them permanently.`}
                 </p>
               </div>
               <button className="subtle-button aspect-square px-0" type="button" title={t`Close`} onClick={onClose}><XMarkIcon className="h-4 w-4" /></button>
@@ -1434,6 +1552,9 @@ function WorkspaceSettingsDialog({
                 onSave={onSave}
                 onOpenDomains={onOpenDomains}
               />
+            )}
+            {active === 'site' && (
+              <SiteThemePanel workspace={workspace} publicUrl={publicUrl} />
             )}
             {active === 'domains' && (
               <WorkspaceDomainsPanel

@@ -33,6 +33,12 @@
       "runtimeArgs": ["-m", "http.server", "8800"],
       "port": 8800,
       "cwd": "services/jtype-web/frontend/dist"
+    },
+    {
+      "name": "jtype-web-themed",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "JTYPED_DATABASE_URL=mysql://jtype:jtype-local@127.0.0.1:3306/jtype JTYPED_BIND_ADDR=127.0.0.1:13346 JTYPED_PUBLIC_BASE_URL=http://127.0.0.1:13346 exec ./services/jtype-web/target/debug/jtype-web"],
+      "port": 13346
     }
   ]
 }

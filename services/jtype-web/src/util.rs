@@ -12,6 +12,10 @@ pub fn sha256_hex(value: &str) -> String {
     hex::encode(Sha256::digest(value.as_bytes()))
 }
 
+pub fn sha256_bytes(value: &[u8]) -> String {
+    hex::encode(Sha256::digest(value))
+}
+
 pub fn random_token() -> String {
     let mut bytes = [0_u8; 32];
     OsRng.fill_bytes(&mut bytes);

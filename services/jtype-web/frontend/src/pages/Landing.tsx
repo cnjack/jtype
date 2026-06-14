@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { t, msg } from '@lingui/core/macro'
 import { Trans } from '@lingui/react/macro'
@@ -5,6 +6,7 @@ import { useLingui } from '@lingui/react'
 import {
   ArrowLeftOnRectangleIcon,
   ArrowRightIcon,
+  Bars3Icon,
   BoltIcon,
   CheckCircleIcon,
   CloudArrowUpIcon,
@@ -14,6 +16,7 @@ import {
   FolderOpenIcon,
   GlobeAltIcon,
   SparklesIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline'
 import { useAuth } from '../components/AuthContext'
 
@@ -75,6 +78,7 @@ const surfaces = [
 export function Landing() {
   const { user, loading, logout } = useAuth()
   const { _ } = useLingui()
+  const [menuOpen, setMenuOpen] = useState(false)
   const appLink = user ? '/workspaces' : '/login'
   const appCtaLabel = user ? t`Open dashboard` : t`Start writing`
   const appCtaTitle = user ? t`Open JType Cloud dashboard` : t`Start with JType Cloud`
@@ -101,6 +105,7 @@ export function Landing() {
             <a className="rounded-lg px-3 py-2 transition hover:bg-[#e8f6f2] hover:text-brand-dark" href="#surfaces"><Trans>Surfaces</Trans></a>
             <a className="rounded-lg px-3 py-2 transition hover:bg-[#e8f6f2] hover:text-brand-dark" href="#ai"><Trans>AI</Trans></a>
             <a className="rounded-lg px-3 py-2 transition hover:bg-[#e8f6f2] hover:text-brand-dark" href="#publish"><Trans>Publish</Trans></a>
+            <Link className="rounded-lg px-3 py-2 transition hover:bg-[#e8f6f2] hover:text-brand-dark" to="/help"><Trans>Help</Trans></Link>
           </div>
           <div className="flex items-center gap-2">
             <a
@@ -144,8 +149,32 @@ export function Landing() {
                 <ArrowRightIcon className="h-4 w-4" />
               </Link>
             )}
+            <button
+              type="button"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-black/[0.06] bg-white/80 text-[#4b5753] shadow-sm shadow-emerald-950/5 transition hover:border-brand/30 hover:bg-white hover:text-brand-dark md:hidden"
+              aria-label={menuOpen ? t`Close menu` : t`Open menu`}
+              aria-expanded={menuOpen}
+              aria-controls="landing-mobile-menu"
+              onClick={() => setMenuOpen(open => !open)}
+            >
+              {menuOpen ? <XMarkIcon className="h-5 w-5" /> : <Bars3Icon className="h-5 w-5" />}
+            </button>
           </div>
         </nav>
+
+        {menuOpen && (
+          <div
+            id="landing-mobile-menu"
+            className="mx-auto mt-2 flex max-w-7xl flex-col gap-1 rounded-xl border border-white/80 bg-white/95 p-2 text-sm font-medium text-[#4b5753] shadow-lg shadow-emerald-950/5 backdrop-blur-xl md:hidden"
+          >
+            <a className="rounded-lg px-3 py-2.5 transition hover:bg-[#e8f6f2] hover:text-brand-dark" href="#flow" onClick={() => setMenuOpen(false)}><Trans>Flow</Trans></a>
+            <a className="rounded-lg px-3 py-2.5 transition hover:bg-[#e8f6f2] hover:text-brand-dark" href="#surfaces" onClick={() => setMenuOpen(false)}><Trans>Surfaces</Trans></a>
+            <a className="rounded-lg px-3 py-2.5 transition hover:bg-[#e8f6f2] hover:text-brand-dark" href="#ai" onClick={() => setMenuOpen(false)}><Trans>AI</Trans></a>
+            <a className="rounded-lg px-3 py-2.5 transition hover:bg-[#e8f6f2] hover:text-brand-dark" href="#publish" onClick={() => setMenuOpen(false)}><Trans>Publish</Trans></a>
+            <Link className="rounded-lg px-3 py-2.5 transition hover:bg-[#e8f6f2] hover:text-brand-dark" to="/help" onClick={() => setMenuOpen(false)}><Trans>Help</Trans></Link>
+            <a className="rounded-lg px-3 py-2.5 transition hover:bg-[#e8f6f2] hover:text-brand-dark" href="https://github.com/cnjack/jtype" target="_blank" rel="noreferrer" onClick={() => setMenuOpen(false)}><Trans>GitHub</Trans></a>
+          </div>
+        )}
 
         <div className="relative mx-auto flex max-w-7xl flex-col items-center pt-12 text-center sm:pt-16">
           <div className="inline-flex items-center gap-2 rounded-full border border-brand/15 bg-white/75 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-brand-dark shadow-sm shadow-emerald-950/5 backdrop-blur">

@@ -26,6 +26,16 @@ msgstr "-----BEGIN PRIVATE KEY-----"
 msgid "(you)"
 msgstr "（我）"
 
+#. placeholder {0}: markdownDocs.length
+#: src/pages/Workspace.tsx
+msgid "{0, plural, one {# Markdown file} other {# Markdown files}}"
+msgstr "{0, plural, other {# 个 Markdown 文件}}"
+
+#. placeholder {0}: themes.length
+#: src/components/SiteThemePanel.tsx
+msgid "{0, plural, one {# theme} other {# themes}}"
+msgstr ""
+
 #. placeholder {0}: workspace.documentCount
 #. placeholder {0}: ws.documentCount
 #: src/pages/Workspace.tsx
@@ -47,12 +57,6 @@ msgstr "{0} 个文档已取消发布。"
 msgid "{0} live"
 msgstr "{0} 项已发布"
 
-#. placeholder {0}: markdownDocs.length
-#. placeholder {1}: markdownDocs.length === 1 ? '' : 's'
-#: src/pages/Workspace.tsx
-msgid "{0} Markdown file{1}"
-msgstr "{0} 个 Markdown 文件{1}"
-
 #. placeholder {0}: formatBytes(storage.totalBudgetBytes)
 #: src/components/Layout.tsx
 msgid "{0} total"
@@ -62,6 +66,14 @@ msgstr "共 {0}"
 #: src/components/Layout.tsx
 msgid "{0} used"
 msgstr "已用 {0}"
+
+#: src/help/pages/HelpHome.tsx
+msgid "{count} articles"
+msgstr "{count} 篇文章"
+
+#: src/pages/Admin.tsx
+msgid "•••••••• — leave blank to keep current"
+msgstr "•••••••• — 留空则保持当前值"
 
 #. placeholder {0}: new Date().getFullYear()
 #: src/pages/Login.tsx
@@ -97,9 +109,17 @@ msgstr "可编辑、可预览的 Markdown 文档"
 msgid "A text document you write and preview"
 msgstr "可编辑、可预览的文本文档"
 
+#: src/components/SiteThemePanel.tsx
+msgid "Accent"
+msgstr "强调色"
+
 #: src/pages/InviteAccept.tsx
 msgid "Accept invitation"
 msgstr "接受邀请"
+
+#: src/pages/Admin.tsx
+msgid "Access key"
+msgstr "访问密钥（Access Key）"
 
 #: src/components/Layout.tsx
 msgid "Account"
@@ -113,14 +133,16 @@ msgstr "操作"
 msgid "Active"
 msgstr "活跃"
 
+#: src/pages/Admin.tsx
+msgid "Active backend"
+msgstr "当前后端"
+
 #: src/pages/Workspace.tsx
 msgid "Add domain"
 msgstr "添加域名"
 
 #: src/pages/Workspace.tsx
-msgid ""
-"Add domains, verify DNS ownership, bind them to this workspace, and manage "
-"SSL certificates from one place."
+msgid "Add domains, verify DNS ownership, bind them to this workspace, and manage SSL certificates from one place."
 msgstr "在一处添加域名、验证 DNS 所有权、绑定到此工作区并管理 SSL 证书。"
 
 #: src/pages/Workspace.tsx
@@ -136,7 +158,8 @@ msgstr "添加到收藏"
 msgid "Add TXT record <0>{0}</0>, then verify DNS."
 msgstr "添加 TXT 记录 <0>{0}</0>，然后验证 DNS。"
 
-#: src/components/Layout.tsx src/pages/Admin.tsx
+#: src/components/Layout.tsx
+#: src/pages/Admin.tsx
 msgid "Admin"
 msgstr "管理"
 
@@ -156,13 +179,34 @@ msgstr "AI 就绪"
 msgid "AI-Ready"
 msgstr "AI 就绪"
 
+#: src/help/pages/HelpHome.tsx
+msgid "All case studies"
+msgstr "全部案例"
+
 #: src/pages/InviteAccept.tsx
 msgid "Already accepted"
 msgstr "已接受"
 
-#: src/pages/DeviceOAuth.tsx src/pages/Login.tsx
+#: src/pages/DeviceOAuth.tsx
+#: src/pages/Login.tsx
 msgid "Already have an account?"
 msgstr "已有账户？"
+
+#: src/components/SiteThemePanel.tsx
+msgid "Appearance"
+msgstr "外观"
+
+#: src/components/SiteThemePanel.tsx
+msgid "Appended last. Tags and @import are stripped for safety."
+msgstr "追加在最后。出于安全考虑会移除标签和 @import。"
+
+#: src/help/pages/CategoryLanding.tsx
+msgid "Articles"
+msgstr "文章"
+
+#: src/help/pages/CategoryLanding.tsx
+msgid "Articles for this topic are on the way."
+msgstr "该主题的文章即将上线。"
 
 #: src/pages/DeviceOAuth.tsx
 msgid "Authentication failed"
@@ -188,6 +232,14 @@ msgstr "授权中…"
 msgid "Back"
 msgstr "返回"
 
+#: src/components/SiteThemePanel.tsx
+msgid "Background"
+msgstr "背景"
+
+#: src/components/SiteThemePanel.tsx
+msgid "Base size"
+msgstr "基础字号"
+
 #: src/pages/Workspace.tsx
 msgid "Bind custom domains and manage certificates."
 msgstr "绑定自定义域名并管理证书。"
@@ -204,6 +256,10 @@ msgstr "绑定到云工作区"
 msgid "Board name"
 msgstr "看板名称"
 
+#: src/components/SiteThemePanel.tsx
+msgid "Body font"
+msgstr "正文字体"
+
 #: src/pages/Workspace.tsx
 msgid "Bold"
 msgstr "粗体"
@@ -211,6 +267,14 @@ msgstr "粗体"
 #: src/pages/Workspace.tsx
 msgid "Bold (Ctrl+B)"
 msgstr "粗体 (Ctrl+B)"
+
+#: src/components/SiteThemePanel.tsx
+msgid "Border"
+msgstr "边框"
+
+#: src/components/SiteThemePanel.tsx
+msgid "Border width"
+msgstr "边框宽度"
 
 #: src/pages/Workspace.tsx
 msgid "bound"
@@ -233,16 +297,32 @@ msgstr "从电脑导入图片或 PDF"
 msgid "Bring your notes and kanban into any AI agent."
 msgstr "将你的笔记和看板接入任意 AI 智能体。"
 
+#: src/help/pages/HelpHome.tsx
+msgid "Browse by topic"
+msgstr "按主题浏览"
+
+#: src/pages/Admin.tsx
+msgid "Bucket"
+msgstr "存储桶"
+
 #: src/pages/Landing.tsx
-msgid ""
-"Calm desktop writing, workspace-scoped sync, and public Markdown publishing "
-"in one product flow. Your notes stay local until a cloud workspace has a job"
-" to do."
+msgid "Calm desktop writing, workspace-scoped sync, and public Markdown publishing in one product flow. Your notes stay local until a cloud workspace has a job to do."
 msgstr "平静的桌面写作、工作区范围同步和公开 Markdown 发布集于一体。您的笔记保持本地，直到云工作区需要时才上云。"
 
-#: src/components/NewResourceDialog.tsx src/pages/Workspace.tsx
+#: src/components/NewResourceDialog.tsx
+#: src/pages/Workspace.tsx
 msgid "Cancel"
 msgstr "取消"
+
+#: src/help/HelpLayout.tsx
+#: src/help/pages/CasesIndex.tsx
+#: src/help/pages/CaseStudy.tsx
+msgid "Case studies"
+msgstr "案例"
+
+#: src/help/pages/CasesIndex.tsx
+msgid "Case studies are coming soon."
+msgstr "案例即将上线。"
 
 #: src/pages/Workspace.tsx
 msgid "Certificate management"
@@ -264,6 +344,10 @@ msgstr "选择云工作区"
 msgid "Choose a note or create a new one."
 msgstr "选择一篇笔记或新建。"
 
+#: src/pages/Workspace.tsx
+msgid "Choose a theme, design your own, and set the site footer."
+msgstr "选择主题、自定义设计，并设置站点页脚。"
+
 #: src/components/NewResourceDialog.tsx
 msgid "Choose what you want to create."
 msgstr "选择要创建的内容。"
@@ -276,15 +360,26 @@ msgstr "为笔记、文档、发布说明和指南提供整洁的只读输出。
 msgid "CLI + stdio"
 msgstr "CLI + stdio"
 
-#: src/components/Layout.tsx src/pages/Admin.tsx src/pages/Workspace.tsx
+#: src/components/SiteThemePanel.tsx
+msgid "Click “Save site settings” below to publish this theme."
+msgstr "点击下方“保存站点设置”以发布该主题。"
+
+#: src/components/Layout.tsx
+#: src/pages/Admin.tsx
+#: src/pages/Workspace.tsx
 msgid "Close"
 msgstr "关闭"
+
+#: src/pages/Landing.tsx
+msgid "Close menu"
+msgstr "关闭菜单"
 
 #: src/pages/Login.tsx
 msgid "Cloud Sync"
 msgstr "云同步"
 
-#: src/pages/Landing.tsx src/pages/Workspace.tsx
+#: src/pages/Landing.tsx
+#: src/pages/Workspace.tsx
 msgid "Cloud workspace"
 msgstr "云工作区"
 
@@ -300,9 +395,37 @@ msgstr "云工作区设置"
 msgid "Cloud workspaces"
 msgstr "云工作区"
 
+#: src/components/SiteThemePanel.tsx
+msgid "Code bg"
+msgstr "代码背景"
+
+#: src/components/SiteThemePanel.tsx
+msgid "Code text"
+msgstr "代码文字"
+
 #: src/pages/Workspace.tsx
 msgid "Collapse all"
 msgstr "全部折叠"
+
+#: src/components/SiteThemePanel.tsx
+msgid "Colors"
+msgstr "颜色"
+
+#: src/components/SiteThemePanel.tsx
+msgid "Comfortable"
+msgstr "宽松"
+
+#: src/components/SiteThemePanel.tsx
+msgid "Compact"
+msgstr "紧凑"
+
+#: src/pages/Admin.tsx
+msgid "Configure server object storage."
+msgstr "配置服务端对象存储。"
+
+#: src/pages/Admin.tsx
+msgid "Configure server object storage. Saved values override the JTYPED_STORAGE_* environment variables and apply immediately."
+msgstr "配置服务端对象存储。保存的值会覆盖 JTYPED_STORAGE_* 环境变量并立即生效。"
 
 #: src/pages/Landing.tsx
 msgid "Connect your AI"
@@ -320,6 +443,10 @@ msgstr "已连接设备"
 msgid "Connecting..."
 msgstr "连接中…"
 
+#: src/components/SiteThemePanel.tsx
+msgid "Content width"
+msgstr "内容宽度"
+
 #: src/pages/Workspace.tsx
 msgid "Copy link"
 msgstr "复制链接"
@@ -328,15 +455,20 @@ msgstr "复制链接"
 msgid "Copy path"
 msgstr "复制路径"
 
+#: src/components/SiteThemePanel.tsx
+msgid "Corner radius"
+msgstr "圆角"
+
+#: src/components/SiteThemePanel.tsx
+msgid "Cozy"
+msgstr "适中"
+
 #: src/components/NewResourceDialog.tsx
 msgid "Create"
 msgstr "创建"
 
 #: src/pages/Landing.tsx
-msgid ""
-"Create a workspace for sync, publishing, and account settings. Local vault "
-"copy stays precise: folders are vaults, server-side collaboration is a cloud"
-" workspace."
+msgid "Create a workspace for sync, publishing, and account settings. Local vault copy stays precise: folders are vaults, server-side collaboration is a cloud workspace."
 msgstr "创建工作区用于同步、发布和账户设置。本地库副本保持精确：文件夹是库，服务端协作是云工作区。"
 
 #: src/pages/Login.tsx
@@ -351,6 +483,14 @@ msgstr "创建第一篇 Markdown 笔记。"
 msgid "Creates in"
 msgstr "创建于"
 
+#: src/components/SiteThemePanel.tsx
+msgid "Custom"
+msgstr "自定义"
+
+#: src/components/SiteThemePanel.tsx
+msgid "Custom CSS"
+msgstr "自定义 CSS"
+
 #: src/pages/Workspace.tsx
 msgid "Custom domains"
 msgstr "自定义域名"
@@ -359,9 +499,21 @@ msgstr "自定义域名"
 msgid "Custom domains and SSL"
 msgstr "自定义域名和 SSL"
 
+#: src/components/SiteThemePanel.tsx
+msgid "Customize"
+msgstr "自定义"
+
 #: src/pages/Workspace.tsx
 msgid "Danger zone"
 msgstr "危险区域"
+
+#: src/components/SiteThemePanel.tsx
+msgid "Dark"
+msgstr "深色"
+
+#: src/components/SiteThemePanel.tsx
+msgid "Define your own theme"
+msgstr "自定义你的主题"
 
 #: src/pages/Workspace.tsx
 msgid "Delete"
@@ -396,6 +548,10 @@ msgstr "删除于 {0} / 过期于 {1}"
 #: src/pages/Workspace.tsx
 msgid "Deleted documents"
 msgstr "已删除文档"
+
+#: src/components/SiteThemePanel.tsx
+msgid "Density"
+msgstr "密度"
 
 #: src/pages/Landing.tsx
 msgid "Desktop app"
@@ -461,7 +617,8 @@ msgstr "文档已发布。"
 msgid "Document unpublished."
 msgstr "文档已取消发布。"
 
-#: src/pages/Admin.tsx src/pages/Workspace.tsx
+#: src/pages/Admin.tsx
+#: src/pages/Workspace.tsx
 msgid "Documents"
 msgstr "文档"
 
@@ -469,11 +626,13 @@ msgstr "文档"
 msgid "Domain"
 msgstr "域名"
 
-#: src/pages/Admin.tsx src/pages/Workspace.tsx
+#: src/pages/Admin.tsx
+#: src/pages/Workspace.tsx
 msgid "Domains"
 msgstr "域名"
 
-#: src/pages/DeviceOAuth.tsx src/pages/Login.tsx
+#: src/pages/DeviceOAuth.tsx
+#: src/pages/Login.tsx
 msgid "Don't have an account?"
 msgstr "没有账户？"
 
@@ -521,6 +680,10 @@ msgstr "清空回收站"
 msgid "Enable"
 msgstr "启用"
 
+#: src/pages/Admin.tsx
+msgid "Enter secret key"
+msgstr "输入私有密钥"
+
 #: src/pages/DeviceOAuth.tsx
 msgid "Enter the code shown in your JType desktop app"
 msgstr "输入 JType 桌面应用中显示的代码"
@@ -533,6 +696,10 @@ msgstr "输入密码"
 msgid "Enter your username"
 msgstr "输入用户名"
 
+#: src/help/pages/HelpHome.tsx
+msgid "Everything you need to write in a local-first vault, sync to the cloud, run a kanban board, publish a site, and connect AI."
+msgstr "在本地优先的仓库中写作、同步到云端、运行看板、发布站点并接入 AI——你需要的一切都在这里。"
+
 #: src/pages/Workspace.tsx
 msgid "Exit focus mode"
 msgstr "退出专注模式"
@@ -540,6 +707,10 @@ msgstr "退出专注模式"
 #: src/pages/Workspace.tsx
 msgid "Expand all"
 msgstr "全部展开"
+
+#: src/help/pages/HelpHome.tsx
+msgid "Explore"
+msgstr "前往了解"
 
 #: src/pages/InviteAccept.tsx
 msgid "Failed to accept invite."
@@ -565,6 +736,10 @@ msgstr "收藏"
 msgid "Favorites"
 msgstr "收藏"
 
+#: src/pages/Workspace.tsx
+msgid "Files"
+msgstr "文件"
+
 #: src/pages/Landing.tsx
 msgid "Flow"
 msgstr "流程"
@@ -572,6 +747,14 @@ msgstr "流程"
 #: src/pages/Workspace.tsx
 msgid "Focus mode"
 msgstr "专注模式"
+
+#: src/components/SiteThemePanel.tsx
+msgid "Footer HTML"
+msgstr "页脚 HTML"
+
+#: src/pages/Admin.tsx
+msgid "from env"
+msgstr "来自环境变量"
 
 #: src/pages/Workspace.tsx
 msgid "General"
@@ -597,9 +780,43 @@ msgstr "前往 JType Cloud"
 msgid "Go to workspaces"
 msgstr "前往工作区"
 
+#: src/components/SiteThemePanel.tsx
+msgid "Heading font"
+msgstr "标题字体"
+
+#: src/components/SiteThemePanel.tsx
+msgid "Heading weight"
+msgstr "标题字重"
+
+#: src/help/HelpLayout.tsx
+#: src/help/pages/Article.tsx
+#: src/help/pages/CasesIndex.tsx
+#: src/help/pages/CaseStudy.tsx
+#: src/help/pages/CategoryLanding.tsx
+#: src/pages/Landing.tsx
+msgid "Help"
+msgstr "帮助"
+
+#: src/components/Layout.tsx
+#: src/help/pages/HelpHome.tsx
+msgid "Help center"
+msgstr "帮助中心"
+
 #: src/pages/Workspace.tsx
 msgid "Hide"
 msgstr "隐藏"
+
+#: src/help/pages/HelpHome.tsx
+msgid "How can we help?"
+msgstr "需要什么帮助？"
+
+#: src/pages/Admin.tsx
+msgid "https://s3.example.com — leave blank to use local files"
+msgstr "https://s3.example.com — 留空则使用本地文件"
+
+#: src/pages/Workspace.tsx
+msgid "Image upload failed"
+msgstr "图片上传失败"
 
 #: src/components/NewResourceDialog.tsx
 msgid "Import file"
@@ -616,6 +833,10 @@ msgstr "行内代码"
 #: src/pages/Workspace.tsx
 msgid "Insert formula"
 msgstr "插入公式"
+
+#: src/pages/Workspace.tsx
+msgid "Insert image"
+msgstr "插入图片"
 
 #: src/pages/Workspace.tsx
 msgid "Insert link"
@@ -670,14 +891,8 @@ msgid "Joining…"
 msgstr "加入中…"
 
 #: src/pages/Landing.tsx
-msgid ""
-"JType ships a built-in MCP server. Connect Claude, Cursor, or any MCP client"
-" over a secure OAuth flow, then ask it to search your notes, draft a doc, or"
-" triage your board. Tokens are scoped, expiring, and revocable — and admin "
-"always stays off-limits."
-msgstr ""
-"JType 内置 MCP 服务器。通过安全的 OAuth 流程连接 Claude、Cursor 或任意 MCP "
-"客户端，即可让它搜索笔记、起草文档或整理看板。令牌均为限定范围、自动过期、可随时撤销，且始终无法触及管理员权限。"
+msgid "JType ships a built-in MCP server. Connect Claude, Cursor, or any MCP client over a secure OAuth flow, then ask it to search your notes, draft a doc, or triage your board. Tokens are scoped, expiring, and revocable — and admin always stays off-limits."
+msgstr "JType 内置 MCP 服务器。通过安全的 OAuth 流程连接 Claude、Cursor 或任意 MCP 客户端，即可让它搜索笔记、起草文档或整理看板。令牌均为限定范围、自动过期、可随时撤销，且始终无法触及管理员权限。"
 
 #: src/components/NewResourceDialog.tsx
 msgid "Kanban board"
@@ -688,9 +903,7 @@ msgid "Kanban tools"
 msgstr "看板工具"
 
 #: src/pages/Workspace.tsx
-msgid ""
-"Keep the publish name and workspace name here. The workspace slug and "
-"storage limit are assigned by the service."
+msgid "Keep the publish name and workspace name here. The workspace slug and storage limit are assigned by the service."
 msgstr "在此保留发布名称和工作区名称。工作区标识和存储限制由服务分配。"
 
 #: src/pages/Login.tsx
@@ -698,12 +911,22 @@ msgid "Keep your vaults in sync across all devices."
 msgstr "在所有设备间保持库同步。"
 
 #: src/components/Layout.tsx
+#: src/help/HelpLayout.tsx
 msgid "Language"
 msgstr "语言"
 
 #: src/components/Layout.tsx
 msgid "Last seen recently"
 msgstr "最近活跃"
+
+#. placeholder {0}: article.updated
+#: src/help/pages/Article.tsx
+msgid "Last updated {0}"
+msgstr "最后更新于 {0}"
+
+#: src/components/SiteThemePanel.tsx
+msgid "Layout"
+msgstr "布局"
 
 #: src/pages/Workspace.tsx
 msgid "Leave"
@@ -717,6 +940,14 @@ msgstr "离开工作区"
 msgid "Leave workspace?"
 msgstr "离开工作区？"
 
+#: src/components/SiteThemePanel.tsx
+msgid "Light"
+msgstr "浅色"
+
+#: src/components/SiteThemePanel.tsx
+msgid "Line height"
+msgstr "行高"
+
 #: src/pages/Workspace.tsx
 msgid "Link (Ctrl+K)"
 msgstr "链接 (Ctrl+K)"
@@ -729,6 +960,7 @@ msgstr "链接已复制！"
 msgid "List, create, update, and move cards across columns."
 msgstr "列出、创建、更新卡片，并在列之间移动。"
 
+#: src/components/SiteThemePanel.tsx
 #: src/pages/Landing.tsx
 msgid "Live preview"
 msgstr "实时预览"
@@ -737,9 +969,25 @@ msgstr "实时预览"
 msgid "Loading invite…"
 msgstr "加载邀请中…"
 
+#: src/help/components/HelpVideo.tsx
+msgid "Loading player…"
+msgstr "正在加载播放器…"
+
+#: src/components/SiteThemePanel.tsx
+msgid "Loading site settings…"
+msgstr "正在加载站点设置…"
+
 #: src/pages/Admin.tsx
 msgid "Loading..."
 msgstr "加载中…"
+
+#: src/pages/Admin.tsx
+msgid "Local directory"
+msgstr "本地目录"
+
+#: src/pages/Admin.tsx
+msgid "Local filesystem"
+msgstr "本地文件系统"
 
 #: src/pages/Landing.tsx
 msgid "Local watcher"
@@ -752,6 +1000,10 @@ msgstr "本地优先"
 #: src/pages/Landing.tsx
 msgid "Local-first Markdown vault"
 msgstr "本地优先 Markdown 库"
+
+#: src/help/HelpLayout.tsx
+msgid "Local-first Markdown vault editing with cloud sync, kanban, publishing, and AI."
+msgstr "本地优先的 Markdown 仓库编辑，支持云端同步、看板、发布与 AI。"
 
 #: src/pages/Login.tsx
 msgid "Local-first notes with cloud sync, publishing, and AI-ready indexing."
@@ -797,7 +1049,8 @@ msgstr "Markdown 编辑器"
 msgid "Member removed."
 msgstr "成员已移除。"
 
-#: src/pages/Admin.tsx src/pages/Workspace.tsx
+#: src/pages/Admin.tsx
+#: src/pages/Workspace.tsx
 msgid "Members"
 msgstr "成员"
 
@@ -810,9 +1063,25 @@ msgstr "成员（{0}）"
 msgid "Members, domains, publishing"
 msgstr "成员、域名、发布"
 
+#: src/help/HelpLayout.tsx
+msgid "Menu"
+msgstr "菜单"
+
+#: src/components/SiteThemePanel.tsx
+msgid "Minimal"
+msgstr "极简"
+
+#: src/help/pages/CaseStudy.tsx
+msgid "More case studies"
+msgstr "更多案例"
+
 #: src/pages/Workspace.tsx
 msgid "Move to trash"
 msgstr "移入回收站"
+
+#: src/components/SiteThemePanel.tsx
+msgid "Muted"
+msgstr "次要"
 
 #: src/pages/Admin.tsx
 msgid "Name"
@@ -834,7 +1103,8 @@ msgstr "新建看板"
 msgid "New cloud workspace"
 msgstr "新建云工作区"
 
-#: src/components/NewResourceDialog.tsx src/pages/Workspace.tsx
+#: src/components/NewResourceDialog.tsx
+#: src/pages/Workspace.tsx
 msgid "New document"
 msgstr "新建文档"
 
@@ -853,6 +1123,14 @@ msgstr "新文件夹名称："
 #: src/components/NewResourceDialog.tsx
 msgid "New resource"
 msgstr "新建资源"
+
+#: src/help/pages/Article.tsx
+msgid "Next"
+msgstr "下一篇"
+
+#: src/help/pages/Article.tsx
+msgid "No"
+msgstr "否"
 
 #: src/pages/Workspace.tsx
 msgid "No cloud workspaces yet."
@@ -898,6 +1176,10 @@ msgstr "无出站链接。"
 msgid "No records."
 msgstr "暂无记录。"
 
+#: src/help/components/SearchBox.tsx
+msgid "No results. Try another term."
+msgstr "没有结果，换个关键词试试。"
+
 #: src/pages/Workspace.tsx
 msgid "No unsaved changes"
 msgstr "无未保存的更改"
@@ -922,11 +1204,12 @@ msgstr "离线"
 msgid "Offline ({pendingCount} saved)"
 msgstr "离线（已保存 {pendingCount} 项）"
 
+#: src/help/pages/Article.tsx
+msgid "On this page"
+msgstr "本页目录"
+
 #: src/pages/Landing.tsx
-msgid ""
-"One Markdown source shows up everywhere it matters: local files on your "
-"machine, sync state in the cloud, and published output for readers — all "
-"visible at once."
+msgid "One Markdown source shows up everywhere it matters: local files on your machine, sync state in the cloud, and published output for readers — all visible at once."
 msgstr "同一份 Markdown 源文件，出现在每一处需要它的地方：你机器上的本地文件、云端的同步状态，以及面向读者的发布输出——尽收眼底。"
 
 #: src/pages/Landing.tsx
@@ -946,10 +1229,12 @@ msgid "Open"
 msgstr "打开"
 
 #: src/pages/Landing.tsx
-msgid ""
-"Open a local Markdown vault, keep normal folders, and edit without turning "
-"notes into remote-only data."
+msgid "Open a local Markdown vault, keep normal folders, and edit without turning notes into remote-only data."
 msgstr "打开本地 Markdown 库，保持普通文件夹结构，编辑笔记而不将其变为仅远程数据。"
+
+#: src/help/HelpLayout.tsx
+msgid "Open app"
+msgstr "打开应用"
 
 #: src/pages/Landing.tsx
 msgid "Open dashboard"
@@ -959,6 +1244,10 @@ msgstr "打开仪表板"
 msgid "Open GitHub"
 msgstr "打开 GitHub"
 
+#: src/help/HelpLayout.tsx
+msgid "Open JType"
+msgstr "打开 JType"
+
 #: src/pages/Landing.tsx
 msgid "Open JType Cloud"
 msgstr "打开 JType Cloud"
@@ -966,6 +1255,22 @@ msgstr "打开 JType Cloud"
 #: src/pages/Landing.tsx
 msgid "Open JType Cloud dashboard"
 msgstr "打开 JType Cloud 仪表板"
+
+#: src/pages/Landing.tsx
+msgid "Open menu"
+msgstr "打开菜单"
+
+#: src/pages/Workspace.tsx
+msgid "Open sidebar"
+msgstr "打开侧栏"
+
+#: src/help/pages/CaseStudy.tsx
+msgid "Open the example vault in JType and follow along. It lives in the repo at:"
+msgstr "在 JType 中打开示例仓库，跟着一起操作。它就在代码仓库的："
+
+#: src/components/SiteThemePanel.tsx
+msgid "Optional. A small set of inline tags is allowed (links, emphasis)."
+msgstr "可选。允许少量内联标签（链接、强调）。"
 
 #: src/pages/Workspace.tsx
 msgid "Outgoing links"
@@ -987,7 +1292,8 @@ msgstr "所有权已转让。"
 msgid "Pass ownership to another admin member."
 msgstr "将所有权转让给另一个管理员成员。"
 
-#: src/pages/DeviceOAuth.tsx src/pages/Login.tsx
+#: src/pages/DeviceOAuth.tsx
+#: src/pages/Login.tsx
 msgid "Password"
 msgstr "密码"
 
@@ -1011,13 +1317,31 @@ msgstr "永久删除此项目？"
 msgid "Permanently remove this workspace and all documents."
 msgstr "永久删除此工作区及所有文档。"
 
-#: src/pages/DeviceOAuth.tsx src/pages/Login.tsx
+#: src/help/components/HelpVideo.tsx
+msgid "Play the explainer video"
+msgstr "播放讲解视频"
+
+#: src/pages/DeviceOAuth.tsx
+#: src/pages/Login.tsx
 msgid "Please wait..."
 msgstr "请稍候…"
 
-#: src/pages/Landing.tsx src/pages/Workspace.tsx
+#: src/help/pages/HelpHome.tsx
+msgid "Popular articles"
+msgstr "热门文章"
+
+#: src/components/SiteThemePanel.tsx
+msgid "Preset…"
+msgstr "预设…"
+
+#: src/pages/Landing.tsx
+#: src/pages/Workspace.tsx
 msgid "Preview"
 msgstr "预览"
+
+#: src/help/pages/Article.tsx
+msgid "Previous"
+msgstr "上一篇"
 
 #: src/pages/Landing.tsx
 msgid "Product flow"
@@ -1043,7 +1367,8 @@ msgstr "属性"
 msgid "Public site"
 msgstr "公开站点"
 
-#: src/pages/Landing.tsx src/pages/Workspace.tsx
+#: src/pages/Landing.tsx
+#: src/pages/Workspace.tsx
 msgid "Publish"
 msgstr "发布"
 
@@ -1077,20 +1402,20 @@ msgid "Publishing details saved"
 msgstr "发布详情已保存"
 
 #: src/pages/Workspace.tsx
-msgid ""
-"Publishing uses a server snapshot; frontmatter status is treated as user "
-"metadata."
+msgid "Publishing uses a server snapshot; frontmatter status is treated as user metadata."
 msgstr "发布使用服务器快照；frontmatter 状态被视为用户元数据。"
 
 #: src/pages/Landing.tsx
-msgid ""
-"Push and pull versions, resolve conflicts, and keep collaboration scoped to "
-"the workspace you choose."
+msgid "Push and pull versions, resolve conflicts, and keep collaboration scoped to the workspace you choose."
 msgstr "推送和拉取版本、解决冲突，并将协作范围限定在您选择的工作区内。"
 
 #: src/pages/Workspace.tsx
 msgid "Quick open"
 msgstr "快速打开"
+
+#: src/help/pages/CasesIndex.tsx
+msgid "Read case study"
+msgstr "阅读案例"
 
 #: src/pages/Workspace.tsx
 msgid "Read-only"
@@ -1100,7 +1425,16 @@ msgstr "只读"
 msgid "Ready for the cloud layer"
 msgstr "已为云层做好准备"
 
-#: src/pages/DeviceOAuth.tsx src/pages/Login.tsx
+#: src/help/pages/CasesIndex.tsx
+msgid "Real, end-to-end scenarios you can reproduce. Each one ships with an example vault you can open in JType."
+msgstr "可复现的真实端到端场景。每个案例都附带可在 JType 中打开的示例仓库。"
+
+#: src/pages/Admin.tsx
+msgid "Region"
+msgstr "区域"
+
+#: src/pages/DeviceOAuth.tsx
+#: src/pages/Login.tsx
 msgid "Register"
 msgstr "注册"
 
@@ -1112,6 +1446,10 @@ msgstr "注册并授权"
 #: src/pages/Workspace.tsx
 msgid "Reload{0}"
 msgstr "重新加载{0}"
+
+#: src/help/components/HelpVideo.tsx
+msgid "Remotion"
+msgstr "Remotion"
 
 #. placeholder {0}: doc.relativePath
 #: src/pages/Workspace.tsx
@@ -1156,8 +1494,7 @@ msgid "Restore"
 msgstr "恢复"
 
 #: src/pages/Workspace.tsx
-msgid ""
-"Restore cloud workspace documents or permanently remove them from trash."
+msgid "Restore cloud workspace documents or permanently remove them from trash."
 msgstr "从回收站恢复云工作区文档或永久删除。"
 
 #: src/pages/Workspace.tsx
@@ -1184,6 +1521,14 @@ msgstr "撤销邀请"
 msgid "Role"
 msgstr "角色"
 
+#: src/pages/Admin.tsx
+msgid "S3 endpoint"
+msgstr "S3 端点"
+
+#: src/pages/Admin.tsx
+msgid "S3-compatible"
+msgstr "S3 兼容"
+
 #: src/pages/Workspace.tsx
 msgid "Save"
 msgstr "保存"
@@ -1196,21 +1541,54 @@ msgstr "保存我的版本"
 msgid "Save profile"
 msgstr "保存资料"
 
+#: src/components/SiteThemePanel.tsx
+msgid "Save site settings"
+msgstr "保存站点设置"
+
+#: src/pages/Admin.tsx
+msgid "Save storage settings"
+msgstr "保存存储设置"
+
 #: src/pages/Workspace.tsx
 msgid "Saved offline. Will sync when reconnected."
 msgstr "已离线保存。重新连接后将同步。"
 
+#: src/components/SiteThemePanel.tsx
+msgid "Saved."
+msgstr "已保存。"
+
+#: src/pages/Admin.tsx
+msgid "Saving verifies the connection before applying."
+msgstr "保存时会先验证连接再应用。"
+
+#: src/pages/Admin.tsx
 #: src/pages/Workspace.tsx
 msgid "Saving..."
+msgstr "保存中…"
+
+#: src/components/SiteThemePanel.tsx
+msgid "Saving…"
 msgstr "保存中…"
 
 #: src/pages/Workspace.tsx
 msgid "Search files..."
 msgstr "搜索文件…"
 
+#: src/help/components/SearchBox.tsx
+msgid "Search the help center…"
+msgstr "搜索帮助中心…"
+
 #: src/pages/Landing.tsx
 msgid "Search, read, create, update, and append documents."
 msgstr "搜索、读取、创建、更新和追加文档。"
+
+#: src/pages/Admin.tsx
+msgid "Secret key"
+msgstr "私有密钥（Secret Key）"
+
+#: src/help/pages/HelpHome.tsx
+msgid "See it in action"
+msgstr "看看实际效果"
 
 #: src/pages/Landing.tsx
 msgid "See product flow"
@@ -1232,11 +1610,29 @@ msgstr "选择 Markdown 文件"
 msgid "Settings"
 msgstr "设置"
 
+#: src/components/SiteThemePanel.tsx
+msgid "Shape"
+msgstr "形状"
+
 #: src/pages/Landing.tsx
 msgid "Ship a readable site"
 msgstr "发布可读站点"
 
-#: src/pages/DeviceOAuth.tsx src/pages/Landing.tsx src/pages/Login.tsx
+#: src/components/SiteThemePanel.tsx
+msgid "Shown in the browser title and site header."
+msgstr "显示在浏览器标题和站点页眉中。"
+
+#: src/components/SiteThemePanel.tsx
+msgid "Sidebar"
+msgstr "侧栏"
+
+#: src/components/SiteThemePanel.tsx
+msgid "Sidebar width"
+msgstr "侧栏宽度"
+
+#: src/pages/DeviceOAuth.tsx
+#: src/pages/Landing.tsx
+#: src/pages/Login.tsx
 msgid "Sign in"
 msgstr "登录"
 
@@ -1248,7 +1644,8 @@ msgstr "登录并授权"
 msgid "Sign in to your JType Cloud account."
 msgstr "登录您的 JType Cloud 账户。"
 
-#: src/components/Layout.tsx src/pages/Landing.tsx
+#: src/components/Layout.tsx
+#: src/pages/Landing.tsx
 msgid "Sign out"
 msgstr "退出登录"
 
@@ -1266,6 +1663,14 @@ msgid "Signed in. Ready to authorize device."
 msgstr "已登录。准备授权设备。"
 
 #: src/pages/Workspace.tsx
+msgid "Site & theme"
+msgstr "站点和主题"
+
+#: src/components/SiteThemePanel.tsx
+msgid "Site name"
+msgstr "站点名称"
+
+#: src/pages/Workspace.tsx
 msgid "Site settings"
 msgstr "站点设置"
 
@@ -1273,11 +1678,13 @@ msgstr "站点设置"
 msgid "Something went wrong"
 msgstr "出现错误"
 
-#: src/pages/Landing.tsx src/pages/Workspace.tsx
+#: src/pages/Landing.tsx
+#: src/pages/Workspace.tsx
 msgid "Split"
 msgstr "分栏"
 
-#: src/pages/Admin.tsx src/pages/Workspace.tsx
+#: src/pages/Admin.tsx
+#: src/pages/Workspace.tsx
 msgid "SSL"
 msgstr "SSL"
 
@@ -1298,6 +1705,10 @@ msgstr "SSL 将于 {0} 过期"
 #: src/pages/Workspace.tsx
 msgid "SSL not configured"
 msgstr "SSL 未配置"
+
+#: src/components/SiteThemePanel.tsx
+msgid "Start from preset"
+msgstr "从预设开始"
 
 #: src/pages/Landing.tsx
 msgid "Start with a private cloud workspace."
@@ -1320,12 +1731,21 @@ msgid "Status"
 msgstr "状态"
 
 #: src/components/Layout.tsx
+#: src/pages/Admin.tsx
 msgid "Storage"
 msgstr "存储"
+
+#: src/pages/Admin.tsx
+msgid "Storage settings saved and applied."
+msgstr "存储设置已保存并生效。"
 
 #: src/pages/Workspace.tsx
 msgid "Storage used"
 msgstr "已用存储"
+
+#: src/components/SiteThemePanel.tsx
+msgid "Surface"
+msgstr "表层"
 
 #: src/pages/Landing.tsx
 msgid "Surfaces"
@@ -1355,6 +1775,14 @@ msgstr "Tauri 库编辑，支持写作、分栏和预览模式。"
 msgid "Team members and invitations"
 msgstr "团队成员和邀请"
 
+#: src/components/SiteThemePanel.tsx
+msgid "Text"
+msgstr "文字"
+
+#: src/help/pages/Article.tsx
+msgid "Thanks for the feedback!"
+msgstr "感谢你的反馈！"
+
 #: src/pages/Landing.tsx
 msgid "The landing story follows the real JType loop."
 msgstr "落地页故事遵循真实的 JType 循环。"
@@ -1362,6 +1790,26 @@ msgstr "落地页故事遵循真实的 JType 循环。"
 #: src/pages/Workspace.tsx
 msgid "The public snapshot is behind the current document."
 msgstr "公开快照落后于当前文档。"
+
+#: src/components/SiteThemePanel.tsx
+msgid "Theme"
+msgstr "主题"
+
+#: src/components/SiteThemePanel.tsx
+msgid "Theme applied."
+msgstr "主题已应用。"
+
+#: src/components/SiteThemePanel.tsx
+msgid "Theme name"
+msgstr "主题名称"
+
+#: src/components/SiteThemePanel.tsx
+msgid "Theme preview"
+msgstr "主题预览"
+
+#: src/pages/Workspace.tsx
+msgid "Theme, custom design, and footer"
+msgstr "主题、自定义设计与页脚"
 
 #: src/pages/Workspace.tsx
 msgid "This document was deleted by another user."
@@ -1381,14 +1829,16 @@ msgstr "此邀请链接无效或已过期。"
 
 #. placeholder {0}: workspace.name
 #: src/pages/Workspace.tsx
-msgid ""
-"This will permanently delete <0>{0}</0> and all its documents. This cannot "
-"be undone."
+msgid "This will permanently delete <0>{0}</0> and all its documents. This cannot be undone."
 msgstr "这将永久删除 <0>{0}</0> 及其所有文档。此操作无法撤销。"
 
 #: src/pages/Workspace.tsx
 msgid "Toggle favorite"
 msgstr "切换收藏"
+
+#: src/components/SiteThemePanel.tsx
+msgid "Top header"
+msgstr "顶部页眉"
 
 #: src/components/NewResourceDialog.tsx
 msgid "Track work in columns and cards"
@@ -1423,15 +1873,21 @@ msgstr "回收站"
 msgid "Trash is empty."
 msgstr "回收站为空。"
 
+#: src/help/pages/CaseStudy.tsx
+msgid "Try it yourself"
+msgstr "自己试一试"
+
 #: src/pages/Landing.tsx
-msgid ""
-"Turn selected documents into a public `/u/:username` site while your source "
-"stays Markdown."
+msgid "Turn selected documents into a public `/u/:username` site while your source stays Markdown."
 msgstr "将选定文档发布为公开的 `/u/:username` 站点，同时源文件保持 Markdown 格式。"
 
 #: src/pages/Workspace.tsx
 msgid "Type the workspace name to confirm:"
 msgstr "输入工作区名称以确认："
+
+#: src/components/SiteThemePanel.tsx
+msgid "Typography"
+msgstr "排版"
 
 #: src/pages/Workspace.tsx
 msgid "Unbind"
@@ -1466,9 +1922,7 @@ msgid "Untitled document"
 msgstr "未命名文档"
 
 #: src/pages/Workspace.tsx
-msgid ""
-"Upload a PEM certificate for a verified domain. The private key is stored as"
-" a hash in the current backend model."
+msgid "Upload a PEM certificate for a verified domain. The private key is stored as a hash in the current backend model."
 msgstr "为已验证域名上传 PEM 证书。私钥在当前后端模型中以哈希形式存储。"
 
 #: src/components/DownloadPromo.tsx
@@ -1483,7 +1937,9 @@ msgstr "用户"
 msgid "User menu"
 msgstr "用户菜单"
 
-#: src/components/Layout.tsx src/pages/Admin.tsx src/pages/DeviceOAuth.tsx
+#: src/components/Layout.tsx
+#: src/pages/Admin.tsx
+#: src/pages/DeviceOAuth.tsx
 #: src/pages/Login.tsx
 msgid "Username"
 msgstr "用户名"
@@ -1520,9 +1976,21 @@ msgstr "验证 DNS"
 msgid "View public page"
 msgstr "查看公开页面"
 
+#: src/components/SiteThemePanel.tsx
+msgid "View published site"
+msgstr "查看已发布站点"
+
 #: src/pages/Workspace.tsx
 msgid "Viewer access is read-only."
 msgstr "查看者权限为只读。"
+
+#: src/help/pages/Article.tsx
+msgid "Was this helpful?"
+msgstr "这篇文章有帮助吗？"
+
+#: src/help/components/HelpVideo.tsx
+msgid "Watch the explainer"
+msgstr "观看讲解"
 
 #: src/pages/Landing.tsx
 msgid "Watch the flow"
@@ -1556,7 +2024,8 @@ msgstr "工作区设置"
 msgid "Workspace slug"
 msgstr "工作区标识符"
 
-#: src/pages/Landing.tsx src/pages/Workspace.tsx
+#: src/pages/Landing.tsx
+#: src/pages/Workspace.tsx
 msgid "Write"
 msgstr "写作"
 
@@ -1564,14 +2033,16 @@ msgstr "写作"
 msgid "Write where your files live"
 msgstr "在文件所在处写作"
 
+#: src/help/pages/Article.tsx
+msgid "Yes"
+msgstr "是"
+
 #: src/pages/Workspace.tsx
 msgid "You will lose access to all cloud documents."
 msgstr "您将失去所有云文档的访问权限。"
 
 #: src/pages/Workspace.tsx
-msgid ""
-"You will lose access to all cloud documents. Your local files are "
-"unaffected."
+msgid "You will lose access to all cloud documents. Your local files are unaffected."
 msgstr "您将失去所有云文档的访问权限。您的本地文件不受影响。"
 
 #: src/pages/InviteAccept.tsx
@@ -1590,15 +2061,6 @@ msgstr "您的 Markdown 工作区，<0/>同步到云端。"
 msgid "Your rendered document will appear here."
 msgstr "渲染后的文档将显示在此处。"
 
-#~ msgid "Document path (e.g. notes/hello.md):"
-#~ msgstr "文档路径（如 notes/hello.md）："
-
-#~ msgid "New document name (e.g. note.md):"
-#~ msgstr "新文档名称（如 note.md）："
-
-#~ msgid ""
-#~ "The page borrows getdesign.app's strongest move: show the actual system "
-#~ "doing the explaining. For JType, that means local files, sync state, and "
-#~ "published output all visible at once."
-#~ msgstr ""
-#~ "该页面借鉴了 getdesign.app 最强的技巧：展示实际系统进行说明。对于 JType，这意味着本地文件、同步状态和已发布输出一目了然。"
+#: src/components/SiteThemePanel.tsx
+msgid "Your theme"
+msgstr "你的主题"

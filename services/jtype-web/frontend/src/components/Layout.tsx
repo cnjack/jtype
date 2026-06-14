@@ -20,6 +20,7 @@ import {
 import { useAuth } from './AuthContext'
 import { AdminDialog } from '../pages/Admin'
 import {
+  BookOpenIcon,
   Cog6ToothIcon,
   GlobeAltIcon,
   ShieldCheckIcon,
@@ -113,6 +114,12 @@ export function Layout() {
               <Link className="menu-row" to="/ai">
                 <SparklesIcon className="h-4 w-4" />
                 <Trans>AI Connections</Trans>
+              </Link>
+            </MenuItem>
+            <MenuItem>
+              <Link className="menu-row" to="/help">
+                <BookOpenIcon className="h-4 w-4" />
+                <Trans>Help center</Trans>
               </Link>
             </MenuItem>
             {user?.role === 'admin' && (

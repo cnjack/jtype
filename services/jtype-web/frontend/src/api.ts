@@ -87,6 +87,10 @@ export const api = {
   adminWorkspaces: () => request<AdminWorkspace[]>('/api/admin/workspaces'),
   adminDomains: () => request<AdminDomain[]>('/api/admin/domains'),
   adminStats: () => request<AdminStats>('/api/admin/stats'),
+  // Server object-storage settings (DB overrides JTYPED_STORAGE_* env vars).
+  getStorageSettings: () => request<StorageSettings>('/api/admin/settings/storage'),
+  updateStorageSettings: (data: UpdateStorageSettings) =>
+    request<StorageSettings>('/api/admin/settings/storage', { method: 'PUT', body: JSON.stringify(data) }),
 
   // Workspaces
   listWorkspaces: () => request<{ workspaces: WorkspaceSummary[] }>('/api/v1/workspaces'),
@@ -150,6 +154,51 @@ export const api = {
     }),
   getPublishStatus: (workspaceId: string, docId: string) =>
     request<PublishStatusResponse>(`/api/v1/workspaces/${workspaceId}/documents/${docId}/publish`),
+
+  // Assets (images). Raw bytes upload; the server proxies public reads.
+  uploadAsset: async (workspaceId: string, file: File): Promise<AssetResponse> => {
+    const token = getStoredToken()
+    const res = await httpRequest(`${API_BASE}/api/v1/workspaces/${workspaceId}/assets`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': file.type || 'application/octet-stream',
+        'X-Filename': encodeURIComponent(file.name || 'image'),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: file,
+    })
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ error: res.statusText }))
+      throw new Error(body.error || res.statusText)
+    }
+    return res.json()
+  },
+  listAssets: (workspaceId: string) =>
+    request<AssetResponse[]>(`/api/v1/workspaces/${workspaceId}/assets`),
+  deleteAsset: (workspaceId: string, assetId: string) =>
+    request<void>(`/api/v1/workspaces/${workspaceId}/assets/${assetId}`, { method: 'DELETE' }),
+
+  // Themes & site settings
+  listThemes: () => request<ThemeInfo[]>('/api/themes'),
+  getTheme: (id: string) => request<ThemeSpec>(`/api/themes/${id}`),
+  getSiteSettings: (workspaceId: string) =>
+    request<SiteSettings>(`/api/v1/workspaces/${workspaceId}/site`),
+  updateSiteSettings: (workspaceId: string, data: UpdateSiteSettings) =>
+    request<SiteSettings>(`/api/v1/workspaces/${workspaceId}/site`, { method: 'PUT', body: JSON.stringify(data) }),
+  /** Render markdown to a full themed HTML page (returns the HTML string). */
+  previewSite: async (workspaceId: string, data: { content: string; theme?: string; customTheme?: ThemeSpec | null }): Promise<string> => {
+    const token = getStoredToken()
+    const res = await httpRequest(`${API_BASE}/api/v1/workspaces/${workspaceId}/preview`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      body: JSON.stringify(data),
+    })
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ error: res.statusText }))
+      throw new Error(body.error || res.statusText)
+    }
+    return res.text()
+  },
   publishDocument: (workspaceId: string, docId: string) =>
     request<PublishDocumentResponse>(`/api/v1/workspaces/${workspaceId}/documents/${docId}/publish`, { method: 'POST', body: '{}' }),
   unpublishDocument: (workspaceId: string, docId: string) =>
@@ -329,6 +378,39 @@ export interface AdminStats {
   totalDomains: number
 }
 
+/** Where each resolved storage field comes from: 'db' | 'env' | 'default'. */
+export interface StorageSettingsSources {
+  endpoint: string
+  bucket: string
+  accessKey: string
+  secretKey: string
+  region: string
+  localDir: string
+}
+
+export interface StorageSettings {
+  /** Backend selected by the current config: 's3' or 'local'. */
+  activeBackend: string
+  endpoint: string
+  bucket: string
+  accessKey: string
+  region: string
+  localDir: string
+  /** The secret value is never returned — only whether one is set. */
+  secretKeySet: boolean
+  sources: StorageSettingsSources
+}
+
+export interface UpdateStorageSettings {
+  endpoint?: string
+  bucket?: string
+  accessKey?: string
+  /** Omit or leave blank to keep the existing secret unchanged. */
+  secretKey?: string
+  region?: string
+  localDir?: string
+}
+
 export interface WorkspaceSummary {
   id: string
   name: string
@@ -432,6 +514,89 @@ export interface PublishStatusResponse {
   currentHash: string
   publishedHash: string | null
   hasUnpublishedChanges: boolean
+}
+
+export interface AssetResponse {
+  id: string
+  url: string
+  contentType: string
+  byteSize: number
+  originalName: string | null
+  createdAt: string
+}
+
+// ── Themes & site settings (mirror services/jtype-web/src/themes) ──────────────
+export type ThemeLayout = 'sidebar' | 'header' | 'minimal'
+export type ThemeAppearance = 'light' | 'dark'
+export type ThemeDensity = 'compact' | 'cozy' | 'comfortable'
+
+export interface ThemePalette {
+  bg: string
+  surface: string
+  fg: string
+  muted: string
+  accent: string
+  accentContrast: string
+  border: string
+  codeBg: string
+  codeFg: string
+  appearance: ThemeAppearance
+}
+
+export interface ThemeTypography {
+  bodyFont: string
+  headingFont: string
+  monoFont: string
+  baseSize: number
+  contentWidth: number
+  lineHeight: number
+  headingWeight: number
+  letterSpacing: number
+}
+
+export interface ThemeShape {
+  radius: number
+  borderWidth: number
+  density: ThemeDensity
+  sidebarWidth: number
+}
+
+export interface ThemeSpec {
+  id: string
+  name: string
+  description: string
+  layout: ThemeLayout
+  palette: ThemePalette
+  typography: ThemeTypography
+  shape: ThemeShape
+  customCss: string
+}
+
+export interface ThemeInfo {
+  id: string
+  name: string
+  description: string
+  layout: ThemeLayout
+  appearance: ThemeAppearance
+  swatch: { bg: string; fg: string; accent: string; surface: string }
+}
+
+export interface SiteSettings {
+  id: string
+  workspaceId: string
+  name: string
+  footerHtml: string | null
+  theme: string
+  customTheme?: ThemeSpec | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface UpdateSiteSettings {
+  name?: string
+  footerHtml?: string
+  theme?: string
+  customTheme?: ThemeSpec | null
 }
 
 export interface SaveDocumentResponse {

@@ -20,6 +20,16 @@ pub async fn list_themes() -> Json<Vec<crate::themes::ThemeInfo>> {
     Json(crate::themes::list_themes())
 }
 
+/// GET /api/themes/:theme_id — full spec for a built-in theme (used to seed a
+/// custom theme from a preset). Unknown ids → 404.
+pub async fn get_theme(
+    Path(theme_id): Path<String>,
+) -> Result<Json<crate::themes::ThemeSpec>, AppError> {
+    crate::themes::builtin_spec(&theme_id)
+        .map(Json)
+        .ok_or(AppError::NotFound)
+}
+
 // ── Site settings ────────────────────────────────────────────────────────────
 
 pub async fn get_site_settings(
@@ -61,18 +71,33 @@ pub async fn update_site_settings(
         }
     }
 
+    // Validate + sanitise any custom theme before persisting. We store the
+    // canonical sanitised spec so the column never holds unsafe values.
+    let custom_theme_json: Option<String> = match &payload.custom_theme {
+        Some(value) => {
+            let raw = serde_json::to_string(value)
+                .map_err(|e| AppError::BadRequest(e.to_string()))?;
+            let spec = crate::themes::ThemeSpec::from_custom_json(&raw)
+                .map_err(|e| AppError::BadRequest(format!("invalid custom theme: {e}")))?;
+            Some(serde_json::to_string(&spec).map_err(|e| AppError::Server(e.to_string()))?)
+        }
+        None => None,
+    };
+
     ensure_site(&state.pool, &workspace_id).await?;
 
     sqlx::query(
         r#"UPDATE sites SET
-             name       = COALESCE(?, name),
+             name        = COALESCE(?, name),
              footer_html = COALESCE(?, footer_html),
-             theme      = COALESCE(?, theme)
+             theme       = COALESCE(?, theme),
+             custom_theme = COALESCE(?, custom_theme)
            WHERE workspace_id = ?"#,
     )
     .bind(payload.name.as_deref())
     .bind(payload.footer_html.as_deref())
     .bind(payload.theme.as_deref())
+    .bind(custom_theme_json.as_deref())
     .bind(&workspace_id)
     .execute(&state.pool)
     .await?;
@@ -395,7 +420,11 @@ pub async fn preview(
     if !crate::themes::is_valid_theme(theme_id) {
         return Err(AppError::BadRequest(format!("unknown theme '{}'", theme_id)));
     }
-    let theme = crate::themes::get_theme(theme_id);
+    let custom_json: Option<String> = match &payload.custom_theme {
+        Some(v) => Some(serde_json::to_string(v).map_err(|e| AppError::BadRequest(e.to_string()))?),
+        None => None,
+    };
+    let spec = crate::themes::resolve(theme_id, custom_json.as_deref());
     let content_html = crate::util::markdown_to_html(&payload.content);
     let title = extract_title(&payload.content).unwrap_or_else(|| "Preview".to_string());
 
@@ -415,7 +444,7 @@ pub async fn preview(
         content_html: &content_html,
     };
 
-    Ok(axum::response::Html(theme.render_page(&ctx)))
+    Ok(axum::response::Html(crate::themes::render_page(&spec, &ctx)))
 }
 
 // ── Internal helpers ──────────────────────────────────────────────────────────
@@ -522,6 +551,7 @@ async fn load_site(
 ) -> Result<Option<SiteSettingsResponse>, AppError> {
     let row = sqlx::query(
         r#"SELECT id, workspace_id, name, footer_html, theme,
+                  CAST(custom_theme AS CHAR) AS custom_theme,
                   DATE_FORMAT(created_at, '%Y-%m-%dT%H:%i:%sZ') AS created_at,
                   DATE_FORMAT(updated_at, '%Y-%m-%dT%H:%i:%sZ') AS updated_at
            FROM sites WHERE workspace_id = ?"#,
@@ -531,12 +561,15 @@ async fn load_site(
     .await?;
 
     let Some(row) = row else { return Ok(None) };
+    let custom_theme_str: Option<String> = row.try_get("custom_theme")?;
+    let custom_theme = custom_theme_str.and_then(|s| serde_json::from_str(&s).ok());
     Ok(Some(SiteSettingsResponse {
         id: row.try_get("id")?,
         workspace_id: row.try_get("workspace_id")?,
         name: row.try_get("name")?,
         footer_html: row.try_get("footer_html")?,
         theme: row.try_get("theme")?,
+        custom_theme,
         created_at: row.try_get("created_at")?,
         updated_at: row.try_get("updated_at")?,
     }))

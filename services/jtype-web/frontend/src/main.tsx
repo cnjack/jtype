@@ -1,4 +1,4 @@
-import { StrictMode } from 'react'
+import { StrictMode, Suspense, lazy } from 'react'
 import { useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom'
@@ -26,6 +26,10 @@ import { AiConnections } from './pages/AiConnections'
 import { DownloadPromo } from './components/DownloadPromo'
 import { api } from './api'
 
+import { HelpSkeleton } from './help/HelpSkeleton'
+
+const HelpApp = lazy(() => import('./help/HelpApp'))
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function loadPlatformMessages(locale: SupportedLocale): Promise<Record<string, unknown>> {
   const platformMod: any = await import(`./i18n/locales/${locale}/messages.mjs`)
@@ -43,6 +47,14 @@ function renderApp() {
             <BrowserRouter>
               <Routes>
                 <Route path="/" element={<Landing />} />
+                <Route
+                  path="/help/*"
+                  element={
+                    <Suspense fallback={<HelpSkeleton />}>
+                      <HelpApp />
+                    </Suspense>
+                  }
+                />
                 <Route path="/login" element={<Login />} />
                 <Route path="/oauth/device" element={<DeviceOAuth />} />
                 <Route path="/invites/:token" element={<InviteAccept />} />

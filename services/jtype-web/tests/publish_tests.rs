@@ -473,3 +473,138 @@ async fn republish_updates_snapshot() {
     assert_eq!(s2, StatusCode::OK);
     assert!(body2["isPublished"].as_bool().unwrap_or(false));
 }
+
+// ── Theme engine ──────────────────────────────────────────────────────────────
+
+// GET /api/themes — engine now ships 12 built-in themes with swatch metadata.
+#[tokio::test]
+async fn list_themes_returns_twelve_with_swatches() {
+    let (app, _pool) = common::setup().await;
+    let (status, body) = common::req(app, "GET", "/api/themes", None, None).await;
+    assert_eq!(status, StatusCode::OK);
+    let themes = body.as_array().expect("expected array");
+    assert_eq!(themes.len(), 12, "expected 12 themes, got {}", themes.len());
+    for theme in themes {
+        assert!(theme["id"].as_str().is_some(), "missing id: {theme}");
+        assert!(theme["name"].as_str().is_some(), "missing name: {theme}");
+        assert!(theme["layout"].as_str().is_some(), "missing layout: {theme}");
+        assert!(theme["appearance"].as_str().is_some(), "missing appearance: {theme}");
+        assert!(theme["swatch"]["accent"].as_str().is_some(), "missing swatch: {theme}");
+    }
+    // Spot-check the new themes are present.
+    let ids: Vec<&str> = themes.iter().filter_map(|t| t["id"].as_str()).collect();
+    for expected in &["dracula", "nord", "solarized", "forest", "sepia", "newsprint", "midnight"] {
+        assert!(ids.contains(expected), "theme '{expected}' missing: {ids:?}");
+    }
+}
+
+// GET /api/themes/:id — returns a full spec for a built-in, 404 for unknown.
+#[tokio::test]
+async fn get_theme_returns_full_spec() {
+    let (app, _pool) = common::setup().await;
+    let (status, body) = common::req(app.clone(), "GET", "/api/themes/tokyo", None, None).await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(body["id"].as_str().unwrap(), "tokyo");
+    assert!(body["palette"]["bg"].as_str().is_some());
+    assert!(body["typography"]["bodyFont"].as_str().is_some());
+
+    let (s404, _) = common::req(app, "GET", "/api/themes/does-not-exist", None, None).await;
+    assert_eq!(s404, StatusCode::NOT_FOUND);
+}
+
+// PUT /site with theme=custom persists a sanitised custom theme; GET reflects it.
+#[tokio::test]
+async fn custom_theme_saved_and_returned() {
+    let (app, _pool) = common::setup().await;
+    let (token, _) = common::register_user(app.clone(), &common::uid()).await;
+    let ws_id = common::create_workspace(app.clone(), &token, &common::wname()).await;
+
+    let (status, body) = common::req(
+        app.clone(),
+        "PUT",
+        &format!("/api/v1/workspaces/{ws_id}/site"),
+        Some(&token),
+        Some(json!({
+            "theme": "custom",
+            "customTheme": {
+                "name": "My Brand",
+                "layout": "header",
+                "palette": { "accent": "#ff3366", "bg": "#101014" },
+                "customCss": ".prose h1{color:red}</style><script>alert(1)</script>"
+            }
+        })),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK, "update failed: {body}");
+    assert_eq!(body["theme"].as_str().unwrap(), "custom");
+    assert_eq!(body["customTheme"]["name"].as_str().unwrap(), "My Brand");
+    assert_eq!(body["customTheme"]["palette"]["accent"].as_str().unwrap(), "#ff3366");
+    // The dangerous markup must have been stripped before persistence.
+    let css = body["customTheme"]["customCss"].as_str().unwrap();
+    assert!(!css.contains('<'), "custom css not sanitised: {css}");
+    assert!(!css.to_ascii_lowercase().contains("/style"), "style breakout: {css}");
+
+    // GET round-trips the stored spec.
+    let (gs, gb) = common::req(
+        app,
+        "GET",
+        &format!("/api/v1/workspaces/{ws_id}/site"),
+        Some(&token),
+        None,
+    )
+    .await;
+    assert_eq!(gs, StatusCode::OK);
+    assert_eq!(gb["theme"].as_str().unwrap(), "custom");
+    assert_eq!(gb["customTheme"]["palette"]["accent"].as_str().unwrap(), "#ff3366");
+}
+
+// POST /preview with an inline custom theme renders using that theme's accent.
+#[tokio::test]
+async fn preview_with_inline_custom_theme() {
+    let (app, _pool) = common::setup().await;
+    let (token, _) = common::register_user(app.clone(), &common::uid()).await;
+    let ws_id = common::create_workspace(app.clone(), &token, &common::wname()).await;
+
+    let (status, body) = common::req(
+        app,
+        "POST",
+        &format!("/api/v1/workspaces/{ws_id}/preview"),
+        Some(&token),
+        Some(json!({
+            "content": "# Hello\n\nWorld",
+            "theme": "custom",
+            "customTheme": { "name": "Inline", "palette": { "accent": "#abcdef" } }
+        })),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    let html = body.as_str().unwrap_or_default();
+    assert!(html.contains("--accent:#abcdef"), "accent not applied in preview");
+    assert!(html.contains("<h1>Hello</h1>"), "content not rendered: {html:.200}");
+}
+
+// Each built-in theme previews without panicking and applies its palette.
+#[tokio::test]
+async fn every_builtin_theme_previews() {
+    let (app, _pool) = common::setup().await;
+    let (token, _) = common::register_user(app.clone(), &common::uid()).await;
+    let ws_id = common::create_workspace(app.clone(), &token, &common::wname()).await;
+
+    for theme in [
+        "default", "academic", "terminal", "paper", "tokyo", "dracula", "nord", "solarized",
+        "forest", "sepia", "newsprint", "midnight",
+    ] {
+        let (status, body) = common::req(
+            app.clone(),
+            "POST",
+            &format!("/api/v1/workspaces/{ws_id}/preview"),
+            Some(&token),
+            Some(json!({ "content": "# Title\n\nBody text", "theme": theme })),
+        )
+        .await;
+        assert_eq!(status, StatusCode::OK, "theme {theme} preview failed");
+        let html = body.as_str().unwrap_or_default();
+        assert!(html.contains("<h1>Title</h1>"), "theme {theme} missing content");
+        assert!(html.contains(":root{"), "theme {theme} missing css vars");
+    }
+}

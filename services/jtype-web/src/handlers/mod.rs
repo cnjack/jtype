@@ -1,4 +1,5 @@
 pub mod admin;
+pub mod assets;
 pub mod auth;
 pub mod document;
 pub mod domain;
@@ -8,6 +9,7 @@ pub mod live;
 pub mod member;
 pub mod oauth;
 pub mod publish;
+pub mod settings;
 pub mod site;
 pub mod sync;
 pub mod trash;
