@@ -1,3 +1,4 @@
+mod cli_install;
 mod workspace;
 mod ws_client;
 
@@ -880,6 +881,9 @@ pub fn run() {
             clear_sync_bases,
             save_vault_settings,
             load_vault_settings,
+            cli_install::cli_status,
+            cli_install::install_cli,
+            cli_install::uninstall_cli,
             app_ready
         ])
         .manage(AppState {

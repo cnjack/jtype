@@ -128,6 +128,10 @@ msgstr "Advanced"
 #~ msgid "Assignee"
 #~ msgstr "Assignee"
 
+#: src/components/modals/AccountDialog.tsx
+msgid "Available in the desktop app."
+msgstr "Available in the desktop app."
+
 #: src/components/modals/NewResourceDialog.tsx
 msgid "Back"
 msgstr "Back"
@@ -291,6 +295,14 @@ msgstr "Collapse all"
 #: src/components/CardPeek.tsx
 #~ msgid "comma, separated"
 #~ msgstr "comma, separated"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Command line"
+msgstr "Command line"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Command line (jtype)"
+msgstr "Command line (jtype)"
 
 #: src/components/modals/CommandPalette.tsx
 msgid "Command palette"
@@ -485,6 +497,10 @@ msgstr "Documents"
 #~ msgid "Done column"
 #~ msgstr "Done column"
 
+#: src/components/modals/AccountDialog.tsx
+msgid "Downloads"
+msgstr "Downloads"
+
 #: src/components/BoardView.tsx
 #~ msgid "Drag to resize"
 #~ msgstr "Drag to resize"
@@ -630,6 +646,22 @@ msgstr "Insert or edit table - Ctrl+Shift+T"
 msgid "Insert or format table"
 msgstr "Insert or format table"
 
+#: src/components/modals/AccountDialog.tsx
+msgid "Install jtype CLI"
+msgstr "Install jtype CLI"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Install jtype to your PATH"
+msgstr "Install jtype to your PATH"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Install the jtype CLI to manage notes and kanban from your terminal and connect AI agents over MCP."
+msgstr "Install the jtype CLI to manage notes and kanban from your terminal and connect AI agents over MCP."
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Installed"
+msgstr "Installed"
+
 #: src/components/editor/EditorShell.tsx
 msgid "Italic - Ctrl+I"
 msgstr "Italic - Ctrl+I"
@@ -728,8 +760,8 @@ msgstr "New board"
 #~ msgstr "New card"
 
 #: src/components/BoardView.tsx
-msgid "New column name"
-msgstr "New column name"
+#~ msgid "New column name"
+#~ msgstr "New column name"
 
 #: src/components/modals/NewResourceDialog.tsx
 #: src/components/sidebar/Sidebar.tsx
@@ -828,6 +860,10 @@ msgstr "No vault"
 #: src/components/modals/AccountDialog.tsx
 msgid "Not bound to a cloud workspace yet. Binding starts bidirectional sync for this vault."
 msgstr "Not bound to a cloud workspace yet. Binding starts bidirectional sync for this vault."
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Not installed"
+msgstr "Not installed"
 
 #: src/components/modals/CreateNoteDialog.tsx
 #~ msgid "Note name..."
@@ -1036,6 +1072,10 @@ msgstr "Rename to:"
 msgid "Republish"
 msgstr "Republish"
 
+#: src/components/modals/AccountDialog.tsx
+msgid "Restart your terminal to pick up the updated PATH."
+msgstr "Restart your terminal to pick up the updated PATH."
+
 #: src/components/sidebar/Sidebar.tsx
 msgid "Restore"
 msgstr "Restore"
@@ -1179,6 +1219,10 @@ msgstr "Template name"
 msgid "The public snapshot is behind the current document."
 msgstr "The public snapshot is behind the current document."
 
+#: src/components/modals/AccountDialog.tsx
+msgid "Then run `jtype login` to sign in."
+msgstr "Then run `jtype login` to sign in."
+
 #: src/components/modals/DeleteFolderDialog.tsx
 msgid "This folder is empty."
 msgstr "This folder is empty."
@@ -1203,6 +1247,10 @@ msgstr "This vault is now local-only."
 msgid "Toggle favorite"
 msgstr "Toggle favorite"
 
+#: src/components/modals/AccountDialog.tsx
+msgid "Tools"
+msgstr "Tools"
+
 #: src/components/modals/NewResourceDialog.tsx
 msgid "Track work in columns and cards"
 msgstr "Track work in columns and cards"
@@ -1218,6 +1266,10 @@ msgstr "Trash"
 #: src/components/modals/CommandPalette.tsx
 msgid "Unavailable"
 msgstr "Unavailable"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Uninstall jtype CLI"
+msgstr "Uninstall jtype CLI"
 
 #: src/components/editor/EditorShell.tsx
 msgid "Unpublish"
@@ -1284,6 +1336,10 @@ msgstr "WIP limit (blank to clear)"
 #: src/components/BoardView.tsx
 #~ msgid "WIP limit {0}"
 #~ msgstr "WIP limit {0}"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Working…"
+msgstr "Working…"
 
 #: src/components/sidebar/Sidebar.tsx
 msgid "Workspace files"

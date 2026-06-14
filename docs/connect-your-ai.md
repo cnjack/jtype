@@ -11,6 +11,41 @@ documents, and triage your kanban board — with your permission and your data.
 
 ---
 
+## Install JType
+
+### Desktop app
+
+Download the installer for your OS from the
+[**latest release**](https://github.com/cnjack/jtype/releases/latest):
+
+| OS | File |
+|---|---|
+| macOS (Apple Silicon) | `JType_*_aarch64.dmg` |
+| macOS (Intel) | `JType_*_x64.dmg` |
+| Windows | `JType_*_x64-setup.exe` |
+
+### CLI (`jtype`)
+
+The `jtype` CLI is what lets you log in and drive notes/kanban from a terminal.
+Pick whichever fits:
+
+- **From the desktop app (easiest):** Settings → **Tools → Command line** → toggle
+  **Install jtype to your PATH**. The app downloads the right binary for your OS
+  and puts it on your PATH.
+- **macOS / Linux:**
+  ```sh
+  curl -fsSL https://raw.githubusercontent.com/cnjack/jtype/main/scripts/install.sh | sh
+  ```
+- **Windows (PowerShell):**
+  ```powershell
+  irm https://raw.githubusercontent.com/cnjack/jtype/main/scripts/install.ps1 | iex
+  ```
+- **From source (needs Rust):** `cargo install --path services/jtype-cli`
+
+Then sign in: `jtype login`.
+
+---
+
 ## What the AI can do
 
 | Notes | Kanban |

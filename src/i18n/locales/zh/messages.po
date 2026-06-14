@@ -1,24 +1,26 @@
+#
 msgid ""
 msgstr ""
-"POT-Creation-Date: 2026-05-14\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
-"X-Generator: @lingui/cli\n"
-"Language: zh\n"
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-05-14\n"
 "PO-Revision-Date: \n"
 "Last-Translator: \n"
 "Language-Team: \n"
+"Language: zh\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: \n"
+"X-Generator: @lingui/cli\n"
 
 #. placeholder {0}: documents.length
 #: src/components/layout/VaultHome.tsx
 msgid "{0, plural, one {# Markdown file} other {# Markdown files}}"
 msgstr "{0,plural,other{# 个 Markdown 文件}}"
 
-#. placeholder {0}: isPublished ? (hasUnpublishedChanges ? "Changed" : "Published") : "Not published"
+#. placeholder {0}: isPublished ? (hasUnpublishedChanges ? "Changed" :
+#. "Published") : "Not published"
 #: src/components/editor/EditorShell.tsx
 msgid "{0}"
 msgstr "{0}"
@@ -83,7 +85,9 @@ msgid "A text document you write and preview"
 msgstr "可编辑、可预览的文本文档"
 
 #: src/components/layout/WelcomeScreen.tsx
-msgid "A vault is a local folder for notes, sync, and publishing. A single file opens JType as a focused Markdown editor."
+msgid ""
+"A vault is a local folder for notes, sync, and publishing. A single file "
+"opens JType as a focused Markdown editor."
 msgstr "库是用于笔记、同步和发布的本地文件夹。单个文件会以专注的 Markdown 编辑器模式打开 JType。"
 
 #: src/components/modals/AccountDialog.tsx
@@ -93,14 +97,6 @@ msgstr "账户"
 #: src/components/modals/AccountDialog.tsx
 msgid "Account service URL"
 msgstr "账户服务 URL"
-
-#: src/components/BoardView.tsx
-#~ msgid "Add column"
-#~ msgstr "添加列"
-
-#: src/components/CardPeek.tsx
-#~ msgid "Add details..."
-#~ msgstr "添加详情…"
 
 #: src/components/editor/EditorShell.tsx
 msgid "Add table column right"
@@ -122,11 +118,9 @@ msgstr "已添加到收藏。"
 msgid "Advanced"
 msgstr "高级"
 
-#: src/components/BoardTable.tsx
-#: src/components/BoardView.tsx
-#: src/components/CardPeek.tsx
-#~ msgid "Assignee"
-#~ msgstr "负责人"
+#: src/components/modals/AccountDialog.tsx
+msgid "Available in the desktop app."
+msgstr "仅在桌面应用中可用。"
 
 #: src/components/modals/NewResourceDialog.tsx
 msgid "Back"
@@ -137,20 +131,14 @@ msgid "Back to home"
 msgstr "返回主页"
 
 #: src/components/modals/SyncPromptDialog.tsx
-msgid "Back up this local vault to a cloud workspace, keep devices in sync, and open the same notes from the web."
+msgid ""
+"Back up this local vault to a cloud workspace, keep devices in sync, and "
+"open the same notes from the web."
 msgstr "将此本地库备份到云工作区，保持设备同步，并可在网页端访问相同的笔记。"
 
 #: src/components/modals/AccountDialog.tsx
 msgid "Bind the current local vault to one cloud workspace."
 msgstr "将当前本地库绑定到一个云工作区。"
-
-#: src/components/BoardView.tsx
-#~ msgid "Blank card"
-#~ msgstr "空白卡片"
-
-#: src/components/BoardView.tsx
-#~ msgid "Board"
-#~ msgstr "看板"
 
 #: src/components/modals/NewResourceDialog.tsx
 msgid "Board name"
@@ -178,11 +166,14 @@ msgid "Bring in an image or PDF from your computer"
 msgstr "从电脑导入图片或 PDF"
 
 #: src/components/modals/AccountDialog.tsx
-msgid "Browser authorization is open. Sync will continue after sign-in completes."
+msgid ""
+"Browser authorization is open. Sync will continue after sign-in completes."
 msgstr "浏览器授权页面已打开。登录完成后同步将继续。"
 
 #: src/components/modals/SyncPromptDialog.tsx
-msgid "Browser authorization is open. This sync will continue after sign-in completes."
+msgid ""
+"Browser authorization is open. This sync will continue after sign-in "
+"completes."
 msgstr "浏览器授权页面已打开。登录完成后同步将继续。"
 
 #: src/components/modals/CreateFolderDialog.tsx
@@ -200,18 +191,6 @@ msgstr "无法将文件夹移动到自身内。"
 msgid "Card"
 msgstr "卡片"
 
-#: src/components/BoardView.tsx
-#~ msgid "Card title — Enter to add, Esc to cancel"
-#~ msgstr ""
-
-#: src/components/BoardView.tsx
-#~ msgid "Card title (Enter to add, Esc to cancel)"
-#~ msgstr "卡片标题（回车添加，Esc 取消）"
-
-#: src/components/BoardView.tsx
-#~ msgid "cards"
-#~ msgstr "张卡片"
-
 #: src/components/sidebar/Sidebar.tsx
 msgid "Choose a local folder"
 msgstr "选择本地文件夹"
@@ -224,10 +203,6 @@ msgstr "选择一篇笔记或新建。此库位于 <0>{0}</0>。"
 #: src/components/modals/NewResourceDialog.tsx
 msgid "Choose what you want to create."
 msgstr "选择要创建的内容。"
-
-#: src/components/BoardView.tsx
-#~ msgid "Clear filter"
-#~ msgstr "清除筛选"
 
 #: src/components/modals/AccountDialog.tsx
 #: src/components/modals/ConflictDialog.tsx
@@ -258,8 +233,7 @@ msgstr "云同步"
 msgid "Cloud sync reminder snoozed."
 msgstr "云同步提醒已推迟。"
 
-#: src/components/layout/Header.tsx
-#: src/components/modals/AccountDialog.tsx
+#: src/components/layout/Header.tsx src/components/modals/AccountDialog.tsx
 msgid "Cloud workspace"
 msgstr "云工作区"
 
@@ -276,28 +250,21 @@ msgstr "云工作区"
 msgid "Collapse all"
 msgstr "全部折叠"
 
-#: src/components/BoardView.tsx
-#~ msgid "Collapse column"
-#~ msgstr "折叠列"
+#: src/components/modals/AccountDialog.tsx
+msgid "Command line"
+msgstr "命令行"
 
-#: src/components/BoardView.tsx
-#~ msgid "Color"
-#~ msgstr "颜色"
-
-#: src/components/BoardView.tsx
-#~ msgid "Color columns"
-#~ msgstr "彩色列"
-
-#: src/components/CardPeek.tsx
-#~ msgid "comma, separated"
-#~ msgstr "用逗号分隔"
+#: src/components/modals/AccountDialog.tsx
+msgid "Command line (jtype)"
+msgstr "命令行 (jtype)"
 
 #: src/components/modals/CommandPalette.tsx
 msgid "Command palette"
 msgstr "命令面板"
 
 #: src/components/modals/AccountDialog.tsx
-msgid "Connect desktop sync through the browser and choose the service endpoint."
+msgid ""
+"Connect desktop sync through the browser and choose the service endpoint."
 msgstr "通过浏览器连接桌面同步并选择服务端点。"
 
 #: src/components/modals/AccountDialog.tsx
@@ -320,10 +287,6 @@ msgstr "连接以加载工作区。"
 #: src/components/modals/AccountDialog.tsx
 msgid "Connected as {0}. Sync vaults with cloud workspaces."
 msgstr "已以 {0} 身份连接。将库与云工作区同步。"
-
-#: src/components/BoardView.tsx
-#~ msgid "Copy link"
-#~ msgstr "复制链接"
 
 #: src/components/sidebar/Sidebar.tsx
 msgid "Copy path"
@@ -383,22 +346,10 @@ msgstr "默认库路径：<0>{defaultVaultPath}</0>"
 msgid "Delete"
 msgstr "删除"
 
-#: src/components/CardPeek.tsx
-#~ msgid "Delete card"
-#~ msgstr "删除卡片"
-
 #. placeholder {0}: card.title
 #: src/components/BoardView.tsx
 msgid "Delete card \"{0}\"? It moves to the trash."
 msgstr "删除卡片“{0}”？它将被移至回收站。"
-
-#: src/components/BoardView.tsx
-#~ msgid "Delete column \"{0}\"?"
-#~ msgstr "删除列“{0}”？"
-
-#: src/components/BoardView.tsx
-#~ msgid "Delete column \"{0}\"? Its {1} card(s) move to \"{2}\"."
-#~ msgstr "删除列“{0}”？其中 {1} 张卡片将移动到“{2}”。"
 
 #: src/components/BoardView.tsx
 msgid "Delete column \"{colName}\"?"
@@ -481,26 +432,13 @@ msgstr "文档已取消发布。"
 msgid "Documents"
 msgstr "文档"
 
-#: src/components/BoardView.tsx
-#~ msgid "Done column"
-#~ msgstr "完成列"
-
-#: src/components/BoardView.tsx
-#~ msgid "Drag to resize"
-#~ msgstr "拖动调整宽度"
+#: src/components/modals/AccountDialog.tsx
+msgid "Downloads"
+msgstr "下载"
 
 #: src/components/sidebar/Sidebar.tsx
 msgid "Drop a folder here to open it as a vault."
 msgstr "将文件夹拖到此处以作为库打开。"
-
-#: src/components/BoardTable.tsx
-#: src/components/CardPeek.tsx
-#~ msgid "Due"
-#~ msgstr "截止日期"
-
-#: src/components/BoardView.tsx
-#~ msgid "Duplicate"
-#~ msgstr "复制卡片"
 
 #: src/components/editor/CardPropertyStrip.tsx
 msgid "Edit properties in the board"
@@ -526,10 +464,6 @@ msgstr "请先为此库启用云同步"
 msgid "Expand all"
 msgstr "全部展开"
 
-#: src/components/BoardView.tsx
-#~ msgid "Expand column"
-#~ msgstr "展开列"
-
 #: src/components/editor/EditorShell.tsx
 msgid "Export"
 msgstr "导出"
@@ -549,10 +483,6 @@ msgstr "收藏"
 #: src/components/sidebar/Sidebar.tsx
 msgid "Favorites"
 msgstr "收藏"
-
-#: src/components/BoardView.tsx
-#~ msgid "Filter"
-#~ msgstr "筛选"
 
 #: src/components/editor/EditorShell.tsx
 msgid "Focus mode"
@@ -574,25 +504,9 @@ msgstr "格式化表格"
 msgid "General"
 msgstr "通用"
 
-#: src/components/BoardView.tsx
-#~ msgid "Group: Assignee"
-#~ msgstr "分组：负责人"
-
-#: src/components/BoardView.tsx
-#~ msgid "Group: Priority"
-#~ msgstr "分组：优先级"
-
-#: src/components/BoardView.tsx
-#~ msgid "Group: Status"
-#~ msgstr "分组：状态"
-
 #: src/components/editor/EditorShell.tsx
 msgid "Hide"
 msgstr "隐藏"
-
-#: src/components/CardPeek.tsx
-#~ msgid "Icon"
-#~ msgstr "图标"
 
 #: src/components/modals/NewResourceDialog.tsx
 msgid "Import file"
@@ -630,6 +544,24 @@ msgstr "插入或编辑表格 - Ctrl+Shift+T"
 msgid "Insert or format table"
 msgstr "插入或格式化表格"
 
+#: src/components/modals/AccountDialog.tsx
+msgid "Install jtype CLI"
+msgstr "安装 jtype 命令行工具"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Install jtype to your PATH"
+msgstr "将 jtype 安装到 PATH"
+
+#: src/components/modals/AccountDialog.tsx
+msgid ""
+"Install the jtype CLI to manage notes and kanban from your terminal and "
+"connect AI agents over MCP."
+msgstr "安装 jtype 命令行工具，即可在终端管理笔记和看板，并通过 MCP 连接 AI 智能体。"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Installed"
+msgstr "已安装"
+
 #: src/components/editor/EditorShell.tsx
 msgid "Italic - Ctrl+I"
 msgstr "斜体 - Ctrl+I"
@@ -659,10 +591,6 @@ msgstr "链接 - Ctrl+K"
 msgid "Loading preview"
 msgstr "正在加载预览"
 
-#: src/components/CardPeek.tsx
-#~ msgid "Loading…"
-#~ msgstr "加载中…"
-
 #: src/components/editor/ResourceViewer.tsx
 msgid "Local"
 msgstr "本地"
@@ -683,8 +611,7 @@ msgstr "本地库模式"
 msgid "Log out"
 msgstr "退出登录"
 
-#: src/components/editor/EditorShell.tsx
-#: src/components/layout/VaultHome.tsx
+#: src/components/editor/EditorShell.tsx src/components/layout/VaultHome.tsx
 msgid "Markdown"
 msgstr "Markdown"
 
@@ -696,8 +623,7 @@ msgstr "Markdown 文档"
 msgid "Markdown editor"
 msgstr "Markdown 编辑器"
 
-#: src/components/layout/Header.tsx
-#: src/components/layout/VaultHome.tsx
+#: src/components/layout/Header.tsx src/components/layout/VaultHome.tsx
 #: src/components/layout/WelcomeScreen.tsx
 msgid "Markdown file"
 msgstr "Markdown 文件"
@@ -710,8 +636,7 @@ msgstr "移动"
 msgid "Move to Folder"
 msgstr "移动到文件夹"
 
-#: src/components/editor/EditorShell.tsx
-#: src/components/sidebar/Sidebar.tsx
+#: src/components/editor/EditorShell.tsx src/components/sidebar/Sidebar.tsx
 msgid "Move to trash"
 msgstr "移入回收站"
 
@@ -723,21 +648,12 @@ msgstr "移动到…"
 msgid "New board"
 msgstr "新建看板"
 
-#: src/components/BoardView.tsx
-#~ msgid "New card"
-#~ msgstr "新建卡片"
-
-#: src/components/BoardView.tsx
-msgid "New column name"
-msgstr "新列名称"
-
 #: src/components/modals/NewResourceDialog.tsx
 #: src/components/sidebar/Sidebar.tsx
 msgid "New document"
 msgstr "新建文档"
 
-#: src/components/layout/VaultHome.tsx
-#: src/components/sidebar/Sidebar.tsx
+#: src/components/layout/VaultHome.tsx src/components/sidebar/Sidebar.tsx
 msgid "New Document"
 msgstr "新建文档"
 
@@ -761,17 +677,9 @@ msgstr "新文件夹名称："
 msgid "New resource"
 msgstr "新建资源"
 
-#: src/components/BoardTable.tsx
-#~ msgid "No cards"
-#~ msgstr "暂无卡片"
-
 #: src/components/modals/AccountDialog.tsx
 msgid "No cloud workspaces yet. Sync this vault to create one."
 msgstr "暂无云工作区。同步此库以创建一个。"
-
-#: src/components/BoardView.tsx
-#~ msgid "No color"
-#~ msgstr "无颜色"
 
 #: src/components/modals/CommandPalette.tsx
 msgid "No commands found."
@@ -792,10 +700,6 @@ msgstr "未选择文件"
 #: src/components/editor/EditorShell.tsx
 msgid "No headings found."
 msgstr "未找到标题。"
-
-#: src/components/CardPeek.tsx
-#~ msgid "No icon"
-#~ msgstr "无图标"
 
 #: src/components/sidebar/Sidebar.tsx
 msgid "No matches."
@@ -826,23 +730,20 @@ msgid "No vault"
 msgstr "无库"
 
 #: src/components/modals/AccountDialog.tsx
-msgid "Not bound to a cloud workspace yet. Binding starts bidirectional sync for this vault."
+msgid ""
+"Not bound to a cloud workspace yet. Binding starts bidirectional sync for "
+"this vault."
 msgstr "尚未绑定到云工作区。绑定后将开始此库的双向同步。"
 
-#: src/components/modals/CreateNoteDialog.tsx
-#~ msgid "Note name..."
-#~ msgstr "笔记名称…"
-
-#: src/components/CardPeek.tsx
-#~ msgid "Notes"
-#~ msgstr "备注"
+#: src/components/modals/AccountDialog.tsx
+msgid "Not installed"
+msgstr "未安装"
 
 #: src/components/editor/EditorShell.tsx
 msgid "Only web, email, and phone links can be opened from preview."
 msgstr "预览中只能打开网页、邮件和电话链接。"
 
-#: src/components/modals/QuickSwitcher.tsx
-#: src/components/sidebar/Sidebar.tsx
+#: src/components/modals/QuickSwitcher.tsx src/components/sidebar/Sidebar.tsx
 msgid "Open"
 msgstr "打开"
 
@@ -877,14 +778,6 @@ msgstr "打开其他库"
 #: src/components/layout/Header.tsx
 msgid "Open file"
 msgstr "打开文件"
-
-#: src/components/BoardView.tsx
-#~ msgid "Open in editor"
-#~ msgstr "在编辑器中打开"
-
-#: src/components/CardPeek.tsx
-#~ msgid "Open in full editor"
-#~ msgstr "在完整编辑器中打开"
 
 #: src/components/editor/ResourceViewer.tsx
 msgid "Open in system app"
@@ -938,22 +831,11 @@ msgstr "永久删除"
 msgid "Preparing PDF export..."
 msgstr "正在准备 PDF 导出…"
 
-#: src/components/CardPeek.tsx
-#~ msgid "Preview"
-#~ msgstr "预览"
-
 #: src/components/editor/ResourceViewer.tsx
 msgid "Preview is available in the desktop app."
 msgstr "预览功能仅在桌面应用中可用。"
 
-#: src/components/BoardTable.tsx
-#: src/components/BoardView.tsx
-#: src/components/CardPeek.tsx
-#~ msgid "Priority"
-#~ msgstr "优先级"
-
-#: src/components/layout/Header.tsx
-#: src/components/modals/AccountDialog.tsx
+#: src/components/layout/Header.tsx src/components/modals/AccountDialog.tsx
 msgid "Profile"
 msgstr "个人资料"
 
@@ -979,11 +861,12 @@ msgid "Published {0}"
 msgstr "发布于 {0}"
 
 #: src/components/editor/EditorShell.tsx
-msgid "Publishing uses a cloud snapshot; frontmatter status is treated as user metadata."
+msgid ""
+"Publishing uses a cloud snapshot; frontmatter status is treated as user "
+"metadata."
 msgstr "发布使用云端快照；frontmatter 状态被视为用户元数据。"
 
-#: src/components/layout/Header.tsx
-#: src/components/layout/VaultHome.tsx
+#: src/components/layout/Header.tsx src/components/layout/VaultHome.tsx
 msgid "Quick open"
 msgstr "快速打开"
 
@@ -995,14 +878,9 @@ msgstr "快速切换"
 msgid "Read-only"
 msgstr "只读"
 
-#: src/components/layout/VaultHome.tsx
-#: src/components/layout/WelcomeScreen.tsx
+#: src/components/layout/VaultHome.tsx src/components/layout/WelcomeScreen.tsx
 msgid "Recent"
 msgstr "最近"
-
-#: src/components/BoardView.tsx
-#~ msgid "Refresh"
-#~ msgstr "刷新"
 
 #: src/components/editor/EditorShell.tsx
 msgid "Remove from favorites"
@@ -1036,6 +914,10 @@ msgstr "重命名为："
 msgid "Republish"
 msgstr "重新发布"
 
+#: src/components/modals/AccountDialog.tsx
+msgid "Restart your terminal to pick up the updated PATH."
+msgstr "重启终端以使更新后的 PATH 生效。"
+
 #: src/components/sidebar/Sidebar.tsx
 msgid "Restore"
 msgstr "恢复"
@@ -1047,14 +929,6 @@ msgstr "恢复已排队。下次推送时同步。"
 #: src/components/editor/EditorShell.tsx
 msgid "Save"
 msgstr "保存"
-
-#: src/components/BoardView.tsx
-#~ msgid "Save as template"
-#~ msgstr "存为模板"
-
-#: src/components/BoardView.tsx
-#~ msgid "Search cards"
-#~ msgstr "搜索卡片"
 
 #: src/components/modals/CommandPalette.tsx
 msgid "Search commands"
@@ -1076,16 +950,7 @@ msgstr "选择 Markdown 文件"
 msgid "Select destination for \"{sourceName}\""
 msgstr "为\"{sourceName}\"选择目标位置"
 
-#: src/components/BoardView.tsx
-#~ msgid "Set as done column"
-#~ msgstr "设为完成列"
-
-#: src/components/BoardView.tsx
-#~ msgid "Set WIP limit"
-#~ msgstr "设置 WIP 限制"
-
-#: src/components/modals/AccountDialog.tsx
-#: src/components/sidebar/Sidebar.tsx
+#: src/components/modals/AccountDialog.tsx src/components/sidebar/Sidebar.tsx
 msgid "Settings"
 msgstr "设置"
 
@@ -1097,22 +962,6 @@ msgstr "在资源管理器中显示"
 msgid "Sign in"
 msgstr "登录"
 
-#: src/components/BoardView.tsx
-#~ msgid "Sort: Due"
-#~ msgstr "排序：截止"
-
-#: src/components/BoardView.tsx
-#~ msgid "Sort: Manual"
-#~ msgstr "排序：手动"
-
-#: src/components/BoardView.tsx
-#~ msgid "Sort: Priority"
-#~ msgstr "排序：优先级"
-
-#: src/components/BoardView.tsx
-#~ msgid "Sort: Title"
-#~ msgstr "排序：标题"
-
 #: src/components/modals/AccountDialog.tsx
 msgid "Start cloud sync"
 msgstr "开始云同步"
@@ -1121,11 +970,6 @@ msgstr "开始云同步"
 #: src/components/modals/SyncPromptDialog.tsx
 msgid "Start sync"
 msgstr "开始同步"
-
-#: src/components/BoardTable.tsx
-#: src/components/CardPeek.tsx
-#~ msgid "Status"
-#~ msgstr "状态"
 
 #: src/components/modals/SyncPromptDialog.tsx
 msgid "Sync \"{vaultName}\" to cloud?"
@@ -1153,16 +997,6 @@ msgstr "发布前请先同步此文档。"
 msgid "Syncing with {0}."
 msgstr "正在与 {0} 同步。"
 
-#: src/components/BoardView.tsx
-#~ msgid "Table"
-#~ msgstr "表格"
-
-#: src/components/BoardTable.tsx
-#: src/components/BoardView.tsx
-#: src/components/CardPeek.tsx
-#~ msgid "Tags"
-#~ msgstr "标签"
-
 #: src/components/editor/EditorShell.tsx
 msgid "Task list"
 msgstr "任务列表"
@@ -1171,13 +1005,13 @@ msgstr "任务列表"
 msgid "Template name"
 msgstr "模板名称"
 
-#: src/components/BoardView.tsx
-#~ msgid "Templates"
-#~ msgstr "模板"
-
 #: src/components/editor/EditorShell.tsx
 msgid "The public snapshot is behind the current document."
 msgstr "公开快照落后于当前文档。"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Then run `jtype login` to sign in."
+msgstr "然后运行 `jtype login` 登录。"
 
 #: src/components/modals/DeleteFolderDialog.tsx
 msgid "This folder is empty."
@@ -1188,20 +1022,22 @@ msgid "This PDF can not be previewed inline."
 msgstr "无法在应用内预览此 PDF。"
 
 #: src/components/modals/AccountDialog.tsx
-msgid "This vault is local-only. You can keep working without cloud sync or enable it below."
+msgid ""
+"This vault is local-only. You can keep working without cloud sync or enable "
+"it below."
 msgstr "此库仅在本地。您可以在不使用云同步的情况下继续工作，或在下方启用云同步。"
 
 #: src/components/modals/SyncPromptDialog.tsx
 msgid "This vault is now local-only."
 msgstr "此库现在仅在本地。"
 
-#: src/components/BoardTable.tsx
-#~ msgid "Title"
-#~ msgstr "标题"
-
 #: src/components/sidebar/Sidebar.tsx
 msgid "Toggle favorite"
 msgstr "切换收藏"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Tools"
+msgstr "工具"
 
 #: src/components/modals/NewResourceDialog.tsx
 msgid "Track work in columns and cards"
@@ -1211,13 +1047,13 @@ msgstr "用列和卡片管理工作"
 msgid "Trash"
 msgstr "回收站"
 
-#: src/components/BoardView.tsx
-#~ msgid "Unassigned"
-#~ msgstr "未分配"
-
 #: src/components/modals/CommandPalette.tsx
 msgid "Unavailable"
 msgstr "不可用"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Uninstall jtype CLI"
+msgstr "卸载 jtype 命令行工具"
 
 #: src/components/editor/EditorShell.tsx
 msgid "Unpublish"
@@ -1231,14 +1067,6 @@ msgstr "未保存"
 #: src/components/modals/AccountDialog.tsx
 msgid "Unsaved changes"
 msgstr "有未保存的更改"
-
-#: src/components/BoardView.tsx
-#~ msgid "Unset done column"
-#~ msgstr "取消完成列"
-
-#: src/components/CardPeek.tsx
-#~ msgid "Untitled card"
-#~ msgstr "无标题卡片"
 
 #: src/components/modals/AccountDialog.tsx
 msgid "Untitled workspace"
@@ -1281,17 +1109,13 @@ msgstr "等待浏览器授权（代码 {0}）…"
 msgid "WIP limit (blank to clear)"
 msgstr "WIP 限制（留空清除）"
 
-#: src/components/BoardView.tsx
-#~ msgid "WIP limit {0}"
-#~ msgstr "WIP 限制 {0}"
+#: src/components/modals/AccountDialog.tsx
+msgid "Working…"
+msgstr "处理中…"
 
 #: src/components/sidebar/Sidebar.tsx
 msgid "Workspace files"
 msgstr "工作区文件"
-
-#: src/components/CardPeek.tsx
-#~ msgid "Write"
-#~ msgstr "编辑"
 
 #: src/components/modals/AccountDialog.tsx
 msgid ""
@@ -1310,3 +1134,177 @@ msgstr "您的账户"
 #: src/components/editor/EditorShell.tsx
 msgid "Your rendered document will appear here."
 msgstr "渲染后的文档将显示在此处。"
+
+#~ msgid "Add column"
+#~ msgstr "添加列"
+
+#~ msgid "Add details..."
+#~ msgstr "添加详情…"
+
+#~ msgid "Assignee"
+#~ msgstr "负责人"
+
+#~ msgid "Blank card"
+#~ msgstr "空白卡片"
+
+#~ msgid "Board"
+#~ msgstr "看板"
+
+#~ msgid "Card title — Enter to add, Esc to cancel"
+#~ msgstr ""
+
+#~ msgid "Card title (Enter to add, Esc to cancel)"
+#~ msgstr "卡片标题（回车添加，Esc 取消）"
+
+#~ msgid "cards"
+#~ msgstr "张卡片"
+
+#~ msgid "Clear filter"
+#~ msgstr "清除筛选"
+
+#~ msgid "Collapse column"
+#~ msgstr "折叠列"
+
+#~ msgid "Color"
+#~ msgstr "颜色"
+
+#~ msgid "Color columns"
+#~ msgstr "彩色列"
+
+#~ msgid "comma, separated"
+#~ msgstr "用逗号分隔"
+
+#~ msgid "Copy link"
+#~ msgstr "复制链接"
+
+#~ msgid "Delete card"
+#~ msgstr "删除卡片"
+
+#~ msgid "Delete column \"{0}\"?"
+#~ msgstr "删除列“{0}”？"
+
+#~ msgid "Delete column \"{0}\"? Its {1} card(s) move to \"{2}\"."
+#~ msgstr "删除列“{0}”？其中 {1} 张卡片将移动到“{2}”。"
+
+#~ msgid "Done column"
+#~ msgstr "完成列"
+
+#~ msgid "Drag to resize"
+#~ msgstr "拖动调整宽度"
+
+#~ msgid "Due"
+#~ msgstr "截止日期"
+
+#~ msgid "Duplicate"
+#~ msgstr "复制卡片"
+
+#~ msgid "Expand column"
+#~ msgstr "展开列"
+
+#~ msgid "Filter"
+#~ msgstr "筛选"
+
+#~ msgid "Group: Assignee"
+#~ msgstr "分组：负责人"
+
+#~ msgid "Group: Priority"
+#~ msgstr "分组：优先级"
+
+#~ msgid "Group: Status"
+#~ msgstr "分组：状态"
+
+#~ msgid "Icon"
+#~ msgstr "图标"
+
+#~ msgid "Loading…"
+#~ msgstr "加载中…"
+
+#~ msgid "New card"
+#~ msgstr "新建卡片"
+
+#~ msgid "New column name"
+#~ msgstr "新列名称"
+
+#~ msgid "No cards"
+#~ msgstr "暂无卡片"
+
+#~ msgid "No color"
+#~ msgstr "无颜色"
+
+#~ msgid "No icon"
+#~ msgstr "无图标"
+
+#~ msgid "Note name..."
+#~ msgstr "笔记名称…"
+
+#~ msgid "Notes"
+#~ msgstr "备注"
+
+#~ msgid "Open in editor"
+#~ msgstr "在编辑器中打开"
+
+#~ msgid "Open in full editor"
+#~ msgstr "在完整编辑器中打开"
+
+#~ msgid "Preview"
+#~ msgstr "预览"
+
+#~ msgid "Priority"
+#~ msgstr "优先级"
+
+#~ msgid "Refresh"
+#~ msgstr "刷新"
+
+#~ msgid "Save as template"
+#~ msgstr "存为模板"
+
+#~ msgid "Search cards"
+#~ msgstr "搜索卡片"
+
+#~ msgid "Set as done column"
+#~ msgstr "设为完成列"
+
+#~ msgid "Set WIP limit"
+#~ msgstr "设置 WIP 限制"
+
+#~ msgid "Sort: Due"
+#~ msgstr "排序：截止"
+
+#~ msgid "Sort: Manual"
+#~ msgstr "排序：手动"
+
+#~ msgid "Sort: Priority"
+#~ msgstr "排序：优先级"
+
+#~ msgid "Sort: Title"
+#~ msgstr "排序：标题"
+
+#~ msgid "Status"
+#~ msgstr "状态"
+
+#~ msgid "Table"
+#~ msgstr "表格"
+
+#~ msgid "Tags"
+#~ msgstr "标签"
+
+#~ msgid "Templates"
+#~ msgstr "模板"
+
+#~ msgid "Title"
+#~ msgstr "标题"
+
+#~ msgid "Unassigned"
+#~ msgstr "未分配"
+
+#~ msgid "Unset done column"
+#~ msgstr "取消完成列"
+
+#~ msgid "Untitled card"
+#~ msgstr "无标题卡片"
+
+#~ msgid "WIP limit {0}"
+#~ msgstr "WIP 限制 {0}"
+
+#~ msgid "Write"
+#~ msgstr "编辑"

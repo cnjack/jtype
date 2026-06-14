@@ -184,7 +184,26 @@ export const tauri = {
     return invoke<void>("cloud_ws_send", { message });
   },
 
+  // jtype CLI install/uninstall (downloads the matching binary from Releases).
+  cliStatus() {
+    return invoke<CliStatus>("cli_status");
+  },
+  installCli() {
+    return invoke<CliStatus>("install_cli");
+  },
+  uninstallCli() {
+    return invoke<CliStatus>("uninstall_cli");
+  },
+
   get isAvailable() {
     return isTauriRuntime();
   },
 };
+
+export interface CliStatus {
+  installed: boolean;
+  path: string | null;
+  onPath: boolean;
+  version: string | null;
+  asset: string | null;
+}

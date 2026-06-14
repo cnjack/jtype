@@ -484,6 +484,18 @@ msgstr "アカウントをお持ちでないですか？"
 msgid "Don't have an account? <0>Sign up</0>"
 msgstr "アカウントをお持ちでないですか？ <0>サインアップ</0>"
 
+#: src/components/DownloadPromo.tsx
+msgid "Don't show this again"
+msgstr "今後表示しない"
+
+#: src/components/DownloadPromo.tsx
+msgid "Download for {osLabel}"
+msgstr "{osLabel} 版をダウンロード"
+
+#: src/components/DownloadPromo.tsx
+msgid "Download the desktop app"
+msgstr "デスクトップアプリをダウンロード"
+
 #: src/pages/Workspace.tsx
 msgid "Draft only"
 msgstr "下書きのみ"
@@ -567,6 +579,10 @@ msgstr "フォーカスモード"
 #: src/pages/Workspace.tsx
 msgid "General"
 msgstr "一般"
+
+#: src/components/DownloadPromo.tsx
+msgid "Get the desktop app — and a jtype CLI for your terminal & AI agents."
+msgstr "デスクトップアプリと、ターミナル・AI エージェント向けの jtype CLI を入手。"
 
 #: src/pages/Landing.tsx
 msgid "GitHub"
@@ -1459,6 +1475,10 @@ msgid ""
 "Upload a PEM certificate for a verified domain. The private key is stored as"
 " a hash in the current backend model."
 msgstr "確認済みドメインの PEM 証明書をアップロードします。秘密鍵は現在のバックエンドモデルでハッシュとして保存されます。"
+
+#: src/components/DownloadPromo.tsx
+msgid "Use JType beyond the browser"
+msgstr "ブラウザの外でも JType を"
 
 #: src/pages/Admin.tsx
 msgid "User"

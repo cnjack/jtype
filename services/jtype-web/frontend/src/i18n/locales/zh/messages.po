@@ -481,6 +481,18 @@ msgstr "没有账户？"
 msgid "Don't have an account? <0>Sign up</0>"
 msgstr "没有账户？<0>注册</0>"
 
+#: src/components/DownloadPromo.tsx
+msgid "Don't show this again"
+msgstr "不再显示"
+
+#: src/components/DownloadPromo.tsx
+msgid "Download for {osLabel}"
+msgstr "下载 {osLabel} 版"
+
+#: src/components/DownloadPromo.tsx
+msgid "Download the desktop app"
+msgstr "下载桌面应用"
+
 #: src/pages/Workspace.tsx
 msgid "Draft only"
 msgstr "仅草稿"
@@ -564,6 +576,10 @@ msgstr "专注模式"
 #: src/pages/Workspace.tsx
 msgid "General"
 msgstr "通用"
+
+#: src/components/DownloadPromo.tsx
+msgid "Get the desktop app — and a jtype CLI for your terminal & AI agents."
+msgstr "获取桌面应用——以及用于终端和 AI 智能体的 jtype 命令行工具。"
 
 #: src/pages/Landing.tsx
 msgid "GitHub"
@@ -1454,6 +1470,10 @@ msgid ""
 "Upload a PEM certificate for a verified domain. The private key is stored as"
 " a hash in the current backend model."
 msgstr "为已验证域名上传 PEM 证书。私钥在当前后端模型中以哈希形式存储。"
+
+#: src/components/DownloadPromo.tsx
+msgid "Use JType beyond the browser"
+msgstr "在浏览器之外使用 JType"
 
 #: src/pages/Admin.tsx
 msgid "User"

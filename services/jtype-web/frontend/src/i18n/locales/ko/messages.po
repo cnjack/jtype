@@ -485,6 +485,18 @@ msgstr "계정이 없으신가요?"
 msgid "Don't have an account? <0>Sign up</0>"
 msgstr "계정이 없으신가요? <0>회원가입</0>"
 
+#: src/components/DownloadPromo.tsx
+msgid "Don't show this again"
+msgstr "다시 표시 안 함"
+
+#: src/components/DownloadPromo.tsx
+msgid "Download for {osLabel}"
+msgstr "{osLabel}용 다운로드"
+
+#: src/components/DownloadPromo.tsx
+msgid "Download the desktop app"
+msgstr "데스크톱 앱 다운로드"
+
 #: src/pages/Workspace.tsx
 msgid "Draft only"
 msgstr "초안만"
@@ -568,6 +580,10 @@ msgstr "집중 모드"
 #: src/pages/Workspace.tsx
 msgid "General"
 msgstr "일반"
+
+#: src/components/DownloadPromo.tsx
+msgid "Get the desktop app — and a jtype CLI for your terminal & AI agents."
+msgstr "데스크톱 앱과 터미널·AI 에이전트용 jtype CLI를 받으세요."
 
 #: src/pages/Landing.tsx
 msgid "GitHub"
@@ -1461,6 +1477,10 @@ msgid ""
 "Upload a PEM certificate for a verified domain. The private key is stored as"
 " a hash in the current backend model."
 msgstr "확인된 도메인에 대한 PEM 인증서를 업로드합니다. 개인 키는 현재 백엔드 모델에서 해시로 저장됩니다."
+
+#: src/components/DownloadPromo.tsx
+msgid "Use JType beyond the browser"
+msgstr "브라우저 밖에서도 JType 사용"
 
 #: src/pages/Admin.tsx
 msgid "User"

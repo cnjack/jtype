@@ -485,6 +485,18 @@ msgstr "Don't have an account?"
 msgid "Don't have an account? <0>Sign up</0>"
 msgstr "Don't have an account? <0>Sign up</0>"
 
+#: src/components/DownloadPromo.tsx
+msgid "Don't show this again"
+msgstr "Don't show this again"
+
+#: src/components/DownloadPromo.tsx
+msgid "Download for {osLabel}"
+msgstr "Download for {osLabel}"
+
+#: src/components/DownloadPromo.tsx
+msgid "Download the desktop app"
+msgstr "Download the desktop app"
+
 #: src/pages/Workspace.tsx
 msgid "Draft only"
 msgstr "Draft only"
@@ -568,6 +580,10 @@ msgstr "Focus mode"
 #: src/pages/Workspace.tsx
 msgid "General"
 msgstr "General"
+
+#: src/components/DownloadPromo.tsx
+msgid "Get the desktop app — and a jtype CLI for your terminal & AI agents."
+msgstr "Get the desktop app — and a jtype CLI for your terminal & AI agents."
 
 #: src/pages/Landing.tsx
 msgid "GitHub"
@@ -1454,6 +1470,10 @@ msgstr "Untitled document"
 #: src/pages/Workspace.tsx
 msgid "Upload a PEM certificate for a verified domain. The private key is stored as a hash in the current backend model."
 msgstr "Upload a PEM certificate for a verified domain. The private key is stored as a hash in the current backend model."
+
+#: src/components/DownloadPromo.tsx
+msgid "Use JType beyond the browser"
+msgstr "Use JType beyond the browser"
 
 #: src/pages/Admin.tsx
 msgid "User"

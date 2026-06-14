@@ -23,6 +23,7 @@ import { Kanban } from './pages/Kanban'
 import { DeviceOAuth } from './pages/DeviceOAuth'
 import { InviteAccept } from './pages/InviteAccept'
 import { AiConnections } from './pages/AiConnections'
+import { DownloadPromo } from './components/DownloadPromo'
 import { api } from './api'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -54,6 +55,7 @@ function renderApp() {
                   <Route path="/workspaces/:workspaceId/kanban" element={<Kanban />} />
                 </Route>
               </Routes>
+              <DownloadPromo />
             </BrowserRouter>
           </PromptDialogProvider>
         </AuthProvider>

@@ -1,24 +1,26 @@
+#
 msgid ""
 msgstr ""
-"POT-Creation-Date: 2026-05-14\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
-"X-Generator: @lingui/cli\n"
-"Language: ja\n"
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-05-14\n"
 "PO-Revision-Date: \n"
 "Last-Translator: \n"
 "Language-Team: \n"
+"Language: ja\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: \n"
+"X-Generator: @lingui/cli\n"
 
 #. placeholder {0}: documents.length
 #: src/components/layout/VaultHome.tsx
 msgid "{0, plural, one {# Markdown file} other {# Markdown files}}"
 msgstr "{0,plural,other{# 個の Markdown ファイル}}"
 
-#. placeholder {0}: isPublished ? (hasUnpublishedChanges ? "Changed" : "Published") : "Not published"
+#. placeholder {0}: isPublished ? (hasUnpublishedChanges ? "Changed" :
+#. "Published") : "Not published"
 #: src/components/editor/EditorShell.tsx
 msgid "{0}"
 msgstr "{0}"
@@ -83,7 +85,9 @@ msgid "A text document you write and preview"
 msgstr ""
 
 #: src/components/layout/WelcomeScreen.tsx
-msgid "A vault is a local folder for notes, sync, and publishing. A single file opens JType as a focused Markdown editor."
+msgid ""
+"A vault is a local folder for notes, sync, and publishing. A single file "
+"opens JType as a focused Markdown editor."
 msgstr "ボルトはノート、同期、公開のためのローカルフォルダーです。単一ファイルは JType を集中 Markdown エディターとして開きます。"
 
 #: src/components/modals/AccountDialog.tsx
@@ -93,14 +97,6 @@ msgstr "アカウント"
 #: src/components/modals/AccountDialog.tsx
 msgid "Account service URL"
 msgstr "アカウントサービス URL"
-
-#: src/components/BoardView.tsx
-#~ msgid "Add column"
-#~ msgstr ""
-
-#: src/components/CardPeek.tsx
-#~ msgid "Add details..."
-#~ msgstr ""
 
 #: src/components/editor/EditorShell.tsx
 msgid "Add table column right"
@@ -122,11 +118,9 @@ msgstr "お気に入りに追加しました。"
 msgid "Advanced"
 msgstr "詳細"
 
-#: src/components/BoardTable.tsx
-#: src/components/BoardView.tsx
-#: src/components/CardPeek.tsx
-#~ msgid "Assignee"
-#~ msgstr ""
+#: src/components/modals/AccountDialog.tsx
+msgid "Available in the desktop app."
+msgstr "デスクトップアプリで利用できます。"
 
 #: src/components/modals/NewResourceDialog.tsx
 msgid "Back"
@@ -137,20 +131,14 @@ msgid "Back to home"
 msgstr "ホームに戻る"
 
 #: src/components/modals/SyncPromptDialog.tsx
-msgid "Back up this local vault to a cloud workspace, keep devices in sync, and open the same notes from the web."
+msgid ""
+"Back up this local vault to a cloud workspace, keep devices in sync, and "
+"open the same notes from the web."
 msgstr "このローカルボルトをクラウドワークスペースにバックアップし、デバイスを同期させ、ウェブから同じノートを開きます。"
 
 #: src/components/modals/AccountDialog.tsx
 msgid "Bind the current local vault to one cloud workspace."
 msgstr "現在のローカルボルトを 1 つのクラウドワークスペースにバインドします。"
-
-#: src/components/BoardView.tsx
-#~ msgid "Blank card"
-#~ msgstr ""
-
-#: src/components/BoardView.tsx
-#~ msgid "Board"
-#~ msgstr ""
 
 #: src/components/modals/NewResourceDialog.tsx
 msgid "Board name"
@@ -178,11 +166,14 @@ msgid "Bring in an image or PDF from your computer"
 msgstr ""
 
 #: src/components/modals/AccountDialog.tsx
-msgid "Browser authorization is open. Sync will continue after sign-in completes."
+msgid ""
+"Browser authorization is open. Sync will continue after sign-in completes."
 msgstr "ブラウザ認証が開かれています。サインイン完了後に同期が続きます。"
 
 #: src/components/modals/SyncPromptDialog.tsx
-msgid "Browser authorization is open. This sync will continue after sign-in completes."
+msgid ""
+"Browser authorization is open. This sync will continue after sign-in "
+"completes."
 msgstr "ブラウザ認証が開かれています。サインイン完了後にこの同期が続きます。"
 
 #: src/components/modals/CreateFolderDialog.tsx
@@ -200,18 +191,6 @@ msgstr "フォルダーをそれ自身の中に移動することはできませ
 msgid "Card"
 msgstr ""
 
-#: src/components/BoardView.tsx
-#~ msgid "Card title — Enter to add, Esc to cancel"
-#~ msgstr ""
-
-#: src/components/BoardView.tsx
-#~ msgid "Card title (Enter to add, Esc to cancel)"
-#~ msgstr ""
-
-#: src/components/BoardView.tsx
-#~ msgid "cards"
-#~ msgstr ""
-
 #: src/components/sidebar/Sidebar.tsx
 msgid "Choose a local folder"
 msgstr "ローカルフォルダーを選択"
@@ -224,10 +203,6 @@ msgstr "ノートを選択するか、新規作成してください。このボ
 #: src/components/modals/NewResourceDialog.tsx
 msgid "Choose what you want to create."
 msgstr ""
-
-#: src/components/BoardView.tsx
-#~ msgid "Clear filter"
-#~ msgstr ""
 
 #: src/components/modals/AccountDialog.tsx
 #: src/components/modals/ConflictDialog.tsx
@@ -258,8 +233,7 @@ msgstr "クラウド同期"
 msgid "Cloud sync reminder snoozed."
 msgstr "クラウド同期リマインダーをスヌーズしました。"
 
-#: src/components/layout/Header.tsx
-#: src/components/modals/AccountDialog.tsx
+#: src/components/layout/Header.tsx src/components/modals/AccountDialog.tsx
 msgid "Cloud workspace"
 msgstr "クラウドワークスペース"
 
@@ -276,28 +250,21 @@ msgstr "クラウドワークスペース"
 msgid "Collapse all"
 msgstr "すべて折りたたむ"
 
-#: src/components/BoardView.tsx
-#~ msgid "Collapse column"
-#~ msgstr ""
+#: src/components/modals/AccountDialog.tsx
+msgid "Command line"
+msgstr "コマンドライン"
 
-#: src/components/BoardView.tsx
-#~ msgid "Color"
-#~ msgstr ""
-
-#: src/components/BoardView.tsx
-#~ msgid "Color columns"
-#~ msgstr ""
-
-#: src/components/CardPeek.tsx
-#~ msgid "comma, separated"
-#~ msgstr ""
+#: src/components/modals/AccountDialog.tsx
+msgid "Command line (jtype)"
+msgstr "コマンドライン (jtype)"
 
 #: src/components/modals/CommandPalette.tsx
 msgid "Command palette"
 msgstr "コマンドパレット"
 
 #: src/components/modals/AccountDialog.tsx
-msgid "Connect desktop sync through the browser and choose the service endpoint."
+msgid ""
+"Connect desktop sync through the browser and choose the service endpoint."
 msgstr "ブラウザを通じてデスクトップ同期を接続し、サービスエンドポイントを選択します。"
 
 #: src/components/modals/AccountDialog.tsx
@@ -320,10 +287,6 @@ msgstr "接続してワークスペースを読み込みます。"
 #: src/components/modals/AccountDialog.tsx
 msgid "Connected as {0}. Sync vaults with cloud workspaces."
 msgstr "{0} として接続済み。ボルトをクラウドワークスペースと同期します。"
-
-#: src/components/BoardView.tsx
-#~ msgid "Copy link"
-#~ msgstr ""
 
 #: src/components/sidebar/Sidebar.tsx
 msgid "Copy path"
@@ -383,22 +346,10 @@ msgstr "デフォルトボルトパス：<0>{defaultVaultPath}</0>"
 msgid "Delete"
 msgstr "削除"
 
-#: src/components/CardPeek.tsx
-#~ msgid "Delete card"
-#~ msgstr ""
-
 #. placeholder {0}: card.title
 #: src/components/BoardView.tsx
 msgid "Delete card \"{0}\"? It moves to the trash."
 msgstr ""
-
-#: src/components/BoardView.tsx
-#~ msgid "Delete column \"{0}\"?"
-#~ msgstr ""
-
-#: src/components/BoardView.tsx
-#~ msgid "Delete column \"{0}\"? Its {1} card(s) move to \"{2}\"."
-#~ msgstr ""
 
 #: src/components/BoardView.tsx
 msgid "Delete column \"{colName}\"?"
@@ -481,26 +432,13 @@ msgstr "ドキュメントの公開を取り消しました。"
 msgid "Documents"
 msgstr "ドキュメント"
 
-#: src/components/BoardView.tsx
-#~ msgid "Done column"
-#~ msgstr ""
-
-#: src/components/BoardView.tsx
-#~ msgid "Drag to resize"
-#~ msgstr ""
+#: src/components/modals/AccountDialog.tsx
+msgid "Downloads"
+msgstr "ダウンロード"
 
 #: src/components/sidebar/Sidebar.tsx
 msgid "Drop a folder here to open it as a vault."
 msgstr "フォルダーをここにドロップしてボルトとして開きます。"
-
-#: src/components/BoardTable.tsx
-#: src/components/CardPeek.tsx
-#~ msgid "Due"
-#~ msgstr ""
-
-#: src/components/BoardView.tsx
-#~ msgid "Duplicate"
-#~ msgstr ""
 
 #: src/components/editor/CardPropertyStrip.tsx
 msgid "Edit properties in the board"
@@ -526,10 +464,6 @@ msgstr "最初にこのボルトのクラウド同期を有効にしてくださ
 msgid "Expand all"
 msgstr "すべて展開"
 
-#: src/components/BoardView.tsx
-#~ msgid "Expand column"
-#~ msgstr ""
-
 #: src/components/editor/EditorShell.tsx
 msgid "Export"
 msgstr "エクスポート"
@@ -549,10 +483,6 @@ msgstr "お気に入り"
 #: src/components/sidebar/Sidebar.tsx
 msgid "Favorites"
 msgstr "お気に入り"
-
-#: src/components/BoardView.tsx
-#~ msgid "Filter"
-#~ msgstr ""
 
 #: src/components/editor/EditorShell.tsx
 msgid "Focus mode"
@@ -574,25 +504,9 @@ msgstr "表をフォーマット"
 msgid "General"
 msgstr "一般"
 
-#: src/components/BoardView.tsx
-#~ msgid "Group: Assignee"
-#~ msgstr ""
-
-#: src/components/BoardView.tsx
-#~ msgid "Group: Priority"
-#~ msgstr ""
-
-#: src/components/BoardView.tsx
-#~ msgid "Group: Status"
-#~ msgstr ""
-
 #: src/components/editor/EditorShell.tsx
 msgid "Hide"
 msgstr "非表示"
-
-#: src/components/CardPeek.tsx
-#~ msgid "Icon"
-#~ msgstr ""
 
 #: src/components/modals/NewResourceDialog.tsx
 msgid "Import file"
@@ -630,6 +544,24 @@ msgstr "表を挿入または編集 - Ctrl+Shift+T"
 msgid "Insert or format table"
 msgstr "表を挿入またはフォーマット"
 
+#: src/components/modals/AccountDialog.tsx
+msgid "Install jtype CLI"
+msgstr "jtype CLI をインストール"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Install jtype to your PATH"
+msgstr "jtype を PATH にインストール"
+
+#: src/components/modals/AccountDialog.tsx
+msgid ""
+"Install the jtype CLI to manage notes and kanban from your terminal and "
+"connect AI agents over MCP."
+msgstr "jtype CLI をインストールすると、ターミナルからノートとカンバンを管理し、MCP 経由で AI エージェントを接続できます。"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Installed"
+msgstr "インストール済み"
+
 #: src/components/editor/EditorShell.tsx
 msgid "Italic - Ctrl+I"
 msgstr "斜体 - Ctrl+I"
@@ -659,10 +591,6 @@ msgstr "リンク - Ctrl+K"
 msgid "Loading preview"
 msgstr ""
 
-#: src/components/CardPeek.tsx
-#~ msgid "Loading…"
-#~ msgstr ""
-
 #: src/components/editor/ResourceViewer.tsx
 msgid "Local"
 msgstr ""
@@ -683,8 +611,7 @@ msgstr "ローカルボルトモード"
 msgid "Log out"
 msgstr "ログアウト"
 
-#: src/components/editor/EditorShell.tsx
-#: src/components/layout/VaultHome.tsx
+#: src/components/editor/EditorShell.tsx src/components/layout/VaultHome.tsx
 msgid "Markdown"
 msgstr "Markdown"
 
@@ -696,8 +623,7 @@ msgstr ""
 msgid "Markdown editor"
 msgstr "Markdown エディター"
 
-#: src/components/layout/Header.tsx
-#: src/components/layout/VaultHome.tsx
+#: src/components/layout/Header.tsx src/components/layout/VaultHome.tsx
 #: src/components/layout/WelcomeScreen.tsx
 msgid "Markdown file"
 msgstr "Markdown ファイル"
@@ -710,8 +636,7 @@ msgstr "移動"
 msgid "Move to Folder"
 msgstr "フォルダーに移動"
 
-#: src/components/editor/EditorShell.tsx
-#: src/components/sidebar/Sidebar.tsx
+#: src/components/editor/EditorShell.tsx src/components/sidebar/Sidebar.tsx
 msgid "Move to trash"
 msgstr "ゴミ箱に移動"
 
@@ -723,21 +648,12 @@ msgstr "移動先..."
 msgid "New board"
 msgstr ""
 
-#: src/components/BoardView.tsx
-#~ msgid "New card"
-#~ msgstr ""
-
-#: src/components/BoardView.tsx
-msgid "New column name"
-msgstr ""
-
 #: src/components/modals/NewResourceDialog.tsx
 #: src/components/sidebar/Sidebar.tsx
 msgid "New document"
 msgstr "新規ドキュメント"
 
-#: src/components/layout/VaultHome.tsx
-#: src/components/sidebar/Sidebar.tsx
+#: src/components/layout/VaultHome.tsx src/components/sidebar/Sidebar.tsx
 msgid "New Document"
 msgstr "新規ドキュメント"
 
@@ -761,17 +677,9 @@ msgstr "新規フォルダー名："
 msgid "New resource"
 msgstr ""
 
-#: src/components/BoardTable.tsx
-#~ msgid "No cards"
-#~ msgstr ""
-
 #: src/components/modals/AccountDialog.tsx
 msgid "No cloud workspaces yet. Sync this vault to create one."
 msgstr "クラウドワークスペースがまだありません。このボルトを同期して作成します。"
-
-#: src/components/BoardView.tsx
-#~ msgid "No color"
-#~ msgstr ""
 
 #: src/components/modals/CommandPalette.tsx
 msgid "No commands found."
@@ -792,10 +700,6 @@ msgstr "ファイルが選択されていません"
 #: src/components/editor/EditorShell.tsx
 msgid "No headings found."
 msgstr "見出しが見つかりません。"
-
-#: src/components/CardPeek.tsx
-#~ msgid "No icon"
-#~ msgstr ""
 
 #: src/components/sidebar/Sidebar.tsx
 msgid "No matches."
@@ -826,23 +730,20 @@ msgid "No vault"
 msgstr "ボルトなし"
 
 #: src/components/modals/AccountDialog.tsx
-msgid "Not bound to a cloud workspace yet. Binding starts bidirectional sync for this vault."
+msgid ""
+"Not bound to a cloud workspace yet. Binding starts bidirectional sync for "
+"this vault."
 msgstr "まだクラウドワークスペースにバインドされていません。バインドするとこのボルトの双方向同期が始まります。"
 
-#: src/components/modals/CreateNoteDialog.tsx
-#~ msgid "Note name..."
-#~ msgstr "ノート名..."
-
-#: src/components/CardPeek.tsx
-#~ msgid "Notes"
-#~ msgstr ""
+#: src/components/modals/AccountDialog.tsx
+msgid "Not installed"
+msgstr "未インストール"
 
 #: src/components/editor/EditorShell.tsx
 msgid "Only web, email, and phone links can be opened from preview."
 msgstr "プレビューからはウェブ、メール、電話リンクのみ開けます。"
 
-#: src/components/modals/QuickSwitcher.tsx
-#: src/components/sidebar/Sidebar.tsx
+#: src/components/modals/QuickSwitcher.tsx src/components/sidebar/Sidebar.tsx
 msgid "Open"
 msgstr "開く"
 
@@ -877,14 +778,6 @@ msgstr "別のボルトを開く"
 #: src/components/layout/Header.tsx
 msgid "Open file"
 msgstr "ファイルを開く"
-
-#: src/components/BoardView.tsx
-#~ msgid "Open in editor"
-#~ msgstr ""
-
-#: src/components/CardPeek.tsx
-#~ msgid "Open in full editor"
-#~ msgstr ""
 
 #: src/components/editor/ResourceViewer.tsx
 msgid "Open in system app"
@@ -938,22 +831,11 @@ msgstr "完全に削除"
 msgid "Preparing PDF export..."
 msgstr "PDF エクスポートを準備中..."
 
-#: src/components/CardPeek.tsx
-#~ msgid "Preview"
-#~ msgstr ""
-
 #: src/components/editor/ResourceViewer.tsx
 msgid "Preview is available in the desktop app."
 msgstr ""
 
-#: src/components/BoardTable.tsx
-#: src/components/BoardView.tsx
-#: src/components/CardPeek.tsx
-#~ msgid "Priority"
-#~ msgstr ""
-
-#: src/components/layout/Header.tsx
-#: src/components/modals/AccountDialog.tsx
+#: src/components/layout/Header.tsx src/components/modals/AccountDialog.tsx
 msgid "Profile"
 msgstr "プロフィール"
 
@@ -979,11 +861,12 @@ msgid "Published {0}"
 msgstr "{0} に公開"
 
 #: src/components/editor/EditorShell.tsx
-msgid "Publishing uses a cloud snapshot; frontmatter status is treated as user metadata."
+msgid ""
+"Publishing uses a cloud snapshot; frontmatter status is treated as user "
+"metadata."
 msgstr "公開はクラウドスナップショットを使用します。フロントマターのステータスはユーザーメタデータとして扱われます。"
 
-#: src/components/layout/Header.tsx
-#: src/components/layout/VaultHome.tsx
+#: src/components/layout/Header.tsx src/components/layout/VaultHome.tsx
 msgid "Quick open"
 msgstr "クイックオープン"
 
@@ -995,14 +878,9 @@ msgstr "クイックスイッチャー"
 msgid "Read-only"
 msgstr "読み取り専用"
 
-#: src/components/layout/VaultHome.tsx
-#: src/components/layout/WelcomeScreen.tsx
+#: src/components/layout/VaultHome.tsx src/components/layout/WelcomeScreen.tsx
 msgid "Recent"
 msgstr "最近"
-
-#: src/components/BoardView.tsx
-#~ msgid "Refresh"
-#~ msgstr ""
 
 #: src/components/editor/EditorShell.tsx
 msgid "Remove from favorites"
@@ -1036,6 +914,10 @@ msgstr "次の名前に変更："
 msgid "Republish"
 msgstr "再公開"
 
+#: src/components/modals/AccountDialog.tsx
+msgid "Restart your terminal to pick up the updated PATH."
+msgstr "更新された PATH を反映するにはターミナルを再起動してください。"
+
 #: src/components/sidebar/Sidebar.tsx
 msgid "Restore"
 msgstr "復元"
@@ -1047,14 +929,6 @@ msgstr "復元をキューに入れました。次のプッシュ時に同期さ
 #: src/components/editor/EditorShell.tsx
 msgid "Save"
 msgstr "保存"
-
-#: src/components/BoardView.tsx
-#~ msgid "Save as template"
-#~ msgstr ""
-
-#: src/components/BoardView.tsx
-#~ msgid "Search cards"
-#~ msgstr ""
 
 #: src/components/modals/CommandPalette.tsx
 msgid "Search commands"
@@ -1076,16 +950,7 @@ msgstr "Markdown ファイルを選択"
 msgid "Select destination for \"{sourceName}\""
 msgstr "\"{sourceName}\" の移動先を選択"
 
-#: src/components/BoardView.tsx
-#~ msgid "Set as done column"
-#~ msgstr ""
-
-#: src/components/BoardView.tsx
-#~ msgid "Set WIP limit"
-#~ msgstr ""
-
-#: src/components/modals/AccountDialog.tsx
-#: src/components/sidebar/Sidebar.tsx
+#: src/components/modals/AccountDialog.tsx src/components/sidebar/Sidebar.tsx
 msgid "Settings"
 msgstr "設定"
 
@@ -1097,22 +962,6 @@ msgstr "エクスプローラーで表示"
 msgid "Sign in"
 msgstr "サインイン"
 
-#: src/components/BoardView.tsx
-#~ msgid "Sort: Due"
-#~ msgstr ""
-
-#: src/components/BoardView.tsx
-#~ msgid "Sort: Manual"
-#~ msgstr ""
-
-#: src/components/BoardView.tsx
-#~ msgid "Sort: Priority"
-#~ msgstr ""
-
-#: src/components/BoardView.tsx
-#~ msgid "Sort: Title"
-#~ msgstr ""
-
 #: src/components/modals/AccountDialog.tsx
 msgid "Start cloud sync"
 msgstr "クラウド同期を開始"
@@ -1121,11 +970,6 @@ msgstr "クラウド同期を開始"
 #: src/components/modals/SyncPromptDialog.tsx
 msgid "Start sync"
 msgstr "同期を開始"
-
-#: src/components/BoardTable.tsx
-#: src/components/CardPeek.tsx
-#~ msgid "Status"
-#~ msgstr ""
 
 #: src/components/modals/SyncPromptDialog.tsx
 msgid "Sync \"{vaultName}\" to cloud?"
@@ -1153,16 +997,6 @@ msgstr "公開する前にこのドキュメントを同期してください。
 msgid "Syncing with {0}."
 msgstr "{0} と同期中。"
 
-#: src/components/BoardView.tsx
-#~ msgid "Table"
-#~ msgstr ""
-
-#: src/components/BoardTable.tsx
-#: src/components/BoardView.tsx
-#: src/components/CardPeek.tsx
-#~ msgid "Tags"
-#~ msgstr ""
-
 #: src/components/editor/EditorShell.tsx
 msgid "Task list"
 msgstr "タスクリスト"
@@ -1171,13 +1005,13 @@ msgstr "タスクリスト"
 msgid "Template name"
 msgstr ""
 
-#: src/components/BoardView.tsx
-#~ msgid "Templates"
-#~ msgstr ""
-
 #: src/components/editor/EditorShell.tsx
 msgid "The public snapshot is behind the current document."
 msgstr "公開スナップショットが現在のドキュメントより古くなっています。"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Then run `jtype login` to sign in."
+msgstr "その後 `jtype login` を実行してサインインします。"
 
 #: src/components/modals/DeleteFolderDialog.tsx
 msgid "This folder is empty."
@@ -1188,20 +1022,22 @@ msgid "This PDF can not be previewed inline."
 msgstr ""
 
 #: src/components/modals/AccountDialog.tsx
-msgid "This vault is local-only. You can keep working without cloud sync or enable it below."
+msgid ""
+"This vault is local-only. You can keep working without cloud sync or enable "
+"it below."
 msgstr "このボルトはローカル専用です。クラウド同期なしで作業を続けるか、下で有効にできます。"
 
 #: src/components/modals/SyncPromptDialog.tsx
 msgid "This vault is now local-only."
 msgstr "このボルトはローカル専用になりました。"
 
-#: src/components/BoardTable.tsx
-#~ msgid "Title"
-#~ msgstr ""
-
 #: src/components/sidebar/Sidebar.tsx
 msgid "Toggle favorite"
 msgstr "お気に入りの切り替え"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Tools"
+msgstr "ツール"
 
 #: src/components/modals/NewResourceDialog.tsx
 msgid "Track work in columns and cards"
@@ -1211,13 +1047,13 @@ msgstr ""
 msgid "Trash"
 msgstr "ゴミ箱"
 
-#: src/components/BoardView.tsx
-#~ msgid "Unassigned"
-#~ msgstr ""
-
 #: src/components/modals/CommandPalette.tsx
 msgid "Unavailable"
 msgstr "利用不可"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Uninstall jtype CLI"
+msgstr "jtype CLI をアンインストール"
 
 #: src/components/editor/EditorShell.tsx
 msgid "Unpublish"
@@ -1231,14 +1067,6 @@ msgstr "未保存"
 #: src/components/modals/AccountDialog.tsx
 msgid "Unsaved changes"
 msgstr "未保存の変更"
-
-#: src/components/BoardView.tsx
-#~ msgid "Unset done column"
-#~ msgstr ""
-
-#: src/components/CardPeek.tsx
-#~ msgid "Untitled card"
-#~ msgstr ""
 
 #: src/components/modals/AccountDialog.tsx
 msgid "Untitled workspace"
@@ -1281,17 +1109,13 @@ msgstr "ブラウザ認証を待機中（コード {0}）..."
 msgid "WIP limit (blank to clear)"
 msgstr ""
 
-#: src/components/BoardView.tsx
-#~ msgid "WIP limit {0}"
-#~ msgstr ""
+#: src/components/modals/AccountDialog.tsx
+msgid "Working…"
+msgstr "処理中…"
 
 #: src/components/sidebar/Sidebar.tsx
 msgid "Workspace files"
 msgstr "ワークスペースファイル"
-
-#: src/components/CardPeek.tsx
-#~ msgid "Write"
-#~ msgstr ""
 
 #: src/components/modals/AccountDialog.tsx
 msgid ""
@@ -1310,3 +1134,177 @@ msgstr "あなたのアカウント"
 #: src/components/editor/EditorShell.tsx
 msgid "Your rendered document will appear here."
 msgstr "レンダリングされたドキュメントがここに表示されます。"
+
+#~ msgid "Add column"
+#~ msgstr ""
+
+#~ msgid "Add details..."
+#~ msgstr ""
+
+#~ msgid "Assignee"
+#~ msgstr ""
+
+#~ msgid "Blank card"
+#~ msgstr ""
+
+#~ msgid "Board"
+#~ msgstr ""
+
+#~ msgid "Card title — Enter to add, Esc to cancel"
+#~ msgstr ""
+
+#~ msgid "Card title (Enter to add, Esc to cancel)"
+#~ msgstr ""
+
+#~ msgid "cards"
+#~ msgstr ""
+
+#~ msgid "Clear filter"
+#~ msgstr ""
+
+#~ msgid "Collapse column"
+#~ msgstr ""
+
+#~ msgid "Color"
+#~ msgstr ""
+
+#~ msgid "Color columns"
+#~ msgstr ""
+
+#~ msgid "comma, separated"
+#~ msgstr ""
+
+#~ msgid "Copy link"
+#~ msgstr ""
+
+#~ msgid "Delete card"
+#~ msgstr ""
+
+#~ msgid "Delete column \"{0}\"?"
+#~ msgstr ""
+
+#~ msgid "Delete column \"{0}\"? Its {1} card(s) move to \"{2}\"."
+#~ msgstr ""
+
+#~ msgid "Done column"
+#~ msgstr ""
+
+#~ msgid "Drag to resize"
+#~ msgstr ""
+
+#~ msgid "Due"
+#~ msgstr ""
+
+#~ msgid "Duplicate"
+#~ msgstr ""
+
+#~ msgid "Expand column"
+#~ msgstr ""
+
+#~ msgid "Filter"
+#~ msgstr ""
+
+#~ msgid "Group: Assignee"
+#~ msgstr ""
+
+#~ msgid "Group: Priority"
+#~ msgstr ""
+
+#~ msgid "Group: Status"
+#~ msgstr ""
+
+#~ msgid "Icon"
+#~ msgstr ""
+
+#~ msgid "Loading…"
+#~ msgstr ""
+
+#~ msgid "New card"
+#~ msgstr ""
+
+#~ msgid "New column name"
+#~ msgstr ""
+
+#~ msgid "No cards"
+#~ msgstr ""
+
+#~ msgid "No color"
+#~ msgstr ""
+
+#~ msgid "No icon"
+#~ msgstr ""
+
+#~ msgid "Note name..."
+#~ msgstr "ノート名..."
+
+#~ msgid "Notes"
+#~ msgstr ""
+
+#~ msgid "Open in editor"
+#~ msgstr ""
+
+#~ msgid "Open in full editor"
+#~ msgstr ""
+
+#~ msgid "Preview"
+#~ msgstr ""
+
+#~ msgid "Priority"
+#~ msgstr ""
+
+#~ msgid "Refresh"
+#~ msgstr ""
+
+#~ msgid "Save as template"
+#~ msgstr ""
+
+#~ msgid "Search cards"
+#~ msgstr ""
+
+#~ msgid "Set as done column"
+#~ msgstr ""
+
+#~ msgid "Set WIP limit"
+#~ msgstr ""
+
+#~ msgid "Sort: Due"
+#~ msgstr ""
+
+#~ msgid "Sort: Manual"
+#~ msgstr ""
+
+#~ msgid "Sort: Priority"
+#~ msgstr ""
+
+#~ msgid "Sort: Title"
+#~ msgstr ""
+
+#~ msgid "Status"
+#~ msgstr ""
+
+#~ msgid "Table"
+#~ msgstr ""
+
+#~ msgid "Tags"
+#~ msgstr ""
+
+#~ msgid "Templates"
+#~ msgstr ""
+
+#~ msgid "Title"
+#~ msgstr ""
+
+#~ msgid "Unassigned"
+#~ msgstr ""
+
+#~ msgid "Unset done column"
+#~ msgstr ""
+
+#~ msgid "Untitled card"
+#~ msgstr ""
+
+#~ msgid "WIP limit {0}"
+#~ msgstr ""
+
+#~ msgid "Write"
+#~ msgstr ""
