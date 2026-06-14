@@ -18,6 +18,28 @@ jobs:
   rust:
     name: Rust services (build + test)
     runs-on: ubuntu-latest
+    # jtype-web integration tests run against a real MySQL (see
+    # tests/common/mod.rs::setup_db). Provision one matching docker-compose's
+    # credentials so the default TEST_DATABASE_URL resolves. The healthcheck
+    # pings over TCP (-h 127.0.0.1) so readiness isn't reported while MySQL is
+    # still initialising on its local socket.
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: jtype-root
+          MYSQL_DATABASE: jtype
+          MYSQL_USER: jtype
+          MYSQL_PASSWORD: jtype-local
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -ujtype -pjtype-local --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=15
+    env:
+      TEST_DATABASE_URL: mysql://jtype:jtype-local@127.0.0.1:3306/jtype
     steps:
       - name: Checkout
         uses: actions/checkout@v4
