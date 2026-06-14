@@ -1,5 +1,6 @@
 import { useAppDispatch, useAppState } from "../app/AppState";
 import { useCallback } from "react";
+import { isEditableResourcePath } from "@shared/lib/fileTypes";
 
 export interface CommandDef {
   id: string;
@@ -46,7 +47,12 @@ export function useCommands(fs: ReturnType<typeof import("./useFileSystem").useF
       aliases: ["write"],
       shortcut: "Ctrl+S",
       scope: ["file"],
-      isEnabled: () => state.currentKind === "markdown" && state.isDirty && !isCloudViewer,
+      // Markdown and editable diagram resources (Mermaid/Excalidraw) are saveable.
+      isEnabled: () =>
+        (state.currentKind === "markdown" ||
+          (state.currentKind === "diagram" && isEditableResourcePath(state.currentPath))) &&
+        state.isDirty &&
+        !isCloudViewer,
       disabledReason: () => isCloudViewer ? "Viewer access is read-only" : "No unsaved changes",
       run: () => fs.saveCurrentFile(),
     },

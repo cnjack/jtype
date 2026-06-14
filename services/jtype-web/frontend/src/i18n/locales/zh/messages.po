@@ -93,6 +93,10 @@ msgstr "<0>{0}</0> 邀请您以 <2>{2}</2> 身份加入 <1>{1}</1>。"
 msgid "⚠ Modified by {0}{1}"
 msgstr "⚠ 由 {0} 修改{1}"
 
+#: src/components/NewResourceDialog.tsx
+msgid "A hand-drawn style whiteboard canvas"
+msgstr "手绘风格的白板画布"
+
 #: src/pages/Landing.tsx
 msgid "A jtype CLI and a local stdio MCP bridge."
 msgstr "jtype 命令行工具与本地 stdio MCP 桥接。"
@@ -108,6 +112,10 @@ msgstr "可编辑、可预览的 Markdown 文档"
 #: src/components/NewResourceDialog.tsx
 msgid "A text document you write and preview"
 msgstr "可编辑、可预览的文本文档"
+
+#: src/components/NewResourceDialog.tsx
+msgid "A text-based diagram with a live preview"
+msgstr "带实时预览的文本图表"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Accent"
@@ -569,6 +577,10 @@ msgstr "设备已授权！您可以返回 JType 桌面应用。"
 msgid "Device Code"
 msgstr "设备代码"
 
+#: src/components/NewResourceDialog.tsx
+msgid "Diagram name"
+msgstr "图表名称"
+
 #: src/pages/Landing.tsx
 msgid "Dirty"
 msgstr "有未同步更改"
@@ -656,6 +668,10 @@ msgstr "下载桌面应用"
 msgid "Draft only"
 msgstr "仅草稿"
 
+#: src/components/NewResourceDialog.tsx
+msgid "Drawing name"
+msgstr "绘图名称"
+
 #: src/pages/DeviceOAuth.tsx
 msgid "e.g. 456478"
 msgstr "例如 456478"
@@ -699,6 +715,10 @@ msgstr "输入用户名"
 #: src/help/pages/HelpHome.tsx
 msgid "Everything you need to write in a local-first vault, sync to the cloud, run a kanban board, publish a site, and connect AI."
 msgstr "在本地优先的仓库中写作、同步到云端、运行看板、发布站点并接入 AI——你需要的一切都在这里。"
+
+#: src/components/NewResourceDialog.tsx
+msgid "Excalidraw drawing"
+msgstr "Excalidraw 绘图"
 
 #: src/pages/Workspace.tsx
 msgid "Exit focus mode"
@@ -1067,6 +1087,10 @@ msgstr "成员、域名、发布"
 msgid "Menu"
 msgstr "菜单"
 
+#: src/components/NewResourceDialog.tsx
+msgid "Mermaid diagram"
+msgstr "Mermaid 图表"
+
 #: src/components/SiteThemePanel.tsx
 msgid "Minimal"
 msgstr "极简"
@@ -1112,6 +1136,10 @@ msgstr "新建文档"
 msgid "New Document"
 msgstr "新建文档"
 
+#: src/components/NewResourceDialog.tsx
+msgid "New Excalidraw drawing"
+msgstr "新建 Excalidraw 绘图"
+
 #: src/pages/Workspace.tsx
 msgid "New folder"
 msgstr "新建文件夹"
@@ -1119,6 +1147,10 @@ msgstr "新建文件夹"
 #: src/pages/Workspace.tsx
 msgid "New folder name:"
 msgstr "新文件夹名称："
+
+#: src/components/NewResourceDialog.tsx
+msgid "New Mermaid diagram"
+msgstr "新建 Mermaid 图表"
 
 #: src/components/NewResourceDialog.tsx
 msgid "New resource"

@@ -93,6 +93,10 @@ msgstr "<0>{0}</0>님이 <2>{2}</2>(으)로 <1>{1}</1>에 초대했습니다."
 msgid "⚠ Modified by {0}{1}"
 msgstr "⚠ {0}{1}에 의해 수정됨"
 
+#: src/components/NewResourceDialog.tsx
+msgid "A hand-drawn style whiteboard canvas"
+msgstr ""
+
 #: src/pages/Landing.tsx
 msgid "A jtype CLI and a local stdio MCP bridge."
 msgstr "jtype CLI와 로컬 stdio MCP 브리지."
@@ -107,6 +111,10 @@ msgstr ""
 
 #: src/components/NewResourceDialog.tsx
 msgid "A text document you write and preview"
+msgstr ""
+
+#: src/components/NewResourceDialog.tsx
+msgid "A text-based diagram with a live preview"
 msgstr ""
 
 #: src/components/SiteThemePanel.tsx
@@ -569,6 +577,10 @@ msgstr "기기가 인증되었습니다! JType 데스크탑 앱으로 돌아갈 
 msgid "Device Code"
 msgstr "기기 코드"
 
+#: src/components/NewResourceDialog.tsx
+msgid "Diagram name"
+msgstr ""
+
 #: src/pages/Landing.tsx
 msgid "Dirty"
 msgstr "동기화되지 않은 변경 사항"
@@ -656,6 +668,10 @@ msgstr "데스크톱 앱 다운로드"
 msgid "Draft only"
 msgstr "초안만"
 
+#: src/components/NewResourceDialog.tsx
+msgid "Drawing name"
+msgstr ""
+
 #: src/pages/DeviceOAuth.tsx
 msgid "e.g. 456478"
 msgstr "예: 456478"
@@ -698,6 +714,10 @@ msgstr "사용자 이름을 입력하세요"
 
 #: src/help/pages/HelpHome.tsx
 msgid "Everything you need to write in a local-first vault, sync to the cloud, run a kanban board, publish a site, and connect AI."
+msgstr ""
+
+#: src/components/NewResourceDialog.tsx
+msgid "Excalidraw drawing"
 msgstr ""
 
 #: src/pages/Workspace.tsx
@@ -1067,6 +1087,10 @@ msgstr "멤버, 도메인, 게시"
 msgid "Menu"
 msgstr ""
 
+#: src/components/NewResourceDialog.tsx
+msgid "Mermaid diagram"
+msgstr ""
+
 #: src/components/SiteThemePanel.tsx
 msgid "Minimal"
 msgstr ""
@@ -1112,6 +1136,10 @@ msgstr "새 문서"
 msgid "New Document"
 msgstr "새 문서"
 
+#: src/components/NewResourceDialog.tsx
+msgid "New Excalidraw drawing"
+msgstr ""
+
 #: src/pages/Workspace.tsx
 msgid "New folder"
 msgstr "새 폴더"
@@ -1119,6 +1147,10 @@ msgstr "새 폴더"
 #: src/pages/Workspace.tsx
 msgid "New folder name:"
 msgstr "새 폴더 이름:"
+
+#: src/components/NewResourceDialog.tsx
+msgid "New Mermaid diagram"
+msgstr ""
 
 #: src/components/NewResourceDialog.tsx
 msgid "New resource"

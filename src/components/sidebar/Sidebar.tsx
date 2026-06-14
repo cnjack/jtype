@@ -29,12 +29,32 @@ import {
   DocumentIcon,
   PhotoIcon,
   ViewColumnsIcon,
+  ShareIcon,
+  RectangleGroupIcon,
+  PencilSquareIcon,
+  CodeBracketIcon,
   ClipboardIcon,
   ArrowRightIcon,
   ArrowsPointingInIcon,
   ArrowsPointingOutIcon,
 } from "@heroicons/react/24/outline";
 import { resourceTypeForPath } from "@shared/lib/fileTypes";
+
+/** Tree icon for a diagram resource, by its concrete type. */
+function diagramIcon(name: string) {
+  switch (resourceTypeForPath(name).id) {
+    case "mermaid":
+      return ShareIcon;
+    case "drawio":
+      return RectangleGroupIcon;
+    case "excalidraw":
+      return PencilSquareIcon;
+    case "swagger":
+      return CodeBracketIcon;
+    default:
+      return DocumentIcon;
+  }
+}
 
 export function Sidebar() {
   const state = useAppState();
@@ -748,9 +768,11 @@ function TreeNode({
       ? ViewColumnsIcon
       : node.kind === "markdown"
         ? DocumentTextIcon
-        : resourceTypeForPath(node.name).id === "image"
-          ? PhotoIcon
-          : DocumentIcon;
+        : node.kind === "diagram"
+          ? diagramIcon(node.name)
+          : resourceTypeForPath(node.name).id === "image"
+            ? PhotoIcon
+            : DocumentIcon;
 
   return (
     <li>
@@ -784,6 +806,8 @@ function TreeNode({
             dispatch({ type: "TOGGLE_EXPAND_FOLDER", folderPath: node.relativePath });
           } else if (node.kind === "markdown") {
             fs.openMarkdownFile(node.path, node.relativePath);
+          } else if (node.kind === "diagram") {
+            fs.openDiagramFile(node.path, node.relativePath);
           } else {
             dispatch({ type: "SELECT_TREE_NODE", node });
           }

@@ -34,7 +34,8 @@ function renderBoardEmbedHtml(config: BoardConfig, cards: BoardCard[]): string {
   return `<div style="border:0.5px solid rgba(0,0,0,0.06);border-radius:10px;padding:8px;margin:8px 0;background:#fbfdfb"><div style="font-size:13px;font-weight:600;color:#1c1917;padding:2px 4px 8px">${escapeHtml(config.title)}</div><div style="display:flex;gap:8px;overflow-x:auto">${cols}</div></div>`;
 }
 import { useScrollSync, useFloatingTooltip } from "@shared/hooks";
-import { ViewModeToggle, FloatingTooltip } from "@shared/components";
+import { ViewModeToggle, FloatingTooltip, DiagramView } from "@shared/components";
+import { isEditableResourcePath } from "@shared/lib/fileTypes";
 import { ResourceViewer } from "./ResourceViewer";
 import { BoardView } from "../BoardView";
 import { CardPropertyStrip } from "./CardPropertyStrip";
@@ -260,6 +261,7 @@ export function EditorShell() {
   const isMarkdown = state.currentKind === "markdown";
   const isAssetView = state.currentKind === "asset" && !!state.currentPath;
   const isBoardView = state.currentKind === "board" && !!state.currentPath;
+  const isDiagramView = state.currentKind === "diagram" && !!state.currentPath;
   const documentLocation = (() => {
     const sourcePath = state.currentRelativePath || state.currentPath;
     if (!sourcePath) return "";
@@ -280,6 +282,9 @@ export function EditorShell() {
     : null;
   const isCloudViewer = Boolean(currentVaultBinding?.workspaceRole === "viewer" && currentVaultSettings?.cloudSyncEnabled !== false);
   const canEditMarkdown = isMarkdown && !isCloudViewer;
+  // Editable diagram resources (Mermaid `.mmd`, Excalidraw) save like documents.
+  const canEditDiagram = isDiagramView && !isCloudViewer && isEditableResourcePath(state.currentPath);
+  const canSaveCurrent = canEditMarkdown || canEditDiagram;
   const canPublishToCloud = Boolean(isMarkdown && state.mode === "workspace" && currentVaultBinding && state.syncToken && state.cloudProfile?.token && currentVaultSettings?.cloudSyncEnabled !== false);
   const showVaultDocumentTools = state.mode === "workspace";
   const showDocumentPanel = showVaultDocumentTools && state.documentPanelOpen;
@@ -660,10 +665,10 @@ export function EditorShell() {
                 className={`header-icon-button ${state.isDirty ? "header-icon-button-primary" : ""}`}
                 type="button"
                 aria-label={state.isDirty ? t`Save` : t`No unsaved changes`}
-                aria-disabled={!canEditMarkdown || !state.isDirty}
+                aria-disabled={!canSaveCurrent || !state.isDirty}
                 {...tooltipProps(state.isDirty ? t`Save` : t`No unsaved changes`)}
                 onClick={() => {
-                  if (!canEditMarkdown || !state.isDirty) return;
+                  if (!canSaveCurrent || !state.isDirty) return;
                   const relPath = state.currentRelativePath;
                   const content = state.editorContent;
                   fs.saveCurrentFile().then(() => {
@@ -774,6 +779,13 @@ export function EditorShell() {
           <BoardView boardPath={state.currentPath} boardRelativePath={state.currentRelativePath} />
         ) : isAssetView ? (
           <ResourceViewer path={state.currentPath} relativePath={state.currentRelativePath} />
+        ) : isDiagramView ? (
+          <DiagramView
+            path={state.currentPath}
+            content={state.editorContent}
+            editable={canEditDiagram}
+            onChange={(next) => dispatch({ type: "SET_EDITOR_CONTENT", content: next })}
+          />
         ) : (
         <div className={getGridClass(state.editorMode)} style={{ position: "relative" }}>
           <textarea

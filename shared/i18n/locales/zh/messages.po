@@ -131,6 +131,18 @@ msgstr "确认"
 msgid "Copy link"
 msgstr "复制链接"
 
+#: ../../../shared/components/viewers/SwaggerView.tsx
+msgid "Could not render this API specification."
+msgstr "无法渲染此 API 规范。"
+
+#: ../../../shared/components/viewers/DrawioView.tsx
+msgid "Could not render this Draw.io diagram."
+msgstr "无法渲染此 Draw.io 图表。"
+
+#: ../../../shared/components/viewers/PdfView.tsx
+msgid "Could not render this PDF."
+msgstr "无法渲染此 PDF。"
+
 #: ../../../shared/components/board/BoardSurface.tsx
 msgid "Delete"
 msgstr "删除"
@@ -139,6 +151,10 @@ msgstr "删除"
 msgid "Delete card"
 msgstr "删除卡片"
 
+#: ../../../shared/components/viewers/MermaidView.tsx
+msgid "Diagram error"
+msgstr "图表错误"
+
 #: ../../../shared/components/board/BoardSurface.tsx
 msgid "Done column"
 msgstr "完成列"
@@ -146,6 +162,10 @@ msgstr "完成列"
 #: ../../../shared/components/board/BoardSurface.tsx
 msgid "Drag to resize"
 msgstr "拖动调整宽度"
+
+#: ../../../shared/components/viewers/DrawioView.tsx
+msgid "Draw.io diagram"
+msgstr "Draw.io 图表"
 
 #: ../../../shared/components/board/BoardPeek.tsx
 #: ../../../shared/components/board/BoardTable.tsx
@@ -163,6 +183,12 @@ msgstr "展开列"
 #: ../../../shared/components/board/BoardSurface.tsx
 msgid "Filter"
 msgstr "筛选"
+
+#: ../../../shared/components/viewers/MermaidView.tsx
+msgid ""
+"flowchart TD\n"
+"  A[Start] --> B[End]"
+msgstr ""
 
 #: ../../../shared/components/board/BoardSurface.tsx
 msgid "Group: Assignee"
@@ -204,6 +230,14 @@ msgstr "链接 (Ctrl+K)"
 msgid "Local (yours)"
 msgstr "本地（我的）"
 
+#: ../../../shared/components/viewers/MermaidView.tsx
+msgid "Mermaid diagram"
+msgstr "Mermaid 图表"
+
+#: ../../../shared/components/viewers/MermaidView.tsx
+msgid "Mermaid source"
+msgstr "Mermaid 源码"
+
 #: ../../../shared/components/board/BoardSurface.tsx
 msgid "New card"
 msgstr "新建卡片"
@@ -240,6 +274,10 @@ msgstr "在编辑器中打开"
 #: ../../../shared/components/board/BoardPeek.tsx
 msgid "Open in full editor"
 msgstr "在完整编辑器中打开"
+
+#: ../../../shared/components/viewers/PdfView.tsx
+msgid "PDF document"
+msgstr "PDF 文档"
 
 #: ../../../shared/components/PromptDialog.tsx
 msgid "Please enter a value."
@@ -332,6 +370,10 @@ msgstr "标签"
 msgid "Templates"
 msgstr "模板"
 
+#: ../../../shared/components/viewers/DiagramView.tsx
+msgid "This file type can not be previewed yet."
+msgstr "暂不支持预览此文件类型。"
+
 #: ../../../shared/components/board/BoardTable.tsx
 msgid "Title"
 msgstr "标题"
@@ -361,3 +403,7 @@ msgstr "WIP 限制 {0}"
 #: ../../../shared/components/ViewModeToggle.tsx
 msgid "Write"
 msgstr "写作"
+
+#: ../../../shared/components/viewers/MermaidView.tsx
+msgid "Write Mermaid syntax to see the diagram."
+msgstr "输入 Mermaid 语法以查看图表。"

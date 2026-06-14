@@ -1,4 +1,4 @@
-export type EntryKind = "folder" | "markdown" | "asset" | "board";
+export type EntryKind = "folder" | "markdown" | "asset" | "board" | "diagram";
 
 /** A column in a `.board` view (a status group). */
 export type BoardColumn = {

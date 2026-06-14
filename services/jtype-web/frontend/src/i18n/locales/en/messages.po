@@ -92,6 +92,10 @@ msgstr "<0>{0}</0> has invited you to join <1>{1}</1> as <2>{2}</2>."
 msgid "⚠ Modified by {0}{1}"
 msgstr "⚠ Modified by {0}{1}"
 
+#: src/components/NewResourceDialog.tsx
+msgid "A hand-drawn style whiteboard canvas"
+msgstr "A hand-drawn style whiteboard canvas"
+
 #: src/pages/Landing.tsx
 msgid "A jtype CLI and a local stdio MCP bridge."
 msgstr "A jtype CLI and a local stdio MCP bridge."
@@ -107,6 +111,10 @@ msgstr "A Markdown document you write and preview"
 #: src/components/NewResourceDialog.tsx
 msgid "A text document you write and preview"
 msgstr "A text document you write and preview"
+
+#: src/components/NewResourceDialog.tsx
+msgid "A text-based diagram with a live preview"
+msgstr "A text-based diagram with a live preview"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Accent"
@@ -568,6 +576,10 @@ msgstr "Device authorized! You can return to the JType desktop app."
 msgid "Device Code"
 msgstr "Device Code"
 
+#: src/components/NewResourceDialog.tsx
+msgid "Diagram name"
+msgstr "Diagram name"
+
 #: src/pages/Landing.tsx
 msgid "Dirty"
 msgstr "Dirty"
@@ -655,6 +667,10 @@ msgstr "Download the desktop app"
 msgid "Draft only"
 msgstr "Draft only"
 
+#: src/components/NewResourceDialog.tsx
+msgid "Drawing name"
+msgstr "Drawing name"
+
 #: src/pages/DeviceOAuth.tsx
 msgid "e.g. 456478"
 msgstr "e.g. 456478"
@@ -698,6 +714,10 @@ msgstr "Enter your username"
 #: src/help/pages/HelpHome.tsx
 msgid "Everything you need to write in a local-first vault, sync to the cloud, run a kanban board, publish a site, and connect AI."
 msgstr "Everything you need to write in a local-first vault, sync to the cloud, run a kanban board, publish a site, and connect AI."
+
+#: src/components/NewResourceDialog.tsx
+msgid "Excalidraw drawing"
+msgstr "Excalidraw drawing"
 
 #: src/pages/Workspace.tsx
 msgid "Exit focus mode"
@@ -1066,6 +1086,10 @@ msgstr "Members, domains, publishing"
 msgid "Menu"
 msgstr "Menu"
 
+#: src/components/NewResourceDialog.tsx
+msgid "Mermaid diagram"
+msgstr "Mermaid diagram"
+
 #: src/components/SiteThemePanel.tsx
 msgid "Minimal"
 msgstr "Minimal"
@@ -1111,6 +1135,10 @@ msgstr "New document"
 msgid "New Document"
 msgstr "New Document"
 
+#: src/components/NewResourceDialog.tsx
+msgid "New Excalidraw drawing"
+msgstr "New Excalidraw drawing"
+
 #: src/pages/Workspace.tsx
 msgid "New folder"
 msgstr "New folder"
@@ -1118,6 +1146,10 @@ msgstr "New folder"
 #: src/pages/Workspace.tsx
 msgid "New folder name:"
 msgstr "New folder name:"
+
+#: src/components/NewResourceDialog.tsx
+msgid "New Mermaid diagram"
+msgstr "New Mermaid diagram"
 
 #: src/components/NewResourceDialog.tsx
 msgid "New resource"

@@ -9,17 +9,35 @@ import {
   ChevronRightIcon,
   ArrowLeftIcon,
   FolderIcon,
+  ShareIcon,
+  PencilSquareIcon,
 } from "@heroicons/react/24/outline";
 import { useAppDispatch, useAppState } from "../../app/AppState";
 import { useFileSystem } from "../../hooks";
 
 type Step = "choose" | "name";
+type NamedKind = "markdown" | "board" | "mermaid" | "excalidraw";
 
 type ResourceChoice = {
-  id: "markdown" | "import" | "kanban";
+  id: "markdown" | "import" | "kanban" | "mermaid" | "excalidraw";
   label: string;
   description: string;
   Icon: typeof DocumentTextIcon;
+};
+
+const MERMAID_STARTER = "flowchart TD\n  A[Start] --> B[End]\n";
+const EXCALIDRAW_STARTER = JSON.stringify(
+  { type: "excalidraw", version: 2, source: "jtype", elements: [], appState: {}, files: {} },
+  null,
+  2,
+);
+
+/** File extension created for each named resource kind. */
+const KIND_EXTENSION: Record<NamedKind, string> = {
+  markdown: ".md",
+  board: ".board",
+  mermaid: ".mmd",
+  excalidraw: ".excalidraw",
 };
 
 /**
@@ -34,7 +52,7 @@ export function NewResourceDialog() {
   const fs = useFileSystem();
   const [step, setStep] = useState<Step>("choose");
   const [name, setName] = useState("");
-  const [nameFor, setNameFor] = useState<"markdown" | "board">("markdown");
+  const [nameFor, setNameFor] = useState<NamedKind>("markdown");
 
   const open = state.createNoteDialogOpen;
 
@@ -68,6 +86,18 @@ export function NewResourceDialog() {
       description: t`Track work in columns and cards`,
       Icon: ViewColumnsIcon,
     },
+    {
+      id: "mermaid",
+      label: t`Mermaid diagram`,
+      description: t`A text-based diagram with a live preview`,
+      Icon: ShareIcon,
+    },
+    {
+      id: "excalidraw",
+      label: t`Excalidraw drawing`,
+      description: t`A hand-drawn style whiteboard canvas`,
+      Icon: PencilSquareIcon,
+    },
   ];
 
   const pick = (id: ResourceChoice["id"]) => {
@@ -76,7 +106,7 @@ export function NewResourceDialog() {
       void fs.importAsset();
       return;
     }
-    setNameFor(id === "kanban" ? "board" : "markdown");
+    setNameFor(id === "kanban" ? "board" : id);
     setStep("name");
   };
 
@@ -93,13 +123,36 @@ export function NewResourceDialog() {
     const trimmed = name.trim();
     if (!trimmed) return;
     close();
+    const ext = KIND_EXTENSION[nameFor];
+    const withExt = trimmed.endsWith(ext) ? trimmed : `${trimmed}${ext}`;
     if (nameFor === "board") {
       void fs.createBoard(trimmed, activeDir);
+    } else if (nameFor === "mermaid") {
+      void fs.createDiagram(withExt, MERMAID_STARTER, activeDir);
+    } else if (nameFor === "excalidraw") {
+      void fs.createDiagram(withExt, EXCALIDRAW_STARTER, activeDir);
     } else {
-      void fs.createDocument(trimmed.endsWith(".md") ? trimmed : `${trimmed}.md`, activeDir);
+      void fs.createDocument(withExt, activeDir);
     }
     setName("");
   };
+
+  const NameIcon = { markdown: DocumentTextIcon, board: ViewColumnsIcon, mermaid: ShareIcon, excalidraw: PencilSquareIcon }[nameFor];
+  const nameTitle =
+    nameFor === "board" ? <Trans>New board</Trans>
+    : nameFor === "mermaid" ? <Trans>New Mermaid diagram</Trans>
+    : nameFor === "excalidraw" ? <Trans>New Excalidraw drawing</Trans>
+    : <Trans>New document</Trans>;
+  const nameSubtitle =
+    nameFor === "board" ? <Trans>A kanban board over your notes</Trans>
+    : nameFor === "mermaid" ? <Trans>A text-based diagram with a live preview</Trans>
+    : nameFor === "excalidraw" ? <Trans>A hand-drawn style whiteboard canvas</Trans>
+    : <Trans>A Markdown document you write and preview</Trans>;
+  const namePlaceholder =
+    nameFor === "board" ? t`Board name`
+    : nameFor === "mermaid" ? t`Diagram name`
+    : nameFor === "excalidraw" ? t`Drawing name`
+    : t`Document name`;
 
   return (
     <Dialog open={open} onClose={close} className="relative z-50">
@@ -147,26 +200,20 @@ export function NewResourceDialog() {
             <>
               <div className="flex items-center gap-3">
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-soft text-brand-dark">
-                  {nameFor === "board" ? <ViewColumnsIcon className="h-5 w-5" /> : <DocumentTextIcon className="h-5 w-5" />}
+                  <NameIcon className="h-5 w-5" />
                 </span>
                 <div className="min-w-0">
                   <DialogTitle className="text-base font-semibold text-stone-900">
-                    {nameFor === "board" ? <Trans>New board</Trans> : <Trans>New document</Trans>}
+                    {nameTitle}
                   </DialogTitle>
-                  <p className="truncate text-xs text-brand-gray">
-                    {nameFor === "board" ? (
-                      <Trans>A kanban board over your notes</Trans>
-                    ) : (
-                      <Trans>A Markdown document you write and preview</Trans>
-                    )}
-                  </p>
+                  <p className="truncate text-xs text-brand-gray">{nameSubtitle}</p>
                 </div>
               </div>
 
               <div className="relative mt-4">
                 <input
                   className="w-full rounded-lg border border-stone-300 px-3 py-2.5 pr-16 text-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30"
-                  placeholder={nameFor === "board" ? t`Board name` : t`Document name`}
+                  placeholder={namePlaceholder}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   onKeyDown={(e) => {
@@ -175,7 +222,7 @@ export function NewResourceDialog() {
                   autoFocus
                 />
                 <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 rounded bg-stone-100 px-1.5 py-0.5 font-mono text-[11px] text-stone-400">
-                  {nameFor === "board" ? ".board" : ".md"}
+                  {KIND_EXTENSION[nameFor]}
                 </span>
               </div>
 

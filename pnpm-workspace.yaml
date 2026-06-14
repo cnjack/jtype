@@ -1,4 +1,8 @@
 allowBuilds:
+  # @scarf/scarf (pulled in by swagger-ui-dist) is analytics-only; never run its
+  # postinstall script. Set explicitly so `pnpm install --frozen-lockfile` (CI)
+  # doesn't fail with ERR_PNPM_IGNORED_BUILDS.
+  '@scarf/scarf': false
   core-js: true
   esbuild: true
 overrides:

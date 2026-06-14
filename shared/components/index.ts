@@ -25,3 +25,6 @@ export type { ContextMenuItem, ContextMenuProps } from "./ContextMenu";
 
 export { FileTree, FileTreeNode } from "./FileTreeNode";
 export type { FileTreeProps, FileTreeNodeProps } from "./FileTreeNode";
+
+export { DiagramView } from "./viewers/DiagramView";
+export type { DiagramViewProps } from "./viewers/DiagramView";

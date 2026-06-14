@@ -93,6 +93,10 @@ msgstr "<0>{0}</0> があなたを <2>{2}</2> として <1>{1}</1> に招待し�
 msgid "⚠ Modified by {0}{1}"
 msgstr "⚠ {0} によって変更{1}"
 
+#: src/components/NewResourceDialog.tsx
+msgid "A hand-drawn style whiteboard canvas"
+msgstr ""
+
 #: src/pages/Landing.tsx
 msgid "A jtype CLI and a local stdio MCP bridge."
 msgstr "jtype CLI とローカルの stdio MCP ブリッジ。"
@@ -107,6 +111,10 @@ msgstr ""
 
 #: src/components/NewResourceDialog.tsx
 msgid "A text document you write and preview"
+msgstr ""
+
+#: src/components/NewResourceDialog.tsx
+msgid "A text-based diagram with a live preview"
 msgstr ""
 
 #: src/components/SiteThemePanel.tsx
@@ -569,6 +577,10 @@ msgstr "デバイスが承認されました！JType デスクトップアプリ
 msgid "Device Code"
 msgstr "デバイスコード"
 
+#: src/components/NewResourceDialog.tsx
+msgid "Diagram name"
+msgstr ""
+
 #: src/pages/Landing.tsx
 msgid "Dirty"
 msgstr "未同期の変更あり"
@@ -656,6 +668,10 @@ msgstr "デスクトップアプリをダウンロード"
 msgid "Draft only"
 msgstr "下書きのみ"
 
+#: src/components/NewResourceDialog.tsx
+msgid "Drawing name"
+msgstr ""
+
 #: src/pages/DeviceOAuth.tsx
 msgid "e.g. 456478"
 msgstr "例：456478"
@@ -698,6 +714,10 @@ msgstr "ユーザー名を入力"
 
 #: src/help/pages/HelpHome.tsx
 msgid "Everything you need to write in a local-first vault, sync to the cloud, run a kanban board, publish a site, and connect AI."
+msgstr ""
+
+#: src/components/NewResourceDialog.tsx
+msgid "Excalidraw drawing"
 msgstr ""
 
 #: src/pages/Workspace.tsx
@@ -1067,6 +1087,10 @@ msgstr "メンバー、ドメイン、公開"
 msgid "Menu"
 msgstr ""
 
+#: src/components/NewResourceDialog.tsx
+msgid "Mermaid diagram"
+msgstr ""
+
 #: src/components/SiteThemePanel.tsx
 msgid "Minimal"
 msgstr ""
@@ -1112,6 +1136,10 @@ msgstr "新規ドキュメント"
 msgid "New Document"
 msgstr "新規ドキュメント"
 
+#: src/components/NewResourceDialog.tsx
+msgid "New Excalidraw drawing"
+msgstr ""
+
 #: src/pages/Workspace.tsx
 msgid "New folder"
 msgstr "新規フォルダー"
@@ -1119,6 +1147,10 @@ msgstr "新規フォルダー"
 #: src/pages/Workspace.tsx
 msgid "New folder name:"
 msgstr "新規フォルダー名："
+
+#: src/components/NewResourceDialog.tsx
+msgid "New Mermaid diagram"
+msgstr ""
 
 #: src/components/NewResourceDialog.tsx
 msgid "New resource"

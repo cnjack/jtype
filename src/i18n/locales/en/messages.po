@@ -71,6 +71,10 @@ msgid "📄 {0} document{1}"
 msgstr "📄 {0} document{1}"
 
 #: src/components/modals/NewResourceDialog.tsx
+msgid "A hand-drawn style whiteboard canvas"
+msgstr "A hand-drawn style whiteboard canvas"
+
+#: src/components/modals/NewResourceDialog.tsx
 msgid "A kanban board over your notes"
 msgstr "A kanban board over your notes"
 
@@ -82,9 +86,15 @@ msgstr "A Markdown document you write and preview"
 msgid "A text document you write and preview"
 msgstr "A text document you write and preview"
 
+#: src/components/modals/NewResourceDialog.tsx
+msgid "A text-based diagram with a live preview"
+msgstr "A text-based diagram with a live preview"
+
 #: src/components/layout/WelcomeScreen.tsx
-msgid "A vault is a local folder for notes, sync, and publishing. A single file opens JType as a focused Markdown editor."
-msgstr "A vault is a local folder for notes, sync, and publishing. A single file opens JType as a focused Markdown editor."
+msgid "A vault is a local folder for notes, sync, and publishing. A single file "
+"opens JType as a focused Markdown editor."
+msgstr "A vault is a local folder for notes, sync, and publishing. A single "
+"file opens JType as a focused Markdown editor."
 
 #: src/components/modals/AccountDialog.tsx
 msgid "Account"
@@ -141,8 +151,10 @@ msgid "Back to home"
 msgstr "Back to home"
 
 #: src/components/modals/SyncPromptDialog.tsx
-msgid "Back up this local vault to a cloud workspace, keep devices in sync, and open the same notes from the web."
-msgstr "Back up this local vault to a cloud workspace, keep devices in sync, and open the same notes from the web."
+msgid "Back up this local vault to a cloud workspace, keep devices in sync, and "
+"open the same notes from the web."
+msgstr "Back up this local vault to a cloud workspace, keep devices in sync, "
+"and open the same notes from the web."
 
 #: src/components/modals/AccountDialog.tsx
 msgid "Bind the current local vault to one cloud workspace."
@@ -182,12 +194,16 @@ msgid "Bring in an image or PDF from your computer"
 msgstr "Bring in an image or PDF from your computer"
 
 #: src/components/modals/AccountDialog.tsx
-msgid "Browser authorization is open. Sync will continue after sign-in completes."
-msgstr "Browser authorization is open. Sync will continue after sign-in completes."
+msgid "Browser authorization is open. Sync will continue after sign-in "
+"completes."
+msgstr "Browser authorization is open. Sync will continue after sign-in "
+"completes."
 
 #: src/components/modals/SyncPromptDialog.tsx
-msgid "Browser authorization is open. This sync will continue after sign-in completes."
-msgstr "Browser authorization is open. This sync will continue after sign-in completes."
+msgid "Browser authorization is open. This sync will continue after sign-in "
+"completes."
+msgstr "Browser authorization is open. This sync will continue after sign-in "
+"completes."
 
 #: src/components/modals/CreateFolderDialog.tsx
 #: src/components/modals/DeleteFolderDialog.tsx
@@ -309,8 +325,10 @@ msgid "Command palette"
 msgstr "Command palette"
 
 #: src/components/modals/AccountDialog.tsx
-msgid "Connect desktop sync through the browser and choose the service endpoint."
-msgstr "Connect desktop sync through the browser and choose the service endpoint."
+msgid "Connect desktop sync through the browser and choose the service "
+"endpoint."
+msgstr "Connect desktop sync through the browser and choose the service "
+"endpoint."
 
 #: src/components/modals/AccountDialog.tsx
 msgid "Connect in browser"
@@ -446,20 +464,24 @@ msgstr "Deleted"
 msgid "Destination: <0>{destPath}</0>"
 msgstr "Destination: <0>{destPath}</0>"
 
+#: src/components/modals/NewResourceDialog.tsx
+msgid "Diagram name"
+msgstr "Diagram name"
+
 #: src/components/modals/AccountDialog.tsx
 msgid "Disconnect"
 msgstr "Disconnect"
 
 #. placeholder {0}: currentVaultBinding.workspaceName
 #: src/components/modals/AccountDialog.tsx
-msgid ""
-"Disconnect \"{0}\" from this vault?\n"
+msgid "Disconnect \"{0}\" from this vault?\n"
 "\n"
-"Local files will stay on disk. Cloud data and workspace membership are not changed."
-msgstr ""
-"Disconnect \"{0}\" from this vault?\n"
+"Local files will stay on disk. Cloud data and workspace membership are not "
+"changed."
+msgstr "Disconnect \"{0}\" from this vault?\n"
 "\n"
-"Local files will stay on disk. Cloud data and workspace membership are not changed."
+"Local files will stay on disk. Cloud data and workspace membership are not "
+"changed."
 
 #: src/components/modals/AccountDialog.tsx
 msgid "Disconnect cloud sync"
@@ -505,6 +527,10 @@ msgstr "Downloads"
 #~ msgid "Drag to resize"
 #~ msgstr "Drag to resize"
 
+#: src/components/modals/NewResourceDialog.tsx
+msgid "Drawing name"
+msgstr "Drawing name"
+
 #: src/components/sidebar/Sidebar.tsx
 msgid "Drop a folder here to open it as a vault."
 msgstr "Drop a folder here to open it as a vault."
@@ -537,6 +563,10 @@ msgstr "Enable cloud sync"
 #: src/components/modals/AccountDialog.tsx
 msgid "Enable cloud sync for this vault first"
 msgstr "Enable cloud sync for this vault first"
+
+#: src/components/modals/NewResourceDialog.tsx
+msgid "Excalidraw drawing"
+msgstr "Excalidraw drawing"
 
 #: src/components/sidebar/Sidebar.tsx
 msgid "Expand all"
@@ -655,8 +685,10 @@ msgid "Install jtype to your PATH"
 msgstr "Install jtype to your PATH"
 
 #: src/components/modals/AccountDialog.tsx
-msgid "Install the jtype CLI to manage notes and kanban from your terminal and connect AI agents over MCP."
-msgstr "Install the jtype CLI to manage notes and kanban from your terminal and connect AI agents over MCP."
+msgid "Install the jtype CLI to manage notes and kanban from your terminal and "
+"connect AI agents over MCP."
+msgstr "Install the jtype CLI to manage notes and kanban from your terminal and "
+"connect AI agents over MCP."
 
 #: src/components/modals/AccountDialog.tsx
 msgid "Installed"
@@ -734,6 +766,10 @@ msgstr "Markdown editor"
 msgid "Markdown file"
 msgstr "Markdown file"
 
+#: src/components/modals/NewResourceDialog.tsx
+msgid "Mermaid diagram"
+msgstr "Mermaid diagram"
+
 #: src/components/modals/MoveFolderDialog.tsx
 msgid "Move"
 msgstr "Move"
@@ -777,6 +813,10 @@ msgstr "New Document"
 msgid "New document name (e.g. note.md):"
 msgstr "New document name (e.g. note.md):"
 
+#: src/components/modals/NewResourceDialog.tsx
+msgid "New Excalidraw drawing"
+msgstr "New Excalidraw drawing"
+
 #: src/components/sidebar/Sidebar.tsx
 msgid "New folder"
 msgstr "New folder"
@@ -788,6 +828,10 @@ msgstr "New Folder"
 #: src/components/sidebar/Sidebar.tsx
 msgid "New folder name:"
 msgstr "New folder name:"
+
+#: src/components/modals/NewResourceDialog.tsx
+msgid "New Mermaid diagram"
+msgstr "New Mermaid diagram"
 
 #: src/components/modals/NewResourceDialog.tsx
 msgid "New resource"
@@ -858,8 +902,10 @@ msgid "No vault"
 msgstr "No vault"
 
 #: src/components/modals/AccountDialog.tsx
-msgid "Not bound to a cloud workspace yet. Binding starts bidirectional sync for this vault."
-msgstr "Not bound to a cloud workspace yet. Binding starts bidirectional sync for this vault."
+msgid "Not bound to a cloud workspace yet. Binding starts bidirectional sync "
+"for this vault."
+msgstr "Not bound to a cloud workspace yet. Binding starts bidirectional sync "
+"for this vault."
 
 #: src/components/modals/AccountDialog.tsx
 msgid "Not installed"
@@ -1015,8 +1061,10 @@ msgid "Published {0}"
 msgstr "Published {0}"
 
 #: src/components/editor/EditorShell.tsx
-msgid "Publishing uses a cloud snapshot; frontmatter status is treated as user metadata."
-msgstr "Publishing uses a cloud snapshot; frontmatter status is treated as user metadata."
+msgid "Publishing uses a cloud snapshot; frontmatter status is treated as user "
+"metadata."
+msgstr "Publishing uses a cloud snapshot; frontmatter status is treated as user "
+"metadata."
 
 #: src/components/layout/Header.tsx
 #: src/components/layout/VaultHome.tsx
@@ -1228,12 +1276,14 @@ msgid "This folder is empty."
 msgstr "This folder is empty."
 
 #: src/components/editor/ResourceViewer.tsx
-msgid "This PDF can not be previewed inline."
-msgstr "This PDF can not be previewed inline."
+#~ msgid "This PDF can not be previewed inline."
+#~ msgstr "This PDF can not be previewed inline."
 
 #: src/components/modals/AccountDialog.tsx
-msgid "This vault is local-only. You can keep working without cloud sync or enable it below."
-msgstr "This vault is local-only. You can keep working without cloud sync or enable it below."
+msgid "This vault is local-only. You can keep working without cloud sync or "
+"enable it below."
+msgstr "This vault is local-only. You can keep working without cloud sync or "
+"enable it below."
 
 #: src/components/modals/SyncPromptDialog.tsx
 msgid "This vault is now local-only."
@@ -1350,12 +1400,12 @@ msgstr "Workspace files"
 #~ msgstr "Write"
 
 #: src/components/modals/AccountDialog.tsx
-msgid ""
-"You have unsaved changes. Switching cloud workspace before saving may cause conflicts.\n"
+msgid "You have unsaved changes. Switching cloud workspace before saving may cause "
+"conflicts.\n"
 "\n"
 "Continue anyway?"
-msgstr ""
-"You have unsaved changes. Switching cloud workspace before saving may cause conflicts.\n"
+msgstr "You have unsaved changes. Switching cloud workspace before saving may cause "
+"conflicts.\n"
 "\n"
 "Continue anyway?"
 

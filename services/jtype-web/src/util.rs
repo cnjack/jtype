@@ -105,9 +105,13 @@ pub fn normalize_relative_markdown_path(path: &str) -> Result<String, AppError> 
             "relative Markdown path is required".to_string(),
         ));
     }
-    // `.board` view files sync as opaque documents (JSON config) — keep their
-    // path as-is; everything else is normalized to Markdown.
-    let normalized = if is_markdown_path(&normalized) || is_board_path(&normalized) {
+    // `.board` views and diagram resources (Mermaid/Draw.io/Excalidraw/Swagger)
+    // sync as opaque documents — keep their path as-is; everything else is
+    // normalized to Markdown.
+    let normalized = if is_markdown_path(&normalized)
+        || is_board_path(&normalized)
+        || is_diagram_path(&normalized)
+    {
         normalized
     } else {
         format!("{}.md", normalized)
@@ -169,6 +173,44 @@ pub fn is_markdown_path(path: &str) -> bool {
 /// `.board` view files (kanban config) sync as opaque documents.
 pub fn is_board_path(path: &str) -> bool {
     path.to_ascii_lowercase().ends_with(".board")
+}
+
+/// Diagram resources (Mermaid/Draw.io/Excalidraw/Swagger) sync as opaque text
+/// documents. Mirrors `is_diagram_path` in jtype-core and `isDiagramTextPath`
+/// in shared/lib/fileTypes.ts. (`.drawio.svg`/`.png` exports are images and do
+/// not match here.)
+pub fn is_diagram_path(path: &str) -> bool {
+    let lower = path.to_ascii_lowercase();
+    if lower.ends_with(".mmd")
+        || lower.ends_with(".mermaid")
+        || lower.ends_with(".drawio")
+        || lower.ends_with(".excalidraw")
+    {
+        return true;
+    }
+    is_swagger_path(&lower)
+}
+
+/// Swagger/OpenAPI specs by filename convention: `swagger.json`, `openapi.yaml`,
+/// `api.swagger.yml`, `petstore-openapi.json`. Mirrors `isSwaggerPath` (TS).
+fn is_swagger_path(lower: &str) -> bool {
+    let name = lower.rsplit('/').next().unwrap_or(lower);
+    let stem = match name
+        .strip_suffix(".json")
+        .or_else(|| name.strip_suffix(".yaml"))
+        .or_else(|| name.strip_suffix(".yml"))
+    {
+        Some(stem) => stem,
+        None => return false,
+    };
+    stem == "swagger"
+        || stem == "openapi"
+        || stem.ends_with(".swagger")
+        || stem.ends_with("-swagger")
+        || stem.ends_with("_swagger")
+        || stem.ends_with(".openapi")
+        || stem.ends_with("-openapi")
+        || stem.ends_with("_openapi")
 }
 
 pub fn extract_title(content: &str) -> Option<String> {
@@ -449,4 +491,37 @@ pub fn three_way_merge_legacy(base: &str, local: &str, cloud: &str) -> Result<St
         return Ok(cloud.to_string());
     }
     Err(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn detects_diagram_paths() {
+        assert!(is_diagram_path("flow.mmd"));
+        assert!(is_diagram_path("a/b/diagram.drawio"));
+        assert!(is_diagram_path("sketch.excalidraw"));
+        assert!(is_diagram_path("openapi.yaml"));
+        assert!(is_diagram_path("petstore-openapi.json"));
+        assert!(is_diagram_path("svc.swagger.yml"));
+        assert!(!is_diagram_path("note.md"));
+        assert!(!is_diagram_path("data.json"));
+        assert!(!is_diagram_path("logo.png"));
+        assert!(!is_diagram_path("export.drawio.svg"));
+    }
+
+    #[test]
+    fn normalizes_relative_paths_by_type() {
+        // Bare names and markdown normalize to `.md`.
+        assert_eq!(normalize_relative_markdown_path("notes/intro").unwrap(), "notes/intro.md");
+        assert_eq!(normalize_relative_markdown_path("intro.md").unwrap(), "intro.md");
+        // Boards and diagram resources keep their own extension (never `.md`-suffixed).
+        assert_eq!(normalize_relative_markdown_path("plan.board").unwrap(), "plan.board");
+        assert_eq!(normalize_relative_markdown_path("flow.mmd").unwrap(), "flow.mmd");
+        assert_eq!(normalize_relative_markdown_path("d/diagram.drawio").unwrap(), "d/diagram.drawio");
+        assert_eq!(normalize_relative_markdown_path("sketch.excalidraw").unwrap(), "sketch.excalidraw");
+        assert_eq!(normalize_relative_markdown_path("api/openapi.yaml").unwrap(), "api/openapi.yaml");
+        assert_eq!(normalize_relative_markdown_path("svc.swagger.json").unwrap(), "svc.swagger.json");
+    }
 }
