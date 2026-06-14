@@ -1,5 +1,17 @@
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::Value as JsonValue;
+
+/// Deserialize `Option<Option<T>>` so that a *missing* field is `None` (no
+/// change) while an explicit `null` is `Some(None)` (clear the field). Used with
+/// `#[serde(default, deserialize_with = "double_option")]`. Plain serde collapses
+/// both to `None`, which makes "clear/unset" impossible to express.
+fn double_option<'de, T, D>(de: D) -> Result<Option<Option<T>>, D::Error>
+where
+    T: Deserialize<'de>,
+    D: Deserializer<'de>,
+{
+    Deserialize::deserialize(de).map(Some)
+}
 
 // ── User ──
 
@@ -22,6 +34,9 @@ pub struct AuthUser {
     pub id: String,
     pub username: String,
     pub role: String,
+    /// Session scope: `full` (login/desktop) or `mcp` (agent token). MCP-scoped
+    /// tokens can manage notes/kanban but are barred from admin endpoints.
+    pub scope: String,
 }
 
 // ── Auth ──
@@ -738,17 +753,24 @@ pub struct CreateKanbanCardRequest {
     pub due_at: Option<String>,
     pub assignee_user_id: Option<String>,
     pub label_ids: Option<Vec<String>>,
+    /// Extensible card properties (e.g. `{ "icon": "🚀" }`); stored as-is.
+    pub properties_extra: Option<JsonValue>,
 }
 
 #[derive(Debug, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateKanbanCardRequest {
     pub title: Option<String>,
+    #[serde(default, deserialize_with = "double_option")]
     pub description: Option<Option<String>>,
     pub priority: Option<String>,
+    #[serde(default, deserialize_with = "double_option")]
     pub due_at: Option<Option<String>>,
+    #[serde(default, deserialize_with = "double_option")]
     pub assignee_user_id: Option<Option<String>>,
     pub label_ids: Option<Vec<String>>,
+    /// Replace the extensible properties blob (present → set).
+    pub properties_extra: Option<JsonValue>,
     pub base_updated_clock: Option<i64>,
     pub force: Option<bool>,
 }

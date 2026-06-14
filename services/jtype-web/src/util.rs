@@ -101,7 +101,9 @@ pub fn normalize_relative_markdown_path(path: &str) -> Result<String, AppError> 
             "relative Markdown path is required".to_string(),
         ));
     }
-    let normalized = if is_markdown_path(&normalized) {
+    // `.board` view files sync as opaque documents (JSON config) — keep their
+    // path as-is; everything else is normalized to Markdown.
+    let normalized = if is_markdown_path(&normalized) || is_board_path(&normalized) {
         normalized
     } else {
         format!("{}.md", normalized)
@@ -158,6 +160,11 @@ pub fn is_markdown_path(path: &str) -> bool {
         || lower.ends_with(".markdown")
         || lower.ends_with(".mdown")
         || lower.ends_with(".mkd")
+}
+
+/// `.board` view files (kanban config) sync as opaque documents.
+pub fn is_board_path(path: &str) -> bool {
+    path.to_ascii_lowercase().ends_with(".board")
 }
 
 pub fn extract_title(content: &str) -> Option<String> {

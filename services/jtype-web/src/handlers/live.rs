@@ -106,6 +106,7 @@ async fn validate_ws_token(
         id: row.try_get("id")?,
         username: row.try_get("username")?,
         role: row.try_get("role")?,
+        scope: "full".to_string(),
     })
 }
 
@@ -558,6 +559,7 @@ async fn handle_doc_save(
         id: user_id.to_string(),
         username: username.to_string(),
         role: role.to_string(),
+        scope: "full".to_string(),
     };
 
     match save_document_version(&state.pool, workspace_id, &auth_user, payload, client_type).await {
@@ -670,6 +672,7 @@ async fn handle_trash_operation(
         id: user_id.to_string(),
         username: username.to_string(),
         role: role.to_string(),
+        scope: "full".to_string(),
     };
 
     match crate::handlers::sync::process_trash_operation(

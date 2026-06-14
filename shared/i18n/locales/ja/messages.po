@@ -36,6 +36,32 @@ msgstr "クラウドを採用"
 msgid "Accept local"
 msgstr "ローカルを採用"
 
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Add column"
+msgstr ""
+
+#: ../../../shared/components/board/BoardPeek.tsx
+msgid "Add details..."
+msgstr ""
+
+#: ../../../shared/components/board/controls.tsx
+msgid "Add labels"
+msgstr ""
+
+#: ../../../shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardTable.tsx
+msgid "Assignee"
+msgstr ""
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Blank card"
+msgstr ""
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Board"
+msgstr ""
+
 #: ../../../shared/components/EditorToolbar.tsx
 msgid "Bold"
 msgstr "太字"
@@ -49,6 +75,26 @@ msgstr "太字 (Ctrl+B)"
 msgid "Cancel"
 msgstr "キャンセル"
 
+#: ../../../shared/components/board/BoardPeek.tsx
+msgid "Card"
+msgstr ""
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Card title (Enter to add, Esc to cancel)"
+msgstr ""
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "cards"
+msgstr ""
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Clear filter"
+msgstr ""
+
+#: ../../../shared/components/board/BoardPeek.tsx
+msgid "Close"
+msgstr ""
+
 #: ../../../shared/components/ConflictResolver.tsx
 msgid "Cloud (remote)"
 msgstr "クラウド（リモート）"
@@ -57,9 +103,82 @@ msgstr "クラウド（リモート）"
 msgid "Code"
 msgstr "コード"
 
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Collapse column"
+msgstr ""
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Color"
+msgstr ""
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Color columns"
+msgstr ""
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Column name"
+msgstr ""
+
+#: ../../../shared/components/board/BoardPeek.tsx
+msgid "comma, separated"
+msgstr ""
+
 #: ../../../shared/components/ConfirmDialog.tsx
 msgid "Confirm"
 msgstr "確認"
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Copy link"
+msgstr ""
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Delete"
+msgstr ""
+
+#: ../../../shared/components/board/BoardPeek.tsx
+msgid "Delete card"
+msgstr ""
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Done column"
+msgstr ""
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Drag to resize"
+msgstr ""
+
+#: ../../../shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardTable.tsx
+msgid "Due"
+msgstr ""
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Duplicate"
+msgstr ""
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Expand column"
+msgstr ""
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Filter"
+msgstr ""
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Group: Assignee"
+msgstr ""
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Group: Priority"
+msgstr ""
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Group: Status"
+msgstr ""
+
+#: ../../../shared/components/board/BoardPeek.tsx
+msgid "Icon"
+msgstr ""
 
 #: ../../../shared/components/EditorToolbar.tsx
 msgid "Inline Code"
@@ -85,22 +204,73 @@ msgstr "リンク (Ctrl+K)"
 msgid "Local (yours)"
 msgstr "ローカル（自分の）"
 
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "New card"
+msgstr ""
+
+#: ../../../shared/components/board/BoardTable.tsx
+msgid "No cards"
+msgstr ""
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "No color"
+msgstr ""
+
+#: ../../../shared/components/board/controls.tsx
+msgid "No icon"
+msgstr ""
+
+#: ../../../shared/components/board/controls.tsx
+msgid "No labels"
+msgstr ""
+
+#: ../../../shared/components/board/BoardPeek.tsx
+msgid "Notes"
+msgstr ""
+
 #: ../../../shared/components/ConfirmDialog.tsx
 #: ../../../shared/components/PromptDialog.tsx
 msgid "OK"
 msgstr "OK"
 
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Open in editor"
+msgstr ""
+
+#: ../../../shared/components/board/BoardPeek.tsx
+msgid "Open in full editor"
+msgstr ""
+
 #: ../../../shared/components/PromptDialog.tsx
 msgid "Please enter a value."
 msgstr "値を入力してください。"
 
+#: ../../../shared/components/board/BoardPeek.tsx
 #: ../../../shared/components/ViewModeToggle.tsx
 msgid "Preview"
 msgstr "プレビュー"
 
+#: ../../../shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardTable.tsx
+msgid "Priority"
+msgstr ""
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Refresh"
+msgstr ""
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Rename"
+msgstr ""
+
 #: ../../../shared/components/ConflictResolver.tsx
 msgid "Result (editable)"
 msgstr "結果（編集可能）"
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Save as template"
+msgstr ""
 
 #: ../../../shared/components/ConflictResolver.tsx
 msgid "Save merged result"
@@ -110,18 +280,84 @@ msgstr "マージ結果を保存"
 msgid "Saving…"
 msgstr "保存中…"
 
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Search cards"
+msgstr ""
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Set as done column"
+msgstr ""
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Set WIP limit"
+msgstr ""
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Sort: Due"
+msgstr ""
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Sort: Manual"
+msgstr ""
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Sort: Priority"
+msgstr ""
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Sort: Title"
+msgstr ""
+
 #: ../../../shared/components/ViewModeToggle.tsx
 msgid "Split"
 msgstr "分割"
 
+#: ../../../shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardTable.tsx
+msgid "Status"
+msgstr ""
+
+#: ../../../shared/components/board/BoardSurface.tsx
 #: ../../../shared/components/EditorToolbar.tsx
 msgid "Table"
 msgstr "表"
+
+#: ../../../shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardTable.tsx
+msgid "Tags"
+msgstr ""
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Templates"
+msgstr ""
+
+#: ../../../shared/components/board/BoardTable.tsx
+msgid "Title"
+msgstr ""
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Unassigned"
+msgstr ""
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Unset done column"
+msgstr ""
+
+#: ../../../shared/components/board/BoardPeek.tsx
+msgid "Untitled card"
+msgstr ""
 
 #: ../../../shared/components/ConflictResolver.tsx
 msgid "Use this"
 msgstr "これを使用"
 
+#. placeholder {0}: col.limit
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "WIP limit {0}"
+msgstr ""
+
+#: ../../../shared/components/board/BoardPeek.tsx
 #: ../../../shared/components/ViewModeToggle.tsx
 msgid "Write"
 msgstr "記述"

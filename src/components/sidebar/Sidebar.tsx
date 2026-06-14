@@ -26,11 +26,15 @@ import {
   FolderPlusIcon,
   PencilIcon,
   DocumentTextIcon,
+  DocumentIcon,
+  PhotoIcon,
+  ViewColumnsIcon,
   ClipboardIcon,
   ArrowRightIcon,
   ArrowsPointingInIcon,
   ArrowsPointingOutIcon,
 } from "@heroicons/react/24/outline";
+import { resourceTypeForPath } from "@shared/lib/fileTypes";
 
 export function Sidebar() {
   const state = useAppState();
@@ -401,7 +405,7 @@ function ExplorerPanel() {
                   </div>
                 ) : (
                   <ul className="space-y-1">
-                    {state.workspace.entries.map((node) => (
+                    {groupBoardsWithFolders(state.workspace.entries).map((node) => (
                       <TreeNode
                         key={node.path}
                         node={node}
@@ -692,6 +696,29 @@ function ExplorerPanel() {
   );
 }
 
+/**
+ * Visually unify a board with its cards folder: a `<name>.board` file and its
+ * sibling `<name>/` folder are shown as one expandable board node (the folder's
+ * card files nest under the board), so they don't appear as two separate entries.
+ */
+function groupBoardsWithFolders(entries: FileTreeNode[]): FileTreeNode[] {
+  const boardBases = new Set<string>();
+  for (const e of entries) if (e.kind === "board") boardBases.add(e.name.replace(/\.board$/i, ""));
+  const folderByName = new Map<string, FileTreeNode>();
+  for (const e of entries) if (e.kind === "folder") folderByName.set(e.name, e);
+  const out: FileTreeNode[] = [];
+  for (const e of entries) {
+    if (e.kind === "folder" && boardBases.has(e.name)) continue; // merged into its board
+    if (e.kind === "board") {
+      const folder = folderByName.get(e.name.replace(/\.board$/i, ""));
+      out.push(folder ? { ...e, children: [...e.children, ...folder.children] } : e);
+    } else {
+      out.push(e);
+    }
+  }
+  return out;
+}
+
 function TreeNode({
   node,
   depth,
@@ -712,7 +739,18 @@ function TreeNode({
 
   const isActive = node.relativePath === state.currentRelativePath;
   const isFolder = node.kind === "folder";
-  const isExpanded = isFolder && state.expandedFolders.has(node.relativePath);
+  // A board with merged card children is expandable too (chevron toggles, row opens it).
+  const isExpandable = isFolder || (node.kind === "board" && node.children.length > 0);
+  const isExpanded = isExpandable && state.expandedFolders.has(node.relativePath);
+  const NodeIcon = isFolder
+    ? FolderIcon
+    : node.kind === "board"
+      ? ViewColumnsIcon
+      : node.kind === "markdown"
+        ? DocumentTextIcon
+        : resourceTypeForPath(node.name).id === "image"
+          ? PhotoIcon
+          : DocumentIcon;
 
   return (
     <li>
@@ -756,19 +794,25 @@ function TreeNode({
           onContextMenu(node, e.clientX, e.clientY);
         }}
       >
-        {isFolder ? (
-          <span className="shrink-0 text-[#8a9691]">
+        {isExpandable ? (
+          <span
+            className="shrink-0 cursor-pointer text-[#8a9691]"
+            onClick={(e) => {
+              e.stopPropagation();
+              dispatch({ type: "TOGGLE_EXPAND_FOLDER", folderPath: node.relativePath });
+            }}
+          >
             {isExpanded ? <ChevronDownIcon className="h-3.5 w-3.5" /> : <ChevronRightIcon className="h-3.5 w-3.5" />}
           </span>
         ) : null}
         <span className="shrink-0 text-[#8a9691]">
-          {isFolder ? <FolderIcon className="h-3.5 w-3.5" /> : node.kind === "markdown" ? <DocumentTextIcon className="h-3.5 w-3.5" /> : null}
+          <NodeIcon className="h-3.5 w-3.5" />
         </span>
         <span className={`truncate ${isFolder ? "font-semibold text-[#4b5753]" : ""}`}>{node.name}</span>
       </button>
-      {isFolder && isExpanded && node.children.length > 0 && (
+      {isExpandable && isExpanded && node.children.length > 0 && (
         <ul className="mt-0.5 space-y-0.5">
-          {node.children.map((child) => (
+          {groupBoardsWithFolders(node.children).map((child) => (
             <TreeNode key={child.path} node={child} depth={depth + 1} onContextMenu={onContextMenu} onDrop={onDrop} />
           ))}
         </ul>

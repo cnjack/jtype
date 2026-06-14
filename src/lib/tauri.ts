@@ -13,9 +13,8 @@ import type {
   VaultSettings,
   FolderContentsSummary,
   TrashMetadata,
-  LocalKanbanStore,
-  LocalKanbanBoard,
-  PendingKanbanOp,
+  BoardCard,
+  CardTemplate,
 } from "./types";
 
 export const tauri = {
@@ -30,6 +29,24 @@ export const tauri = {
   },
   writeBinaryFile(path: string, content: number[]) {
     return invoke("write_binary_file", { path, content });
+  },
+  readBinaryFile(path: string) {
+    return invoke<number[]>("read_binary_file", { path });
+  },
+  createBoard(rootPath: string, relativePath: string, content: string) {
+    return invoke<WorkspaceSnapshot>("create_board", { rootPath, relativePath, content });
+  },
+  readBoardFile(path: string) {
+    return invoke<string>("read_board_file", { path });
+  },
+  writeBoardFile(path: string, content: string) {
+    return invoke("write_board_file", { path, content });
+  },
+  scanBoardCards(rootPath: string, boardId: string) {
+    return invoke<BoardCard[]>("scan_board_cards", { rootPath, boardId });
+  },
+  scanCardTemplates(rootPath: string, boardDir: string) {
+    return invoke<CardTemplate[]>("scan_card_templates", { rootPath, boardDir });
   },
   openWorkspace(path: string) {
     return invoke<WorkspaceSnapshot>("open_workspace", { path });
@@ -167,45 +184,26 @@ export const tauri = {
     return invoke<void>("cloud_ws_send", { message });
   },
 
-  // ── Local-first Kanban (offline; persists to {vault}/.jtype/kanban.json) ──
-  kanbanLoad(rootPath: string) {
-    return invoke<LocalKanbanStore>("kanban_load", { rootPath });
+  // jtype CLI install/uninstall (downloads the matching binary from Releases).
+  cliStatus() {
+    return invoke<CliStatus>("cli_status");
   },
-  kanbanCreateBoard(rootPath: string, id: string, name: string, description: string | null, columnIds: string[]) {
-    return invoke<LocalKanbanStore>("kanban_create_board", { rootPath, id, name, description, columnIds });
+  installCli() {
+    return invoke<CliStatus>("install_cli");
   },
-  kanbanDeleteBoard(rootPath: string, boardId: string) {
-    return invoke<LocalKanbanStore>("kanban_delete_board", { rootPath, boardId });
-  },
-  kanbanCreateCard(
-    rootPath: string,
-    boardId: string,
-    columnId: string,
-    id: string,
-    title: string,
-    description?: string | null,
-    priority?: string | null,
-    labelIds?: string[],
-  ) {
-    return invoke<LocalKanbanStore>("kanban_create_card", { rootPath, boardId, columnId, id, title, description, priority, labelIds });
-  },
-  kanbanMoveCard(rootPath: string, boardId: string, cardId: string, targetColumnId: string, targetPosition: number) {
-    return invoke<LocalKanbanStore>("kanban_move_card", { rootPath, boardId, cardId, targetColumnId, targetPosition });
-  },
-  kanbanArchiveCard(rootPath: string, boardId: string, cardId: string, archivedAt: string) {
-    return invoke<LocalKanbanStore>("kanban_archive_card", { rootPath, boardId, cardId, archivedAt });
-  },
-  kanbanRestoreCard(rootPath: string, boardId: string, cardId: string) {
-    return invoke<LocalKanbanStore>("kanban_restore_card", { rootPath, boardId, cardId });
-  },
-  kanbanTakePendingOps(rootPath: string) {
-    return invoke<PendingKanbanOp[]>("kanban_take_pending_ops", { rootPath });
-  },
-  kanbanMergeRemoteBoard(rootPath: string, board: LocalKanbanBoard, cloudClock: number) {
-    return invoke<LocalKanbanStore>("kanban_merge_remote_board", { rootPath, board, cloudClock });
+  uninstallCli() {
+    return invoke<CliStatus>("uninstall_cli");
   },
 
   get isAvailable() {
     return isTauriRuntime();
   },
 };
+
+export interface CliStatus {
+  installed: boolean;
+  path: string | null;
+  onPath: boolean;
+  version: string | null;
+  asset: string | null;
+}

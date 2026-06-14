@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JType · AI Integration — MCP + CLI + Skills</title>
+<style>
+  :root{
+    --bg:#0a1211; --surface:#0f1a18; --surface2:#13201d; --line:#1f322e;
+    --ink:#eafaf5; --muted:#8fb3ab; --teal:#2bb7a6; --teal-dim:#0f8f83;
+    --teal-deep:#008884; --amber:#fbbf24; --rose:#fb7185; --good:#34d399;
+    --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Monaco,monospace;
+    --sans:'Inter',system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;overflow:hidden}
+  /* progress + chrome */
+  #bar{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--teal),var(--teal-deep));z-index:50;transition:width .35s ease;box-shadow:0 0 12px rgba(43,183,166,.6)}
+  .chrome{position:fixed;z-index:40;color:var(--muted);font:600 12px/1 var(--mono);letter-spacing:.04em}
+  #brand{left:34px;bottom:26px}
+  #brand b{color:var(--teal)}
+  #count{right:34px;bottom:26px}
+  #dots{position:fixed;right:30px;top:50%;transform:translateY(-50%);z-index:40;display:flex;flex-direction:column;gap:10px}
+  #dots button{width:9px;height:9px;border-radius:50%;border:0;background:#2a3d39;cursor:pointer;padding:0;transition:.2s}
+  #dots button.on{background:var(--teal);box-shadow:0 0 8px var(--teal);transform:scale(1.25)}
+  .hint{position:fixed;left:34px;top:26px;z-index:40;color:#456;font:500 11px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase}
+  /* slides */
+  .deck{height:100%;width:100%}
+  .slide{position:fixed;inset:0;display:none;flex-direction:column;justify-content:center;
+    padding:7vh 9vw;opacity:0;transition:opacity .4s ease}
+  .slide.live{display:flex;opacity:1}
+  .slide::before{content:"";position:absolute;inset:0;z-index:-1;
+    background:radial-gradient(1200px 600px at 85% -10%,rgba(43,183,166,.10),transparent 60%),
+               radial-gradient(900px 500px at -5% 110%,rgba(0,136,132,.08),transparent 55%)}
+  .eyebrow{font:700 12px/1 var(--mono);letter-spacing:.22em;text-transform:uppercase;color:var(--teal);margin-bottom:18px}
+  h1{font-size:clamp(34px,6vw,68px);line-height:1.02;letter-spacing:-.02em;font-weight:800}
+  h2{font-size:clamp(26px,3.6vw,42px);line-height:1.05;letter-spacing:-.02em;font-weight:800;margin-bottom:8px}
+  h2 .accent{color:var(--teal)}
+  .sub{color:var(--muted);font-size:clamp(15px,1.5vw,19px);max-width:60ch;margin-top:14px;line-height:1.5}
+  .grid{display:grid;gap:18px;margin-top:30px}
+  .g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+  .card{background:linear-gradient(180deg,var(--surface),var(--surface2));border:1px solid var(--line);
+    border-radius:14px;padding:20px 22px}
+  .card h3{font-size:15px;letter-spacing:.02em;margin-bottom:8px;display:flex;align-items:center;gap:9px}
+  .card h3 .ic{color:var(--teal)}
+  .card p,.card li{color:var(--muted);font-size:13.5px;line-height:1.55}
+  .card ul{margin:6px 0 0 0;padding-left:16px}
+  .pill{display:inline-block;font:600 11px/1 var(--mono);color:var(--teal);background:rgba(43,183,166,.10);
+    border:1px solid rgba(43,183,166,.3);border-radius:999px;padding:6px 11px;margin:3px 4px 0 0}
+  .tag{font:600 11px/1 var(--mono);color:var(--bg);background:var(--teal);border-radius:6px;padding:4px 8px}
+  code,.mono{font-family:var(--mono)}
+  pre{background:#07100e;border:1px solid var(--line);border-radius:12px;padding:16px 18px;overflow:auto;
+    font:500 12.5px/1.6 var(--mono);color:#cfeee7;max-height:54vh}
+  pre .c{color:#5b7c75}.k{color:var(--teal)}.s{color:var(--amber)}.n{color:#9ad}.ok{color:var(--good)}.no{color:var(--rose)}
+  table{width:100%;border-collapse:collapse;margin-top:18px;font-size:13.5px}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line)}
+  th{color:var(--teal);font:700 11px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase}
+  td{color:var(--ink)} td .m{color:var(--muted)}
+  .big{font-size:clamp(40px,7vw,84px);font-weight:800;letter-spacing:-.03em;line-height:1}
+  .big.teal{color:var(--teal)}
+  .statlbl{color:var(--muted);font:600 12px/1.3 var(--mono);letter-spacing:.04em;margin-top:8px;text-transform:uppercase}
+  .flow{display:flex;align-items:stretch;gap:12px;margin-top:26px;flex-wrap:wrap}
+  .node{flex:1;min-width:150px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px}
+  .node .t{font:700 12px/1 var(--mono);color:var(--teal);letter-spacing:.05em}
+  .node .d{color:var(--muted);font-size:12.5px;margin-top:8px;line-height:1.5}
+  .arrow{align-self:center;color:var(--teal);font-size:22px}
+  .kvs{display:flex;gap:26px;flex-wrap:wrap;margin-top:10px}
+  .kv b{color:var(--teal);font-family:var(--mono);font-size:13px}
+  .kv span{color:var(--muted);font-size:12px;display:block;margin-top:3px}
+  .twocol{display:grid;grid-template-columns:1.05fr .95fr;gap:30px;align-items:center;margin-top:24px}
+  .legend{color:var(--muted);font-size:12px;margin-top:12px;font-family:var(--mono)}
+  .good-row td:first-child{color:var(--good)}
+  @media (max-width:880px){.g2,.g3,.g4,.twocol{grid-template-columns:1fr}.slide{padding:8vh 7vw}#dots{display:none}}
+  @media print{.slide{position:relative;display:flex !important;opacity:1 !important;page-break-after:always;height:100vh}.chrome,#dots,#bar,.hint{display:none}}
+</style>
+</head>
+<body>
+<div id="bar"></div>
+<div class="hint">← / → · space</div>
+<div id="brand" class="chrome"><b>JType</b> · AI Integration</div>
+<div id="count" class="chrome"></div>
+<div id="dots"></div>
+<div class="deck">
+
+<!-- 1 TITLE -->
+<section class="slide">
+  <div class="eyebrow">Internal Engineering Report · 2026-06-14</div>
+  <h1>Making JType<br><span style="color:var(--teal)">AI-controllable.</span></h1>
+  <p class="sub">Notes <i>and</i> kanban exposed to AI agents through three modalities — a hosted
+  <b style="color:var(--ink)">MCP server</b>, a device-auth <b style="color:var(--ink)">CLI</b>, and verified
+  <b style="color:var(--ink)">Agent Skills</b> — researched against Notion, Obsidian, Linear, Jira &amp; GitHub,
+  then built, tested, and proven with a live model conversation.</p>
+  <div style="margin-top:30px">
+    <span class="pill">Streamable HTTP MCP</span>
+    <span class="pill">OAuth 2.0 device grant</span>
+    <span class="pill">14 tools</span>
+    <span class="pill">jtype CLI</span>
+    <span class="pill">Obsidian vault sync</span>
+    <span class="pill">2 skills</span>
+    <span class="pill">44 tests green</span>
+    <span class="pill">adversarial-review hardened</span>
+    <span class="pill">live GLM-5.2 demo</span>
+  </div>
+</section>
+
+<!-- 2 MANDATE -->
+<section class="slide">
+  <div class="eyebrow">The mandate</div>
+  <h2>One product, <span class="accent">three ways</span> for an AI to use it.</h2>
+  <p class="sub">JType is already both a note app (Markdown documents + folders) and a kanban app
+  (boards / columns / cards / labels) — and it already had an OAuth <b style="color:var(--ink)">device flow</b>
+  and bearer sessions. We mirror exactly how the market leaders ship AI access.</p>
+  <div class="grid g3">
+    <div class="card"><h3><span class="ic">◆</span> Online MCP server</h3>
+      <p>Remote, multi-tenant, OAuth — like Notion &amp; Linear's hosted MCP. Read &amp; manage notes and cards over Streamable HTTP.</p></div>
+    <div class="card"><h3><span class="ic">▢</span> Command-line tool</h3>
+      <p>Bundled with desktop, device-auth login — like the Obsidian Local REST API path. Manages docs &amp; projects; binds an Obsidian vault.</p></div>
+    <div class="card"><h3><span class="ic">✦</span> Agent Skills</h3>
+      <p>Folders of <code>SKILL.md</code> that teach an agent jtype conventions and drive the CLI/MCP — installed &amp; proven inside <code>jcode</code>.</p></div>
+  </div>
+</section>
+
+<!-- 3 RESEARCH: FILE TOOLS -->
+<section class="slide">
+  <div class="eyebrow">Research · file &amp; note tools</div>
+  <h2>How <span class="accent">Notion</span> &amp; <span class="accent">Obsidian</span> reach AI agents</h2>
+  <table>
+    <tr><th>Tool</th><th>Hosted MCP</th><th>CLI / local MCP</th><th>Skills</th></tr>
+    <tr><td><b>Notion</b></td>
+      <td><span class="m">mcp.notion.com · Streamable HTTP · <b style="color:var(--teal)">OAuth only</b> · ~18 tools (search/fetch/create/update/comments)</span></td>
+      <td><span class="m">@notionhq/notion-mcp-server · stdio or HTTP · integration token · ~22 tools</span></td>
+      <td><span class="m">official connector + community skill packs</span></td></tr>
+    <tr><td><b>Obsidian</b></td>
+      <td><span class="m">none official (community/self-host only)</span></td>
+      <td><span class="m"><b style="color:var(--teal)">the mature path</b>: Local REST API plugin :27124 + bearer key; mcp-obsidian, cyanheads · 7–14 tools</span></td>
+      <td><span class="m">none verified — convention-only skills that call an MCP</span></td></tr>
+  </table>
+  <p class="sub" style="margin-top:22px"><b style="color:var(--ink)">Convergent verbs:</b>
+  <code>search · get(→Markdown) · list · create · update · append · patch · delete</code> + frontmatter/tags.
+  Local → bearer/API-key; hosted → OAuth inheriting the user's permissions; content returned as Markdown for token density.</p>
+</section>
+
+<!-- 4 RESEARCH: PM TOOLS -->
+<section class="slide">
+  <div class="eyebrow">Research · project-management / kanban</div>
+  <h2>How <span class="accent">Linear</span>, <span class="accent">Jira</span> &amp; <span class="accent">GitHub</span> do it</h2>
+  <table>
+    <tr><th>Tool</th><th>Hosted MCP (OAuth 2.1 · Streamable HTTP)</th><th>CLI</th></tr>
+    <tr><td><b>Linear</b></td><td><span class="m">mcp.linear.app · ~23 tools · <code>update_issue</code> folds status+assignee+priority+labels into one call</span></td><td><span class="m">community (Finesssee/linear-cli, …)</span></td></tr>
+    <tr><td><b>Jira</b></td><td><span class="m">Atlassian Rovo MCP · CRUD + JQL search + <code>transitionJiraIssue</code> (explicit state machine)</span></td><td><span class="m">jira-cli · acli (official)</span></td></tr>
+    <tr><td><b>GitHub</b></td><td><span class="m">api.githubcopilot.com · Projects + Issues; merged CRUD (<code>issue_read</code>/<code>issue_write</code>) to save context</span></td><td><span class="m">gh project / gh issue</span></td></tr>
+  </table>
+  <p class="sub" style="margin-top:22px"><b style="color:var(--ink)">Convergent pattern:</b>
+  list boards/projects → list columns/statuses → list cards → <code>get</code>; <code>create_card</code>; one fat
+  <code>update_card</code>; <code>move_card</code> (= status change); powerful <code>search</code>; <code>list_members</code> to resolve assignees.
+  PM "skills" ship as <i>connectors + a plugin that drives them</i>.</p>
+</section>
+
+<!-- 5 ARCHITECTURE -->
+<section class="slide">
+  <div class="eyebrow">Design · the key decision</div>
+  <h2>MCP tools <span class="accent">dispatch in-process</span> into the existing API</h2>
+  <p class="sub">No duplicated SQL. Each <code>tools/call</code> builds an internal HTTP request, forwards the caller's
+  bearer token, and runs it through a clone of the live Axum router via <code>tower::oneshot</code> — the same
+  mechanism the integration tests use. Reuses all tested logic: RBAC, sqlx CAST handling, lamport clocks, version
+  history, WebSocket broadcasts. Zero changes to existing handlers.</p>
+  <div class="flow">
+    <div class="node"><div class="t">MCP / AI client</div><div class="d">jcode · Claude · Cursor<br><code>Authorization: Bearer</code></div></div>
+    <div class="arrow">→</div>
+    <div class="node"><div class="t">POST /mcp</div><div class="d">Streamable HTTP · JSON-RPC 2.0 · auth + tool dispatch</div></div>
+    <div class="arrow">→</div>
+    <div class="node"><div class="t">api.oneshot(req)</div><div class="d">in-process call into the existing router</div></div>
+    <div class="arrow">→</div>
+    <div class="node"><div class="t">Axum handlers</div><div class="d">documents · kanban · members → MySQL</div></div>
+  </div>
+  <p class="legend">services/jtype-web/src/mcp/{mod,tools,oauth}.rs · wired in lib.rs via <code>mcp.merge(api)</code></p>
+</section>
+
+<!-- 6 MCP SERVER -->
+<section class="slide">
+  <div class="eyebrow">Build · the MCP server</div>
+  <h2>Streamable HTTP · OAuth device grant · <span class="accent">14 tools</span></h2>
+  <div class="twocol">
+    <div>
+      <div class="card" style="margin-bottom:14px">
+        <h3><span class="ic">🔑</span> Auth that satisfies the MCP spec</h3>
+        <p>Reuses jtype's <b style="color:var(--ink)">device flow</b>, repackaged as RFC 8628:
+        <code>/.well-known/oauth-protected-resource</code> + <code>oauth-authorization-server</code>,
+        <code>/api/oauth/device_authorization</code> &amp; <code>/api/oauth/token</code>. Missing token →
+        <code>401</code> + <code>WWW-Authenticate</code> challenge. The access token <i>is</i> a jtype session token.</p>
+      </div>
+      <div class="card">
+        <h3><span class="ic">🧰</span> The catalog</h3>
+        <p><b style="color:var(--teal)">Notes</b> — list_workspaces · list_notes · get_note · search_notes · create_note · update_note · append_note<br>
+        <b style="color:var(--teal)">Kanban</b> — list_boards · get_board · list_cards · create_card · update_card · move_card · list_members</p>
+      </div>
+    </div>
+    <pre><span class="c">// list the tools, then call one</span>
+POST /mcp   <span class="k">Authorization: Bearer …</span>
+{ <span class="k">"method"</span>:<span class="s">"tools/call"</span>,
+  <span class="k">"params"</span>:{ <span class="k">"name"</span>:<span class="s">"create_card"</span>,
+    <span class="k">"arguments"</span>:{
+      <span class="k">"workspace_id"</span>:<span class="s">"…"</span>,
+      <span class="k">"board_id"</span>:<span class="s">"…"</span>,
+      <span class="k">"column_id"</span>:<span class="s">"…"</span>,
+      <span class="k">"title"</span>:<span class="s">"Draft launch plan"</span>,
+      <span class="k">"priority"</span>:<span class="s">"high"</span> }}}
+<span class="c">→ { content:[{type:"text", …}], isError:false }</span></pre>
+  </div>
+</section>
+
+<!-- 7 CLI -->
+<section class="slide">
+  <div class="eyebrow">Build · the jtype CLI</div>
+  <h2>Device-auth CLI: docs, projects, <span class="accent">Obsidian</span> &amp; a stdio bridge</h2>
+  <div class="twocol">
+    <pre><span class="c"># log in via the device flow</span>
+$ <span class="k">jtype login</span>
+  Open: http://localhost:13345/oauth/device?code=425327
+  Approve code: 425327
+  ✓ Logged in as demo
+
+<span class="c"># manage notes &amp; kanban</span>
+$ jtype note create --workspace W ideas/x.md --content -
+$ jtype card move --workspace W --board B C --to-column Doing
+
+<span class="c"># enable an Obsidian vault → cloud → AI</span>
+$ jtype obsidian enable --vault ~/Vault --workspace W
+$ jtype obsidian push        <span class="c"># .md → documents</span>
+
+<span class="c"># expose the same tools over stdio MCP</span>
+$ jtype mcp-stdio            <span class="c"># bridges to /mcp</span></pre>
+    <div>
+      <div class="card" style="margin-bottom:14px"><h3><span class="ic">▢</span> One binary, four jobs</h3>
+        <p>A standalone Rust crate (<code>services/jtype-cli</code>): device-auth client, notes/kanban manager,
+        Obsidian two-way sync (content-hash diff), and a stdio↔HTTP MCP bridge for clients that only speak stdio.</p></div>
+      <div class="card"><h3><span class="ic">✦</span> "Enable Obsidian"</h3>
+        <p>Bind any local Markdown folder to a workspace; <code>push</code>/<code>pull</code> sync changed files by hash —
+        turning an Obsidian vault into AI-reachable cloud documents.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 8 SKILLS -->
+<section class="slide">
+  <div class="eyebrow">Build · Agent Skills</div>
+  <h2>Two verified skills that drive the tools</h2>
+  <div class="grid g2">
+    <div class="card"><h3><span class="ic">✦</span> /jtype-notes</h3>
+      <p>Capture, find, summarize &amp; organize Markdown notes. Encodes path/folder conventions
+      (kebab-case, <code>meetings/…</code>, <code>ideas/…</code>), H1 titles, append-vs-replace judgement, and a
+      search→get→summarize-with-citations workflow.</p></div>
+    <div class="card"><h3><span class="ic">✦</span> /jtype-kanban</h3>
+      <p>Board triage: get_board → classify priority → set assignee via list_members → move to advance →
+      summarize counts. Guardrails: resolve real ids before mutating; plan bulk changes first.</p></div>
+  </div>
+  <p class="sub" style="margin-top:24px">Installed into <code>~/.jcode/skills/</code> (and the project's
+  <code>.jcode/skills/</code>). jcode surfaces each skill's description in the system prompt and loads the full
+  body on demand — the skill supplies <i>judgement</i>, the MCP/CLI supplies <i>capability</i>.</p>
+</section>
+
+<!-- 9 TESTS -->
+<section class="slide">
+  <div class="eyebrow">Verification · adversarial review + every tool tested</div>
+  <h2>44 new tests — <span style="color:var(--good)">all green</span> · zero regressions</h2>
+  <div class="grid g4" style="margin-bottom:6px">
+    <div class="card" style="text-align:center"><div class="big teal">11</div><div class="statlbl">MCP server tests</div></div>
+    <div class="card" style="text-align:center"><div class="big teal">27</div><div class="statlbl">CLI e2e checks</div></div>
+    <div class="card" style="text-align:center"><div class="big teal">6</div><div class="statlbl">CLI unit tests</div></div>
+    <div class="card" style="text-align:center"><div class="big teal">85</div><div class="statlbl">existing tests still pass</div></div>
+  </div>
+  <table>
+    <tr><th>Suite</th><th>Covers</th><th>Result</th></tr>
+    <tr class="good-row"><td>mcp_tests</td><td class="m">initialize · tools/list (all 14) · tools/call per tool · 401 challenge · field-clear · batch envelope</td><td>✓ 7/7</td></tr>
+    <tr class="good-row"><td>oauth_mcp_tests</td><td class="m">discovery metadata · device grant (pending→approve→token) · bad-grant errors</td><td>✓ 4/4</td></tr>
+    <tr class="good-row"><td>jtype-cli e2e</td><td class="m">login→whoami→notes→board→cards→obsidian push/pull→mcp-stdio→logout</td><td>✓ 27/27</td></tr>
+    <tr class="good-row"><td>unit</td><td class="m">vault push/pull diff · content-hash · path-traversal guard</td><td>✓ 6/6</td></tr>
+    <tr class="good-row"><td>regression</td><td class="m">auth · documents · kanban · workspace · oauth (in-process dispatch is additive)</td><td>✓ 85/85</td></tr>
+  </table>
+  <p class="legend">Hardened by a 4-dimension adversarial review (security · correctness · MCP-spec · robustness): <b style="color:var(--teal)">15 confirmed findings fixed</b> — atomic OAuth device-code consume, working field-clear, vault path-traversal guard, resilient push, stdio-bridge error handling.</p>
+</section>
+
+<!-- 10 LIVE DEMO -->
+<section class="slide">
+  <div class="eyebrow">Proof · a real AI conversation</div>
+  <h2>GLM-5.2 drove the tools &amp; <span class="accent">changed real data</span></h2>
+  <p class="sub">Using the exact model + key <code>jcode</code> runs (<code>glm-5.2</code>, OpenAI-compatible), the model
+  discovered all 14 tools and executed an agentic loop — verified independently via the API.</p>
+  <div class="twocol" style="margin-top:18px">
+    <pre><span class="c">=== TOOL CALL ===</span>
+list_workspaces({})  <span class="c">→ "AI Demo"</span>
+get_board({board_id:…})
+get_note({path:<span class="s">"roadmap.md"</span>})
+<span class="ok">create_note</span>({path:<span class="s">"meetings/2026-06-14-ai-kickoff.md"</span>,…})
+  <span class="c">→ Saved (mergeStatus: accepted)</span>
+<span class="ok">create_card</span>({title:<span class="s">"Draft launch plan"</span>,priority:<span class="s">"high"</span>})
+  <span class="c">→ Created card 6b4bdd88…</span>
+<span class="c">=== ASSISTANT ===</span>
+"All done! Created the kickoff note referencing
+ your Q3 roadmap items, and added a high-priority
+ 'Draft launch plan' card to the Launch board."</pre>
+    <div>
+      <div class="card" style="margin-bottom:14px"><h3><span class="ic" style="color:var(--good)">✓</span> Verified in the database</h3>
+        <p><code>meetings/2026-06-14-ai-kickoff.md</code> exists with real content; card <code>Draft launch plan</code>
+        <span class="tag">high</span> present on the Launch board. A second run did live <b style="color:var(--ink)">triage</b>:
+        search_notes · update_card (assignee) · move_card.</p></div>
+      <div class="card"><h3><span class="ic">🔌</span> Wired into jcode</h3>
+        <p><code>jcode mcp list</code> shows the <code>jtype</code> server (Streamable HTTP, bearer); skills installed.
+        Pointed at the durable <code>:13345</code> container.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 11 jcode config -->
+<section class="slide">
+  <div class="eyebrow">Reproduce it</div>
+  <h2>Plug JType into any MCP client in one block</h2>
+  <div class="twocol">
+    <pre><span class="c">// ~/.jcode/config.json  (or any MCP client)</span>
+{
+  <span class="k">"mcp_servers"</span>: {
+    <span class="k">"jtype"</span>: {
+      <span class="k">"type"</span>: <span class="s">"http"</span>,
+      <span class="k">"url"</span>:  <span class="s">"http://localhost:13345/mcp"</span>,
+      <span class="k">"headers"</span>: {
+        <span class="k">"Authorization"</span>: <span class="s">"Bearer &lt;token&gt;"</span>
+      }
+    }
+  }
+}</pre>
+    <div>
+      <div class="card" style="margin-bottom:14px"><h3><span class="ic">①</span> Get a token</h3>
+        <p><code>jtype login</code> (device flow) — or any MCP client does the OAuth device grant the server advertises.</p></div>
+      <div class="card" style="margin-bottom:14px"><h3><span class="ic">②</span> Drop in the skills</h3>
+        <p>Copy <code>jtype-notes</code> / <code>jtype-kanban</code> into <code>~/.jcode/skills/</code>.</p></div>
+      <div class="card"><h3><span class="ic">③</span> Talk to it</h3>
+        <p>"Triage my Launch board and file a kickoff note" — the agent does the rest.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 12 OUTCOMES -->
+<section class="slide">
+  <div class="eyebrow">Outcomes &amp; next</div>
+  <h2>Shipped: a full <span class="accent">three-modality</span> AI surface</h2>
+  <div class="grid g3">
+    <div class="card"><h3><span class="ic">✓</span> Delivered</h3>
+      <ul><li>Streamable-HTTP MCP server, 14 tools</li><li>OAuth 2.0 device grant + discovery</li>
+      <li>jtype CLI + Obsidian sync + stdio bridge</li><li>2 Agent Skills</li><li>40 tests · live GLM-5.2 proof</li></ul></div>
+    <div class="card"><h3><span class="ic">◷</span> Fast follow</h3>
+      <ul><li>Bundle CLI as a Tauri sidecar (<code>externalBin</code>)</li><li>Auth-code + DCR consent UI</li>
+      <li><code>patch_note</code> (surgical heading edits)</li><li>Card comments &amp; labels in MCP</li></ul></div>
+    <div class="card"><h3><span class="ic">★</span> Why it matters</h3>
+      <ul><li>Reuses existing auth &amp; handlers — low risk</li><li>Matches Notion/Linear conventions</li>
+      <li>Notes <i>and</i> kanban in one server: a differentiator</li></ul></div>
+  </div>
+  <p class="sub" style="margin-top:26px;color:var(--teal);font-family:var(--mono);font-size:14px">
+  internal-docs/ai-integration/ — research · PRD · design · skills · demo · this report</p>
+</section>
+
+</div>
+
+<script>
+  const slides=[...document.querySelectorAll('.slide')];
+  const dots=document.getElementById('dots');
+  const bar=document.getElementById('bar');
+  const count=document.getElementById('count');
+  let i=0;
+  slides.forEach((_,n)=>{const b=document.createElement('button');b.onclick=()=>go(n);dots.appendChild(b);});
+  const dotEls=[...dots.children];
+  function go(n){
+    i=Math.max(0,Math.min(slides.length-1,n));
+    slides.forEach((s,k)=>s.classList.toggle('live',k===i));
+    dotEls.forEach((d,k)=>d.classList.toggle('on',k===i));
+    bar.style.width=((i+1)/slides.length*100)+'%';
+    count.textContent=String(i+1).padStart(2,'0')+' / '+String(slides.length).padStart(2,'0');
+  }
+  function next(){go(i+1)} function prev(){go(i-1)}
+  document.addEventListener('keydown',e=>{
+    if(['ArrowRight','ArrowDown',' ','PageDown'].includes(e.key)){e.preventDefault();next();}
+    else if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){e.preventDefault();prev();}
+    else if(e.key==='Home'){go(0)} else if(e.key==='End'){go(slides.length-1)}
+  });
+  let sx=null;
+  addEventListener('touchstart',e=>sx=e.touches[0].clientX,{passive:true});
+  addEventListener('touchend',e=>{if(sx===null)return;const dx=e.changedTouches[0].clientX-sx;if(Math.abs(dx)>50)dx<0?next():prev();sx=null;},{passive:true});
+  addEventListener('click',e=>{if(e.target.closest('#dots,a,button'))return;const x=e.clientX/innerWidth;if(x>0.62)next();else if(x<0.38)prev();});
+  go(0);
+</script>
+</body>
+</html>

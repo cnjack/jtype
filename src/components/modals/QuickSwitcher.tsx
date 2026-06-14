@@ -13,7 +13,7 @@ export function QuickSwitcher() {
 
   const allNodes = useMemo(() => {
     if (!state.workspace?.entries) return [];
-    return flattenMarkdownNodes(state.workspace.entries);
+    return flattenOpenableNodes(state.workspace.entries);
   }, [state.workspace]);
 
   return (
@@ -67,7 +67,11 @@ export function QuickSwitcher() {
             className="command-row"
             onClick={() => {
               dispatch({ type: "SET_QUICK_SWITCHER", open: false });
-              fs.openMarkdownFile(node.path, node.relativePath);
+              if (node.kind === "board") {
+                dispatch({ type: "SELECT_TREE_NODE", node });
+              } else {
+                fs.openMarkdownFile(node.path, node.relativePath);
+              }
             }}
           >
             <span className="min-w-0">
@@ -82,11 +86,11 @@ export function QuickSwitcher() {
   );
 }
 
-function flattenMarkdownNodes(entries: import("../../lib/types").FileTreeNode[]): import("../../lib/types").FileTreeNode[] {
+function flattenOpenableNodes(entries: import("../../lib/types").FileTreeNode[]): import("../../lib/types").FileTreeNode[] {
   const result: import("../../lib/types").FileTreeNode[] = [];
   for (const node of entries) {
-    if (node.kind === "markdown") result.push(node);
-    if (node.children) result.push(...flattenMarkdownNodes(node.children));
+    if (node.kind === "markdown" || node.kind === "board") result.push(node);
+    if (node.children) result.push(...flattenOpenableNodes(node.children));
   }
   return result;
 }

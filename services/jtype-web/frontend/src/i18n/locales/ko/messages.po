@@ -1,17 +1,18 @@
+#
 msgid ""
 msgstr ""
-"POT-Creation-Date: 2026-05-14\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
-"X-Generator: @lingui/cli\n"
-"Language: ko\n"
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-05-14\n"
 "PO-Revision-Date: \n"
 "Last-Translator: \n"
 "Language-Team: \n"
+"Language: ko\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: \n"
+"X-Generator: @lingui/cli\n"
 
 #: src/pages/Workspace.tsx
 msgid "-----BEGIN CERTIFICATE-----"
@@ -46,8 +47,8 @@ msgstr "{0}개 문서의 게시가 취소되었습니다."
 msgid "{0} live"
 msgstr "{0}개 게시 중"
 
-#. placeholder {0}: documents.length
-#. placeholder {1}: documents.length === 1 ? '' : 's'
+#. placeholder {0}: markdownDocs.length
+#. placeholder {1}: markdownDocs.length === 1 ? '' : 's'
 #: src/pages/Workspace.tsx
 msgid "{0} Markdown file{1}"
 msgstr "{0}개 Markdown 파일{1}"
@@ -80,6 +81,22 @@ msgstr "<0>{0}</0>님이 <2>{2}</2>(으)로 <1>{1}</1>에 초대했습니다."
 msgid "⚠ Modified by {0}{1}"
 msgstr "⚠ {0}{1}에 의해 수정됨"
 
+#: src/pages/Landing.tsx
+msgid "A jtype CLI and a local stdio MCP bridge."
+msgstr "jtype CLI와 로컬 stdio MCP 브리지."
+
+#: src/components/NewResourceDialog.tsx
+msgid "A kanban board over your notes"
+msgstr ""
+
+#: src/components/NewResourceDialog.tsx
+msgid "A Markdown document you write and preview"
+msgstr ""
+
+#: src/components/NewResourceDialog.tsx
+msgid "A text document you write and preview"
+msgstr ""
+
 #: src/pages/InviteAccept.tsx
 msgid "Accept invitation"
 msgstr "초대 수락"
@@ -101,7 +118,9 @@ msgid "Add domain"
 msgstr "도메인 추가"
 
 #: src/pages/Workspace.tsx
-msgid "Add domains, verify DNS ownership, bind them to this workspace, and manage SSL certificates from one place."
+msgid ""
+"Add domains, verify DNS ownership, bind them to this workspace, and manage "
+"SSL certificates from one place."
 msgstr "한 곳에서 도메인 추가, DNS 소유권 확인, 워크스페이스 바인딩 및 SSL 인증서 관리."
 
 #: src/pages/Workspace.tsx
@@ -117,10 +136,21 @@ msgstr "즐겨찾기에 추가"
 msgid "Add TXT record <0>{0}</0>, then verify DNS."
 msgstr "TXT 레코드 <0>{0}</0>를 추가한 후 DNS를 확인합니다."
 
-#: src/components/Layout.tsx
-#: src/pages/Admin.tsx
+#: src/components/Layout.tsx src/pages/Admin.tsx
 msgid "Admin"
 msgstr "관리"
+
+#: src/pages/Landing.tsx
+msgid "AI"
+msgstr "AI"
+
+#: src/components/Layout.tsx
+msgid "AI Connections"
+msgstr "AI 연결"
+
+#: src/pages/Landing.tsx
+msgid "AI-ready"
+msgstr "AI 지원"
 
 #: src/pages/Login.tsx
 msgid "AI-Ready"
@@ -130,8 +160,7 @@ msgstr "AI 준비됨"
 msgid "Already accepted"
 msgstr "이미 수락됨"
 
-#: src/pages/DeviceOAuth.tsx
-#: src/pages/Login.tsx
+#: src/pages/DeviceOAuth.tsx src/pages/Login.tsx
 msgid "Already have an account?"
 msgstr "이미 계정이 있으신가요?"
 
@@ -155,6 +184,10 @@ msgstr "기기 인증"
 msgid "Authorizing..."
 msgstr "인증 중..."
 
+#: src/components/NewResourceDialog.tsx
+msgid "Back"
+msgstr ""
+
 #: src/pages/Workspace.tsx
 msgid "Bind custom domains and manage certificates."
 msgstr "커스텀 도메인을 바인딩하고 인증서를 관리합니다."
@@ -166,6 +199,10 @@ msgstr "여기에 바인딩"
 #: src/pages/Landing.tsx
 msgid "Bind to a cloud workspace"
 msgstr "클라우드 워크스페이스에 바인딩"
+
+#: src/components/NewResourceDialog.tsx
+msgid "Board name"
+msgstr ""
 
 #: src/pages/Workspace.tsx
 msgid "Bold"
@@ -188,11 +225,24 @@ msgstr "여기에 바인딩됨"
 msgid "Bound to {0}"
 msgstr "{0}에 바인딩됨"
 
-#: src/pages/Landing.tsx
-msgid "Calm desktop writing, workspace-scoped sync, and public Markdown publishing in one product flow. Your notes stay local until a cloud workspace has a job to do."
-msgstr "차분한 데스크탑 글쓰기, 워크스페이스 범위 동기화, 공개 Markdown 게시가 하나의 제품 흐름으로. 노트는 클라우드 워크스페이스가 필요할 때까지 로컬에 보관됩니다."
+#: src/components/NewResourceDialog.tsx
+msgid "Bring in an image or PDF from your computer"
+msgstr ""
 
-#: src/pages/Workspace.tsx
+#: src/pages/Landing.tsx
+msgid "Bring your notes and kanban into any AI agent."
+msgstr "노트와 칸반을 모든 AI 에이전트에 연결하세요."
+
+#: src/pages/Landing.tsx
+msgid ""
+"Calm desktop writing, workspace-scoped sync, and public Markdown publishing "
+"in one product flow. Your notes stay local until a cloud workspace has a job"
+" to do."
+msgstr ""
+"차분한 데스크탑 글쓰기, 워크스페이스 범위 동기화, 공개 Markdown 게시가 하나의 제품 흐름으로. 노트는 클라우드 워크스페이스가 "
+"필요할 때까지 로컬에 보관됩니다."
+
+#: src/components/NewResourceDialog.tsx src/pages/Workspace.tsx
 msgid "Cancel"
 msgstr "취소"
 
@@ -216,13 +266,19 @@ msgstr "클라우드 워크스페이스 선택"
 msgid "Choose a note or create a new one."
 msgstr "노트를 선택하거나 새로 만드세요."
 
+#: src/components/NewResourceDialog.tsx
+msgid "Choose what you want to create."
+msgstr ""
+
 #: src/pages/Landing.tsx
 msgid "Clean read-only output for notes, docs, releases, and guides."
 msgstr "노트, 문서, 릴리즈, 가이드를 위한 깔끔한 읽기 전용 출력."
 
-#: src/components/Layout.tsx
-#: src/pages/Admin.tsx
-#: src/pages/Workspace.tsx
+#: src/pages/Landing.tsx
+msgid "CLI + stdio"
+msgstr "CLI + stdio"
+
+#: src/components/Layout.tsx src/pages/Admin.tsx src/pages/Workspace.tsx
 msgid "Close"
 msgstr "닫기"
 
@@ -230,8 +286,7 @@ msgstr "닫기"
 msgid "Cloud Sync"
 msgstr "클라우드 동기화"
 
-#: src/pages/Landing.tsx
-#: src/pages/Workspace.tsx
+#: src/pages/Landing.tsx src/pages/Workspace.tsx
 msgid "Cloud workspace"
 msgstr "클라우드 워크스페이스"
 
@@ -250,6 +305,10 @@ msgstr "클라우드 워크스페이스"
 #: src/pages/Workspace.tsx
 msgid "Collapse all"
 msgstr "모두 접기"
+
+#: src/pages/Landing.tsx
+msgid "Connect your AI"
+msgstr "AI 연결"
 
 #: src/pages/Workspace.tsx
 msgid "Connected"
@@ -271,9 +330,18 @@ msgstr "링크 복사"
 msgid "Copy path"
 msgstr "경로 복사"
 
+#: src/components/NewResourceDialog.tsx
+msgid "Create"
+msgstr "만들기"
+
 #: src/pages/Landing.tsx
-msgid "Create a workspace for sync, publishing, and account settings. Local vault copy stays precise: folders are vaults, server-side collaboration is a cloud workspace."
-msgstr "동기화, 게시, 계정 설정을 위한 워크스페이스를 만듭니다. 로컬 볼트 복사본은 정확하게 유지됩니다: 폴더는 볼트, 서버 측 협업은 클라우드 워크스페이스."
+msgid ""
+"Create a workspace for sync, publishing, and account settings. Local vault "
+"copy stays precise: folders are vaults, server-side collaboration is a cloud"
+" workspace."
+msgstr ""
+"동기화, 게시, 계정 설정을 위한 워크스페이스를 만듭니다. 로컬 볼트 복사본은 정확하게 유지됩니다: 폴더는 볼트, 서버 측 협업은 "
+"클라우드 워크스페이스."
 
 #: src/pages/Login.tsx
 msgid "Create account"
@@ -282,6 +350,10 @@ msgstr "계정 만들기"
 #: src/pages/Workspace.tsx
 msgid "Create your first Markdown note."
 msgstr "첫 번째 Markdown 노트를 만드세요."
+
+#: src/components/NewResourceDialog.tsx
+msgid "Creates in"
+msgstr ""
 
 #: src/pages/Workspace.tsx
 msgid "Custom domains"
@@ -381,9 +453,9 @@ msgstr "문서 정보"
 msgid "Document Info"
 msgstr "문서 정보"
 
-#: src/pages/Workspace.tsx
-msgid "Document path (e.g. notes/hello.md):"
-msgstr "문서 경로 (예: notes/hello.md):"
+#: src/components/NewResourceDialog.tsx
+msgid "Document name"
+msgstr ""
 
 #: src/pages/Workspace.tsx
 msgid "Document published."
@@ -393,8 +465,7 @@ msgstr "문서가 게시되었습니다."
 msgid "Document unpublished."
 msgstr "문서 게시가 취소되었습니다."
 
-#: src/pages/Admin.tsx
-#: src/pages/Workspace.tsx
+#: src/pages/Admin.tsx src/pages/Workspace.tsx
 msgid "Documents"
 msgstr "문서"
 
@@ -402,19 +473,29 @@ msgstr "문서"
 msgid "Domain"
 msgstr "도메인"
 
-#: src/pages/Admin.tsx
-#: src/pages/Workspace.tsx
+#: src/pages/Admin.tsx src/pages/Workspace.tsx
 msgid "Domains"
 msgstr "도메인"
 
-#: src/pages/DeviceOAuth.tsx
-#: src/pages/Login.tsx
+#: src/pages/DeviceOAuth.tsx src/pages/Login.tsx
 msgid "Don't have an account?"
 msgstr "계정이 없으신가요?"
 
 #: src/pages/InviteAccept.tsx
 msgid "Don't have an account? <0>Sign up</0>"
 msgstr "계정이 없으신가요? <0>회원가입</0>"
+
+#: src/components/DownloadPromo.tsx
+msgid "Don't show this again"
+msgstr "다시 표시 안 함"
+
+#: src/components/DownloadPromo.tsx
+msgid "Download for {osLabel}"
+msgstr "{osLabel}용 다운로드"
+
+#: src/components/DownloadPromo.tsx
+msgid "Download the desktop app"
+msgstr "데스크톱 앱 다운로드"
 
 #: src/pages/Workspace.tsx
 msgid "Draft only"
@@ -500,6 +581,10 @@ msgstr "집중 모드"
 msgid "General"
 msgstr "일반"
 
+#: src/components/DownloadPromo.tsx
+msgid "Get the desktop app — and a jtype CLI for your terminal & AI agents."
+msgstr "데스크톱 앱과 터미널·AI 에이전트용 jtype CLI를 받으세요."
+
 #: src/pages/Landing.tsx
 msgid "GitHub"
 msgstr "GitHub"
@@ -519,6 +604,10 @@ msgstr "워크스페이스로 이동"
 #: src/pages/Workspace.tsx
 msgid "Hide"
 msgstr "숨기기"
+
+#: src/components/NewResourceDialog.tsx
+msgid "Import file"
+msgstr ""
 
 #: src/pages/Login.tsx
 msgid "Indexed and ready for intelligent assistance."
@@ -584,8 +673,29 @@ msgstr "기울임꼴 (Ctrl+I)"
 msgid "Joining…"
 msgstr "참가 중…"
 
+#: src/pages/Landing.tsx
+msgid ""
+"JType ships a built-in MCP server. Connect Claude, Cursor, or any MCP client"
+" over a secure OAuth flow, then ask it to search your notes, draft a doc, or"
+" triage your board. Tokens are scoped, expiring, and revocable — and admin "
+"always stays off-limits."
+msgstr ""
+"JType에는 MCP 서버가 내장되어 있습니다. 안전한 OAuth 흐름으로 Claude, Cursor 등 모든 MCP 클라이언트를 "
+"연결하면 노트 검색, 문서 초안 작성, 보드 정리를 맡길 수 있습니다. 토큰은 범위가 제한되고 만료되며 취소할 수 있으며, 관리자 "
+"권한에는 절대 접근하지 않습니다."
+
+#: src/components/NewResourceDialog.tsx
+msgid "Kanban board"
+msgstr ""
+
+#: src/pages/Landing.tsx
+msgid "Kanban tools"
+msgstr "칸반 도구"
+
 #: src/pages/Workspace.tsx
-msgid "Keep the publish name and workspace name here. The workspace slug and storage limit are assigned by the service."
+msgid ""
+"Keep the publish name and workspace name here. The workspace slug and "
+"storage limit are assigned by the service."
 msgstr "여기서 게시 이름과 워크스페이스 이름을 관리합니다. 워크스페이스 슬러그와 저장소 한도는 서비스에서 할당됩니다."
 
 #: src/pages/Login.tsx
@@ -619,6 +729,10 @@ msgstr "링크 (Ctrl+K)"
 #: src/pages/Workspace.tsx
 msgid "Link copied!"
 msgstr "링크가 복사되었습니다!"
+
+#: src/pages/Landing.tsx
+msgid "List, create, update, and move cards across columns."
+msgstr "열 간에 카드를 나열, 생성, 업데이트 및 이동."
 
 #: src/pages/Landing.tsx
 msgid "Live preview"
@@ -676,6 +790,10 @@ msgstr "JType Cloud 계정과 연결된 기기를 관리합니다."
 msgid "Markdown"
 msgstr "Markdown"
 
+#: src/components/NewResourceDialog.tsx
+msgid "Markdown document"
+msgstr ""
+
 #: src/pages/Workspace.tsx
 msgid "Markdown editor"
 msgstr "Markdown 편집기"
@@ -684,8 +802,7 @@ msgstr "Markdown 편집기"
 msgid "Member removed."
 msgstr "멤버가 제거되었습니다."
 
-#: src/pages/Admin.tsx
-#: src/pages/Workspace.tsx
+#: src/pages/Admin.tsx src/pages/Workspace.tsx
 msgid "Members"
 msgstr "멤버"
 
@@ -714,11 +831,15 @@ msgstr "이름, 게시 ID, 저장소"
 msgid "New"
 msgstr "새로 만들기"
 
+#: src/components/NewResourceDialog.tsx
+msgid "New board"
+msgstr ""
+
 #: src/pages/Workspace.tsx
 msgid "New cloud workspace"
 msgstr "새 클라우드 워크스페이스"
 
-#: src/pages/Workspace.tsx
+#: src/components/NewResourceDialog.tsx src/pages/Workspace.tsx
 msgid "New document"
 msgstr "새 문서"
 
@@ -727,16 +848,16 @@ msgid "New Document"
 msgstr "새 문서"
 
 #: src/pages/Workspace.tsx
-msgid "New document name (e.g. note.md):"
-msgstr "새 문서 이름 (예: note.md):"
-
-#: src/pages/Workspace.tsx
 msgid "New folder"
 msgstr "새 폴더"
 
 #: src/pages/Workspace.tsx
 msgid "New folder name:"
 msgstr "새 폴더 이름:"
+
+#: src/components/NewResourceDialog.tsx
+msgid "New resource"
+msgstr ""
 
 #: src/pages/Workspace.tsx
 msgid "No cloud workspaces yet."
@@ -790,6 +911,14 @@ msgstr "저장되지 않은 변경 사항 없음"
 msgid "Not published"
 msgstr "게시 안 됨"
 
+#: src/pages/Landing.tsx
+msgid "Notes tools"
+msgstr "노트 도구"
+
+#: src/pages/Landing.tsx
+msgid "OAuth + PKCE"
+msgstr "OAuth + PKCE"
+
 #: src/pages/Workspace.tsx
 msgid "Offline"
 msgstr "오프라인"
@@ -799,8 +928,21 @@ msgid "Offline ({pendingCount} saved)"
 msgstr "오프라인 ({pendingCount}개 저장됨)"
 
 #: src/pages/Landing.tsx
+msgid ""
+"One Markdown source shows up everywhere it matters: local files on your "
+"machine, sync state in the cloud, and published output for readers — all "
+"visible at once."
+msgstr ""
+"하나의 Markdown 소스가 필요한 모든 곳에 나타납니다: 내 컴퓨터의 로컬 파일, 클라우드의 동기화 상태, 독자를 위한 게시 출력 —"
+" 한 번에 모두."
+
+#: src/pages/Landing.tsx
 msgid "One Markdown source, three calm surfaces."
 msgstr "하나의 Markdown 소스, 세 가지 차분한 화면."
+
+#: src/pages/Landing.tsx
+msgid "One-click browser approval — no token to paste."
+msgstr "브라우저에서 원클릭 승인 — 토큰 붙여넣기 불필요."
 
 #: src/pages/Workspace.tsx
 msgid "Only owners and admins can change workspace settings"
@@ -811,7 +953,9 @@ msgid "Open"
 msgstr "열기"
 
 #: src/pages/Landing.tsx
-msgid "Open a local Markdown vault, keep normal folders, and edit without turning notes into remote-only data."
+msgid ""
+"Open a local Markdown vault, keep normal folders, and edit without turning "
+"notes into remote-only data."
 msgstr "로컬 Markdown 볼트를 열고, 일반 폴더 구조를 유지하며, 노트를 원격 전용 데이터로 만들지 않고 편집합니다."
 
 #: src/pages/Landing.tsx
@@ -850,8 +994,7 @@ msgstr "소유권이 이전되었습니다."
 msgid "Pass ownership to another admin member."
 msgstr "다른 관리자 멤버에게 소유권을 넘깁니다."
 
-#: src/pages/DeviceOAuth.tsx
-#: src/pages/Login.tsx
+#: src/pages/DeviceOAuth.tsx src/pages/Login.tsx
 msgid "Password"
 msgstr "비밀번호"
 
@@ -875,13 +1018,11 @@ msgstr "이 항목을 영구 삭제하시겠습니까?"
 msgid "Permanently remove this workspace and all documents."
 msgstr "이 워크스페이스와 모든 문서를 영구 삭제합니다."
 
-#: src/pages/DeviceOAuth.tsx
-#: src/pages/Login.tsx
+#: src/pages/DeviceOAuth.tsx src/pages/Login.tsx
 msgid "Please wait..."
 msgstr "잠시 기다려 주세요..."
 
-#: src/pages/Landing.tsx
-#: src/pages/Workspace.tsx
+#: src/pages/Landing.tsx src/pages/Workspace.tsx
 msgid "Preview"
 msgstr "미리보기"
 
@@ -909,8 +1050,7 @@ msgstr "속성"
 msgid "Public site"
 msgstr "공개 사이트"
 
-#: src/pages/Landing.tsx
-#: src/pages/Workspace.tsx
+#: src/pages/Landing.tsx src/pages/Workspace.tsx
 msgid "Publish"
 msgstr "게시"
 
@@ -944,11 +1084,15 @@ msgid "Publishing details saved"
 msgstr "게시 세부 정보가 저장되었습니다"
 
 #: src/pages/Workspace.tsx
-msgid "Publishing uses a server snapshot; frontmatter status is treated as user metadata."
+msgid ""
+"Publishing uses a server snapshot; frontmatter status is treated as user "
+"metadata."
 msgstr "게시는 서버 스냅샷을 사용합니다. 프론트매터 상태는 사용자 메타데이터로 처리됩니다."
 
 #: src/pages/Landing.tsx
-msgid "Push and pull versions, resolve conflicts, and keep collaboration scoped to the workspace you choose."
+msgid ""
+"Push and pull versions, resolve conflicts, and keep collaboration scoped to "
+"the workspace you choose."
 msgstr "버전 푸시/풀, 충돌 해결, 선택한 워크스페이스 내에서 협업 유지."
 
 #: src/pages/Workspace.tsx
@@ -963,8 +1107,7 @@ msgstr "읽기 전용"
 msgid "Ready for the cloud layer"
 msgstr "클라우드 레이어 준비 완료"
 
-#: src/pages/DeviceOAuth.tsx
-#: src/pages/Login.tsx
+#: src/pages/DeviceOAuth.tsx src/pages/Login.tsx
 msgid "Register"
 msgstr "등록"
 
@@ -1020,7 +1163,8 @@ msgid "Restore"
 msgstr "복원"
 
 #: src/pages/Workspace.tsx
-msgid "Restore cloud workspace documents or permanently remove them from trash."
+msgid ""
+"Restore cloud workspace documents or permanently remove them from trash."
 msgstr "클라우드 워크스페이스 문서를 휴지통에서 복원하거나 영구 삭제합니다."
 
 #: src/pages/Workspace.tsx
@@ -1072,6 +1216,10 @@ msgid "Search files..."
 msgstr "파일 검색..."
 
 #: src/pages/Landing.tsx
+msgid "Search, read, create, update, and append documents."
+msgstr "문서 검색, 읽기, 생성, 업데이트 및 추가."
+
+#: src/pages/Landing.tsx
 msgid "See product flow"
 msgstr "제품 흐름 보기"
 
@@ -1095,9 +1243,7 @@ msgstr "설정"
 msgid "Ship a readable site"
 msgstr "읽기 쉬운 사이트 게시"
 
-#: src/pages/DeviceOAuth.tsx
-#: src/pages/Landing.tsx
-#: src/pages/Login.tsx
+#: src/pages/DeviceOAuth.tsx src/pages/Landing.tsx src/pages/Login.tsx
 msgid "Sign in"
 msgstr "로그인"
 
@@ -1109,8 +1255,7 @@ msgstr "로그인 및 인증"
 msgid "Sign in to your JType Cloud account."
 msgstr "JType Cloud 계정에 로그인하세요."
 
-#: src/components/Layout.tsx
-#: src/pages/Landing.tsx
+#: src/components/Layout.tsx src/pages/Landing.tsx
 msgid "Sign out"
 msgstr "로그아웃"
 
@@ -1135,13 +1280,11 @@ msgstr "사이트 설정"
 msgid "Something went wrong"
 msgstr "오류가 발생했습니다"
 
-#: src/pages/Landing.tsx
-#: src/pages/Workspace.tsx
+#: src/pages/Landing.tsx src/pages/Workspace.tsx
 msgid "Split"
 msgstr "분할"
 
-#: src/pages/Admin.tsx
-#: src/pages/Workspace.tsx
+#: src/pages/Admin.tsx src/pages/Workspace.tsx
 msgid "SSL"
 msgstr "SSL"
 
@@ -1223,10 +1366,6 @@ msgstr "팀 멤버 및 초대"
 msgid "The landing story follows the real JType loop."
 msgstr "랜딩 페이지 스토리는 실제 JType 루프를 따릅니다."
 
-#: src/pages/Landing.tsx
-msgid "The page borrows getdesign.app's strongest move: show the actual system doing the explaining. For JType, that means local files, sync state, and published output all visible at once."
-msgstr "이 페이지는 getdesign.app의 가장 강력한 기법을 빌려옵니다: 실제 시스템이 설명하는 모습을 보여줍니다. JType의 경우 로컬 파일, 동기화 상태, 게시된 출력이 모두 한 번에 표시됩니다."
-
 #: src/pages/Workspace.tsx
 msgid "The public snapshot is behind the current document."
 msgstr "공개 스냅샷이 현재 문서보다 오래되었습니다."
@@ -1249,12 +1388,18 @@ msgstr "이 초대 링크는 유효하지 않거나 만료되었습니다."
 
 #. placeholder {0}: workspace.name
 #: src/pages/Workspace.tsx
-msgid "This will permanently delete <0>{0}</0> and all its documents. This cannot be undone."
+msgid ""
+"This will permanently delete <0>{0}</0> and all its documents. This cannot "
+"be undone."
 msgstr "<0>{0}</0>과(와) 모든 문서가 영구 삭제됩니다. 이 작업은 취소할 수 없습니다."
 
 #: src/pages/Workspace.tsx
 msgid "Toggle favorite"
 msgstr "즐겨찾기 전환"
+
+#: src/components/NewResourceDialog.tsx
+msgid "Track work in columns and cards"
+msgstr ""
 
 #: src/pages/Workspace.tsx
 msgid "Transfer"
@@ -1286,7 +1431,9 @@ msgid "Trash is empty."
 msgstr "휴지통이 비어 있습니다."
 
 #: src/pages/Landing.tsx
-msgid "Turn selected documents into a public `/u/:username` site while your source stays Markdown."
+msgid ""
+"Turn selected documents into a public `/u/:username` site while your source "
+"stays Markdown."
 msgstr "소스는 Markdown으로 유지하면서 선택한 문서를 공개 `/u/:username` 사이트로 만듭니다."
 
 #: src/pages/Workspace.tsx
@@ -1326,8 +1473,14 @@ msgid "Untitled document"
 msgstr "제목 없는 문서"
 
 #: src/pages/Workspace.tsx
-msgid "Upload a PEM certificate for a verified domain. The private key is stored as a hash in the current backend model."
+msgid ""
+"Upload a PEM certificate for a verified domain. The private key is stored as"
+" a hash in the current backend model."
 msgstr "확인된 도메인에 대한 PEM 인증서를 업로드합니다. 개인 키는 현재 백엔드 모델에서 해시로 저장됩니다."
+
+#: src/components/DownloadPromo.tsx
+msgid "Use JType beyond the browser"
+msgstr "브라우저 밖에서도 JType 사용"
 
 #: src/pages/Admin.tsx
 msgid "User"
@@ -1337,9 +1490,7 @@ msgstr "사용자"
 msgid "User menu"
 msgstr "사용자 메뉴"
 
-#: src/components/Layout.tsx
-#: src/pages/Admin.tsx
-#: src/pages/DeviceOAuth.tsx
+#: src/components/Layout.tsx src/pages/Admin.tsx src/pages/DeviceOAuth.tsx
 #: src/pages/Login.tsx
 msgid "Username"
 msgstr "사용자 이름"
@@ -1355,6 +1506,10 @@ msgstr "볼트"
 #: src/pages/Workspace.tsx
 msgid "Vault ready"
 msgstr "볼트 준비 완료"
+
+#: src/components/NewResourceDialog.tsx
+msgid "vault root"
+msgstr ""
 
 #: src/pages/Workspace.tsx
 msgid "Vault space"
@@ -1408,8 +1563,7 @@ msgstr "워크스페이스 설정"
 msgid "Workspace slug"
 msgstr "워크스페이스 슬러그"
 
-#: src/pages/Landing.tsx
-#: src/pages/Workspace.tsx
+#: src/pages/Landing.tsx src/pages/Workspace.tsx
 msgid "Write"
 msgstr "작성"
 
@@ -1422,7 +1576,9 @@ msgid "You will lose access to all cloud documents."
 msgstr "모든 클라우드 문서에 대한 접근 권한을 잃게 됩니다."
 
 #: src/pages/Workspace.tsx
-msgid "You will lose access to all cloud documents. Your local files are unaffected."
+msgid ""
+"You will lose access to all cloud documents. Your local files are "
+"unaffected."
 msgstr "모든 클라우드 문서에 대한 접근 권한을 잃게 됩니다. 로컬 파일은 영향을 받지 않습니다."
 
 #: src/pages/InviteAccept.tsx
@@ -1440,3 +1596,17 @@ msgstr "당신의 Markdown 워크스페이스,<0/>클라우드에 동기화됩�
 #: src/pages/Workspace.tsx
 msgid "Your rendered document will appear here."
 msgstr "렌더링된 문서가 여기에 표시됩니다."
+
+#~ msgid "Document path (e.g. notes/hello.md):"
+#~ msgstr "문서 경로 (예: notes/hello.md):"
+
+#~ msgid "New document name (e.g. note.md):"
+#~ msgstr "새 문서 이름 (예: note.md):"
+
+#~ msgid ""
+#~ "The page borrows getdesign.app's strongest move: show the actual system "
+#~ "doing the explaining. For JType, that means local files, sync state, and "
+#~ "published output all visible at once."
+#~ msgstr ""
+#~ "이 페이지는 getdesign.app의 가장 강력한 기법을 빌려옵니다: 실제 시스템이 설명하는 모습을 보여줍니다. JType의 경우 로컬"
+#~ " 파일, 동기화 상태, 게시된 출력이 모두 한 번에 표시됩니다."

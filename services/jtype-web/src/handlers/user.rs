@@ -1,9 +1,16 @@
-use axum::{extract::State, http::HeaderMap, Json};
+use axum::{
+    extract::{Path, State},
+    http::{header, HeaderMap, StatusCode},
+    Json,
+};
+use serde_json::{json, Value};
 use sqlx::Row;
 
 use crate::db::models::*;
 use crate::error::AppError;
+use crate::handlers::auth::create_scoped_session;
 use crate::middleware::auth::extract_user;
+use crate::util::sha256_hex;
 use crate::AppState;
 
 pub async fn get_profile(
@@ -173,4 +180,100 @@ pub async fn my_devices(
         .collect();
 
     Ok(Json(devices))
+}
+
+// ── API / MCP tokens ──────────────────────────────────────────────────────
+
+fn current_token_hash(headers: &HeaderMap) -> Option<String> {
+    headers
+        .get(header::AUTHORIZATION)
+        .and_then(|v| v.to_str().ok())
+        .and_then(|v| v.strip_prefix("Bearer "))
+        .map(|t| sha256_hex(t.trim()))
+}
+
+/// List the caller's session tokens (login + MCP), without revealing the token
+/// itself — only its hash id, scope, label, and lifetimes.
+pub async fn list_tokens(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+) -> Result<Json<Value>, AppError> {
+    let user = extract_user(&state.pool, &headers).await?;
+    let current = current_token_hash(&headers);
+    let rows = sqlx::query(
+        r#"SELECT token_hash, scope, label,
+                  CAST(created_at AS CHAR) AS created_at,
+                  CAST(expires_at AS CHAR) AS expires_at
+           FROM sessions WHERE user_id = ? ORDER BY created_at DESC"#,
+    )
+    .bind(&user.id)
+    .fetch_all(&state.pool)
+    .await?;
+
+    let tokens: Vec<Value> = rows
+        .iter()
+        .map(|r| {
+            let hash: String = r.try_get("token_hash").unwrap_or_default();
+            json!({
+                "id": hash,
+                "scope": r.try_get::<String, _>("scope").unwrap_or_else(|_| "full".into()),
+                "label": r.try_get::<Option<String>, _>("label").unwrap_or(None),
+                "createdAt": r.try_get::<String, _>("created_at").unwrap_or_default(),
+                "expiresAt": r.try_get::<Option<String>, _>("expires_at").unwrap_or(None),
+                "current": current.as_deref() == Some(hash.as_str()),
+            })
+        })
+        .collect();
+    Ok(Json(json!({ "tokens": tokens })))
+}
+
+/// Mint a new scoped `mcp` token for an AI client. Returns the token **once**.
+/// Only a full-scope session may do this (an MCP token can't spawn more).
+pub async fn create_token(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Json(payload): Json<Value>,
+) -> Result<Json<Value>, AppError> {
+    let user = extract_user(&state.pool, &headers).await?;
+    if user.scope != "full" {
+        return Err(AppError::Forbidden);
+    }
+    let label = payload
+        .get("label")
+        .and_then(|v| v.as_str())
+        .map(|s| s.trim())
+        .filter(|s| !s.is_empty())
+        .unwrap_or("MCP token")
+        .to_string();
+    let ttl_days = payload.get("ttlDays").and_then(|v| v.as_i64()).unwrap_or(90).clamp(1, 365);
+    let token =
+        create_scoped_session(&state.pool, &user.id, "mcp", Some(ttl_days * 86400), Some(&label))
+            .await?;
+    Ok(Json(json!({
+        "token": token,
+        "scope": "mcp",
+        "label": label,
+        "ttlDays": ttl_days,
+    })))
+}
+
+/// Revoke a token by its hash id. Full-scope only.
+pub async fn revoke_token(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Path(token_id): Path<String>,
+) -> Result<StatusCode, AppError> {
+    let user = extract_user(&state.pool, &headers).await?;
+    if user.scope != "full" {
+        return Err(AppError::Forbidden);
+    }
+    let res = sqlx::query("DELETE FROM sessions WHERE token_hash = ? AND user_id = ?")
+        .bind(&token_id)
+        .bind(&user.id)
+        .execute(&state.pool)
+        .await?;
+    if res.rows_affected() == 0 {
+        return Err(AppError::NotFound);
+    }
+    Ok(StatusCode::NO_CONTENT)
 }

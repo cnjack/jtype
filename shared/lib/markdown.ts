@@ -129,17 +129,41 @@ async function renderPlantumlPreview(container: HTMLElement, version: number) {
   );
 }
 
+/**
+ * Convert `[[Note]]` / `[[Note|Label]]` wikilinks into clickable spans carrying
+ * the link target in `data-wikilink`. The platform layer resolves the target to
+ * a vault note on click (see EditorShell's preview click handler).
+ */
+function renderWikilinks(markdown: string): string {
+  return markdown.replace(/\[\[([^\]|\n]+?)(?:\|([^\]\n]+?))?\]\]/g, (_match, target: string, label?: string) => {
+    const targetText = target.trim();
+    const labelText = (label ?? target).trim();
+    const safeTarget = targetText.replace(/"/g, "&quot;");
+    return `<span class="wikilink" role="link" tabindex="0" data-wikilink="${safeTarget}">${escapeHtmlSimple(labelText)}</span>`;
+  });
+}
+
+/**
+ * Replace a ```` ```jtype-board <id> ```` fenced block with an embed placeholder
+ * that the platform layer fills with a read-only mini board (it needs to scan
+ * card-notes, which requires filesystem access not available in this shared module).
+ */
+function replaceBoardEmbeds(html: string): string {
+  return html.replace(
+    /<pre><code class="language-jtype-board">([\s\S]*?)<\/code><\/pre>/g,
+    (_match, id: string) => `<div class="jtype-board-embed" data-board="${id.trim().replace(/"/g, "&quot;")}"></div>`,
+  );
+}
+
 export async function renderMarkdownToHtml(content: string): Promise<string> {
   if (!content.trim()) {
     return '<h2>Empty document</h2><p>Start typing Markdown to preview it here.</p>';
   }
-  const { data, body, hasFrontmatter } = parseFrontmatter(content);
-  let markdownBody = body;
-  if (hasFrontmatter && data.title) {
-    markdownBody = `# ${data.title}\n\n${markdownBody}`;
-  }
-  const rendered = await marked.parse(renderMath(markdownBody));
-  return DOMPurify.sanitize(rendered);
+  // Frontmatter (title/metadata) is not document content, so it is not rendered
+  // into the preview body — the title belongs to the card/property UI, not here.
+  const { body } = parseFrontmatter(content);
+  const rendered = await marked.parse(renderWikilinks(renderMath(body)));
+  return DOMPurify.sanitize(replaceBoardEmbeds(rendered), { ADD_ATTR: ["data-wikilink", "data-board"] });
 }
 
 export async function renderToContainer(content: string, container: HTMLElement): Promise<boolean> {
