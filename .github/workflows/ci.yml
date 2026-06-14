@@ -36,6 +36,18 @@ jobs:
       - name: Test jtype-core
         run: cargo test --locked --manifest-path services/jtype-core/Cargo.toml
 
+      # jtype-web embeds services/jtype-web/frontend/dist via rust-embed. That
+      # dir is gitignored build output and is absent in a clean checkout, so the
+      # Embed derive generates no FrontendAssets::get and the crate fails to
+      # compile (E0599). The Rust tests don't exercise static-asset serving, so a
+      # placeholder dist is enough to compile and test. The real frontend is
+      # built and bundled by docker.yml / release.yml, not by this fast gate.
+      - name: Seed placeholder frontend assets for rust-embed
+        run: |
+          mkdir -p services/jtype-web/frontend/dist
+          echo '<!doctype html><title>ci placeholder</title>' \
+            > services/jtype-web/frontend/dist/index.html
+
       - name: Test jtype-web
         run: cargo test --locked --manifest-path services/jtype-web/Cargo.toml
 
