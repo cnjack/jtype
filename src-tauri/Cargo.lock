@@ -2071,6 +2071,7 @@ version = "0.1.0"
 dependencies = [
  "dirs 5.0.1",
  "futures",
+ "jtype-core",
  "notify",
  "pulldown-cmark",
  "reqwest 0.12.28",
@@ -2085,6 +2086,15 @@ dependencies = [
  "tokio",
  "tokio-tungstenite",
  "winreg 0.52.0",
+]
+
+[[package]]
+name = "jtype-core"
+version = "0.1.0"
+dependencies = [
+ "pulldown-cmark",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

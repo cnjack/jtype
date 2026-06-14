@@ -2,7 +2,7 @@
 name = "jtype-cli"
 version = "0.1.0"
 edition = "2021"
-description = "JType CLI — manage notes and kanban projects from the terminal or AI agents (device-auth, Obsidian vault sync, stdio MCP bridge)."
+description = "JType CLI — local-first Markdown vault + kanban from the terminal or AI agents (device-auth, cwd-vault notes with cloud write-through/sync, stdio MCP bridge)."
 
 [[bin]]
 name = "jtype"
@@ -12,6 +12,7 @@ path = "src/main.rs"
 anyhow = "1"
 clap = { version = "4", features = ["derive", "env"] }
 dirs = "5"
+jtype-core = { path = "../jtype-core" }
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"

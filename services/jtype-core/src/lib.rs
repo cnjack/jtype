@@ -758,7 +758,7 @@ fn sort_nodes(nodes: &mut [FileTreeNode]) {
     });
 }
 
-fn safe_join(root: &Path, relative_path: &str) -> Result<PathBuf, String> {
+pub fn safe_join(root: &Path, relative_path: &str) -> Result<PathBuf, String> {
     if Path::new(relative_path).is_absolute() {
         return Err("Path must be relative to the workspace.".to_string());
     }
@@ -866,7 +866,7 @@ fn page_template(title: &str, body: &str) -> String {
     )
 }
 
-fn extract_title(content: &str) -> Option<String> {
+pub fn extract_title(content: &str) -> Option<String> {
     let frontmatter = parse_frontmatter(content);
     frontmatter
         .get("title")
@@ -1292,7 +1292,7 @@ fn unix_timestamp() -> String {
         .unwrap_or_else(|_| "0".to_string())
 }
 
-fn path_to_string(path: &Path) -> String {
+pub fn path_to_string(path: &Path) -> String {
     path.to_string_lossy().replace('\\', "/")
 }
 

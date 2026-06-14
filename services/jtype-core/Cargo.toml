@@ -1,0 +1,13 @@
+[package]
+name = "jtype-core"
+version = "0.1.0"
+edition = "2021"
+description = "JType vault core: local Markdown vault file IO, frontmatter, sync-base, and trash logic shared by the desktop app and the jtype CLI."
+
+[dependencies]
+pulldown-cmark = "0.13"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[dev-dependencies]
+tempfile = "3"

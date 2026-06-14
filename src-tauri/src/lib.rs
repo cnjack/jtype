@@ -1,6 +1,10 @@
 mod cli_install;
-mod workspace;
 mod ws_client;
+
+// `workspace` now lives in the shared `jtype-core` crate (extracted so the `jtype`
+// CLI can reuse the exact vault logic). Aliased so the existing `workspace::…`
+// call-sites and command wrappers below compile unchanged.
+use jtype_core as workspace;
 
 use notify::Watcher;
 use serde::{Deserialize, Serialize};
