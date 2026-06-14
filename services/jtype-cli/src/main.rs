@@ -320,15 +320,15 @@ async fn run() -> Result<()> {
                 let root = vault::require_vault(cli.vault.as_deref())?;
                 notes::search_notes_local(&root, &query, limit, json)?
             }
-            NoteCmd::Create { path, content, file, title, .. } => {
+            NoteCmd::Create { path, content, file, title, workspace } => {
                 let root = vault::vault_or_init(cli.vault.as_deref())?;
                 let body = notes::read_content(content, file)?;
-                notes::save_note_local(&root, &cfg, &path, &body, title.as_deref(), json).await?
+                notes::save_note_local(&root, &cfg, workspace.as_deref(), &path, &body, title.as_deref(), json).await?
             }
-            NoteCmd::Update { path, content, file, .. } => {
+            NoteCmd::Update { path, content, file, workspace } => {
                 let root = vault::vault_or_init(cli.vault.as_deref())?;
                 let body = notes::read_content(content, file)?;
-                notes::save_note_local(&root, &cfg, &path, &body, None, json).await?
+                notes::save_note_local(&root, &cfg, workspace.as_deref(), &path, &body, None, json).await?
             }
         },
         Command::Bind { workspace } => {

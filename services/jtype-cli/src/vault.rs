@@ -68,8 +68,26 @@ pub fn vault_or_init(explicit: Option<&str>) -> Result<PathBuf> {
 }
 
 pub fn load_binding(vault_root: &Path) -> Option<CloudBinding> {
-    let text = std::fs::read_to_string(binding_path(vault_root)).ok()?;
-    serde_json::from_str(&text).ok()
+    let path = binding_path(vault_root);
+    let text = match std::fs::read_to_string(&path) {
+        Ok(t) => t,
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return None, // simply unbound
+        Err(e) => {
+            eprintln!("warning: cannot read {}: {e}", path.display());
+            return None;
+        }
+    };
+    match serde_json::from_str(&text) {
+        Ok(b) => Some(b),
+        Err(e) => {
+            // Surface corruption instead of silently treating it as "unbound".
+            eprintln!(
+                "warning: {} is corrupt ({e}); treating vault as unbound — re-run `jtype bind`",
+                path.display()
+            );
+            None
+        }
+    }
 }
 
 pub fn save_binding(vault_root: &Path, binding: &CloudBinding) -> Result<()> {
@@ -77,6 +95,10 @@ pub fn save_binding(vault_root: &Path, binding: &CloudBinding) -> Result<()> {
     std::fs::create_dir_all(&dir).with_context(|| format!("creating {}", dir.display()))?;
     let path = binding_path(vault_root);
     let text = serde_json::to_string_pretty(binding)?;
-    std::fs::write(&path, format!("{text}\n")).with_context(|| format!("writing {}", path.display()))?;
+    // Atomic write: temp file in the same dir, then rename — an interrupted write can't
+    // leave a half-written/corrupt cloud.json.
+    let tmp = dir.join("cloud.json.tmp");
+    std::fs::write(&tmp, format!("{text}\n")).with_context(|| format!("writing {}", tmp.display()))?;
+    std::fs::rename(&tmp, &path).with_context(|| format!("finalizing {}", path.display()))?;
     Ok(())
 }

@@ -74,6 +74,7 @@ curl -s "$SERVER/api/v1/workspaces/$WS/documents" -H "authorization: Bearer $TOK
 JTV note list | grep -q "ideas/cli.md" && ok "note list (local)" || no "note list"
 printf '{"id":"b","title":"x"}' > "$VAULT/x.board"
 if JTV note list | grep -q "x.board"; then no "note list excludes .board"; else ok "note list excludes .board"; fi
+rm -f "$VAULT/x.board"   # don't let `sync` push this sentinel board to the live workspace
 JTV note get "ideas/cli.md" | grep -q "Mango" && ok "note get (local)" || no "note get"
 JTV note search "Mango" | grep -q "ideas/cli.md" && ok "note search (local)" || no "note search"
 chk "note update (local + write-through)" JTV note update "ideas/cli.md" --content $'# CLI v2\n\nUpdated body.'

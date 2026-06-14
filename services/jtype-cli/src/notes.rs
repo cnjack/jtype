@@ -75,6 +75,17 @@ fn is_note_path(rel: &str) -> bool {
     jtype_core::is_markdown_path(p) && !jtype_core::is_board_path(p)
 }
 
+/// Note commands operate on Markdown only — reject `.board` kanban configs so
+/// `jtype note create/get/update foo.board` can't read or clobber board metadata.
+fn ensure_note_path(path: &str) -> Result<()> {
+    if jtype_core::is_board_path(Path::new(path)) {
+        return Err(anyhow!(
+            "'{path}' is a kanban board file — use the `board`/`card` commands, not `note`"
+        ));
+    }
+    Ok(())
+}
+
 pub fn list_notes_local(vault_root: &Path, folder: Option<&str>, json: bool) -> Result<()> {
     let docs = jtype_core::collect_sync_documents(vault_root).map_err(|e| anyhow!(e))?;
     let mut docs: Vec<_> = docs.into_iter().filter(|d| is_note_path(&d.relative_path)).collect();
@@ -98,6 +109,7 @@ pub fn list_notes_local(vault_root: &Path, folder: Option<&str>, json: bool) -> 
 }
 
 pub fn get_note_local(vault_root: &Path, path: &str, json: bool) -> Result<()> {
+    ensure_note_path(path)?;
     let content = read_note_file(vault_root, path)?;
     if json {
         emit(true, &json!({ "relativePath": normalize_note_rel(path), "content": content }));
@@ -145,15 +157,19 @@ pub fn search_notes_local(vault_root: &Path, query: &str, limit: usize, json: bo
 }
 
 /// Write a note to the vault (authoritative), then best-effort write-through to cloud.
+/// `workspace` overrides the bound workspace as the write-through target (the
+/// `--workspace` flag); when `None`, the cwd vault's `.jtype/cloud.json` binding is used.
 pub async fn save_note_local(
     vault_root: &Path,
     cfg: &Config,
+    workspace: Option<&str>,
     path: &str,
     content: &str,
     title: Option<&str>,
     json: bool,
 ) -> Result<()> {
     let rel = normalize_note_rel(path);
+    ensure_note_path(&rel)?;
     let target = jtype_core::safe_join(vault_root, &rel).map_err(|e| anyhow!(e))?;
     if let Some(parent) = target.parent() {
         std::fs::create_dir_all(parent).with_context(|| format!("creating {}", parent.display()))?;
@@ -161,7 +177,7 @@ pub async fn save_note_local(
     std::fs::write(&target, content).with_context(|| format!("writing {}", target.display()))?;
 
     let binding = vault::load_binding(vault_root);
-    let cloud = push_note(cfg, binding.as_ref(), &rel, content, title).await;
+    let cloud = push_note(cfg, binding.as_ref(), workspace, &rel, content, title).await;
 
     if json {
         emit(true, &json!({ "relativePath": rel, "saved": true, "cloud": cloud.to_json() }));
@@ -201,22 +217,26 @@ impl CloudResult {
 async fn push_note(
     cfg: &Config,
     binding: Option<&CloudBinding>,
+    workspace: Option<&str>,
     rel: &str,
     content: &str,
     title: Option<&str>,
 ) -> CloudResult {
-    let binding = match binding {
-        Some(b) if b.is_bound() => b,
+    // Target workspace: explicit --workspace wins; else the vault binding.
+    // serverUrl comes from the binding when present, else the CLI default.
+    let server_from = |b: Option<&CloudBinding>| {
+        b.map(|b| b.server_url.clone())
+            .filter(|s| !s.is_empty())
+            .unwrap_or_else(|| cfg.server_url.clone())
+    };
+    let (workspace_id, server) = match (workspace, binding) {
+        (Some(ws), b) => (ws.to_string(), server_from(b)),
+        (None, Some(b)) if b.is_bound() => (b.workspace_id.clone(), server_from(Some(b))),
         _ => return CloudResult::NotBound,
     };
     let token = match cfg.token.as_deref() {
         Some(t) if !t.is_empty() => t,
         _ => return CloudResult::NotLoggedIn,
-    };
-    let server = if binding.server_url.is_empty() {
-        cfg.server_url.clone()
-    } else {
-        binding.server_url.clone()
     };
     let client = ApiClient::new(server, Some(token.to_string()));
     // Omit baseContentHash → last-write-wins (decision B); never 409.
@@ -225,7 +245,7 @@ async fn push_note(
         body["title"] = json!(t);
     }
     match client
-        .post(&format!("/api/v1/workspaces/{}/documents/save", binding.workspace_id), body)
+        .post(&format!("/api/v1/workspaces/{workspace_id}/documents/save"), body)
         .await
     {
         Ok(res) => CloudResult::Pushed(res["mergeStatus"].as_str().unwrap_or("ok").to_string()),

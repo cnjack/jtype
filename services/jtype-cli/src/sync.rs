@@ -61,6 +61,10 @@ pub async fn sync(cfg: &Config, vault_root: &Path, json: bool) -> Result<()> {
     }
 
     // ── Push: upload all local docs (notes + boards), last-write-wins (no baseContentHash).
+    // NOTE (last-write-wins, decision B): pulled content is applied to disk above before
+    // this push snapshot is taken, so for a path changed BOTH locally (write-through having
+    // failed) and remotely, the remote version wins. Conflict-safe sync (3-way merge against
+    // `.jtype/sync-base/`) is the deferred full-engine work; the desktop app is the safety net.
     let local = jtype_core::collect_sync_documents(vault_root).map_err(|e| anyhow!(e))?;
     let documents: Vec<Value> = local
         .iter()
@@ -69,14 +73,12 @@ pub async fn sync(cfg: &Config, vault_root: &Path, json: bool) -> Result<()> {
     let pushed = documents.len();
     let push_body = json!({ "deviceId": DEVICE_ID, "documents": documents });
     let presp = client.post(&format!("/api/v1/workspaces/{ws}/sync/push"), push_body).await?;
-    for d in presp["documents"].as_array().cloned().unwrap_or_default() {
-        if let Some(c) = d["updatedClock"].as_i64() {
-            max_clock = max_clock.max(c);
-        }
-    }
     let conflicts = presp["conflicts"].as_array().map(|a| a.len()).unwrap_or(0);
 
-    // ── Advance the CLI-owned cursor (decision C3).
+    // ── Advance the CLI-owned cursor (decision C3). PULL-ONLY high-water mark: never fold
+    // push-assigned clocks in, or the next pull (sinceClock = this) would skip remote
+    // changes created between our pull and push. Re-pulling our own pushes next time is a
+    // harmless no-op thanks to diff-before-write.
     binding.last_pulled_clock = max_clock;
     vault::save_binding(vault_root, &binding)?;
 
