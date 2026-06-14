@@ -34,6 +34,9 @@ export default defineConfig(async () => ({
   define: {
     __JTYPE_VERSION__: JSON.stringify(appVersion),
     __JTYPE_PACKAGE_VERSION__: JSON.stringify(packageVersion),
+    // @excalidraw/excalidraw reads process.env.IS_PREACT at runtime; without
+    // this define it throws "process is not defined" in the browser.
+    "process.env.IS_PREACT": JSON.stringify("false"),
   },
 
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`

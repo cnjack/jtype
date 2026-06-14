@@ -5,9 +5,10 @@ import { api, getStoredUsername, setSessionId, type WorkspaceSummary, type Docum
 import { renderToContainer } from '@shared/lib/markdown'
 import { parseFrontmatter, writeFrontmatter } from '@shared/lib/frontmatter'
 import type { EditorMode } from '@shared/lib/types'
+import { isDiagramTextPath, isMarkdownPath, resourceTypeForPath } from '@shared/lib/fileTypes'
 import { usePrompt, useConfirm } from '@shared/components/PromptDialogContext'
 import { WebBoardView } from './WebBoardView'
-import { AppVersion } from '@shared/components'
+import { AppVersion, DiagramView } from '@shared/components'
 import { useWorkspaceSocket } from '../hooks/useWorkspaceSocket'
 import { useOfflineSync } from '../hooks/useOfflineSync'
 import { ConflictResolver } from '../components/ConflictResolver'
@@ -41,6 +42,7 @@ import {
   FolderIcon,
   FolderOpenIcon,
   DocumentTextIcon,
+  RectangleGroupIcon,
   StarIcon,
   FolderPlusIcon,
   ArrowsPointingInIcon,
@@ -411,6 +413,21 @@ export function Workspace() {
     if (created) void openDocument(created.id)
   }
 
+  // Create a diagram resource (Mermaid/Excalidraw) with starter content. The
+  // relativePath already carries the right extension.
+  async function createDiagramWeb(relativePath: string, content: string, baseDir: string) {
+    if (!workspaceId || !canEditContent) return
+    const trimmed = relativePath.trim()
+    if (!trimmed) return
+    const full = baseDir ? `${baseDir.replace(/\/+$/, '')}/${trimmed}` : trimmed
+    await api.saveDocument(workspaceId, { relativePath: full, content })
+    const docs = await api.listDocuments(workspaceId)
+    setDocuments(docs)
+    setFolders(await api.listFolders(workspaceId))
+    const created = docs.find((d) => d.relativePath === full)
+    if (created) void openDocument(created.id)
+  }
+
   // Seed a default kanban config so the web renders the new `.board` as a board.
   async function createBoardWeb(name: string, baseDir: string) {
     if (!workspaceId || !canEditContent) return
@@ -730,6 +747,10 @@ export function Workspace() {
 
   const selectedDocument = selectedDoc ? documents.find(d => d.id === selectedDoc) ?? null : null
   const isBoardFile = selectedDocument?.relativePath?.toLowerCase().endsWith('.board') ?? false
+  // Diagram resources (Mermaid/Draw.io/Excalidraw/Swagger) render in their own viewer.
+  const isDiagramFile = selectedDocument ? isDiagramTextPath(selectedDocument.relativePath) : false
+  // Only Markdown documents are publishable (diagrams/boards are opaque content).
+  const isMarkdownDoc = selectedDocument ? isMarkdownPath(selectedDocument.relativePath) : false
   const documentLocation = selectedDocument?.relativePath && selectedDocument.relativePath.includes('/') ? selectedDocument.relativePath.replace(/\/[^/]+$/, '') : ''
   const fileName = selectedDocument?.relativePath ? selectedDocument.relativePath.split('/').pop() || '' : ''
   const isFavorite = selectedDoc ? (() => {
@@ -745,9 +766,10 @@ export function Workspace() {
   const isPublished = publishState?.isPublished ?? selectedDocument?.isPublished ?? false
   const hasUnpublishedChanges = Boolean(isPublished && (dirty || publishState?.hasUnpublishedChanges))
   const publishedDocuments = useMemo(() => documents.filter(doc => doc.isPublished), [documents])
-  const unpublishedDocuments = useMemo(() => documents.filter(doc => !doc.isPublished), [documents])
-  // `.board` files are board views, not Markdown documents — exclude from counts.
-  const markdownDocs = useMemo(() => documents.filter(doc => !doc.relativePath.toLowerCase().endsWith('.board')), [documents])
+  // Only Markdown drafts are publishable — exclude diagrams/boards from bulk publish.
+  const unpublishedDocuments = useMemo(() => documents.filter(doc => !doc.isPublished && isMarkdownPath(doc.relativePath)), [documents])
+  // Boards and diagram resources are not Markdown documents — exclude from counts.
+  const markdownDocs = useMemo(() => documents.filter(doc => isMarkdownPath(doc.relativePath)), [documents])
   const boundDomains = workspace ? domains.filter(domain => domain.workspaceId === workspace.id) : []
   const availableDomains = workspace ? domains.filter(domain => !domain.workspaceId || domain.workspaceId === workspace.id) : []
   const verifiedDomains = boundDomains.filter(domain => domain.status === 'verified')
@@ -806,6 +828,7 @@ export function Workspace() {
         onClose={() => setCreateDialogOpen(false)}
         onCreateDocument={(name, baseDir) => { void createDocumentWeb(name, baseDir) }}
         onCreateBoard={(name, baseDir) => { void createBoardWeb(name, baseDir) }}
+        onCreateDiagram={(relativePath, content, baseDir) => { void createDiagramWeb(relativePath, content, baseDir) }}
       />
 
       {activeSection === 'documents' && (
@@ -928,7 +951,7 @@ export function Workspace() {
                 </div>
                 <div className="header-action-group">
                   {!dirty || <span className="status-chip status-chip-warning"><Trans>Unsaved</Trans></span>}
-                  {selectedDoc && canEditContent && (!isPublished || hasUnpublishedChanges) && (
+                  {selectedDoc && isMarkdownDoc && canEditContent && (!isPublished || hasUnpublishedChanges) && (
                     <span className="header-tooltip header-tooltip-end group">
                       <button
                         className={`header-icon-button ${
@@ -949,7 +972,7 @@ export function Workspace() {
                       </button>
                     </span>
                   )}
-                  {isPublished && canEditContent && (
+                  {isPublished && isMarkdownDoc && canEditContent && (
                     <button
                       className="header-icon-button header-icon-button-danger"
                       type="button"
@@ -1002,6 +1025,17 @@ export function Workspace() {
                   </div>
                 </div>
               )}
+              {isDiagramFile && selectedDocument ? (
+                <div className="min-h-0 flex-1">
+                  <DiagramView
+                    path={selectedDocument.relativePath}
+                    content={docContent}
+                    editable={canEditContent}
+                    onChange={(next) => { setDocContent(next); setDirty(true) }}
+                  />
+                </div>
+              ) : (
+              <>
               <div className="editor-toolbar-row flex min-h-12 items-center gap-1 border-b border-black/[0.04] bg-[#fbfdfb] px-5">
                 <button
                   type="button"
@@ -1152,6 +1186,8 @@ export function Workspace() {
                   </aside>
                 )}
               </div>
+              </>
+              )}
             </>
             )
           ) : (
@@ -2980,7 +3016,7 @@ function WebDocExplorer({
                   <PencilIcon className="mr-2 h-3.5 w-3.5" /><Trans>Rename</Trans>
                 </button>
               )}
-              {!readOnly && (
+              {!readOnly && isMarkdownPath(treeContextMenu.node.doc?.relativePath ?? '') && (
                 <>
                   <div className="my-1 border-t border-stone-200" />
                   <button
@@ -3028,6 +3064,22 @@ function WebDocExplorer({
       )}
     </div>
   )
+}
+
+/** Tree icon for a document node, distinguishing diagram resources by type. */
+function docTreeIcon(name: string) {
+  switch (resourceTypeForPath(name).id) {
+    case 'mermaid':
+      return ShareIcon
+    case 'drawio':
+      return RectangleGroupIcon
+    case 'excalidraw':
+      return PencilSquareIcon
+    case 'swagger':
+      return CodeBracketIcon
+    default:
+      return DocumentTextIcon
+  }
 }
 
 const WebTreeNodeRow = memo(function WebTreeNodeRow({
@@ -3079,7 +3131,12 @@ const WebTreeNodeRow = memo(function WebTreeNodeRow({
           </span>
         ) : null}
         <span className="shrink-0 text-[#8a9691]">
-          {isFolder ? <FolderIcon className="h-3.5 w-3.5" /> : isBoard ? <ViewColumnsIcon className="h-3.5 w-3.5" /> : <DocumentTextIcon className="h-3.5 w-3.5" />}
+          {(() => {
+            if (isFolder) return <FolderIcon className="h-3.5 w-3.5" />
+            if (isBoard) return <ViewColumnsIcon className="h-3.5 w-3.5" />
+            const DocIcon = docTreeIcon(node.name)
+            return <DocIcon className="h-3.5 w-3.5" />
+          })()}
         </span>
         <span className={`truncate ${isFolder ? 'font-semibold text-[#4b5753]' : ''}`}>{node.name}</span>
         {!isFolder && node.doc?.isPublished && (

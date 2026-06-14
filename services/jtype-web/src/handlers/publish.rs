@@ -137,6 +137,13 @@ pub async fn publish_document(
     .ok_or(AppError::NotFound)?;
 
     let relative_path: String = doc_row.try_get("relative_path")?;
+    // `.board` views and diagram resources are opaque content — never publish them
+    // (the public site would render their raw source as broken Markdown).
+    if is_board_path(&relative_path) || is_diagram_path(&relative_path) {
+        return Err(AppError::BadRequest(
+            "Only Markdown documents can be published.".to_string(),
+        ));
+    }
     let title: String = doc_row.try_get("title")?;
     let content: String = doc_row.try_get("content")?;
     let content_hash: String = doc_row.try_get("content_hash")?;
@@ -467,6 +474,12 @@ async fn do_publish_one(
     .ok_or(AppError::NotFound)?;
 
     let relative_path: String = row.try_get("relative_path")?;
+    // `.board` views and diagram resources are opaque content — never publish them.
+    if is_board_path(&relative_path) || is_diagram_path(&relative_path) {
+        return Err(AppError::BadRequest(
+            "Only Markdown documents can be published.".to_string(),
+        ));
+    }
     let title: String = row.try_get("title")?;
     let content: String = row.try_get("content")?;
     let content_hash: String = row.try_get("content_hash")?;

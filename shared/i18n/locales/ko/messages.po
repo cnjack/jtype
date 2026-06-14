@@ -131,6 +131,18 @@ msgstr "확인"
 msgid "Copy link"
 msgstr ""
 
+#: ../../../shared/components/viewers/SwaggerView.tsx
+msgid "Could not render this API specification."
+msgstr ""
+
+#: ../../../shared/components/viewers/DrawioView.tsx
+msgid "Could not render this Draw.io diagram."
+msgstr ""
+
+#: ../../../shared/components/viewers/PdfView.tsx
+msgid "Could not render this PDF."
+msgstr ""
+
 #: ../../../shared/components/board/BoardSurface.tsx
 msgid "Delete"
 msgstr ""
@@ -139,12 +151,20 @@ msgstr ""
 msgid "Delete card"
 msgstr ""
 
+#: ../../../shared/components/viewers/MermaidView.tsx
+msgid "Diagram error"
+msgstr ""
+
 #: ../../../shared/components/board/BoardSurface.tsx
 msgid "Done column"
 msgstr ""
 
 #: ../../../shared/components/board/BoardSurface.tsx
 msgid "Drag to resize"
+msgstr ""
+
+#: ../../../shared/components/viewers/DrawioView.tsx
+msgid "Draw.io diagram"
 msgstr ""
 
 #: ../../../shared/components/board/BoardPeek.tsx
@@ -162,6 +182,12 @@ msgstr ""
 
 #: ../../../shared/components/board/BoardSurface.tsx
 msgid "Filter"
+msgstr ""
+
+#: ../../../shared/components/viewers/MermaidView.tsx
+msgid ""
+"flowchart TD\n"
+"  A[Start] --> B[End]"
 msgstr ""
 
 #: ../../../shared/components/board/BoardSurface.tsx
@@ -204,6 +230,14 @@ msgstr "링크 (Ctrl+K)"
 msgid "Local (yours)"
 msgstr "로컈 (내 것)"
 
+#: ../../../shared/components/viewers/MermaidView.tsx
+msgid "Mermaid diagram"
+msgstr ""
+
+#: ../../../shared/components/viewers/MermaidView.tsx
+msgid "Mermaid source"
+msgstr ""
+
 #: ../../../shared/components/board/BoardSurface.tsx
 msgid "New card"
 msgstr ""
@@ -239,6 +273,10 @@ msgstr ""
 
 #: ../../../shared/components/board/BoardPeek.tsx
 msgid "Open in full editor"
+msgstr ""
+
+#: ../../../shared/components/viewers/PdfView.tsx
+msgid "PDF document"
 msgstr ""
 
 #: ../../../shared/components/PromptDialog.tsx
@@ -332,6 +370,10 @@ msgstr ""
 msgid "Templates"
 msgstr ""
 
+#: ../../../shared/components/viewers/DiagramView.tsx
+msgid "This file type can not be previewed yet."
+msgstr ""
+
 #: ../../../shared/components/board/BoardTable.tsx
 msgid "Title"
 msgstr ""
@@ -361,3 +403,7 @@ msgstr ""
 #: ../../../shared/components/ViewModeToggle.tsx
 msgid "Write"
 msgstr "작성"
+
+#: ../../../shared/components/viewers/MermaidView.tsx
+msgid "Write Mermaid syntax to see the diagram."
+msgstr ""

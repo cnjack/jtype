@@ -1,4 +1,5 @@
 allowBuilds:
+  '@scarf/scarf': set this to true or false
   core-js: true
   esbuild: true
 overrides:

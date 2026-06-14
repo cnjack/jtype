@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
@@ -14,9 +14,12 @@ import { tauri } from "../../lib/tauri";
 import { basename } from "../../lib/utils";
 import { resourceTypeForPath, mimeForPath } from "@shared/lib/fileTypes";
 
+// pdf.js is heavy; only load it when a PDF is actually opened.
+const PdfView = lazy(() => import("@shared/components/viewers/PdfView"));
+
 type LoadState =
   | { status: "loading" }
-  | { status: "ready"; url: string; size: number }
+  | { status: "ready"; url: string; size: number; bytes: Uint8Array }
   | { status: "unavailable" }
   | { status: "error"; message: string };
 
@@ -60,7 +63,7 @@ export function ResourceViewer({ path, relativePath }: { path: string; relativeP
       return;
     }
     if (def.viewer === "none") {
-      setState({ status: "ready", url: "", size: 0 });
+      setState({ status: "ready", url: "", size: 0, bytes: new Uint8Array() });
       return;
     }
 
@@ -72,7 +75,7 @@ export function ResourceViewer({ path, relativePath }: { path: string; relativeP
         const buffer = new Uint8Array(bytes);
         const blob = new Blob([buffer], { type: mimeForPath(path) });
         objectUrl = URL.createObjectURL(blob);
-        setState({ status: "ready", url: objectUrl, size: buffer.byteLength });
+        setState({ status: "ready", url: objectUrl, size: buffer.byteLength, bytes: buffer });
       })
       .catch((error) => {
         if (revoked) return;
@@ -153,21 +156,15 @@ export function ResourceViewer({ path, relativePath }: { path: string; relativeP
         )}
 
         {state.status === "ready" && def.viewer === "pdf" && (
-          <object data={state.url} type="application/pdf" className="h-full w-full">
-            <div className="flex h-full flex-col items-center justify-center gap-3 p-8 text-center">
-              <DocumentIcon className="h-10 w-10 text-brand-gray" />
-              <p className="text-sm text-stone-600">
-                <Trans>This PDF can not be previewed inline.</Trans>
-              </p>
-              <button
-                type="button"
-                className="rounded-lg bg-brand-dark px-3 py-1.5 text-sm font-medium text-white hover:bg-[#005854]"
-                onClick={openInOs}
-              >
-                <Trans>Open in system app</Trans>
-              </button>
-            </div>
-          </object>
+          <Suspense
+            fallback={
+              <div className="flex h-full items-center justify-center">
+                <div className="h-24 w-40 animate-pulse rounded-xl bg-stone-200/70" aria-label={t`Loading preview`} />
+              </div>
+            }
+          >
+            <PdfView data={state.bytes} />
+          </Suspense>
         )}
 
         {state.status === "ready" && def.viewer === "none" && (

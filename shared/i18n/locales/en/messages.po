@@ -131,6 +131,18 @@ msgstr "Confirm"
 msgid "Copy link"
 msgstr "Copy link"
 
+#: ../../../shared/components/viewers/SwaggerView.tsx
+msgid "Could not render this API specification."
+msgstr "Could not render this API specification."
+
+#: ../../../shared/components/viewers/DrawioView.tsx
+msgid "Could not render this Draw.io diagram."
+msgstr "Could not render this Draw.io diagram."
+
+#: ../../../shared/components/viewers/PdfView.tsx
+msgid "Could not render this PDF."
+msgstr "Could not render this PDF."
+
 #: ../../../shared/components/board/BoardSurface.tsx
 msgid "Delete"
 msgstr "Delete"
@@ -139,6 +151,10 @@ msgstr "Delete"
 msgid "Delete card"
 msgstr "Delete card"
 
+#: ../../../shared/components/viewers/MermaidView.tsx
+msgid "Diagram error"
+msgstr "Diagram error"
+
 #: ../../../shared/components/board/BoardSurface.tsx
 msgid "Done column"
 msgstr "Done column"
@@ -146,6 +162,10 @@ msgstr "Done column"
 #: ../../../shared/components/board/BoardSurface.tsx
 msgid "Drag to resize"
 msgstr "Drag to resize"
+
+#: ../../../shared/components/viewers/DrawioView.tsx
+msgid "Draw.io diagram"
+msgstr "Draw.io diagram"
 
 #: ../../../shared/components/board/BoardPeek.tsx
 #: ../../../shared/components/board/BoardTable.tsx
@@ -163,6 +183,14 @@ msgstr "Expand column"
 #: ../../../shared/components/board/BoardSurface.tsx
 msgid "Filter"
 msgstr "Filter"
+
+#: ../../../shared/components/viewers/MermaidView.tsx
+msgid ""
+"flowchart TD\n"
+"  A[Start] --> B[End]"
+msgstr ""
+"flowchart TD\n"
+"  A[Start] --> B[End]"
 
 #: ../../../shared/components/board/BoardSurface.tsx
 msgid "Group: Assignee"
@@ -204,6 +232,14 @@ msgstr "Link (Ctrl+K)"
 msgid "Local (yours)"
 msgstr "Local (yours)"
 
+#: ../../../shared/components/viewers/MermaidView.tsx
+msgid "Mermaid diagram"
+msgstr "Mermaid diagram"
+
+#: ../../../shared/components/viewers/MermaidView.tsx
+msgid "Mermaid source"
+msgstr "Mermaid source"
+
 #: ../../../shared/components/board/BoardSurface.tsx
 msgid "New card"
 msgstr "New card"
@@ -240,6 +276,10 @@ msgstr "Open in editor"
 #: ../../../shared/components/board/BoardPeek.tsx
 msgid "Open in full editor"
 msgstr "Open in full editor"
+
+#: ../../../shared/components/viewers/PdfView.tsx
+msgid "PDF document"
+msgstr "PDF document"
 
 #: ../../../shared/components/PromptDialog.tsx
 msgid "Please enter a value."
@@ -332,6 +372,10 @@ msgstr "Tags"
 msgid "Templates"
 msgstr "Templates"
 
+#: ../../../shared/components/viewers/DiagramView.tsx
+msgid "This file type can not be previewed yet."
+msgstr "This file type can not be previewed yet."
+
 #: ../../../shared/components/board/BoardTable.tsx
 msgid "Title"
 msgstr "Title"
@@ -361,3 +405,7 @@ msgstr "WIP limit {0}"
 #: ../../../shared/components/ViewModeToggle.tsx
 msgid "Write"
 msgstr "Write"
+
+#: ../../../shared/components/viewers/MermaidView.tsx
+msgid "Write Mermaid syntax to see the diagram."
+msgstr "Write Mermaid syntax to see the diagram."

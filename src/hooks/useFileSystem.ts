@@ -7,6 +7,7 @@ import { usePrompt, useConfirm } from "@shared/components/PromptDialogContext";
 import { tauri } from "../lib/tauri";
 import { httpRequest } from "@shared/lib/http";
 import { basename, isMarkdownPath, relativePathFromWorkspace, normalizePath } from "../lib/utils";
+import { isEditableResourcePath, isDiagramTextPath, isViewableAssetPath } from "@shared/lib/fileTypes";
 import { writeFrontmatter, titleFromMarkdown } from "@shared/lib/frontmatter";
 import type { RecentItem, FileTreeNode, BoardConfig } from "../lib/types";
 import { markdownNodes, extractMarkdownLinks } from "../lib/utils";
@@ -82,6 +83,26 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     }
   }, [dispatch, state.workspace]);
 
+  const openDiagramFile = useCallback(async (path: string, relativePath = "") => {
+    try {
+      dispatch({ type: "SET_LOADING", isLoading: true });
+      dispatch({ type: "SET_STATUS", message: "Opening..." });
+      const content = await tauri.readDiagramFile(path);
+      const derivedRelativePath = relativePath || (state.workspace ? relativePathFromWorkspace(path, state.workspace.rootPath) : "");
+      if (!relativePath && state.workspace && !derivedRelativePath) {
+        // File is outside the current vault — switch to single-file mode
+        dispatch({ type: "CLOSE_WORKSPACE" });
+      }
+      dispatch({ type: "OPEN_FILE", path, relativePath: derivedRelativePath, content, kind: "diagram" });
+      dispatch({ type: "SET_STATUS", message: `Opened ${derivedRelativePath || basename(path)}.` });
+      addRecent({ kind: "file", name: basename(path), path });
+    } catch (error) {
+      dispatch({ type: "SET_STATUS", message: String(error) });
+    } finally {
+      dispatch({ type: "SET_LOADING", isLoading: false });
+    }
+  }, [dispatch, state.workspace]);
+
   const chooseMarkdownFile = useCallback(async () => {
     if (!tauri.isAvailable) return;
     try {
@@ -141,7 +162,11 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
   }, [dispatch]);
 
   const saveCurrentFile = useCallback(async () => {
-    if (!state.currentPath || state.currentKind !== "markdown") return;
+    if (!state.currentPath) return;
+    const isMarkdownDoc = state.currentKind === "markdown";
+    // Editable diagram resources (Mermaid `.mmd`, Excalidraw) save as text too.
+    const isEditableDiagram = state.currentKind === "diagram" && isEditableResourcePath(state.currentPath);
+    if (!isMarkdownDoc && !isEditableDiagram) return;
     if (isCloudViewer) {
       dispatch({ type: "SET_STATUS", message: "Viewer access is read-only." });
       return;
@@ -149,7 +174,11 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     try {
       dispatch({ type: "SET_LOADING", isLoading: true });
       dispatch({ type: "SET_STATUS", message: "Saving..." });
-      await tauri.writeFile(state.currentPath, state.editorContent);
+      if (isMarkdownDoc) {
+        await tauri.writeFile(state.currentPath, state.editorContent);
+      } else {
+        await tauri.writeDiagramFile(state.currentPath, state.editorContent);
+      }
       dispatch({ type: "SAVE_FILE" });
       dispatch({ type: "SET_STATUS", message: `Saved ${state.currentRelativePath || basename(state.currentPath)}.` });
       await onAfterSaveRef.current?.();
@@ -219,6 +248,43 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
   }, [dispatch, isCloudViewer, state.workspace, openMarkdownFile, getCloudContext, cloudRest]);
 
   /**
+   * Create a new diagram resource (Mermaid `.mmd`, Excalidraw `.excalidraw`, …)
+   * with starter content and open it in-pane. `relativePath` must already carry
+   * the correct extension.
+   */
+  const createDiagram = useCallback(async (relativePath: string, starter = "", baseDir = "") => {
+    if (!state.workspace) return;
+    if (isCloudViewer) {
+      dispatch({ type: "SET_STATUS", message: "Viewer access is read-only." });
+      return;
+    }
+    let trimmed = relativePath.trim();
+    if (!trimmed) return;
+    if (baseDir && !trimmed.includes("/")) {
+      trimmed = `${baseDir.replace(/\/+$/, "")}/${trimmed}`;
+    }
+    try {
+      dispatch({ type: "SET_LOADING", isLoading: true });
+      const workspace = await tauri.createEntry(state.workspace.rootPath, trimmed, "diagram");
+      const fullPath = `${workspace.rootPath}/${trimmed}`;
+      if (starter) await tauri.writeDiagramFile(fullPath, starter);
+      dispatch({ type: "UPDATE_WORKSPACE", workspace });
+      await openDiagramFile(fullPath, trimmed);
+      // Notify cloud so web clients see the new file immediately.
+      if (tauri.isAvailable && getCloudContext()) {
+        try {
+          const content = await tauri.readDiagramFile(fullPath);
+          await cloudRest("/documents/save", "POST", { relativePath: trimmed, title: "", content });
+        } catch { /* non-critical */ }
+      }
+    } catch (error) {
+      dispatch({ type: "SET_STATUS", message: String(error) });
+    } finally {
+      dispatch({ type: "SET_LOADING", isLoading: false });
+    }
+  }, [dispatch, isCloudViewer, state.workspace, openDiagramFile, getCloudContext, cloudRest]);
+
+  /**
    * Create a new `.board` view file (kanban over card-notes) and open it in-pane.
    * The board's cards are ordinary `.md` notes with `board: <id>` frontmatter.
    */
@@ -281,29 +347,50 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
       const selected = await open({
         multiple: false,
         directory: false,
-        filters: [{ name: "Files", extensions: ["png", "jpg", "jpeg", "gif", "webp", "svg", "pdf"] }],
+        filters: [
+          {
+            name: "Files",
+            extensions: [
+              "png", "jpg", "jpeg", "gif", "webp", "svg", "pdf",
+              "drawio", "excalidraw", "mmd", "mermaid", "json", "yaml", "yml",
+            ],
+          },
+        ],
       });
       if (!selected) return;
       const sourcePath = Array.isArray(selected) ? selected[0] : selected;
       if (!sourcePath) return;
-      dispatch({ type: "SET_LOADING", isLoading: true });
-      const bytes = await tauri.readBinaryFile(sourcePath);
       const fileName = basename(sourcePath);
       const relativePath = targetFolder ? `${targetFolder.replace(/\/+$/, "")}/${fileName}` : fileName;
-      await tauri.createEntry(state.workspace.rootPath, relativePath, "asset");
+      // Diagram resources (Mermaid/Draw.io/Excalidraw/Swagger) are text files with
+      // their own viewer; recognized images/PDFs are binary assets. Anything else
+      // (e.g. a non-Swagger .json/.yaml) wouldn't appear in the tree, so reject it
+      // rather than copy an invisible orphan into the vault.
+      const isDiagram = isDiagramTextPath(relativePath);
+      if (!isDiagram && !isViewableAssetPath(relativePath)) {
+        dispatch({ type: "SET_STATUS", message: `Can not import ${fileName}: unsupported file type.` });
+        return;
+      }
+      dispatch({ type: "SET_LOADING", isLoading: true });
+      const bytes = await tauri.readBinaryFile(sourcePath);
+      await tauri.createEntry(state.workspace.rootPath, relativePath, isDiagram ? "diagram" : "asset");
       const destPath = `${state.workspace.rootPath}/${relativePath}`;
       await tauri.writeBinaryFile(destPath, Array.from(bytes));
       const workspace = await tauri.openWorkspace(state.workspace.rootPath);
       dispatch({ type: "UPDATE_WORKSPACE", workspace });
-      const node: FileTreeNode = { name: fileName, path: destPath, relativePath, kind: "asset", children: [] };
-      dispatch({ type: "SELECT_TREE_NODE", node });
+      if (isDiagram) {
+        await openDiagramFile(destPath, relativePath);
+      } else {
+        const node: FileTreeNode = { name: fileName, path: destPath, relativePath, kind: "asset", children: [] };
+        dispatch({ type: "SELECT_TREE_NODE", node });
+      }
       dispatch({ type: "SET_STATUS", message: `Imported ${relativePath}.` });
     } catch (error) {
       dispatch({ type: "SET_STATUS", message: String(error) });
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, isCloudViewer, state.workspace]);
+  }, [dispatch, isCloudViewer, state.workspace, openDiagramFile]);
 
   const renameEntry = useCallback(async (fromRelativePath: string, toRelativePath: string, updateLinks: boolean) => {
     if (!state.workspace) return;
@@ -319,6 +406,9 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
       if (updateLinks) await updateLinksAfterRename(impacted, fromRelativePath, toRelativePath);
       if (isMarkdownPath(toRelativePath)) {
         await openMarkdownFile(`${workspace.rootPath}/${toRelativePath}`, toRelativePath);
+      } else if (isDiagramTextPath(toRelativePath)) {
+        // Re-point the editor at the renamed diagram so saves don't target the old path.
+        await openDiagramFile(`${workspace.rootPath}/${toRelativePath}`, toRelativePath);
       } else {
         dispatch({ type: "SET_STATUS", message: `Renamed entry to ${toRelativePath}.` });
       }
@@ -330,7 +420,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, isCloudViewer, state.workspace, openMarkdownFile, getCloudContext, cloudRest]);
+  }, [dispatch, isCloudViewer, state.workspace, openMarkdownFile, openDiagramFile, getCloudContext, cloudRest]);
 
   const renameCurrentEntry = useCallback(async () => {
     if (!state.workspace || !state.currentRelativePath) return;
@@ -767,6 +857,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
 
   return {
     openMarkdownFile,
+    openDiagramFile,
     chooseMarkdownFile,
     chooseWorkspaceFolder,
     openWorkspace,
@@ -774,6 +865,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     saveCurrentFile,
     exportCurrentMarkdown,
     createDocument,
+    createDiagram,
     createBoard,
     importAsset,
     renameCurrentEntry,

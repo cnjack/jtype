@@ -198,6 +198,19 @@ fn read_board_file(path: String) -> Result<String, String> {
     fs::read_to_string(PathBuf::from(path)).map_err(|error| error.to_string())
 }
 
+/// Read a diagram/text resource (Mermaid/Draw.io/Excalidraw/Swagger) as text,
+/// bypassing the Markdown-only gate.
+#[tauri::command]
+fn read_text_file(path: String) -> Result<String, String> {
+    workspace::read_text(&PathBuf::from(path))
+}
+
+/// Write a diagram/text resource as text, creating parent directories as needed.
+#[tauri::command]
+fn write_text_file(path: String, content: String) -> Result<(), String> {
+    workspace::write_text(&PathBuf::from(path), &content)
+}
+
 /// Write a `.board` view file (plain text/JSON), creating parent dirs as needed.
 #[tauri::command]
 fn write_board_file(path: String, content: String) -> Result<(), String> {
@@ -396,7 +409,10 @@ fn apply_cloud_documents(
         fs::create_dir_all(target).map_err(|error| error.to_string())?;
     }
     for document in documents {
-        if !workspace::is_markdown_path(&PathBuf::from(&document.relative_path)) {
+        let doc_path = PathBuf::from(&document.relative_path);
+        // Markdown and diagram resources (Mermaid/Draw.io/Excalidraw/Swagger) both
+        // sync down as text. (`.board` views keep their existing behaviour.)
+        if !(workspace::is_markdown_path(&doc_path) || workspace::is_diagram_path(&doc_path)) {
             continue;
         }
         let target = safe_join(&root, &document.relative_path)?;
@@ -842,6 +858,8 @@ pub fn run() {
             create_workspace_entry,
             read_board_file,
             write_board_file,
+            read_text_file,
+            write_text_file,
             create_board,
             scan_board_cards,
             scan_card_templates,

@@ -16,6 +16,10 @@ pub enum EntryKind {
     Asset,
     /// A `.board` view file (JSON config) — a kanban board over card-notes.
     Board,
+    /// A text-based file with a dedicated in-app viewer/editor (Mermaid `.mmd`,
+    /// Draw.io `.drawio`, Excalidraw `.excalidraw`, or a Swagger/OpenAPI spec).
+    /// Syncs as a text document like Markdown — see `is_diagram_path`.
+    Diagram,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
@@ -168,6 +172,67 @@ pub fn write_markdown(path: &Path, content: &str) -> Result<(), String> {
     fs::write(path, content).map_err(|error| error.to_string())
 }
 
+/// True for text-based files that render in a dedicated in-app viewer/editor:
+/// Mermaid (`.mmd`/`.mermaid`), Draw.io (`.drawio`), Excalidraw (`.excalidraw`),
+/// and Swagger/OpenAPI specs (by filename convention). `.drawio.svg`/`.png`
+/// exports are images and stay on the asset path. Mirrors `isDiagramTextPath`
+/// in shared/lib/fileTypes.ts.
+pub fn is_diagram_path(path: &Path) -> bool {
+    if is_swagger_path(path) {
+        return true;
+    }
+    path.extension()
+        .and_then(|value| value.to_str())
+        .map(|extension| {
+            matches!(
+                extension.to_ascii_lowercase().as_str(),
+                "mmd" | "mermaid" | "drawio" | "excalidraw"
+            )
+        })
+        .unwrap_or(false)
+}
+
+/// Swagger/OpenAPI specs are detected by filename convention so we never claim
+/// every `.json`/`.yaml` file: `swagger.json`, `openapi.yaml`, `api.swagger.yml`,
+/// `petstore-openapi.json`. Mirrors `isSwaggerPath` in shared/lib/fileTypes.ts.
+fn is_swagger_path(path: &Path) -> bool {
+    let Some(name) = path.file_name().and_then(|value| value.to_str()) else {
+        return false;
+    };
+    let name = name.to_ascii_lowercase();
+    let stem = match name.strip_suffix(".json") {
+        Some(stem) => stem,
+        None => match name.strip_suffix(".yaml") {
+            Some(stem) => stem,
+            None => match name.strip_suffix(".yml") {
+                Some(stem) => stem,
+                None => return false,
+            },
+        },
+    };
+    stem == "swagger"
+        || stem == "openapi"
+        || stem.ends_with(".swagger")
+        || stem.ends_with("-swagger")
+        || stem.ends_with("_swagger")
+        || stem.ends_with(".openapi")
+        || stem.ends_with("-openapi")
+        || stem.ends_with("_openapi")
+}
+
+/// Read a diagram/text resource (no Markdown extension gate).
+pub fn read_text(path: &Path) -> Result<String, String> {
+    fs::read_to_string(path).map_err(|error| error.to_string())
+}
+
+/// Write a diagram/text resource, creating parent directories as needed.
+pub fn write_text(path: &Path, content: &str) -> Result<(), String> {
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent).map_err(|error| error.to_string())?;
+    }
+    fs::write(path, content).map_err(|error| error.to_string())
+}
+
 /// Walk up from a file path to find the nearest ancestor directory containing `.jtype`.
 /// Returns `None` if no vault root is found.
 pub fn detect_vault_root(file_path: &Path) -> Option<PathBuf> {
@@ -216,7 +281,7 @@ pub fn create_entry(root: &Path, relative_path: &str, kind: EntryKind) -> Result
     let target = safe_join(root, relative_path)?;
     match kind {
         EntryKind::Folder => fs::create_dir_all(target).map_err(|error| error.to_string()),
-        EntryKind::Markdown | EntryKind::Asset | EntryKind::Board => {
+        EntryKind::Markdown | EntryKind::Asset | EntryKind::Board | EntryKind::Diagram => {
             if let Some(parent) = target.parent() {
                 fs::create_dir_all(parent).map_err(|error| error.to_string())?;
             }
@@ -371,24 +436,27 @@ pub fn validate_workspace(root: &Path) -> Result<ValidationResult, String> {
 }
 
 pub fn collect_sync_documents(root: &Path) -> Result<Vec<SyncDocument>, String> {
-    let mut markdown_files = collect_markdown_files(root)?;
+    let mut files = collect_markdown_files(root)?;
     // `.board` view files sync too (opaque JSON content) so the cloud/web can
     // render the board over the same card notes.
-    markdown_files.extend(collect_board_files(root)?);
+    files.extend(collect_board_files(root)?);
+    // Diagram resources (Mermaid/Draw.io/Excalidraw/Swagger) are text and sync as
+    // opaque documents so they render/edit on the web too.
+    files.extend(collect_diagram_files(root)?);
     let mut documents = Vec::new();
 
-    for file in markdown_files {
+    for file in files {
         let relative = file.strip_prefix(root).map_err(|error| error.to_string())?;
         if relative.starts_with(".jtype") {
             continue;
         }
 
         let content = fs::read_to_string(&file).map_err(|error| error.to_string())?;
-        // `.board` files are opaque JSON config — never publish them, and don't
-        // parse them as Markdown frontmatter.
-        let (title, status) = if is_board_path(&file) {
+        // `.board` and diagram files are opaque content — never publish them, and
+        // don't parse them as Markdown frontmatter.
+        let (title, status) = if is_board_path(&file) || is_diagram_path(&file) {
             (
-                file.file_stem().and_then(|v| v.to_str()).unwrap_or("board").to_string(),
+                file.file_stem().and_then(|v| v.to_str()).unwrap_or("document").to_string(),
                 "draft".to_string(),
             )
         } else {
@@ -720,7 +788,11 @@ fn read_children(root: &Path, current: &Path) -> Result<Vec<FileTreeNode>, Strin
                 kind: EntryKind::Folder,
                 children,
             });
-        } else if is_markdown_path(&path) || is_board_path(&path) || is_asset_path(&path) {
+        } else if is_markdown_path(&path)
+            || is_board_path(&path)
+            || is_diagram_path(&path)
+            || is_asset_path(&path)
+        {
             nodes.push(FileTreeNode {
                 name: file_name,
                 path: path_to_string(&path),
@@ -729,6 +801,8 @@ fn read_children(root: &Path, current: &Path) -> Result<Vec<FileTreeNode>, Strin
                     EntryKind::Board
                 } else if is_markdown_path(&path) {
                     EntryKind::Markdown
+                } else if is_diagram_path(&path) {
+                    EntryKind::Diagram
                 } else {
                     EntryKind::Asset
                 },
@@ -740,13 +814,14 @@ fn read_children(root: &Path, current: &Path) -> Result<Vec<FileTreeNode>, Strin
     Ok(nodes)
 }
 
-/// Tree sort rank: folders first, then boards, then markdown docs, then assets.
+/// Tree sort rank: folders first, then boards, markdown docs, diagrams, assets.
 fn kind_rank(kind: &EntryKind) -> u8 {
     match kind {
         EntryKind::Folder => 0,
         EntryKind::Board => 1,
         EntryKind::Markdown => 2,
-        EntryKind::Asset => 3,
+        EntryKind::Diagram => 3,
+        EntryKind::Asset => 4,
     }
 }
 
@@ -806,6 +881,32 @@ fn collect_board_files_inner(current: &Path, files: &mut Vec<PathBuf>) -> Result
         if path.is_dir() {
             collect_board_files_inner(&path, files)?;
         } else if is_board_path(&path) {
+            files.push(path);
+        }
+    }
+    Ok(())
+}
+
+/// Walk the vault for diagram resources (Mermaid/Draw.io/Excalidraw/Swagger).
+/// They sync as opaque text documents alongside Markdown and `.board` files.
+fn collect_diagram_files(root: &Path) -> Result<Vec<PathBuf>, String> {
+    let mut files = Vec::new();
+    collect_diagram_files_inner(root, &mut files)?;
+    files.sort();
+    Ok(files)
+}
+
+fn collect_diagram_files_inner(current: &Path, files: &mut Vec<PathBuf>) -> Result<(), String> {
+    for entry in fs::read_dir(current).map_err(|error| error.to_string())? {
+        let entry = entry.map_err(|error| error.to_string())?;
+        let path = entry.path();
+        let file_name = entry.file_name().to_string_lossy().to_string();
+        if file_name == ".git" || file_name == "node_modules" || file_name == "target" {
+            continue;
+        }
+        if path.is_dir() {
+            collect_diagram_files_inner(&path, files)?;
+        } else if is_diagram_path(&path) {
             files.push(path);
         }
     }
@@ -1724,6 +1825,65 @@ mod tests {
 
         assert!(read_markdown(&file).is_err());
         assert!(write_markdown(&file, "hello").is_err());
+    }
+
+    #[test]
+    fn classifies_diagram_resources() {
+        // Diagram resources by extension and swagger/openapi filename convention.
+        assert!(is_diagram_path(Path::new("flow.mmd")));
+        assert!(is_diagram_path(Path::new("a/b/notes.mermaid")));
+        assert!(is_diagram_path(Path::new("diagram.drawio")));
+        assert!(is_diagram_path(Path::new("sketch.excalidraw")));
+        assert!(is_diagram_path(Path::new("swagger.json")));
+        assert!(is_diagram_path(Path::new("api/openapi.yaml")));
+        assert!(is_diagram_path(Path::new("petstore.swagger.yml")));
+        assert!(is_diagram_path(Path::new("my-openapi.json")));
+        // Not diagram resources.
+        assert!(!is_diagram_path(Path::new("note.md")));
+        assert!(!is_diagram_path(Path::new("data.json")));
+        assert!(!is_diagram_path(Path::new("config.yaml")));
+        assert!(!is_diagram_path(Path::new("export.drawio.svg"))); // image export, not XML
+        assert!(!is_diagram_path(Path::new("image.png")));
+    }
+
+    #[test]
+    fn workspace_tree_marks_diagram_kind() {
+        let dir = tempdir().unwrap();
+        fs::write(dir.path().join("flow.mmd"), "flowchart TD\n  A --> B").unwrap();
+        fs::write(dir.path().join("api.swagger.json"), "{}").unwrap();
+        fs::write(dir.path().join("note.md"), "# Hi").unwrap();
+
+        let snapshot = open_workspace(dir.path()).unwrap();
+        let kinds: HashMap<String, EntryKind> = snapshot
+            .entries
+            .iter()
+            .map(|node| (node.name.clone(), node.kind.clone()))
+            .collect();
+
+        assert_eq!(kinds.get("flow.mmd"), Some(&EntryKind::Diagram));
+        assert_eq!(kinds.get("api.swagger.json"), Some(&EntryKind::Diagram));
+        assert_eq!(kinds.get("note.md"), Some(&EntryKind::Markdown));
+    }
+
+    #[test]
+    fn read_write_text_round_trips_diagrams() {
+        let dir = tempdir().unwrap();
+        let file = dir.path().join("sub/diagram.drawio");
+        write_text(&file, "<mxfile></mxfile>").unwrap();
+        assert_eq!(read_text(&file).unwrap(), "<mxfile></mxfile>");
+    }
+
+    #[test]
+    fn sync_documents_include_diagrams_as_drafts() {
+        let dir = tempdir().unwrap();
+        fs::write(dir.path().join("flow.mmd"), "graph TD").unwrap();
+        fs::write(dir.path().join("note.md"), "# Hi").unwrap();
+
+        let docs = collect_sync_documents(dir.path()).unwrap();
+        let diagram = docs.iter().find(|d| d.relative_path == "flow.mmd");
+        assert!(diagram.is_some(), "diagram file should sync");
+        assert_eq!(diagram.unwrap().status, "draft");
+        assert!(docs.iter().any(|d| d.relative_path == "note.md"));
     }
 
     #[test]

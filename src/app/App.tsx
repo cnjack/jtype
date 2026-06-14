@@ -19,6 +19,7 @@ import { ExclamationTriangleIcon, SignalSlashIcon } from "@heroicons/react/24/ou
 import { PromptDialogProvider } from "@shared/components/PromptDialogContext";
 import { AppVersion } from "@shared/components";
 import { isTauriRuntime, relativePathFromWorkspace } from "../lib/utils";
+import { isDiagramTextPath } from "@shared/lib/fileTypes";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 
@@ -305,11 +306,13 @@ function AppContent() {
           await fs.openWorkspace(state.lastWorkspacePath);
           if (state.lastFilePath) {
             const relPath = relativePathFromWorkspace(state.lastFilePath, state.lastWorkspacePath);
-            fs.openMarkdownFile(state.lastFilePath, relPath);
+            if (isDiagramTextPath(state.lastFilePath)) fs.openDiagramFile(state.lastFilePath, relPath);
+            else fs.openMarkdownFile(state.lastFilePath, relPath);
           }
         } else if (state.lastFilePath) {
           // Restore previous single-file session
-          fs.openMarkdownFile(state.lastFilePath);
+          if (isDiagramTextPath(state.lastFilePath)) fs.openDiagramFile(state.lastFilePath);
+          else fs.openMarkdownFile(state.lastFilePath);
         }
       })();
     } else {

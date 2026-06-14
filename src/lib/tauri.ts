@@ -42,6 +42,12 @@ export const tauri = {
   writeBoardFile(path: string, content: string) {
     return invoke("write_board_file", { path, content });
   },
+  readDiagramFile(path: string) {
+    return invoke<string>("read_text_file", { path });
+  },
+  writeDiagramFile(path: string, content: string) {
+    return invoke("write_text_file", { path, content });
+  },
   scanBoardCards(rootPath: string, boardId: string) {
     return invoke<BoardCard[]>("scan_board_cards", { rootPath, boardId });
   },
