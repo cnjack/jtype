@@ -1,0 +1,124 @@
+name: Release
+
+# Single entry point for a release. Push a tag (e.g. v1.2.3) and this:
+#   1. creates a DRAFT GitHub release for the tag,
+#   2. builds the CLI, desktop installers, and Docker image in parallel,
+#      each uploading its assets to the draft,
+#   3. publishes the release once everything succeeds.
+# The draft-then-publish flow means the release page never appears with missing
+# assets, and the tag is the single source of truth for the version.
+#
+# Note: creating a release manually in the GitHub UI no longer triggers builds —
+# push a tag instead. To rebuild an existing tag, use the workflow_dispatch input.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing tag to (re)build and publish (e.g. v1.2.3)
+        required: true
+        type: string
+
+# Never cancel an in-flight release.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    name: Create draft release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      tag: ${{ steps.resolve.outputs.tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve tag
+        id: resolve
+        shell: bash
+        env:
+          DISPATCH_TAG: ${{ inputs.tag }}
+        run: |
+          tag="${DISPATCH_TAG:-${GITHUB_REF_NAME}}"
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+
+      - name: Verify tag exists
+        shell: bash
+        env:
+          TAG: ${{ steps.resolve.outputs.tag }}
+        run: |
+          if ! git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
+            echo "::error::Tag '${TAG}' does not exist on the remote. Push the tag first." >&2
+            exit 1
+          fi
+
+      - name: Create draft release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.resolve.outputs.tag }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            # Release already exists. Only (re)draft it while it is STILL a draft
+            # — never demote an already-published release, which would remove it
+            # from releases/latest for the whole build window (install.sh,
+            # install.ps1, and src-tauri/src/cli_install.rs all resolve latest).
+            # For a published release we let the builds re-upload with --clobber.
+            if [[ "$(gh release view "$TAG" --json isDraft -q .isDraft)" == "true" ]]; then
+              gh release edit "$TAG" --draft --title "$TAG"
+              echo "Re-using existing draft release $TAG."
+            else
+              echo "Release $TAG is already published; assets will be updated in place."
+            fi
+          else
+            gh release create "$TAG" --draft --generate-notes --title "$TAG"
+            echo "Created draft release $TAG."
+          fi
+
+  cli:
+    needs: prepare
+    permissions:
+      contents: write
+    secrets: inherit
+    uses: ./.github/workflows/cli.yml
+    with:
+      tag: ${{ needs.prepare.outputs.tag }}
+
+  desktop:
+    needs: prepare
+    permissions:
+      contents: write
+    secrets: inherit
+    uses: ./.github/workflows/desktop.yml
+    with:
+      tag: ${{ needs.prepare.outputs.tag }}
+
+  docker:
+    needs: prepare
+    permissions:
+      contents: read
+      packages: write
+    secrets: inherit
+    uses: ./.github/workflows/docker.yml
+    with:
+      tag: ${{ needs.prepare.outputs.tag }}
+
+  publish:
+    name: Publish release
+    needs: [prepare, cli, desktop, docker]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Publish release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.prepare.outputs.tag }}
+        run: gh release edit "$TAG" --draft=false --latest

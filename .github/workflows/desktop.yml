@@ -1,13 +1,22 @@
 name: Build Desktop App
 
+# Reusable: builds the macOS (.dmg) and Windows (.nsis) installers and uploads
+# them to the release for the given tag. Invoked by release.yml; PR/main compile
+# checks live in ci.yml (Linux, no installers). Can also be run manually against
+# an existing tag via the Actions UI.
 on:
-  pull_request:
-    branches: [main]
-  push:
-    branches: [main]
+  workflow_call:
+    inputs:
+      tag:
+        description: Release tag to build and upload the desktop installers to
+        required: true
+        type: string
   workflow_dispatch:
-  release:
-    types: [published]
+    inputs:
+      tag:
+        description: Release tag to build and upload the desktop installers to
+        required: true
+        type: string
 
 jobs:
   build-desktop:
@@ -22,13 +31,11 @@ jobs:
           - name: Windows
             os: windows-latest
             bundle: nsis
-            artifact-name: jtype-windows-desktop
-            artifact-path: src-tauri/target/release/bundle/nsis/*
+            artifact-path: src-tauri/target/release/bundle/nsis/*-setup.exe
           - name: macOS
             os: macos-latest
             bundle: dmg
-            artifact-name: jtype-macos-desktop
-            artifact-path: src-tauri/target/release/bundle/dmg/*
+            artifact-path: src-tauri/target/release/bundle/dmg/*.dmg
 
     steps:
       - name: Checkout
@@ -48,6 +55,11 @@ jobs:
       - name: Set up Rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
 
@@ -55,21 +67,10 @@ jobs:
         id: version
         shell: bash
         env:
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          RELEASE_TAG: ${{ inputs.tag }}
         run: |
-          package_version="$(node -p "require('./package.json').version")"
-          if [[ -n "${RELEASE_TAG}" ]]; then
-            version="${RELEASE_TAG#v}"
-            display_version="${version}"
-          elif [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
-            version="${GITHUB_REF_NAME#v}"
-            display_version="${version}"
-          else
-            version="${package_version}"
-            display_version="${package_version}+${GITHUB_SHA::7}"
-          fi
+          version="${RELEASE_TAG#v}"
           echo "version=${version}" >> "$GITHUB_OUTPUT"
-          echo "display_version=${display_version}" >> "$GITHUB_OUTPUT"
 
       - name: Sync desktop package version
         shell: bash
@@ -77,26 +78,20 @@ jobs:
           APP_VERSION: ${{ steps.version.outputs.version }}
         run: |
           node --input-type=module <<'NODE'
-          import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+          import { readFileSync, writeFileSync } from 'node:fs';
 
           const version = process.env.APP_VERSION;
           if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/.test(version)) {
             throw new Error(`Invalid app version: ${version}`);
           }
 
-          function writeJsonVersion(path, updateLockRoot = false) {
+          function writeJsonVersion(path) {
             const data = JSON.parse(readFileSync(path, 'utf8'));
             data.version = version;
-            if (updateLockRoot && data.packages?.['']) {
-              data.packages[''].version = version;
-            }
             writeFileSync(path, `${JSON.stringify(data, null, 2)}\n`);
           }
 
           writeJsonVersion('package.json');
-          if (existsSync('package-lock.json')) {
-            writeJsonVersion('package-lock.json', true);
-          }
           writeJsonVersion('src-tauri/tauri.conf.json');
 
           const cargoPath = 'src-tauri/Cargo.toml';
@@ -106,30 +101,15 @@ jobs:
 
       # Build directly with the tauri CLI instead of tauri-action@v0, which
       # crashes on the runner with "unsettled top-level await" (a bundled-JS /
-      # Node-version issue). The upload-artifact step below collects the bundle.
+      # Node-version issue).
       - name: Build desktop app
-        if: github.event_name != 'release'
         env:
-          VITE_JTYPE_VERSION: ${{ steps.version.outputs.display_version }}
-        run: pnpm exec tauri build --bundles ${{ matrix.bundle }}
-
-      - name: Build desktop app for release
-        if: github.event_name == 'release'
-        env:
-          VITE_JTYPE_VERSION: ${{ steps.version.outputs.display_version }}
+          VITE_JTYPE_VERSION: ${{ steps.version.outputs.version }}
         run: pnpm exec tauri build --bundles ${{ matrix.bundle }}
 
       - name: Upload desktop app to release
-        if: github.event_name == 'release'
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload "${{ github.event.release.tag_name }}" ${{ matrix.artifact-path }} --clobber
-
-      - name: Upload desktop build artifact
-        if: github.event_name != 'release'
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.artifact-name }}
-          path: ${{ matrix.artifact-path }}
-          if-no-files-found: error
+          TAG: ${{ inputs.tag }}
+        run: gh release upload "$TAG" ${{ matrix.artifact-path }} --clobber

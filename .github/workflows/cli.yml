@@ -1,13 +1,20 @@
 name: Build CLI
 
+# Reusable: invoked by release.yml on a tag. Can also be run manually against an
+# existing tag via the Actions UI.
 on:
-  release:
-    types: [published]
+  workflow_call:
+    inputs:
+      tag:
+        description: Release tag to build and upload the CLI binaries to
+        required: true
+        type: string
   workflow_dispatch:
     inputs:
       tag:
-        description: Release tag to upload the CLI binaries to
+        description: Release tag to build and upload the CLI binaries to
         required: true
+        type: string
 
 jobs:
   build:
@@ -41,8 +48,37 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: services/jtype-cli
+          key: ${{ matrix.target }}
+
+      # Stamp the crate version from the tag so `jtype --version` (which reads
+      # CARGO_PKG_VERSION) reports the released version instead of whatever was
+      # last committed to Cargo.toml.
+      - name: Set CLI version from tag
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          export CLI_VERSION="${RELEASE_TAG#v}"
+          node --input-type=module <<'NODE'
+          import { readFileSync, writeFileSync } from 'node:fs';
+          const version = process.env.CLI_VERSION;
+          if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/.test(version)) {
+            throw new Error(`Invalid CLI version from tag: ${version}`);
+          }
+          const path = 'services/jtype-cli/Cargo.toml';
+          const toml = readFileSync(path, 'utf8');
+          writeFileSync(path, toml.replace(/^version = ".*"$/m, `version = "${version}"`));
+          NODE
+
+      # --locked is intentionally omitted: bumping the crate's own version above
+      # would otherwise conflict with the committed Cargo.lock. Dependencies stay
+      # pinned by Cargo.lock regardless.
       - name: Build
-        run: cargo build --release --locked --manifest-path services/jtype-cli/Cargo.toml --target ${{ matrix.target }}
+        run: cargo build --release --manifest-path services/jtype-cli/Cargo.toml --target ${{ matrix.target }}
 
       - name: Stage binary (unix)
         if: runner.os != 'Windows'
@@ -58,5 +94,5 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ github.event.release.tag_name || inputs.tag }}
+          TAG: ${{ inputs.tag }}
         run: gh release upload "$TAG" "${{ matrix.asset }}" --clobber

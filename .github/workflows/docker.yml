@@ -1,9 +1,17 @@
 name: Build and Push Docker Image
 
+# Pushes `:latest` on every merge to main, and the semver-tagged image when
+# invoked by release.yml on a tag. The standalone `tags: v*` trigger was removed
+# so a tag builds the image exactly once (via release.yml), not twice.
 on:
   push:
     branches: [main]
-    tags: ["v*"]
+  workflow_call:
+    inputs:
+      tag:
+        description: Release tag being built (e.g. v1.2.3)
+        required: false
+        type: string
 
 env:
   REGISTRY: ghcr.io
@@ -35,8 +43,14 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          # Disable metadata-action's implicit "latest=auto", which would
+          # otherwise move :latest onto every semver tag — including
+          # pre-releases. :latest is controlled solely by the explicit rule
+          # below: main pushes and stable (non rc/beta) tags only.
+          flavor: |
+            latest=false
           tags: |
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || (startsWith(github.ref, 'refs/tags/v') && !contains(github.ref, '-rc') && !contains(github.ref, '-beta')) }}
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}},enable=${{ startsWith(github.ref, 'refs/tags/v') && !contains(github.ref, '-rc') && !contains(github.ref, '-beta') }}
@@ -44,10 +58,15 @@ jobs:
       - name: Resolve app version
         id: version
         shell: bash
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
         run: |
           package_version="$(node -p "require('./package.json').version")"
-          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
-            version="${GITHUB_REF_NAME#v}"
+          # A tag never triggers this workflow directly anymore (release.yml
+          # drives tag builds via workflow_call, passing inputs.tag); the only
+          # other path is push:main, which falls through to version+sha.
+          if [[ -n "${RELEASE_TAG}" ]]; then
+            version="${RELEASE_TAG#v}"
           else
             version="${package_version}+${GITHUB_SHA::7}"
           fi

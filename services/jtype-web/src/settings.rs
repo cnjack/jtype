@@ -1,6 +1,8 @@
 //! Server-wide settings stored in the database, resolved with the precedence
 //!
-//!     database (operator UI) → environment variable → built-in default
+//! ```text
+//! database (operator UI) → environment variable → built-in default
+//! ```
 //!
 //! i.e. a value set through the admin UI (persisted in `server_settings`)
 //! overrides the corresponding `JTYPED_*` environment variable, which in turn
