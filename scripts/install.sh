@@ -35,9 +35,13 @@ fi
 chmod +x "$dir/jtype"
 
 # Ensure ~/.jtype/bin is on PATH via the user's shell profiles (idempotent).
+# Always seed .zshrc (macOS default) and .profile; touch .bashrc only if present.
 line='export PATH="$HOME/.jtype/bin:$PATH"'
 for rc in "$HOME/.zshrc" "$HOME/.bashrc" "$HOME/.profile"; do
-  [ -e "$rc" ] || { [ "$rc" = "$HOME/.profile" ] || continue; }
+  case "$rc" in
+    *.zshrc | *.profile) : ;;
+    *) [ -e "$rc" ] || continue ;;
+  esac
   if ! grep -q '.jtype/bin' "$rc" 2>/dev/null; then
     printf '\n# Added by JType\n%s\n' "$line" >> "$rc"
   fi
