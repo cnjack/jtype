@@ -44,6 +44,7 @@
     "@lingui/format-po": "^6.0.1",
     "@lingui/vite-plugin": "^6.0.1",
     "@playwright/test": "^1.59.1",
+    "@rolldown/plugin-babel": "^0.2.3",
     "@tailwindcss/vite": "^4.2.4",
     "@tauri-apps/cli": "^2",
     "@types/morphdom": "^2.3.0",

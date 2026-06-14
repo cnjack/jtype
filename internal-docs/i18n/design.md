@@ -169,12 +169,18 @@ const config: LinguiConfig = {
 
 ```ts
 // vite.config.ts
-import { lingui } from "@lingui/vite-plugin";
+import babel from "@rolldown/plugin-babel";
+import { lingui, linguiTransformerBabelPreset } from "@lingui/vite-plugin";
 
 export default defineConfig({
   plugins: [
-    react({ babel: { plugins: ["@lingui/babel-plugin-lingui-macro"] } }),
+    // @vitejs/plugin-react v6 (Vite 8 / Rolldown) 用 oxc 转换，不再支持 `babel`
+    // 选项。Lingui macro 必须作为独立的 Rolldown-babel pass 运行，否则
+    // `@lingui/*/macro` 会泄漏进 bundle，运行时抛
+    // "executed outside the context of compilation"。
+    react(),
     lingui(),
+    babel({ presets: [linguiTransformerBabelPreset()] }),
     // ...existing plugins
   ],
 });

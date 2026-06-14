@@ -1,7 +1,8 @@
 import { defineConfig } from "vite";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
-import { lingui } from "@lingui/vite-plugin";
+import babel from "@rolldown/plugin-babel";
+import { lingui, linguiTransformerBabelPreset } from "@lingui/vite-plugin";
 import path from "path";
 
 // @ts-expect-error process is a nodejs global
@@ -17,8 +18,13 @@ const packageVersion = process.env.npm_package_version ?? "0.1.0";
 export default defineConfig(async () => ({
   plugins: [
     tailwindcss(),
-    react({ babel: { plugins: ["@lingui/babel-plugin-lingui-macro"] } }),
+    // @vitejs/plugin-react v6 (Vite 8 / Rolldown) transforms with oxc and no
+    // longer accepts a `babel` option, so the Lingui macro must run as its own
+    // Rolldown-babel pass — otherwise `@lingui/*/macro` imports leak into the
+    // bundle and throw "executed outside the context of compilation" at runtime.
+    react(),
     lingui(),
+    babel({ presets: [linguiTransformerBabelPreset()] }),
   ],
   resolve: {
     alias: {

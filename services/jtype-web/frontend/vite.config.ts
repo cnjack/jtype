@@ -1,7 +1,8 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import babel from '@rolldown/plugin-babel'
 import tailwindcss from '@tailwindcss/vite'
-import { lingui } from '@lingui/vite-plugin'
+import { lingui, linguiTransformerBabelPreset } from '@lingui/vite-plugin'
 import path from 'path'
 
 const appVersion = process.env.VITE_JTYPE_VERSION ?? process.env.JTYPE_VERSION ?? process.env.npm_package_version ?? '0.1.0'
@@ -9,9 +10,14 @@ const packageVersion = process.env.npm_package_version ?? '0.1.0'
 
 export default defineConfig({
   plugins: [
-    react({ babel: { plugins: ['@lingui/babel-plugin-lingui-macro'] } }),
+    // @vitejs/plugin-react v6 (Vite 8 / Rolldown) transforms with oxc and no
+    // longer accepts a `babel` option, so the Lingui macro must run as its own
+    // Rolldown-babel pass — otherwise `@lingui/*/macro` imports leak into the
+    // bundle and throw "executed outside the context of compilation" at runtime.
+    react(),
     tailwindcss(),
     lingui(),
+    babel({ presets: [linguiTransformerBabelPreset()] }),
   ],
   resolve: {
     dedupe: ['@lingui/core', '@lingui/react'],
