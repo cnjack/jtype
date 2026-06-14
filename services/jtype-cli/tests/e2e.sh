@@ -4,7 +4,8 @@
 # Exercises every subcommand, including the real OAuth device flow (login is
 # approved out-of-band with a freshly-registered user's token). Seeds a
 # workspace + board via REST (the CLI intentionally has no workspace/board
-# create), then drives notes, kanban, Obsidian sync, and the stdio MCP bridge.
+# create), then drives local-first notes (bind + write-through + sync), kanban,
+# and the stdio MCP bridge.
 #
 # Usage: bash e2e.sh [SERVER_URL]   (default http://localhost:13346)
 
@@ -59,14 +60,34 @@ COL=$(echo "$BOARD" | jq -r '.columns[0].id')
 COL2=$(echo "$BOARD" | jq -r '.columns[1].id')
 [ -n "$WS" ] && [ "$WS" != null ] && ok "seed workspace+board" || no "seed workspace+board"
 
-# 3. Workspace + notes.
+# 3. Local-first notes: bind a vault, read/write disk files, write-through to cloud.
+VAULT="$WORK/vault"; mkdir -p "$VAULT"
+JTV() { "$BIN" --server "$SERVER" --vault "$VAULT" "$@"; }
 JT workspace list | grep -q "$WS" && ok "workspace list" || no "workspace list"
-chk "note create" JT note create --workspace "$WS" "ideas/cli.md" --content $'# CLI\n\nMango notes live here.'
-JT note list --workspace "$WS" | grep -q "ideas/cli.md" && ok "note list" || no "note list"
-JT note get --workspace "$WS" "ideas/cli.md" | grep -q "Mango" && ok "note get" || no "note get"
-JT note search --workspace "$WS" "Mango" | grep -q "ideas/cli.md" && ok "note search" || no "note search"
-chk "note update" JT note update --workspace "$WS" "ideas/cli.md" --content $'# CLI v2\n\nUpdated body.'
-JT note get --workspace "$WS" "ideas/cli.md" | grep -q "Updated body" && ok "note update applied" || no "note update applied"
+chk "bind vault → workspace" JTV bind --workspace "$WS"
+JTV vault status | grep -q "$WS" && ok "vault status shows binding" || no "vault status"
+chk "note create (local + write-through)" JTV note create "ideas/cli.md" --content $'# CLI\n\nMango notes live here.'
+[ -f "$VAULT/ideas/cli.md" ] && ok "note written to disk" || no "note written to disk"
+curl -s "$SERVER/api/v1/workspaces/$WS/documents" -H "authorization: Bearer $TOKEN" \
+  | jq -e '.[]|select(.relativePath=="ideas/cli.md")' >/dev/null 2>&1 \
+  && ok "note write-through reached cloud" || no "note write-through reached cloud"
+JTV note list | grep -q "ideas/cli.md" && ok "note list (local)" || no "note list"
+printf '{"id":"b","title":"x"}' > "$VAULT/x.board"
+if JTV note list | grep -q "x.board"; then no "note list excludes .board"; else ok "note list excludes .board"; fi
+JTV note get "ideas/cli.md" | grep -q "Mango" && ok "note get (local)" || no "note get"
+JTV note search "Mango" | grep -q "ideas/cli.md" && ok "note search (local)" || no "note search"
+chk "note update (local + write-through)" JTV note update "ideas/cli.md" --content $'# CLI v2\n\nUpdated body.'
+JTV note get "ideas/cli.md" | grep -q "Updated body" && ok "note update applied (local)" || no "note update applied"
+
+# 3b. Sync round-trip: a doc born in the cloud is pulled down into the vault.
+curl -s -X POST "$SERVER/api/v1/workspaces/$WS/documents/save" -H "authorization: Bearer $TOKEN" \
+  -H 'content-type: application/json' \
+  -d '{"relativePath":"from-cloud.md","content":"# Cloud\n\nborn in the cloud"}' >/dev/null
+chk "sync (pull + push)" JTV sync
+{ [ -f "$VAULT/from-cloud.md" ] && grep -q "born in the cloud" "$VAULT/from-cloud.md"; } \
+  && ok "sync pulled cloud doc to disk" || no "sync pulled cloud doc to disk"
+JTV --json sync | jq -e '.pulled.written == 0' >/dev/null 2>&1 \
+  && ok "re-sync idempotent (0 written)" || no "re-sync idempotent"
 
 # 4. Kanban.
 JT board list --workspace "$WS" | grep -q "CLI Board" && ok "board list" || no "board list"
