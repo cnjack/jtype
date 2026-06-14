@@ -70,7 +70,7 @@ pub fn render_workspace_index(
     let footer = render_footer(footer_html);
     let head = head(spec, site_name);
     let intro = format!(
-        "<h1>{}</h1><p>Select a page to begin.</p>",
+        "<h1>{}</h1><p>请选择一个页面开始阅读。</p>",
         escape_html(site_name)
     );
     let inner = match spec.layout {
@@ -110,17 +110,16 @@ pub fn render_workspace_index(
 
 pub fn render_user_index(spec: &ThemeSpec, username: &str, workspaces: &[WorkspaceMeta]) -> String {
     let cards = if workspaces.is_empty() {
-        "<p>No published workspaces yet.</p>".to_string()
+        "<p>该作者还没有发布任何工作区。</p>".to_string()
     } else {
         workspaces
             .iter()
             .map(|w| {
                 format!(
-                    r#"<a class="workspace-card" href="{href}"><strong>{title}</strong><span>{count} published page{pl}</span></a>"#,
+                    r#"<a class="workspace-card" href="{href}"><strong>{title}</strong><span>{count} 个已发布页面</span></a>"#,
                     href = escape_html(&w.href),
                     title = escape_html(&w.title),
                     count = w.page_count,
-                    pl = if w.page_count == 1 { "" } else { "s" },
                 )
             })
             .collect::<String>()
@@ -167,10 +166,9 @@ fn mermaid_script(theme: &str) -> String {
 
 fn sidebar_header(site_name: &str, count: usize) -> String {
     format!(
-        "<div class=\"sidebar-header\">{BRAND}<div class=\"site-title\">{site}</div><span class=\"doc-count\">{count} page{pl}</span></div>",
+        "<div class=\"sidebar-header\">{BRAND}<div class=\"site-title\">{site}</div><span class=\"doc-count\">{count} 个页面</span></div>",
         site = escape_html(site_name),
         count = count,
-        pl = if count == 1 { "" } else { "s" },
     )
 }
 
