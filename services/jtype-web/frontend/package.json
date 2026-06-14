@@ -33,9 +33,12 @@
     "@types/morphdom": "^2.3.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^4.4.0",
+    "@vitejs/plugin-react": "^6.0.0",
     "tailwindcss": "^4.3.0",
     "typescript": "~5.6.2",
-    "vite": "^6.4.2"
+    "vite": "^8.0.0"
+  },
+  "overrides": {
+    "esbuild": "^0.28.1"
   }
 }
