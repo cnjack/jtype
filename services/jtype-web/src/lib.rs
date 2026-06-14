@@ -4,11 +4,14 @@ pub mod handlers;
 pub mod hub;
 pub mod mcp;
 pub mod middleware;
+pub mod settings;
+pub mod storage;
 pub mod tasks;
 pub mod themes;
 pub mod util;
 
 use axum::{
+    extract::DefaultBodyLimit,
     http::{header, StatusCode, Uri},
     response::{Html, IntoResponse, Response},
     routing::{delete, get, patch, post, put},
@@ -26,6 +29,26 @@ pub struct AppState {
     pub pool: Pool<MySql>,
     pub public_base_url: String,
     pub hub: hub::ConnectionHub,
+    pub storage: storage::SharedStore,
+}
+
+impl AppState {
+    /// Current object-store handle. The read lock is held only long enough to
+    /// clone the inner `Arc` out — never across `.await` — so storage swaps
+    /// never block request handling.
+    pub fn storage(&self) -> storage::DynStore {
+        self.storage
+            .read()
+            .unwrap_or_else(|e| e.into_inner())
+            .clone()
+    }
+
+    /// Atomically replace the live object-store backend (used when an admin
+    /// changes storage settings). In-flight requests keep the handle they
+    /// already cloned; subsequent requests see the new backend.
+    pub fn set_storage(&self, store: storage::DynStore) {
+        *self.storage.write().unwrap_or_else(|e| e.into_inner()) = store;
+    }
 }
 
 #[derive(Embed)]
@@ -40,7 +63,10 @@ pub async fn run_from_env() -> Result<(), AppError> {
     let pool = db::connect().await.map_err(AppError::Database)?;
     db::migrations::run_all(&pool).await?;
 
-    let app = build_router(pool.clone(), public_base_url);
+    // Storage config resolves DB (admin UI) → env (`JTYPED_STORAGE_*`) → default.
+    let storage_cfg = settings::load_storage_config(&pool).await?;
+    let storage = storage::from_config(&storage_cfg);
+    let (app, _hub) = build_app(pool.clone(), public_base_url, storage);
     let listener = tokio::net::TcpListener::bind(&bind_addr)
         .await
         .map_err(|e| AppError::Server(e.to_string()))?;
@@ -57,9 +83,21 @@ pub fn build_router(pool: Pool<MySql>, public_base_url: String) -> Router {
     router
 }
 
+/// Build the router with an in-memory object store (used by tests, which do not
+/// need a real S3 backend).
 pub fn build_router_with_hub(
     pool: Pool<MySql>,
     public_base_url: String,
+) -> (Router, hub::ConnectionHub) {
+    build_app(pool, public_base_url, storage::in_memory())
+}
+
+/// Core router builder: wires the app state (including object storage) and all
+/// routes.
+pub fn build_app(
+    pool: Pool<MySql>,
+    public_base_url: String,
+    storage: storage::DynStore,
 ) -> (Router, hub::ConnectionHub) {
     let hub = hub::ConnectionHub::new();
     let cleanup_hub = hub.clone();
@@ -74,6 +112,7 @@ pub fn build_router_with_hub(
         pool,
         public_base_url,
         hub,
+        storage: storage::shared(storage),
     };
 
     let return_hub = state.hub.clone();
@@ -115,6 +154,11 @@ pub fn build_router_with_hub(
         )
         .route("/api/admin/domains", get(handlers::admin::list_domains))
         .route("/api/admin/stats", get(handlers::admin::stats))
+        .route(
+            "/api/admin/settings/storage",
+            get(handlers::settings::get_storage_settings)
+                .put(handlers::settings::update_storage_settings),
+        )
         // OAuth device flow
         .route("/api/oauth/device/start", post(handlers::oauth::start))
         .route("/api/oauth/device/approve", post(handlers::oauth::approve))
@@ -319,6 +363,10 @@ pub fn build_router_with_hub(
             get(handlers::publish::list_themes),
         )
         .route(
+            "/api/themes/:theme_id",
+            get(handlers::publish::get_theme),
+        )
+        .route(
             "/api/v1/workspaces/:workspace_id/site",
             get(handlers::publish::get_site_settings).put(handlers::publish::update_site_settings),
         )
@@ -339,6 +387,22 @@ pub fn build_router_with_hub(
             get(handlers::publish::get_publish_status)
                 .post(handlers::publish::publish_document)
                 .delete(handlers::publish::unpublish_document),
+        )
+        // Assets (images). Upload/list/delete require workspace roles; the
+        // public read route proxies bytes so the object store stays hidden.
+        .route(
+            "/api/v1/workspaces/:workspace_id/assets",
+            post(handlers::assets::upload_asset)
+                .get(handlers::assets::list_assets)
+                .layer(DefaultBodyLimit::max(handlers::assets::MAX_ASSET_BYTES + 64 * 1024)),
+        )
+        .route(
+            "/api/v1/workspaces/:workspace_id/assets/:asset_id",
+            delete(handlers::assets::delete_asset),
+        )
+        .route(
+            "/assets/:workspace_id/:asset_id",
+            get(handlers::assets::serve_asset),
         )
         // Public sites
         .route("/u/:site_user", get(handlers::site::user_site_index))

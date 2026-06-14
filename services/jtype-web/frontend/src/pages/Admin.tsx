@@ -1,11 +1,18 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Dialog, DialogPanel } from '@headlessui/react'
-import { api, type AdminUser, type AdminWorkspace, type AdminDomain, type AdminStats } from '../api'
+import {
+  api,
+  type AdminUser,
+  type AdminWorkspace,
+  type AdminDomain,
+  type AdminStats,
+  type StorageSettings as StorageSettingsData,
+} from '../api'
 import { t } from '@lingui/core/macro'
 import { Trans } from '@lingui/react/macro'
 
-type AdminTab = 'users' | 'workspaces' | 'domains'
+type AdminTab = 'users' | 'workspaces' | 'domains' | 'storage'
 
 export function Admin() {
   const navigate = useNavigate()
@@ -26,6 +33,8 @@ export function AdminDialog({ onClose }: { onClose: () => void }) {
   }, [])
 
   useEffect(() => {
+    // The storage tab manages its own loading; the table tabs load here.
+    if (tab === 'storage') return
     setLoading(true)
     const load =
       tab === 'users'
@@ -52,40 +61,51 @@ export function AdminDialog({ onClose }: { onClose: () => void }) {
           <AdminNavButton active={tab === 'users'} onClick={() => setTab('users')} label={t`Users`} />
           <AdminNavButton active={tab === 'workspaces'} onClick={() => setTab('workspaces')} label={t`Cloud workspaces`} />
           <AdminNavButton active={tab === 'domains'} onClick={() => setTab('domains')} label={t`Domains`} />
+          <AdminNavButton active={tab === 'storage'} onClick={() => setTab('storage')} label={t`Storage`} />
         </aside>
 
         <main className="min-h-0 overflow-y-auto p-8">
           <div className="mb-7 flex items-start justify-between gap-4">
             <div>
               <h2 className="text-3xl font-semibold text-zinc-950"><Trans>Admin</Trans></h2>
-              <p className="mt-1 text-sm text-zinc-500"><Trans>Manage users, cloud workspaces, domains, and service activity.</Trans></p>
+              <p className="mt-1 text-sm text-zinc-500">
+                {tab === 'storage'
+                  ? <Trans>Configure server object storage. Saved values override the JTYPED_STORAGE_* environment variables and apply immediately.</Trans>
+                  : <Trans>Manage users, cloud workspaces, domains, and service activity.</Trans>}
+              </p>
             </div>
             <button className="subtle-button" type="button" onClick={onClose}><Trans>Close</Trans></button>
           </div>
 
           <div className="max-w-4xl space-y-6">
-            {stats && (
-              <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                <StatCard label={t`Users`} value={stats.totalUsers} />
-                <StatCard label={t`Cloud workspaces`} value={stats.totalWorkspaces} />
-                <StatCard label={t`Documents`} value={stats.totalDocuments} />
-                <StatCard label={t`Domains`} value={stats.totalDomains} />
-              </section>
+            {tab === 'storage' ? (
+              <StorageSettingsPanel />
+            ) : (
+              <>
+                {stats && (
+                  <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                    <StatCard label={t`Users`} value={stats.totalUsers} />
+                    <StatCard label={t`Cloud workspaces`} value={stats.totalWorkspaces} />
+                    <StatCard label={t`Documents`} value={stats.totalDocuments} />
+                    <StatCard label={t`Domains`} value={stats.totalDomains} />
+                  </section>
+                )}
+
+                <section>
+                  <div className="mb-3 flex items-end justify-between gap-3">
+                    <div>
+                      <h3 className="text-base font-semibold text-zinc-950">{adminTabTitle(tab)}</h3>
+                      <p className="mt-1 text-xs text-zinc-500">{adminTabDescription(tab)}</p>
+                    </div>
+                    {loading && <span className="text-xs font-semibold text-stone-400"><Trans>Loading...</Trans></span>}
+                  </div>
+
+                  {tab === 'users' && <UsersTable users={users} onToggleUser={toggleUser} />}
+                  {tab === 'workspaces' && <WorkspacesTable workspaces={workspaces} />}
+                  {tab === 'domains' && <DomainsTable domains={domains} />}
+                </section>
+              </>
             )}
-
-            <section>
-              <div className="mb-3 flex items-end justify-between gap-3">
-                <div>
-                  <h3 className="text-base font-semibold text-zinc-950">{adminTabTitle(tab)}</h3>
-                  <p className="mt-1 text-xs text-zinc-500">{adminTabDescription(tab)}</p>
-                </div>
-                {loading && <span className="text-xs font-semibold text-stone-400"><Trans>Loading...</Trans></span>}
-              </div>
-
-              {tab === 'users' && <UsersTable users={users} onToggleUser={toggleUser} />}
-              {tab === 'workspaces' && <WorkspacesTable workspaces={workspaces} />}
-              {tab === 'domains' && <DomainsTable domains={domains} />}
-            </section>
           </div>
         </main>
       </DialogPanel>
@@ -226,5 +246,141 @@ function adminTabTitle(tab: AdminTab): string {
 function adminTabDescription(tab: AdminTab): string {
   if (tab === 'users') return t`Review accounts, roles, and enabled status.`
   if (tab === 'workspaces') return t`Inspect cloud workspace ownership and document counts.`
-  return t`Review published custom domains and SSL state.`
+  if (tab === 'domains') return t`Review published custom domains and SSL state.`
+  return t`Configure server object storage.`
+}
+
+function StorageSettingsPanel() {
+  const [settings, setSettings] = useState<StorageSettingsData | null>(null)
+  const [endpoint, setEndpoint] = useState('')
+  const [bucket, setBucket] = useState('')
+  const [accessKey, setAccessKey] = useState('')
+  const [secretKey, setSecretKey] = useState('')
+  const [region, setRegion] = useState('')
+  const [localDir, setLocalDir] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [message, setMessage] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null)
+
+  function apply(s: StorageSettingsData) {
+    setSettings(s)
+    setEndpoint(s.endpoint)
+    setBucket(s.bucket)
+    setAccessKey(s.accessKey)
+    setRegion(s.region)
+    setLocalDir(s.localDir)
+    setSecretKey('')
+  }
+
+  useEffect(() => {
+    api.getStorageSettings().then(apply).catch(err => setMessage({ kind: 'err', text: String(err?.message || err) }))
+  }, [])
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault()
+    setSaving(true)
+    setMessage(null)
+    try {
+      const updated = await api.updateStorageSettings({
+        endpoint,
+        bucket,
+        accessKey,
+        region,
+        localDir,
+        ...(secretKey.trim() ? { secretKey } : {}),
+      })
+      apply(updated)
+      setMessage({ kind: 'ok', text: t`Storage settings saved and applied.` })
+    } catch (err) {
+      setMessage({ kind: 'err', text: String(err instanceof Error ? err.message : err) })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (!settings) {
+    return <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand border-t-transparent" />
+  }
+
+  const usingS3 = endpoint.trim() !== ''
+
+  return (
+    <form onSubmit={handleSubmit} className="max-w-2xl space-y-5">
+      {message && (
+        <p className={`rounded-lg px-3 py-2 text-sm font-semibold ${message.kind === 'ok' ? 'bg-[#e8f6f2] text-brand' : 'bg-red-50 text-red-700'}`}>
+          {message.text}
+        </p>
+      )}
+
+      <div className="flex items-center gap-2">
+        <span className="field-label">{t`Active backend`}</span>
+        <span className="status-chip status-chip-neutral">
+          {settings.activeBackend === 's3' ? t`S3-compatible` : t`Local filesystem`}
+        </span>
+      </div>
+
+      <StorageField
+        label={t`S3 endpoint`}
+        value={endpoint}
+        onChange={setEndpoint}
+        placeholder={t`https://s3.example.com — leave blank to use local files`}
+        source={settings.sources.endpoint}
+      />
+
+      {usingS3 ? (
+        <>
+          <StorageField label={t`Bucket`} value={bucket} onChange={setBucket} source={settings.sources.bucket} />
+          <StorageField label={t`Access key`} value={accessKey} onChange={setAccessKey} source={settings.sources.accessKey} />
+          <StorageField
+            label={t`Secret key`}
+            value={secretKey}
+            onChange={setSecretKey}
+            type="password"
+            placeholder={settings.secretKeySet ? t`•••••••• — leave blank to keep current` : t`Enter secret key`}
+            source={settings.sources.secretKey}
+          />
+          <StorageField label={t`Region`} value={region} onChange={setRegion} source={settings.sources.region} />
+        </>
+      ) : (
+        <StorageField label={t`Local directory`} value={localDir} onChange={setLocalDir} source={settings.sources.localDir} />
+      )}
+
+      <div className="flex items-center gap-3">
+        <button type="submit" disabled={saving} className="sidebar-action bg-brand text-white hover:bg-brand-dark hover:text-white">
+          {saving ? t`Saving...` : t`Save storage settings`}
+        </button>
+        {usingS3 && <span className="text-xs text-stone-500"><Trans>Saving verifies the connection before applying.</Trans></span>}
+      </div>
+    </form>
+  )
+}
+
+function StorageField({ label, value, onChange, type = 'text', placeholder, source }: {
+  label: string
+  value: string
+  onChange: (value: string) => void
+  type?: string
+  placeholder?: string
+  source?: string
+}) {
+  return (
+    <label className="block">
+      <span className="flex items-center gap-2">
+        <span className="field-label">{label}</span>
+        {source === 'env' && (
+          <span className="rounded bg-stone-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-stone-500">
+            {t`from env`}
+          </span>
+        )}
+      </span>
+      <input
+        type={type}
+        value={value}
+        placeholder={placeholder}
+        onChange={e => onChange(e.target.value)}
+        className="field-input"
+        autoComplete="off"
+        spellCheck={false}
+      />
+    </label>
+  )
 }

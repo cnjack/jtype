@@ -1,4 +1,17 @@
+//! Theme engine: data-driven site themes.
+//!
+//! A theme is a [`ThemeSpec`] (design tokens + a [`Layout`] archetype). The
+//! generic renderer in [`render`] turns any spec into HTML. Built-in themes are
+//! presets ([`presets`]); custom themes are user JSON stored on the site and
+//! validated through [`ThemeSpec::from_custom_json`].
+
 use crate::handlers::site::PageMeta;
+
+mod presets;
+mod render;
+pub mod spec;
+
+pub use spec::{Appearance, Layout, ThemeSpec};
 
 /// Metadata about a workspace shown on the user index page.
 pub struct WorkspaceMeta {
@@ -20,77 +33,107 @@ pub struct RenderContext<'a> {
     pub content_html: &'a str,
 }
 
-/// Static info about a theme, returned by the themes API.
+/// A small color sample so the frontend can draw a theme thumbnail without an
+/// iframe round-trip.
+#[derive(Debug, Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Swatch {
+    pub bg: String,
+    pub fg: String,
+    pub accent: String,
+    pub surface: String,
+}
+
+/// Static info about a theme, returned by the themes API. Carries the legacy
+/// `id`/`name`/`description` plus presentation hints for the picker.
 #[derive(Debug, Clone, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ThemeInfo {
-    pub id: &'static str,
-    pub name: &'static str,
-    pub description: &'static str,
+    pub id: String,
+    pub name: String,
+    pub description: String,
+    pub layout: Layout,
+    pub appearance: Appearance,
+    pub swatch: Swatch,
 }
 
-/// A site theme: produces complete HTML strings for each page type.
-pub trait SiteTheme: Send + Sync {
-    fn info(&self) -> ThemeInfo;
-    /// Render a document page.
-    fn render_page(&self, ctx: &RenderContext<'_>) -> String;
-    /// Render the workspace-level index (list of pages).
-    fn render_workspace_index(
-        &self,
-        site_name: &str,
-        footer_html: &str,
-        username: &str,
-        workspace_slug: &str,
-        workspace_title: &str,
-        pages: &[PageMeta],
-    ) -> String;
-    /// Render the user-level index (list of workspaces).
-    fn render_user_index(
-        &self,
-        username: &str,
-        workspaces: &[WorkspaceMeta],
-    ) -> String;
-}
-
-// ── Registry ────────────────────────────────────────────────────────────────
-
-mod default;
-mod academic;
-mod terminal;
-mod paper;
-mod tokyo;
-
-static DEFAULT_THEME: default::DefaultTheme = default::DefaultTheme;
-static ACADEMIC_THEME: academic::AcademicTheme = academic::AcademicTheme;
-static TERMINAL_THEME: terminal::TerminalTheme = terminal::TerminalTheme;
-static PAPER_THEME: paper::PaperTheme = paper::PaperTheme;
-static TOKYO_THEME: tokyo::TokyoTheme = tokyo::TokyoTheme;
-
-/// Return the theme for the given id, falling back to `default`.
-pub fn get_theme(id: &str) -> &'static dyn SiteTheme {
-    match id {
-        "academic" => &ACADEMIC_THEME,
-        "terminal" => &TERMINAL_THEME,
-        "paper" => &PAPER_THEME,
-        "tokyo" => &TOKYO_THEME,
-        _ => &DEFAULT_THEME,
+impl From<&ThemeSpec> for ThemeInfo {
+    fn from(s: &ThemeSpec) -> Self {
+        ThemeInfo {
+            id: s.id.clone(),
+            name: s.name.clone(),
+            description: s.description.clone(),
+            layout: s.layout,
+            appearance: s.palette.appearance,
+            swatch: Swatch {
+                bg: s.palette.bg.clone(),
+                fg: s.palette.fg.clone(),
+                accent: s.palette.accent.clone(),
+                surface: s.palette.surface.clone(),
+            },
+        }
     }
 }
 
-/// Return info for all available themes.
-pub fn list_themes() -> Vec<ThemeInfo> {
-    vec![
-        DEFAULT_THEME.info(),
-        ACADEMIC_THEME.info(),
-        TERMINAL_THEME.info(),
-        PAPER_THEME.info(),
-        TOKYO_THEME.info(),
-    ]
+// ── Public engine API ─────────────────────────────────────────────────────────
+
+/// Resolve the spec to render with. `theme_id == "custom"` uses `custom_theme`
+/// JSON (falling back to the default if absent/invalid); a built-in id returns
+/// its preset; anything unknown falls back to the default.
+pub fn resolve(theme_id: &str, custom_theme: Option<&str>) -> ThemeSpec {
+    if theme_id == "custom" {
+        if let Some(json) = custom_theme {
+            if let Ok(spec) = ThemeSpec::from_custom_json(json) {
+                return spec;
+            }
+        }
+        return presets::default_spec();
+    }
+    presets::builtin(theme_id).unwrap_or_else(presets::default_spec)
 }
 
-/// Return true if `id` matches a registered theme.
+/// Full spec for a built-in id (used by `GET /api/themes/:id`).
+pub fn builtin_spec(id: &str) -> Option<ThemeSpec> {
+    presets::builtin(id)
+}
+
+pub fn render_page(spec: &ThemeSpec, ctx: &RenderContext<'_>) -> String {
+    render::render_page(spec, ctx)
+}
+
+#[allow(clippy::too_many_arguments)]
+pub fn render_workspace_index(
+    spec: &ThemeSpec,
+    site_name: &str,
+    footer_html: &str,
+    username: &str,
+    workspace_slug: &str,
+    workspace_title: &str,
+    pages: &[PageMeta],
+) -> String {
+    render::render_workspace_index(
+        spec,
+        site_name,
+        footer_html,
+        username,
+        workspace_slug,
+        workspace_title,
+        pages,
+    )
+}
+
+pub fn render_user_index(spec: &ThemeSpec, username: &str, workspaces: &[WorkspaceMeta]) -> String {
+    render::render_user_index(spec, username, workspaces)
+}
+
+/// Info for all built-in themes, in display order.
+pub fn list_themes() -> Vec<ThemeInfo> {
+    presets::all().iter().map(ThemeInfo::from).collect()
+}
+
+/// True if `id` is a registered built-in or the special `custom` sentinel.
 pub fn is_valid_theme(id: &str) -> bool {
-    matches!(id, "default" | "academic" | "terminal" | "paper" | "tokyo")
+    id == "custom" || presets::is_builtin(id)
 }
 
 // ── Shared HTML helpers ──────────────────────────────────────────────────────
@@ -108,8 +151,6 @@ pub fn sanitize_footer(raw: &str) -> String {
     if raw.trim().is_empty() {
         return String::new();
     }
-    // Strip disallowed tags while keeping their text content.
-    // This is a simple implementation sufficient for footer use.
     let allowed = ["p", "a", "span", "br", "strong", "em", "small", "b", "i"];
     let mut out = String::with_capacity(raw.len());
     let mut chars = raw.chars().peekable();
@@ -118,7 +159,6 @@ pub fn sanitize_footer(raw: &str) -> String {
             out.push(ch);
             continue;
         }
-        // Collect tag
         let mut tag = String::new();
         let mut is_close = false;
         if chars.peek() == Some(&'/') {
@@ -131,10 +171,16 @@ pub fn sanitize_footer(raw: &str) -> String {
             }
             tag.push(c);
         }
-        let tag_name = tag.split_whitespace().next().unwrap_or("").to_ascii_lowercase();
+        let tag_name = tag
+            .split_whitespace()
+            .next()
+            .unwrap_or("")
+            .to_ascii_lowercase();
         if allowed.contains(&tag_name.as_str()) {
             out.push('<');
-            if is_close { out.push('/'); }
+            if is_close {
+                out.push('/');
+            }
             out.push_str(&tag);
             out.push('>');
         }

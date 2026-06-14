@@ -12,6 +12,22 @@ export const LOCALE_LABELS: Record<SupportedLocale, string> = {
   ko: "한국어",
 };
 
+// BCP-47 language tags for the <html lang> attribute. Keeping this in sync with
+// the active locale fixes screen-reader pronunciation, browser translation
+// prompts, and search-engine language detection.
+const HTML_LANG: Record<SupportedLocale, string> = {
+  en: "en",
+  zh: "zh-Hans",
+  ja: "ja",
+  ko: "ko",
+};
+
+function applyDocumentLang(locale: SupportedLocale) {
+  if (typeof document !== "undefined") {
+    document.documentElement.lang = HTML_LANG[locale] ?? locale;
+  }
+}
+
 const STORAGE_KEY = "jtype-locale";
 let localeMessagesLoader: LocaleMessagesLoader | null = null;
 
@@ -23,6 +39,7 @@ export function ensureLocaleActivated(locale: SupportedLocale = "en") {
   if (i18n.locale) return;
   i18n.load(locale, {});
   i18n.activate(locale);
+  applyDocumentLang(locale);
 }
 
 export function getDefaultLocale(): SupportedLocale {
@@ -50,6 +67,7 @@ export async function activateLocale(
     : sharedMessages;
   i18n.load(locale, merged);
   i18n.activate(locale);
+  applyDocumentLang(locale);
   localStorage.setItem(STORAGE_KEY, locale);
 }
 

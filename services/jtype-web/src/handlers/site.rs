@@ -26,9 +26,9 @@ pub async fn user_site_index(
     let username = load_username(&state, &site_user).await?;
     let workspaces = load_user_workspaces(&state, &username).await?;
 
-    // Use default theme for user index
-    let theme = crate::themes::get_theme("default");
-    let html = theme.render_user_index(&username, &workspaces);
+    // Use default theme for the cross-workspace user index.
+    let spec = crate::themes::resolve("default", None);
+    let html = crate::themes::render_user_index(&spec, &username, &workspaces);
     Ok(Html(html).into_response())
 }
 
@@ -57,14 +57,15 @@ async fn render_workspace_site(
     serve_raw: bool,
 ) -> Result<Response, AppError> {
     let username = load_username(&state, &site_user).await?;
-    let (workspace_id, workspace_title, site_name, footer_html, theme_id) =
+    let (workspace_id, workspace_title, site_name, footer_html, theme_id, custom_theme) =
         load_workspace_site(&state, &username, &workspace_slug).await?;
 
+    let spec = crate::themes::resolve(&theme_id, custom_theme.as_deref());
     let pages = load_published_pages(&state, &workspace_id, &username, &workspace_slug).await?;
 
     if pages.is_empty() {
-        let theme = crate::themes::get_theme(&theme_id);
-        return Ok(Html(theme.render_workspace_index(
+        return Ok(Html(crate::themes::render_workspace_index(
+            &spec,
             &site_name,
             &footer_html,
             &username,
@@ -89,7 +90,6 @@ async fn render_workspace_site(
     let content = load_page_content(&state, &workspace_id, &selected.relative_path).await?;
     let content_html = markdown_to_html(&content);
 
-    let theme = crate::themes::get_theme(&theme_id);
     let ctx = crate::themes::RenderContext {
         site_name: &site_name,
         footer_html: &footer_html,
@@ -100,7 +100,7 @@ async fn render_workspace_site(
         current_page: selected,
         content_html: &content_html,
     };
-    Ok(Html(theme.render_page(&ctx)).into_response())
+    Ok(Html(crate::themes::render_page(&spec, &ctx)).into_response())
 }
 
 // ── Data loaders ─────────────────────────────────────────────────────────────
@@ -114,18 +114,19 @@ async fn load_username(state: &AppState, username: &str) -> Result<String, AppEr
     Ok(row.try_get("username")?)
 }
 
-/// Returns (workspace_id, workspace_title, site_name, footer_html, theme_id)
+/// Returns (workspace_id, workspace_title, site_name, footer_html, theme_id, custom_theme_json)
 async fn load_workspace_site(
     state: &AppState,
     username: &str,
     workspace_slug: &str,
-) -> Result<(String, String, String, String, String), AppError> {
+) -> Result<(String, String, String, String, String, Option<String>), AppError> {
     let row = sqlx::query(
         r#"SELECT w.id,
                   COALESCE(NULLIF(w.publish_title,''), w.name) AS workspace_title,
                   COALESCE(NULLIF(s.name,''), w.name) AS site_name,
                   COALESCE(s.footer_html, '') AS footer_html,
-                  COALESCE(s.theme, 'default') AS theme
+                  COALESCE(s.theme, 'default') AS theme,
+                  CAST(s.custom_theme AS CHAR) AS custom_theme
            FROM workspaces w
            JOIN users u ON u.id = w.owner_user_id
            LEFT JOIN sites s ON s.workspace_id = w.id
@@ -145,6 +146,7 @@ async fn load_workspace_site(
         row.try_get("site_name")?,
         row.try_get("footer_html")?,
         row.try_get("theme")?,
+        row.try_get("custom_theme")?,
     ))
 }
 

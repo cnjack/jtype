@@ -227,19 +227,20 @@ export function BoardSurface({
     <div className="relative flex h-full min-h-0 bg-[#fbfdfb]">
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         {/* Header */}
-        <div className="flex items-center gap-2.5 border-b border-black/[0.05] bg-white/70 px-5 py-2.5">
-          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-soft text-brand-dark">
+        <div className="flex flex-wrap items-center gap-2.5 border-b border-black/[0.05] bg-white/70 px-5 py-2.5">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-brand-soft text-brand-dark">
             <ViewColumnsIcon className="h-4 w-4" />
           </span>
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold text-stone-900">{config.title}</p>
-            <p className="text-xs text-brand-gray">
+            <p className="truncate text-xs text-brand-gray">
               <Trans>Board</Trans>
               <span aria-hidden> · </span>
               {vis.length}
               {vis.length !== cards.length ? `/${cards.length}` : ""} <Trans>cards</Trans>
             </p>
           </div>
+          <div className="flex items-center gap-2.5 max-md:w-full">
           <div className="inline-flex items-center rounded-lg border border-stone-200 p-0.5">
             <button
               type="button"
@@ -286,6 +287,7 @@ export function BoardSurface({
               <Trans>Refresh</Trans>
             </button>
           )}
+          </div>
         </div>
 
         {/* Toolbar */}

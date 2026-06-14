@@ -56,6 +56,24 @@ fn all_migrations() -> Vec<Migration> {
             up: include_str!("../../migrations/0008_mcp_oauth.up.sql"),
             down: include_str!("../../migrations/0008_mcp_oauth.down.sql"),
         },
+        Migration {
+            version: 9,
+            name: "theme_engine",
+            up: include_str!("../../migrations/0009_theme_engine.up.sql"),
+            down: include_str!("../../migrations/0009_theme_engine.down.sql"),
+        },
+        Migration {
+            version: 10,
+            name: "assets",
+            up: include_str!("../../migrations/0010_assets.up.sql"),
+            down: include_str!("../../migrations/0010_assets.down.sql"),
+        },
+        Migration {
+            version: 11,
+            name: "server_settings",
+            up: include_str!("../../migrations/0011_server_settings.up.sql"),
+            down: include_str!("../../migrations/0011_server_settings.down.sql"),
+        },
     ]
 }
 

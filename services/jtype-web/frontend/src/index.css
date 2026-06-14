@@ -361,6 +361,28 @@
   .landing-md-line:nth-child(n + 10) {
     display: none;
   }
+
+  /* Editor: side-by-side split has no room on phones. Collapse "split" to the
+     editor pane only — users tap the Preview mode to read the rendered output. */
+  .editor-preview-grid.view-mode-split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .editor-preview-grid.view-mode-split #preview,
+  .editor-preview-grid.view-mode-split article {
+    display: none;
+  }
+
+  /* Formatting toolbar holds many buttons — let it scroll horizontally instead
+     of wrapping or overflowing the viewport. */
+  .editor-toolbar-row {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .editor-toolbar-row::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
