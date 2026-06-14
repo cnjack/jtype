@@ -137,6 +137,29 @@ async fn full_authcode_pkce_flow() {
 }
 
 #[tokio::test]
+async fn authorize_rejects_scope_escalation() {
+    let (app, _pool) = common::setup().await;
+    let client_id = register_client(app.clone()).await;
+    let username = common::uid();
+    let (user_token, _) = common::register_user(app.clone(), &username).await;
+
+    // A client must not be able to request a broader scope than `mcp`.
+    let (status, body) = common::req(
+        app,
+        "POST",
+        "/api/oauth/authorize",
+        Some(&user_token),
+        Some(json!({
+            "client_id": client_id, "redirect_uri": REDIRECT,
+            "code_challenge": CHALLENGE, "scope": "full"
+        })),
+    )
+    .await;
+    assert_eq!(status, StatusCode::BAD_REQUEST);
+    assert_eq!(body["error"], "invalid_scope");
+}
+
+#[tokio::test]
 async fn pkce_mismatch_is_rejected() {
     let (app, _pool) = common::setup().await;
     let client_id = register_client(app.clone()).await;

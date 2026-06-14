@@ -30,17 +30,28 @@ pub async fn run(client: &ApiClient) -> Result<()> {
 
         match client.post_mcp_raw(trimmed).await {
             Ok((status, body)) => {
-                if !body.trim().is_empty() {
-                    write_line(&mut stdout, body.trim_end()).await?;
-                } else if !status.is_success() {
-                    // Non-2xx with an empty body (e.g. a gateway timeout) — a
-                    // request would otherwise hang the client forever.
-                    if let Some(id) = &req_id {
-                        let e = rpc_error(id, -32000, &format!("upstream http {}", status.as_u16()));
-                        write_line(&mut stdout, &e).await?;
+                if status.is_success() {
+                    // Forward the upstream JSON-RPC response. An empty 2xx body is
+                    // a notification ack (202) → write nothing.
+                    if !body.trim().is_empty() {
+                        write_line(&mut stdout, body.trim_end()).await?;
                     }
+                } else if let Some(id) = &req_id {
+                    // Non-2xx: synthesize a JSON-RPC error so the client never
+                    // hangs (empty body) or chokes on a non-envelope body
+                    // (e.g. proxy HTML / gateway timeout).
+                    let detail = body.trim();
+                    let msg = if detail.is_empty() {
+                        format!("upstream http {}", status.as_u16())
+                    } else {
+                        format!(
+                            "upstream http {}: {}",
+                            status.as_u16(),
+                            detail.chars().take(200).collect::<String>()
+                        )
+                    };
+                    write_line(&mut stdout, &rpc_error(id, -32000, &msg)).await?;
                 }
-                // Empty 2xx body = notification ack (202) → write nothing.
             }
             Err(e) => {
                 // Survive transient network failures instead of aborting the server.

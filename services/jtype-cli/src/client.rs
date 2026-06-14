@@ -1,5 +1,7 @@
 //! Thin async HTTP client for the jtype-web REST API.
 
+use std::time::Duration;
+
 use anyhow::{anyhow, Context, Result};
 use reqwest::{Method, StatusCode};
 use serde_json::Value;
@@ -13,7 +15,11 @@ pub struct ApiClient {
 impl ApiClient {
     pub fn new(base: impl Into<String>, token: Option<String>) -> Self {
         Self {
-            http: reqwest::Client::new(),
+            http: reqwest::Client::builder()
+                .connect_timeout(Duration::from_secs(10))
+                .timeout(Duration::from_secs(60))
+                .build()
+                .unwrap_or_else(|_| reqwest::Client::new()),
             base: base.into().trim_end_matches('/').to_string(),
             token,
         }

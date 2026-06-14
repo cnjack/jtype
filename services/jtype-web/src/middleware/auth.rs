@@ -29,7 +29,8 @@ pub async fn extract_user(pool: &Pool<MySql>, headers: &HeaderMap) -> Result<Aut
         id: row.try_get("id")?,
         username: row.try_get("username")?,
         role: row.try_get("role")?,
-        scope: row.try_get("scope").unwrap_or_else(|_| "full".to_string()),
+        // Fail closed: a scope read failure must deny, never escalate to `full`.
+        scope: row.try_get("scope")?,
     })
 }
 

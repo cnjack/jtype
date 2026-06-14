@@ -185,7 +185,15 @@ pub async fn authorize_approve(
     if req.code_challenge.is_empty() {
         return Err(AppError::BadRequest("code_challenge required".into()));
     }
-    let scope = req.scope.clone().filter(|s| !s.is_empty()).unwrap_or_else(|| "mcp".into());
+    // This authorization server only ever grants the `mcp` scope (notes + kanban),
+    // which is what the consent page promises. Reject any attempt to request a
+    // broader scope (e.g. `full`) so a client can't escalate past the boundary.
+    if let Some(s) = req.scope.as_deref().filter(|s| !s.is_empty()) {
+        if s != "mcp" {
+            return Err(oauth_error("invalid_scope"));
+        }
+    }
+    let scope = "mcp".to_string();
 
     let code = random_token();
     let code_hash = sha256_hex(&code);
@@ -391,6 +399,10 @@ async fn token_authcode(st: &McpState, req: TokenRequest) -> Result<Json<Value>,
     let stored_redirect: String = row.try_get("redirect_uri")?;
     let challenge: String = row.try_get("code_challenge")?;
     let scope: String = row.try_get("scope").unwrap_or_else(|_| "mcp".into());
+    // Defense in depth: never mint anything but `mcp` from this server.
+    if scope != "mcp" {
+        return Err(oauth_error("invalid_scope"));
+    }
 
     // client_id / redirect_uri must match what the code was issued for.
     if let Some(c) = req.client_id.as_deref() {
