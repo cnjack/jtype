@@ -19,6 +19,20 @@
       "runtimeArgs": ["run", "dev"],
       "port": 5173,
       "cwd": "services/jtype-web/frontend"
+    },
+    {
+      "name": "report-deck",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8799"],
+      "port": 8799,
+      "cwd": "internal-docs/ai-integration"
+    },
+    {
+      "name": "web-dist",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8800"],
+      "port": 8800,
+      "cwd": "services/jtype-web/frontend/dist"
     }
   ]
 }

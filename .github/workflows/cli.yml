@@ -1,0 +1,62 @@
+name: Build CLI
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to upload the CLI binaries to
+        required: true
+
+jobs:
+  build:
+    name: Build jtype CLI (${{ matrix.asset }})
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            asset: jtype-macos-arm64
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            asset: jtype-macos-x64
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            asset: jtype-linux-x64
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            asset: jtype-windows-x64.exe
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Build
+        run: cargo build --release --locked --manifest-path services/jtype-cli/Cargo.toml --target ${{ matrix.target }}
+
+      - name: Stage binary (unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: cp "services/jtype-cli/target/${{ matrix.target }}/release/jtype" "${{ matrix.asset }}"
+
+      - name: Stage binary (windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: cp "services/jtype-cli/target/${{ matrix.target }}/release/jtype.exe" "${{ matrix.asset }}"
+
+      - name: Upload to release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.event.release.tag_name || inputs.tag }}
+        run: gh release upload "$TAG" "${{ matrix.asset }}" --clobber

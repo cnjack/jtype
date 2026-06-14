@@ -9,7 +9,7 @@ pub async fn extract_user(pool: &Pool<MySql>, headers: &HeaderMap) -> Result<Aut
     let token = bearer_token(headers)?;
     let token_hash = sha256_hex(token);
     let row = sqlx::query(
-        r#"SELECT u.id, u.username, u.role, u.disabled_at
+        r#"SELECT u.id, u.username, u.role, u.disabled_at, s.scope
            FROM sessions s
            JOIN users u ON u.id = s.user_id
            WHERE s.token_hash = ?
@@ -29,11 +29,15 @@ pub async fn extract_user(pool: &Pool<MySql>, headers: &HeaderMap) -> Result<Aut
         id: row.try_get("id")?,
         username: row.try_get("username")?,
         role: row.try_get("role")?,
+        // Fail closed: a scope read failure must deny, never escalate to `full`.
+        scope: row.try_get("scope")?,
     })
 }
 
 pub fn require_admin(user: &AuthUser) -> Result<(), AppError> {
-    if user.role == "admin" {
+    // Admin endpoints require a full-scope session; MCP/agent tokens are barred
+    // from privilege escalation even when the user is an admin.
+    if user.role == "admin" && user.scope == "full" {
         Ok(())
     } else {
         Err(AppError::Forbidden)

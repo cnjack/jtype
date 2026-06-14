@@ -18,6 +18,7 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
+jtype-core = { path = "../services/jtype-core" }
 tauri = { version = "2", features = [] }
 tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
@@ -29,6 +30,11 @@ notify = "6"
 tokio-tungstenite = { version = "0.24", features = ["native-tls"] }
 tokio = { version = "1", features = ["time", "rt", "macros", "sync"] }
 futures = "0.3"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+dirs = "5"
+
+[target.'cfg(windows)'.dependencies]
+winreg = "0.52"
 
 [dev-dependencies]
 tempfile = "3"

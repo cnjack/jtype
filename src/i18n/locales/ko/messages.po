@@ -1,24 +1,26 @@
+#
 msgid ""
 msgstr ""
-"POT-Creation-Date: 2026-05-14\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
-"X-Generator: @lingui/cli\n"
-"Language: ko\n"
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-05-14\n"
 "PO-Revision-Date: \n"
 "Last-Translator: \n"
 "Language-Team: \n"
+"Language: ko\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: \n"
+"X-Generator: @lingui/cli\n"
 
 #. placeholder {0}: documents.length
 #: src/components/layout/VaultHome.tsx
 msgid "{0, plural, one {# Markdown file} other {# Markdown files}}"
 msgstr "{0,plural,other{# 개의 Markdown 파일}}"
 
-#. placeholder {0}: isPublished ? (hasUnpublishedChanges ? "Changed" : "Published") : "Not published"
+#. placeholder {0}: isPublished ? (hasUnpublishedChanges ? "Changed" :
+#. "Published") : "Not published"
 #: src/components/editor/EditorShell.tsx
 msgid "{0}"
 msgstr "{0}"
@@ -35,6 +37,11 @@ msgstr "충돌 {0}건{1}"
 msgid "{0} conflict{1} to resolve"
 msgstr "해결할 충돌 {0}건{1}"
 
+#. placeholder {0}: card.title
+#: src/components/BoardView.tsx
+msgid "{0} copy"
+msgstr ""
+
 #. placeholder {0}: ws.documentCount ?? 0
 #. placeholder {1}: formatBytes(ws.storageBudgetBytes)
 #: src/components/modals/AccountDialog.tsx
@@ -44,6 +51,10 @@ msgstr "{0}개 문서 - {1} 예산"
 #: src/components/sidebar/Sidebar.tsx
 msgid "{docCount} documents"
 msgstr "{docCount}개 문서"
+
+#: src/components/editor/ResourceViewer.tsx
+msgid "{label} files can not be previewed in JType yet."
+msgstr ""
 
 #: src/components/modals/MoveFolderDialog.tsx
 msgid "/ (root)"
@@ -61,8 +72,22 @@ msgstr "📁 하위 폴더 {0}개{1}"
 msgid "📄 {0} document{1}"
 msgstr "📄 문서 {0}개{1}"
 
+#: src/components/modals/NewResourceDialog.tsx
+msgid "A kanban board over your notes"
+msgstr ""
+
+#: src/components/modals/NewResourceDialog.tsx
+msgid "A Markdown document you write and preview"
+msgstr ""
+
+#: src/components/modals/NewResourceDialog.tsx
+msgid "A text document you write and preview"
+msgstr ""
+
 #: src/components/layout/WelcomeScreen.tsx
-msgid "A vault is a local folder for notes, sync, and publishing. A single file opens JType as a focused Markdown editor."
+msgid ""
+"A vault is a local folder for notes, sync, and publishing. A single file "
+"opens JType as a focused Markdown editor."
 msgstr "볼트는 노트, 동기화, 게시를 위한 로컬 폴더입니다. 단일 파일은 JType을 집중형 Markdown 편집기로 엽니다."
 
 #: src/components/modals/AccountDialog.tsx
@@ -93,17 +118,31 @@ msgstr "즐겨찾기에 추가되었습니다."
 msgid "Advanced"
 msgstr "고급"
 
+#: src/components/modals/AccountDialog.tsx
+msgid "Available in the desktop app."
+msgstr "데스크톱 앱에서 사용할 수 있습니다."
+
+#: src/components/modals/NewResourceDialog.tsx
+msgid "Back"
+msgstr ""
+
 #: src/components/layout/Header.tsx
 msgid "Back to home"
 msgstr "홈으로 돌아가기"
 
 #: src/components/modals/SyncPromptDialog.tsx
-msgid "Back up this local vault to a cloud workspace, keep devices in sync, and open the same notes from the web."
+msgid ""
+"Back up this local vault to a cloud workspace, keep devices in sync, and "
+"open the same notes from the web."
 msgstr "이 로컬 볼트를 클라우드 워크스페이스에 백업하고, 기기를 동기화하며, 웹에서 동일한 노트를 열 수 있습니다."
 
 #: src/components/modals/AccountDialog.tsx
 msgid "Bind the current local vault to one cloud workspace."
 msgstr "현재 로컬 볼트를 하나의 클라우드 워크스페이스에 바인딩합니다."
+
+#: src/components/modals/NewResourceDialog.tsx
+msgid "Board name"
+msgstr ""
 
 #: src/components/editor/EditorShell.tsx
 msgid "Bold"
@@ -122,24 +161,35 @@ msgstr "바인딩됨"
 msgid "Bound to {0}. Sync will push and pull this vault."
 msgstr "{0}에 바인딩됨. 동기화로 이 볼트를 푸시/풀합니다."
 
+#: src/components/modals/NewResourceDialog.tsx
+msgid "Bring in an image or PDF from your computer"
+msgstr ""
+
 #: src/components/modals/AccountDialog.tsx
-msgid "Browser authorization is open. Sync will continue after sign-in completes."
+msgid ""
+"Browser authorization is open. Sync will continue after sign-in completes."
 msgstr "브라우저 인증이 열려 있습니다. 로그인 완료 후 동기화가 계속됩니다."
 
 #: src/components/modals/SyncPromptDialog.tsx
-msgid "Browser authorization is open. This sync will continue after sign-in completes."
+msgid ""
+"Browser authorization is open. This sync will continue after sign-in "
+"completes."
 msgstr "브라우저 인증이 열려 있습니다. 로그인 완료 후 이 동기화가 계속됩니다."
 
 #: src/components/modals/CreateFolderDialog.tsx
-#: src/components/modals/CreateNoteDialog.tsx
 #: src/components/modals/DeleteFolderDialog.tsx
 #: src/components/modals/MoveFolderDialog.tsx
+#: src/components/modals/NewResourceDialog.tsx
 msgid "Cancel"
 msgstr "취소"
 
 #: src/components/sidebar/Sidebar.tsx
 msgid "Cannot move folder into itself."
 msgstr "폴더를 자기 자신 안으로 이동할 수 없습니다."
+
+#: src/components/editor/CardPropertyStrip.tsx
+msgid "Card"
+msgstr ""
 
 #: src/components/sidebar/Sidebar.tsx
 msgid "Choose a local folder"
@@ -149,6 +199,10 @@ msgstr "로컬 폴더 선택"
 #: src/components/layout/VaultHome.tsx
 msgid "Choose a note or create a new one. This vault lives at <0>{0}</0>."
 msgstr "노트를 선택하거나 새로 만드세요. 이 볼트는 <0>{0}</0>에 있습니다."
+
+#: src/components/modals/NewResourceDialog.tsx
+msgid "Choose what you want to create."
+msgstr ""
 
 #: src/components/modals/AccountDialog.tsx
 #: src/components/modals/ConflictDialog.tsx
@@ -179,12 +233,11 @@ msgstr "클라우드 동기화"
 msgid "Cloud sync reminder snoozed."
 msgstr "클라우드 동기화 알림이 스누즈되었습니다."
 
-#: src/components/layout/Header.tsx
-#: src/components/modals/AccountDialog.tsx
+#: src/components/layout/Header.tsx src/components/modals/AccountDialog.tsx
 msgid "Cloud workspace"
 msgstr "클라우드 워크스페이스"
 
-#. placeholder {0}: currentBinding?.workspaceName
+#. placeholder {0}: currentBinding?.workspaceName ?? ""
 #: src/components/layout/Header.tsx
 msgid "Cloud workspace: {0}"
 msgstr "클라우드 워크스페이스: {0}"
@@ -197,12 +250,21 @@ msgstr "클라우드 워크스페이스"
 msgid "Collapse all"
 msgstr "모두 접기"
 
+#: src/components/modals/AccountDialog.tsx
+msgid "Command line"
+msgstr "명령줄"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Command line (jtype)"
+msgstr "명령줄 (jtype)"
+
 #: src/components/modals/CommandPalette.tsx
 msgid "Command palette"
 msgstr "명령 팔레트"
 
 #: src/components/modals/AccountDialog.tsx
-msgid "Connect desktop sync through the browser and choose the service endpoint."
+msgid ""
+"Connect desktop sync through the browser and choose the service endpoint."
 msgstr "브라우저를 통해 데스크탑 동기화를 연결하고 서비스 엔드포인트를 선택합니다."
 
 #: src/components/modals/AccountDialog.tsx
@@ -230,6 +292,10 @@ msgstr "{0}(으)로 연결됨. 볼트를 클라우드 워크스페이스와 동�
 msgid "Copy path"
 msgstr "경로 복사"
 
+#: src/components/editor/ResourceViewer.tsx
+msgid "Could not open this file."
+msgstr ""
+
 #: src/components/editor/EditorShell.tsx
 msgid "Could not prepare PDF export."
 msgstr "PDF 내보내기를 준비할 수 없습니다."
@@ -239,7 +305,7 @@ msgid "Could not prepare PDF page."
 msgstr "PDF 페이지를 준비할 수 없습니다."
 
 #: src/components/modals/CreateFolderDialog.tsx
-#: src/components/modals/CreateNoteDialog.tsx
+#: src/components/modals/NewResourceDialog.tsx
 msgid "Create"
 msgstr "만들기"
 
@@ -264,6 +330,10 @@ msgstr "첫 번째 Markdown 노트를 만드세요."
 msgid "Created folder {0}."
 msgstr "폴더 {0}을(를) 만들었습니다."
 
+#: src/components/modals/NewResourceDialog.tsx
+msgid "Creates in"
+msgstr ""
+
 #: src/components/modals/AccountDialog.tsx
 msgid "Current vault"
 msgstr "현재 볼트"
@@ -275,6 +345,21 @@ msgstr "기본 볼트 경로: <0>{defaultVaultPath}</0>"
 #: src/components/modals/DeleteFolderDialog.tsx
 msgid "Delete"
 msgstr "삭제"
+
+#. placeholder {0}: card.title
+#: src/components/BoardView.tsx
+msgid "Delete card \"{0}\"? It moves to the trash."
+msgstr ""
+
+#: src/components/BoardView.tsx
+msgid "Delete column \"{colName}\"?"
+msgstr ""
+
+#. placeholder {0}: inCol.length
+#. placeholder {1}: fallback.name
+#: src/components/BoardView.tsx
+msgid "Delete column \"{colName}\"? Its {0} card(s) move to \"{1}\"."
+msgstr ""
 
 #: src/components/sidebar/Sidebar.tsx
 msgid "Delete folder"
@@ -310,7 +395,10 @@ msgid ""
 "Disconnect \"{0}\" from this vault?\n"
 "\n"
 "Local files will stay on disk. Cloud data and workspace membership are not changed."
-msgstr "\"{0}\"을(를) 이 볼트에서 연결 해제하시겠습니까?\n\n로컬 파일은 디스크에 그대로 남습니다. 클라우드 데이터와 워크스페이스 멤버십은 변경되지 않습니다."
+msgstr ""
+"\"{0}\"을(를) 이 볼트에서 연결 해제하시겠습니까?\n"
+"\n"
+"로컬 파일은 디스크에 그대로 남습니다. 클라우드 데이터와 워크스페이스 멤버십은 변경되지 않습니다."
 
 #: src/components/modals/AccountDialog.tsx
 msgid "Disconnect cloud sync"
@@ -328,6 +416,10 @@ msgstr "문서 정보"
 msgid "Document Info"
 msgstr "문서 정보"
 
+#: src/components/modals/NewResourceDialog.tsx
+msgid "Document name"
+msgstr ""
+
 #: src/components/editor/EditorShell.tsx
 msgid "Document published."
 msgstr "문서가 게시되었습니다."
@@ -340,9 +432,17 @@ msgstr "문서 게시가 취소되었습니다."
 msgid "Documents"
 msgstr "문서"
 
+#: src/components/modals/AccountDialog.tsx
+msgid "Downloads"
+msgstr "다운로드"
+
 #: src/components/sidebar/Sidebar.tsx
 msgid "Drop a folder here to open it as a vault."
 msgstr "폴더를 여기에 드롭하여 볼트로 엽니다."
+
+#: src/components/editor/CardPropertyStrip.tsx
+msgid "Edit properties in the board"
+msgstr ""
 
 #: src/components/editor/EditorShell.tsx
 msgid "Edits are written back to YAML frontmatter."
@@ -408,6 +508,10 @@ msgstr "일반"
 msgid "Hide"
 msgstr "숨기기"
 
+#: src/components/modals/NewResourceDialog.tsx
+msgid "Import file"
+msgstr ""
+
 #: src/components/modals/CreateFolderDialog.tsx
 msgid "in {parentPath}/"
 msgstr "{parentPath}/ 안"
@@ -440,9 +544,31 @@ msgstr "표 삽입 또는 편집 - Ctrl+Shift+T"
 msgid "Insert or format table"
 msgstr "표 삽입 또는 서식"
 
+#: src/components/modals/AccountDialog.tsx
+msgid "Install jtype CLI"
+msgstr "jtype CLI 설치"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Install jtype to your PATH"
+msgstr "PATH에 jtype 설치"
+
+#: src/components/modals/AccountDialog.tsx
+msgid ""
+"Install the jtype CLI to manage notes and kanban from your terminal and "
+"connect AI agents over MCP."
+msgstr "jtype CLI를 설치하면 터미널에서 노트와 칸반을 관리하고 MCP로 AI 에이전트를 연결할 수 있습니다."
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Installed"
+msgstr "설치됨"
+
 #: src/components/editor/EditorShell.tsx
 msgid "Italic - Ctrl+I"
 msgstr "기울임꼴 - Ctrl+I"
+
+#: src/components/modals/NewResourceDialog.tsx
+msgid "Kanban board"
+msgstr ""
 
 #: src/components/layout/Header.tsx
 msgid "Language"
@@ -461,6 +587,14 @@ msgstr "{0}번째 줄"
 msgid "Link - Ctrl+K"
 msgstr "링크 - Ctrl+K"
 
+#: src/components/editor/ResourceViewer.tsx
+msgid "Loading preview"
+msgstr ""
+
+#: src/components/editor/ResourceViewer.tsx
+msgid "Local"
+msgstr ""
+
 #: src/components/modals/AccountDialog.tsx
 msgid "Local mode"
 msgstr "로컬 모드"
@@ -477,17 +611,19 @@ msgstr "로컬 볼트 모드"
 msgid "Log out"
 msgstr "로그아웃"
 
-#: src/components/editor/EditorShell.tsx
-#: src/components/layout/VaultHome.tsx
+#: src/components/editor/EditorShell.tsx src/components/layout/VaultHome.tsx
 msgid "Markdown"
 msgstr "Markdown"
+
+#: src/components/modals/NewResourceDialog.tsx
+msgid "Markdown document"
+msgstr ""
 
 #: src/components/editor/EditorShell.tsx
 msgid "Markdown editor"
 msgstr "Markdown 편집기"
 
-#: src/components/layout/Header.tsx
-#: src/components/layout/VaultHome.tsx
+#: src/components/layout/Header.tsx src/components/layout/VaultHome.tsx
 #: src/components/layout/WelcomeScreen.tsx
 msgid "Markdown file"
 msgstr "Markdown 파일"
@@ -500,8 +636,7 @@ msgstr "이동"
 msgid "Move to Folder"
 msgstr "폴더로 이동"
 
-#: src/components/editor/EditorShell.tsx
-#: src/components/sidebar/Sidebar.tsx
+#: src/components/editor/EditorShell.tsx src/components/sidebar/Sidebar.tsx
 msgid "Move to trash"
 msgstr "휴지통으로 이동"
 
@@ -509,13 +644,16 @@ msgstr "휴지통으로 이동"
 msgid "Move to..."
 msgstr "이동..."
 
+#: src/components/modals/NewResourceDialog.tsx
+msgid "New board"
+msgstr ""
+
+#: src/components/modals/NewResourceDialog.tsx
 #: src/components/sidebar/Sidebar.tsx
 msgid "New document"
 msgstr "새 문서"
 
-#: src/components/layout/VaultHome.tsx
-#: src/components/modals/CreateNoteDialog.tsx
-#: src/components/sidebar/Sidebar.tsx
+#: src/components/layout/VaultHome.tsx src/components/sidebar/Sidebar.tsx
 msgid "New Document"
 msgstr "새 문서"
 
@@ -534,6 +672,10 @@ msgstr "새 폴더"
 #: src/components/sidebar/Sidebar.tsx
 msgid "New folder name:"
 msgstr "새 폴더 이름:"
+
+#: src/components/modals/NewResourceDialog.tsx
+msgid "New resource"
+msgstr ""
 
 #: src/components/modals/AccountDialog.tsx
 msgid "No cloud workspaces yet. Sync this vault to create one."
@@ -563,6 +705,10 @@ msgstr "제목을 찾을 수 없습니다."
 msgid "No matches."
 msgstr "일치하는 항목 없음."
 
+#: src/components/editor/EditorShell.tsx
+msgid "No note named \"{target}\"."
+msgstr ""
+
 #: src/components/layout/VaultHome.tsx
 msgid "No notes yet."
 msgstr "노트가 아직 없습니다."
@@ -584,19 +730,20 @@ msgid "No vault"
 msgstr "볼트 없음"
 
 #: src/components/modals/AccountDialog.tsx
-msgid "Not bound to a cloud workspace yet. Binding starts bidirectional sync for this vault."
+msgid ""
+"Not bound to a cloud workspace yet. Binding starts bidirectional sync for "
+"this vault."
 msgstr "아직 클라우드 워크스페이스에 바인딩되지 않았습니다. 바인딩하면 이 볼트의 양방향 동기화가 시작됩니다."
 
-#: src/components/modals/CreateNoteDialog.tsx
-msgid "Note name..."
-msgstr "노트 이름..."
+#: src/components/modals/AccountDialog.tsx
+msgid "Not installed"
+msgstr "설치되지 않음"
 
 #: src/components/editor/EditorShell.tsx
 msgid "Only web, email, and phone links can be opened from preview."
 msgstr "미리보기에서는 웹, 이메일, 전화 링크만 열 수 있습니다."
 
-#: src/components/modals/QuickSwitcher.tsx
-#: src/components/sidebar/Sidebar.tsx
+#: src/components/modals/QuickSwitcher.tsx src/components/sidebar/Sidebar.tsx
 msgid "Open"
 msgstr "열기"
 
@@ -631,6 +778,10 @@ msgstr "다른 볼트 열기"
 #: src/components/layout/Header.tsx
 msgid "Open file"
 msgstr "파일 열기"
+
+#: src/components/editor/ResourceViewer.tsx
+msgid "Open in system app"
+msgstr ""
 
 #: src/components/layout/WelcomeScreen.tsx
 msgid "Open Markdown file"
@@ -680,8 +831,11 @@ msgstr "영구 삭제"
 msgid "Preparing PDF export..."
 msgstr "PDF 내보내기 준비 중..."
 
-#: src/components/layout/Header.tsx
-#: src/components/modals/AccountDialog.tsx
+#: src/components/editor/ResourceViewer.tsx
+msgid "Preview is available in the desktop app."
+msgstr ""
+
+#: src/components/layout/Header.tsx src/components/modals/AccountDialog.tsx
 msgid "Profile"
 msgstr "프로필"
 
@@ -707,11 +861,12 @@ msgid "Published {0}"
 msgstr "{0}에 게시됨"
 
 #: src/components/editor/EditorShell.tsx
-msgid "Publishing uses a cloud snapshot; frontmatter status is treated as user metadata."
+msgid ""
+"Publishing uses a cloud snapshot; frontmatter status is treated as user "
+"metadata."
 msgstr "게시는 클라우드 스냅샷을 사용합니다. 프론트매터 상태는 사용자 메타데이터로 처리됩니다."
 
-#: src/components/layout/Header.tsx
-#: src/components/layout/VaultHome.tsx
+#: src/components/layout/Header.tsx src/components/layout/VaultHome.tsx
 msgid "Quick open"
 msgstr "빠른 열기"
 
@@ -723,8 +878,7 @@ msgstr "빠른 전환"
 msgid "Read-only"
 msgstr "읽기 전용"
 
-#: src/components/layout/VaultHome.tsx
-#: src/components/layout/WelcomeScreen.tsx
+#: src/components/layout/VaultHome.tsx src/components/layout/WelcomeScreen.tsx
 msgid "Recent"
 msgstr "최근"
 
@@ -744,6 +898,10 @@ msgstr "즐겨찾기에서 제거되었습니다."
 msgid "Rename"
 msgstr "이름 변경"
 
+#: src/components/BoardView.tsx
+msgid "Rename column"
+msgstr ""
+
 #: src/components/sidebar/Sidebar.tsx
 msgid "Rename folder to:"
 msgstr "폴더 이름 변경:"
@@ -755,6 +913,10 @@ msgstr "이름 변경:"
 #: src/components/editor/EditorShell.tsx
 msgid "Republish"
 msgstr "다시 게시"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Restart your terminal to pick up the updated PATH."
+msgstr "업데이트된 PATH를 적용하려면 터미널을 다시 시작하세요."
 
 #: src/components/sidebar/Sidebar.tsx
 msgid "Restore"
@@ -788,8 +950,7 @@ msgstr "Markdown 파일 선택"
 msgid "Select destination for \"{sourceName}\""
 msgstr "\"{sourceName}\"의 대상 선택"
 
-#: src/components/modals/AccountDialog.tsx
-#: src/components/sidebar/Sidebar.tsx
+#: src/components/modals/AccountDialog.tsx src/components/sidebar/Sidebar.tsx
 msgid "Settings"
 msgstr "설정"
 
@@ -840,16 +1001,30 @@ msgstr "{0}과(와) 동기화 중."
 msgid "Task list"
 msgstr "작업 목록"
 
+#: src/components/BoardView.tsx
+msgid "Template name"
+msgstr ""
+
 #: src/components/editor/EditorShell.tsx
 msgid "The public snapshot is behind the current document."
 msgstr "공개 스냅샷이 현재 문서보다 오래되었습니다."
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Then run `jtype login` to sign in."
+msgstr "그런 다음 `jtype login`을 실행하여 로그인하세요."
 
 #: src/components/modals/DeleteFolderDialog.tsx
 msgid "This folder is empty."
 msgstr "이 폴더는 비어 있습니다."
 
+#: src/components/editor/ResourceViewer.tsx
+msgid "This PDF can not be previewed inline."
+msgstr ""
+
 #: src/components/modals/AccountDialog.tsx
-msgid "This vault is local-only. You can keep working without cloud sync or enable it below."
+msgid ""
+"This vault is local-only. You can keep working without cloud sync or enable "
+"it below."
 msgstr "이 볼트는 로컬 전용입니다. 클라우드 동기화 없이 계속 작업하거나 아래에서 활성화할 수 있습니다."
 
 #: src/components/modals/SyncPromptDialog.tsx
@@ -860,6 +1035,14 @@ msgstr "이 볼트는 이제 로컬 전용입니다."
 msgid "Toggle favorite"
 msgstr "즐겨찾기 전환"
 
+#: src/components/modals/AccountDialog.tsx
+msgid "Tools"
+msgstr "도구"
+
+#: src/components/modals/NewResourceDialog.tsx
+msgid "Track work in columns and cards"
+msgstr ""
+
 #: src/components/sidebar/Sidebar.tsx
 msgid "Trash"
 msgstr "휴지통"
@@ -867,6 +1050,10 @@ msgstr "휴지통"
 #: src/components/modals/CommandPalette.tsx
 msgid "Unavailable"
 msgstr "사용 불가"
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Uninstall jtype CLI"
+msgstr "jtype CLI 제거"
 
 #: src/components/editor/EditorShell.tsx
 msgid "Unpublish"
@@ -901,6 +1088,10 @@ msgstr "볼트"
 msgid "Vault ready"
 msgstr "볼트 준비 완료"
 
+#: src/components/modals/NewResourceDialog.tsx
+msgid "vault root"
+msgstr ""
+
 #: src/components/editor/EditorShell.tsx
 msgid "View published page"
 msgstr "게시된 페이지 보기"
@@ -914,6 +1105,14 @@ msgstr "뷰어 접근은 읽기 전용입니다."
 msgid "Waiting for browser authorization (code {0})..."
 msgstr "브라우저 인증 대기 중 (코드 {0})..."
 
+#: src/components/BoardView.tsx
+msgid "WIP limit (blank to clear)"
+msgstr ""
+
+#: src/components/modals/AccountDialog.tsx
+msgid "Working…"
+msgstr "처리 중…"
+
 #: src/components/sidebar/Sidebar.tsx
 msgid "Workspace files"
 msgstr "워크스페이스 파일"
@@ -923,7 +1122,10 @@ msgid ""
 "You have unsaved changes. Switching cloud workspace before saving may cause conflicts.\n"
 "\n"
 "Continue anyway?"
-msgstr "저장되지 않은 변경 사항이 있습니다. 저장하기 전에 클라우드 워크스페이스를 전환하면 충돌이 발생할 수 있습니다.\n\n계속하시겠습니까?"
+msgstr ""
+"저장되지 않은 변경 사항이 있습니다. 저장하기 전에 클라우드 워크스페이스를 전환하면 충돌이 발생할 수 있습니다.\n"
+"\n"
+"계속하시겠습니까?"
 
 #: src/components/modals/AccountDialog.tsx
 msgid "your account"
@@ -932,3 +1134,177 @@ msgstr "내 계정"
 #: src/components/editor/EditorShell.tsx
 msgid "Your rendered document will appear here."
 msgstr "렌더링된 문서가 여기에 표시됩니다."
+
+#~ msgid "Add column"
+#~ msgstr ""
+
+#~ msgid "Add details..."
+#~ msgstr ""
+
+#~ msgid "Assignee"
+#~ msgstr ""
+
+#~ msgid "Blank card"
+#~ msgstr ""
+
+#~ msgid "Board"
+#~ msgstr ""
+
+#~ msgid "Card title — Enter to add, Esc to cancel"
+#~ msgstr ""
+
+#~ msgid "Card title (Enter to add, Esc to cancel)"
+#~ msgstr ""
+
+#~ msgid "cards"
+#~ msgstr ""
+
+#~ msgid "Clear filter"
+#~ msgstr ""
+
+#~ msgid "Collapse column"
+#~ msgstr ""
+
+#~ msgid "Color"
+#~ msgstr ""
+
+#~ msgid "Color columns"
+#~ msgstr ""
+
+#~ msgid "comma, separated"
+#~ msgstr ""
+
+#~ msgid "Copy link"
+#~ msgstr ""
+
+#~ msgid "Delete card"
+#~ msgstr ""
+
+#~ msgid "Delete column \"{0}\"?"
+#~ msgstr ""
+
+#~ msgid "Delete column \"{0}\"? Its {1} card(s) move to \"{2}\"."
+#~ msgstr ""
+
+#~ msgid "Done column"
+#~ msgstr ""
+
+#~ msgid "Drag to resize"
+#~ msgstr ""
+
+#~ msgid "Due"
+#~ msgstr ""
+
+#~ msgid "Duplicate"
+#~ msgstr ""
+
+#~ msgid "Expand column"
+#~ msgstr ""
+
+#~ msgid "Filter"
+#~ msgstr ""
+
+#~ msgid "Group: Assignee"
+#~ msgstr ""
+
+#~ msgid "Group: Priority"
+#~ msgstr ""
+
+#~ msgid "Group: Status"
+#~ msgstr ""
+
+#~ msgid "Icon"
+#~ msgstr ""
+
+#~ msgid "Loading…"
+#~ msgstr ""
+
+#~ msgid "New card"
+#~ msgstr ""
+
+#~ msgid "New column name"
+#~ msgstr ""
+
+#~ msgid "No cards"
+#~ msgstr ""
+
+#~ msgid "No color"
+#~ msgstr ""
+
+#~ msgid "No icon"
+#~ msgstr ""
+
+#~ msgid "Note name..."
+#~ msgstr "노트 이름..."
+
+#~ msgid "Notes"
+#~ msgstr ""
+
+#~ msgid "Open in editor"
+#~ msgstr ""
+
+#~ msgid "Open in full editor"
+#~ msgstr ""
+
+#~ msgid "Preview"
+#~ msgstr ""
+
+#~ msgid "Priority"
+#~ msgstr ""
+
+#~ msgid "Refresh"
+#~ msgstr ""
+
+#~ msgid "Save as template"
+#~ msgstr ""
+
+#~ msgid "Search cards"
+#~ msgstr ""
+
+#~ msgid "Set as done column"
+#~ msgstr ""
+
+#~ msgid "Set WIP limit"
+#~ msgstr ""
+
+#~ msgid "Sort: Due"
+#~ msgstr ""
+
+#~ msgid "Sort: Manual"
+#~ msgstr ""
+
+#~ msgid "Sort: Priority"
+#~ msgstr ""
+
+#~ msgid "Sort: Title"
+#~ msgstr ""
+
+#~ msgid "Status"
+#~ msgstr ""
+
+#~ msgid "Table"
+#~ msgstr ""
+
+#~ msgid "Tags"
+#~ msgstr ""
+
+#~ msgid "Templates"
+#~ msgstr ""
+
+#~ msgid "Title"
+#~ msgstr ""
+
+#~ msgid "Unassigned"
+#~ msgstr ""
+
+#~ msgid "Unset done column"
+#~ msgstr ""
+
+#~ msgid "Untitled card"
+#~ msgstr ""
+
+#~ msgid "WIP limit {0}"
+#~ msgstr ""
+
+#~ msgid "Write"
+#~ msgstr ""

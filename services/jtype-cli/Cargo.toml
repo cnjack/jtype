@@ -1,0 +1,22 @@
+[package]
+name = "jtype-cli"
+version = "0.1.0"
+edition = "2021"
+description = "JType CLI — local-first Markdown vault + kanban from the terminal or AI agents (device-auth, cwd-vault notes with cloud write-through/sync, stdio MCP bridge)."
+
+[[bin]]
+name = "jtype"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1"
+clap = { version = "4", features = ["derive", "env"] }
+dirs = "5"
+jtype-core = { path = "../jtype-core" }
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "io-std", "io-util", "time"] }
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"

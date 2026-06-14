@@ -2,6 +2,7 @@ pub mod db;
 pub mod error;
 pub mod handlers;
 pub mod hub;
+pub mod mcp;
 pub mod middleware;
 pub mod tasks;
 pub mod themes;
@@ -76,8 +77,10 @@ pub fn build_router_with_hub(
     };
 
     let return_hub = state.hub.clone();
+    let pool_for_mcp = state.pool.clone();
+    let public_base_url_for_mcp = state.public_base_url.clone();
 
-    let router = Router::new()
+    let api = Router::new()
         // Health
         .route("/health", get(|| async { "ok" }))
         // Auth API
@@ -92,6 +95,14 @@ pub fn build_router_with_hub(
         .route("/api/me/site", put(handlers::user::update_site_settings))
         .route("/api/me/storage", get(handlers::user::my_storage))
         .route("/api/me/devices", get(handlers::user::my_devices))
+        .route(
+            "/api/me/tokens",
+            get(handlers::user::list_tokens).post(handlers::user::create_token),
+        )
+        .route(
+            "/api/me/tokens/:token_id",
+            delete(handlers::user::revoke_token),
+        )
         // Admin API
         .route("/api/admin/users", get(handlers::admin::list_users))
         .route(
@@ -341,15 +352,24 @@ pub fn build_router_with_hub(
         )
         // Frontend SPA - catch all other routes
         .fallback(serve_frontend)
-        .layer(
-            CorsLayer::new()
-                .allow_origin(Any)
-                .allow_methods(Any)
-                .allow_headers(Any),
-        )
         .with_state(state);
 
-    (router, return_hub)
+    // MCP server (Streamable HTTP) + OAuth discovery. MCP tools dispatch
+    // in-process through a clone of the API router (see `mcp` module).
+    let mcp = mcp::router(mcp::McpState {
+        api: api.clone(),
+        pool: pool_for_mcp,
+        public_base_url: public_base_url_for_mcp,
+    });
+
+    let app = mcp.merge(api).layer(
+        CorsLayer::new()
+            .allow_origin(Any)
+            .allow_methods(Any)
+            .allow_headers(Any),
+    );
+
+    (app, return_hub)
 }
 
 async fn serve_frontend(uri: Uri) -> Response {

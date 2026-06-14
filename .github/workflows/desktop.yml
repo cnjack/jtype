@@ -34,17 +34,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.6.0
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
+          cache: pnpm
 
       - name: Set up Rust
         uses: dtolnay/rust-toolchain@stable
 
       - name: Install frontend dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Resolve app version
         id: version
@@ -99,24 +104,27 @@ jobs:
           writeFileSync(cargoPath, cargo.replace(/^version = ".*"$/m, `version = "${version}"`));
           NODE
 
+      # Build directly with the tauri CLI instead of tauri-action@v0, which
+      # crashes on the runner with "unsettled top-level await" (a bundled-JS /
+      # Node-version issue). The upload-artifact step below collects the bundle.
       - name: Build desktop app
         if: github.event_name != 'release'
-        uses: tauri-apps/tauri-action@v0
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VITE_JTYPE_VERSION: ${{ steps.version.outputs.display_version }}
-        with:
-          args: --bundles ${{ matrix.bundle }}
+        run: pnpm exec tauri build --bundles ${{ matrix.bundle }}
 
-      - name: Build and upload desktop app to release
+      - name: Build desktop app for release
         if: github.event_name == 'release'
-        uses: tauri-apps/tauri-action@v0
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VITE_JTYPE_VERSION: ${{ steps.version.outputs.display_version }}
-        with:
-          args: --bundles ${{ matrix.bundle }}
-          releaseId: ${{ github.event.release.id }}
+        run: pnpm exec tauri build --bundles ${{ matrix.bundle }}
+
+      - name: Upload desktop app to release
+        if: github.event_name == 'release'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "${{ github.event.release.tag_name }}" ${{ matrix.artifact-path }} --clobber
 
       - name: Upload desktop build artifact
         if: github.event_name != 'release'

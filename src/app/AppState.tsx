@@ -78,7 +78,7 @@ export type AppAction =
   | { type: "TOGGLE_DOCUMENT_PANEL" }
   | { type: "OPEN_WORKSPACE"; workspace: WorkspaceSnapshot }
   | { type: "OPEN_FILE"; path: string; relativePath: string; content: string; kind: EntryKind }
-  | { type: "SET_EDITOR_CONTENT"; content: string }
+  | { type: "SET_EDITOR_CONTENT"; content: string; sync?: boolean }
   | { type: "SAVE_FILE" }
   | { type: "CLEAR_DOCUMENT" }
   | { type: "UPDATE_WORKSPACE"; workspace: WorkspaceSnapshot }
@@ -242,7 +242,14 @@ export function appReducer(state: AppState, action: AppAction): AppState {
     }
     case "SET_EDITOR_CONTENT": {
       const isDirty = action.content !== state.originalContent;
-      return { ...state, editorContent: action.content, isDirty };
+      return {
+        ...state,
+        editorContent: action.content,
+        isDirty,
+        // When set programmatically (e.g. the card property strip rewrites
+        // frontmatter), bump the version so the textarea re-syncs from state.
+        editorContentVersion: action.sync ? state.editorContentVersion + 1 : state.editorContentVersion,
+      };
     }
     case "SAVE_FILE":
       return { ...state, originalContent: state.editorContent, isDirty: false };

@@ -8,7 +8,7 @@ import { tauri } from "../lib/tauri";
 import { httpRequest } from "@shared/lib/http";
 import { basename, isMarkdownPath, relativePathFromWorkspace, normalizePath } from "../lib/utils";
 import { writeFrontmatter, titleFromMarkdown } from "@shared/lib/frontmatter";
-import type { RecentItem } from "../lib/types";
+import type { RecentItem, FileTreeNode, BoardConfig } from "../lib/types";
 import { markdownNodes, extractMarkdownLinks } from "../lib/utils";
 import { appStorage } from "../lib/storage";
 import type { AICommandProposal } from "../lib/aiCommands";
@@ -179,7 +179,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     }
   }, [dispatch, state.currentPath, state.currentKind, state.editorContent]);
 
-  const createDocument = useCallback(async (relativePath: string) => {
+  const createDocument = useCallback(async (relativePath: string, baseDir = "") => {
     if (!state.workspace) return;
     if (isCloudViewer) {
       dispatch({ type: "SET_STATUS", message: "Viewer access is read-only." });
@@ -189,6 +189,10 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     if (!trimmed) return;
     if (!isMarkdownPath(trimmed)) {
       trimmed = `${trimmed}.md`;
+    }
+    // Bare names are created in the active folder (where the user is), not the root.
+    if (baseDir && !trimmed.includes("/")) {
+      trimmed = `${baseDir.replace(/\/+$/, "")}/${trimmed}`;
     }
     try {
       dispatch({ type: "SET_LOADING", isLoading: true });
@@ -213,6 +217,93 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
   }, [dispatch, isCloudViewer, state.workspace, openMarkdownFile, getCloudContext, cloudRest]);
+
+  /**
+   * Create a new `.board` view file (kanban over card-notes) and open it in-pane.
+   * The board's cards are ordinary `.md` notes with `board: <id>` frontmatter.
+   */
+  const createBoard = useCallback(async (name: string, baseDir = "") => {
+    if (!state.workspace) return;
+    if (isCloudViewer) {
+      dispatch({ type: "SET_STATUS", message: "Viewer access is read-only." });
+      return;
+    }
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    const dir = baseDir ? `${baseDir.replace(/\/+$/, "")}/` : "";
+    try {
+      dispatch({ type: "SET_LOADING", isLoading: true });
+      const id = `b_${Math.random().toString(36).slice(2, 10)}`;
+      const config: BoardConfig = {
+        id,
+        title: trimmed,
+        groupBy: "status",
+        columns: [
+          { key: "todo", name: "To do" },
+          { key: "doing", name: "Doing" },
+          { key: "done", name: "Done" },
+        ],
+      };
+      const relativePath = `${dir}${trimmed}.board`;
+      const workspace = await tauri.createBoard(
+        state.workspace.rootPath,
+        relativePath,
+        JSON.stringify(config, null, 2),
+      );
+      dispatch({ type: "UPDATE_WORKSPACE", workspace });
+      const node: FileTreeNode = {
+        name: `${trimmed}.board`,
+        path: `${workspace.rootPath}/${relativePath}`,
+        relativePath,
+        kind: "board",
+        children: [],
+      };
+      dispatch({ type: "SELECT_TREE_NODE", node });
+      dispatch({ type: "SET_STATUS", message: `Created board ${trimmed}.` });
+    } catch (error) {
+      dispatch({ type: "SET_STATUS", message: String(error) });
+    } finally {
+      dispatch({ type: "SET_LOADING", isLoading: false });
+    }
+  }, [dispatch, isCloudViewer, state.workspace]);
+
+  /**
+   * Import a binary asset (image, PDF) from disk into the current vault and open
+   * it in the read-only resource viewer. Local-only for now (no cloud upload).
+   */
+  const importAsset = useCallback(async (targetFolder = "") => {
+    if (!tauri.isAvailable || !state.workspace) return;
+    if (isCloudViewer) {
+      dispatch({ type: "SET_STATUS", message: "Viewer access is read-only." });
+      return;
+    }
+    try {
+      const selected = await open({
+        multiple: false,
+        directory: false,
+        filters: [{ name: "Files", extensions: ["png", "jpg", "jpeg", "gif", "webp", "svg", "pdf"] }],
+      });
+      if (!selected) return;
+      const sourcePath = Array.isArray(selected) ? selected[0] : selected;
+      if (!sourcePath) return;
+      dispatch({ type: "SET_LOADING", isLoading: true });
+      const bytes = await tauri.readBinaryFile(sourcePath);
+      const fileName = basename(sourcePath);
+      const relativePath = targetFolder ? `${targetFolder.replace(/\/+$/, "")}/${fileName}` : fileName;
+      await tauri.createEntry(state.workspace.rootPath, relativePath, "asset");
+      const destPath = `${state.workspace.rootPath}/${relativePath}`;
+      await tauri.writeBinaryFile(destPath, Array.from(bytes));
+      const workspace = await tauri.openWorkspace(state.workspace.rootPath);
+      dispatch({ type: "UPDATE_WORKSPACE", workspace });
+      const node: FileTreeNode = { name: fileName, path: destPath, relativePath, kind: "asset", children: [] };
+      dispatch({ type: "SELECT_TREE_NODE", node });
+      dispatch({ type: "SET_STATUS", message: `Imported ${relativePath}.` });
+    } catch (error) {
+      dispatch({ type: "SET_STATUS", message: String(error) });
+    } finally {
+      dispatch({ type: "SET_LOADING", isLoading: false });
+    }
+  }, [dispatch, isCloudViewer, state.workspace]);
 
   const renameEntry = useCallback(async (fromRelativePath: string, toRelativePath: string, updateLinks: boolean) => {
     if (!state.workspace) return;
@@ -683,6 +774,8 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     saveCurrentFile,
     exportCurrentMarkdown,
     createDocument,
+    createBoard,
+    importAsset,
     renameCurrentEntry,
     deleteEntry,
     deleteCurrentEntry,

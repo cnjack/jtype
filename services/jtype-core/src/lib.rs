@@ -14,6 +14,8 @@ pub enum EntryKind {
     Folder,
     Markdown,
     Asset,
+    /// A `.board` view file (JSON config) — a kanban board over card-notes.
+    Board,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
@@ -214,7 +216,7 @@ pub fn create_entry(root: &Path, relative_path: &str, kind: EntryKind) -> Result
     let target = safe_join(root, relative_path)?;
     match kind {
         EntryKind::Folder => fs::create_dir_all(target).map_err(|error| error.to_string()),
-        EntryKind::Markdown | EntryKind::Asset => {
+        EntryKind::Markdown | EntryKind::Asset | EntryKind::Board => {
             if let Some(parent) = target.parent() {
                 fs::create_dir_all(parent).map_err(|error| error.to_string())?;
             }
@@ -369,7 +371,10 @@ pub fn validate_workspace(root: &Path) -> Result<ValidationResult, String> {
 }
 
 pub fn collect_sync_documents(root: &Path) -> Result<Vec<SyncDocument>, String> {
-    let markdown_files = collect_markdown_files(root)?;
+    let mut markdown_files = collect_markdown_files(root)?;
+    // `.board` view files sync too (opaque JSON content) so the cloud/web can
+    // render the board over the same card notes.
+    markdown_files.extend(collect_board_files(root)?);
     let mut documents = Vec::new();
 
     for file in markdown_files {
@@ -379,23 +384,32 @@ pub fn collect_sync_documents(root: &Path) -> Result<Vec<SyncDocument>, String> 
         }
 
         let content = fs::read_to_string(&file).map_err(|error| error.to_string())?;
-        let frontmatter = parse_frontmatter(&content);
-        let title = frontmatter
-            .get("title")
-            .cloned()
-            .or_else(|| extract_title(&content))
-            .unwrap_or_else(|| {
-                file.file_stem()
-                    .and_then(|value| value.to_str())
-                    .unwrap_or("Untitled")
-                    .to_string()
-            });
-        let status = normalize_status(&frontmatter);
+        // `.board` files are opaque JSON config — never publish them, and don't
+        // parse them as Markdown frontmatter.
+        let (title, status) = if is_board_path(&file) {
+            (
+                file.file_stem().and_then(|v| v.to_str()).unwrap_or("board").to_string(),
+                "draft".to_string(),
+            )
+        } else {
+            let frontmatter = parse_frontmatter(&content);
+            let title = frontmatter
+                .get("title")
+                .cloned()
+                .or_else(|| extract_title(&content))
+                .unwrap_or_else(|| {
+                    file.file_stem()
+                        .and_then(|value| value.to_str())
+                        .unwrap_or("Untitled")
+                        .to_string()
+                });
+            (title, normalize_status(&frontmatter).to_string())
+        };
 
         documents.push(SyncDocument {
             relative_path: path_to_string(relative),
             title,
-            status: status.to_string(),
+            status,
             content,
         });
     }
@@ -706,12 +720,14 @@ fn read_children(root: &Path, current: &Path) -> Result<Vec<FileTreeNode>, Strin
                 kind: EntryKind::Folder,
                 children,
             });
-        } else if is_markdown_path(&path) || is_asset_path(&path) {
+        } else if is_markdown_path(&path) || is_board_path(&path) || is_asset_path(&path) {
             nodes.push(FileTreeNode {
                 name: file_name,
                 path: path_to_string(&path),
                 relative_path: path_to_string(relative),
-                kind: if is_markdown_path(&path) {
+                kind: if is_board_path(&path) {
+                    EntryKind::Board
+                } else if is_markdown_path(&path) {
                     EntryKind::Markdown
                 } else {
                     EntryKind::Asset
@@ -724,19 +740,25 @@ fn read_children(root: &Path, current: &Path) -> Result<Vec<FileTreeNode>, Strin
     Ok(nodes)
 }
 
+/// Tree sort rank: folders first, then boards, then markdown docs, then assets.
+fn kind_rank(kind: &EntryKind) -> u8 {
+    match kind {
+        EntryKind::Folder => 0,
+        EntryKind::Board => 1,
+        EntryKind::Markdown => 2,
+        EntryKind::Asset => 3,
+    }
+}
+
 fn sort_nodes(nodes: &mut [FileTreeNode]) {
-    nodes.sort_by(|a, b| match (&a.kind, &b.kind) {
-        (EntryKind::Folder, EntryKind::Folder)
-        | (EntryKind::Markdown, EntryKind::Markdown)
-        | (EntryKind::Asset, EntryKind::Asset) => a.name.to_lowercase().cmp(&b.name.to_lowercase()),
-        (EntryKind::Folder, _) => std::cmp::Ordering::Less,
-        (_, EntryKind::Folder) => std::cmp::Ordering::Greater,
-        (EntryKind::Markdown, EntryKind::Asset) => std::cmp::Ordering::Less,
-        (EntryKind::Asset, EntryKind::Markdown) => std::cmp::Ordering::Greater,
+    nodes.sort_by(|a, b| {
+        kind_rank(&a.kind)
+            .cmp(&kind_rank(&b.kind))
+            .then_with(|| a.name.to_lowercase().cmp(&b.name.to_lowercase()))
     });
 }
 
-fn safe_join(root: &Path, relative_path: &str) -> Result<PathBuf, String> {
+pub fn safe_join(root: &Path, relative_path: &str) -> Result<PathBuf, String> {
     if Path::new(relative_path).is_absolute() {
         return Err("Path must be relative to the workspace.".to_string());
     }
@@ -762,6 +784,32 @@ fn collect_markdown_files(root: &Path) -> Result<Vec<PathBuf>, String> {
     collect_markdown_files_inner(root, &mut files)?;
     files.sort();
     Ok(files)
+}
+
+/// Walk the vault for `.board` view files (synced as opaque documents so the
+/// cloud/web has the board config; their card `.md` notes sync as markdown).
+fn collect_board_files(root: &Path) -> Result<Vec<PathBuf>, String> {
+    let mut files = Vec::new();
+    collect_board_files_inner(root, &mut files)?;
+    files.sort();
+    Ok(files)
+}
+
+fn collect_board_files_inner(current: &Path, files: &mut Vec<PathBuf>) -> Result<(), String> {
+    for entry in fs::read_dir(current).map_err(|error| error.to_string())? {
+        let entry = entry.map_err(|error| error.to_string())?;
+        let path = entry.path();
+        let file_name = entry.file_name().to_string_lossy().to_string();
+        if file_name == ".git" || file_name == "node_modules" || file_name == "target" {
+            continue;
+        }
+        if path.is_dir() {
+            collect_board_files_inner(&path, files)?;
+        } else if is_board_path(&path) {
+            files.push(path);
+        }
+    }
+    Ok(())
 }
 
 fn collect_markdown_files_inner(current: &Path, files: &mut Vec<PathBuf>) -> Result<(), String> {
@@ -818,7 +866,7 @@ fn page_template(title: &str, body: &str) -> String {
     )
 }
 
-fn extract_title(content: &str) -> Option<String> {
+pub fn extract_title(content: &str) -> Option<String> {
     let frontmatter = parse_frontmatter(content);
     frontmatter
         .get("title")
@@ -1024,6 +1072,213 @@ fn is_asset_path(path: &Path) -> bool {
         .unwrap_or(false)
 }
 
+/// `.board` files are kanban board views (JSON config over card-notes).
+pub fn is_board_path(path: &Path) -> bool {
+    path.extension()
+        .and_then(|value| value.to_str())
+        .map(|extension| extension.eq_ignore_ascii_case("board"))
+        .unwrap_or(false)
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BoardCardInfo {
+    pub relative_path: String,
+    pub path: String,
+    pub title: String,
+    pub status: String,
+    pub position: i64,
+    pub priority: Option<String>,
+    pub assignee: Option<String>,
+    pub due: Option<String>,
+    pub tags: Vec<String>,
+    pub task_done: i64,
+    pub task_total: i64,
+    pub icon: Option<String>,
+    pub excerpt: Option<String>,
+}
+
+/// The body content after the frontmatter block (for previews/excerpts).
+fn body_after_frontmatter(content: &str) -> &str {
+    let normalized = content.strip_prefix('\u{feff}').unwrap_or(content);
+    if let Some(rest) = normalized.strip_prefix("---\n").or_else(|| normalized.strip_prefix("---\r\n")) {
+        if let Some(end) = rest.find("\n---") {
+            let after = &rest[end + 4..];
+            return after.trim_start_matches(['\r', '\n']);
+        }
+    }
+    normalized
+}
+
+/// A short single-line preview of the card body (Notion's "Page content" card
+/// preview): the first line with visible text, leading Markdown markers stripped.
+fn body_excerpt(content: &str) -> Option<String> {
+    for line in body_after_frontmatter(content).lines() {
+        let stripped = line
+            .trim()
+            .trim_start_matches(['#', '>', '-', '*', '+', ' '])
+            .trim_start_matches("[ ]")
+            .trim_start_matches("[x]")
+            .trim_start_matches("[X]")
+            .trim();
+        if stripped.is_empty() {
+            continue;
+        }
+        let mut excerpt: String = stripped.chars().take(120).collect();
+        if stripped.chars().count() > 120 {
+            excerpt.push('…');
+        }
+        return Some(excerpt);
+    }
+    None
+}
+
+/// Parse a frontmatter `tags` value (`a, b, c` or `[a, b, c]`, optional `#`
+/// prefixes) into a clean list. Frontmatter is flat strings, so this stays lenient.
+fn parse_card_tags(raw: &str) -> Vec<String> {
+    raw.trim()
+        .trim_start_matches('[')
+        .trim_end_matches(']')
+        .split(',')
+        .map(|tag| tag.trim().trim_start_matches('#').trim())
+        .filter(|tag| !tag.is_empty())
+        .map(str::to_string)
+        .collect()
+}
+
+/// Count Markdown task checkboxes (`- [ ]` / `- [x]`) in a card body, returning
+/// (done, total). Frontmatter lines are `key: value` so they never match.
+fn count_tasks(content: &str) -> (i64, i64) {
+    let mut done = 0;
+    let mut total = 0;
+    for line in content.lines() {
+        let trimmed = line.trim_start();
+        let after_bullet = trimmed
+            .strip_prefix("- ")
+            .or_else(|| trimmed.strip_prefix("* "))
+            .or_else(|| trimmed.strip_prefix("+ "));
+        let Some(rest) = after_bullet else { continue };
+        let bytes = rest.as_bytes();
+        if bytes.len() >= 3 && bytes[0] == b'[' && bytes[2] == b']' {
+            total += 1;
+            if bytes[1] == b'x' || bytes[1] == b'X' {
+                done += 1;
+            }
+        }
+    }
+    (done, total)
+}
+
+/// Walk the vault for Markdown card-notes whose frontmatter `board == board_id`,
+/// returning their card metadata (status/position/priority/assignee/due). This is
+/// the Dataview-style scan that turns a board into a view over real `.md` notes.
+pub fn scan_board_cards(root: &Path, board_id: &str) -> Result<Vec<BoardCardInfo>, String> {
+    let mut cards = Vec::new();
+    scan_board_cards_inner(root, root, board_id, &mut cards)?;
+    cards.sort_by(|a, b| {
+        a.status
+            .cmp(&b.status)
+            .then_with(|| a.position.cmp(&b.position))
+    });
+    Ok(cards)
+}
+
+fn scan_board_cards_inner(
+    root: &Path,
+    current: &Path,
+    board_id: &str,
+    cards: &mut Vec<BoardCardInfo>,
+) -> Result<(), String> {
+    for entry in fs::read_dir(current).map_err(|error| error.to_string())? {
+        let entry = entry.map_err(|error| error.to_string())?;
+        let path = entry.path();
+        let file_name = entry.file_name().to_string_lossy().to_string();
+        if file_name == ".git" || file_name == "node_modules" || file_name == "target" || file_name == ".jtype" {
+            continue;
+        }
+        if path.is_dir() {
+            scan_board_cards_inner(root, &path, board_id, cards)?;
+        } else if is_markdown_path(&path) {
+            let content = fs::read_to_string(&path).unwrap_or_default();
+            let fm = parse_frontmatter(&content);
+            if fm.get("board").map(String::as_str) != Some(board_id) {
+                continue;
+            }
+            let relative = path.strip_prefix(root).map_err(|error| error.to_string())?;
+            let title = extract_title(&content).unwrap_or_else(|| {
+                path.file_stem()
+                    .and_then(|s| s.to_str())
+                    .unwrap_or("Untitled")
+                    .to_string()
+            });
+            let (task_done, task_total) = count_tasks(&content);
+            cards.push(BoardCardInfo {
+                relative_path: path_to_string(relative),
+                path: path_to_string(&path),
+                title,
+                status: fm.get("status").cloned().unwrap_or_default(),
+                position: fm
+                    .get("position")
+                    .and_then(|v| v.parse::<i64>().ok())
+                    .unwrap_or(0),
+                priority: fm.get("priority").cloned().filter(|v| !v.is_empty()),
+                assignee: fm.get("assignee").cloned().filter(|v| !v.is_empty()),
+                due: fm.get("due").cloned().filter(|v| !v.is_empty()),
+                tags: fm.get("tags").map(|v| parse_card_tags(v)).unwrap_or_default(),
+                task_done,
+                task_total,
+                icon: fm.get("icon").cloned().filter(|v| !v.is_empty()),
+                excerpt: body_excerpt(&content),
+            });
+        }
+    }
+    Ok(())
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CardTemplateInfo {
+    pub name: String,
+    pub relative_path: String,
+    pub path: String,
+}
+
+/// List card templates: `.md` files in `<board_dir>/.templates/`. Templates carry
+/// no `board:` frontmatter, so they are never picked up as cards by the board scan.
+pub fn scan_card_templates(root: &Path, board_dir: &str) -> Result<Vec<CardTemplateInfo>, String> {
+    let dir = if board_dir.is_empty() {
+        root.join(".templates")
+    } else {
+        root.join(board_dir).join(".templates")
+    };
+    let mut out = Vec::new();
+    if !dir.exists() {
+        return Ok(out);
+    }
+    for entry in fs::read_dir(&dir).map_err(|error| error.to_string())? {
+        let entry = entry.map_err(|error| error.to_string())?;
+        let path = entry.path();
+        if !is_markdown_path(&path) {
+            continue;
+        }
+        let content = fs::read_to_string(&path).unwrap_or_default();
+        let name = extract_title(&content).unwrap_or_else(|| {
+            path.file_stem()
+                .and_then(|s| s.to_str())
+                .unwrap_or("Template")
+                .to_string()
+        });
+        let relative = path.strip_prefix(root).map_err(|error| error.to_string())?;
+        out.push(CardTemplateInfo {
+            name,
+            relative_path: path_to_string(relative),
+            path: path_to_string(&path),
+        });
+    }
+    out.sort_by(|a, b| a.name.cmp(&b.name));
+    Ok(out)
+}
+
 fn stable_id(value: &str) -> String {
     let mut hasher = DefaultHasher::new();
     value.hash(&mut hasher);
@@ -1037,7 +1292,7 @@ fn unix_timestamp() -> String {
         .unwrap_or_else(|_| "0".to_string())
 }
 
-fn path_to_string(path: &Path) -> String {
+pub fn path_to_string(path: &Path) -> String {
     path.to_string_lossy().replace('\\', "/")
 }
 
@@ -1707,5 +1962,109 @@ mod tests {
         assert_eq!(loaded.items.len(), 1);
         assert_eq!(loaded.last_synced_clock, 42);
         assert_eq!(loaded.items[0].source, "local");
+    }
+
+    #[test]
+    fn scans_board_cards_by_frontmatter() {
+        let dir = tempdir().unwrap();
+        let root = dir.path();
+        fs::create_dir_all(root.join("roadmap")).unwrap();
+        fs::write(
+            root.join("roadmap").join("a.md"),
+            "---\nboard: rm\nstatus: todo\nposition: 0\npriority: high\nassignee: jack\ntags: api, #design\nicon: 🚀\n---\n# Design API\n\n- [x] sketch\n- [ ] review\n",
+        )
+        .unwrap();
+        fs::write(
+            root.join("roadmap").join("b.md"),
+            "---\nboard: rm\nstatus: doing\nposition: 1\n---\n# Build UI\n",
+        )
+        .unwrap();
+        // Different board + a plain note must be excluded.
+        fs::write(root.join("other.md"), "---\nboard: zzz\nstatus: todo\n---\n# Other\n").unwrap();
+        fs::write(root.join("plain.md"), "# Plain note\n").unwrap();
+
+        let cards = scan_board_cards(root, "rm").unwrap();
+        assert_eq!(cards.len(), 2);
+        let a = cards.iter().find(|c| c.title == "Design API").unwrap();
+        assert_eq!(a.status, "todo");
+        assert_eq!(a.position, 0);
+        assert_eq!(a.priority.as_deref(), Some("high"));
+        assert_eq!(a.assignee.as_deref(), Some("jack"));
+        assert_eq!(a.tags, vec!["api".to_string(), "design".to_string()]);
+        assert_eq!(a.task_done, 1);
+        assert_eq!(a.task_total, 2);
+        assert_eq!(a.icon.as_deref(), Some("🚀"));
+        assert_eq!(a.excerpt.as_deref(), Some("Design API"));
+        let b = cards.iter().find(|c| c.title == "Build UI").unwrap();
+        assert_eq!(b.status, "doing");
+        assert_eq!(b.position, 1);
+        assert!(b.priority.is_none());
+        assert!(b.tags.is_empty());
+        assert_eq!(b.task_total, 0);
+    }
+
+    #[test]
+    fn sync_collects_board_files_as_opaque_documents() {
+        let dir = tempdir().unwrap();
+        let root = dir.path();
+        fs::create_dir_all(root.join("jcode")).unwrap();
+        fs::write(root.join("jcode.board"), "{\"id\":\"jcode\",\"title\":\"J\",\"columns\":[]}").unwrap();
+        fs::write(root.join("jcode").join("a.md"), "---\nboard: jcode\nstatus: todo\n---\n# Card\n").unwrap();
+
+        let docs = collect_sync_documents(root).unwrap();
+        let board = docs.iter().find(|d| d.relative_path == "jcode.board").expect("board file synced");
+        assert!(board.content.contains("\"id\":\"jcode\""));
+        assert_eq!(board.status, "draft"); // never published
+        assert_eq!(board.title, "jcode");
+        // the card .md syncs as a normal markdown document too
+        assert!(docs.iter().any(|d| d.relative_path == "jcode/a.md"));
+    }
+
+    #[test]
+    fn scans_card_templates_excluding_cards() {
+        let dir = tempdir().unwrap();
+        let root = dir.path();
+        fs::create_dir_all(root.join("sprint").join(".templates")).unwrap();
+        fs::write(
+            root.join("sprint").join(".templates").join("bug.md"),
+            "---\ntitle: Bug report\npriority: high\n---\nSteps to reproduce\n",
+        )
+        .unwrap();
+        fs::write(
+            root.join("sprint").join(".templates").join("feature.md"),
+            "---\ntitle: Feature\n---\n",
+        )
+        .unwrap();
+        // A real card in the board folder must NOT be listed as a template.
+        fs::write(
+            root.join("sprint").join("card.md"),
+            "---\nboard: sprint\nstatus: todo\n---\n# Card\n",
+        )
+        .unwrap();
+
+        let tpls = scan_card_templates(root, "sprint").unwrap();
+        assert_eq!(tpls.len(), 2);
+        // Sorted by name: "Bug report" < "Feature".
+        assert_eq!(tpls[0].name, "Bug report");
+        assert_eq!(tpls[1].name, "Feature");
+        assert!(tpls.iter().all(|t| t.relative_path.contains(".templates")));
+        // No templates folder -> empty, not an error.
+        assert!(scan_card_templates(root, "other").unwrap().is_empty());
+    }
+
+    #[test]
+    fn lists_board_files_as_board_kind() {
+        let dir = tempdir().unwrap();
+        let root = dir.path();
+        fs::write(root.join("plan.board"), "{\"id\":\"plan\",\"title\":\"Plan\",\"columns\":[]}").unwrap();
+        fs::write(root.join("note.md"), "# Note\n").unwrap();
+
+        let snapshot = open_workspace(root).unwrap();
+        let board = snapshot
+            .entries
+            .iter()
+            .find(|e| e.name == "plan.board")
+            .expect("board file listed in tree");
+        assert!(matches!(board.kind, EntryKind::Board));
     }
 }

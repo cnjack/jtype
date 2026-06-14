@@ -2,9 +2,10 @@ import { useAppDispatch, useAppState } from "../../app/AppState";
 import { useCloudSync } from "../../hooks";
 import { useConfirm } from "@shared/components/PromptDialogContext";
 import type { CloudWorkspace } from "../../lib/types";
+import { tauri, type CliStatus } from "../../lib/tauri";
 import { useEffect, useState } from "react";
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
-import { CloudArrowUpIcon, LinkSlashIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { CloudArrowUpIcon, CommandLineIcon, LinkSlashIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 
@@ -13,12 +14,33 @@ export function AccountDialog() {
   const dispatch = useAppDispatch();
   const sync = useCloudSync();
   const confirm = useConfirm();
-  const [activeSection, setActiveSection] = useState<"account" | "workspace">(state.accountDialogSection);
+  const [activeSection, setActiveSection] = useState<"account" | "workspace" | "cli">(state.accountDialogSection);
   const [pendingWorkspaceSync, setPendingWorkspaceSync] = useState(false);
+  const [cli, setCli] = useState<CliStatus | null>(null);
+  const [cliBusy, setCliBusy] = useState(false);
+  const [cliError, setCliError] = useState<string | null>(null);
 
   useEffect(() => {
     if (state.accountDialogOpen) setActiveSection(state.accountDialogSection);
   }, [state.accountDialogOpen, state.accountDialogSection]);
+
+  useEffect(() => {
+    if (state.accountDialogOpen && activeSection === "cli" && tauri.isAvailable && !cli) {
+      tauri.cliStatus().then(setCli).catch((e) => setCliError(String(e)));
+    }
+  }, [state.accountDialogOpen, activeSection, cli]);
+
+  const toggleCli = async () => {
+    setCliBusy(true);
+    setCliError(null);
+    try {
+      setCli(cli?.installed ? await tauri.uninstallCli() : await tauri.installCli());
+    } catch (e) {
+      setCliError(String(e));
+    } finally {
+      setCliBusy(false);
+    }
+  };
 
   useEffect(() => {
     if (!pendingWorkspaceSync || !state.syncToken || !state.workspace) return;
@@ -95,6 +117,8 @@ export function AccountDialog() {
             <SettingsNavButton active={activeSection === "account"} onClick={() => setActiveSection("account")} label={t`Profile`} />
             <p className="mb-2 mt-5 text-xs font-semibold uppercase text-stone-500"><Trans>Cloud workspace</Trans></p>
             <SettingsNavButton active={activeSection === "workspace"} onClick={() => setActiveSection("workspace")} label={t`General`} />
+            <p className="mb-2 mt-5 text-xs font-semibold uppercase text-stone-500"><Trans>Tools</Trans></p>
+            <SettingsNavButton active={activeSection === "cli"} onClick={() => setActiveSection("cli")} label={t`Command line`} />
           </aside>
 
           <main className="min-h-0 overflow-y-auto p-6">
@@ -209,6 +233,55 @@ export function AccountDialog() {
               </section>
             )}
 
+            {activeSection === "cli" && (
+              <section className="max-w-2xl">
+                <h2 className="text-2xl font-semibold text-stone-950"><Trans>Command line (jtype)</Trans></h2>
+                <p className="mt-1 text-sm text-[#6b7773]">
+                  <Trans>Install the jtype CLI to manage notes and kanban from your terminal and connect AI agents over MCP.</Trans>
+                </p>
+                {!tauri.isAvailable ? (
+                  <p className="mt-6 text-sm text-stone-500"><Trans>Available in the desktop app.</Trans></p>
+                ) : (
+                  <div className="mt-6 rounded-2xl border border-white/80 bg-white/80 p-4 shadow-sm shadow-emerald-950/5 ring-1 ring-black/[0.03]">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="flex items-center gap-2 font-semibold text-stone-900">
+                          <CommandLineIcon className="h-4 w-4 text-[#008884]" />
+                          <Trans>Install jtype to your PATH</Trans>
+                        </p>
+                        <p className="mt-1 text-xs text-stone-500">
+                          {cli?.installed ? <Trans>Installed</Trans> : <Trans>Not installed</Trans>}
+                          {cli?.version ? ` — ${cli.version}` : ""}
+                        </p>
+                        {cli?.asset && !cli.installed && (
+                          <p className="mt-1 truncate text-xs text-stone-400"><Trans>Downloads</Trans> <code>{cli.asset}</code></p>
+                        )}
+                        {cli?.path && <p className="mt-1 truncate text-xs text-stone-400">{cli.path}</p>}
+                      </div>
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={!!cli?.installed}
+                        disabled={cliBusy}
+                        onClick={toggleCli}
+                        title={cli?.installed ? t`Uninstall jtype CLI` : t`Install jtype CLI`}
+                        className={`relative h-6 w-11 shrink-0 rounded-full transition ${cli?.installed ? "bg-[#008884]" : "bg-stone-300"} ${cliBusy ? "opacity-60" : ""}`}
+                      >
+                        <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${cli?.installed ? "left-[22px]" : "left-0.5"}`} />
+                      </button>
+                    </div>
+                    {cliBusy && <p className="mt-3 text-xs text-teal-700"><Trans>Working…</Trans></p>}
+                    {cli?.installed && !cli.onPath && (
+                      <p className="mt-3 text-xs text-amber-700"><Trans>Restart your terminal to pick up the updated PATH.</Trans></p>
+                    )}
+                    {cliError && <p className="mt-3 text-xs text-red-600">{cliError}</p>}
+                    <p className="mt-3 text-xs text-stone-500">
+                      <Trans>Then run `jtype login` to sign in.</Trans>
+                    </p>
+                  </div>
+                )}
+              </section>
+            )}
 
           </main>
         </div>
