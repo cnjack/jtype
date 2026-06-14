@@ -50,8 +50,9 @@ We ship **three integration modalities**:
   card to follow up." → `search_notes`, `get_note`, `create_card`.
 - **Developer with `jcode`/Claude Code** — wires the JType MCP into their agent and asks
   it to file/triage work items while coding.
-- **Obsidian user** — runs `jtype obsidian enable --vault ~/Vault`, then any AI agent
-  (via MCP) can read/update that vault through JType, and changes sync to cloud.
+- **Obsidian user** — `cd ~/Vault` and any AI agent (via the CLI) reads/updates the local
+  `.md` files directly; `jtype bind` once, and changes write-through to the cloud. (See
+  [`03-cli-local-first.md`](03-cli-local-first.md).)
 - **Automation / CI** — scripts the `jtype` CLI with a device-minted token.
 
 ## 4. Functional requirements
@@ -80,9 +81,13 @@ We ship **three integration modalities**:
 - FR-C2. `jtype workspace list`.
 - FR-C3. Notes: `note list|get|search|create|update` (`--workspace`, `--path`, `--content/-`).
 - FR-C4. Kanban: `board list|get`, `card list|create|update|move`.
-- FR-C5. Obsidian: `jtype obsidian enable --vault <path> --workspace <id>` binds a local
-  vault to a workspace; `obsidian status`; `obsidian push`/`pull` sync `.md` files ↔
-  workspace documents.
+- FR-C5. Local-first vault (revised in [`03-cli-local-first.md`](03-cli-local-first.md)):
+  when run inside a vault (a `.jtype/`-marked folder, discovered from `cwd`), the `note`
+  commands read/write the local `.md` files **directly** — the disk is the source of truth,
+  no `--workspace` needed. `jtype bind --workspace <id|name>` records the vault↔cloud binding
+  in `.jtype/cloud.json`; `jtype vault status` shows it. Cloud is optional: note create/update
+  write-through to the workspace, and `jtype sync` does a headless pull/push.
+  (This replaces the earlier `obsidian enable/status/push/pull` cloud-mirror shape.)
 - FR-C6. `jtype mcp-stdio` exposes the tool set over stdio JSON-RPC (bridges to `/mcp`).
 - FR-C7. `--json` for machine-readable output on read commands.
 
@@ -103,7 +108,8 @@ We ship **three integration modalities**:
 - 100% of MCP tools and CLI commands covered by a passing test.
 - A captured `jcode` transcript shows the model invoking JType MCP tools and the
   resulting note/card visible via the API.
-- `jtype obsidian enable` round-trips a local vault file to a cloud document.
+- `jtype bind` + a note write-through round-trips a local vault file to a cloud document
+  (see [`03-cli-local-first.md`](03-cli-local-first.md)).
 
 ## 6. Risks & mitigations
 - **MySQL/sqlx lacks chrono** → CAST timestamps to CHAR (known gotcha). Mitigation:

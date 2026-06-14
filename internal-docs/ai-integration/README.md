@@ -22,8 +22,9 @@ device flow.
   `src/lib.rs`. `POST /mcp` (Streamable HTTP, JSON-RPC), OAuth device-grant +
   discovery, **14 tools**. Tests: `services/jtype-web/tests/{mcp_tests,oauth_mcp_tests}.rs`.
 - **CLI** — `services/jtype-cli/` (Rust bin `jtype`): device-auth login,
-  note/board/card commands, `obsidian` vault sync, `mcp-stdio` bridge. Tests:
-  `cargo test` (vault unit) + `tests/e2e.sh` (27 checks).
+  **local-first** note commands (cwd vault), remote board/card, `bind` + `sync` for cloud
+  write-through, `mcp-stdio` bridge. See [`03-cli-local-first.md`](03-cli-local-first.md).
+  Tests: `cargo test` (vault unit) + `tests/e2e.sh`.
 
 ## Run it
 

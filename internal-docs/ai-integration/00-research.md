@@ -73,7 +73,7 @@ JType already is *both* a note app (Markdown documents/folders) **and** a kanban
 | Modality | JType deliverable | Built on |
 |---|---|---|
 | **A. Online MCP server** | `POST /mcp` on jtype-web — **Streamable HTTP**, MCP auth via **OAuth (device grant, RFC 8628) + bearer**, exposing note + kanban tools that converge with the patterns above | existing Axum handlers (dispatched in-process), existing sessions table |
-| **B. CLI** | `jtype` CLI, bundled with the desktop app, **device-auth login**, commands to manage documents + kanban projects, plus `obsidian enable` to bind/sync a local vault, and a `jtype mcp-stdio` bridge | existing device flow + REST API |
+| **B. CLI** | `jtype` CLI, bundled with the desktop app, **device-auth login**, **local-first** note commands over the cwd vault, remote kanban, `bind`+`sync` for cloud write-through (see [`03-cli-local-first.md`](03-cli-local-first.md)), and a `jtype mcp-stdio` bridge | existing device flow + REST API |
 | **C. Skills** | Verified Agent Skills (`SKILL.md` folders) for note capture/organize and board triage, that **drive the jtype CLI/MCP** — installed & proven inside `jcode` | the CLI/MCP above |
 
 **Tool surface (mirrors Notion notes + Linear/GitHub kanban, consolidated):**

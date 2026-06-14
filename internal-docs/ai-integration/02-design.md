@@ -88,14 +88,19 @@ status/assignee/priority into one mutation). Results are compact JSON or Markdow
 
 ## 5. CLI (`jtype`) — `services/jtype-cli` (Rust bin: clap + reqwest + tokio)
 
-- Config `~/.jtype/cli.json` (0600): `{ server_url, token, username, vaults: {<path>: {workspace_id}} }`.
+- Config `~/.jtype/cli.json` (0600): `{ server_url, token, username }`. The per-vault
+  cloud binding (`workspaceId` + `serverUrl` + `lastPulledClock`) lives **in the vault** at
+  `.jtype/cloud.json`, not in `cli.json` — see [`03-cli-local-first.md`](03-cli-local-first.md).
 - Commands:
   - `login` (device flow: device_authorization → print code+URL → poll /token until approved → store), `logout`, `whoami`
   - `workspace list`
-  - `note list|get|search|create|update` (`--workspace`, `--path`, `--content` or `-` stdin)
-  - `board list|get`, `card list|create|update|move`
-  - `obsidian enable --vault <path> --workspace <id>` (bind), `obsidian status`,
-    `obsidian push` (upload changed `.md` → documents), `obsidian pull` (download → vault)
+  - `note list|get|search|create|update` — **local-first**: operate on the cwd vault's
+    `.md` files directly (`--workspace` optional/ignored for notes); create/update also
+    write-through to the bound cloud workspace. See [`03-cli-local-first.md`](03-cli-local-first.md).
+  - `board list|get`, `card list|create|update|move` — remote (cloud); `--workspace` defaults
+    to the vault's bound `workspaceId`
+  - `bind --workspace <id|name>` (record binding in `.jtype/cloud.json`), `vault status`,
+    `sync` (headless pull/push) — replaces the earlier `obsidian enable/push/pull`
   - `mcp-stdio` — read JSON-RPC from stdin, forward to `/mcp` with bearer, write to stdout
   - global `--json`, `--server`
 - Auth: device flow against the new RFC 8628 endpoints; token reused as bearer for REST.
