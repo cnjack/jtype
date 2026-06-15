@@ -2,6 +2,7 @@ import { useCallback, useRef } from "react";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { openPath } from "@tauri-apps/plugin-opener";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
+import { t } from "@lingui/core/macro";
 import { useAppDispatch, useAppState } from "../app/AppState";
 import { usePrompt, useConfirm } from "@shared/components/PromptDialogContext";
 import { tauri } from "../lib/tauri";
@@ -927,6 +928,39 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     }
   }, [dispatch, openMarkdownFile]);
 
+  // Remove a recent item (vault or Markdown file) from the list. If it had a
+  // cloud binding, unbind locally (delete binding entry + .jtype/sync-base);
+  // the reducer only resets sync state when this is the *current* vault, so
+  // removing other entries is safe. Never touches cloud data or local files.
+  const removeRecentItem = useCallback(async (path: string) => {
+    const items = readRecentItems();
+    const item = items.find((it) => normalizePath(it.path) === normalizePath(path));
+    const name = item?.name ?? path.split("/").pop() ?? path;
+    const binding = state.vaultBindings.find((it) => it.localVaultPath === path);
+    let warning = "";
+    if (binding && tauri.isAvailable) {
+      try {
+        await tauri.unbindCloudWorkspace(binding.workspaceId, path);
+      } catch (error) {
+        warning = t` (cloud unbind failed: ${String(error)})`;
+      }
+      dispatch({
+        type: "DISCONNECT_WORKSPACE",
+        workspaceId: binding.workspaceId,
+        vaultPath: path,
+      });
+    }
+    removeRecentItemEntry(path);
+    dispatch({
+      type: "SET_STATUS",
+      message: binding
+        ? t`Removed "${name}" from the list and unbound cloud sync (local files kept).${warning}`
+        : t`Removed "${name}" from the list.`,
+    });
+  }, [dispatch, state.vaultBindings]);
+  /** @deprecated use {@link removeRecentItem} — kept for clarity of intent. */
+  const removeVaultFromList = removeRecentItem;
+
   return {
     openMarkdownFile,
     openDiagramFile,
@@ -958,6 +992,8 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     moveFolder,
     deleteFolder,
     renameEntry,
+    removeRecentItem,
+    removeVaultFromList,
   };
 }
 
@@ -966,12 +1002,18 @@ function addRecent(item: RecentItem) {
   appStorage.set("recent", nextItems);
 }
 
-function readRecentItems(): RecentItem[] {
+export function readRecentItems(): RecentItem[] {
   return appStorage.get("recent", []);
 }
 
 function removeRecentEntry(rootPath: string, relativePath: string) {
   const targetPath = normalizePath(`${rootPath}/${relativePath}`);
+  const nextItems = readRecentItems().filter((item) => normalizePath(item.path) !== targetPath);
+  appStorage.set("recent", nextItems);
+}
+
+function removeRecentItemEntry(path: string) {
+  const targetPath = normalizePath(path);
   const nextItems = readRecentItems().filter((item) => normalizePath(item.path) !== targetPath);
   appStorage.set("recent", nextItems);
 }

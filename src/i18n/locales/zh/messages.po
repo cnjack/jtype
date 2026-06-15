@@ -14,6 +14,11 @@ msgstr ""
 "Plural-Forms: \n"
 "X-Generator: @lingui/cli\n"
 
+#. placeholder {0}: String(error)
+#: src/hooks/useFileSystem.ts
+msgid " (cloud unbind failed: {0})"
+msgstr "（云端解绑失败：{0}）"
+
 #. placeholder {0}: documents.length
 #: src/components/layout/VaultHome.tsx
 msgid "{0, plural, one {# Markdown file} other {# Markdown files}}"
@@ -142,8 +147,8 @@ msgid "Back"
 msgstr "返回"
 
 #: src/components/layout/Header.tsx
-msgid "Back to home"
-msgstr "返回主页"
+#~ msgid "Back to home"
+#~ msgstr "返回主页"
 
 #: src/components/modals/SyncPromptDialog.tsx
 msgid "Back up this local vault to a cloud workspace, keep devices in sync, and "
@@ -409,13 +414,13 @@ msgstr "删除卡片“{0}”？它将被移至回收站。"
 
 #: src/components/BoardView.tsx
 msgid "Delete column \"{colName}\"?"
-msgstr ""
+msgstr "删除列 \"{colName}\"？"
 
 #. placeholder {0}: inCol.length
 #. placeholder {1}: fallback.name
 #: src/components/BoardView.tsx
 msgid "Delete column \"{colName}\"? Its {0} card(s) move to \"{1}\"."
-msgstr ""
+msgstr "删除列 \"{colName}\"？其中的 {0} 张卡片将移动到 \"{1}\"。"
 
 #: src/components/sidebar/Sidebar.tsx
 msgid "Delete folder"
@@ -1035,13 +1040,44 @@ msgstr "最近"
 #~ msgid "Refresh"
 #~ msgstr "刷新"
 
+#. placeholder {0}: item.name
+#. placeholder {0}: vault.name
+#: src/components/layout/WelcomeScreen.tsx
+#: src/components/sidebar/Sidebar.tsx
+msgid "Remove \"{0}\" from list?"
+msgstr "从列表移除「{0}」?"
+
+#: src/components/layout/WelcomeScreen.tsx
+msgid "Remove file"
+msgstr "移除文件"
+
 #: src/components/editor/EditorShell.tsx
 msgid "Remove from favorites"
 msgstr "取消收藏"
 
+#: src/components/layout/WelcomeScreen.tsx
+#: src/components/sidebar/Sidebar.tsx
+msgid "Remove from list"
+msgstr "从列表移除"
+
 #: src/components/editor/EditorShell.tsx
 msgid "Remove this document from the public site?"
 msgstr "从公开站点移除此文档？"
+
+#: src/components/layout/WelcomeScreen.tsx
+#: src/components/sidebar/Sidebar.tsx
+msgid "Remove vault"
+msgstr "移除 vault"
+
+#: src/hooks/useFileSystem.ts
+msgid "Removed \"{name}\" from the list and unbound cloud sync (local files "
+"kept).{warning}"
+msgstr ""
+"已从列表移除「{name}」并解绑云端同步（本地文件已保留）。{warning}"
+
+#: src/hooks/useFileSystem.ts
+msgid "Removed \"{name}\" from the list."
+msgstr "已从列表移除「{name}」。"
 
 #: src/components/editor/EditorShell.tsx
 msgid "Removed from favorites."
@@ -1340,3 +1376,12 @@ msgstr "您的账户"
 #: src/components/editor/EditorShell.tsx
 msgid "Your rendered document will appear here."
 msgstr "渲染后的文档将显示在此处。"
+
+#. placeholder {0}: item.name
+#: src/components/layout/WelcomeScreen.tsx
+#~ msgid "从列表移除「{0}」?"
+#~ msgstr ""
+
+#: src/components/layout/WelcomeScreen.tsx
+#~ msgid "移除 vault"
+#~ msgstr ""

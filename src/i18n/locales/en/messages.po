@@ -13,6 +13,11 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
+#. placeholder {0}: String(error)
+#: src/hooks/useFileSystem.ts
+msgid " (cloud unbind failed: {0})"
+msgstr " (cloud unbind failed: {0})"
+
 #. placeholder {0}: documents.length
 #: src/components/layout/VaultHome.tsx
 msgid "{0, plural, one {# Markdown file} other {# Markdown files}}"
@@ -147,8 +152,8 @@ msgid "Back"
 msgstr "Back"
 
 #: src/components/layout/Header.tsx
-msgid "Back to home"
-msgstr "Back to home"
+#~ msgid "Back to home"
+#~ msgstr "Back to home"
 
 #: src/components/modals/SyncPromptDialog.tsx
 msgid "Back up this local vault to a cloud workspace, keep devices in sync, and "
@@ -1088,13 +1093,44 @@ msgstr "Recent"
 #~ msgid "Refresh"
 #~ msgstr "Refresh"
 
+#. placeholder {0}: item.name
+#. placeholder {0}: vault.name
+#: src/components/layout/WelcomeScreen.tsx
+#: src/components/sidebar/Sidebar.tsx
+msgid "Remove \"{0}\" from list?"
+msgstr "Remove \"{0}\" from list?"
+
+#: src/components/layout/WelcomeScreen.tsx
+msgid "Remove file"
+msgstr "Remove file"
+
 #: src/components/editor/EditorShell.tsx
 msgid "Remove from favorites"
 msgstr "Remove from favorites"
 
+#: src/components/layout/WelcomeScreen.tsx
+#: src/components/sidebar/Sidebar.tsx
+msgid "Remove from list"
+msgstr "Remove from list"
+
 #: src/components/editor/EditorShell.tsx
 msgid "Remove this document from the public site?"
 msgstr "Remove this document from the public site?"
+
+#: src/components/layout/WelcomeScreen.tsx
+#: src/components/sidebar/Sidebar.tsx
+msgid "Remove vault"
+msgstr "Remove vault"
+
+#: src/hooks/useFileSystem.ts
+msgid "Removed \"{name}\" from the list and unbound cloud sync (local files "
+"kept).{warning}"
+msgstr "Removed \"{name}\" from the list and unbound cloud sync (local files "
+"kept).{warning}"
+
+#: src/hooks/useFileSystem.ts
+msgid "Removed \"{name}\" from the list."
+msgstr "Removed \"{name}\" from the list."
 
 #: src/components/editor/EditorShell.tsx
 msgid "Removed from favorites."
@@ -1416,3 +1452,12 @@ msgstr "your account"
 #: src/components/editor/EditorShell.tsx
 msgid "Your rendered document will appear here."
 msgstr "Your rendered document will appear here."
+
+#. placeholder {0}: item.name
+#: src/components/layout/WelcomeScreen.tsx
+#~ msgid "从列表移除「{0}」?"
+#~ msgstr "从列表移除「{0}」?"
+
+#: src/components/layout/WelcomeScreen.tsx
+#~ msgid "移除 vault"
+#~ msgstr "移除 vault"

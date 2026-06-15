@@ -10,7 +10,7 @@ import { useCallback, useEffect, useState, useMemo } from "react";
 import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/react";
 import { DeleteFolderDialog } from "../modals/DeleteFolderDialog";
 import { MoveFolderDialog } from "../modals/MoveFolderDialog";
-import { usePrompt } from "@shared/components/PromptDialogContext";
+import { usePrompt, useConfirm } from "@shared/components/PromptDialogContext";
 import {
   DocumentPlusIcon,
   Cog6ToothIcon,
@@ -60,6 +60,7 @@ export function Sidebar() {
   const state = useAppState();
   const dispatch = useAppDispatch();
   const fs = useFileSystem();
+  const confirm = useConfirm();
   if (state.mode === "empty" && !state.workspace) return null;
   if (state.focusMode) return null;
 
@@ -113,21 +114,35 @@ export function Sidebar() {
               {recentVaults(state.workspace?.rootPath).length > 0 && (
                 <div className="mt-1 space-y-0.5">
                   {recentVaults(state.workspace?.rootPath).map((vault) => (
-                    <MenuItem
-                      key={vault.path}
-                      as="button"
-                      type="button"
-                      className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-zinc-700 transition hover:bg-[#e8f6f2]"
-                      onClick={() => { void fs.openWorkspace(vault.path); }}
-                    >
-                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-white text-xs font-semibold text-zinc-500 ring-1 ring-black/[0.04]">
-                        {vault.name.charAt(0).toUpperCase()}
-                      </span>
-                      <span className="min-w-0 flex-1 text-left">
-                        <span className="block truncate font-semibold">{vault.name}</span>
-                        <span className="block truncate text-xs text-zinc-500">{vault.path}</span>
-                      </span>
-                    </MenuItem>
+                    <div key={vault.path} className="group relative">
+                      <MenuItem
+                        as="button"
+                        type="button"
+                        className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-zinc-700 transition hover:bg-[#e8f6f2]"
+                        onClick={() => { void fs.openWorkspace(vault.path); }}
+                      >
+                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-white text-xs font-semibold text-zinc-500 ring-1 ring-black/[0.04]">
+                          {vault.name.charAt(0).toUpperCase()}
+                        </span>
+                        <span className="min-w-0 flex-1 pr-8 text-left">
+                          <span className="block truncate font-semibold">{vault.name}</span>
+                          <span className="block truncate text-xs text-zinc-500">{vault.path}</span>
+                        </span>
+                      </MenuItem>
+                      <button
+                        type="button"
+                        title={t`Remove from list`}
+                        className="absolute inset-y-0 right-1.5 z-10 flex w-7 items-center justify-center rounded-md text-zinc-400 opacity-0 transition-opacity hover:bg-red-50 hover:text-red-600 group-hover:opacity-100"
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          const ok = await confirm(t`Remove "${vault.name}" from list?`, { title: t`Remove vault`, destructive: true });
+                          if (!ok) return;
+                          await fs.removeRecentItem(vault.path);
+                        }}
+                      >
+                        <TrashIcon className="h-4 w-4" />
+                      </button>
+                    </div>
                   ))}
                 </div>
               )}

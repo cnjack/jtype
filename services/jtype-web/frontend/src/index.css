@@ -1,6 +1,15 @@
 @import 'tailwindcss';
 @import '@shared/styles/tokens.css';
 @import '@shared/styles/components.css';
+@import '@shared/styles/preview.css';
+
+/* Tailwind v4 auto-detection scopes to the nearest ancestor directory holding a
+   package lockfile, which here is services/jtype-web/frontend/. That excludes
+   shared/, whose components (e.g. shared/components/board/BoardSurface.tsx) are
+   the only source of board-card utilities like p-2.5. Without an explicit
+   @source they are never generated, so cards collapse to content height (the
+   "too short" cards bug). Point the scanner at shared/ to fix it. */
+@source "../../../../shared";
 
 @layer base {
   body {
@@ -52,115 +61,8 @@
   display: none;
 }
 
-.preview.empty {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  color: #78716c;
-}
-
-.preview h1,
-.preview h2,
-.preview h3 {
-  margin: 1.6em 0 0.45em;
-  color: #292524;
-  line-height: 1.15;
-  font-weight: 700;
-}
-
-.preview h1 { font-size: 2rem; }
-.preview h2 { font-size: 1.5rem; }
-.preview h3 { font-size: 1.2rem; }
-
-.preview h1:first-child,
-.preview h2:first-child,
-.preview h3:first-child {
-  margin-top: 0;
-}
-
-.preview p,
-.preview li {
-  max-width: 78ch;
-  overflow-wrap: anywhere;
-}
-
-.preview p { margin: 0.9em 0; }
-
-.preview ul,
-.preview ol {
-  margin: 0.9em 0;
-  padding-left: 1.5rem;
-}
-
-.preview ul { list-style: disc; }
-.preview ol { list-style: decimal; }
-
-.preview a {
-  color: #0f766e;
-  text-decoration: underline;
-}
-
-.preview code {
-  padding: 0.1em 0.35em;
-  background: #f5f5f4;
-  border-radius: 4px;
-  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
-}
-
-.preview pre {
-  max-width: 100%;
-  overflow: auto;
-  padding: 16px;
-  color: #f8fafc;
-  background: #292524;
-  border-radius: 8px;
-}
-
-.preview pre code {
-  padding: 0;
-  color: inherit;
-  background: transparent;
-}
-
-.preview blockquote {
-  margin-left: 0;
-  padding-left: 18px;
-  color: #57534e;
-  border-left: 4px solid #14b8a6;
-}
-
-.preview table {
-  width: 100%;
-  max-width: 100%;
-  border-collapse: collapse;
-  margin: 1rem 0;
-}
-
-.preview th,
-.preview td {
-  padding: 10px 12px;
-  border: 1px solid #e7e5e4;
-  text-align: left;
-  vertical-align: top;
-}
-
-.preview .math-block,
-.preview .mermaid,
-.preview .plantuml {
-  max-width: 100%;
-  overflow: auto;
-  margin: 1rem 0;
-  padding: 12px;
-  border: 1px solid #e7e5e4;
-  border-radius: 8px;
-  background: #ffffff;
-}
-
-.preview .plantuml img {
-  display: block;
-  max-width: 100%;
-  height: auto;
-}
+/* Markdown preview styles live in @shared/styles/preview.css, shared verbatim
+   with the desktop frontend. Do not redefine them here. */
 
 .landing-page-grid {
   background-image:

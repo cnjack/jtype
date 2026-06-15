@@ -295,15 +295,17 @@ export function appReducer(state: AppState, action: AppAction): AppState {
     case "DISCONNECT_WORKSPACE": {
       const nextSettings = { ...state.vaultSettings };
       if (action.settings) nextSettings[action.vaultPath] = action.settings;
+      // Only reset the *current* vault's sync state. Removing a binding for a
+      // non-current vault (e.g. pruning the recent list) must not wipe the
+      // active vault's conflicts / connection.
+      const isCurrent = action.vaultPath === state.workspace?.rootPath;
       return {
         ...state,
         vaultBindings: state.vaultBindings.filter(
           (binding) => !(binding.workspaceId === action.workspaceId && binding.localVaultPath === action.vaultPath),
         ),
         vaultSettings: nextSettings,
-        activeConflicts: [],
-        syncStatus: "idle",
-        wsConnected: false,
+        ...(isCurrent ? { activeConflicts: [], syncStatus: "idle", wsConnected: false } : {}),
       };
     }
     case "SET_CLOUD_WORKSPACES":

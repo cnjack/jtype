@@ -1,12 +1,37 @@
+import { useEffect, useState } from "react";
+import { TrashIcon } from "@heroicons/react/24/outline";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useFileSystem } from "../../hooks";
+import { useConfirm } from "@shared/components/PromptDialogContext";
+import { readRecentItems } from "../../hooks/useFileSystem";
+import type { RecentItem } from "../../lib/types";
 
 export function WelcomeScreen() {
   const fs = useFileSystem();
-
-  const recentItems = readRecentItems();
+  const confirm = useConfirm();
+  const [recentItems, setRecentItems] = useState<RecentItem[]>(() => readRecentItems());
   const defaultVaultPath = "~/Documents/Jtype Vaullt";
+
+  // Re-read the recent list whenever the window regains focus. Opening a
+  // file/vault elsewhere mutates localStorage, so a stale snapshot would show
+  // entries the user just opened (or hide ones they removed from the side bar).
+  useEffect(() => {
+    const refresh = () => setRecentItems(readRecentItems());
+    refresh();
+    window.addEventListener("focus", refresh);
+    return () => window.removeEventListener("focus", refresh);
+  }, []);
+
+  const handleRemove = async (item: RecentItem) => {
+    const ok = await confirm(t`Remove "${item.name}" from list?`, {
+      title: item.kind === "workspace" ? t`Remove vault` : t`Remove file`,
+      destructive: true,
+    });
+    if (!ok) return;
+    await fs.removeRecentItem(item.path);
+    setRecentItems(readRecentItems());
+  };
 
   return (
     <section id="welcome-screen" className="welcome-screen min-h-0 overflow-y-auto bg-[#fbfaf7]">
@@ -47,18 +72,27 @@ export function WelcomeScreen() {
               <p className="text-sm text-stone-500"><Trans>No recent vaults or Markdown files yet.</Trans></p>
             ) : (
               recentItems.map((item) => (
-                <button
-                  key={item.path}
-                  type="button"
-                  className="tree-button text-sm"
-                  onClick={() => {
-                    if (item.kind === "workspace") fs.openWorkspace(item.path);
-                    else fs.openMarkdownFile(item.path);
-                  }}
-                >
-                  <span className="text-stone-500">{item.kind === "workspace" ? t`Vault` : t`Markdown file`}</span>
-                  <span className="truncate font-semibold">{item.name}</span>
-                </button>
+                <div key={item.path} className="group relative">
+                  <button
+                    type="button"
+                    className="tree-button w-full pr-9 text-sm"
+                    onClick={() => {
+                      if (item.kind === "workspace") fs.openWorkspace(item.path);
+                      else fs.openMarkdownFile(item.path);
+                    }}
+                  >
+                    <span className="text-stone-500">{item.kind === "workspace" ? t`Vault` : t`Markdown file`}</span>
+                    <span className="truncate font-semibold">{item.name}</span>
+                  </button>
+                  <button
+                    type="button"
+                    title={t`Remove from list`}
+                    className="absolute inset-y-0 right-1.5 flex w-7 items-center justify-center rounded-md text-stone-400 opacity-0 transition-opacity hover:bg-stone-100 hover:text-red-600 focus:opacity-100 group-hover:opacity-100"
+                    onClick={(e) => { e.stopPropagation(); void handleRemove(item); }}
+                  >
+                    <TrashIcon className="h-4 w-4" />
+                  </button>
+                </div>
               ))
             )}
           </div>
@@ -66,13 +100,4 @@ export function WelcomeScreen() {
       </div>
     </section>
   );
-}
-
-import type { RecentItem } from "../../lib/types";
-function readRecentItems(): RecentItem[] {
-  try {
-    return JSON.parse(window.localStorage.getItem("jtype.recent") ?? "[]");
-  } catch {
-    return [];
-  }
 }

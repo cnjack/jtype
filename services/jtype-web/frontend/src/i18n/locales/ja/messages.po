@@ -29,12 +29,12 @@ msgstr "（あなた）"
 #. placeholder {0}: markdownDocs.length
 #: src/pages/Workspace.tsx
 msgid "{0, plural, one {# Markdown file} other {# Markdown files}}"
-msgstr ""
+msgstr "{0, plural, one {# 個の Markdown ファイル} other {# 個の Markdown ファイル}}"
 
 #. placeholder {0}: themes.length
 #: src/components/SiteThemePanel.tsx
 msgid "{0, plural, one {# theme} other {# themes}}"
-msgstr ""
+msgstr "{0, plural, one {# 個のテーマ} other {# 個のテーマ}}"
 
 #. placeholder {0}: workspace.documentCount
 #. placeholder {0}: ws.documentCount
@@ -69,11 +69,11 @@ msgstr "{0} 使用済み"
 
 #: src/help/pages/HelpHome.tsx
 msgid "{count} articles"
-msgstr ""
+msgstr "{count} 件の記事"
 
 #: src/pages/Admin.tsx
 msgid "•••••••• — leave blank to keep current"
-msgstr ""
+msgstr "•••••••• — 現在のままにする場合は空欄"
 
 #. placeholder {0}: new Date().getFullYear()
 #: src/pages/Login.tsx
@@ -95,7 +95,7 @@ msgstr "⚠ {0} によって変更{1}"
 
 #: src/components/NewResourceDialog.tsx
 msgid "A hand-drawn style whiteboard canvas"
-msgstr ""
+msgstr "手描き風のホワイトボードキャンバス"
 
 #: src/pages/Landing.tsx
 msgid "A jtype CLI and a local stdio MCP bridge."
@@ -103,23 +103,23 @@ msgstr "jtype CLI とローカルの stdio MCP ブリッジ。"
 
 #: src/components/NewResourceDialog.tsx
 msgid "A kanban board over your notes"
-msgstr ""
+msgstr "あなたのノート上のカンバンボード"
 
 #: src/components/NewResourceDialog.tsx
 msgid "A Markdown document you write and preview"
-msgstr ""
+msgstr "書いてプレビューできる Markdown ドキュメント"
 
 #: src/components/NewResourceDialog.tsx
 msgid "A text document you write and preview"
-msgstr ""
+msgstr "書いてプレビューできるテキストドキュメント"
 
 #: src/components/NewResourceDialog.tsx
 msgid "A text-based diagram with a live preview"
-msgstr ""
+msgstr "ライブプレビュー付きのテキストベースの図"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Accent"
-msgstr ""
+msgstr "アクセント"
 
 #: src/pages/InviteAccept.tsx
 msgid "Accept invitation"
@@ -127,7 +127,11 @@ msgstr "招待を受け入れる"
 
 #: src/pages/Admin.tsx
 msgid "Access key"
-msgstr ""
+msgstr "アクセスキー"
+
+#: src/pages/AiConnections.tsx
+msgid "Access token"
+msgstr "アクセストークン"
 
 #: src/components/Layout.tsx
 msgid "Account"
@@ -143,14 +147,19 @@ msgstr "アクティブ"
 
 #: src/pages/Admin.tsx
 msgid "Active backend"
-msgstr ""
+msgstr "アクティブなバックエンド"
+
+#: src/pages/AiConnections.tsx
+msgid "Active tokens & sessions"
+msgstr "アクティブなトークンとセッション"
 
 #: src/pages/Workspace.tsx
 msgid "Add domain"
 msgstr "ドメインを追加"
 
 #: src/pages/Workspace.tsx
-msgid "Add domains, verify DNS ownership, bind them to this workspace, and manage SSL certificates from one place."
+msgid "Add domains, verify DNS ownership, bind them to this workspace, and "
+"manage SSL certificates from one place."
 msgstr "ドメインの追加、DNS 所有権の確認、ワークスペースへのバインド、SSL 証書の管理を一か所で行います。"
 
 #: src/pages/Workspace.tsx
@@ -176,6 +185,7 @@ msgid "AI"
 msgstr "AI"
 
 #: src/components/Layout.tsx
+#: src/pages/AiConnections.tsx
 msgid "AI Connections"
 msgstr "AI 連携"
 
@@ -189,7 +199,7 @@ msgstr "AI 対応"
 
 #: src/help/pages/HelpHome.tsx
 msgid "All case studies"
-msgstr ""
+msgstr "すべてのケーススタディ"
 
 #: src/pages/InviteAccept.tsx
 msgid "Already accepted"
@@ -202,19 +212,19 @@ msgstr "すでにアカウントをお持ちですか？"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Appearance"
-msgstr ""
+msgstr "外観"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Appended last. Tags and @import are stripped for safety."
-msgstr ""
+msgstr "最後に追加されます。安全のためタグと @import は削除されます。"
 
 #: src/help/pages/CategoryLanding.tsx
 msgid "Articles"
-msgstr ""
+msgstr "記事"
 
 #: src/help/pages/CategoryLanding.tsx
 msgid "Articles for this topic are on the way."
-msgstr ""
+msgstr "このトピックの記事は近日公開です。"
 
 #: src/pages/DeviceOAuth.tsx
 msgid "Authentication failed"
@@ -238,15 +248,15 @@ msgstr "承認中..."
 
 #: src/components/NewResourceDialog.tsx
 msgid "Back"
-msgstr ""
+msgstr "戻る"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Background"
-msgstr ""
+msgstr "背景"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Base size"
-msgstr ""
+msgstr "ベースサイズ"
 
 #: src/pages/Workspace.tsx
 msgid "Bind custom domains and manage certificates."
@@ -262,11 +272,11 @@ msgstr "クラウドワークスペースにバインド"
 
 #: src/components/NewResourceDialog.tsx
 msgid "Board name"
-msgstr ""
+msgstr "ボード名"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Body font"
-msgstr ""
+msgstr "本文フォント"
 
 #: src/pages/Workspace.tsx
 msgid "Bold"
@@ -278,11 +288,11 @@ msgstr "太字 (Ctrl+B)"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Border"
-msgstr ""
+msgstr "枠線"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Border width"
-msgstr ""
+msgstr "枠線の太さ"
 
 #: src/pages/Workspace.tsx
 msgid "bound"
@@ -299,7 +309,7 @@ msgstr "{0} にバインド済み"
 
 #: src/components/NewResourceDialog.tsx
 msgid "Bring in an image or PDF from your computer"
-msgstr ""
+msgstr "コンピューターから画像や PDF を取り込む"
 
 #: src/pages/Landing.tsx
 msgid "Bring your notes and kanban into any AI agent."
@@ -307,15 +317,18 @@ msgstr "ノートとカンバンを、あらゆる AI エージェントへ。"
 
 #: src/help/pages/HelpHome.tsx
 msgid "Browse by topic"
-msgstr ""
+msgstr "トピックで探す"
 
 #: src/pages/Admin.tsx
 msgid "Bucket"
-msgstr ""
+msgstr "バケット"
 
 #: src/pages/Landing.tsx
-msgid "Calm desktop writing, workspace-scoped sync, and public Markdown publishing in one product flow. Your notes stay local until a cloud workspace has a job to do."
-msgstr "落ち着いたデスクトップ執筆、ワークスペーススコープの同期、パブリック Markdown 公開が 1 つの製品フローに。クラウドワークスペースが必要になるまで、ノートはローカルに保たれます。"
+msgid "Calm desktop writing, workspace-scoped sync, and public Markdown "
+"publishing in one product flow. Your notes stay local until a cloud "
+"workspace has a job to do."
+msgstr "落ち着いたデスクトップ執筆、ワークスペーススコープの同期、パブリック Markdown 公開が 1 "
+"つの製品フローに。クラウドワークスペースが必要になるまで、ノートはローカルに保たれます。"
 
 #: src/components/NewResourceDialog.tsx
 #: src/pages/Workspace.tsx
@@ -326,11 +339,11 @@ msgstr "キャンセル"
 #: src/help/pages/CasesIndex.tsx
 #: src/help/pages/CaseStudy.tsx
 msgid "Case studies"
-msgstr ""
+msgstr "ケーススタディ"
 
 #: src/help/pages/CasesIndex.tsx
 msgid "Case studies are coming soon."
-msgstr ""
+msgstr "ケーススタディは近日公開です。"
 
 #: src/pages/Workspace.tsx
 msgid "Certificate management"
@@ -354,11 +367,11 @@ msgstr "ノートを選択するか、新規作成してください。"
 
 #: src/pages/Workspace.tsx
 msgid "Choose a theme, design your own, and set the site footer."
-msgstr ""
+msgstr "テーマの選択、独自デザインの作成、サイトフッターの設定。"
 
 #: src/components/NewResourceDialog.tsx
 msgid "Choose what you want to create."
-msgstr ""
+msgstr "作成するものを選んでください。"
 
 #: src/pages/Landing.tsx
 msgid "Clean read-only output for notes, docs, releases, and guides."
@@ -370,7 +383,7 @@ msgstr "CLI + stdio"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Click “Save site settings” below to publish this theme."
-msgstr ""
+msgstr "このテーマを公開するには、下の「サイト設定を保存」をクリックしてください。"
 
 #: src/components/Layout.tsx
 #: src/pages/Admin.tsx
@@ -380,7 +393,7 @@ msgstr "閉じる"
 
 #: src/pages/Landing.tsx
 msgid "Close menu"
-msgstr ""
+msgstr "メニューを閉じる"
 
 #: src/pages/Login.tsx
 msgid "Cloud Sync"
@@ -405,11 +418,11 @@ msgstr "クラウドワークスペース"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Code bg"
-msgstr ""
+msgstr "コードの背景"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Code text"
-msgstr ""
+msgstr "コードのテキスト"
 
 #: src/pages/Workspace.tsx
 msgid "Collapse all"
@@ -417,23 +430,29 @@ msgstr "すべて折りたたむ"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Colors"
-msgstr ""
+msgstr "カラー"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Comfortable"
-msgstr ""
+msgstr "ゆったり"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Compact"
-msgstr ""
+msgstr "コンパクト"
 
 #: src/pages/Admin.tsx
 msgid "Configure server object storage."
-msgstr ""
+msgstr "サーバーのオブジェクトストレージを設定します。"
 
 #: src/pages/Admin.tsx
-msgid "Configure server object storage. Saved values override the JTYPED_STORAGE_* environment variables and apply immediately."
-msgstr ""
+msgid "Configure server object storage. Saved values override the "
+"JTYPED_STORAGE_* environment variables and apply immediately."
+msgstr "サーバーのオブジェクトストレージを設定します。保存した値は JTYPED_STORAGE_* 環境変数より優先され、即座に適用されます。"
+
+#: src/pages/AiConnections.tsx
+msgid "Connect Claude, Cursor, Cline, or jcode to your notes & kanban through "
+"the built-in MCP server."
+msgstr "組み込みの MCP サーバーを経由して、Claude、Cursor、Cline、jcode をあなたのノート＆カンバンに接続しましょう。"
 
 #: src/pages/Landing.tsx
 msgid "Connect your AI"
@@ -453,7 +472,15 @@ msgstr "接続中..."
 
 #: src/components/SiteThemePanel.tsx
 msgid "Content width"
-msgstr ""
+msgstr "コンテンツ幅"
+
+#: src/pages/AiConnections.tsx
+msgid "Copy"
+msgstr "コピー"
+
+#: src/pages/AiConnections.tsx
+msgid "Copy it now — it won't be shown again."
+msgstr "今すぐコピーしてください — 再度表示されることはありません。"
 
 #: src/pages/Workspace.tsx
 msgid "Copy link"
@@ -465,23 +492,26 @@ msgstr "パスをコピー"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Corner radius"
-msgstr ""
+msgstr "角の丸み"
 
 #: src/pages/Workspace.tsx
 msgid "Could not load this PDF."
-msgstr ""
+msgstr "この PDF を読み込めませんでした。"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Cozy"
-msgstr ""
+msgstr "こだわり"
 
 #: src/components/NewResourceDialog.tsx
 msgid "Create"
 msgstr "作成"
 
 #: src/pages/Landing.tsx
-msgid "Create a workspace for sync, publishing, and account settings. Local vault copy stays precise: folders are vaults, server-side collaboration is a cloud workspace."
-msgstr "同期、公開、アカウント設定のためのワークスペースを作成します。ローカルボルトのコピーは正確に保たれます：フォルダーはボルト、サーバーサイドのコラボレーションはクラウドワークスペースです。"
+msgid "Create a workspace for sync, publishing, and account settings. Local "
+"vault copy stays precise: folders are vaults, server-side collaboration "
+"is a cloud workspace."
+msgstr "同期、公開、アカウント設定のためのワークスペースを作成します。ローカルボルトのコピーは正確に保たれます：フォルダーはボルト、サーバーサイドのコ"
+"ラボレーションはクラウドワークスペースです。"
 
 #: src/pages/Login.tsx
 msgid "Create account"
@@ -493,15 +523,19 @@ msgstr "最初の Markdown ノートを作成します。"
 
 #: src/components/NewResourceDialog.tsx
 msgid "Creates in"
-msgstr ""
+msgstr "作成先"
+
+#: src/pages/AiConnections.tsx
+msgid "current"
+msgstr "現在"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Custom"
-msgstr ""
+msgstr "カスタム"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Custom CSS"
-msgstr ""
+msgstr "カスタム CSS"
 
 #: src/pages/Workspace.tsx
 msgid "Custom domains"
@@ -513,7 +547,7 @@ msgstr "カスタムドメインと SSL"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Customize"
-msgstr ""
+msgstr "カスタマイズ"
 
 #: src/pages/Workspace.tsx
 msgid "Danger zone"
@@ -521,11 +555,11 @@ msgstr "危険ゾーン"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Dark"
-msgstr ""
+msgstr "ダーク"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Define your own theme"
-msgstr ""
+msgstr "独自のテーマを定義"
 
 #: src/pages/Workspace.tsx
 msgid "Delete"
@@ -545,7 +579,7 @@ msgstr "完全に削除"
 
 #: src/pages/Workspace.tsx
 msgid "Delete this PDF?"
-msgstr ""
+msgstr "この PDF を削除しますか？"
 
 #: src/pages/Workspace.tsx
 msgid "Delete workspace"
@@ -567,7 +601,7 @@ msgstr "削除済みドキュメント"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Density"
-msgstr ""
+msgstr "密度"
 
 #: src/pages/Landing.tsx
 msgid "Desktop app"
@@ -587,7 +621,7 @@ msgstr "デバイスコード"
 
 #: src/components/NewResourceDialog.tsx
 msgid "Diagram name"
-msgstr ""
+msgstr "図の名前"
 
 #: src/pages/Landing.tsx
 msgid "Dirty"
@@ -627,7 +661,7 @@ msgstr "ドキュメント情報"
 
 #: src/components/NewResourceDialog.tsx
 msgid "Document name"
-msgstr ""
+msgstr "ドキュメント名"
 
 #: src/pages/Workspace.tsx
 msgid "Document published."
@@ -678,7 +712,7 @@ msgstr "下書きのみ"
 
 #: src/components/NewResourceDialog.tsx
 msgid "Drawing name"
-msgstr ""
+msgstr "描画の名前"
 
 #: src/pages/DeviceOAuth.tsx
 msgid "e.g. 456478"
@@ -706,7 +740,7 @@ msgstr "有効化"
 
 #: src/pages/Admin.tsx
 msgid "Enter secret key"
-msgstr ""
+msgstr "シークレットキーを入力"
 
 #: src/pages/DeviceOAuth.tsx
 msgid "Enter the code shown in your JType desktop app"
@@ -721,12 +755,14 @@ msgid "Enter your username"
 msgstr "ユーザー名を入力"
 
 #: src/help/pages/HelpHome.tsx
-msgid "Everything you need to write in a local-first vault, sync to the cloud, run a kanban board, publish a site, and connect AI."
-msgstr ""
+msgid "Everything you need to write in a local-first vault, sync to the cloud, "
+"run a kanban board, publish a site, and connect AI."
+msgstr "ローカルファーストのボルトで執筆し、クラウドに同期し、カンバンボードを運用し、サイトを公開し、AI "
+"を接続するために必要なすべてが揃っています。"
 
 #: src/components/NewResourceDialog.tsx
 msgid "Excalidraw drawing"
-msgstr ""
+msgstr "Excalidraw の描画"
 
 #: src/pages/Workspace.tsx
 msgid "Exit focus mode"
@@ -736,9 +772,13 @@ msgstr "フォーカスモードを終了"
 msgid "Expand all"
 msgstr "すべて展開"
 
+#: src/pages/AiConnections.tsx
+msgid "Expires"
+msgstr "有効期限"
+
 #: src/help/pages/HelpHome.tsx
 msgid "Explore"
-msgstr ""
+msgstr "探す"
 
 #: src/pages/InviteAccept.tsx
 msgid "Failed to accept invite."
@@ -766,7 +806,7 @@ msgstr "お気に入り"
 
 #: src/pages/Workspace.tsx
 msgid "Files"
-msgstr ""
+msgstr "ファイル"
 
 #: src/pages/Landing.tsx
 msgid "Flow"
@@ -778,15 +818,30 @@ msgstr "フォーカスモード"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Footer HTML"
-msgstr ""
+msgstr "フッター HTML"
+
+#: src/pages/AiConnections.tsx
+msgid "For clients that only accept a static header (e.g. jcode). Tokens are "
+"<0>mcp</0>-scoped (notes & kanban only, never admin) and expire in 90 "
+"days."
+msgstr "静的ヘッダーのみを受け付けるクライアント（例：jcode）向けです。トークンは <0>mcp</0> "
+"スコープ（ノートとカンバンのみ、管理者権限なし）で、90 日で期限切れになります。"
 
 #: src/pages/Admin.tsx
 msgid "from env"
-msgstr ""
+msgstr "環境変数から"
 
 #: src/pages/Workspace.tsx
 msgid "General"
 msgstr "一般"
+
+#: src/pages/AiConnections.tsx
+msgid "Generate token"
+msgstr "トークンを生成"
+
+#: src/pages/AiConnections.tsx
+msgid "Generating…"
+msgstr "生成中…"
 
 #: src/components/DownloadPromo.tsx
 msgid "Get the desktop app — and a jtype CLI for your terminal & AI agents."
@@ -810,11 +865,11 @@ msgstr "ワークスペースへ"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Heading font"
-msgstr ""
+msgstr "見出しフォント"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Heading weight"
-msgstr ""
+msgstr "見出しの太さ"
 
 #: src/help/HelpLayout.tsx
 #: src/help/pages/Article.tsx
@@ -823,12 +878,12 @@ msgstr ""
 #: src/help/pages/CategoryLanding.tsx
 #: src/pages/Landing.tsx
 msgid "Help"
-msgstr ""
+msgstr "ヘルプ"
 
 #: src/components/Layout.tsx
 #: src/help/pages/HelpHome.tsx
 msgid "Help center"
-msgstr ""
+msgstr "ヘルプセンター"
 
 #: src/pages/Workspace.tsx
 msgid "Hide"
@@ -836,23 +891,23 @@ msgstr "非表示"
 
 #: src/help/pages/HelpHome.tsx
 msgid "How can we help?"
-msgstr ""
+msgstr "何かお困りですか？"
 
 #: src/pages/Admin.tsx
 msgid "https://s3.example.com — leave blank to use local files"
-msgstr ""
+msgstr "https://s3.example.com — ローカルファイルを使う場合は空欄"
 
 #: src/pages/Workspace.tsx
 msgid "Image upload failed"
-msgstr ""
+msgstr "画像のアップロードに失敗しました"
 
 #: src/pages/Workspace.tsx
 msgid "Import failed"
-msgstr ""
+msgstr "インポートに失敗しました"
 
 #: src/components/NewResourceDialog.tsx
 msgid "Import file"
-msgstr ""
+msgstr "ファイルをインポート"
 
 #: src/pages/Login.tsx
 msgid "Indexed and ready for intelligent assistance."
@@ -868,7 +923,7 @@ msgstr "数式を挿入"
 
 #: src/pages/Workspace.tsx
 msgid "Insert image"
-msgstr ""
+msgstr "画像を挿入"
 
 #: src/pages/Workspace.tsx
 msgid "Insert link"
@@ -923,24 +978,38 @@ msgid "Joining…"
 msgstr "参加中…"
 
 #: src/pages/Landing.tsx
-msgid "JType ships a built-in MCP server. Connect Claude, Cursor, or any MCP client over a secure OAuth flow, then ask it to search your notes, draft a doc, or triage your board. Tokens are scoped, expiring, and revocable — and admin always stays off-limits."
-msgstr "JType には MCP サーバーが組み込まれています。安全な OAuth フローで Claude や Cursor などの MCP クライアントを接続すれば、ノートの検索、ドキュメントの下書き、ボードの整理を任せられます。トークンはスコープ付き・期限付き・取り消し可能で、管理者権限には決して触れません。"
+msgid "JType ships a built-in MCP server. Connect Claude, Cursor, or any MCP "
+"client over a secure OAuth flow, then ask it to search your notes, draft "
+"a doc, or triage your board. Tokens are scoped, expiring, and revocable "
+"— and admin always stays off-limits."
+msgstr "JType には MCP サーバーが組み込まれています。安全な OAuth フローで Claude や Cursor などの MCP "
+"クライアントを接続すれば、ノートの検索、ドキュメントの下書き、ボードの整理を任せられます。トークンはスコープ付き・期限付き・取り消し可能で、管"
+"理者権限には決して触れません。"
 
 #: src/components/NewResourceDialog.tsx
 msgid "Kanban board"
-msgstr ""
+msgstr "カンバンボード"
 
 #: src/pages/Landing.tsx
 msgid "Kanban tools"
 msgstr "カンバンツール"
 
 #: src/pages/Workspace.tsx
-msgid "Keep the publish name and workspace name here. The workspace slug and storage limit are assigned by the service."
+msgid "Keep the publish name and workspace name here. The workspace slug and "
+"storage limit are assigned by the service."
 msgstr "ここで公開名とワークスペース名を管理します。ワークスペーススラッグとストレージ制限はサービスによって割り当てられます。"
 
 #: src/pages/Login.tsx
 msgid "Keep your vaults in sync across all devices."
 msgstr "すべてのデバイスでボルトを同期させます。"
+
+#: src/pages/AiConnections.tsx
+msgid "Label"
+msgstr "ラベル"
+
+#: src/pages/AiConnections.tsx
+msgid "Label (e.g. jcode on my laptop)"
+msgstr "ラベル（例：私のラップトップの jcode）"
 
 #: src/components/Layout.tsx
 #: src/help/HelpLayout.tsx
@@ -954,11 +1023,11 @@ msgstr "最近アクティブ"
 #. placeholder {0}: article.updated
 #: src/help/pages/Article.tsx
 msgid "Last updated {0}"
-msgstr ""
+msgstr "最終更新 {0}"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Layout"
-msgstr ""
+msgstr "レイアウト"
 
 #: src/pages/Workspace.tsx
 msgid "Leave"
@@ -974,11 +1043,11 @@ msgstr "ワークスペースを退出しますか？"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Light"
-msgstr ""
+msgstr "ライト"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Line height"
-msgstr ""
+msgstr "行の高さ"
 
 #: src/pages/Workspace.tsx
 msgid "Link (Ctrl+K)"
@@ -1003,31 +1072,35 @@ msgstr "招待を読み込み中…"
 
 #: src/pages/Workspace.tsx
 msgid "Loading PDF…"
-msgstr ""
+msgstr "PDF を読み込み中…"
 
 #: src/help/components/HelpVideo.tsx
 msgid "Loading player…"
-msgstr ""
+msgstr "プレーヤーを読み込み中…"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Loading site settings…"
-msgstr ""
+msgstr "サイト設定を読み込み中…"
 
 #: src/pages/Workspace.tsx
 msgid "Loading viewer…"
-msgstr ""
+msgstr "ビューアーを読み込み中…"
 
 #: src/pages/Admin.tsx
 msgid "Loading..."
 msgstr "読み込み中..."
 
+#: src/pages/AiConnections.tsx
+msgid "Loading…"
+msgstr "読み込み中…"
+
 #: src/pages/Admin.tsx
 msgid "Local directory"
-msgstr ""
+msgstr "ローカルディレクトリ"
 
 #: src/pages/Admin.tsx
 msgid "Local filesystem"
-msgstr ""
+msgstr "ローカルファイルシステム"
 
 #: src/pages/Landing.tsx
 msgid "Local watcher"
@@ -1042,8 +1115,9 @@ msgid "Local-first Markdown vault"
 msgstr "ローカルファースト Markdown ボルト"
 
 #: src/help/HelpLayout.tsx
-msgid "Local-first Markdown vault editing with cloud sync, kanban, publishing, and AI."
-msgstr ""
+msgid "Local-first Markdown vault editing with cloud sync, kanban, publishing, "
+"and AI."
+msgstr "クラウド同期、カンバン、公開、AI を備えたローカルファーストの Markdown ボルト編集。"
 
 #: src/pages/Login.tsx
 msgid "Local-first notes with cloud sync, publishing, and AI-ready indexing."
@@ -1079,11 +1153,15 @@ msgstr "Markdown"
 
 #: src/components/NewResourceDialog.tsx
 msgid "Markdown document"
-msgstr ""
+msgstr "Markdown ドキュメント"
 
 #: src/pages/Workspace.tsx
 msgid "Markdown editor"
 msgstr "Markdown エディター"
+
+#: src/pages/AiConnections.tsx
+msgid "MCP token"
+msgstr "MCP トークン"
 
 #: src/pages/Workspace.tsx
 msgid "Member removed."
@@ -1105,19 +1183,19 @@ msgstr "メンバー、ドメイン、公開"
 
 #: src/help/HelpLayout.tsx
 msgid "Menu"
-msgstr ""
+msgstr "メニュー"
 
 #: src/components/NewResourceDialog.tsx
 msgid "Mermaid diagram"
-msgstr ""
+msgstr "Mermaid 図"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Minimal"
-msgstr ""
+msgstr "ミニマル"
 
 #: src/help/pages/CaseStudy.tsx
 msgid "More case studies"
-msgstr ""
+msgstr "ケーススタディをもっと見る"
 
 #: src/pages/Workspace.tsx
 msgid "Move to trash"
@@ -1125,7 +1203,7 @@ msgstr "ゴミ箱に移動"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Muted"
-msgstr ""
+msgstr "ミュート"
 
 #: src/pages/Admin.tsx
 msgid "Name"
@@ -1135,13 +1213,17 @@ msgstr "名前"
 msgid "Name, publishing identity, and storage"
 msgstr "名前、公開 ID、ストレージ"
 
+#: src/pages/AiConnections.tsx
+msgid "never"
+msgstr "無期限"
+
 #: src/pages/Workspace.tsx
 msgid "New"
 msgstr "新規"
 
 #: src/components/NewResourceDialog.tsx
 msgid "New board"
-msgstr ""
+msgstr "新規ボード"
 
 #: src/pages/Workspace.tsx
 msgid "New cloud workspace"
@@ -1158,7 +1240,7 @@ msgstr "新規ドキュメント"
 
 #: src/components/NewResourceDialog.tsx
 msgid "New Excalidraw drawing"
-msgstr ""
+msgstr "新規 Excalidraw 描画"
 
 #: src/pages/Workspace.tsx
 msgid "New folder"
@@ -1170,19 +1252,19 @@ msgstr "新規フォルダー名："
 
 #: src/components/NewResourceDialog.tsx
 msgid "New Mermaid diagram"
-msgstr ""
+msgstr "新規 Mermaid 図"
 
 #: src/components/NewResourceDialog.tsx
 msgid "New resource"
-msgstr ""
+msgstr "新規リソース"
 
 #: src/help/pages/Article.tsx
 msgid "Next"
-msgstr ""
+msgstr "次へ"
 
 #: src/help/pages/Article.tsx
 msgid "No"
-msgstr ""
+msgstr "いいえ"
 
 #: src/pages/Workspace.tsx
 msgid "No cloud workspaces yet."
@@ -1230,7 +1312,7 @@ msgstr "レコードがありません。"
 
 #: src/help/components/SearchBox.tsx
 msgid "No results. Try another term."
-msgstr ""
+msgstr "結果がありません。別の語句でお試しください。"
 
 #: src/pages/Workspace.tsx
 msgid "No unsaved changes"
@@ -1258,11 +1340,14 @@ msgstr "オフライン（{pendingCount} 件保存済み）"
 
 #: src/help/pages/Article.tsx
 msgid "On this page"
-msgstr ""
+msgstr "このページの内容"
 
 #: src/pages/Landing.tsx
-msgid "One Markdown source shows up everywhere it matters: local files on your machine, sync state in the cloud, and published output for readers — all visible at once."
-msgstr "ひとつの Markdown ソースが、必要なすべての場所に現れます。手元のローカルファイル、クラウドの同期状態、読者向けの公開出力——そのすべてを一度に。"
+msgid "One Markdown source shows up everywhere it matters: local files on your "
+"machine, sync state in the cloud, and published output for readers — all "
+"visible at once."
+msgstr "ひとつの Markdown "
+"ソースが、必要なすべての場所に現れます。手元のローカルファイル、クラウドの同期状態、読者向けの公開出力——そのすべてを一度に。"
 
 #: src/pages/Landing.tsx
 msgid "One Markdown source, three calm surfaces."
@@ -1281,12 +1366,13 @@ msgid "Open"
 msgstr "開く"
 
 #: src/pages/Landing.tsx
-msgid "Open a local Markdown vault, keep normal folders, and edit without turning notes into remote-only data."
+msgid "Open a local Markdown vault, keep normal folders, and edit without "
+"turning notes into remote-only data."
 msgstr "ローカル Markdown ボルトを開き、通常のフォルダー構造を保ち、ノートをリモート専用データにせずに編集します。"
 
 #: src/help/HelpLayout.tsx
 msgid "Open app"
-msgstr ""
+msgstr "アプリを開く"
 
 #: src/pages/Landing.tsx
 msgid "Open dashboard"
@@ -1298,7 +1384,7 @@ msgstr "GitHub を開く"
 
 #: src/help/HelpLayout.tsx
 msgid "Open JType"
-msgstr ""
+msgstr "JType を開く"
 
 #: src/pages/Landing.tsx
 msgid "Open JType Cloud"
@@ -1310,19 +1396,20 @@ msgstr "JType Cloud ダッシュボードを開く"
 
 #: src/pages/Landing.tsx
 msgid "Open menu"
-msgstr ""
+msgstr "メニューを開く"
 
 #: src/pages/Workspace.tsx
 msgid "Open sidebar"
-msgstr ""
+msgstr "サイドバーを開く"
 
 #: src/help/pages/CaseStudy.tsx
-msgid "Open the example vault in JType and follow along. It lives in the repo at:"
-msgstr ""
+msgid "Open the example vault in JType and follow along. It lives in the repo "
+"at:"
+msgstr "JType でサンプルボルトを開いて一緒に進めましょう。リポジトリの場所："
 
 #: src/components/SiteThemePanel.tsx
 msgid "Optional. A small set of inline tags is allowed (links, emphasis)."
-msgstr ""
+msgstr "任意です。限られたインラインタグ（リンク、強調）が許可されています。"
 
 #: src/pages/Workspace.tsx
 msgid "Outgoing links"
@@ -1371,7 +1458,7 @@ msgstr "このワークスペースとすべてのドキュメントを完全に
 
 #: src/help/components/HelpVideo.tsx
 msgid "Play the explainer video"
-msgstr ""
+msgstr "解説動画を再生"
 
 #: src/pages/DeviceOAuth.tsx
 #: src/pages/Login.tsx
@@ -1380,11 +1467,11 @@ msgstr "しばらくお待ちください..."
 
 #: src/help/pages/HelpHome.tsx
 msgid "Popular articles"
-msgstr ""
+msgstr "人気の記事"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Preset…"
-msgstr ""
+msgstr "プリセット…"
 
 #: src/pages/Landing.tsx
 #: src/pages/Workspace.tsx
@@ -1393,7 +1480,7 @@ msgstr "プレビュー"
 
 #: src/help/pages/Article.tsx
 msgid "Previous"
-msgstr ""
+msgstr "前へ"
 
 #: src/pages/Landing.tsx
 msgid "Product flow"
@@ -1454,11 +1541,13 @@ msgid "Publishing details saved"
 msgstr "公開詳細を保存しました"
 
 #: src/pages/Workspace.tsx
-msgid "Publishing uses a server snapshot; frontmatter status is treated as user metadata."
+msgid "Publishing uses a server snapshot; frontmatter status is treated as user "
+"metadata."
 msgstr "公開はサーバースナップショットを使用します。フロントマターのステータスはユーザーメタデータとして扱われます。"
 
 #: src/pages/Landing.tsx
-msgid "Push and pull versions, resolve conflicts, and keep collaboration scoped to the workspace you choose."
+msgid "Push and pull versions, resolve conflicts, and keep collaboration scoped "
+"to the workspace you choose."
 msgstr "バージョンのプッシュ/プル、競合の解決、コラボレーションを選択したワークスペースに限定します。"
 
 #: src/pages/Workspace.tsx
@@ -1467,7 +1556,7 @@ msgstr "クイックオープン"
 
 #: src/help/pages/CasesIndex.tsx
 msgid "Read case study"
-msgstr ""
+msgstr "ケーススタディを読む"
 
 #: src/pages/Workspace.tsx
 msgid "Read-only"
@@ -1478,12 +1567,19 @@ msgid "Ready for the cloud layer"
 msgstr "クラウドレイヤーの準備完了"
 
 #: src/help/pages/CasesIndex.tsx
-msgid "Real, end-to-end scenarios you can reproduce. Each one ships with an example vault you can open in JType."
-msgstr ""
+msgid "Real, end-to-end scenarios you can reproduce. Each one ships with an "
+"example vault you can open in JType."
+msgstr "再現可能な実エンドツーエンドのシナリオ。それぞれ JType で開けるサンプルボルトが付属します。"
+
+#: src/pages/AiConnections.tsx
+msgid "Recommended: paste this URL into an OAuth-capable client (Claude, "
+"Cursor) — you'll approve in the browser, no token to copy."
+msgstr "推奨：この URL を OAuth "
+"対応クライアント（Claude、Cursor）に貼り付けてください。ブラウザで承認するだけで、トークンのコピーは不要です。"
 
 #: src/pages/Admin.tsx
 msgid "Region"
-msgstr ""
+msgstr "リージョン"
 
 #: src/pages/DeviceOAuth.tsx
 #: src/pages/Login.tsx
@@ -1501,7 +1597,7 @@ msgstr "再読み込み{0}"
 
 #: src/help/components/HelpVideo.tsx
 msgid "Remotion"
-msgstr ""
+msgstr "Remotion"
 
 #. placeholder {0}: doc.relativePath
 #: src/pages/Workspace.tsx
@@ -1541,6 +1637,10 @@ msgstr "再公開"
 msgid "Republish live docs"
 msgstr "公開済みドキュメントを再公開"
 
+#: src/pages/AiConnections.tsx
+msgid "Request failed"
+msgstr "リクエストに失敗しました"
+
 #: src/pages/Workspace.tsx
 msgid "Restore"
 msgstr "復元"
@@ -1565,9 +1665,17 @@ msgstr "アカウント、ロール、有効ステータスを確認します。
 msgid "Review published custom domains and SSL state."
 msgstr "公開済みのカスタムドメインと SSL の状態を確認します。"
 
+#: src/pages/AiConnections.tsx
+msgid "Revoke"
+msgstr "取り消す"
+
 #: src/pages/Workspace.tsx
 msgid "Revoke invite"
 msgstr "招待を取り消し"
+
+#: src/pages/AiConnections.tsx
+msgid "Revoke this token? Any client using it will stop working."
+msgstr "このトークンを取り消しますか？これを使用しているクライアントはすべて停止します。"
 
 #: src/pages/Admin.tsx
 msgid "Role"
@@ -1575,11 +1683,11 @@ msgstr "ロール"
 
 #: src/pages/Admin.tsx
 msgid "S3 endpoint"
-msgstr ""
+msgstr "S3 エンドポイント"
 
 #: src/pages/Admin.tsx
 msgid "S3-compatible"
-msgstr ""
+msgstr "S3 互換"
 
 #: src/pages/Workspace.tsx
 msgid "Save"
@@ -1595,11 +1703,11 @@ msgstr "プロフィールを保存"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Save site settings"
-msgstr ""
+msgstr "サイト設定を保存"
 
 #: src/pages/Admin.tsx
 msgid "Save storage settings"
-msgstr ""
+msgstr "ストレージ設定を保存"
 
 #: src/pages/Workspace.tsx
 msgid "Saved offline. Will sync when reconnected."
@@ -1607,11 +1715,11 @@ msgstr "オフラインで保存しました。再接続時に同期されます
 
 #: src/components/SiteThemePanel.tsx
 msgid "Saved."
-msgstr ""
+msgstr "保存しました。"
 
 #: src/pages/Admin.tsx
 msgid "Saving verifies the connection before applying."
-msgstr ""
+msgstr "保存時に接続を検証してから適用します。"
 
 #: src/pages/Admin.tsx
 #: src/pages/Workspace.tsx
@@ -1620,7 +1728,11 @@ msgstr "保存中..."
 
 #: src/components/SiteThemePanel.tsx
 msgid "Saving…"
-msgstr ""
+msgstr "保存中…"
+
+#: src/pages/AiConnections.tsx
+msgid "Scope"
+msgstr "スコープ"
 
 #: src/pages/Workspace.tsx
 msgid "Search files..."
@@ -1628,7 +1740,7 @@ msgstr "ファイルを検索..."
 
 #: src/help/components/SearchBox.tsx
 msgid "Search the help center…"
-msgstr ""
+msgstr "ヘルプセンターを検索…"
 
 #: src/pages/Landing.tsx
 msgid "Search, read, create, update, and append documents."
@@ -1636,11 +1748,11 @@ msgstr "ドキュメントの検索・読み取り・作成・更新・追記。
 
 #: src/pages/Admin.tsx
 msgid "Secret key"
-msgstr ""
+msgstr "シークレットキー"
 
 #: src/help/pages/HelpHome.tsx
 msgid "See it in action"
-msgstr ""
+msgstr "実際の動作を見る"
 
 #: src/pages/Landing.tsx
 msgid "See product flow"
@@ -1664,7 +1776,7 @@ msgstr "設定"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Shape"
-msgstr ""
+msgstr "シェイプ"
 
 #: src/pages/Landing.tsx
 msgid "Ship a readable site"
@@ -1672,15 +1784,15 @@ msgstr "読みやすいサイトを公開"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Shown in the browser title and site header."
-msgstr ""
+msgstr "ブラウザーのタイトルとサイトヘッダーに表示されます。"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Sidebar"
-msgstr ""
+msgstr "サイドバー"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Sidebar width"
-msgstr ""
+msgstr "サイドバーの幅"
 
 #: src/pages/DeviceOAuth.tsx
 #: src/pages/Landing.tsx
@@ -1716,11 +1828,11 @@ msgstr "サインイン済み。デバイスを承認する準備ができてい
 
 #: src/pages/Workspace.tsx
 msgid "Site & theme"
-msgstr ""
+msgstr "サイトとテーマ"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Site name"
-msgstr ""
+msgstr "サイト名"
 
 #: src/pages/Workspace.tsx
 msgid "Site settings"
@@ -1760,7 +1872,7 @@ msgstr "SSL が設定されていません"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Start from preset"
-msgstr ""
+msgstr "プリセットから開始"
 
 #: src/pages/Landing.tsx
 msgid "Start with a private cloud workspace."
@@ -1789,7 +1901,7 @@ msgstr "ストレージ"
 
 #: src/pages/Admin.tsx
 msgid "Storage settings saved and applied."
-msgstr ""
+msgstr "ストレージ設定を保存して適用しました。"
 
 #: src/pages/Workspace.tsx
 msgid "Storage used"
@@ -1797,7 +1909,7 @@ msgstr "使用ストレージ"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Surface"
-msgstr ""
+msgstr "サーフェス"
 
 #: src/pages/Landing.tsx
 msgid "Surfaces"
@@ -1829,11 +1941,11 @@ msgstr "チームメンバーと招待"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Text"
-msgstr ""
+msgstr "テキスト"
 
 #: src/help/pages/Article.tsx
 msgid "Thanks for the feedback!"
-msgstr ""
+msgstr "フィードバックありがとうございます！"
 
 #: src/pages/Landing.tsx
 msgid "The landing story follows the real JType loop."
@@ -1845,23 +1957,23 @@ msgstr "公開スナップショットが現在のドキュメントより古く
 
 #: src/components/SiteThemePanel.tsx
 msgid "Theme"
-msgstr ""
+msgstr "テーマ"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Theme applied."
-msgstr ""
+msgstr "テーマを適用しました。"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Theme name"
-msgstr ""
+msgstr "テーマ名"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Theme preview"
-msgstr ""
+msgstr "テーマプレビュー"
 
 #: src/pages/Workspace.tsx
 msgid "Theme, custom design, and footer"
-msgstr ""
+msgstr "テーマ、カスタムデザイン、フッター"
 
 #: src/pages/Workspace.tsx
 msgid "This document was deleted by another user."
@@ -1881,7 +1993,8 @@ msgstr "この招待リンクは無効か期限切れです。"
 
 #. placeholder {0}: workspace.name
 #: src/pages/Workspace.tsx
-msgid "This will permanently delete <0>{0}</0> and all its documents. This cannot be undone."
+msgid "This will permanently delete <0>{0}</0> and all its documents. This "
+"cannot be undone."
 msgstr "<0>{0}</0> とそのすべてのドキュメントが完全に削除されます。この操作は取り消せません。"
 
 #: src/pages/Workspace.tsx
@@ -1890,11 +2003,11 @@ msgstr "お気に入りの切り替え"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Top header"
-msgstr ""
+msgstr "トップヘッダー"
 
 #: src/components/NewResourceDialog.tsx
 msgid "Track work in columns and cards"
-msgstr ""
+msgstr "列とカードで作業を管理"
 
 #: src/pages/Workspace.tsx
 msgid "Transfer"
@@ -1927,10 +2040,11 @@ msgstr "ゴミ箱は空です。"
 
 #: src/help/pages/CaseStudy.tsx
 msgid "Try it yourself"
-msgstr ""
+msgstr "自分で試す"
 
 #: src/pages/Landing.tsx
-msgid "Turn selected documents into a public `/u/:username` site while your source stays Markdown."
+msgid "Turn selected documents into a public `/u/:username` site while your "
+"source stays Markdown."
 msgstr "選択したドキュメントをパブリック `/u/:username` サイトにしながら、ソースは Markdown のまま保ちます。"
 
 #: src/pages/Workspace.tsx
@@ -1939,7 +2053,7 @@ msgstr "確認のためワークスペース名を入力："
 
 #: src/components/SiteThemePanel.tsx
 msgid "Typography"
-msgstr ""
+msgstr "タイポグラフィ"
 
 #: src/pages/Workspace.tsx
 msgid "Unbind"
@@ -1974,7 +2088,8 @@ msgid "Untitled document"
 msgstr "無題のドキュメント"
 
 #: src/pages/Workspace.tsx
-msgid "Upload a PEM certificate for a verified domain. The private key is stored as a hash in the current backend model."
+msgid "Upload a PEM certificate for a verified domain. The private key is "
+"stored as a hash in the current backend model."
 msgstr "確認済みドメインの PEM 証明書をアップロードします。秘密鍵は現在のバックエンドモデルでハッシュとして保存されます。"
 
 #: src/components/DownloadPromo.tsx
@@ -2010,7 +2125,7 @@ msgstr "ボルト準備完了"
 
 #: src/components/NewResourceDialog.tsx
 msgid "vault root"
-msgstr ""
+msgstr "ボルトルート"
 
 #: src/pages/Workspace.tsx
 msgid "Vault space"
@@ -2030,7 +2145,7 @@ msgstr "公開ページを表示"
 
 #: src/components/SiteThemePanel.tsx
 msgid "View published site"
-msgstr ""
+msgstr "公開サイトを表示"
 
 #: src/pages/Workspace.tsx
 msgid "Viewer access is read-only."
@@ -2038,11 +2153,11 @@ msgstr "ビューアーアクセスは読み取り専用です。"
 
 #: src/help/pages/Article.tsx
 msgid "Was this helpful?"
-msgstr ""
+msgstr "参考になりましたか？"
 
 #: src/help/components/HelpVideo.tsx
 msgid "Watch the explainer"
-msgstr ""
+msgstr "解説を見る"
 
 #: src/pages/Landing.tsx
 msgid "Watch the flow"
@@ -2087,14 +2202,15 @@ msgstr "ファイルのある場所で書く"
 
 #: src/help/pages/Article.tsx
 msgid "Yes"
-msgstr ""
+msgstr "はい"
 
 #: src/pages/Workspace.tsx
 msgid "You will lose access to all cloud documents."
 msgstr "すべてのクラウドドキュメントへのアクセスを失います。"
 
 #: src/pages/Workspace.tsx
-msgid "You will lose access to all cloud documents. Your local files are unaffected."
+msgid "You will lose access to all cloud documents. Your local files are "
+"unaffected."
 msgstr "すべてのクラウドドキュメントへのアクセスを失います。ローカルファイルは影響を受けません。"
 
 #: src/pages/InviteAccept.tsx
@@ -2109,10 +2225,14 @@ msgstr "ファイルは常にあなたのマシンに。"
 msgid "Your Markdown workspace,<0/>synced to the cloud."
 msgstr "あなたの Markdown ワークスペース、<0/>クラウドに同期。"
 
+#: src/pages/AiConnections.tsx
+msgid "Your MCP server"
+msgstr "あなたの MCP サーバー"
+
 #: src/pages/Workspace.tsx
 msgid "Your rendered document will appear here."
 msgstr "レンダリングされたドキュメントがここに表示されます。"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Your theme"
-msgstr ""
+msgstr "あなたのテーマ"
