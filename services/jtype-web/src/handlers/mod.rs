@@ -1,5 +1,6 @@
 pub mod admin;
 pub mod assets;
+pub mod blobs;
 pub mod auth;
 pub mod document;
 pub mod domain;

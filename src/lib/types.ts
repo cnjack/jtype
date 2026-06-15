@@ -100,6 +100,23 @@ export type SyncBaseEntry = {
   content: string;
 };
 
+/** Per-vault binary-blob sync state: highest server clock seen + last-synced
+ *  sha256 per asset relative path. Mirrors jtype-core `AssetSyncState`. */
+export type AssetSyncState = {
+  clock: number;
+  bases: Record<string, string>;
+};
+
+/** One entry in the server blob manifest (GET /blobs). */
+export type BlobManifestEntry = {
+  relativePath: string;
+  sha256: string;
+  byteSize: number;
+  contentType: string;
+  updatedClock: number;
+  deletedClock: number | null;
+};
+
 export type AuthResponse = {
   token: string;
   username: string;

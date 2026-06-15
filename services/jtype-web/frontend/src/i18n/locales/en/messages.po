@@ -466,6 +466,10 @@ msgstr "Copy path"
 msgid "Corner radius"
 msgstr "Corner radius"
 
+#: src/pages/Workspace.tsx
+msgid "Could not load this PDF."
+msgstr "Could not load this PDF."
+
 #: src/components/SiteThemePanel.tsx
 msgid "Cozy"
 msgstr "Cozy"
@@ -537,6 +541,10 @@ msgstr "Delete folder \"{folderPath}\" and all its contents?"
 #: src/pages/Workspace.tsx
 msgid "Delete forever"
 msgstr "Delete forever"
+
+#: src/pages/Workspace.tsx
+msgid "Delete this PDF?"
+msgstr "Delete this PDF?"
 
 #: src/pages/Workspace.tsx
 msgid "Delete workspace"
@@ -837,6 +845,10 @@ msgstr "https://s3.example.com — leave blank to use local files"
 msgid "Image upload failed"
 msgstr "Image upload failed"
 
+#: src/pages/Workspace.tsx
+msgid "Import failed"
+msgstr "Import failed"
+
 #: src/components/NewResourceDialog.tsx
 msgid "Import file"
 msgstr "Import file"
@@ -988,6 +1000,10 @@ msgstr "Live preview"
 msgid "Loading invite…"
 msgstr "Loading invite…"
 
+#: src/pages/Workspace.tsx
+msgid "Loading PDF…"
+msgstr "Loading PDF…"
+
 #: src/help/components/HelpVideo.tsx
 msgid "Loading player…"
 msgstr "Loading player…"
@@ -995,6 +1011,10 @@ msgstr "Loading player…"
 #: src/components/SiteThemePanel.tsx
 msgid "Loading site settings…"
 msgstr "Loading site settings…"
+
+#: src/pages/Workspace.tsx
+msgid "Loading viewer…"
+msgstr "Loading viewer…"
 
 #: src/pages/Admin.tsx
 msgid "Loading..."

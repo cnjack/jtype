@@ -571,7 +571,7 @@ export function EditorShell() {
 
   return (
     <section className="flex min-h-0 flex-col bg-[#fbfdfb]">
-      <div className="relative z-30 flex min-h-[56px] min-w-0 items-center justify-between gap-3 border-b border-black/[0.04] bg-white/60 px-5 backdrop-blur-xl">
+      <div className="relative z-30 flex min-h-[56px] min-w-0 items-center justify-between gap-3 bg-white/60 px-5 backdrop-blur-xl">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <div className="flex min-w-0 items-baseline gap-1">
@@ -727,7 +727,7 @@ export function EditorShell() {
       </div>
 
       {isMarkdown && (
-      <div className="flex min-h-12 min-w-0 items-center gap-1 overflow-x-auto border-b border-black/[0.04] bg-[#fbfdfb] px-5">
+      <div className="flex min-h-12 min-w-0 items-center gap-1 overflow-x-auto bg-[#fbfdfb] px-5">
         <EditorToolbarButton command="editor.bold" title={t`Bold - Ctrl+B`} disabled={!canEditMarkdown} runCommand={runCommand} tooltipProps={tooltipProps(t`Bold - Ctrl+B`)}>
           <BoldIcon className="h-4 w-4" />
         </EditorToolbarButton>
@@ -785,6 +785,7 @@ export function EditorShell() {
             content={state.editorContent}
             editable={canEditDiagram}
             onChange={(next) => dispatch({ type: "SET_EDITOR_CONTENT", content: next })}
+            onSave={(next) => void fs.saveCurrentFile(next)}
           />
         ) : (
         <div className={getGridClass(state.editorMode)} style={{ position: "relative" }}>

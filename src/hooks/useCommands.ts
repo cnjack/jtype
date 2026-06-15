@@ -127,6 +127,31 @@ export function useCommands(fs: ReturnType<typeof import("./useFileSystem").useF
       run: () => sync.syncWorkspaceToWeb(),
     },
     {
+      id: "sync.verify",
+      title: "Verify and repair cloud sync",
+      aliases: ["reconcile", "repair", "verify"],
+      scope: ["publish", "workspace"],
+      isEnabled: () => Boolean(state.workspace && state.syncToken && currentVaultBinding && currentVaultSettings?.cloudSyncEnabled !== false) && !state.isLoading,
+      disabledReason: () => currentVaultSettings?.cloudSyncEnabled === false ? "Enable cloud sync for this vault first" : "Bind this vault to a cloud workspace before syncing",
+      run: () => {
+        if (!currentVaultBinding) return;
+        dispatch({ type: "SET_STATUS", message: "Verifying cloud sync…" });
+        void sync.reconcileDocuments(currentVaultBinding).then((result) => {
+          if (!result) {
+            dispatch({ type: "SET_STATUS", message: "Could not verify cloud sync." });
+            return;
+          }
+          const orphanNote = result.orphans > 0
+            ? ` · ${result.orphans} non-syncable server row${result.orphans === 1 ? "" : "s"} ignored (delete on web)`
+            : "";
+          dispatch({
+            type: "SET_STATUS",
+            message: `Cloud sync verified — ${result.inSync} in sync, ${result.repaired} repaired, ${result.localEdits} local edit${result.localEdits === 1 ? "" : "s"} kept.${orphanNote}`,
+          });
+        });
+      },
+    },
+    {
       id: "ai.index",
       title: "Build AI index",
       aliases: ["context"],

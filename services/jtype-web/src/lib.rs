@@ -404,6 +404,20 @@ pub fn build_app(
             "/assets/:workspace_id/:asset_id",
             get(handlers::assets::serve_asset),
         )
+        // Path-keyed binary blobs (desktop asset sync). Manifest lists changes
+        // since a clock; the wildcard route uploads/downloads/tombstones bytes
+        // by vault relative path.
+        .route(
+            "/api/v1/workspaces/:workspace_id/blobs",
+            get(handlers::blobs::list_blobs),
+        )
+        .route(
+            "/api/v1/workspaces/:workspace_id/blobs/*relative_path",
+            post(handlers::blobs::upload_blob)
+                .get(handlers::blobs::download_blob)
+                .delete(handlers::blobs::delete_blob)
+                .layer(DefaultBodyLimit::max(handlers::blobs::MAX_BLOB_BYTES + 64 * 1024)),
+        )
         // Public sites
         .route("/u/:site_user", get(handlers::site::user_site_index))
         .route(

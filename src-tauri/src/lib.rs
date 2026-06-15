@@ -20,8 +20,8 @@ use tauri::Manager;
 use tauri::{AppHandle, Emitter};
 
 use workspace::{
-    AiIndexResult, EntryKind, FolderContentsSummary, PublishResult, SyncBaseEntry, SyncDocument,
-    SyncFolder, TrashItemInfo, TrashMetadata, ValidationResult, WorkspaceSnapshot,
+    AiIndexResult, AssetSyncState, EntryKind, FolderContentsSummary, PublishResult, SyncBaseEntry,
+    SyncDocument, SyncFolder, TrashItemInfo, TrashMetadata, ValidationResult, WorkspaceSnapshot,
 };
 
 struct WatcherState {
@@ -82,6 +82,18 @@ struct CloudSyncDocument {
 #[serde(rename_all = "camelCase")]
 struct CloudSyncFolder {
     relative_path: String,
+}
+
+/// Result of `apply_cloud_documents`. `written_paths` lists the documents that
+/// were ACTUALLY written to disk — the caller advances sync-bases off this, not
+/// off the requested set, so a file the gate skipped never gets a poisoned base
+/// (which would make the 3-way merge treat a never-written file as "locally
+/// modified" and strand it on every future pull).
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct ApplyCloudResult {
+    workspace: workspace::WorkspaceSnapshot,
+    written_paths: Vec<String>,
 }
 
 #[tauri::command]
@@ -190,6 +202,44 @@ fn create_workspace_entry(
     let root = PathBuf::from(root_path);
     workspace::create_entry(&root, &relative_path, kind)?;
     workspace::open_workspace(&root)
+}
+
+/// Copy externally-dropped files/folders into the vault under `target_folder`
+/// (collision-safe), then return the refreshed workspace plus the imported
+/// vault-relative paths so the UI can reveal/open them.
+#[tauri::command]
+fn import_external_paths(
+    root_path: String,
+    source_paths: Vec<String>,
+    target_folder: String,
+) -> Result<(WorkspaceSnapshot, Vec<String>), String> {
+    let root = PathBuf::from(root_path);
+    let mut imported = Vec::new();
+    for source in &source_paths {
+        let relative =
+            workspace::import_external_path(&root, &PathBuf::from(source), &target_folder)?;
+        imported.push(relative);
+    }
+    let snapshot = workspace::open_workspace(&root)?;
+    Ok((snapshot, imported))
+}
+
+/// List vault-relative paths of binary assets (images/PDFs) for blob sync.
+#[tauri::command]
+fn collect_asset_paths(root_path: String) -> Result<Vec<String>, String> {
+    workspace::collect_asset_paths(&PathBuf::from(root_path))
+}
+
+/// Load the per-vault asset blob sync state (last-synced sha per path + clock).
+#[tauri::command]
+fn load_asset_sync_state(root_path: String) -> Result<AssetSyncState, String> {
+    workspace::load_asset_sync_state(&PathBuf::from(root_path))
+}
+
+/// Persist the per-vault asset blob sync state after a blob-sync pass.
+#[tauri::command]
+fn save_asset_sync_state(root_path: String, state: AssetSyncState) -> Result<(), String> {
+    workspace::save_asset_sync_state(&PathBuf::from(root_path), &state)
 }
 
 /// Read a `.board` view file (plain text/JSON; bypasses the markdown-only gate).
@@ -402,17 +452,20 @@ fn apply_cloud_documents(
     root_path: String,
     documents: Vec<CloudSyncDocument>,
     folders: Vec<CloudSyncFolder>,
-) -> Result<WorkspaceSnapshot, String> {
+) -> Result<ApplyCloudResult, String> {
     let root = PathBuf::from(root_path);
     for folder in folders {
         let target = safe_join(&root, &folder.relative_path)?;
         fs::create_dir_all(target).map_err(|error| error.to_string())?;
     }
+    let mut written_paths = Vec::new();
     for document in documents {
         let doc_path = PathBuf::from(&document.relative_path);
-        // Markdown and diagram resources (Mermaid/Draw.io/Excalidraw/Swagger) both
-        // sync down as text. (`.board` views keep their existing behaviour.)
-        if !(workspace::is_markdown_path(&doc_path) || workspace::is_diagram_path(&doc_path)) {
+        // Markdown, `.board` kanban views, and diagram resources
+        // (Mermaid/Draw.io/Excalidraw/Swagger) all sync down as opaque text.
+        // Must mirror collect_sync_documents / collect_files_recursive exactly —
+        // hence the shared predicate, so a synced type can't be dropped here.
+        if !workspace::is_syncable_document_path(&doc_path) {
             continue;
         }
         let target = safe_join(&root, &document.relative_path)?;
@@ -420,8 +473,13 @@ fn apply_cloud_documents(
             fs::create_dir_all(parent).map_err(|error| error.to_string())?;
         }
         fs::write(target, document.content).map_err(|error| error.to_string())?;
+        written_paths.push(document.relative_path);
     }
-    workspace::open_workspace(&root)
+    let workspace = workspace::open_workspace(&root)?;
+    Ok(ApplyCloudResult {
+        workspace,
+        written_paths,
+    })
 }
 
 #[tauri::command]
@@ -708,13 +766,6 @@ struct VaultSettings {
     sync_disabled_permanently: bool,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize, Default)]
-#[serde(rename_all = "camelCase")]
-struct VaultSettingsStore {
-    #[serde(flatten)]
-    entries: std::collections::HashMap<String, VaultSettings>,
-}
-
 // ── Vault lifecycle commands ──
 
 #[tauri::command]
@@ -856,6 +907,10 @@ pub fn run() {
             open_workspace,
             detect_vault_root,
             create_workspace_entry,
+            import_external_paths,
+            collect_asset_paths,
+            load_asset_sync_state,
+            save_asset_sync_state,
             read_board_file,
             write_board_file,
             read_text_file,
@@ -937,4 +992,68 @@ pub fn run() {
                 }
             }
         });
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tempfile::tempdir;
+
+    fn doc(path: &str, content: &str) -> CloudSyncDocument {
+        CloudSyncDocument {
+            relative_path: path.to_string(),
+            content: content.to_string(),
+        }
+    }
+
+    #[test]
+    fn apply_cloud_documents_writes_board_files() {
+        // Regression: a `.board` document pulled from the cloud must be written
+        // to disk. Before the gate used the shared is_syncable_document_path
+        // predicate, `.board` was silently `continue`d (neither markdown nor
+        // diagram), so a web-created kanban never appeared on desktop.
+        let dir = tempdir().unwrap();
+        let root = dir.path().to_string_lossy().to_string();
+
+        let result = apply_cloud_documents(
+            root,
+            vec![
+                doc("note.md", "# Note"),
+                doc("23232.board", "{\"id\":\"b\",\"columns\":[]}"),
+                doc("flow.mmd", "graph TD; A-->B"),
+            ],
+            vec![],
+        )
+        .unwrap();
+
+        assert_eq!(
+            fs::read_to_string(dir.path().join("23232.board")).unwrap(),
+            "{\"id\":\"b\",\"columns\":[]}"
+        );
+        assert!(dir.path().join("note.md").exists());
+        assert!(dir.path().join("flow.mmd").exists());
+        // written_paths must report the board so the caller records its sync-base.
+        assert!(result.written_paths.contains(&"23232.board".to_string()));
+        assert_eq!(result.written_paths.len(), 3);
+    }
+
+    #[test]
+    fn apply_cloud_documents_skips_non_syncable_and_reports_it() {
+        // A type outside the synced document set must NOT be written, and must NOT
+        // be reported in written_paths — otherwise the caller poisons its
+        // sync-base with a file that was never created.
+        let dir = tempdir().unwrap();
+        let root = dir.path().to_string_lossy().to_string();
+
+        let result = apply_cloud_documents(
+            root,
+            vec![doc("note.md", "# Note"), doc("photo.png", "binary")],
+            vec![],
+        )
+        .unwrap();
+
+        assert!(dir.path().join("note.md").exists());
+        assert!(!dir.path().join("photo.png").exists());
+        assert_eq!(result.written_paths, vec!["note.md".to_string()]);
+    }
 }

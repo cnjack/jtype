@@ -1,11 +1,11 @@
-import { useEffect, useState, useRef, useCallback, useMemo, memo } from 'react'
+import { useEffect, useState, useRef, useCallback, useMemo, memo, lazy, Suspense } from 'react'
 import { Menu, MenuButton, MenuItems, MenuItem, Dialog, DialogPanel } from '@headlessui/react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
-import { api, getStoredUsername, setSessionId, type WorkspaceSummary, type DocumentListItem, type FolderListItem, type DomainResponse, type TrashItem, type MemberInfo, type InviteListItem, type InviteResponse, type PublishStatusResponse } from '../api'
+import { api, getStoredUsername, setSessionId, type WorkspaceSummary, type DocumentListItem, type FolderListItem, type DomainResponse, type TrashItem, type MemberInfo, type InviteListItem, type InviteResponse, type PublishStatusResponse, type BlobManifestEntry } from '../api'
 import { renderToContainer } from '@shared/lib/markdown'
 import { parseFrontmatter, writeFrontmatter } from '@shared/lib/frontmatter'
 import type { EditorMode } from '@shared/lib/types'
-import { isDiagramTextPath, isMarkdownPath, resourceTypeForPath } from '@shared/lib/fileTypes'
+import { isBoardPath, isBinaryDocumentPath, isDiagramTextPath, isMarkdownPath, resourceTypeForPath } from '@shared/lib/fileTypes'
 import { usePrompt, useConfirm } from '@shared/components/PromptDialogContext'
 import { WebBoardView } from './WebBoardView'
 import { AppVersion, DiagramView } from '@shared/components'
@@ -42,6 +42,7 @@ import {
   FolderIcon,
   FolderOpenIcon,
   DocumentTextIcon,
+  DocumentIcon,
   RectangleGroupIcon,
   StarIcon,
   FolderPlusIcon,
@@ -59,6 +60,9 @@ import {
 } from '@heroicons/react/24/outline'
 import { t, plural } from '@lingui/core/macro'
 import { Trans } from '@lingui/react/macro'
+
+// pdf.js is heavy — only load it when a PDF is actually opened.
+const PdfView = lazy(() => import('@shared/components/viewers/PdfView'))
 
 type WorkspaceSection = 'documents' | 'trash' | 'publishing' | 'domains'
 type WorkspaceSettingsSection = 'general' | 'site' | 'trash' | 'domains' | 'members'
@@ -78,6 +82,10 @@ export function Workspace() {
   const [workspaces, setWorkspaces] = useState<WorkspaceSummary[]>([])
   const [documents, setDocuments] = useState<DocumentListItem[]>([])
   const [folders, setFolders] = useState<FolderListItem[]>([])
+  // Binary documents (PDF) live in the path-keyed blob store, not the documents
+  // table. They show as first-class tree entries; `selectedBlob` is the open one.
+  const [blobs, setBlobs] = useState<BlobManifestEntry[]>([])
+  const [selectedBlob, setSelectedBlob] = useState<string | null>(null)
   const [trashItems, setTrashItems] = useState<TrashItem[]>([])
   const [domains, setDomains] = useState<DomainResponse[]>([])
   const [loading, setLoading] = useState(true)
@@ -158,6 +166,7 @@ export function Workspace() {
 
   const editorRef = useRef<HTMLTextAreaElement>(null)
   const imageInputRef = useRef<HTMLInputElement>(null)
+  const importInputRef = useRef<HTMLInputElement>(null)
   const [editorNotice, setEditorNotice] = useState('')
   const previewRef = useRef<HTMLElement>(null)
   const isSyncingScroll = useRef(false)
@@ -171,11 +180,13 @@ export function Workspace() {
       api.listDocuments(workspaceId),
       api.listTrash(workspaceId),
       api.listDomains(),
-    ]).then(([workspaceList, ws, folderList, docs, trash, domainList]) => {
+      api.listBlobs(workspaceId).catch(() => [] as BlobManifestEntry[]),
+    ]).then(([workspaceList, ws, folderList, docs, trash, domainList, blobList]) => {
       setWorkspaces(workspaceList.workspaces)
       setWorkspace(ws)
       setFolders(folderList)
       setDocuments(docs)
+      setBlobs(blobList)
       setTrashItems(trash)
       setDomains(domainList)
       setWorkspaceName(ws.name === '.jtype' ? (ws.publishTitle || '') : ws.name)
@@ -335,6 +346,7 @@ export function Workspace() {
       api.getDocument(workspaceId, docId),
       api.getPublishStatus(workspaceId, docId).catch(() => null),
     ])
+    setSelectedBlob(null)
     setSelectedDoc(docId)
     setDocContent(doc.content)
     setLoadedContentHash(doc.contentHash)
@@ -343,13 +355,48 @@ export function Workspace() {
     setDirty(false)
   }
 
+  // Active (non-tombstoned) PDF blobs — the binary documents shown in the tree.
+  const pdfBlobs = useMemo(
+    () => blobs.filter(b => b.deletedClock == null && isBinaryDocumentPath(b.relativePath)),
+    [blobs],
+  )
+
+  const reloadBlobs = useCallback(async () => {
+    if (!workspaceId) return
+    try { setBlobs(await api.listBlobs(workspaceId)) } catch { /* best-effort */ }
+  }, [workspaceId])
+
+  const openBlob = useCallback((relativePath: string) => {
+    setSelectedDoc(null)
+    setSelectedBlob(relativePath)
+  }, [])
+
+  // Import a binary document (PDF) into the path-keyed blob store so it syncs to
+  // the desktop and shows as a first-class tree entry.
+  const handleImportFiles = useCallback(async (files: FileList | null) => {
+    if (!workspaceId || !files || files.length === 0) return
+    for (const file of Array.from(files)) {
+      const name = file.name || 'document.pdf'
+      try {
+        await api.uploadBlob(workspaceId, name, file)
+      } catch (err) {
+        setStatusMessage(t`Import failed` + `: ${String((err as Error)?.message || err)}`)
+        setTimeout(() => setStatusMessage(''), 4000)
+      }
+    }
+    await reloadBlobs()
+  }, [workspaceId, reloadBlobs])
+
   const toggleFavorite = useCallback(() => {
     if (!selectedDoc) return
     toggleFavoriteDoc(selectedDoc, workspaceId)
     setFavoriteVersion(v => v + 1)
   }, [selectedDoc, workspaceId])
 
-  async function saveDocument() {
+  // `overrideContent` lets a canvas editor (Excalidraw) hand us the latest
+  // serialized scene synchronously on Ctrl+S, bypassing its onChange debounce so
+  // we never persist a stale snapshot.
+  async function saveDocument(overrideContent?: string) {
     if (!workspaceId || !selectedDoc) return
     if (!canEditContent) {
       setStatusMessage(t`Viewer access is read-only.`)
@@ -358,24 +405,26 @@ export function Workspace() {
     }
     const doc = documents.find(d => d.id === selectedDoc)
     if (!doc) return
+    const content = overrideContent ?? docContent
+    if (overrideContent !== undefined) setDocContent(overrideContent)
     setSaving(true)
     try {
-      const parsedDoc = parseFrontmatter(docContent)
+      const parsedDoc = parseFrontmatter(content)
       try {
         const result = await api.saveDocument(workspaceId, {
           relativePath: doc.relativePath,
-          content: docContent,
+          content,
           title: parsedDoc.data.title || undefined,
           baseContentHash: loadedContentHash || undefined,
           baseContent: loadedContent || undefined,
         })
         setLoadedContentHash(result.contentHash)
-        setLoadedContent(docContent)
+        setLoadedContent(content)
         setDirty(false)
         setDocuments(await api.listDocuments(workspaceId))
         return
       } catch { /* fall through to offline */ }
-      await saveOffline(doc.relativePath, docContent, loadedContentHash || '', loadedContent || '')
+      await saveOffline(doc.relativePath, content, loadedContentHash || '', loadedContent || '')
       setDirty(false)
       setStatusMessage(t`Saved offline. Will sync when reconnected.`)
       setTimeout(() => setStatusMessage(''), 3000)
@@ -746,7 +795,7 @@ export function Workspace() {
   }, [treeContextMenu])
 
   const selectedDocument = selectedDoc ? documents.find(d => d.id === selectedDoc) ?? null : null
-  const isBoardFile = selectedDocument?.relativePath?.toLowerCase().endsWith('.board') ?? false
+  const isBoardFile = selectedDocument ? isBoardPath(selectedDocument.relativePath) : false
   // Diagram resources (Mermaid/Draw.io/Excalidraw/Swagger) render in their own viewer.
   const isDiagramFile = selectedDocument ? isDiagramTextPath(selectedDocument.relativePath) : false
   // Only Markdown documents are publishable (diagrams/boards are opaque content).
@@ -782,7 +831,7 @@ export function Workspace() {
   if (loading) return <div className="flex items-center justify-center py-20"><div className="h-6 w-6 animate-spin rounded-full border-2 border-brand border-t-transparent" /></div>
 
   return (
-    <div className="grid h-[calc(100vh-4rem)] grid-rows-[1fr_auto] overflow-hidden bg-[#fbfdfb]">
+    <div className="grid h-[calc(100vh-4rem)] grid-rows-[1fr_auto] overflow-hidden bg-[#f5f8f6]">
       {workspace && (
         <WorkspaceSettingsDialog
           open={settingsOpen}
@@ -829,6 +878,15 @@ export function Workspace() {
         onCreateDocument={(name, baseDir) => { void createDocumentWeb(name, baseDir) }}
         onCreateBoard={(name, baseDir) => { void createBoardWeb(name, baseDir) }}
         onCreateDiagram={(relativePath, content, baseDir) => { void createDiagramWeb(relativePath, content, baseDir) }}
+        onImport={canEditContent ? () => importInputRef.current?.click() : undefined}
+      />
+      <input
+        ref={importInputRef}
+        type="file"
+        accept="application/pdf,.pdf"
+        multiple
+        className="hidden"
+        onChange={(e) => { const files = e.target.files; void handleImportFiles(files); e.target.value = '' }}
       />
 
       {activeSection === 'documents' && (
@@ -842,7 +900,7 @@ export function Workspace() {
           )}
           {!sidebarCollapsed && !focusMode && (
             <aside
-              className={`flex min-h-0 flex-col border-r border-black/[0.04] bg-[#f7faf8] max-md:fixed max-md:bottom-0 max-md:left-0 max-md:top-16 max-md:z-50 max-md:w-[min(86vw,300px)] max-md:shadow-2xl max-md:shadow-stone-900/20 max-md:transition-transform ${mobileSidebarOpen ? 'max-md:translate-x-0' : 'max-md:-translate-x-full'}`}
+              className={`flex min-h-0 flex-col bg-transparent max-md:fixed max-md:bottom-0 max-md:left-0 max-md:top-16 max-md:z-50 max-md:w-[min(86vw,300px)] max-md:bg-[#f7faf8] max-md:shadow-2xl max-md:shadow-stone-900/20 max-md:transition-transform ${mobileSidebarOpen ? 'max-md:translate-x-0' : 'max-md:-translate-x-full'}`}
             >
               <div className="p-5 pb-4">
                 <CloudWorkspaceSwitcher
@@ -875,8 +933,11 @@ export function Workspace() {
                   workspaceId={workspaceId}
                   folders={folders}
                   documents={documents}
+                  pdfBlobs={pdfBlobs}
                   selectedDoc={selectedDoc}
+                  selectedBlob={selectedBlob}
                   onOpen={openDocument}
+                  onOpenBlob={openBlob}
                   onDelete={deleteDocument}
                   onPublish={docId => publishDocumentsByIds([docId])}
                   onUnpublish={docId => unpublishDocumentsByIds([docId])}
@@ -905,13 +966,27 @@ export function Workspace() {
             </aside>
           )}
 
-        <section className="flex min-w-0 flex-col overflow-hidden bg-[#fbfdfb]">
-          {selectedDoc ? (
+        <section className="m-2.5 flex min-w-0 flex-col overflow-hidden rounded-2xl bg-[#fbfdfb] shadow-[0_1px_2px_rgba(20,45,38,0.04),0_16px_38px_-24px_rgba(20,45,38,0.22)] ring-1 ring-black/[0.035] max-md:m-0 max-md:rounded-none max-md:shadow-none max-md:ring-0">
+          {selectedBlob && workspaceId ? (
+            <PdfPane
+              workspaceId={workspaceId}
+              relativePath={selectedBlob}
+              canEdit={canEditContent}
+              onOpenSidebar={() => setMobileSidebarOpen(true)}
+              onDelete={async () => {
+                const ok = await confirm(t`Delete this PDF?`, { title: t`Move to trash`, confirmLabel: t`Delete`, destructive: true })
+                if (!ok) return
+                try { await api.deleteBlob(workspaceId, selectedBlob) } catch { /* ignore */ }
+                setSelectedBlob(null)
+                await reloadBlobs()
+              }}
+            />
+          ) : selectedDoc ? (
             isBoardFile && selectedDocument && workspaceId ? (
               <WebBoardView workspaceId={workspaceId} boardDocId={selectedDoc} boardRelativePath={selectedDocument.relativePath} />
             ) : (
             <>
-              <div className="flex min-h-[56px] items-center justify-between gap-3 border-b border-black/[0.04] bg-white/60 px-5 backdrop-blur-xl">
+              <div className="flex min-h-[56px] items-center justify-between gap-3 bg-white/60 px-5 backdrop-blur-xl">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <div className="flex min-w-0 items-baseline gap-1">
@@ -1032,11 +1107,12 @@ export function Workspace() {
                     content={docContent}
                     editable={canEditContent}
                     onChange={(next) => { setDocContent(next); setDirty(true) }}
+                    onSave={(next) => { void saveDocument(next) }}
                   />
                 </div>
               ) : (
               <>
-              <div className="editor-toolbar-row flex min-h-12 items-center gap-1 border-b border-black/[0.04] bg-[#fbfdfb] px-5">
+              <div className="editor-toolbar-row flex min-h-12 items-center gap-1 bg-[#fbfdfb] px-5">
                 <button
                   type="button"
                   className="editor-tool mr-1 shrink-0 md:hidden"
@@ -1144,7 +1220,7 @@ export function Workspace() {
                   )}
                   <article
                     ref={previewRef}
-                    className="preview empty min-h-0 overflow-y-auto overflow-x-hidden border-l border-black/[0.04] bg-[#f8fbf9] p-10"
+                    className="preview empty min-h-0 overflow-y-auto overflow-x-hidden bg-[#f8fbf9] p-10"
                     style={{ position: 'relative', zIndex: 1 }}
                   >
                     <h2><Trans>Select a Markdown file</Trans></h2>
@@ -1160,7 +1236,7 @@ export function Workspace() {
                   />
                 )}
                 {infoPanel && (
-                  <aside className="min-h-0 overflow-y-auto border-l border-black/[0.04] bg-[#f6faf7] p-5 max-md:fixed max-md:bottom-0 max-md:right-0 max-md:top-16 max-md:z-50 max-md:w-[min(86vw,340px)] max-md:shadow-2xl max-md:shadow-stone-900/20">
+                  <aside className="min-h-0 overflow-y-auto bg-[#f6faf7] p-5 max-md:fixed max-md:bottom-0 max-md:right-0 max-md:top-16 max-md:z-50 max-md:w-[min(86vw,340px)] max-md:shadow-2xl max-md:shadow-stone-900/20">
                     <div className="mb-4 flex items-center justify-between">
                       <p className="text-sm font-semibold text-stone-950"><Trans>Document Info</Trans></p>
                       <button className="subtle-button aspect-square px-0" type="button" title={t`Hide`} onClick={() => setInfoPanel(false)}><XMarkIcon className="h-4 w-4" /></button>
@@ -1320,7 +1396,7 @@ export function Workspace() {
       </div>
       )}
 
-      <div id="operation-log" className="col-span-full flex items-center justify-between border-t border-black/[0.04] bg-white/70 px-5 py-3 text-xs text-[#6b7773]">
+      <div id="operation-log" className="col-span-full flex items-center justify-between bg-transparent px-5 pb-1.5 pt-1 text-xs text-[#6b7773]">
         <span>{statusMessage || (selectedDoc ? `Opened ${documents.find(d => d.id === selectedDoc)?.relativePath || 'document'}.` : t`Select a document to edit.`)}</span>
         <span className="flex shrink-0 items-center gap-3">
           {reconciling ? (
@@ -2546,13 +2622,15 @@ interface WebTreeNode {
   // A `board` node is a `<name>.board` document unified with its sibling `<name>/`
   // folder (the folder's card files become the board node's children) — mirrors the
   // desktop sidebar, where a board shows as one expandable row with a kanban icon.
-  kind: 'folder' | 'document' | 'board'
+  kind: 'folder' | 'document' | 'board' | 'pdf'
   folder?: FolderListItem
   doc?: DocumentListItem
+  /** For `pdf` nodes: the blob's vault-relative path (opened via the blob store). */
+  blobPath?: string
   children: WebTreeNode[]
 }
 
-function buildDocTree(folders: FolderListItem[], documents: DocumentListItem[]): WebTreeNode[] {
+function buildDocTree(folders: FolderListItem[], documents: DocumentListItem[], pdfBlobs: BlobManifestEntry[] = []): WebTreeNode[] {
   const root: WebTreeNode[] = []
   const folderMap = new Map<string, WebTreeNode>()
 
@@ -2591,6 +2669,20 @@ function buildDocTree(folders: FolderListItem[], documents: DocumentListItem[]):
     }
   }
 
+  // Binary documents (PDF) — first-class tree leaves from the blob store. They
+  // open via the path-keyed blob channel, not a documents-table id.
+  for (const blob of pdfBlobs) {
+    const parts = blob.relativePath.split('/')
+    const fileName = parts[parts.length - 1]!
+    const leaf: WebTreeNode = { name: fileName, path: blob.relativePath, kind: 'pdf', blobPath: blob.relativePath, children: [] }
+    if (parts.length > 1) {
+      const parent = ensureFolder(parts.slice(0, -1).join('/'))
+      parent.children.push(leaf)
+    } else {
+      root.push(leaf)
+    }
+  }
+
   // Unify a `<name>.board` file with its sibling `<name>/` folder into a single
   // expandable board node — the board is the surviving row and the folder's card
   // files become its children. Mirrors the desktop sidebar's groupBoardsWithFolders
@@ -2598,7 +2690,7 @@ function buildDocTree(folders: FolderListItem[], documents: DocumentListItem[]):
   const mergeBoards = (nodes: WebTreeNode[]): WebTreeNode[] => {
     const boardBases = new Set<string>()
     for (const n of nodes) {
-      if (n.kind === 'document' && n.name.toLowerCase().endsWith('.board')) {
+      if (n.kind === 'document' && isBoardPath(n.name)) {
         boardBases.add(n.name.replace(/\.board$/i, ''))
       }
     }
@@ -2607,7 +2699,7 @@ function buildDocTree(folders: FolderListItem[], documents: DocumentListItem[]):
     const out: WebTreeNode[] = []
     for (const n of nodes) {
       if (n.kind === 'folder' && boardBases.has(n.name)) continue // absorbed into its board
-      if (n.kind === 'document' && n.name.toLowerCase().endsWith('.board')) {
+      if (n.kind === 'document' && isBoardPath(n.name)) {
         const folder = folderByName.get(n.name.replace(/\.board$/i, ''))
         out.push({ ...n, kind: 'board', children: folder ? [...n.children, ...folder.children] : [...n.children] })
       } else {
@@ -2619,7 +2711,7 @@ function buildDocTree(folders: FolderListItem[], documents: DocumentListItem[]):
   }
 
   // Folders and boards (containers) sort before plain documents, then alphabetically.
-  const sortRank = (kind: WebTreeNode['kind']) => (kind === 'document' ? 1 : 0)
+  const sortRank = (kind: WebTreeNode['kind']) => (kind === 'document' || kind === 'pdf' ? 1 : 0)
   const sortNodes = (nodes: WebTreeNode[]) => {
     nodes.sort((a, b) => {
       const ra = sortRank(a.kind)
@@ -2666,8 +2758,11 @@ function WebDocExplorer({
   workspaceId,
   folders,
   documents,
+  pdfBlobs,
   selectedDoc,
+  selectedBlob,
   onOpen,
+  onOpenBlob,
   onDelete,
   onPublish,
   onUnpublish,
@@ -2692,8 +2787,11 @@ function WebDocExplorer({
   workspaceId: string | undefined
   folders: FolderListItem[]
   documents: DocumentListItem[]
+  pdfBlobs: BlobManifestEntry[]
   selectedDoc: string | null
+  selectedBlob: string | null
   onOpen: (docId: string) => void
+  onOpenBlob: (relativePath: string) => void
   onDelete: (docId: string) => void
   onPublish: (docId: string) => Promise<void> | void
   onUnpublish: (docId: string) => Promise<void> | void
@@ -2717,7 +2815,7 @@ function WebDocExplorer({
 }) {
   const prompt = usePrompt()
   const confirmDialog = useConfirm()
-  const tree = useMemo(() => buildDocTree(folders, documents), [folders, documents])
+  const tree = useMemo(() => buildDocTree(folders, documents, pdfBlobs), [folders, documents, pdfBlobs])
   const folderPaths = useMemo(() => allFolderPaths(tree), [tree])
   const allExpanded = folderPaths.size > 0 && folderPaths.size === expanded.size
 
@@ -2899,8 +2997,10 @@ function WebDocExplorer({
                     depth={0}
                     expanded={expanded}
                     selectedDoc={selectedDoc}
+                    selectedBlob={selectedBlob}
                     onToggle={handleToggle}
                     onOpen={onOpen}
+                    onOpenBlob={onOpenBlob}
                     onContextMenu={(n, x, y) => setTreeContextMenu({ node: n, x, y })}
                   />
                 ))}
@@ -3066,6 +3166,65 @@ function WebDocExplorer({
   )
 }
 
+/** Read-only viewer pane for a binary document (PDF) from the blob store. */
+function PdfPane({
+  workspaceId,
+  relativePath,
+  canEdit,
+  onOpenSidebar,
+  onDelete,
+}: {
+  workspaceId: string
+  relativePath: string
+  canEdit: boolean
+  onOpenSidebar: () => void
+  onDelete: () => void | Promise<void>
+}) {
+  const [state, setState] = useState<{ status: 'loading' | 'ready' | 'error'; bytes?: Uint8Array }>({ status: 'loading' })
+  const fileName = relativePath.split('/').pop() || relativePath
+
+  useEffect(() => {
+    let cancelled = false
+    setState({ status: 'loading' })
+    api.downloadBlob(workspaceId, relativePath)
+      .then(buf => { if (!cancelled) setState({ status: 'ready', bytes: new Uint8Array(buf) }) })
+      .catch(() => { if (!cancelled) setState({ status: 'error' }) })
+    return () => { cancelled = true }
+  }, [workspaceId, relativePath])
+
+  return (
+    <>
+      <div className="flex min-h-[56px] items-center justify-between gap-3 border-b border-black/[0.04] bg-white/60 px-5 backdrop-blur-xl">
+        <div className="flex min-w-0 items-center gap-2">
+          <button type="button" className="editor-tool mr-1 shrink-0 md:hidden" aria-label={t`Open sidebar`} onClick={onOpenSidebar}>
+            <Bars3Icon className="h-4 w-4" />
+          </button>
+          <DocumentIcon className="h-4 w-4 shrink-0 text-[#8a9691]" />
+          <p className="truncate text-sm font-semibold text-stone-950">{fileName}</p>
+        </div>
+        {canEdit && (
+          <button type="button" className="editor-tool h-8 w-8 px-0 hover:text-red-700" aria-label={t`Move to trash`} title={t`Move to trash`} onClick={() => { void onDelete() }}>
+            <TrashIcon className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+      <div className="min-h-0 flex-1 overflow-hidden">
+        {state.status === 'loading' && (
+          <div className="flex h-full items-center justify-center text-sm text-stone-500"><Trans>Loading PDF…</Trans></div>
+        )}
+        {state.status === 'error' && (
+          <div className="flex h-full items-center justify-center text-sm text-stone-500"><Trans>Could not load this PDF.</Trans></div>
+        )}
+        {state.status === 'ready' && state.bytes && (
+          <Suspense fallback={<div className="flex h-full items-center justify-center text-sm text-stone-500"><Trans>Loading viewer…</Trans></div>}>
+            <PdfView data={state.bytes} />
+          </Suspense>
+        )}
+      </div>
+    </>
+  )
+}
+
 /** Tree icon for a document node, distinguishing diagram resources by type. */
 function docTreeIcon(name: string) {
   switch (resourceTypeForPath(name).id) {
@@ -3077,6 +3236,8 @@ function docTreeIcon(name: string) {
       return PencilSquareIcon
     case 'swagger':
       return CodeBracketIcon
+    case 'pdf':
+      return DocumentIcon
     default:
       return DocumentTextIcon
   }
@@ -3087,24 +3248,29 @@ const WebTreeNodeRow = memo(function WebTreeNodeRow({
   depth,
   expanded,
   selectedDoc,
+  selectedBlob,
   onToggle,
   onOpen,
+  onOpenBlob,
   onContextMenu,
 }: {
   node: WebTreeNode
   depth: number
   expanded: Set<string>
   selectedDoc: string | null
+  selectedBlob: string | null
   onToggle: (path: string) => void
   onOpen: (docId: string) => void
+  onOpenBlob: (relativePath: string) => void
   onContextMenu: (node: WebTreeNode, x: number, y: number) => void
 }) {
   const isFolder = node.kind === 'folder'
   const isBoard = node.kind === 'board'
+  const isPdf = node.kind === 'pdf'
   // A board with merged card children is expandable too (chevron toggles, row opens it).
   const isExpandable = isFolder || (isBoard && node.children.length > 0)
   const isExpanded = isExpandable && expanded.has(node.path)
-  const isActive = !isFolder && node.doc?.id === selectedDoc
+  const isActive = isPdf ? node.blobPath === selectedBlob : !isFolder && node.doc?.id === selectedDoc
 
   return (
     <li>
@@ -3114,6 +3280,7 @@ const WebTreeNodeRow = memo(function WebTreeNodeRow({
         style={{ paddingLeft: `${0.5 + depth * 0.75}rem` }}
         onClick={() => {
           if (isFolder) onToggle(node.path)
+          else if (isPdf && node.blobPath) onOpenBlob(node.blobPath)
           else if (node.doc) onOpen(node.doc.id)
         }}
         onContextMenu={e => {
@@ -3152,8 +3319,10 @@ const WebTreeNodeRow = memo(function WebTreeNodeRow({
               depth={depth + 1}
               expanded={expanded}
               selectedDoc={selectedDoc}
+              selectedBlob={selectedBlob}
               onToggle={onToggle}
               onOpen={onOpen}
+              onOpenBlob={onOpenBlob}
               onContextMenu={onContextMenu}
             />
           ))}

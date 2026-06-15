@@ -108,10 +108,7 @@ pub fn normalize_relative_markdown_path(path: &str) -> Result<String, AppError> 
     // `.board` views and diagram resources (Mermaid/Draw.io/Excalidraw/Swagger)
     // sync as opaque documents — keep their path as-is; everything else is
     // normalized to Markdown.
-    let normalized = if is_markdown_path(&normalized)
-        || is_board_path(&normalized)
-        || is_diagram_path(&normalized)
-    {
+    let normalized = if is_syncable_document_path(&normalized) {
         normalized
     } else {
         format!("{}.md", normalized)
@@ -211,6 +208,14 @@ fn is_swagger_path(lower: &str) -> bool {
         || stem.ends_with(".openapi")
         || stem.ends_with("-openapi")
         || stem.ends_with("_openapi")
+}
+
+/// Single source of truth for "files that sync through the document pipeline as
+/// opaque text" — Markdown notes, `.board` kanban views, and diagram resources.
+/// Mirrors `is_syncable_document_path` in jtype-core and `syncsAsDocument` in
+/// shared/lib/fileTypes.ts — keep the three in lockstep.
+pub fn is_syncable_document_path(path: &str) -> bool {
+    is_markdown_path(path) || is_board_path(path) || is_diagram_path(path)
 }
 
 pub fn extract_title(content: &str) -> Option<String> {

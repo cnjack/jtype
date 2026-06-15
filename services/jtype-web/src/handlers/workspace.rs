@@ -24,7 +24,11 @@ pub async fn list_workspaces(
                   COALESCE(w.publish_title, w.name) AS publish_title,
                   COALESCE(m.role, 'owner') AS role,
                   COALESCE(w.storage_budget_bytes, 1073741824) AS storage_budget_bytes,
-                  COUNT(CASE WHEN d.relative_path NOT LIKE '%.board' THEN d.id END) AS document_count,
+                  COUNT(CASE WHEN d.relative_path NOT LIKE '%.board'
+                              AND d.relative_path NOT LIKE '%.mmd'
+                              AND d.relative_path NOT LIKE '%.mermaid'
+                              AND d.relative_path NOT LIKE '%.drawio'
+                              AND d.relative_path NOT LIKE '%.excalidraw' THEN d.id END) AS document_count,
                   CAST(COALESCE(SUM(OCTET_LENGTH(d.content)), 0) AS SIGNED) AS storage_used_bytes
            FROM workspaces w
            LEFT JOIN workspace_members m ON m.workspace_id = w.id AND m.user_id = ? AND m.status = 'active'
@@ -463,7 +467,11 @@ pub async fn load_workspace_summary(
                   COALESCE(w.publish_title, w.name) AS publish_title,
                   COALESCE(m.role, 'owner') AS role,
                   COALESCE(w.storage_budget_bytes, 1073741824) AS storage_budget_bytes,
-                  COUNT(CASE WHEN d.relative_path NOT LIKE '%.board' THEN d.id END) AS document_count,
+                  COUNT(CASE WHEN d.relative_path NOT LIKE '%.board'
+                              AND d.relative_path NOT LIKE '%.mmd'
+                              AND d.relative_path NOT LIKE '%.mermaid'
+                              AND d.relative_path NOT LIKE '%.drawio'
+                              AND d.relative_path NOT LIKE '%.excalidraw' THEN d.id END) AS document_count,
                   CAST(COALESCE(SUM(OCTET_LENGTH(d.content)), 0) AS SIGNED) AS storage_used_bytes
            FROM workspaces w
            LEFT JOIN workspace_members m ON m.workspace_id = w.id AND m.user_id = ? AND m.status = 'active'

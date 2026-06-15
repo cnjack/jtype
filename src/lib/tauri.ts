@@ -15,6 +15,7 @@ import type {
   TrashMetadata,
   BoardCard,
   CardTemplate,
+  AssetSyncState,
 } from "./types";
 
 export const tauri = {
@@ -63,6 +64,18 @@ export const tauri = {
   createEntry(rootPath: string, relativePath: string, kind: string) {
     return invoke<WorkspaceSnapshot>("create_workspace_entry", { rootPath, relativePath, kind });
   },
+  importExternalPaths(rootPath: string, sourcePaths: string[], targetFolder: string) {
+    return invoke<[WorkspaceSnapshot, string[]]>("import_external_paths", { rootPath, sourcePaths, targetFolder });
+  },
+  collectAssetPaths(rootPath: string) {
+    return invoke<string[]>("collect_asset_paths", { rootPath });
+  },
+  loadAssetSyncState(rootPath: string) {
+    return invoke<AssetSyncState>("load_asset_sync_state", { rootPath });
+  },
+  saveAssetSyncState(rootPath: string, state: AssetSyncState) {
+    return invoke<void>("save_asset_sync_state", { rootPath, state });
+  },
   renameEntry(rootPath: string, fromRelativePath: string, toRelativePath: string) {
     return invoke<WorkspaceSnapshot>("rename_workspace_entry", { rootPath, fromRelativePath, toRelativePath });
   },
@@ -91,7 +104,10 @@ export const tauri = {
     return invoke<VaultBinding[]>("list_vault_bindings");
   },
   applyCloudDocuments(rootPath: string, documents: Array<{ relativePath: string; content: string }>, folders: SyncFolder[] = []) {
-    return invoke<WorkspaceSnapshot>("apply_cloud_documents", { rootPath, documents, folders });
+    // `writtenPaths` = the documents actually written to disk (the apply gate
+    // skips non-syncable types). Callers must advance sync-bases off this, not
+    // off the requested set, or a skipped file gets a poisoned base.
+    return invoke<{ workspace: WorkspaceSnapshot; writtenPaths: string[] }>("apply_cloud_documents", { rootPath, documents, folders });
   },
   applyDeletedCloudFolders(rootPath: string, folders: SyncFolder[]) {
     return invoke<WorkspaceSnapshot>("apply_deleted_cloud_folders", { rootPath, folders });

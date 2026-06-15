@@ -161,7 +161,10 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     }
   }, [dispatch]);
 
-  const saveCurrentFile = useCallback(async () => {
+  // `contentOverride` lets a canvas editor (Excalidraw) hand us the latest
+  // serialized scene synchronously on Ctrl+S, bypassing its onChange debounce so
+  // we never persist a stale snapshot.
+  const saveCurrentFile = useCallback(async (contentOverride?: string) => {
     if (!state.currentPath) return;
     const isMarkdownDoc = state.currentKind === "markdown";
     // Editable diagram resources (Mermaid `.mmd`, Excalidraw) save as text too.
@@ -171,13 +174,19 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
       dispatch({ type: "SET_STATUS", message: "Viewer access is read-only." });
       return;
     }
+    const content = contentOverride ?? state.editorContent;
     try {
       dispatch({ type: "SET_LOADING", isLoading: true });
       dispatch({ type: "SET_STATUS", message: "Saving..." });
+      // Sync the override into state first so SAVE_FILE clears the dirty flag
+      // against the content we're actually writing to disk.
+      if (contentOverride !== undefined && contentOverride !== state.editorContent) {
+        dispatch({ type: "SET_EDITOR_CONTENT", content });
+      }
       if (isMarkdownDoc) {
-        await tauri.writeFile(state.currentPath, state.editorContent);
+        await tauri.writeFile(state.currentPath, content);
       } else {
-        await tauri.writeDiagramFile(state.currentPath, state.editorContent);
+        await tauri.writeDiagramFile(state.currentPath, content);
       }
       dispatch({ type: "SAVE_FILE" });
       dispatch({ type: "SET_STATUS", message: `Saved ${state.currentRelativePath || basename(state.currentPath)}.` });
@@ -739,17 +748,80 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     }
   }, []);
 
+  /**
+   * Copy externally-dropped files/folders into the current vault and reveal the
+   * first one that has a viewer. The drop target is the selected folder, else
+   * the folder holding the open file, else the vault root.
+   */
+  const importDroppedPaths = useCallback(async (sourcePaths: string[]) => {
+    if (!state.workspace || sourcePaths.length === 0) return;
+    if (isCloudViewer) {
+      dispatch({ type: "SET_STATUS", message: "Viewer access is read-only." });
+      return;
+    }
+    const targetFolder = state.currentKind === "folder"
+      ? state.currentRelativePath
+      : state.currentRelativePath.split("/").slice(0, -1).join("/");
+    try {
+      dispatch({ type: "SET_LOADING", isLoading: true });
+      const [workspace, imported] = await tauri.importExternalPaths(
+        state.workspace.rootPath,
+        sourcePaths,
+        targetFolder,
+      );
+      dispatch({ type: "UPDATE_WORKSPACE", workspace });
+      const firstFile = imported.find(
+        (rel) => isMarkdownPath(rel) || isDiagramTextPath(rel) || isViewableAssetPath(rel),
+      );
+      if (firstFile) {
+        const fullPath = `${workspace.rootPath}/${firstFile}`;
+        if (isMarkdownPath(firstFile)) {
+          await openMarkdownFile(fullPath, firstFile);
+        } else if (isDiagramTextPath(firstFile)) {
+          await openDiagramFile(fullPath, firstFile);
+        } else {
+          const node: FileTreeNode = { name: basename(firstFile), path: fullPath, relativePath: firstFile, kind: "asset", children: [] };
+          dispatch({ type: "SELECT_TREE_NODE", node });
+        }
+      }
+      dispatch({
+        type: "SET_STATUS",
+        message: imported.length === 1 ? `Imported ${imported[0]}.` : `Imported ${imported.length} items.`,
+      });
+      // Push the new files to the cloud if this vault is synced.
+      window.dispatchEvent(new CustomEvent("jtype:vault-folder-changed"));
+    } catch (error) {
+      dispatch({ type: "SET_STATUS", message: String(error) });
+    } finally {
+      dispatch({ type: "SET_LOADING", isLoading: false });
+    }
+  }, [dispatch, isCloudViewer, state.workspace, state.currentKind, state.currentRelativePath, openMarkdownFile, openDiagramFile]);
+
+  // Latest-value ref so the once-registered OS drop listener (below) always uses
+  // current state instead of the values captured at mount time.
+  const dropHandlerRef = useRef<(paths: string[]) => void>(() => {});
+  dropHandlerRef.current = (paths: string[]) => {
+    if (paths.length === 0) return;
+    if (state.workspace) {
+      // A vault is open: copy the dropped files/folders into it.
+      void importDroppedPaths(paths);
+    } else {
+      // No vault yet (onboarding): open a dropped markdown file, or treat a
+      // dropped folder as a vault to open.
+      const firstMarkdownPath = paths.find(isMarkdownPath);
+      if (firstMarkdownPath) void openMarkdownFile(firstMarkdownPath);
+      else if (paths[0]) void openWorkspace(paths[0]);
+    }
+  };
+
   const registerDragDrop = useCallback(async () => {
     if (!tauri.isAvailable) return;
     const webview = getCurrentWebview();
     await webview.onDragDropEvent((event) => {
       if (event.payload.type !== "drop") return;
-      const firstPath = event.payload.paths[0];
-      const firstMarkdownPath = event.payload.paths.find(isMarkdownPath);
-      if (firstMarkdownPath) void openMarkdownFile(firstMarkdownPath);
-      else if (firstPath) void openWorkspace(firstPath);
+      dropHandlerRef.current(event.payload.paths);
     });
-  }, [openMarkdownFile, openWorkspace]);
+  }, []);
 
   const createFolder = useCallback(async (folderRelativePath: string) => {
     if (!state.workspace) return;
