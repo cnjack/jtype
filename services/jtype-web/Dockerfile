@@ -2,8 +2,14 @@ FROM node:22-slim AS frontend
 WORKDIR /app
 ARG JTYPE_VERSION=0.1.0
 ENV VITE_JTYPE_VERSION=$JTYPE_VERSION
+# A repo-root .dockerignore excludes host node_modules/dist from the context, so
+# the trailing `COPY services/jtype-web/frontend/` can never overwrite the clean
+# `npm ci` result with a stale host node_modules tree.
 COPY services/jtype-web/frontend/package.json services/jtype-web/frontend/package-lock.json* ./services/jtype-web/frontend/
 RUN cd services/jtype-web/frontend && npm ci
+# shared/ is included by tsconfig and imports the frontend's dependencies, but it
+# lives outside services/jtype-web/frontend, so it can't resolve node_modules by
+# walking up. Expose the freshly installed node_modules at the /app root.
 RUN ln -s /app/services/jtype-web/frontend/node_modules /app/node_modules
 COPY shared/ ./shared/
 COPY services/jtype-web/frontend/ ./services/jtype-web/frontend/

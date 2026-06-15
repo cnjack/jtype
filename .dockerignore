@@ -1,0 +1,44 @@
+# Keep Docker build contexts lean and prevent host state from leaking into images.
+# The web service Dockerfile copies from the repo root, so node_modules/dist built
+# on the host (e.g. macOS arm64) must never enter the Linux build stage — otherwise
+# stale or wrong-platform native binaries overwrite the clean `npm ci` result.
+
+# Dependencies and build output (regenerated inside each stage)
+**/node_modules/
+**/dist/
+**/build/
+**/.vite/
+**/.turbo/
+**/target/
+
+# Tauri / desktop build artifacts (not needed by the web service image)
+src-tauri/target/
+src-tauri/gen/
+
+# Local environment and secrets
+**/.env
+**/.env.*
+**/.env.local
+!**/.env.example
+
+# Version control, editors, OS cruft
+.git/
+.gitignore
+**/.DS_Store
+**/.idea/
+**/.vscode/
+**/*.swp
+**/*~
+
+# Logs and coverage
+**/*.log
+**/npm-debug.log*
+**/coverage/
+**/.nyc_output/
+
+# E2E / tooling caches (web service doesn't need these)
+node_modules/
+playwright-report/
+test-results/
+.storage/
+.tmp/
