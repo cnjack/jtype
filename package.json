@@ -9,6 +9,7 @@
     "build": "tsc && vite build",
     "test": "npm run build && npm run test:e2e",
     "test:e2e": "playwright test",
+    "test:unit": "playwright test --config playwright.unit.config.ts",
     "test:web": "playwright test --config playwright.web.config.ts",
     "web:dev": "cargo run --manifest-path services/jtype-web/Cargo.toml",
     "web:test": "cargo test --manifest-path services/jtype-web/Cargo.toml",

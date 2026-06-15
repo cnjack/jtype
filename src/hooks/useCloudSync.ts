@@ -3,9 +3,10 @@ import { openUrl } from "@tauri-apps/plugin-opener";
 import { useAppDispatch, useAppState } from "../app/AppState";
 import { tauri } from "../lib/tauri";
 import { httpRequest } from "@shared/lib/http";
-import { sha256Hex } from "../lib/utils";
+import { syncsAsDocument } from "@shared/lib/fileTypes";
+import { sha256Hex, sha256HexBytes } from "../lib/utils";
 import { markCloudWrite, markCloudWriteBatch } from "../lib/cloudWriteHashes";
-import type { AuthResponse, CloudProfile, VaultBinding, CloudDocument, CloudFolder, CloudWorkspace, DeletedFolder, DeletedPath, DeletedPathInput, EntryKind, SyncPushDocument, SyncPushResponse, TrashSyncPayload, VaultSettings } from "../lib/types";
+import type { AuthResponse, CloudProfile, VaultBinding, CloudDocument, CloudFolder, CloudWorkspace, DeletedFolder, DeletedPath, DeletedPathInput, EntryKind, SyncPushDocument, SyncPushResponse, TrashSyncPayload, VaultSettings, BlobManifestEntry } from "../lib/types";
 import { parseSyncConflicts } from "../lib/types";
 
 type TrashOperationPayload =
@@ -162,7 +163,117 @@ export function useCloudSync() {
     });
   }, [dispatch, state.workspace]);
 
-  const syncWorkspaceToWeb = useCallback(async (options: { silent?: boolean; skipRelativePath?: string; bindingOverride?: VaultBinding } = {}): Promise<SyncPushDocument | undefined> => {
+  // Path-keyed binary blob sync (images, PDFs). Runs alongside document sync:
+  // pulls the server manifest, downloads new/changed blobs, uploads locally
+  // new/changed ones, and propagates deletions both ways. Best-effort — a
+  // failure here never breaks document sync. Keyed by vault relative_path so it
+  // round-trips across desktop devices regardless of the web's UUID asset store.
+  const syncAssets = useCallback(async (binding: VaultBinding, readOnly = false) => {
+    if (!state.workspace || !state.syncToken || !tauri.isAvailable) return;
+    const rootPath = state.workspace.rootPath;
+    const serviceUrl = getServiceUrl();
+    const wsId = binding.workspaceId;
+    const authHeaders: Record<string, string> = { Authorization: `Bearer ${state.syncToken}` };
+    const encodePath = (rel: string) => rel.split("/").map(encodeURIComponent).join("/");
+    let changedLocally = false;
+    try {
+      // 1. Local assets + content hashes.
+      const localPaths = await tauri.collectAssetPaths(rootPath);
+      const localSha = new Map<string, string>();
+      const localBytes = new Map<string, Uint8Array>();
+      for (const rel of localPaths) {
+        try {
+          const bytes = Uint8Array.from(await tauri.readBinaryFile(`${rootPath}/${rel}`));
+          localBytes.set(rel, bytes);
+          localSha.set(rel, await sha256HexBytes(bytes));
+        } catch { /* unreadable — skip */ }
+      }
+
+      // 2. Saved sync state (last-synced sha per path + clock).
+      const saved = await tauri.loadAssetSyncState(rootPath);
+      const bases: Record<string, string> = { ...saved.bases };
+      let maxClock = saved.clock;
+
+      // 3. Server manifest since last clock.
+      const manifestRes = await httpRequest(`${serviceUrl}/api/v1/workspaces/${wsId}/blobs?sinceClock=${saved.clock}`, { headers: authHeaders });
+      if (!manifestRes.ok) return; // older server without blob support — skip silently
+      const manifest = (await manifestRes.json()) as BlobManifestEntry[];
+
+      // 4. Server → local: downloads + remote deletions.
+      for (const entry of manifest) {
+        maxClock = Math.max(maxClock, entry.updatedClock);
+        const rel = entry.relativePath;
+        if (entry.deletedClock != null) {
+          if (localSha.has(rel)) {
+            markCloudWrite(`${rootPath}/${rel}`, "DELETED_BY_CLOUD_PULL");
+            try { await tauri.trashEntry(rootPath, rel); changedLocally = true; } catch { /* gone already */ }
+            localSha.delete(rel);
+            localBytes.delete(rel);
+          }
+          delete bases[rel];
+          continue;
+        }
+        if (localSha.get(rel) === entry.sha256) { bases[rel] = entry.sha256; continue; }
+        const localChanged = localSha.has(rel) && localSha.get(rel) !== bases[rel];
+        // Download when we lack it or hold an unmodified older copy. If the local
+        // copy diverged from base AND differs from the server, leave it for the
+        // upload step (last-writer-wins) rather than clobber local edits.
+        if (!localSha.has(rel) || !localChanged) {
+          try {
+            const res = await httpRequest(`${serviceUrl}/api/v1/workspaces/${wsId}/blobs/${encodePath(rel)}`, { headers: authHeaders });
+            if (res.ok) {
+              const buf = new Uint8Array(await res.arrayBuffer());
+              const full = `${rootPath}/${rel}`;
+              await tauri.createEntry(rootPath, rel, "asset").catch(() => { /* exists — keep, just ensure dirs */ });
+              markCloudWrite(full, entry.sha256);
+              await tauri.writeBinaryFile(full, Array.from(buf));
+              bases[rel] = entry.sha256;
+              localSha.set(rel, entry.sha256);
+              changedLocally = true;
+            }
+          } catch { /* skip this asset */ }
+        }
+      }
+
+      if (!readOnly) {
+        // 5. Local → server: uploads of new/changed.
+        for (const rel of localPaths) {
+          const sha = localSha.get(rel);
+          if (!sha || bases[rel] === sha) continue;
+          try {
+            const res = await httpRequest(`${serviceUrl}/api/v1/workspaces/${wsId}/blobs/${encodePath(rel)}`, {
+              method: "POST",
+              headers: authHeaders,
+              body: localBytes.get(rel)!,
+            });
+            if (res.ok) {
+              const data = (await res.json()) as { updatedClock?: number };
+              if (typeof data.updatedClock === "number") maxClock = Math.max(maxClock, data.updatedClock);
+              bases[rel] = sha;
+            }
+          } catch { /* skip this asset */ }
+        }
+        // 6. Local deletions: paths we previously synced that are now gone.
+        for (const rel of Object.keys(bases)) {
+          if (localSha.has(rel)) continue;
+          try {
+            const res = await httpRequest(`${serviceUrl}/api/v1/workspaces/${wsId}/blobs/${encodePath(rel)}`, { method: "DELETE", headers: authHeaders });
+            if (res.ok || res.status === 404) delete bases[rel];
+          } catch { /* retry next sync */ }
+        }
+      }
+
+      await tauri.saveAssetSyncState(rootPath, { clock: maxClock, bases });
+      if (changedLocally) {
+        try {
+          const workspace = await tauri.openWorkspace(rootPath);
+          dispatch({ type: "UPDATE_WORKSPACE", workspace });
+        } catch { /* non-critical */ }
+      }
+    } catch { /* asset sync is best-effort; never break document sync */ }
+  }, [dispatch, state.workspace, state.syncToken, getServiceUrl]);
+
+  const runSyncWorkspaceToWeb = useCallback(async (options: { silent?: boolean; skipRelativePath?: string; bindingOverride?: VaultBinding } = {}): Promise<SyncPushDocument | undefined> => {
     if (!state.workspace) {
       dispatch({ type: "SET_STATUS", message: "Open a vault before syncing." });
       return;
@@ -188,6 +299,7 @@ export function useCloudSync() {
       if (binding) {
         if (binding.workspaceRole === "viewer") {
           await pullCloudWorkspace(binding, options.skipRelativePath, undefined, new Set(), { reason: "viewer-read-only-sync" });
+          await syncAssets(binding, true);
           dispatch({ type: "SET_STATUS", message: `Pulled cloud workspace ${binding.workspaceName}. Viewer access is read-only.` });
           dispatch({ type: "SET_SYNC_STATUS", status: "idle", success: true });
           return;
@@ -306,19 +418,29 @@ export function useCloudSync() {
         // Only apply documents that were merged by the server (not unchanged echoes)
         // to avoid unnecessary disk writes and file watcher churn.
         const mergedPushDocs = pushData.documents.filter((d) => d.mergeStatus !== "unchanged");
-        await applyCloudDocumentsRef.current(mergedPushDocs, pushData.folders ?? [], options.skipRelativePath);
+        const appliedDocs = await applyCloudDocumentsRef.current(mergedPushDocs, pushData.folders ?? [], options.skipRelativePath);
         if (tauri.isAvailable && deletedPaths.length > 0) {
           try {
             await tauri.deleteSyncBases(state.workspace.rootPath, deletedPaths.map((d) => d.relativePath));
           } catch { /* non-critical */ }
         }
 
-        // 5. Save sync bases for next sync (the server's merged content is the new base)
-        if (tauri.isAvailable && pushData.documents.length > 0) {
+        // 5. Save sync bases for next sync (the server's merged content is the new base).
+        // Skip any *changed* doc we didn't actually write to disk (the dirty
+        // open file): advancing its base would silently drop the remote edit.
+        // Unchanged docs (disk already matches server) and the skipRelativePath
+        // doc (caller updates the editor) keep their base.
+        const appliedPaths = new Set(appliedDocs.map((d) => d.relativePath));
+        const basesToSave = pushData.documents.filter((d) =>
+          d.mergeStatus === "unchanged" ||
+          appliedPaths.has(d.relativePath) ||
+          d.relativePath === options.skipRelativePath
+        );
+        if (tauri.isAvailable && basesToSave.length > 0) {
           try {
             await tauri.saveSyncBases(
               state.workspace.rootPath,
-              pushData.documents.map((d) => ({ relativePath: d.relativePath, content: d.content }))
+              basesToSave.map((d) => ({ relativePath: d.relativePath, content: d.content }))
             );
           } catch { /* non-critical */ }
         }
@@ -338,6 +460,9 @@ export function useCloudSync() {
             await tauri.saveTrashMetadata(state.workspace.rootPath, trashMetadata);
           } catch { /* non-critical */ }
         }
+
+        // Binary assets (images/PDFs) sync on their own path-keyed channel.
+        await syncAssets(binding);
 
         const deleteCount = pushData.deletedPaths?.length ?? 0;
         const deletionText = deleteCount > 0 ? ` ${deleteCount} moved to cloud trash.` : "";
@@ -359,12 +484,26 @@ export function useCloudSync() {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, state.workspace, state.syncToken, state.syncUsername, state.cloudProfile, state.vaultBindings, state.vaultSettings, getServiceUrl, refreshCloudWorkspaces, handleWorkspaceAccessLoss]);
+  }, [dispatch, state.workspace, state.syncToken, state.syncUsername, state.cloudProfile, state.vaultBindings, state.vaultSettings, getServiceUrl, refreshCloudWorkspaces, handleWorkspaceAccessLoss, syncAssets]);
+
+  // Serialize every sync run through one promise chain. Without this, the
+  // periodic timer, file-watcher events, websocket pulls, and manual syncs can
+  // overlap — collecting stale local docs and clobbering each other's
+  // sync-base/conflict writes. Each caller still gets its own return value;
+  // bursty callers are additionally debounced upstream (App.tsx).
+  const syncChainRef = useRef<Promise<unknown>>(Promise.resolve());
+  const syncWorkspaceToWeb = useCallback((options: { silent?: boolean; skipRelativePath?: string; bindingOverride?: VaultBinding } = {}): Promise<SyncPushDocument | undefined> => {
+    const run = syncChainRef.current.catch(() => {}).then(() => runSyncWorkspaceToWeb(options));
+    syncChainRef.current = run;
+    return run;
+  }, [runSyncWorkspaceToWeb]);
 
   // Ref ensures pullCloudWorkspace/syncWorkspaceToWeb always call the latest
   // applyCloudDocuments without needing it as a dependency (which would cause
   // cascading recreation of every callback that touches it).
-  const applyCloudDocumentsRef = useRef<(documents: CloudDocument[], folders?: CloudFolder[], skipRelativePath?: string) => Promise<void>>(async () => {});
+  // Returns the documents actually written to disk (after the dirty/skip
+  // filter) so callers only advance the sync-base for files they truly applied.
+  const applyCloudDocumentsRef = useRef<(documents: CloudDocument[], folders?: CloudFolder[], skipRelativePath?: string) => Promise<CloudDocument[]>>(async () => []);
 
   const pullCloudWorkspace = useCallback(async (
     binding: VaultBinding,
@@ -469,18 +608,22 @@ export function useCloudSync() {
       folderPaths: (pullData.folders ?? []).map((f) => f.relativePath),
       skipRelativePath,
     });
-    await applyCloudDocumentsRef.current(pullDocsToApply, pullData.folders ?? [], skipRelativePath);
-    if (tauri.isAvailable && pullDocsToApply.length > 0) {
+    // Only the docs actually written to disk (dirty/skip files are filtered out
+    // inside applyCloudDocuments). Advancing the sync-base for a file we did NOT
+    // write would poison the 3-way merge and silently drop the remote edit on
+    // the user's next save.
+    const appliedDocs = await applyCloudDocumentsRef.current(pullDocsToApply, pullData.folders ?? [], skipRelativePath);
+    if (tauri.isAvailable && appliedDocs.length > 0) {
       try {
         await tauri.saveSyncBases(
           state.workspace.rootPath,
-          pullDocsToApply.map((d) => ({ relativePath: d.relativePath, content: d.content }))
+          appliedDocs.map((d) => ({ relativePath: d.relativePath, content: d.content }))
         );
       } catch { /* non-critical */ }
       // Remove restored documents from local trash so they don't re-appear in the trash list
       try {
         const localTrashItems = await tauri.listTrash(state.workspace.rootPath);
-        for (const doc of pullDocsToApply) {
+        for (const doc of appliedDocs) {
           const localItem = localTrashItems.find((item) => item.relativePath === doc.relativePath);
           if (localItem) {
             await tauri.permanentDeleteTrash(state.workspace.rootPath, localItem.trashId);
@@ -633,9 +776,9 @@ export function useCloudSync() {
     };
   }, [dispatch, state.workspace, state.syncToken, state.cloudProfile, getServiceUrl, handleWorkspaceAccessLoss]);
 
-  const applyCloudDocuments = useCallback(async (documents: CloudDocument[], folders: CloudFolder[] = [], skipRelativePath?: string) => {
+  const applyCloudDocuments = useCallback(async (documents: CloudDocument[], folders: CloudFolder[] = [], skipRelativePath?: string): Promise<CloudDocument[]> => {
     if (!state.workspace || (documents.length === 0 && folders.length === 0)) {
-      return;
+      return [];
     }
     const filtered = (state.isDirty && state.currentRelativePath) || skipRelativePath
       ? documents.filter((d) => {
@@ -653,7 +796,7 @@ export function useCloudSync() {
         isDirty: state.isDirty,
         currentRelativePath: state.currentRelativePath,
       });
-      return;
+      return [];
     }
     console.log("[cloud:apply] writing", {
       vaultPath: state.workspace.rootPath,
@@ -670,21 +813,34 @@ export function useCloudSync() {
       }))
     );
     markCloudWriteBatch(hashEntries);
-    const workspace = await tauri.applyCloudDocuments(
+    const { workspace, writtenPaths } = await tauri.applyCloudDocuments(
       state.workspace.rootPath,
       filtered.map((d) => ({ relativePath: d.relativePath, content: d.content })),
       folders.map((f) => ({ relativePath: f.relativePath }))
     );
     dispatch({ type: "UPDATE_WORKSPACE", workspace });
+    // Only the docs the Rust side actually wrote to disk. Returning `filtered`
+    // here would let the caller record a sync-base for a file the apply gate
+    // skipped — poisoning the 3-way merge so that file is treated as "locally
+    // modified" and dropped on every future pull (the .board download bug).
+    const writtenSet = new Set(writtenPaths);
+    const applied = filtered.filter((d) => writtenSet.has(d.relativePath));
+    if (applied.length !== filtered.length) {
+      console.warn("[cloud:apply] some pulled docs were not written to disk", {
+        requested: filtered.map((d) => d.relativePath),
+        written: writtenPaths,
+      });
+    }
     console.log("[cloud:apply] workspace updated", {
-      documentPaths: filtered.map((d) => d.relativePath),
+      documentPaths: applied.map((d) => d.relativePath),
     });
     const currentDoc = !state.isDirty && state.currentRelativePath
-      ? filtered.find((d) => d.relativePath === state.currentRelativePath)
+      ? applied.find((d) => d.relativePath === state.currentRelativePath)
       : undefined;
     if (currentDoc && currentDoc.content !== state.editorContent) {
       dispatch({ type: "OPEN_FILE", path: state.currentPath, relativePath: state.currentRelativePath, content: currentDoc.content, kind: state.currentKind as EntryKind });
     }
+    return applied;
   }, [dispatch, state.workspace, state.isDirty, state.currentRelativePath, state.currentPath, state.currentKind, state.editorContent]);
 
   // Keep ref in sync so pullCloudWorkspace always uses the latest version.
@@ -905,6 +1061,82 @@ export function useCloudSync() {
     return selectedPath;
   }, [dispatch, state.cloudWorkspaces, state.vaultBindings]);
 
+  // Anti-entropy for documents. Incremental pull + best-effort WS can silently
+  // miss a server document (a dropped apply, a lost event, a clock skip), and
+  // nothing else ever notices. This diffs the server's full document manifest
+  // (path + contentHash, metadata only) against local files and repairs drift,
+  // mirroring syncAssets' proven loop for blobs. Pull-only and best-effort — a
+  // failure never breaks normal sync. Returns a summary for the manual command.
+  const reconcileDocuments = useCallback(async (
+    binding: VaultBinding,
+  ): Promise<{ inSync: number; repaired: number; localEdits: number; orphans: number } | undefined> => {
+    if (!state.workspace || !state.syncToken || !tauri.isAvailable) return;
+    const rootPath = state.workspace.rootPath;
+    const wsId = binding.workspaceId;
+    const authHeaders: Record<string, string> = { Authorization: `Bearer ${state.syncToken}` };
+    try {
+      // 1. Server manifest (metadata only — no content transfer).
+      const res = await httpRequest(`${getServiceUrl()}/api/v1/workspaces/${wsId}/manifest`, { headers: authHeaders });
+      if (!res.ok) return; // older server without manifest / no access — skip silently
+      const manifest = (await res.json()) as {
+        documents: Array<{ relativePath: string; contentHash: string; updatedClock: number }>;
+      };
+
+      // Only documents the desktop can actually materialize (md/board/diagram).
+      // Non-syncable rows — e.g. a stray binary `.pdf` that an old bug stored as a
+      // document instead of a blob — are server-side garbage: the apply gate
+      // correctly refuses to write them, so "repairing" them would loop forever.
+      // Skip them here and report the count so they can be cleaned up.
+      const manifestDocs = manifest.documents.filter((m) => syncsAsDocument(m.relativePath));
+      const orphans = manifest.documents.length - manifestDocs.length;
+
+      // 2. Local document hashes + sync-bases.
+      const localDocs = await tauri.collectSyncDocuments(rootPath);
+      const localHash = new Map<string, string>();
+      for (const d of localDocs) localHash.set(d.relativePath, await sha256Hex(d.content));
+      const bases = await tauri.loadSyncBases(rootPath).catch(() => ({} as Record<string, string>));
+
+      // 3. Classify each server doc. Repair = missing locally OR present-but-stale
+      // (local matches its last-synced base, server moved on). A genuine local
+      // edit (local diverged from base) is left for the push/merge path.
+      const repair: Array<{ relativePath: string; updatedClock: number }> = [];
+      let inSync = 0;
+      let localEdits = 0;
+      for (const m of manifestDocs) {
+        const lh = localHash.get(m.relativePath);
+        if (lh === m.contentHash) { inSync++; continue; }
+        if (lh != null) {
+          const base = bases[m.relativePath];
+          const baseHash = base != null ? await sha256Hex(base) : undefined;
+          if (lh !== baseHash) { localEdits++; continue; } // local edit → push owns it
+        }
+        repair.push({ relativePath: m.relativePath, updatedClock: m.updatedClock });
+      }
+      if (repair.length === 0) return { inSync, repaired: 0, localEdits, orphans };
+
+      // 4. Repair: clear the stale/poisoned bases for the drifted paths so the
+      // dirty-filter treats them as fresh-from-cloud, then re-pull from just below
+      // the lowest drifted clock. Bases for OTHER (locally-edited) docs are kept,
+      // so the same pull cannot clobber genuine local edits. applyCloudDocuments
+      // (gate-fixed) writes the files and records correct bases off writtenPaths.
+      const repairPaths = repair.map((r) => r.relativePath);
+      await tauri.deleteSyncBases(rootPath, repairPaths).catch(() => undefined);
+      const basesForPull: Record<string, string> = { ...bases };
+      for (const p of repairPaths) delete basesForPull[p];
+      const minClock = Math.min(...repair.map((r) => r.updatedClock));
+      await pullCloudWorkspace(binding, undefined, basesForPull, new Set(), {
+        sinceClock: Math.max(0, minClock - 1),
+        sinceTrashEventClock: Math.max(0, minClock - 1),
+        reason: "reconcile-repair",
+      });
+      console.warn("[reconcile] repaired drifted documents", { count: repair.length, paths: repairPaths });
+      return { inSync, repaired: repair.length, localEdits, orphans };
+    } catch (error) {
+      console.error("[reconcile] failed (non-critical):", error);
+      return undefined;
+    }
+  }, [state.workspace, state.syncToken, getServiceUrl, pullCloudWorkspace]);
+
   const pullOnly = useCallback(async (options: PullOnlyOptions = {}) => {
     console.log("[pullOnly] called with options:", options);
     if (!state.workspace || !state.syncToken) {
@@ -942,8 +1174,10 @@ export function useCloudSync() {
       new Set(),
       pullOptions,
     );
+    // Download any new/changed binary assets referenced by the pulled docs.
+    await syncAssets(binding, true);
     console.log("[pullOnly] pull completed");
-  }, [state.workspace, state.syncToken, state.vaultBindings, state.vaultSettings, pullCloudWorkspace]);
+  }, [state.workspace, state.syncToken, state.vaultBindings, state.vaultSettings, pullCloudWorkspace, syncAssets]);
 
   return {
     getServiceUrl,
@@ -952,6 +1186,7 @@ export function useCloudSync() {
     refreshCloudWorkspaces,
     syncWorkspaceToWeb,
     pullOnly,
+    reconcileDocuments,
     resolveConflict,
     loadCloudProfile,
     loadVaultBindings,

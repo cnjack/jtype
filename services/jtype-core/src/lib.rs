@@ -293,6 +293,82 @@ pub fn create_entry(root: &Path, relative_path: &str, kind: EntryKind) -> Result
     }
 }
 
+/// Copy an external file or directory (from anywhere on disk) into the vault
+/// under `target_folder`, choosing a collision-free leaf name. Returns the
+/// imported entry's vault-relative path (forward-slashed).
+pub fn import_external_path(
+    root: &Path,
+    source: &Path,
+    target_folder: &str,
+) -> Result<String, String> {
+    if !source.exists() {
+        return Err(format!("Source does not exist: {}", source.display()));
+    }
+    let name = source
+        .file_name()
+        .and_then(|value| value.to_str())
+        .ok_or_else(|| "Source has no file name.".to_string())?;
+
+    let folder = target_folder.trim_matches('/');
+    let base_relative = if folder.is_empty() {
+        name.to_string()
+    } else {
+        format!("{folder}/{name}")
+    };
+    let relative = unique_relative_path(root, &base_relative)?;
+    let dest = safe_join(root, &relative)?;
+    if let Some(parent) = dest.parent() {
+        fs::create_dir_all(parent).map_err(|error| error.to_string())?;
+    }
+
+    if source.is_dir() {
+        copy_dir_all(source, &dest)?;
+    } else {
+        fs::copy(source, &dest).map_err(|error| error.to_string())?;
+    }
+    Ok(relative)
+}
+
+/// Pick a vault-relative path derived from `base_relative` that does not yet
+/// exist, inserting " 2", " 3", … before the extension on collision.
+fn unique_relative_path(root: &Path, base_relative: &str) -> Result<String, String> {
+    if !safe_join(root, base_relative)?.exists() {
+        return Ok(base_relative.to_string());
+    }
+    let (dir, leaf) = match base_relative.rsplit_once('/') {
+        Some((d, l)) => (format!("{d}/"), l.to_string()),
+        None => (String::new(), base_relative.to_string()),
+    };
+    // Keep dotfiles (".env") whole; only split a real "stem.ext".
+    let (stem, ext) = match leaf.rsplit_once('.') {
+        Some((s, e)) if !s.is_empty() => (s.to_string(), format!(".{e}")),
+        _ => (leaf.clone(), String::new()),
+    };
+    for n in 2..10_000 {
+        let candidate = format!("{dir}{stem} {n}{ext}");
+        if !safe_join(root, &candidate)?.exists() {
+            return Ok(candidate);
+        }
+    }
+    Err("Could not find a free name for the imported file.".to_string())
+}
+
+/// Recursively copy a directory tree from `src` to `dst`.
+fn copy_dir_all(src: &Path, dst: &Path) -> Result<(), String> {
+    fs::create_dir_all(dst).map_err(|error| error.to_string())?;
+    for entry in fs::read_dir(src).map_err(|error| error.to_string())? {
+        let entry = entry.map_err(|error| error.to_string())?;
+        let from = entry.path();
+        let to = dst.join(entry.file_name());
+        if from.is_dir() {
+            copy_dir_all(&from, &to)?;
+        } else {
+            fs::copy(&from, &to).map_err(|error| error.to_string())?;
+        }
+    }
+    Ok(())
+}
+
 pub fn rename_entry(
     root: &Path,
     from_relative_path: &str,
@@ -436,13 +512,12 @@ pub fn validate_workspace(root: &Path) -> Result<ValidationResult, String> {
 }
 
 pub fn collect_sync_documents(root: &Path) -> Result<Vec<SyncDocument>, String> {
-    let mut files = collect_markdown_files(root)?;
-    // `.board` view files sync too (opaque JSON content) so the cloud/web can
-    // render the board over the same card notes.
-    files.extend(collect_board_files(root)?);
-    // Diagram resources (Mermaid/Draw.io/Excalidraw/Swagger) are text and sync as
-    // opaque documents so they render/edit on the web too.
-    files.extend(collect_diagram_files(root)?);
+    // ONE walk gated by the shared predicate so the push set is decided by the
+    // exact same rule as collect_files_recursive (sync-base) and
+    // apply_cloud_documents (apply). Markdown notes, `.board` kanban views, and
+    // diagram resources (Mermaid/Draw.io/Excalidraw/Swagger) all sync as opaque
+    // text — see is_syncable_document_path.
+    let files = collect_paths_where(root, is_syncable_document_path)?;
     let mut documents = Vec::new();
 
     for file in files {
@@ -572,6 +647,71 @@ pub fn load_sync_folder_bases(root: &Path) -> Result<Vec<String>, String> {
     serde_json::from_str(&content).map_err(|e| e.to_string())
 }
 
+/// Last-synced state for binary asset blobs. `bases` maps vault relative_path →
+/// sha256 of the last content we synced (to detect local edits/deletions);
+/// `clock` is the highest server blob updated_clock we've reconciled (for
+/// incremental manifest pulls).
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AssetSyncState {
+    #[serde(default)]
+    pub clock: i64,
+    #[serde(default)]
+    pub bases: HashMap<String, String>,
+}
+
+/// Collect vault-relative paths of binary asset files (images, PDFs) for blob
+/// sync. Skips the `.jtype` metadata dir and common junk dirs.
+pub fn collect_asset_paths(root: &Path) -> Result<Vec<String>, String> {
+    let mut files = Vec::new();
+    collect_asset_files_inner(root, &mut files)?;
+    let mut relatives = Vec::new();
+    for file in files {
+        let relative = file.strip_prefix(root).map_err(|error| error.to_string())?;
+        let rel = path_to_string(relative);
+        if rel.starts_with(".jtype") {
+            continue;
+        }
+        relatives.push(rel);
+    }
+    relatives.sort();
+    Ok(relatives)
+}
+
+fn collect_asset_files_inner(current: &Path, files: &mut Vec<PathBuf>) -> Result<(), String> {
+    for entry in fs::read_dir(current).map_err(|error| error.to_string())? {
+        let entry = entry.map_err(|error| error.to_string())?;
+        let path = entry.path();
+        let file_name = entry.file_name().to_string_lossy().to_string();
+        if file_name == ".git" || file_name == "node_modules" || file_name == "target" || file_name == ".jtype" {
+            continue;
+        }
+        if path.is_dir() {
+            collect_asset_files_inner(&path, files)?;
+        } else if is_asset_path(&path) {
+            files.push(path);
+        }
+    }
+    Ok(())
+}
+
+pub fn load_asset_sync_state(root: &Path) -> Result<AssetSyncState, String> {
+    let file = root.join(".jtype").join("asset-sync.json");
+    if !file.exists() {
+        return Ok(AssetSyncState::default());
+    }
+    let content = fs::read_to_string(&file).map_err(|error| error.to_string())?;
+    serde_json::from_str(&content).map_err(|error| error.to_string())
+}
+
+pub fn save_asset_sync_state(root: &Path, state: &AssetSyncState) -> Result<(), String> {
+    let dir = root.join(".jtype");
+    fs::create_dir_all(&dir).map_err(|error| error.to_string())?;
+    let file = dir.join("asset-sync.json");
+    let json = serde_json::to_string_pretty(state).map_err(|error| error.to_string())?;
+    fs::write(file, json).map_err(|error| error.to_string())
+}
+
 fn collect_files_recursive(
     root: &Path,
     dir: &Path,
@@ -583,7 +723,11 @@ fn collect_files_recursive(
         let path = entry.path();
         if path.is_dir() {
             collect_files_recursive(root, &path, result)?;
-        } else if is_markdown_path(&path) {
+        } else if is_syncable_document_path(&path) {
+            // Must mirror collect_sync_documents' file set exactly: if a synced
+            // file type is missing here, its sync-base never loads, which breaks
+            // 3-way conflict detection and deletion propagation for that type
+            // (silent lost-update / resurrection on next pull).
             let relative = path.strip_prefix(root).map_err(|e| e.to_string())?;
             let content = fs::read_to_string(&path).map_err(|e| e.to_string())?;
             result.insert(path_to_string(relative), content);
@@ -791,8 +935,12 @@ fn read_children(root: &Path, current: &Path) -> Result<Vec<FileTreeNode>, Strin
         } else if is_markdown_path(&path)
             || is_board_path(&path)
             || is_diagram_path(&path)
-            || is_asset_path(&path)
+            || is_binary_document_path(&path)
         {
+            // First-class tree entries: text documents + binary documents (pdf).
+            // Inline images (is_image_path) are intentionally NOT listed — they are
+            // markdown attachments, embedded via `![](path)`. They still sync as
+            // blobs (collect_asset_paths is unchanged) so the embeds resolve.
             nodes.push(FileTreeNode {
                 name: file_name,
                 path: path_to_string(&path),
@@ -854,83 +1002,45 @@ pub fn safe_join(root: &Path, relative_path: &str) -> Result<PathBuf, String> {
     Ok(normalized)
 }
 
+/// Recursively collect files under `root` whose path matches `predicate`,
+/// sorted. Skips VCS/build dirs (`.git`/`node_modules`/`target`); callers that
+/// must drop `.jtype` metadata filter it after (collect_sync_documents does).
+/// One walker so every "which files?" gate is just a predicate choice.
+fn collect_paths_where(
+    root: &Path,
+    predicate: fn(&Path) -> bool,
+) -> Result<Vec<PathBuf>, String> {
+    let mut files = Vec::new();
+    collect_paths_where_inner(root, predicate, &mut files)?;
+    files.sort();
+    Ok(files)
+}
+
+fn collect_paths_where_inner(
+    current: &Path,
+    predicate: fn(&Path) -> bool,
+    files: &mut Vec<PathBuf>,
+) -> Result<(), String> {
+    for entry in fs::read_dir(current).map_err(|error| error.to_string())? {
+        let entry = entry.map_err(|error| error.to_string())?;
+        let path = entry.path();
+        let file_name = entry.file_name().to_string_lossy().to_string();
+        if file_name == ".git" || file_name == "node_modules" || file_name == "target" {
+            continue;
+        }
+        if path.is_dir() {
+            collect_paths_where_inner(&path, predicate, files)?;
+        } else if predicate(&path) {
+            files.push(path);
+        }
+    }
+    Ok(())
+}
+
+/// Markdown-only walk (HTML export, AI context, link validation). For the sync
+/// document set use collect_paths_where(root, is_syncable_document_path).
 fn collect_markdown_files(root: &Path) -> Result<Vec<PathBuf>, String> {
-    let mut files = Vec::new();
-    collect_markdown_files_inner(root, &mut files)?;
-    files.sort();
-    Ok(files)
-}
-
-/// Walk the vault for `.board` view files (synced as opaque documents so the
-/// cloud/web has the board config; their card `.md` notes sync as markdown).
-fn collect_board_files(root: &Path) -> Result<Vec<PathBuf>, String> {
-    let mut files = Vec::new();
-    collect_board_files_inner(root, &mut files)?;
-    files.sort();
-    Ok(files)
-}
-
-fn collect_board_files_inner(current: &Path, files: &mut Vec<PathBuf>) -> Result<(), String> {
-    for entry in fs::read_dir(current).map_err(|error| error.to_string())? {
-        let entry = entry.map_err(|error| error.to_string())?;
-        let path = entry.path();
-        let file_name = entry.file_name().to_string_lossy().to_string();
-        if file_name == ".git" || file_name == "node_modules" || file_name == "target" {
-            continue;
-        }
-        if path.is_dir() {
-            collect_board_files_inner(&path, files)?;
-        } else if is_board_path(&path) {
-            files.push(path);
-        }
-    }
-    Ok(())
-}
-
-/// Walk the vault for diagram resources (Mermaid/Draw.io/Excalidraw/Swagger).
-/// They sync as opaque text documents alongside Markdown and `.board` files.
-fn collect_diagram_files(root: &Path) -> Result<Vec<PathBuf>, String> {
-    let mut files = Vec::new();
-    collect_diagram_files_inner(root, &mut files)?;
-    files.sort();
-    Ok(files)
-}
-
-fn collect_diagram_files_inner(current: &Path, files: &mut Vec<PathBuf>) -> Result<(), String> {
-    for entry in fs::read_dir(current).map_err(|error| error.to_string())? {
-        let entry = entry.map_err(|error| error.to_string())?;
-        let path = entry.path();
-        let file_name = entry.file_name().to_string_lossy().to_string();
-        if file_name == ".git" || file_name == "node_modules" || file_name == "target" {
-            continue;
-        }
-        if path.is_dir() {
-            collect_diagram_files_inner(&path, files)?;
-        } else if is_diagram_path(&path) {
-            files.push(path);
-        }
-    }
-    Ok(())
-}
-
-fn collect_markdown_files_inner(current: &Path, files: &mut Vec<PathBuf>) -> Result<(), String> {
-    for entry in fs::read_dir(current).map_err(|error| error.to_string())? {
-        let entry = entry.map_err(|error| error.to_string())?;
-        let path = entry.path();
-        let file_name = entry.file_name().to_string_lossy().to_string();
-
-        if file_name == ".git" || file_name == "node_modules" || file_name == "target" {
-            continue;
-        }
-
-        if path.is_dir() {
-            collect_markdown_files_inner(&path, files)?;
-        } else if is_markdown_path(&path) {
-            files.push(path);
-        }
-    }
-
-    Ok(())
+    collect_paths_where(root, is_markdown_path)
 }
 
 fn markdown_to_html(content: &str) -> String {
@@ -1161,16 +1271,43 @@ fn parse_heading(line: &str) -> Option<(usize, String)> {
     Some((marker_len, line[marker_len + 1..].trim().to_string()))
 }
 
-fn is_asset_path(path: &Path) -> bool {
+/// Inline image attachments (png/jpg/…). These are embedded in Markdown via
+/// `![](path)` and are NOT first-class tree entries — `read_children` hides them
+/// from the file tree, but they still sync through the blob pipeline so the
+/// embeds resolve. Mirrors `isImagePath` (shared) — keep extensions in lockstep.
+pub fn is_image_path(path: &Path) -> bool {
     path.extension()
         .and_then(|value| value.to_str())
         .map(|extension| {
             matches!(
                 extension.to_ascii_lowercase().as_str(),
-                "png" | "jpg" | "jpeg" | "gif" | "webp" | "svg" | "pdf"
+                "png" | "jpg" | "jpeg" | "gif" | "webp" | "avif" | "bmp" | "ico" | "svg"
             )
         })
         .unwrap_or(false)
+}
+
+/// A first-class "binary document" (currently PDF): a standalone tree entry that
+/// opens in its own viewer, as opposed to inline image attachments. Syncs via the
+/// blob pipeline (NOT the text-document channel). Mirrors `isBinaryDocumentPath`
+/// (shared) and `is_binary_document_path` (jtype-web). Extend as new types are
+/// added (each also needs `content_type_for` + a viewer).
+pub fn is_binary_document_path(path: &Path) -> bool {
+    path.extension()
+        .and_then(|value| value.to_str())
+        .map(|extension| extension.eq_ignore_ascii_case("pdf"))
+        .unwrap_or(false)
+}
+
+/// Binary files that sync through the blob pipeline (`collect_asset_paths` +
+/// `syncAssets`): inline images + first-class binary documents. The desktop
+/// source of truth for the blob sync set; MUST mirror the image/pdf extensions
+/// in shared/lib/fileTypes.ts (`IMAGE` + `PDF`) and the server's
+/// `content_type_for` in jtype-web `handlers/blobs.rs`. NOTE: this is the SYNC
+/// set, not the TREE set — `read_children` lists only `is_binary_document_path`
+/// (pdf), hiding images, while this still collects both for syncing.
+fn is_asset_path(path: &Path) -> bool {
+    is_image_path(path) || is_binary_document_path(path)
 }
 
 /// `.board` files are kanban board views (JSON config over card-notes).
@@ -1179,6 +1316,21 @@ pub fn is_board_path(path: &Path) -> bool {
         .and_then(|value| value.to_str())
         .map(|extension| extension.eq_ignore_ascii_case("board"))
         .unwrap_or(false)
+}
+
+/// Single source of truth for "files that sync through the document pipeline as
+/// opaque text" — Markdown, `.board` kanban views, and diagram resources.
+///
+/// EVERY gate that decides the synced document set must use THIS predicate, not
+/// an inline `is_markdown_path || …` list: `collect_sync_documents` (push/up),
+/// `collect_files_recursive` (sync-base load), and `apply_cloud_documents`
+/// (pull/down write) must agree exactly. A type included in one gate but omitted
+/// from another silently loses data — e.g. a `.board` that pushes up and lists
+/// in the tree but is dropped on download, so a web-created board never appears
+/// on desktop. Mirrors the markdown/board/diagram predicates in
+/// shared/lib/fileTypes.ts.
+pub fn is_syncable_document_path(path: &Path) -> bool {
+    is_markdown_path(path) || is_board_path(path) || is_diagram_path(path)
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -1815,6 +1967,259 @@ mod tests {
         assert!(dir.path().join(".jtype").join("publish.json").exists());
         assert_eq!(snapshot.entries[0].name, ".jtype");
         assert_eq!(snapshot.entries[1].name, "notes");
+    }
+
+    #[test]
+    fn sync_bases_round_trip_board_and_diagram_files() {
+        // Regression: load_all_sync_bases must return the SAME file set that
+        // collect_sync_documents syncs (markdown + .board + diagram), or
+        // conflict detection / deletion propagation silently breaks for the
+        // missing types.
+        let dir = tempdir().unwrap();
+        open_workspace(dir.path()).unwrap();
+        let entries = vec![
+            SyncBaseEntry { relative_path: "note.md".into(), content: "# Note".into() },
+            SyncBaseEntry { relative_path: "plan.board".into(), content: "{\"id\":\"b\"}".into() },
+            SyncBaseEntry { relative_path: "flow.mmd".into(), content: "graph TD; A-->B".into() },
+            SyncBaseEntry { relative_path: "arch.drawio".into(), content: "<mxfile/>".into() },
+        ];
+        save_sync_bases(dir.path(), &entries).unwrap();
+
+        let loaded = load_all_sync_bases(dir.path()).unwrap();
+
+        assert_eq!(loaded.get("note.md").map(String::as_str), Some("# Note"));
+        assert_eq!(loaded.get("plan.board").map(String::as_str), Some("{\"id\":\"b\"}"));
+        assert_eq!(loaded.get("flow.mmd").map(String::as_str), Some("graph TD; A-->B"));
+        assert_eq!(loaded.get("arch.drawio").map(String::as_str), Some("<mxfile/>"));
+    }
+
+    #[test]
+    fn syncable_document_predicate_covers_all_synced_text_types() {
+        // Single source of truth shared by collect_sync_documents,
+        // collect_files_recursive, and apply_cloud_documents. If `.board` (or any
+        // synced text type) ever falls out of this set, a web-created board stops
+        // appearing on desktop — exactly the bug this predicate prevents.
+        for ok in [
+            "note.md",
+            "a.markdown",
+            "23232.board",
+            "flow.mmd",
+            "diagram.mermaid",
+            "arch.drawio",
+            "sketch.excalidraw",
+            "swagger.json",
+            "petstore-openapi.yaml",
+        ] {
+            assert!(
+                is_syncable_document_path(Path::new(ok)),
+                "{ok} should sync as a document"
+            );
+        }
+        // MUST MATCH the TS fixture in tests/unit/fileTypes.spec.ts.
+        for no in [
+            "photo.png",
+            "doc.pdf",
+            "data.csv",
+            "notes.txt",
+            "archive.zip",
+            "image.drawio.svg", // a Draw.io export image — an asset, not a synced document
+        ] {
+            assert!(
+                !is_syncable_document_path(Path::new(no)),
+                "{no} should NOT sync as a document"
+            );
+        }
+    }
+
+    #[test]
+    fn sync_collect_and_base_gates_agree() {
+        // The push gate (collect_sync_documents — a vault walk) and the sync-base
+        // gate (load_all_sync_bases → collect_files_recursive — a .jtype/sync-base
+        // walk) must produce the SAME path set; both go through
+        // is_syncable_document_path. The apply gate (apply_cloud_documents in
+        // src-tauri) shares the same predicate and is covered by that crate's
+        // tests. If any gate drops a type the others keep, this fails.
+        let dir = tempdir().unwrap();
+        open_workspace(dir.path()).unwrap();
+
+        let syncable = [
+            "note.md",
+            "plan.board",
+            "flow.mmd",
+            "arch.drawio",
+            "sketch.excalidraw",
+            "swagger.json",
+        ];
+        for name in syncable {
+            fs::write(dir.path().join(name), "x").unwrap();
+        }
+        // Non-syncable files that BOTH gates must exclude.
+        for name in ["photo.png", "data.txt", "archive.zip"] {
+            fs::write(dir.path().join(name), "x").unwrap();
+        }
+
+        let expected: std::collections::BTreeSet<String> =
+            syncable.iter().map(|s| s.to_string()).collect();
+
+        // Gate 1 — push set.
+        let collected: std::collections::BTreeSet<String> = collect_sync_documents(dir.path())
+            .unwrap()
+            .into_iter()
+            .map(|d| d.relative_path)
+            .collect();
+        assert_eq!(collected, expected, "collect_sync_documents set");
+
+        // Gate 2 — sync-base set. Save bases for the syncable docs AND plant a
+        // stray non-syncable base file; load_all_sync_bases must drop it.
+        let entries: Vec<SyncBaseEntry> = collect_sync_documents(dir.path())
+            .unwrap()
+            .into_iter()
+            .map(|d| SyncBaseEntry { relative_path: d.relative_path, content: d.content })
+            .collect();
+        save_sync_bases(dir.path(), &entries).unwrap();
+        fs::write(
+            dir.path().join(".jtype").join("sync-base").join("stray.png"),
+            "x",
+        )
+        .unwrap();
+        let base_keys: std::collections::BTreeSet<String> =
+            load_all_sync_bases(dir.path()).unwrap().into_keys().collect();
+        assert_eq!(base_keys, expected, "load_all_sync_bases (collect_files_recursive) set");
+    }
+
+    #[test]
+    fn binary_document_predicate_is_pdf_only() {
+        // First-class binary documents (tree entries, blob channel) vs inline
+        // images. MUST MATCH the TS fixture in tests/unit/fileTypes.spec.ts.
+        for ok in ["doc.pdf", "reports/q3.PDF"] {
+            assert!(is_binary_document_path(Path::new(ok)), "{ok} is a binary document");
+        }
+        for no in ["note.md", "photo.png", "logo.svg", "flow.mmd", "23232.board"] {
+            assert!(!is_binary_document_path(Path::new(no)), "{no} is not a binary document");
+        }
+        for img in ["photo.png", "logo.svg", "a.jpeg", "icon.webp"] {
+            assert!(is_image_path(Path::new(img)), "{img} is an image");
+        }
+        assert!(!is_image_path(Path::new("doc.pdf")));
+        // Binary documents sync via the blob channel, NOT the text-document channel.
+        assert!(!is_syncable_document_path(Path::new("doc.pdf")));
+    }
+
+    #[test]
+    fn tree_hides_images_keeps_binary_documents() {
+        // Images are inline markdown attachments → hidden from the tree but still
+        // collected for blob sync (so `![](path)` embeds resolve). PDFs are
+        // first-class binary documents → shown in the tree.
+        let dir = tempdir().unwrap();
+        open_workspace(dir.path()).unwrap();
+        fs::write(dir.path().join("note.md"), "# n").unwrap();
+        fs::write(dir.path().join("doc.pdf"), b"%PDF-1.4").unwrap();
+        fs::write(dir.path().join("photo.png"), b"x").unwrap();
+        fs::write(dir.path().join("logo.svg"), b"<svg/>").unwrap();
+
+        let snapshot = open_workspace(dir.path()).unwrap();
+        let names: std::collections::BTreeSet<String> =
+            snapshot.entries.iter().map(|e| e.name.clone()).collect();
+        assert!(names.contains("note.md"), "markdown shown in tree");
+        assert!(names.contains("doc.pdf"), "pdf (binary document) shown in tree");
+        assert!(!names.contains("photo.png"), "png image hidden from tree");
+        assert!(!names.contains("logo.svg"), "svg image hidden from tree");
+
+        // Hidden ≠ not synced: images are still collected for the blob pipeline.
+        let assets = collect_asset_paths(dir.path()).unwrap();
+        assert!(assets.contains(&"photo.png".to_string()), "image still blob-synced");
+        assert!(assets.contains(&"logo.svg".to_string()), "svg still blob-synced");
+        assert!(assets.contains(&"doc.pdf".to_string()), "pdf blob-synced too");
+    }
+
+    #[test]
+    fn collects_asset_paths_and_round_trips_sync_state() {
+        let dir = tempdir().unwrap();
+        open_workspace(dir.path()).unwrap();
+        fs::create_dir_all(dir.path().join("images")).unwrap();
+        fs::write(dir.path().join("images/a.png"), b"x").unwrap();
+        // avif/bmp/ico must collect too — they're previewable images in the
+        // shared registry, so omitting them from the allowlist silently drops
+        // them from sync (regression guard).
+        fs::write(dir.path().join("images/b.avif"), b"x").unwrap();
+        fs::write(dir.path().join("images/c.bmp"), b"x").unwrap();
+        fs::write(dir.path().join("favicon.ico"), b"x").unwrap();
+        fs::write(dir.path().join("doc.pdf"), b"y").unwrap();
+        fs::write(dir.path().join("note.md"), "# n").unwrap();
+
+        let assets = collect_asset_paths(dir.path()).unwrap();
+        assert_eq!(
+            assets,
+            vec![
+                "doc.pdf".to_string(),
+                "favicon.ico".to_string(),
+                "images/a.png".to_string(),
+                "images/b.avif".to_string(),
+                "images/c.bmp".to_string(),
+            ]
+        );
+
+        let mut bases = HashMap::new();
+        bases.insert("images/a.png".to_string(), "deadbeef".to_string());
+        save_asset_sync_state(dir.path(), &AssetSyncState { clock: 7, bases }).unwrap();
+        let loaded = load_asset_sync_state(dir.path()).unwrap();
+        assert_eq!(loaded.clock, 7);
+        assert_eq!(loaded.bases.get("images/a.png").map(String::as_str), Some("deadbeef"));
+    }
+
+    #[test]
+    fn imports_external_file_into_target_folder() {
+        let vault = tempdir().unwrap();
+        open_workspace(vault.path()).unwrap();
+        let src = tempdir().unwrap();
+        let source = src.path().join("photo.png");
+        fs::write(&source, b"img-bytes").unwrap();
+
+        let rel = import_external_path(vault.path(), &source, "assets").unwrap();
+
+        assert_eq!(rel, "assets/photo.png");
+        assert_eq!(
+            fs::read(vault.path().join("assets").join("photo.png")).unwrap(),
+            b"img-bytes"
+        );
+    }
+
+    #[test]
+    fn imports_dedupe_name_on_collision() {
+        let vault = tempdir().unwrap();
+        open_workspace(vault.path()).unwrap();
+        let src = tempdir().unwrap();
+        let source = src.path().join("doc.pdf");
+        fs::write(&source, b"v1").unwrap();
+
+        // First import lands as-is; second collides and gets " 2" before the ext.
+        let first = import_external_path(vault.path(), &source, "").unwrap();
+        let second = import_external_path(vault.path(), &source, "").unwrap();
+
+        assert_eq!(first, "doc.pdf");
+        assert_eq!(second, "doc 2.pdf");
+        assert!(vault.path().join("doc.pdf").exists());
+        assert!(vault.path().join("doc 2.pdf").exists());
+    }
+
+    #[test]
+    fn imports_directory_recursively() {
+        let vault = tempdir().unwrap();
+        open_workspace(vault.path()).unwrap();
+        let src = tempdir().unwrap();
+        let tree = src.path().join("bundle");
+        fs::create_dir_all(tree.join("nested")).unwrap();
+        fs::write(tree.join("a.md"), "# A").unwrap();
+        fs::write(tree.join("nested").join("b.png"), b"bin").unwrap();
+
+        let rel = import_external_path(vault.path(), &tree, "imported").unwrap();
+
+        assert_eq!(rel, "imported/bundle");
+        assert_eq!(
+            fs::read_to_string(vault.path().join("imported/bundle/a.md")).unwrap(),
+            "# A"
+        );
+        assert!(vault.path().join("imported/bundle/nested/b.png").exists());
     }
 
     #[test]

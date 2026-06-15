@@ -5,11 +5,15 @@
   "windows": ["main"],
   "permissions": [
     "core:default",
+    "core:window:allow-start-dragging",
     "dialog:allow-confirm",
     "dialog:allow-open",
     "dialog:allow-save",
     "fs:allow-read-text-file",
     "opener:default",
-    "opener:allow-open-path"
+    {
+      "identifier": "opener:allow-open-path",
+      "allow": [{ "path": "$HOME/**" }, { "path": "/**" }]
+    }
   ]
 }

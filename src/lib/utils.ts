@@ -2,9 +2,9 @@ export function basename(path: string) {
   return path.split(/[\\/]/).pop() || path;
 }
 
-export function isMarkdownPath(path: string) {
-  return /\.(md|markdown|mdown|mkd)$/i.test(path);
-}
+// One implementation of the markdown extension set lives in @shared so the
+// desktop, web, and Rust sides can't drift. Re-exported here for existing callers.
+export { isMarkdownPath } from "@shared/lib/fileTypes";
 
 export function normalizePath(path: string) {
   return path.replace(/\\/g, "/");
@@ -51,6 +51,15 @@ export function truthy(value: string | undefined) {
 export async function sha256Hex(value: string): Promise<string> {
   const encoded = new TextEncoder().encode(value);
   const buffer = await crypto.subtle.digest("SHA-256", encoded);
+  return Array.from(new Uint8Array(buffer))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+/** SHA-256 of raw bytes — must match the server's sha256_bytes for blob dedupe. */
+export async function sha256HexBytes(bytes: Uint8Array): Promise<string> {
+  // Copy into a fresh ArrayBuffer so subtle.digest gets a clean BufferSource.
+  const buffer = await crypto.subtle.digest("SHA-256", bytes.slice().buffer);
   return Array.from(new Uint8Array(buffer))
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");

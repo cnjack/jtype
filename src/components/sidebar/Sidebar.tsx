@@ -73,7 +73,7 @@ export function Sidebar() {
   const docCount = state.workspace ? markdownNodes(state.workspace.entries).length : 0;
 
   return (
-    <aside id="workspace-sidebar" className="flex min-h-0 flex-col border-r border-black/[0.04] bg-[#f7faf8]">
+    <aside id="workspace-sidebar" className="flex min-h-0 flex-col bg-transparent">
       <div className="p-5 pb-4">
         <Menu as="div" className="relative">
           <MenuButton
@@ -339,12 +339,16 @@ function ExplorerPanel() {
 
   return (
     <div className="px-3 pb-4">
-      <input
-        className="sync-input"
-        placeholder={t`Search files...`}
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-      />
+      {/* Pinned to the top of the scroll region so only the document list below
+          scrolls — the search box stays put. */}
+      <div className="sticky top-0 z-10 -mx-3 mb-1 bg-[#f5f8f6] px-3 pb-2 pt-0.5">
+        <input
+          className="sync-input"
+          placeholder={t`Search files...`}
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+      </div>
 
       {filteredResults ? (
         <div className="mt-3 space-y-1">

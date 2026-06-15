@@ -9,6 +9,8 @@ export interface MermaidViewProps {
   editable?: boolean;
   /** Called with the new source on every edit. */
   onChange?: (next: string) => void;
+  /** Called with the latest source when the user presses Ctrl/Cmd+S. */
+  onSave?: (next: string) => void;
 }
 
 // Mermaid is heavy, so it is imported on first render and cached for the session.
@@ -29,7 +31,7 @@ async function getMermaid() {
  * optional source pane for editing. Reuses the same Mermaid renderer (strict
  * security) as fenced ```mermaid code blocks in Markdown.
  */
-export default function MermaidView({ content, editable = false, onChange }: MermaidViewProps) {
+export default function MermaidView({ content, editable = false, onChange, onSave }: MermaidViewProps) {
   const previewRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
   // Bumped on each render request so a stale async render can bail out.
@@ -97,6 +99,21 @@ export default function MermaidView({ content, editable = false, onChange }: Mer
         aria-label={t`Mermaid source`}
         placeholder={t`flowchart TD\n  A[Start] --> B[End]`}
         onChange={(event) => onChange?.(event.target.value)}
+        onKeyDown={(event) => {
+          // Ctrl/Cmd+S: persist immediately. The web shell only attaches its save
+          // shortcut to the Markdown editor, so without this the browser's "save
+          // page" dialog fires instead. The textarea value is already in sync via
+          // onChange, so save the current value directly.
+          if (!(event.ctrlKey || event.metaKey) || event.shiftKey || event.altKey) return;
+          if (event.key.toLowerCase() !== "s") return;
+          if (!onSave) return; // no handler — let the host's own shortcut (if any) handle it
+          event.preventDefault();
+          // Desktop also registers a document-level Ctrl+S handler; stop the event
+          // here so it doesn't fire a second redundant save (write + cloud sync).
+          // On web there's no competing document handler, so this is a no-op.
+          event.stopPropagation();
+          onSave(event.currentTarget.value);
+        }}
       />
       {preview}
     </div>

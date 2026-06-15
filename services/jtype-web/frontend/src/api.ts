@@ -56,6 +56,12 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   return res.json()
 }
 
+/** Encode each segment for the `/blobs/*relativePath` wildcard route (mirrors
+ * the desktop `encodePath` in useCloudSync). Keeps `/` separators. */
+function encodeBlobPath(relativePath: string): string {
+  return relativePath.split('/').map(encodeURIComponent).join('/')
+}
+
 // Auth
 export const api = {
   register: (username: string, password: string, siteTitle?: string) =>
@@ -177,6 +183,36 @@ export const api = {
     request<AssetResponse[]>(`/api/v1/workspaces/${workspaceId}/assets`),
   deleteAsset: (workspaceId: string, assetId: string) =>
     request<void>(`/api/v1/workspaces/${workspaceId}/assets/${assetId}`, { method: 'DELETE' }),
+
+  // Blobs: path-keyed binary documents (e.g. PDF). These sync to the desktop via
+  // `document_blobs` (path-keyed) — distinct from the UUID asset store above which
+  // backs inline markdown images. The server derives content-type from the path
+  // extension (ignores any client Content-Type) for safety.
+  uploadBlob: async (workspaceId: string, relativePath: string, file: File | Blob): Promise<BlobUploadResponse> => {
+    const token = getStoredToken()
+    const res = await httpRequest(`${API_BASE}/api/v1/workspaces/${workspaceId}/blobs/${encodeBlobPath(relativePath)}`, {
+      method: 'POST',
+      headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      body: file,
+    })
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ error: res.statusText }))
+      throw new Error(body.error || res.statusText)
+    }
+    return res.json()
+  },
+  listBlobs: (workspaceId: string, sinceClock = 0) =>
+    request<BlobManifestEntry[]>(`/api/v1/workspaces/${workspaceId}/blobs?sinceClock=${sinceClock}`),
+  downloadBlob: async (workspaceId: string, relativePath: string): Promise<ArrayBuffer> => {
+    const token = getStoredToken()
+    const res = await httpRequest(`${API_BASE}/api/v1/workspaces/${workspaceId}/blobs/${encodeBlobPath(relativePath)}`, {
+      headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    })
+    if (!res.ok) throw new Error(res.statusText)
+    return res.arrayBuffer()
+  },
+  deleteBlob: (workspaceId: string, relativePath: string) =>
+    request<void>(`/api/v1/workspaces/${workspaceId}/blobs/${encodeBlobPath(relativePath)}`, { method: 'DELETE' }),
 
   // Themes & site settings
   listThemes: () => request<ThemeInfo[]>('/api/themes'),
@@ -523,6 +559,24 @@ export interface AssetResponse {
   byteSize: number
   originalName: string | null
   createdAt: string
+}
+
+/** One entry in the server blob manifest (GET /blobs). Mirrors the desktop
+ * `BlobManifestEntry` in src/lib/types.ts. */
+export interface BlobManifestEntry {
+  relativePath: string
+  sha256: string
+  byteSize: number
+  contentType: string
+  updatedClock: number
+  deletedClock: number | null
+}
+
+export interface BlobUploadResponse {
+  relativePath: string
+  sha256: string
+  byteSize: number
+  updatedClock: number
 }
 
 // ── Themes & site settings (mirror services/jtype-web/src/themes) ──────────────

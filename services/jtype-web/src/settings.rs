@@ -4,11 +4,13 @@
 //! database (operator UI) → environment variable → built-in default
 //! ```
 //!
-//! i.e. a value set through the admin UI (persisted in `server_settings`)
-//! overrides the corresponding `JTYPED_*` environment variable, which in turn
-//! overrides the built-in default. The database connection URL is deliberately
-//! NOT resolvable here — the server must already be connected to read this
-//! table.
+//! i.e. a NON-EMPTY value set through the admin UI (persisted in
+//! `server_settings`) overrides the corresponding `JTYPED_*` environment
+//! variable, which in turn overrides the built-in default. A present-but-empty
+//! row is treated as unset and skipped (so clearing a field reverts to the env
+//! value, and a stray/test-written empty row can't silently disable configured
+//! storage). The database connection URL is deliberately NOT resolvable here —
+//! the server must already be connected to read this table.
 //!
 //! Today only the object-storage config (`storage.*`) is wired; the table and
 //! this resolver are generic so further overridable settings can be added
@@ -71,24 +73,32 @@ pub async fn load_map(pool: &Pool<MySql>) -> Result<HashMap<String, String>, App
     Ok(map)
 }
 
-/// Resolve a single value with DB → env → default precedence. Note that a
-/// *present* DB row wins even when its value is empty (an operator who clears a
-/// field is explicitly overriding the environment).
+/// Resolve a single value with DB → env → default precedence. A present-but-
+/// EMPTY DB row is treated as unset and skipped, so a cleared admin field or a
+/// stray/test-written empty row can't silently shadow a configured env var
+/// (which previously broke durable storage — see settings docs). Empty env vars
+/// are likewise skipped. Only a non-empty value at a level "wins".
 fn resolve_value(map: &HashMap<String, String>, key: &str, env_key: &str, default: &str) -> String {
     if let Some(v) = map.get(key) {
-        return v.clone();
+        if !v.trim().is_empty() {
+            return v.clone();
+        }
     }
     if let Ok(v) = std::env::var(env_key) {
-        return v;
+        if !v.trim().is_empty() {
+            return v;
+        }
     }
     default.to_string()
 }
 
-/// Which source supplied the resolved value for a key.
+/// Which source supplied the resolved value for a key. Mirrors `resolve_value`:
+/// an empty value at a level is skipped, so it reports the level that actually
+/// supplied the effective (non-empty) value.
 pub fn source_of(map: &HashMap<String, String>, key: &str, env_key: &str) -> Source {
-    if map.contains_key(key) {
+    if map.get(key).map(|v| !v.trim().is_empty()).unwrap_or(false) {
         Source::Db
-    } else if std::env::var(env_key).is_ok() {
+    } else if std::env::var(env_key).map(|v| !v.trim().is_empty()).unwrap_or(false) {
         Source::Env
     } else {
         Source::Default
@@ -161,15 +171,19 @@ mod tests {
     }
 
     #[test]
-    fn present_but_empty_db_row_still_overrides_env() {
-        // Clearing a field through the UI explicitly overrides the environment.
+    fn present_but_empty_db_row_is_skipped_and_falls_through() {
+        // An empty DB value is treated as unset: env (then default) wins, so a
+        // stray empty row can't silently disable a configured env var.
         let mut map = HashMap::new();
         map.insert("k".to_string(), String::new());
         let env_key = "JTYPE_TEST_SETTINGS_PRECEDENCE_B";
         std::env::set_var(env_key, "from-env");
-        assert_eq!(resolve_value(&map, "k", env_key, "def"), "");
-        assert_eq!(source_of(&map, "k", env_key), Source::Db);
+        assert_eq!(resolve_value(&map, "k", env_key, "def"), "from-env");
+        assert_eq!(source_of(&map, "k", env_key), Source::Env);
         std::env::remove_var(env_key);
+        // With no env either, an empty DB value yields the default.
+        assert_eq!(resolve_value(&map, "k", env_key, "def"), "def");
+        assert_eq!(source_of(&map, "k", env_key), Source::Default);
     }
 
     #[test]

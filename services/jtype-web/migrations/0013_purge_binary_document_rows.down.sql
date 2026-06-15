@@ -1,0 +1,2 @@
+-- Irreversible data cleanup: the purged rows held unusable binary content that
+-- never belonged in the documents table. Nothing to restore. No-op.

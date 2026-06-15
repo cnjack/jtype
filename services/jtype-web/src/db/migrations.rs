@@ -74,6 +74,18 @@ fn all_migrations() -> Vec<Migration> {
             up: include_str!("../../migrations/0011_server_settings.up.sql"),
             down: include_str!("../../migrations/0011_server_settings.down.sql"),
         },
+        Migration {
+            version: 12,
+            name: "document_blobs",
+            up: include_str!("../../migrations/0012_document_blobs.up.sql"),
+            down: include_str!("../../migrations/0012_document_blobs.down.sql"),
+        },
+        Migration {
+            version: 13,
+            name: "purge_binary_document_rows",
+            up: include_str!("../../migrations/0013_purge_binary_document_rows.up.sql"),
+            down: include_str!("../../migrations/0013_purge_binary_document_rows.down.sql"),
+        },
     ]
 }
 
@@ -123,16 +135,18 @@ async fn remove_version(pool: &Pool<MySql>, version: i64) -> Result<(), AppError
 // ---------------------------------------------------------------------------
 
 /// Execute a SQL script that may contain multiple statements separated by `;`.
-/// Skips empty statements and strips leading SQL comments (`--`).
+/// Skips empty statements and strips full-line SQL comments (`--`).
 async fn exec_sql(pool: &Pool<MySql>, sql: &str) -> Result<(), AppError> {
-    for statement in sql.split(';') {
-        // Strip leading comment lines
-        let stmt: String = statement
-            .lines()
-            .filter(|line| !line.trim_start().starts_with("--"))
-            .collect::<Vec<_>>()
-            .join("\n");
-        let stmt = stmt.trim();
+    // Strip full-line `--` comments BEFORE splitting on `;`. A semicolon inside a
+    // comment must not split a statement: otherwise the `--` and the rest of its
+    // line land in different chunks, and the comment tail becomes bogus SQL.
+    let without_comments: String = sql
+        .lines()
+        .filter(|line| !line.trim_start().starts_with("--"))
+        .collect::<Vec<_>>()
+        .join("\n");
+    for statement in without_comments.split(';') {
+        let stmt = statement.trim();
         if stmt.is_empty() {
             continue;
         }

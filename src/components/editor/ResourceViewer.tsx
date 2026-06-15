@@ -97,12 +97,13 @@ export function ResourceViewer({ path, relativePath }: { path: string; relativeP
   return (
     <div className="flex h-full min-h-0 flex-col bg-[#fbfdfb]">
       {/* Source strip */}
-      <div className="flex items-center gap-3 border-b border-black/[0.05] bg-white/70 px-5 py-2.5">
+      <div className="flex items-center gap-3 bg-white/70 px-5 py-2.5">
         <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-soft text-brand-dark">
           <TypeIcon className="h-4 w-4" />
         </span>
+        {/* The filename is already shown in the editor header's title bar, so the
+            source strip only carries provenance + size to avoid repeating it. */}
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium text-stone-900">{name}</p>
           <p className="flex items-center gap-1.5 text-xs text-brand-gray">
             <ComputerDesktopIcon className="h-3 w-3" />
             <Trans>Local</Trans>

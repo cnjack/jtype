@@ -78,11 +78,15 @@ async fn storage_settings_rejects_bad_endpoint() {
     assert_eq!(status, StatusCode::BAD_REQUEST);
 }
 
-/// Writing the local backend config persists it, marks the fields as
-/// DB-sourced (overriding any env), and is reflected on the next GET. This is
+/// Writing a non-empty local_dir persists it (DB-sourced) and selects the local
+/// backend, while a *cleared* endpoint is treated as unset (NOT DB-sourced) and
+/// falls through to env/default — an empty row no longer overrides env. This is
 /// the only test that mutates the (global, singleton) `server_settings` rows.
 #[tokio::test]
-async fn storage_settings_put_local_persists_and_overrides_env() {
+async fn storage_settings_put_local_persists_and_clears_endpoint_override() {
+    // Ensure no ambient S3 endpoint leaks in, so the empty endpoint
+    // deterministically resolves to the local backend (empty = skip now).
+    std::env::remove_var("JTYPED_STORAGE_ENDPOINT");
     let (app, pool) = common::setup().await;
     let token = make_admin(app.clone(), &pool).await;
 
@@ -104,8 +108,9 @@ async fn storage_settings_put_local_persists_and_overrides_env() {
     assert_eq!(status, StatusCode::OK, "put failed: {body}");
     assert_eq!(body["activeBackend"].as_str(), Some("local"), "{body}");
     assert_eq!(body["localDir"].as_str(), Some(dir.as_str()), "{body}");
-    // A present row (even endpoint="") and the new dir are both DB-sourced.
-    assert_eq!(body["sources"]["endpoint"].as_str(), Some("db"), "{body}");
+    // The non-empty local_dir is DB-sourced; the cleared endpoint is skipped,
+    // so it is NOT reported as DB-sourced (falls through to env/default).
+    assert_ne!(body["sources"]["endpoint"].as_str(), Some("db"), "{body}");
     assert_eq!(body["sources"]["localDir"].as_str(), Some("db"), "{body}");
 
     let (status, body) =

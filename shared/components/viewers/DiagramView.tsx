@@ -18,6 +18,8 @@ export interface DiagramViewProps {
   editable?: boolean;
   /** Called with new content on edits (editable types only). */
   onChange?: (next: string) => void;
+  /** Called with the latest content when the user presses Ctrl/Cmd+S (Mermaid, Excalidraw). */
+  onSave?: (next: string) => void;
 }
 
 function ViewerLoading() {
@@ -34,7 +36,7 @@ function ViewerLoading() {
  * shells so both render these file types identically. Keyed by `path` so opening
  * a different file remounts the underlying editor with fresh state.
  */
-export function DiagramView({ path, content, editable = false, onChange }: DiagramViewProps) {
+export function DiagramView({ path, content, editable = false, onChange, onSave }: DiagramViewProps) {
   const def = resourceTypeForPath(path);
   const canEdit = editable && def.editable;
 
@@ -42,11 +44,11 @@ export function DiagramView({ path, content, editable = false, onChange }: Diagr
     <div className="flex h-full min-h-0 flex-col bg-[#fbfdfb]">
       <Suspense fallback={<ViewerLoading />}>
         {def.viewer === "mermaid" ? (
-          <MermaidView key={path} content={content} editable={canEdit} onChange={onChange} />
+          <MermaidView key={path} content={content} editable={canEdit} onChange={onChange} onSave={onSave} />
         ) : def.viewer === "drawio" ? (
           <DrawioView key={path} content={content} />
         ) : def.viewer === "excalidraw" ? (
-          <ExcalidrawView key={path} content={content} editable={canEdit} onChange={onChange} />
+          <ExcalidrawView key={path} content={content} editable={canEdit} onChange={onChange} onSave={onSave} />
         ) : def.viewer === "swagger" ? (
           <SwaggerView key={path} content={content} />
         ) : (

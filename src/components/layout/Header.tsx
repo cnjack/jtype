@@ -34,31 +34,16 @@ export function Header() {
   const currentVaultSettings = state.workspace ? state.vaultSettings[state.workspace.rootPath] : undefined;
   const cloudSyncEnabled = Boolean(currentBinding && currentVaultSettings?.cloudSyncEnabled !== false);
 
-  const handleLogoClick = () => {
-    if (state.mode !== "empty") {
-      dispatch({ type: "CLOSE_WORKSPACE" });
-    }
-  };
-
   const userInitial = (state.syncUsername || "A").charAt(0).toUpperCase();
 
   return (
-    <header className="relative z-10 flex min-h-16 items-center justify-between gap-4 border-b border-black/[0.04] bg-white/85 px-5 backdrop-blur-xl">
+    <header
+      data-tauri-drag-region
+      className="relative z-10 flex min-h-12 items-center justify-between gap-4 bg-transparent px-5 pt-5"
+    >
       <div className="flex min-w-0 items-center gap-4">
-        <button
-          className="-mx-1 select-none rounded-lg px-1 py-0.5 transition hover:bg-emerald-50"
-          type="button"
-          onClick={handleLogoClick}
-          title={t`Back to home`}
-          style={{ fontFamily: "'Arial Black', 'Segoe UI', Arial, sans-serif", fontSize: 18, fontWeight: 900, letterSpacing: 0 }}
-        >
-          <span className="text-[#8d939d]">[</span>
-          <span className="text-[#008884]">J</span>
-          <span className="text-[#0d0d0c]">TYPE</span>
-          <span className="text-[#8d939d]">]</span>
-        </button>
         {breadcrumbs && (
-          <div className="hidden min-w-0 border-l border-emerald-900/10 pl-4 md:block">
+          <div className="hidden min-w-0 pl-1 md:block">
             <p id="app-context-title" className="truncate text-xs font-medium text-[#67736f]">{breadcrumbs}</p>
           </div>
         )}

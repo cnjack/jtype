@@ -467,6 +467,10 @@ msgstr "复制路径"
 msgid "Corner radius"
 msgstr "圆角"
 
+#: src/pages/Workspace.tsx
+msgid "Could not load this PDF."
+msgstr "无法加载此 PDF。"
+
 #: src/components/SiteThemePanel.tsx
 msgid "Cozy"
 msgstr "适中"
@@ -538,6 +542,10 @@ msgstr "删除文件夹 \"{folderPath}\" 及其所有内容？"
 #: src/pages/Workspace.tsx
 msgid "Delete forever"
 msgstr "永久删除"
+
+#: src/pages/Workspace.tsx
+msgid "Delete this PDF?"
+msgstr "删除此 PDF？"
 
 #: src/pages/Workspace.tsx
 msgid "Delete workspace"
@@ -838,6 +846,10 @@ msgstr "https://s3.example.com — 留空则使用本地文件"
 msgid "Image upload failed"
 msgstr "图片上传失败"
 
+#: src/pages/Workspace.tsx
+msgid "Import failed"
+msgstr "导入失败"
+
 #: src/components/NewResourceDialog.tsx
 msgid "Import file"
 msgstr "导入文件"
@@ -989,6 +1001,10 @@ msgstr "实时预览"
 msgid "Loading invite…"
 msgstr "加载邀请中…"
 
+#: src/pages/Workspace.tsx
+msgid "Loading PDF…"
+msgstr "正在加载 PDF…"
+
 #: src/help/components/HelpVideo.tsx
 msgid "Loading player…"
 msgstr "正在加载播放器…"
@@ -996,6 +1012,10 @@ msgstr "正在加载播放器…"
 #: src/components/SiteThemePanel.tsx
 msgid "Loading site settings…"
 msgstr "正在加载站点设置…"
+
+#: src/pages/Workspace.tsx
+msgid "Loading viewer…"
+msgstr "正在加载查看器…"
 
 #: src/pages/Admin.tsx
 msgid "Loading..."

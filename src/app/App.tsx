@@ -1,4 +1,4 @@
-import React, { useReducer, useCallback, useEffect, useRef, createContext, useContext } from "react";
+import React, { useReducer, useCallback, useEffect, useRef, useState, createContext, useContext } from "react";
 import { appReducer, initialState, AppStateContext, AppDispatchContext } from "./AppState";
 import { useFileSystem, useCloudSync, useKeyboardShortcuts, useCommands } from "../hooks";
 import { usePeriodicSync } from "../hooks/usePeriodicSync";
@@ -43,6 +43,37 @@ export function App() {
   );
 }
 
+/** Thin drag strip on the sidebar's right edge — drag to resize its width.
+ * Invisible until hovered; updates the width live and clamps to 200–480px. */
+function SidebarResizeHandle({ width, onResize }: { width: number; onResize: (w: number) => void }) {
+  const onMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const move = (ev: MouseEvent) => onResize(Math.min(480, Math.max(200, ev.clientX)));
+    const up = () => {
+      document.removeEventListener("mousemove", move);
+      document.removeEventListener("mouseup", up);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+    document.addEventListener("mousemove", move);
+    document.addEventListener("mouseup", up);
+  };
+  return (
+    <div
+      className="group absolute bottom-0 top-0 z-20 w-2.5 -translate-x-1/2 cursor-col-resize"
+      style={{ left: `${width}px` }}
+      onMouseDown={onMouseDown}
+      role="separator"
+      aria-orientation="vertical"
+      aria-label="Resize sidebar"
+    >
+      <div className="mx-auto h-full w-px bg-transparent transition-colors group-hover:bg-black/10" />
+    </div>
+  );
+}
+
 function AppContent() {
   const { state, dispatch } = useApp();
   const sync = useCloudSync();
@@ -71,6 +102,34 @@ function AppContent() {
   }, [sync]);
 
   useFileWatcher(onExternalFileChange);
+
+  // The chrome-vs-content `user-select` split (styles.css) lets a click on a
+  // non-selectable control (e.g. a dropdown over the preview) bleed a stray text
+  // selection into the nearest selectable region. Only allow a selection that
+  // actually *starts* inside a selectable region; cancel ones that begin on
+  // chrome. Keyboard selection in fields is unaffected (handled by the field).
+  useEffect(() => {
+    const SELECTABLE =
+      "#editor, #preview, .preview, .textLayer, input, textarea, [contenteditable], [data-selectable]";
+    let pressInSelectable = true;
+    const onMouseDown = (e: MouseEvent) => {
+      const target = e.target as Element | null;
+      pressInSelectable = !!(target && target.closest(SELECTABLE));
+    };
+    const onSelectStart = (e: Event) => {
+      if (pressInSelectable) return;
+      const target = e.target as Element | null;
+      // Always allow editable fields (covers keyboard/focus-driven selection).
+      if (target && target.closest("input, textarea, [contenteditable]")) return;
+      e.preventDefault();
+    };
+    document.addEventListener("mousedown", onMouseDown, true);
+    document.addEventListener("selectstart", onSelectStart, true);
+    return () => {
+      document.removeEventListener("mousedown", onMouseDown, true);
+      document.removeEventListener("selectstart", onSelectStart, true);
+    };
+  }, []);
 
   const handleAction = useCallback((action: string) => {
     if (action === "quickSwitcher.create") {
@@ -105,6 +164,21 @@ function AppContent() {
 
   useCloudEvents(sync.pullOnly);
 
+  // Anti-entropy: after a normal pull, diff the server document manifest against
+  // local files and repair any drift (also recovers files stranded by a poisoned
+  // sync-base). Throttled so frequent ws reconnects don't spam the manifest.
+  const lastReconcileAtRef = useRef(0);
+  const maybeReconcile = useCallback(async () => {
+    if (!state.workspace || !state.syncToken || !currentBinding) return;
+    if (currentVaultSettings?.cloudSyncEnabled === false) return;
+    const now = Date.now();
+    if (now - lastReconcileAtRef.current < 60_000) return;
+    lastReconcileAtRef.current = now;
+    try { await sync.reconcileDocuments(currentBinding); } catch { /* best-effort */ }
+  }, [state.workspace, state.syncToken, currentBinding, currentVaultSettings?.cloudSyncEnabled, sync]);
+  const maybeReconcileRef = useRef(maybeReconcile);
+  maybeReconcileRef.current = maybeReconcile;
+
   useEffect(() => {
     const rootPath = state.workspace?.rootPath;
     if (!rootPath || !state.syncToken || !currentBinding) {
@@ -120,9 +194,11 @@ function AppContent() {
     const pullKey = `${rootPath}:${currentBinding.workspaceId}`;
     if (openedVaultPullKeyRef.current === pullKey) return;
     openedVaultPullKeyRef.current = pullKey;
-    sync.pullOnly({ full: true, reason: "open-vault" }).catch((error) => {
-      dispatch({ type: "SET_STATUS", message: `Cloud update failed: ${String(error)}` });
-    });
+    sync.pullOnly({ full: true, reason: "open-vault" })
+      .then(() => maybeReconcileRef.current())
+      .catch((error) => {
+        dispatch({ type: "SET_STATUS", message: `Cloud update failed: ${String(error)}` });
+      });
   }, [
     state.workspace?.rootPath,
     state.syncToken,
@@ -150,15 +226,22 @@ function AppContent() {
   );
 
   useEffect(() => {
+    // Coalesce bursty vault mutations (e.g. dragging several files, rapid
+    // folder ops) into a single trailing sync instead of one per operation.
+    let debounceTimer: number | undefined;
     const syncAfterTrashChange = () => {
-      if (state.workspace && state.syncToken && currentBinding && currentVaultSettings?.cloudSyncEnabled !== false) {
+      if (!(state.workspace && state.syncToken && currentBinding && currentVaultSettings?.cloudSyncEnabled !== false)) return;
+      if (debounceTimer !== undefined) window.clearTimeout(debounceTimer);
+      debounceTimer = window.setTimeout(() => {
+        debounceTimer = undefined;
         void sync.syncWorkspaceToWeb({ silent: true });
-      }
+      }, 600);
     };
     window.addEventListener("jtype:vault-deleted", syncAfterTrashChange);
     window.addEventListener("jtype:vault-restored", syncAfterTrashChange);
     window.addEventListener("jtype:vault-folder-changed", syncAfterTrashChange);
     return () => {
+      if (debounceTimer !== undefined) window.clearTimeout(debounceTimer);
       window.removeEventListener("jtype:vault-deleted", syncAfterTrashChange);
       window.removeEventListener("jtype:vault-restored", syncAfterTrashChange);
       window.removeEventListener("jtype:vault-folder-changed", syncAfterTrashChange);
@@ -184,10 +267,24 @@ function AppContent() {
   workspaceRef.current = state.workspace;
   const syncRef = useRef(sync);
   syncRef.current = sync;
+  // Tracks whether the websocket has connected at least once, so a *reconnect*
+  // (vs. the very first connect) can reconcile changes missed while offline.
+  const hasConnectedOnceRef = useRef(false);
 
   useEffect(() => {
     if (!isTauriRuntime()) return;
-    const unlistenConnected = listen("cloud:ws-connected", () => dispatch({ type: "SET_WS_CONNECTED", connected: true }));
+    const unlistenConnected = listen("cloud:ws-connected", () => {
+      dispatch({ type: "SET_WS_CONNECTED", connected: true });
+      // The server has no replay queue, so document:changed messages broadcast
+      // while we were disconnected are gone. Pull once on reconnect to catch up.
+      // (The first connect is skipped — the open-vault full pull covers it.)
+      if (hasConnectedOnceRef.current) {
+        syncRef.current.pullOnly({ reason: "ws-reconnect" })
+          .then(() => maybeReconcileRef.current())
+          .catch(() => {});
+      }
+      hasConnectedOnceRef.current = true;
+    });
     const unlistenDisconnected = listen("cloud:ws-disconnected", () => dispatch({ type: "SET_WS_CONNECTED", connected: false }));
     const unlistenSession = listen<string>("cloud:ws-session", (e) => dispatch({ type: "SET_WS_SESSION", sessionId: e.payload }));
     const unlistenActivity = listen<{ msgType: string }>("cloud:ws-activity", (e) =>
@@ -324,16 +421,34 @@ function AppContent() {
   const showVaultHome = state.mode === "workspace" && !state.currentPath;
   const sidebarVisible = state.mode === "workspace" && !state.focusMode;
 
+  // Resizable sidebar width (drag the right edge), persisted across launches.
+  const [sidebarWidth, setSidebarWidth] = useState(() => {
+    const saved = Number(localStorage.getItem("jtype.sidebarWidth"));
+    return saved >= 200 && saved <= 480 ? saved : 272;
+  });
+  useEffect(() => {
+    localStorage.setItem("jtype.sidebarWidth", String(sidebarWidth));
+  }, [sidebarWidth]);
+
   return (
     <CommandsContext.Provider value={commands}>
       <div className={`${state.mode === "empty" ? "app-empty" : state.mode === "workspace" ? "workspace-mode" : "single-file-mode"} ${state.focusMode ? "focus-mode" : ""} h-screen overflow-hidden bg-[#f5f8f6] text-stone-950 antialiased`}>
         <main className="grid h-screen grid-rows-[auto_1fr_auto]">
           <Header />
-          <section className={`grid min-h-0 ${sidebarVisible ? "grid-cols-[272px_minmax(0,1fr)]" : "grid-cols-[minmax(0,1fr)]"}`}>
+          <section
+            className="relative grid min-h-0"
+            style={{ gridTemplateColumns: sidebarVisible ? `${sidebarWidth}px minmax(0,1fr)` : "minmax(0,1fr)" }}
+          >
             {sidebarVisible && <Sidebar />}
-            {showWelcome ? <WelcomeScreen /> : showVaultHome ? <VaultHome /> : state.currentPath ? <EditorShell /> : <WelcomeScreen />}
+            {sidebarVisible && <SidebarResizeHandle width={sidebarWidth} onResize={setSidebarWidth} />}
+            {/* The content floats as a single rounded panel that the shell (header,
+                sidebar, status bar) wraps around — no divider lines, just a soft
+                tinted lift. */}
+            <div className="m-2.5 grid min-h-0 grid-cols-1 overflow-hidden rounded-2xl bg-[#fbfdfb] shadow-[0_1px_2px_rgba(20,45,38,0.04),0_16px_38px_-24px_rgba(20,45,38,0.22)] ring-1 ring-black/[0.035]">
+              {showWelcome ? <WelcomeScreen /> : showVaultHome ? <VaultHome /> : state.currentPath ? <EditorShell /> : <WelcomeScreen />}
+            </div>
           </section>
-          <div id="operation-log" className="flex items-center justify-between border-t border-black/[0.04] bg-white/70 px-5 py-3 text-xs text-[#6b7773]">
+          <div id="operation-log" className="flex items-center justify-between bg-transparent px-5 pb-1.5 pt-1 text-xs text-[#6b7773]">
             <span>{state.statusMessage}</span>
             <span className="flex shrink-0 items-center gap-3">
               {isSyncEnabled && (

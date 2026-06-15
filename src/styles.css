@@ -7,6 +7,29 @@
   body {
     background: #f5f8f6;
   }
+
+  /* Native-app feel: chrome (sidebar, header, toolbars, menus, labels) is not
+     mouse-selectable. Content surfaces and editable fields opt back in below. */
+  body {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Selection allow-list: the editor textarea, rendered markdown preview, the
+     PDF.js text layer, every form control, and anything tagged
+     [data-selectable] stay fully selectable so copy/paste keeps working. */
+  #editor,
+  #preview,
+  .preview,
+  .textLayer,
+  input,
+  textarea,
+  select,
+  [contenteditable="true"],
+  [data-selectable] {
+    -webkit-user-select: text;
+    user-select: text;
+  }
 }
 
 @layer components {
@@ -263,4 +286,38 @@
     box-shadow: -18px 0 40px rgb(28 25 23 / 0.12);
     z-index: 20;
   }
+}
+
+/* App-wide unobtrusive scrollbars: the heavy default bars are gone. A fixed 8px
+   gutter (no layout shift) with a transparent thumb that fades in only while the
+   scroll region is hovered. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+*:hover {
+  scrollbar-color: rgb(20 45 38 / 0.16) transparent;
+}
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+:hover > ::-webkit-scrollbar-thumb,
+:hover::-webkit-scrollbar-thumb {
+  background-color: rgb(20 45 38 / 0.16);
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgb(20 45 38 / 0.3);
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
 }

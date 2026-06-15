@@ -98,12 +98,13 @@ pub struct UpdateStorageSettings {
 
 /// PUT /api/admin/settings/storage
 ///
-/// A field present in the body is persisted (overriding the environment),
-/// including when set to empty — an operator who clears `endpoint` is
-/// explicitly switching to the local backend. The secret is the exception: a
-/// blank secret keeps the stored one. The candidate backend is built and
-/// connectivity-probed before anything is persisted or swapped, so a bad config
-/// is rejected rather than breaking uploads.
+/// A field present in the body is persisted. A NON-EMPTY value overrides the
+/// environment; clearing a field (empty value) is treated as unset, so the
+/// value falls back to the `JTYPED_STORAGE_*` env var then the built-in default
+/// — an empty row no longer silently forces the local backend. The secret is
+/// the exception: a blank secret keeps the stored one. The candidate backend is
+/// built and connectivity-probed before anything is persisted or swapped, so a
+/// bad config is rejected rather than breaking uploads.
 pub async fn update_storage_settings(
     State(state): State<AppState>,
     headers: HeaderMap,

@@ -467,6 +467,10 @@ msgstr "パスをコピー"
 msgid "Corner radius"
 msgstr ""
 
+#: src/pages/Workspace.tsx
+msgid "Could not load this PDF."
+msgstr ""
+
 #: src/components/SiteThemePanel.tsx
 msgid "Cozy"
 msgstr ""
@@ -538,6 +542,10 @@ msgstr "\"{folderPath}\" フォルダーとその全コンテンツを削除し�
 #: src/pages/Workspace.tsx
 msgid "Delete forever"
 msgstr "完全に削除"
+
+#: src/pages/Workspace.tsx
+msgid "Delete this PDF?"
+msgstr ""
 
 #: src/pages/Workspace.tsx
 msgid "Delete workspace"
@@ -838,6 +846,10 @@ msgstr ""
 msgid "Image upload failed"
 msgstr ""
 
+#: src/pages/Workspace.tsx
+msgid "Import failed"
+msgstr ""
+
 #: src/components/NewResourceDialog.tsx
 msgid "Import file"
 msgstr ""
@@ -989,12 +1001,20 @@ msgstr "ライブプレビュー"
 msgid "Loading invite…"
 msgstr "招待を読み込み中…"
 
+#: src/pages/Workspace.tsx
+msgid "Loading PDF…"
+msgstr ""
+
 #: src/help/components/HelpVideo.tsx
 msgid "Loading player…"
 msgstr ""
 
 #: src/components/SiteThemePanel.tsx
 msgid "Loading site settings…"
+msgstr ""
+
+#: src/pages/Workspace.tsx
+msgid "Loading viewer…"
 msgstr ""
 
 #: src/pages/Admin.tsx

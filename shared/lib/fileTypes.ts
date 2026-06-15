@@ -64,7 +64,9 @@ const MARKDOWN: ResourceTypeDef = {
   previewable: true,
 };
 
-/** Image assets. The first 6 + pdf below match the desktop `is_asset_path` allowlist. */
+/** Image assets. These + pdf mirror the desktop `is_asset_path` allowlist
+ * (services/jtype-core) and the server `content_type_for` (jtype-web blobs);
+ * keep all three in sync or the omitted type silently never syncs. */
 const IMAGE: ResourceTypeDef = {
   id: "image",
   label: "Image",
@@ -246,12 +248,31 @@ export function isMarkdownPath(path: string): boolean {
   return resourceTypeForPath(path).id === "markdown";
 }
 
+/** True for `.board` kanban view files (JSON config over card-notes). */
+export function isBoardPath(path: string): boolean {
+  return resourceTypeForPath(path).id === "board";
+}
+
 export function isImagePath(path: string): boolean {
   return resourceTypeForPath(path).id === "image";
 }
 
 export function isPdfPath(path: string): boolean {
   return resourceTypeForPath(path).id === "pdf";
+}
+
+/**
+ * A "binary document" is a non-text file that is a FIRST-CLASS document: it
+ * appears as a standalone entry in the file tree and opens in its own viewer,
+ * as opposed to images (which are inline markdown attachments, not tree
+ * entries). Binary documents sync via the blob channel (document_blobs), NOT
+ * the text-document channel — so they are deliberately excluded from
+ * `syncsAsDocument`. Currently PDF only; extend here as new types are added.
+ * Mirrors `is_binary_document_path` in jtype-core and jtype-web (Rust) — keep
+ * the three in lockstep (see the cross-language fixture test).
+ */
+export function isBinaryDocumentPath(path: string): boolean {
+  return isPdfPath(path);
 }
 
 export function isMermaidPath(path: string): boolean {
@@ -275,6 +296,18 @@ export function isExcalidrawPath(path: string): boolean {
 export function isDiagramTextPath(path: string): boolean {
   const id = resourceTypeForPath(path).id;
   return id === "mermaid" || id === "drawio" || id === "excalidraw" || id === "swagger";
+}
+
+/**
+ * Single source of truth for "files that sync through the document pipeline as
+ * opaque text" — Markdown notes, `.board` kanban views, and diagram resources.
+ * Every place that decides the synced document set must use THIS predicate, not
+ * an inline extension check, so the client agrees with the server and desktop.
+ * Mirrors `is_syncable_document_path` in jtype-core (Rust) and jtype-web (Rust);
+ * keep all three in lockstep — see the cross-language fixture test.
+ */
+export function syncsAsDocument(path: string): boolean {
+  return isMarkdownPath(path) || isBoardPath(path) || isDiagramTextPath(path);
 }
 
 /** True when the resource supports in-app editing (and writes back to the file). */
