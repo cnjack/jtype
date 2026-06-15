@@ -128,6 +128,10 @@ msgstr "Accept invitation"
 msgid "Access key"
 msgstr "Access key"
 
+#: src/pages/AiConnections.tsx
+msgid "Access token"
+msgstr "Access token"
+
 #: src/components/Layout.tsx
 msgid "Account"
 msgstr "Account"
@@ -144,13 +148,19 @@ msgstr "Active"
 msgid "Active backend"
 msgstr "Active backend"
 
+#: src/pages/AiConnections.tsx
+msgid "Active tokens & sessions"
+msgstr "Active tokens & sessions"
+
 #: src/pages/Workspace.tsx
 msgid "Add domain"
 msgstr "Add domain"
 
 #: src/pages/Workspace.tsx
-msgid "Add domains, verify DNS ownership, bind them to this workspace, and manage SSL certificates from one place."
-msgstr "Add domains, verify DNS ownership, bind them to this workspace, and manage SSL certificates from one place."
+msgid "Add domains, verify DNS ownership, bind them to this workspace, and "
+"manage SSL certificates from one place."
+msgstr "Add domains, verify DNS ownership, bind them to this workspace, and "
+"manage SSL certificates from one place."
 
 #: src/pages/Workspace.tsx
 msgid "Add table row below"
@@ -175,6 +185,7 @@ msgid "AI"
 msgstr "AI"
 
 #: src/components/Layout.tsx
+#: src/pages/AiConnections.tsx
 msgid "AI Connections"
 msgstr "AI Connections"
 
@@ -313,8 +324,12 @@ msgid "Bucket"
 msgstr "Bucket"
 
 #: src/pages/Landing.tsx
-msgid "Calm desktop writing, workspace-scoped sync, and public Markdown publishing in one product flow. Your notes stay local until a cloud workspace has a job to do."
-msgstr "Calm desktop writing, workspace-scoped sync, and public Markdown publishing in one product flow. Your notes stay local until a cloud workspace has a job to do."
+msgid "Calm desktop writing, workspace-scoped sync, and public Markdown "
+"publishing in one product flow. Your notes stay local until a cloud "
+"workspace has a job to do."
+msgstr "Calm desktop writing, workspace-scoped sync, and public Markdown "
+"publishing in one product flow. Your notes stay local until a cloud "
+"workspace has a job to do."
 
 #: src/components/NewResourceDialog.tsx
 #: src/pages/Workspace.tsx
@@ -431,8 +446,16 @@ msgid "Configure server object storage."
 msgstr "Configure server object storage."
 
 #: src/pages/Admin.tsx
-msgid "Configure server object storage. Saved values override the JTYPED_STORAGE_* environment variables and apply immediately."
-msgstr "Configure server object storage. Saved values override the JTYPED_STORAGE_* environment variables and apply immediately."
+msgid "Configure server object storage. Saved values override the "
+"JTYPED_STORAGE_* environment variables and apply immediately."
+msgstr "Configure server object storage. Saved values override the "
+"JTYPED_STORAGE_* environment variables and apply immediately."
+
+#: src/pages/AiConnections.tsx
+msgid "Connect Claude, Cursor, Cline, or jcode to your notes & kanban through "
+"the built-in MCP server."
+msgstr "Connect Claude, Cursor, Cline, or jcode to your notes & kanban through "
+"the built-in MCP server."
 
 #: src/pages/Landing.tsx
 msgid "Connect your AI"
@@ -453,6 +476,14 @@ msgstr "Connecting..."
 #: src/components/SiteThemePanel.tsx
 msgid "Content width"
 msgstr "Content width"
+
+#: src/pages/AiConnections.tsx
+msgid "Copy"
+msgstr "Copy"
+
+#: src/pages/AiConnections.tsx
+msgid "Copy it now — it won't be shown again."
+msgstr "Copy it now — it won't be shown again."
 
 #: src/pages/Workspace.tsx
 msgid "Copy link"
@@ -479,8 +510,12 @@ msgid "Create"
 msgstr "Create"
 
 #: src/pages/Landing.tsx
-msgid "Create a workspace for sync, publishing, and account settings. Local vault copy stays precise: folders are vaults, server-side collaboration is a cloud workspace."
-msgstr "Create a workspace for sync, publishing, and account settings. Local vault copy stays precise: folders are vaults, server-side collaboration is a cloud workspace."
+msgid "Create a workspace for sync, publishing, and account settings. Local "
+"vault copy stays precise: folders are vaults, server-side collaboration "
+"is a cloud workspace."
+msgstr "Create a workspace for sync, publishing, and account settings. Local "
+"vault copy stays precise: folders are vaults, server-side collaboration "
+"is a cloud workspace."
 
 #: src/pages/Login.tsx
 msgid "Create account"
@@ -493,6 +528,10 @@ msgstr "Create your first Markdown note."
 #: src/components/NewResourceDialog.tsx
 msgid "Creates in"
 msgstr "Creates in"
+
+#: src/pages/AiConnections.tsx
+msgid "current"
+msgstr "current"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Custom"
@@ -720,8 +759,10 @@ msgid "Enter your username"
 msgstr "Enter your username"
 
 #: src/help/pages/HelpHome.tsx
-msgid "Everything you need to write in a local-first vault, sync to the cloud, run a kanban board, publish a site, and connect AI."
-msgstr "Everything you need to write in a local-first vault, sync to the cloud, run a kanban board, publish a site, and connect AI."
+msgid "Everything you need to write in a local-first vault, sync to the cloud, "
+"run a kanban board, publish a site, and connect AI."
+msgstr "Everything you need to write in a local-first vault, sync to the cloud, "
+"run a kanban board, publish a site, and connect AI."
 
 #: src/components/NewResourceDialog.tsx
 msgid "Excalidraw drawing"
@@ -734,6 +775,10 @@ msgstr "Exit focus mode"
 #: src/pages/Workspace.tsx
 msgid "Expand all"
 msgstr "Expand all"
+
+#: src/pages/AiConnections.tsx
+msgid "Expires"
+msgstr "Expires"
 
 #: src/help/pages/HelpHome.tsx
 msgid "Explore"
@@ -779,6 +824,14 @@ msgstr "Focus mode"
 msgid "Footer HTML"
 msgstr "Footer HTML"
 
+#: src/pages/AiConnections.tsx
+msgid "For clients that only accept a static header (e.g. jcode). Tokens are "
+"<0>mcp</0>-scoped (notes & kanban only, never admin) and expire in 90 "
+"days."
+msgstr "For clients that only accept a static header (e.g. jcode). Tokens are "
+"<0>mcp</0>-scoped (notes & kanban only, never admin) and expire in 90 "
+"days."
+
 #: src/pages/Admin.tsx
 msgid "from env"
 msgstr "from env"
@@ -786,6 +839,14 @@ msgstr "from env"
 #: src/pages/Workspace.tsx
 msgid "General"
 msgstr "General"
+
+#: src/pages/AiConnections.tsx
+msgid "Generate token"
+msgstr "Generate token"
+
+#: src/pages/AiConnections.tsx
+msgid "Generating…"
+msgstr "Generating…"
 
 #: src/components/DownloadPromo.tsx
 msgid "Get the desktop app — and a jtype CLI for your terminal & AI agents."
@@ -922,8 +983,14 @@ msgid "Joining…"
 msgstr "Joining…"
 
 #: src/pages/Landing.tsx
-msgid "JType ships a built-in MCP server. Connect Claude, Cursor, or any MCP client over a secure OAuth flow, then ask it to search your notes, draft a doc, or triage your board. Tokens are scoped, expiring, and revocable — and admin always stays off-limits."
-msgstr "JType ships a built-in MCP server. Connect Claude, Cursor, or any MCP client over a secure OAuth flow, then ask it to search your notes, draft a doc, or triage your board. Tokens are scoped, expiring, and revocable — and admin always stays off-limits."
+msgid "JType ships a built-in MCP server. Connect Claude, Cursor, or any MCP "
+"client over a secure OAuth flow, then ask it to search your notes, draft "
+"a doc, or triage your board. Tokens are scoped, expiring, and revocable "
+"— and admin always stays off-limits."
+msgstr "JType ships a built-in MCP server. Connect Claude, Cursor, or any MCP "
+"client over a secure OAuth flow, then ask it to search your notes, "
+"draft a doc, or triage your board. Tokens are scoped, expiring, and "
+"revocable — and admin always stays off-limits."
 
 #: src/components/NewResourceDialog.tsx
 msgid "Kanban board"
@@ -934,12 +1001,22 @@ msgid "Kanban tools"
 msgstr "Kanban tools"
 
 #: src/pages/Workspace.tsx
-msgid "Keep the publish name and workspace name here. The workspace slug and storage limit are assigned by the service."
-msgstr "Keep the publish name and workspace name here. The workspace slug and storage limit are assigned by the service."
+msgid "Keep the publish name and workspace name here. The workspace slug and "
+"storage limit are assigned by the service."
+msgstr "Keep the publish name and workspace name here. The workspace slug and "
+"storage limit are assigned by the service."
 
 #: src/pages/Login.tsx
 msgid "Keep your vaults in sync across all devices."
 msgstr "Keep your vaults in sync across all devices."
+
+#: src/pages/AiConnections.tsx
+msgid "Label"
+msgstr "Label"
+
+#: src/pages/AiConnections.tsx
+msgid "Label (e.g. jcode on my laptop)"
+msgstr "Label (e.g. jcode on my laptop)"
 
 #: src/components/Layout.tsx
 #: src/help/HelpLayout.tsx
@@ -1020,6 +1097,10 @@ msgstr "Loading viewer…"
 msgid "Loading..."
 msgstr "Loading..."
 
+#: src/pages/AiConnections.tsx
+msgid "Loading…"
+msgstr "Loading…"
+
 #: src/pages/Admin.tsx
 msgid "Local directory"
 msgstr "Local directory"
@@ -1041,8 +1122,10 @@ msgid "Local-first Markdown vault"
 msgstr "Local-first Markdown vault"
 
 #: src/help/HelpLayout.tsx
-msgid "Local-first Markdown vault editing with cloud sync, kanban, publishing, and AI."
-msgstr "Local-first Markdown vault editing with cloud sync, kanban, publishing, and AI."
+msgid "Local-first Markdown vault editing with cloud sync, kanban, publishing, "
+"and AI."
+msgstr "Local-first Markdown vault editing with cloud sync, kanban, publishing, "
+"and AI."
 
 #: src/pages/Login.tsx
 msgid "Local-first notes with cloud sync, publishing, and AI-ready indexing."
@@ -1083,6 +1166,10 @@ msgstr "Markdown document"
 #: src/pages/Workspace.tsx
 msgid "Markdown editor"
 msgstr "Markdown editor"
+
+#: src/pages/AiConnections.tsx
+msgid "MCP token"
+msgstr "MCP token"
 
 #: src/pages/Workspace.tsx
 msgid "Member removed."
@@ -1133,6 +1220,10 @@ msgstr "Name"
 #: src/pages/Workspace.tsx
 msgid "Name, publishing identity, and storage"
 msgstr "Name, publishing identity, and storage"
+
+#: src/pages/AiConnections.tsx
+msgid "never"
+msgstr "never"
 
 #: src/pages/Workspace.tsx
 msgid "New"
@@ -1260,8 +1351,12 @@ msgid "On this page"
 msgstr "On this page"
 
 #: src/pages/Landing.tsx
-msgid "One Markdown source shows up everywhere it matters: local files on your machine, sync state in the cloud, and published output for readers — all visible at once."
-msgstr "One Markdown source shows up everywhere it matters: local files on your machine, sync state in the cloud, and published output for readers — all visible at once."
+msgid "One Markdown source shows up everywhere it matters: local files on your "
+"machine, sync state in the cloud, and published output for readers — all "
+"visible at once."
+msgstr "One Markdown source shows up everywhere it matters: local files on your "
+"machine, sync state in the cloud, and published output for readers — "
+"all visible at once."
 
 #: src/pages/Landing.tsx
 msgid "One Markdown source, three calm surfaces."
@@ -1280,8 +1375,10 @@ msgid "Open"
 msgstr "Open"
 
 #: src/pages/Landing.tsx
-msgid "Open a local Markdown vault, keep normal folders, and edit without turning notes into remote-only data."
-msgstr "Open a local Markdown vault, keep normal folders, and edit without turning notes into remote-only data."
+msgid "Open a local Markdown vault, keep normal folders, and edit without "
+"turning notes into remote-only data."
+msgstr "Open a local Markdown vault, keep normal folders, and edit without "
+"turning notes into remote-only data."
 
 #: src/help/HelpLayout.tsx
 msgid "Open app"
@@ -1316,8 +1413,10 @@ msgid "Open sidebar"
 msgstr "Open sidebar"
 
 #: src/help/pages/CaseStudy.tsx
-msgid "Open the example vault in JType and follow along. It lives in the repo at:"
-msgstr "Open the example vault in JType and follow along. It lives in the repo at:"
+msgid "Open the example vault in JType and follow along. It lives in the repo "
+"at:"
+msgstr "Open the example vault in JType and follow along. It lives in the repo "
+"at:"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Optional. A small set of inline tags is allowed (links, emphasis)."
@@ -1453,12 +1552,16 @@ msgid "Publishing details saved"
 msgstr "Publishing details saved"
 
 #: src/pages/Workspace.tsx
-msgid "Publishing uses a server snapshot; frontmatter status is treated as user metadata."
-msgstr "Publishing uses a server snapshot; frontmatter status is treated as user metadata."
+msgid "Publishing uses a server snapshot; frontmatter status is treated as user "
+"metadata."
+msgstr "Publishing uses a server snapshot; frontmatter status is treated as "
+"user metadata."
 
 #: src/pages/Landing.tsx
-msgid "Push and pull versions, resolve conflicts, and keep collaboration scoped to the workspace you choose."
-msgstr "Push and pull versions, resolve conflicts, and keep collaboration scoped to the workspace you choose."
+msgid "Push and pull versions, resolve conflicts, and keep collaboration scoped "
+"to the workspace you choose."
+msgstr "Push and pull versions, resolve conflicts, and keep collaboration "
+"scoped to the workspace you choose."
 
 #: src/pages/Workspace.tsx
 msgid "Quick open"
@@ -1477,8 +1580,16 @@ msgid "Ready for the cloud layer"
 msgstr "Ready for the cloud layer"
 
 #: src/help/pages/CasesIndex.tsx
-msgid "Real, end-to-end scenarios you can reproduce. Each one ships with an example vault you can open in JType."
-msgstr "Real, end-to-end scenarios you can reproduce. Each one ships with an example vault you can open in JType."
+msgid "Real, end-to-end scenarios you can reproduce. Each one ships with an "
+"example vault you can open in JType."
+msgstr "Real, end-to-end scenarios you can reproduce. Each one ships with an "
+"example vault you can open in JType."
+
+#: src/pages/AiConnections.tsx
+msgid "Recommended: paste this URL into an OAuth-capable client (Claude, "
+"Cursor) — you'll approve in the browser, no token to copy."
+msgstr "Recommended: paste this URL into an OAuth-capable client (Claude, "
+"Cursor) — you'll approve in the browser, no token to copy."
 
 #: src/pages/Admin.tsx
 msgid "Region"
@@ -1540,13 +1651,18 @@ msgstr "Republish"
 msgid "Republish live docs"
 msgstr "Republish live docs"
 
+#: src/pages/AiConnections.tsx
+msgid "Request failed"
+msgstr "Request failed"
+
 #: src/pages/Workspace.tsx
 msgid "Restore"
 msgstr "Restore"
 
 #: src/pages/Workspace.tsx
 msgid "Restore cloud workspace documents or permanently remove them from trash."
-msgstr "Restore cloud workspace documents or permanently remove them from trash."
+msgstr "Restore cloud workspace documents or permanently remove them from "
+"trash."
 
 #: src/pages/Workspace.tsx
 msgid "Restore deleted documents or remove them permanently."
@@ -1564,9 +1680,17 @@ msgstr "Review accounts, roles, and enabled status."
 msgid "Review published custom domains and SSL state."
 msgstr "Review published custom domains and SSL state."
 
+#: src/pages/AiConnections.tsx
+msgid "Revoke"
+msgstr "Revoke"
+
 #: src/pages/Workspace.tsx
 msgid "Revoke invite"
 msgstr "Revoke invite"
+
+#: src/pages/AiConnections.tsx
+msgid "Revoke this token? Any client using it will stop working."
+msgstr "Revoke this token? Any client using it will stop working."
 
 #: src/pages/Admin.tsx
 msgid "Role"
@@ -1620,6 +1744,10 @@ msgstr "Saving..."
 #: src/components/SiteThemePanel.tsx
 msgid "Saving…"
 msgstr "Saving…"
+
+#: src/pages/AiConnections.tsx
+msgid "Scope"
+msgstr "Scope"
 
 #: src/pages/Workspace.tsx
 msgid "Search files..."
@@ -1880,8 +2008,10 @@ msgstr "This invite link is invalid or has expired."
 
 #. placeholder {0}: workspace.name
 #: src/pages/Workspace.tsx
-msgid "This will permanently delete <0>{0}</0> and all its documents. This cannot be undone."
-msgstr "This will permanently delete <0>{0}</0> and all its documents. This cannot be undone."
+msgid "This will permanently delete <0>{0}</0> and all its documents. This "
+"cannot be undone."
+msgstr "This will permanently delete <0>{0}</0> and all its documents. This "
+"cannot be undone."
 
 #: src/pages/Workspace.tsx
 msgid "Toggle favorite"
@@ -1929,8 +2059,10 @@ msgid "Try it yourself"
 msgstr "Try it yourself"
 
 #: src/pages/Landing.tsx
-msgid "Turn selected documents into a public `/u/:username` site while your source stays Markdown."
-msgstr "Turn selected documents into a public `/u/:username` site while your source stays Markdown."
+msgid "Turn selected documents into a public `/u/:username` site while your "
+"source stays Markdown."
+msgstr "Turn selected documents into a public `/u/:username` site while your "
+"source stays Markdown."
 
 #: src/pages/Workspace.tsx
 msgid "Type the workspace name to confirm:"
@@ -1973,8 +2105,10 @@ msgid "Untitled document"
 msgstr "Untitled document"
 
 #: src/pages/Workspace.tsx
-msgid "Upload a PEM certificate for a verified domain. The private key is stored as a hash in the current backend model."
-msgstr "Upload a PEM certificate for a verified domain. The private key is stored as a hash in the current backend model."
+msgid "Upload a PEM certificate for a verified domain. The private key is "
+"stored as a hash in the current backend model."
+msgstr "Upload a PEM certificate for a verified domain. The private key is "
+"stored as a hash in the current backend model."
 
 #: src/components/DownloadPromo.tsx
 msgid "Use JType beyond the browser"
@@ -2093,8 +2227,10 @@ msgid "You will lose access to all cloud documents."
 msgstr "You will lose access to all cloud documents."
 
 #: src/pages/Workspace.tsx
-msgid "You will lose access to all cloud documents. Your local files are unaffected."
-msgstr "You will lose access to all cloud documents. Your local files are unaffected."
+msgid "You will lose access to all cloud documents. Your local files are "
+"unaffected."
+msgstr "You will lose access to all cloud documents. Your local files are "
+"unaffected."
 
 #: src/pages/InviteAccept.tsx
 msgid "You're invited"
@@ -2107,6 +2243,10 @@ msgstr "Your files stay on your machine. Always."
 #: src/pages/Login.tsx
 msgid "Your Markdown workspace,<0/>synced to the cloud."
 msgstr "Your Markdown workspace,<0/>synced to the cloud."
+
+#: src/pages/AiConnections.tsx
+msgid "Your MCP server"
+msgstr "Your MCP server"
 
 #: src/pages/Workspace.tsx
 msgid "Your rendered document will appear here."

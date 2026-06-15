@@ -29,12 +29,12 @@ msgstr "(나)"
 #. placeholder {0}: markdownDocs.length
 #: src/pages/Workspace.tsx
 msgid "{0, plural, one {# Markdown file} other {# Markdown files}}"
-msgstr ""
+msgstr "{0, plural, one {# Markdown 파일} other {# Markdown 파일}}"
 
 #. placeholder {0}: themes.length
 #: src/components/SiteThemePanel.tsx
 msgid "{0, plural, one {# theme} other {# themes}}"
-msgstr ""
+msgstr "{0, plural, one {# 테마} other {# 테마}}"
 
 #. placeholder {0}: workspace.documentCount
 #. placeholder {0}: ws.documentCount
@@ -69,11 +69,11 @@ msgstr "{0} 사용됨"
 
 #: src/help/pages/HelpHome.tsx
 msgid "{count} articles"
-msgstr ""
+msgstr "{count}개 문서"
 
 #: src/pages/Admin.tsx
 msgid "•••••••• — leave blank to keep current"
-msgstr ""
+msgstr "•••••••• — 현재값 유지 시 비워두세요"
 
 #. placeholder {0}: new Date().getFullYear()
 #: src/pages/Login.tsx
@@ -95,7 +95,7 @@ msgstr "⚠ {0}{1}에 의해 수정됨"
 
 #: src/components/NewResourceDialog.tsx
 msgid "A hand-drawn style whiteboard canvas"
-msgstr ""
+msgstr "손그림 스타일의 화이트보드 캔버스"
 
 #: src/pages/Landing.tsx
 msgid "A jtype CLI and a local stdio MCP bridge."
@@ -103,23 +103,23 @@ msgstr "jtype CLI와 로컬 stdio MCP 브리지."
 
 #: src/components/NewResourceDialog.tsx
 msgid "A kanban board over your notes"
-msgstr ""
+msgstr "내 노트 위의 칸반 보드"
 
 #: src/components/NewResourceDialog.tsx
 msgid "A Markdown document you write and preview"
-msgstr ""
+msgstr "작성하고 미리 볼 수 있는 Markdown 문서"
 
 #: src/components/NewResourceDialog.tsx
 msgid "A text document you write and preview"
-msgstr ""
+msgstr "작성하고 미리 볼 수 있는 텍스트 문서"
 
 #: src/components/NewResourceDialog.tsx
 msgid "A text-based diagram with a live preview"
-msgstr ""
+msgstr "실시간 미리보기가 있는 텍스트 기반 다이어그램"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Accent"
-msgstr ""
+msgstr "강조"
 
 #: src/pages/InviteAccept.tsx
 msgid "Accept invitation"
@@ -127,7 +127,11 @@ msgstr "초대 수락"
 
 #: src/pages/Admin.tsx
 msgid "Access key"
-msgstr ""
+msgstr "액세스 키"
+
+#: src/pages/AiConnections.tsx
+msgid "Access token"
+msgstr "액세스 토큰"
 
 #: src/components/Layout.tsx
 msgid "Account"
@@ -143,14 +147,19 @@ msgstr "활성"
 
 #: src/pages/Admin.tsx
 msgid "Active backend"
-msgstr ""
+msgstr "활성 백엔드"
+
+#: src/pages/AiConnections.tsx
+msgid "Active tokens & sessions"
+msgstr "활성 토큰 및 세션"
 
 #: src/pages/Workspace.tsx
 msgid "Add domain"
 msgstr "도메인 추가"
 
 #: src/pages/Workspace.tsx
-msgid "Add domains, verify DNS ownership, bind them to this workspace, and manage SSL certificates from one place."
+msgid "Add domains, verify DNS ownership, bind them to this workspace, and "
+"manage SSL certificates from one place."
 msgstr "한 곳에서 도메인 추가, DNS 소유권 확인, 워크스페이스 바인딩 및 SSL 인증서 관리."
 
 #: src/pages/Workspace.tsx
@@ -176,6 +185,7 @@ msgid "AI"
 msgstr "AI"
 
 #: src/components/Layout.tsx
+#: src/pages/AiConnections.tsx
 msgid "AI Connections"
 msgstr "AI 연결"
 
@@ -189,7 +199,7 @@ msgstr "AI 준비됨"
 
 #: src/help/pages/HelpHome.tsx
 msgid "All case studies"
-msgstr ""
+msgstr "모든 사례 연구"
 
 #: src/pages/InviteAccept.tsx
 msgid "Already accepted"
@@ -202,19 +212,19 @@ msgstr "이미 계정이 있으신가요?"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Appearance"
-msgstr ""
+msgstr "모양"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Appended last. Tags and @import are stripped for safety."
-msgstr ""
+msgstr "마지막에 추가됩니다. 안전을 위해 태그와 @import는 제거됩니다."
 
 #: src/help/pages/CategoryLanding.tsx
 msgid "Articles"
-msgstr ""
+msgstr "문서"
 
 #: src/help/pages/CategoryLanding.tsx
 msgid "Articles for this topic are on the way."
-msgstr ""
+msgstr "이 주제의 문서가 곧 게시됩니다."
 
 #: src/pages/DeviceOAuth.tsx
 msgid "Authentication failed"
@@ -238,15 +248,15 @@ msgstr "인증 중..."
 
 #: src/components/NewResourceDialog.tsx
 msgid "Back"
-msgstr ""
+msgstr "뒤로"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Background"
-msgstr ""
+msgstr "배경"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Base size"
-msgstr ""
+msgstr "기본 크기"
 
 #: src/pages/Workspace.tsx
 msgid "Bind custom domains and manage certificates."
@@ -262,11 +272,11 @@ msgstr "클라우드 워크스페이스에 바인딩"
 
 #: src/components/NewResourceDialog.tsx
 msgid "Board name"
-msgstr ""
+msgstr "보드 이름"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Body font"
-msgstr ""
+msgstr "본문 글꼴"
 
 #: src/pages/Workspace.tsx
 msgid "Bold"
@@ -278,11 +288,11 @@ msgstr "굵게 (Ctrl+B)"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Border"
-msgstr ""
+msgstr "테두리"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Border width"
-msgstr ""
+msgstr "테두리 두께"
 
 #: src/pages/Workspace.tsx
 msgid "bound"
@@ -299,7 +309,7 @@ msgstr "{0}에 바인딩됨"
 
 #: src/components/NewResourceDialog.tsx
 msgid "Bring in an image or PDF from your computer"
-msgstr ""
+msgstr "컴퓨터에서 이미지나 PDF 가져오기"
 
 #: src/pages/Landing.tsx
 msgid "Bring your notes and kanban into any AI agent."
@@ -307,15 +317,18 @@ msgstr "노트와 칸반을 모든 AI 에이전트에 연결하세요."
 
 #: src/help/pages/HelpHome.tsx
 msgid "Browse by topic"
-msgstr ""
+msgstr "주제별로 탐색"
 
 #: src/pages/Admin.tsx
 msgid "Bucket"
-msgstr ""
+msgstr "버킷"
 
 #: src/pages/Landing.tsx
-msgid "Calm desktop writing, workspace-scoped sync, and public Markdown publishing in one product flow. Your notes stay local until a cloud workspace has a job to do."
-msgstr "차분한 데스크탑 글쓰기, 워크스페이스 범위 동기화, 공개 Markdown 게시가 하나의 제품 흐름으로. 노트는 클라우드 워크스페이스가 필요할 때까지 로컬에 보관됩니다."
+msgid "Calm desktop writing, workspace-scoped sync, and public Markdown "
+"publishing in one product flow. Your notes stay local until a cloud "
+"workspace has a job to do."
+msgstr "차분한 데스크탑 글쓰기, 워크스페이스 범위 동기화, 공개 Markdown 게시가 하나의 제품 흐름으로. 노트는 클라우드 "
+"워크스페이스가 필요할 때까지 로컬에 보관됩니다."
 
 #: src/components/NewResourceDialog.tsx
 #: src/pages/Workspace.tsx
@@ -326,11 +339,11 @@ msgstr "취소"
 #: src/help/pages/CasesIndex.tsx
 #: src/help/pages/CaseStudy.tsx
 msgid "Case studies"
-msgstr ""
+msgstr "사례 연구"
 
 #: src/help/pages/CasesIndex.tsx
 msgid "Case studies are coming soon."
-msgstr ""
+msgstr "사례 연구가 곧 제공됩니다."
 
 #: src/pages/Workspace.tsx
 msgid "Certificate management"
@@ -354,11 +367,11 @@ msgstr "노트를 선택하거나 새로 만드세요."
 
 #: src/pages/Workspace.tsx
 msgid "Choose a theme, design your own, and set the site footer."
-msgstr ""
+msgstr "테마를 선택하고, 직접 디자인하고, 사이트 푸터를 설정하세요."
 
 #: src/components/NewResourceDialog.tsx
 msgid "Choose what you want to create."
-msgstr ""
+msgstr "생성할 항목을 선택하세요."
 
 #: src/pages/Landing.tsx
 msgid "Clean read-only output for notes, docs, releases, and guides."
@@ -370,7 +383,7 @@ msgstr "CLI + stdio"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Click “Save site settings” below to publish this theme."
-msgstr ""
+msgstr "이 테마를 게시하려면 아래의 “사이트 설정 저장”을 클릭하세요."
 
 #: src/components/Layout.tsx
 #: src/pages/Admin.tsx
@@ -380,7 +393,7 @@ msgstr "닫기"
 
 #: src/pages/Landing.tsx
 msgid "Close menu"
-msgstr ""
+msgstr "메뉴 닫기"
 
 #: src/pages/Login.tsx
 msgid "Cloud Sync"
@@ -405,11 +418,11 @@ msgstr "클라우드 워크스페이스"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Code bg"
-msgstr ""
+msgstr "코드 배경"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Code text"
-msgstr ""
+msgstr "코드 텍스트"
 
 #: src/pages/Workspace.tsx
 msgid "Collapse all"
@@ -417,23 +430,29 @@ msgstr "모두 접기"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Colors"
-msgstr ""
+msgstr "색상"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Comfortable"
-msgstr ""
+msgstr "여유"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Compact"
-msgstr ""
+msgstr "컴팩트"
 
 #: src/pages/Admin.tsx
 msgid "Configure server object storage."
-msgstr ""
+msgstr "서버 객체 스토리지를 구성합니다."
 
 #: src/pages/Admin.tsx
-msgid "Configure server object storage. Saved values override the JTYPED_STORAGE_* environment variables and apply immediately."
-msgstr ""
+msgid "Configure server object storage. Saved values override the "
+"JTYPED_STORAGE_* environment variables and apply immediately."
+msgstr "서버 객체 스토리지를 구성합니다. 저장된 값은 JTYPED_STORAGE_* 환경 변수보다 우선하며 즉시 적용됩니다."
+
+#: src/pages/AiConnections.tsx
+msgid "Connect Claude, Cursor, Cline, or jcode to your notes & kanban through "
+"the built-in MCP server."
+msgstr "내장 MCP 서버를 통해 Claude, Cursor, Cline, 또는 jcode를 내 노트와 칸반에 연결하세요."
 
 #: src/pages/Landing.tsx
 msgid "Connect your AI"
@@ -453,7 +472,15 @@ msgstr "연결 중..."
 
 #: src/components/SiteThemePanel.tsx
 msgid "Content width"
-msgstr ""
+msgstr "콘텐츠 너비"
+
+#: src/pages/AiConnections.tsx
+msgid "Copy"
+msgstr "복사"
+
+#: src/pages/AiConnections.tsx
+msgid "Copy it now — it won't be shown again."
+msgstr "지금 복사하세요 — 다시 표시되지 않습니다."
 
 #: src/pages/Workspace.tsx
 msgid "Copy link"
@@ -465,23 +492,26 @@ msgstr "경로 복사"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Corner radius"
-msgstr ""
+msgstr "모서리 반경"
 
 #: src/pages/Workspace.tsx
 msgid "Could not load this PDF."
-msgstr ""
+msgstr "이 PDF를 불러올 수 없습니다."
 
 #: src/components/SiteThemePanel.tsx
 msgid "Cozy"
-msgstr ""
+msgstr "아늑함"
 
 #: src/components/NewResourceDialog.tsx
 msgid "Create"
 msgstr "만들기"
 
 #: src/pages/Landing.tsx
-msgid "Create a workspace for sync, publishing, and account settings. Local vault copy stays precise: folders are vaults, server-side collaboration is a cloud workspace."
-msgstr "동기화, 게시, 계정 설정을 위한 워크스페이스를 만듭니다. 로컬 볼트 복사본은 정확하게 유지됩니다: 폴더는 볼트, 서버 측 협업은 클라우드 워크스페이스."
+msgid "Create a workspace for sync, publishing, and account settings. Local "
+"vault copy stays precise: folders are vaults, server-side collaboration "
+"is a cloud workspace."
+msgstr "동기화, 게시, 계정 설정을 위한 워크스페이스를 만듭니다. 로컬 볼트 복사본은 정확하게 유지됩니다: 폴더는 볼트, 서버 측 "
+"협업은 클라우드 워크스페이스."
 
 #: src/pages/Login.tsx
 msgid "Create account"
@@ -493,15 +523,19 @@ msgstr "첫 번째 Markdown 노트를 만드세요."
 
 #: src/components/NewResourceDialog.tsx
 msgid "Creates in"
-msgstr ""
+msgstr "생성 위치"
+
+#: src/pages/AiConnections.tsx
+msgid "current"
+msgstr "현재"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Custom"
-msgstr ""
+msgstr "사용자 지정"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Custom CSS"
-msgstr ""
+msgstr "사용자 지정 CSS"
 
 #: src/pages/Workspace.tsx
 msgid "Custom domains"
@@ -513,7 +547,7 @@ msgstr "커스텀 도메인 및 SSL"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Customize"
-msgstr ""
+msgstr "사용자 지정"
 
 #: src/pages/Workspace.tsx
 msgid "Danger zone"
@@ -521,11 +555,11 @@ msgstr "위험 구역"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Dark"
-msgstr ""
+msgstr "다크"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Define your own theme"
-msgstr ""
+msgstr "나만의 테마 정의"
 
 #: src/pages/Workspace.tsx
 msgid "Delete"
@@ -545,7 +579,7 @@ msgstr "영구 삭제"
 
 #: src/pages/Workspace.tsx
 msgid "Delete this PDF?"
-msgstr ""
+msgstr "이 PDF를 삭제하시겠습니까?"
 
 #: src/pages/Workspace.tsx
 msgid "Delete workspace"
@@ -567,7 +601,7 @@ msgstr "삭제된 문서"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Density"
-msgstr ""
+msgstr "밀도"
 
 #: src/pages/Landing.tsx
 msgid "Desktop app"
@@ -587,7 +621,7 @@ msgstr "기기 코드"
 
 #: src/components/NewResourceDialog.tsx
 msgid "Diagram name"
-msgstr ""
+msgstr "다이어그램 이름"
 
 #: src/pages/Landing.tsx
 msgid "Dirty"
@@ -627,7 +661,7 @@ msgstr "문서 정보"
 
 #: src/components/NewResourceDialog.tsx
 msgid "Document name"
-msgstr ""
+msgstr "문서 이름"
 
 #: src/pages/Workspace.tsx
 msgid "Document published."
@@ -678,7 +712,7 @@ msgstr "초안만"
 
 #: src/components/NewResourceDialog.tsx
 msgid "Drawing name"
-msgstr ""
+msgstr "그림 이름"
 
 #: src/pages/DeviceOAuth.tsx
 msgid "e.g. 456478"
@@ -706,7 +740,7 @@ msgstr "활성화"
 
 #: src/pages/Admin.tsx
 msgid "Enter secret key"
-msgstr ""
+msgstr "시크릿 키 입력"
 
 #: src/pages/DeviceOAuth.tsx
 msgid "Enter the code shown in your JType desktop app"
@@ -721,12 +755,14 @@ msgid "Enter your username"
 msgstr "사용자 이름을 입력하세요"
 
 #: src/help/pages/HelpHome.tsx
-msgid "Everything you need to write in a local-first vault, sync to the cloud, run a kanban board, publish a site, and connect AI."
-msgstr ""
+msgid "Everything you need to write in a local-first vault, sync to the cloud, "
+"run a kanban board, publish a site, and connect AI."
+msgstr "로컬 우선 볼트에서 작성하고, 클라우드에 동기화하고, 칸반 보드를 운영하고, 사이트를 게시하고, AI를 연결하는 데 필요한 모든 "
+"것."
 
 #: src/components/NewResourceDialog.tsx
 msgid "Excalidraw drawing"
-msgstr ""
+msgstr "Excalidraw 그림"
 
 #: src/pages/Workspace.tsx
 msgid "Exit focus mode"
@@ -736,9 +772,13 @@ msgstr "집중 모드 종료"
 msgid "Expand all"
 msgstr "모두 펼치기"
 
+#: src/pages/AiConnections.tsx
+msgid "Expires"
+msgstr "만료"
+
 #: src/help/pages/HelpHome.tsx
 msgid "Explore"
-msgstr ""
+msgstr "탐색"
 
 #: src/pages/InviteAccept.tsx
 msgid "Failed to accept invite."
@@ -766,7 +806,7 @@ msgstr "즐겨찾기"
 
 #: src/pages/Workspace.tsx
 msgid "Files"
-msgstr ""
+msgstr "파일"
 
 #: src/pages/Landing.tsx
 msgid "Flow"
@@ -778,15 +818,30 @@ msgstr "집중 모드"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Footer HTML"
-msgstr ""
+msgstr "푸터 HTML"
+
+#: src/pages/AiConnections.tsx
+msgid "For clients that only accept a static header (e.g. jcode). Tokens are "
+"<0>mcp</0>-scoped (notes & kanban only, never admin) and expire in 90 "
+"days."
+msgstr "정적 헤더만 허용하는 클라이언트(예: jcode)용입니다. 토큰은 <0>mcp</0> 범위(노트와 칸반만, 관리자 권한 "
+"없음)이며 90일 후 만료됩니다."
 
 #: src/pages/Admin.tsx
 msgid "from env"
-msgstr ""
+msgstr "환경에서"
 
 #: src/pages/Workspace.tsx
 msgid "General"
 msgstr "일반"
+
+#: src/pages/AiConnections.tsx
+msgid "Generate token"
+msgstr "토큰 생성"
+
+#: src/pages/AiConnections.tsx
+msgid "Generating…"
+msgstr "생성 중…"
 
 #: src/components/DownloadPromo.tsx
 msgid "Get the desktop app — and a jtype CLI for your terminal & AI agents."
@@ -810,11 +865,11 @@ msgstr "워크스페이스로 이동"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Heading font"
-msgstr ""
+msgstr "제목 글꼴"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Heading weight"
-msgstr ""
+msgstr "제목 굵기"
 
 #: src/help/HelpLayout.tsx
 #: src/help/pages/Article.tsx
@@ -823,12 +878,12 @@ msgstr ""
 #: src/help/pages/CategoryLanding.tsx
 #: src/pages/Landing.tsx
 msgid "Help"
-msgstr ""
+msgstr "도움말"
 
 #: src/components/Layout.tsx
 #: src/help/pages/HelpHome.tsx
 msgid "Help center"
-msgstr ""
+msgstr "도움말 센터"
 
 #: src/pages/Workspace.tsx
 msgid "Hide"
@@ -836,23 +891,23 @@ msgstr "숨기기"
 
 #: src/help/pages/HelpHome.tsx
 msgid "How can we help?"
-msgstr ""
+msgstr "무엇을 도와드릴까요?"
 
 #: src/pages/Admin.tsx
 msgid "https://s3.example.com — leave blank to use local files"
-msgstr ""
+msgstr "https://s3.example.com — 로컬 파일을 사용하려면 비워두세요"
 
 #: src/pages/Workspace.tsx
 msgid "Image upload failed"
-msgstr ""
+msgstr "이미지 업로드 실패"
 
 #: src/pages/Workspace.tsx
 msgid "Import failed"
-msgstr ""
+msgstr "가져오기 실패"
 
 #: src/components/NewResourceDialog.tsx
 msgid "Import file"
-msgstr ""
+msgstr "파일 가져오기"
 
 #: src/pages/Login.tsx
 msgid "Indexed and ready for intelligent assistance."
@@ -868,7 +923,7 @@ msgstr "수식 삽입"
 
 #: src/pages/Workspace.tsx
 msgid "Insert image"
-msgstr ""
+msgstr "이미지 삽입"
 
 #: src/pages/Workspace.tsx
 msgid "Insert link"
@@ -923,24 +978,38 @@ msgid "Joining…"
 msgstr "참가 중…"
 
 #: src/pages/Landing.tsx
-msgid "JType ships a built-in MCP server. Connect Claude, Cursor, or any MCP client over a secure OAuth flow, then ask it to search your notes, draft a doc, or triage your board. Tokens are scoped, expiring, and revocable — and admin always stays off-limits."
-msgstr "JType에는 MCP 서버가 내장되어 있습니다. 안전한 OAuth 흐름으로 Claude, Cursor 등 모든 MCP 클라이언트를 연결하면 노트 검색, 문서 초안 작성, 보드 정리를 맡길 수 있습니다. 토큰은 범위가 제한되고 만료되며 취소할 수 있으며, 관리자 권한에는 절대 접근하지 않습니다."
+msgid "JType ships a built-in MCP server. Connect Claude, Cursor, or any MCP "
+"client over a secure OAuth flow, then ask it to search your notes, draft "
+"a doc, or triage your board. Tokens are scoped, expiring, and revocable "
+"— and admin always stays off-limits."
+msgstr "JType에는 MCP 서버가 내장되어 있습니다. 안전한 OAuth 흐름으로 Claude, Cursor 등 모든 MCP "
+"클라이언트를 연결하면 노트 검색, 문서 초안 작성, 보드 정리를 맡길 수 있습니다. 토큰은 범위가 제한되고 만료되며 취소할 수 "
+"있으며, 관리자 권한에는 절대 접근하지 않습니다."
 
 #: src/components/NewResourceDialog.tsx
 msgid "Kanban board"
-msgstr ""
+msgstr "칸반 보드"
 
 #: src/pages/Landing.tsx
 msgid "Kanban tools"
 msgstr "칸반 도구"
 
 #: src/pages/Workspace.tsx
-msgid "Keep the publish name and workspace name here. The workspace slug and storage limit are assigned by the service."
+msgid "Keep the publish name and workspace name here. The workspace slug and "
+"storage limit are assigned by the service."
 msgstr "여기서 게시 이름과 워크스페이스 이름을 관리합니다. 워크스페이스 슬러그와 저장소 한도는 서비스에서 할당됩니다."
 
 #: src/pages/Login.tsx
 msgid "Keep your vaults in sync across all devices."
 msgstr "모든 기기에서 볼트를 동기화하세요."
+
+#: src/pages/AiConnections.tsx
+msgid "Label"
+msgstr "레이블"
+
+#: src/pages/AiConnections.tsx
+msgid "Label (e.g. jcode on my laptop)"
+msgstr "레이블 (예: 내 노트북의 jcode)"
 
 #: src/components/Layout.tsx
 #: src/help/HelpLayout.tsx
@@ -954,11 +1023,11 @@ msgstr "최근 활동"
 #. placeholder {0}: article.updated
 #: src/help/pages/Article.tsx
 msgid "Last updated {0}"
-msgstr ""
+msgstr "최근 업데이트 {0}"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Layout"
-msgstr ""
+msgstr "레이아웃"
 
 #: src/pages/Workspace.tsx
 msgid "Leave"
@@ -974,11 +1043,11 @@ msgstr "워크스페이스를 나가시겠습니까?"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Light"
-msgstr ""
+msgstr "라이트"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Line height"
-msgstr ""
+msgstr "줄 높이"
 
 #: src/pages/Workspace.tsx
 msgid "Link (Ctrl+K)"
@@ -1003,31 +1072,35 @@ msgstr "초대 불러오는 중…"
 
 #: src/pages/Workspace.tsx
 msgid "Loading PDF…"
-msgstr ""
+msgstr "PDF 불러오는 중…"
 
 #: src/help/components/HelpVideo.tsx
 msgid "Loading player…"
-msgstr ""
+msgstr "플레이어 불러오는 중…"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Loading site settings…"
-msgstr ""
+msgstr "사이트 설정 불러오는 중…"
 
 #: src/pages/Workspace.tsx
 msgid "Loading viewer…"
-msgstr ""
+msgstr "뷰어 불러오는 중…"
 
 #: src/pages/Admin.tsx
 msgid "Loading..."
 msgstr "불러오는 중..."
 
+#: src/pages/AiConnections.tsx
+msgid "Loading…"
+msgstr "불러오는 중…"
+
 #: src/pages/Admin.tsx
 msgid "Local directory"
-msgstr ""
+msgstr "로컬 디렉터리"
 
 #: src/pages/Admin.tsx
 msgid "Local filesystem"
-msgstr ""
+msgstr "로컬 파일 시스템"
 
 #: src/pages/Landing.tsx
 msgid "Local watcher"
@@ -1042,8 +1115,9 @@ msgid "Local-first Markdown vault"
 msgstr "로컬 우선 Markdown 볼트"
 
 #: src/help/HelpLayout.tsx
-msgid "Local-first Markdown vault editing with cloud sync, kanban, publishing, and AI."
-msgstr ""
+msgid "Local-first Markdown vault editing with cloud sync, kanban, publishing, "
+"and AI."
+msgstr "클라우드 동기화, 칸반, 게시, AI를 갖춘 로컬 우선 Markdown 볼트 편집."
 
 #: src/pages/Login.tsx
 msgid "Local-first notes with cloud sync, publishing, and AI-ready indexing."
@@ -1079,11 +1153,15 @@ msgstr "Markdown"
 
 #: src/components/NewResourceDialog.tsx
 msgid "Markdown document"
-msgstr ""
+msgstr "Markdown 문서"
 
 #: src/pages/Workspace.tsx
 msgid "Markdown editor"
 msgstr "Markdown 편집기"
+
+#: src/pages/AiConnections.tsx
+msgid "MCP token"
+msgstr "MCP 토큰"
 
 #: src/pages/Workspace.tsx
 msgid "Member removed."
@@ -1105,19 +1183,19 @@ msgstr "멤버, 도메인, 게시"
 
 #: src/help/HelpLayout.tsx
 msgid "Menu"
-msgstr ""
+msgstr "메뉴"
 
 #: src/components/NewResourceDialog.tsx
 msgid "Mermaid diagram"
-msgstr ""
+msgstr "Mermaid 다이어그램"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Minimal"
-msgstr ""
+msgstr "미니멀"
 
 #: src/help/pages/CaseStudy.tsx
 msgid "More case studies"
-msgstr ""
+msgstr "더 많은 사례 연구"
 
 #: src/pages/Workspace.tsx
 msgid "Move to trash"
@@ -1125,7 +1203,7 @@ msgstr "휴지통으로 이동"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Muted"
-msgstr ""
+msgstr "음소거"
 
 #: src/pages/Admin.tsx
 msgid "Name"
@@ -1135,13 +1213,17 @@ msgstr "이름"
 msgid "Name, publishing identity, and storage"
 msgstr "이름, 게시 ID, 저장소"
 
+#: src/pages/AiConnections.tsx
+msgid "never"
+msgstr "만료 없음"
+
 #: src/pages/Workspace.tsx
 msgid "New"
 msgstr "새로 만들기"
 
 #: src/components/NewResourceDialog.tsx
 msgid "New board"
-msgstr ""
+msgstr "새 보드"
 
 #: src/pages/Workspace.tsx
 msgid "New cloud workspace"
@@ -1158,7 +1240,7 @@ msgstr "새 문서"
 
 #: src/components/NewResourceDialog.tsx
 msgid "New Excalidraw drawing"
-msgstr ""
+msgstr "새 Excalidraw 그림"
 
 #: src/pages/Workspace.tsx
 msgid "New folder"
@@ -1170,19 +1252,19 @@ msgstr "새 폴더 이름:"
 
 #: src/components/NewResourceDialog.tsx
 msgid "New Mermaid diagram"
-msgstr ""
+msgstr "새 Mermaid 다이어그램"
 
 #: src/components/NewResourceDialog.tsx
 msgid "New resource"
-msgstr ""
+msgstr "새 리소스"
 
 #: src/help/pages/Article.tsx
 msgid "Next"
-msgstr ""
+msgstr "다음"
 
 #: src/help/pages/Article.tsx
 msgid "No"
-msgstr ""
+msgstr "아니오"
 
 #: src/pages/Workspace.tsx
 msgid "No cloud workspaces yet."
@@ -1230,7 +1312,7 @@ msgstr "레코드가 없습니다."
 
 #: src/help/components/SearchBox.tsx
 msgid "No results. Try another term."
-msgstr ""
+msgstr "결과가 없습니다. 다른 검색어로 시도해 보세요."
 
 #: src/pages/Workspace.tsx
 msgid "No unsaved changes"
@@ -1258,11 +1340,14 @@ msgstr "오프라인 ({pendingCount}개 저장됨)"
 
 #: src/help/pages/Article.tsx
 msgid "On this page"
-msgstr ""
+msgstr "이 페이지에서"
 
 #: src/pages/Landing.tsx
-msgid "One Markdown source shows up everywhere it matters: local files on your machine, sync state in the cloud, and published output for readers — all visible at once."
-msgstr "하나의 Markdown 소스가 필요한 모든 곳에 나타납니다: 내 컴퓨터의 로컬 파일, 클라우드의 동기화 상태, 독자를 위한 게시 출력 — 한 번에 모두."
+msgid "One Markdown source shows up everywhere it matters: local files on your "
+"machine, sync state in the cloud, and published output for readers — all "
+"visible at once."
+msgstr "하나의 Markdown 소스가 필요한 모든 곳에 나타납니다: 내 컴퓨터의 로컬 파일, 클라우드의 동기화 상태, 독자를 위한 게시 "
+"출력 — 한 번에 모두."
 
 #: src/pages/Landing.tsx
 msgid "One Markdown source, three calm surfaces."
@@ -1281,12 +1366,13 @@ msgid "Open"
 msgstr "열기"
 
 #: src/pages/Landing.tsx
-msgid "Open a local Markdown vault, keep normal folders, and edit without turning notes into remote-only data."
+msgid "Open a local Markdown vault, keep normal folders, and edit without "
+"turning notes into remote-only data."
 msgstr "로컬 Markdown 볼트를 열고, 일반 폴더 구조를 유지하며, 노트를 원격 전용 데이터로 만들지 않고 편집합니다."
 
 #: src/help/HelpLayout.tsx
 msgid "Open app"
-msgstr ""
+msgstr "앱 열기"
 
 #: src/pages/Landing.tsx
 msgid "Open dashboard"
@@ -1298,7 +1384,7 @@ msgstr "GitHub 열기"
 
 #: src/help/HelpLayout.tsx
 msgid "Open JType"
-msgstr ""
+msgstr "JType 열기"
 
 #: src/pages/Landing.tsx
 msgid "Open JType Cloud"
@@ -1310,19 +1396,20 @@ msgstr "JType Cloud 대시보드 열기"
 
 #: src/pages/Landing.tsx
 msgid "Open menu"
-msgstr ""
+msgstr "메뉴 열기"
 
 #: src/pages/Workspace.tsx
 msgid "Open sidebar"
-msgstr ""
+msgstr "사이드바 열기"
 
 #: src/help/pages/CaseStudy.tsx
-msgid "Open the example vault in JType and follow along. It lives in the repo at:"
-msgstr ""
+msgid "Open the example vault in JType and follow along. It lives in the repo "
+"at:"
+msgstr "JType에서 예제 볼트를 열고 따라 해보세요. 저장소 위치:"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Optional. A small set of inline tags is allowed (links, emphasis)."
-msgstr ""
+msgstr "선택 사항입니다. 제한된 인라인 태그(링크, 강조)가 허용됩니다."
 
 #: src/pages/Workspace.tsx
 msgid "Outgoing links"
@@ -1371,7 +1458,7 @@ msgstr "이 워크스페이스와 모든 문서를 영구 삭제합니다."
 
 #: src/help/components/HelpVideo.tsx
 msgid "Play the explainer video"
-msgstr ""
+msgstr "설명 영상 재생"
 
 #: src/pages/DeviceOAuth.tsx
 #: src/pages/Login.tsx
@@ -1380,11 +1467,11 @@ msgstr "잠시 기다려 주세요..."
 
 #: src/help/pages/HelpHome.tsx
 msgid "Popular articles"
-msgstr ""
+msgstr "인기 문서"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Preset…"
-msgstr ""
+msgstr "프리셋…"
 
 #: src/pages/Landing.tsx
 #: src/pages/Workspace.tsx
@@ -1393,7 +1480,7 @@ msgstr "미리보기"
 
 #: src/help/pages/Article.tsx
 msgid "Previous"
-msgstr ""
+msgstr "이전"
 
 #: src/pages/Landing.tsx
 msgid "Product flow"
@@ -1454,11 +1541,13 @@ msgid "Publishing details saved"
 msgstr "게시 세부 정보가 저장되었습니다"
 
 #: src/pages/Workspace.tsx
-msgid "Publishing uses a server snapshot; frontmatter status is treated as user metadata."
+msgid "Publishing uses a server snapshot; frontmatter status is treated as user "
+"metadata."
 msgstr "게시는 서버 스냅샷을 사용합니다. 프론트매터 상태는 사용자 메타데이터로 처리됩니다."
 
 #: src/pages/Landing.tsx
-msgid "Push and pull versions, resolve conflicts, and keep collaboration scoped to the workspace you choose."
+msgid "Push and pull versions, resolve conflicts, and keep collaboration scoped "
+"to the workspace you choose."
 msgstr "버전 푸시/풀, 충돌 해결, 선택한 워크스페이스 내에서 협업 유지."
 
 #: src/pages/Workspace.tsx
@@ -1467,7 +1556,7 @@ msgstr "빠른 열기"
 
 #: src/help/pages/CasesIndex.tsx
 msgid "Read case study"
-msgstr ""
+msgstr "사례 연구 읽기"
 
 #: src/pages/Workspace.tsx
 msgid "Read-only"
@@ -1478,12 +1567,19 @@ msgid "Ready for the cloud layer"
 msgstr "클라우드 레이어 준비 완료"
 
 #: src/help/pages/CasesIndex.tsx
-msgid "Real, end-to-end scenarios you can reproduce. Each one ships with an example vault you can open in JType."
-msgstr ""
+msgid "Real, end-to-end scenarios you can reproduce. Each one ships with an "
+"example vault you can open in JType."
+msgstr "재현 가능한 실제 엔드투엔드 시나리오입니다. 각각 JType에서 열 수 있는 예제 볼트를 제공합니다."
+
+#: src/pages/AiConnections.tsx
+msgid "Recommended: paste this URL into an OAuth-capable client (Claude, "
+"Cursor) — you'll approve in the browser, no token to copy."
+msgstr "권장: 이 URL을 OAuth 지원 클라이언트(Claude, Cursor)에 붙여넣으세요. 브라우저에서 승인만 하면 되며 토큰을 "
+"복사할 필요가 없습니다."
 
 #: src/pages/Admin.tsx
 msgid "Region"
-msgstr ""
+msgstr "리전"
 
 #: src/pages/DeviceOAuth.tsx
 #: src/pages/Login.tsx
@@ -1501,7 +1597,7 @@ msgstr "새로고침{0}"
 
 #: src/help/components/HelpVideo.tsx
 msgid "Remotion"
-msgstr ""
+msgstr "Remotion"
 
 #. placeholder {0}: doc.relativePath
 #: src/pages/Workspace.tsx
@@ -1541,6 +1637,10 @@ msgstr "다시 게시"
 msgid "Republish live docs"
 msgstr "게시된 문서 다시 게시"
 
+#: src/pages/AiConnections.tsx
+msgid "Request failed"
+msgstr "요청 실패"
+
 #: src/pages/Workspace.tsx
 msgid "Restore"
 msgstr "복원"
@@ -1565,9 +1665,17 @@ msgstr "계정, 역할 및 활성화 상태를 검토합니다."
 msgid "Review published custom domains and SSL state."
 msgstr "게시된 커스텀 도메인과 SSL 상태를 검토합니다."
 
+#: src/pages/AiConnections.tsx
+msgid "Revoke"
+msgstr "철회"
+
 #: src/pages/Workspace.tsx
 msgid "Revoke invite"
 msgstr "초대 취소"
+
+#: src/pages/AiConnections.tsx
+msgid "Revoke this token? Any client using it will stop working."
+msgstr "이 토큰을 철회하시겠습니까? 이 토큰을 사용하는 모든 클라이언트가 작동을 멈춥니다."
 
 #: src/pages/Admin.tsx
 msgid "Role"
@@ -1575,11 +1683,11 @@ msgstr "역할"
 
 #: src/pages/Admin.tsx
 msgid "S3 endpoint"
-msgstr ""
+msgstr "S3 엔드포인트"
 
 #: src/pages/Admin.tsx
 msgid "S3-compatible"
-msgstr ""
+msgstr "S3 호환"
 
 #: src/pages/Workspace.tsx
 msgid "Save"
@@ -1595,11 +1703,11 @@ msgstr "프로필 저장"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Save site settings"
-msgstr ""
+msgstr "사이트 설정 저장"
 
 #: src/pages/Admin.tsx
 msgid "Save storage settings"
-msgstr ""
+msgstr "스토리지 설정 저장"
 
 #: src/pages/Workspace.tsx
 msgid "Saved offline. Will sync when reconnected."
@@ -1607,11 +1715,11 @@ msgstr "오프라인으로 저장되었습니다. 재연결 시 동기화됩니�
 
 #: src/components/SiteThemePanel.tsx
 msgid "Saved."
-msgstr ""
+msgstr "저장됨."
 
 #: src/pages/Admin.tsx
 msgid "Saving verifies the connection before applying."
-msgstr ""
+msgstr "저장 시 연결을 검증한 후 적용합니다."
 
 #: src/pages/Admin.tsx
 #: src/pages/Workspace.tsx
@@ -1620,7 +1728,11 @@ msgstr "저장 중..."
 
 #: src/components/SiteThemePanel.tsx
 msgid "Saving…"
-msgstr ""
+msgstr "저장 중…"
+
+#: src/pages/AiConnections.tsx
+msgid "Scope"
+msgstr "범위"
 
 #: src/pages/Workspace.tsx
 msgid "Search files..."
@@ -1628,7 +1740,7 @@ msgstr "파일 검색..."
 
 #: src/help/components/SearchBox.tsx
 msgid "Search the help center…"
-msgstr ""
+msgstr "도움말 센터 검색…"
 
 #: src/pages/Landing.tsx
 msgid "Search, read, create, update, and append documents."
@@ -1636,11 +1748,11 @@ msgstr "문서 검색, 읽기, 생성, 업데이트 및 추가."
 
 #: src/pages/Admin.tsx
 msgid "Secret key"
-msgstr ""
+msgstr "시크릿 키"
 
 #: src/help/pages/HelpHome.tsx
 msgid "See it in action"
-msgstr ""
+msgstr "실제 동작 보기"
 
 #: src/pages/Landing.tsx
 msgid "See product flow"
@@ -1664,7 +1776,7 @@ msgstr "설정"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Shape"
-msgstr ""
+msgstr "모양"
 
 #: src/pages/Landing.tsx
 msgid "Ship a readable site"
@@ -1672,15 +1784,15 @@ msgstr "읽기 쉬운 사이트 게시"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Shown in the browser title and site header."
-msgstr ""
+msgstr "브라우저 제목과 사이트 헤더에 표시됩니다."
 
 #: src/components/SiteThemePanel.tsx
 msgid "Sidebar"
-msgstr ""
+msgstr "사이드바"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Sidebar width"
-msgstr ""
+msgstr "사이드바 너비"
 
 #: src/pages/DeviceOAuth.tsx
 #: src/pages/Landing.tsx
@@ -1716,11 +1828,11 @@ msgstr "로그인됨. 기기 인증 준비 완료."
 
 #: src/pages/Workspace.tsx
 msgid "Site & theme"
-msgstr ""
+msgstr "사이트 및 테마"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Site name"
-msgstr ""
+msgstr "사이트 이름"
 
 #: src/pages/Workspace.tsx
 msgid "Site settings"
@@ -1760,7 +1872,7 @@ msgstr "SSL이 구성되지 않았습니다"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Start from preset"
-msgstr ""
+msgstr "프리셋에서 시작"
 
 #: src/pages/Landing.tsx
 msgid "Start with a private cloud workspace."
@@ -1789,7 +1901,7 @@ msgstr "저장소"
 
 #: src/pages/Admin.tsx
 msgid "Storage settings saved and applied."
-msgstr ""
+msgstr "스토리지 설정이 저장되어 적용되었습니다."
 
 #: src/pages/Workspace.tsx
 msgid "Storage used"
@@ -1797,7 +1909,7 @@ msgstr "사용된 저장소"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Surface"
-msgstr ""
+msgstr "서피스"
 
 #: src/pages/Landing.tsx
 msgid "Surfaces"
@@ -1829,11 +1941,11 @@ msgstr "팀 멤버 및 초대"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Text"
-msgstr ""
+msgstr "텍스트"
 
 #: src/help/pages/Article.tsx
 msgid "Thanks for the feedback!"
-msgstr ""
+msgstr "피드백 감사합니다!"
 
 #: src/pages/Landing.tsx
 msgid "The landing story follows the real JType loop."
@@ -1845,23 +1957,23 @@ msgstr "공개 스냅샷이 현재 문서보다 오래되었습니다."
 
 #: src/components/SiteThemePanel.tsx
 msgid "Theme"
-msgstr ""
+msgstr "테마"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Theme applied."
-msgstr ""
+msgstr "테마가 적용되었습니다."
 
 #: src/components/SiteThemePanel.tsx
 msgid "Theme name"
-msgstr ""
+msgstr "테마 이름"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Theme preview"
-msgstr ""
+msgstr "테마 미리보기"
 
 #: src/pages/Workspace.tsx
 msgid "Theme, custom design, and footer"
-msgstr ""
+msgstr "테마, 사용자 지정 디자인, 푸터"
 
 #: src/pages/Workspace.tsx
 msgid "This document was deleted by another user."
@@ -1881,7 +1993,8 @@ msgstr "이 초대 링크는 유효하지 않거나 만료되었습니다."
 
 #. placeholder {0}: workspace.name
 #: src/pages/Workspace.tsx
-msgid "This will permanently delete <0>{0}</0> and all its documents. This cannot be undone."
+msgid "This will permanently delete <0>{0}</0> and all its documents. This "
+"cannot be undone."
 msgstr "<0>{0}</0>과(와) 모든 문서가 영구 삭제됩니다. 이 작업은 취소할 수 없습니다."
 
 #: src/pages/Workspace.tsx
@@ -1890,11 +2003,11 @@ msgstr "즐겨찾기 전환"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Top header"
-msgstr ""
+msgstr "상단 헤더"
 
 #: src/components/NewResourceDialog.tsx
 msgid "Track work in columns and cards"
-msgstr ""
+msgstr "열과 카드로 작업 추적"
 
 #: src/pages/Workspace.tsx
 msgid "Transfer"
@@ -1927,10 +2040,11 @@ msgstr "휴지통이 비어 있습니다."
 
 #: src/help/pages/CaseStudy.tsx
 msgid "Try it yourself"
-msgstr ""
+msgstr "직접 시도"
 
 #: src/pages/Landing.tsx
-msgid "Turn selected documents into a public `/u/:username` site while your source stays Markdown."
+msgid "Turn selected documents into a public `/u/:username` site while your "
+"source stays Markdown."
 msgstr "소스는 Markdown으로 유지하면서 선택한 문서를 공개 `/u/:username` 사이트로 만듭니다."
 
 #: src/pages/Workspace.tsx
@@ -1939,7 +2053,7 @@ msgstr "확인을 위해 워크스페이스 이름을 입력하세요:"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Typography"
-msgstr ""
+msgstr "타이포그래피"
 
 #: src/pages/Workspace.tsx
 msgid "Unbind"
@@ -1974,7 +2088,8 @@ msgid "Untitled document"
 msgstr "제목 없는 문서"
 
 #: src/pages/Workspace.tsx
-msgid "Upload a PEM certificate for a verified domain. The private key is stored as a hash in the current backend model."
+msgid "Upload a PEM certificate for a verified domain. The private key is "
+"stored as a hash in the current backend model."
 msgstr "확인된 도메인에 대한 PEM 인증서를 업로드합니다. 개인 키는 현재 백엔드 모델에서 해시로 저장됩니다."
 
 #: src/components/DownloadPromo.tsx
@@ -2010,7 +2125,7 @@ msgstr "볼트 준비 완료"
 
 #: src/components/NewResourceDialog.tsx
 msgid "vault root"
-msgstr ""
+msgstr "볼트 루트"
 
 #: src/pages/Workspace.tsx
 msgid "Vault space"
@@ -2030,7 +2145,7 @@ msgstr "공개 페이지 보기"
 
 #: src/components/SiteThemePanel.tsx
 msgid "View published site"
-msgstr ""
+msgstr "게시된 사이트 보기"
 
 #: src/pages/Workspace.tsx
 msgid "Viewer access is read-only."
@@ -2038,11 +2153,11 @@ msgstr "뷰어 접근은 읽기 전용입니다."
 
 #: src/help/pages/Article.tsx
 msgid "Was this helpful?"
-msgstr ""
+msgstr "도움이 되었나요?"
 
 #: src/help/components/HelpVideo.tsx
 msgid "Watch the explainer"
-msgstr ""
+msgstr "설명 보기"
 
 #: src/pages/Landing.tsx
 msgid "Watch the flow"
@@ -2087,14 +2202,15 @@ msgstr "파일이 있는 곳에서 작성"
 
 #: src/help/pages/Article.tsx
 msgid "Yes"
-msgstr ""
+msgstr "예"
 
 #: src/pages/Workspace.tsx
 msgid "You will lose access to all cloud documents."
 msgstr "모든 클라우드 문서에 대한 접근 권한을 잃게 됩니다."
 
 #: src/pages/Workspace.tsx
-msgid "You will lose access to all cloud documents. Your local files are unaffected."
+msgid "You will lose access to all cloud documents. Your local files are "
+"unaffected."
 msgstr "모든 클라우드 문서에 대한 접근 권한을 잃게 됩니다. 로컬 파일은 영향을 받지 않습니다."
 
 #: src/pages/InviteAccept.tsx
@@ -2109,10 +2225,14 @@ msgstr "파일은 항상 내 기기에 보관됩니다."
 msgid "Your Markdown workspace,<0/>synced to the cloud."
 msgstr "당신의 Markdown 워크스페이스,<0/>클라우드에 동기화됩니다."
 
+#: src/pages/AiConnections.tsx
+msgid "Your MCP server"
+msgstr "내 MCP 서버"
+
 #: src/pages/Workspace.tsx
 msgid "Your rendered document will appear here."
 msgstr "렌더링된 문서가 여기에 표시됩니다."
 
 #: src/components/SiteThemePanel.tsx
 msgid "Your theme"
-msgstr ""
+msgstr "내 테마"
