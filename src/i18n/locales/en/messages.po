@@ -152,8 +152,8 @@ msgid "Back"
 msgstr "Back"
 
 #: src/components/layout/Header.tsx
-#~ msgid "Back to home"
-#~ msgstr "Back to home"
+msgid "Back to home"
+msgstr "Back to home"
 
 #: src/components/modals/SyncPromptDialog.tsx
 msgid "Back up this local vault to a cloud workspace, keep devices in sync, and "
@@ -472,6 +472,10 @@ msgstr "Destination: <0>{destPath}</0>"
 #: src/components/modals/NewResourceDialog.tsx
 msgid "Diagram name"
 msgstr "Diagram name"
+
+#: src/components/layout/Header.tsx
+msgid "Discard unsaved changes and return to home?"
+msgstr "Discard unsaved changes and return to home?"
 
 #: src/components/modals/AccountDialog.tsx
 msgid "Disconnect"
@@ -1366,6 +1370,7 @@ msgid "Unsaved"
 msgstr "Unsaved"
 
 #: src/components/editor/EditorShell.tsx
+#: src/components/layout/Header.tsx
 #: src/components/modals/AccountDialog.tsx
 msgid "Unsaved changes"
 msgstr "Unsaved changes"

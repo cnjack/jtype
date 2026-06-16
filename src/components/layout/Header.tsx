@@ -10,10 +10,12 @@ import {
   ArrowRightOnRectangleIcon,
   ArrowLeftOnRectangleIcon,
   GlobeAltIcon,
+  HomeIcon,
 } from "@heroicons/react/24/outline";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
+import { useConfirm } from "@shared/components/PromptDialogContext";
 import { LanguageSwitcherMenuPanel } from "@shared/components/LanguageSwitcher";
 
 export function Header() {
@@ -22,11 +24,26 @@ export function Header() {
   const fs = useFileSystem();
   const sync = useCloudSync();
   const { i18n } = useLingui();
+  const confirm = useConfirm();
   const [showLangPanel, setShowLangPanel] = useState(false);
 
   const breadcrumbs = state.mode === "single-file" ? t`Markdown file` : "";
 
   const isSingleFile = state.mode === "single-file";
+
+  // In single-file mode there's no sidebar, so closing the document is the only
+  // way back to the welcome screen. Guard against losing unsaved edits.
+  const handleBackToHome = async () => {
+    if (state.isDirty) {
+      const ok = await confirm(t`Discard unsaved changes and return to home?`, {
+        title: t`Unsaved changes`,
+        destructive: true,
+      });
+      if (!ok) return;
+    }
+    dispatch({ type: "CLEAR_DOCUMENT" });
+  };
+
   const hasDocument = Boolean(state.currentPath);
   const currentBinding = state.workspace
     ? state.vaultBindings.find((binding) => binding.localVaultPath === state.workspace?.rootPath)
@@ -70,9 +87,14 @@ export function Header() {
           </>
         )}
         {isSingleFile && (
-          <button className="toolbar-button aspect-square px-0" type="button" title={t`Open file`} onClick={() => fs.chooseMarkdownFile()}>
-            <FolderOpenIcon className="h-4 w-4" />
-          </button>
+          <>
+            <button className="toolbar-button aspect-square px-0" type="button" title={t`Back to home`} onClick={handleBackToHome}>
+              <HomeIcon className="h-4 w-4" />
+            </button>
+            <button className="toolbar-button aspect-square px-0" type="button" title={t`Open file`} onClick={() => fs.chooseMarkdownFile()}>
+              <FolderOpenIcon className="h-4 w-4" />
+            </button>
+          </>
         )}
         {hasDocument && state.isDirty && (
           <span className="status-chip status-chip-warning"><Trans>Unsaved</Trans></span>
