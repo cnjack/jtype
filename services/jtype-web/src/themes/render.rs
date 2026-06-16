@@ -375,7 +375,7 @@ footer.site-footer{padding:24px 40px;font-size:13px;color:var(--muted);border-to
 .prose img{max-width:100%;height:auto;border-radius:var(--radius)}
 .prose figure{margin:1.5em 0}
 .prose figcaption{font-size:.85em;color:var(--muted);text-align:center;margin-top:.5em}
-.prose pre{overflow:auto;border-radius:var(--radius);background:var(--code-bg);color:var(--code-fg);padding:18px;font-family:var(--mono-font);font-size:.9em}
+.prose pre{overflow:auto;border-radius:var(--radius);border:var(--border-width) solid var(--border);background:var(--code-bg);color:var(--code-fg);padding:18px;font-family:var(--mono-font);font-size:.9em}
 .prose code{font-family:var(--mono-font)}
 .prose :not(pre)>code{border-radius:6px;background:color-mix(in srgb,var(--accent) 12%,transparent);padding:2px 5px;color:var(--fg);font-size:.88em}
 .prose blockquote{border-left:3px solid var(--accent);margin-left:0;padding-left:16px;color:var(--muted)}

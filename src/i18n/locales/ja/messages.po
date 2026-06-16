@@ -147,8 +147,8 @@ msgid "Back"
 msgstr "戻る"
 
 #: src/components/layout/Header.tsx
-#~ msgid "Back to home"
-#~ msgstr "ホームに戻る"
+msgid "Back to home"
+msgstr "ホームに戻る"
 
 #: src/components/modals/SyncPromptDialog.tsx
 msgid "Back up this local vault to a cloud workspace, keep devices in sync, and "
@@ -449,6 +449,10 @@ msgstr "移動先：<0>{destPath}</0>"
 #: src/components/modals/NewResourceDialog.tsx
 msgid "Diagram name"
 msgstr "図の名前"
+
+#: src/components/layout/Header.tsx
+msgid "Discard unsaved changes and return to home?"
+msgstr "保存していない変更を破棄してホームに戻りますか？"
 
 #: src/components/modals/AccountDialog.tsx
 msgid "Disconnect"
@@ -1072,9 +1076,7 @@ msgstr "ボルトを削除"
 #: src/hooks/useFileSystem.ts
 msgid "Removed \"{name}\" from the list and unbound cloud sync (local files "
 "kept).{warning}"
-msgstr ""
-"「{name}」をリストから削除し、クラウド同期を解除しました（ローカルファ"
-"イルは保持されます）。{warning}"
+msgstr "「{name}」をリストから削除し、クラウド同期を解除しました（ローカルファイルは保持されます）。{warning}"
 
 #: src/hooks/useFileSystem.ts
 msgid "Removed \"{name}\" from the list."
@@ -1296,6 +1298,7 @@ msgid "Unsaved"
 msgstr "未保存"
 
 #: src/components/editor/EditorShell.tsx
+#: src/components/layout/Header.tsx
 #: src/components/modals/AccountDialog.tsx
 msgid "Unsaved changes"
 msgstr "未保存の変更"

@@ -147,8 +147,8 @@ msgid "Back"
 msgstr "返回"
 
 #: src/components/layout/Header.tsx
-#~ msgid "Back to home"
-#~ msgstr "返回主页"
+msgid "Back to home"
+msgstr "返回主页"
 
 #: src/components/modals/SyncPromptDialog.tsx
 msgid "Back up this local vault to a cloud workspace, keep devices in sync, and "
@@ -449,6 +449,10 @@ msgstr "目标位置：<0>{destPath}</0>"
 #: src/components/modals/NewResourceDialog.tsx
 msgid "Diagram name"
 msgstr "图表名称"
+
+#: src/components/layout/Header.tsx
+msgid "Discard unsaved changes and return to home?"
+msgstr "放弃未保存的更改并返回主页？"
 
 #: src/components/modals/AccountDialog.tsx
 msgid "Disconnect"
@@ -1072,8 +1076,7 @@ msgstr "移除 vault"
 #: src/hooks/useFileSystem.ts
 msgid "Removed \"{name}\" from the list and unbound cloud sync (local files "
 "kept).{warning}"
-msgstr ""
-"已从列表移除「{name}」并解绑云端同步（本地文件已保留）。{warning}"
+msgstr "已从列表移除「{name}」并解绑云端同步（本地文件已保留）。{warning}"
 
 #: src/hooks/useFileSystem.ts
 msgid "Removed \"{name}\" from the list."
@@ -1295,6 +1298,7 @@ msgid "Unsaved"
 msgstr "未保存"
 
 #: src/components/editor/EditorShell.tsx
+#: src/components/layout/Header.tsx
 #: src/components/modals/AccountDialog.tsx
 msgid "Unsaved changes"
 msgstr "有未保存的更改"
