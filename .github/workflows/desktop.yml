@@ -99,6 +99,34 @@ jobs:
           writeFileSync(cargoPath, cargo.replace(/^version = ".*"$/m, `version = "${version}"`));
           NODE
 
+      # macOS only: hand the Apple signing + notarization credentials to Tauri.
+      # Tauri 2 reads these from the process env and runs codesign + notarytool
+      # + stapler automatically. APPLE_CERTIFICATE is base64 of the .p12; Tauri
+      # decodes it and imports it into a temporary keychain. The App Store
+      # Connect API key (.p8) must be written to disk and pointed at via
+      # APPLE_API_KEY_PATH — that's how notarytool authenticates (JWT).
+      # Windows is skipped here; its build below inherits no Apple env.
+      - name: Configure Apple signing
+        if: runner.os == 'macOS'
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          APPLE_API_PRIVATE_KEY: ${{ secrets.APPLE_API_PRIVATE_KEY }}
+        run: |
+          key_path="${RUNNER_TEMP}/AuthKey_${APPLE_API_KEY}.p8"
+          printf '%s\n' "${APPLE_API_PRIVATE_KEY}" > "${key_path}"
+          {
+            echo "APPLE_CERTIFICATE=${APPLE_CERTIFICATE}"
+            echo "APPLE_CERTIFICATE_PASSWORD=${APPLE_CERTIFICATE_PASSWORD}"
+            echo "APPLE_SIGNING_IDENTITY=${APPLE_SIGNING_IDENTITY}"
+            echo "APPLE_API_ISSUER=${APPLE_API_ISSUER}"
+            echo "APPLE_API_KEY=${APPLE_API_KEY}"
+            echo "APPLE_API_KEY_PATH=${key_path}"
+          } >> "$GITHUB_ENV"
+
       # Build directly with the tauri CLI instead of tauri-action@v0, which
       # crashes on the runner with "unsettled top-level await" (a bundled-JS /
       # Node-version issue).
