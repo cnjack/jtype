@@ -183,9 +183,41 @@ fn render_footer(raw: &str) -> String {
     }
 }
 
+/// Convert mermaid fenced code blocks into `<div class="mermaid">` containers
+/// for client-side rendering, leaving every other code block untouched.
+///
+/// `pulldown_cmark` emits a mermaid block as exactly
+/// `<pre><code class="language-mermaid">…escaped source…</code></pre>`. We must
+/// rewrite only the open/close tags of *that* block — an earlier version replaced
+/// every `</code></pre>` with `</div>` unconditionally, which stripped the
+/// closing tag off all `language-text`/`language-bash`/… blocks and made the
+/// browser nest the rest of the document inside the first code block.
 fn prepare_mermaid(html: &str) -> String {
-    html.replace("<pre><code class=\"language-mermaid\">", "<div class=\"mermaid\">")
-        .replace("</code></pre>", "</div>")
+    const OPEN: &str = "<pre><code class=\"language-mermaid\">";
+    const CLOSE: &str = "</code></pre>";
+    let mut out = String::with_capacity(html.len());
+    let mut rest = html;
+    while let Some(start) = rest.find(OPEN) {
+        out.push_str(&rest[..start]);
+        let after_open = &rest[start + OPEN.len()..];
+        // The source is HTML-escaped, so the first CLOSE after OPEN is the real
+        // end of this block (an inner `</code></pre>` cannot occur).
+        match after_open.find(CLOSE) {
+            Some(end) => {
+                out.push_str("<div class=\"mermaid\">");
+                out.push_str(&after_open[..end]);
+                out.push_str("</div>");
+                rest = &after_open[end + CLOSE.len()..];
+            }
+            None => {
+                // Malformed (no closer) — emit untouched and stop.
+                out.push_str(&rest[start..]);
+                return out;
+            }
+        }
+    }
+    out.push_str(rest);
+    out
 }
 
 fn page_label(p: &PageMeta) -> &str {
@@ -390,3 +422,62 @@ footer.site-footer{padding:24px 40px;font-size:13px;color:var(--muted);border-to
 .prose h1{font-size:1.9em}
 }
 "#;
+
+#[cfg(test)]
+mod tests {
+    use super::prepare_mermaid;
+
+    #[test]
+    fn leaves_plain_code_blocks_intact() {
+        // Regression: previously `</code></pre>` was replaced unconditionally,
+        // stripping the closing tag off every non-mermaid block.
+        let html = "<pre><code class=\"language-text\">hello\nworld</code></pre>";
+        assert_eq!(prepare_mermaid(html), html);
+    }
+
+    #[test]
+    fn does_not_swallow_following_content() {
+        let html = "<pre><code class=\"language-bash\">npm install</code></pre>\n<h2>Run</h2>\n<p>next</p>";
+        let out = prepare_mermaid(html);
+        // Every pre is still closed and the heading/paragraph remain siblings.
+        assert_eq!(out.matches("<pre>").count(), out.matches("</pre>").count());
+        assert!(out.contains("</code></pre>\n<h2>Run</h2>"));
+        assert_eq!(out, html);
+    }
+
+    #[test]
+    fn converts_only_mermaid_blocks() {
+        let html = "<pre><code class=\"language-mermaid\">graph TD; A--&gt;B</code></pre>";
+        assert_eq!(
+            prepare_mermaid(html),
+            "<div class=\"mermaid\">graph TD; A--&gt;B</div>"
+        );
+    }
+
+    #[test]
+    fn mixes_mermaid_and_plain_blocks() {
+        let html = concat!(
+            "<pre><code class=\"language-mermaid\">graph TD; A--&gt;B</code></pre>\n",
+            "<pre><code class=\"language-rust\">fn main() {}</code></pre>"
+        );
+        let out = prepare_mermaid(html);
+        assert!(out.contains("<div class=\"mermaid\">graph TD; A--&gt;B</div>"));
+        assert!(out.contains("<pre><code class=\"language-rust\">fn main() {}</code></pre>"));
+        // The plain block keeps a real closing tag.
+        assert_eq!(out.matches("<pre>").count(), 1);
+        assert_eq!(out.matches("</pre>").count(), 1);
+    }
+
+    #[test]
+    fn handles_multiple_mermaid_blocks() {
+        let html = concat!(
+            "<pre><code class=\"language-mermaid\">a</code></pre>",
+            "<p>mid</p>",
+            "<pre><code class=\"language-mermaid\">b</code></pre>"
+        );
+        assert_eq!(
+            prepare_mermaid(html),
+            "<div class=\"mermaid\">a</div><p>mid</p><div class=\"mermaid\">b</div>"
+        );
+    }
+}
