@@ -16,6 +16,8 @@ import { httpRequest } from "@shared/lib/http";
 import { tauri } from "../../lib/tauri";
 import type { EditorMode } from "@shared/lib/types";
 import type { BoardConfig, BoardCard } from "../../lib/types";
+import { FindBar } from "./FindBar";
+import { ZoomIndicator } from "./ZoomIndicator";
 
 /** Build read-only HTML for an inline ```jtype-board``` embed in a document preview. */
 function renderBoardEmbedHtml(config: BoardConfig, cards: BoardCard[]): string {
@@ -214,11 +216,56 @@ export function EditorShell() {
   const [publishState, setPublishState] = useState<PublishStatusResponse | null>(null);
   const { tooltip: floatingTooltip, tooltipProps } = useFloatingTooltip();
 
+  // In-page shortcuts: find (Cmd+F / Cmd+G) and zoom (Cmd+/- / Cmd+0). These
+  // live on EditorShell (not the global shortcut table) because find/zoom only
+  // make sense with a document open, and Cmd+F must suppress the browser's own
+  // find UI in the Tauri webview.
+  useEffect(() => {
+    // Only meaningful when there is a document or draft to act on.
+    if (!state.currentPath && !state.isDraft) return;
+    function onKey(e: KeyboardEvent) {
+      const mod = e.ctrlKey || e.metaKey;
+      if (!mod) return;
+      const key = e.key;
+      // Find open / next / previous
+      if (key === "f") {
+        e.preventDefault();
+        dispatch({ type: "SET_FINDBAR", open: true });
+        return;
+      }
+      if (key === "g") {
+        e.preventDefault();
+        // Dispatch a custom event the FindBar listens for so it can step its
+        // internal match index without round-tripping through global state.
+        window.dispatchEvent(new CustomEvent("jtype:find-step", { detail: { direction: e.shiftKey ? -1 : 1 } }));
+        return;
+      }
+      // Zoom in / out / reset
+      if (key === "=" || key === "+") {
+        e.preventDefault();
+        dispatch({ type: "SET_ZOOM", level: state.zoomLevel + 0.1 });
+        return;
+      }
+      if (key === "-") {
+        e.preventDefault();
+        dispatch({ type: "SET_ZOOM", level: state.zoomLevel - 0.1 });
+        return;
+      }
+      if (key === "0") {
+        e.preventDefault();
+        dispatch({ type: "SET_ZOOM", level: 1 });
+        return;
+      }
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [dispatch, state.currentPath, state.isDraft, state.zoomLevel]);
+
   useEffect(() => {
     if (editorRef.current) {
       editorRef.current.value = state.editorContent;
     }
-  }, [state.currentPath, state.editorContentVersion]);
+  }, [state.currentPath, state.editorContentVersion, state.isDraft]);
 
   const populateBoardEmbeds = useCallback(
     async (container: HTMLElement) => {
@@ -257,7 +304,7 @@ export function EditorShell() {
     };
   }, [state.editorContent, state.currentKind, state.editorMode, populateBoardEmbeds]);
 
-  const fileName = state.currentPath ? basename(state.currentPath) : t`No file selected`;
+  const fileName = state.isDraft ? t`Untitled` : state.currentPath ? basename(state.currentPath) : t`No file selected`;
   const isMarkdown = state.currentKind === "markdown";
   const isAssetView = state.currentKind === "asset" && !!state.currentPath;
   const isBoardView = state.currentKind === "board" && !!state.currentPath;
@@ -570,7 +617,15 @@ export function EditorShell() {
   useScrollSync(editorRef, previewRef, !!state.currentPath && state.currentKind === "markdown");
 
   return (
-    <section className="flex min-h-0 flex-col bg-[#fbfdfb]">
+    <section
+      className="relative flex min-h-0 flex-col bg-[#fbfdfb]"
+      // --jtype-zoom drives font-size scaling for the editor + preview. Both
+      // #editor and #preview read it via calc() so a single dispatch rescales
+      // the whole document surface (incl. PDF, which receives zoomLevel as a prop).
+      style={{ "--jtype-zoom": state.zoomLevel } as React.CSSProperties}
+    >
+      <FindBar />
+      <ZoomIndicator />
       <div className="relative z-30 flex min-h-[56px] min-w-0 items-center justify-between gap-3 bg-white/60 px-5 backdrop-blur-xl">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
@@ -659,15 +714,20 @@ export function EditorShell() {
               <Trans>{state.activeConflicts.length} conflict{state.activeConflicts.length > 1 ? "s" : ""}</Trans>
             </button>
           )}
-          {state.currentPath && (
+          {(state.currentPath || state.isDraft) && (
             <span className="header-tooltip header-tooltip-end group">
               <button
-                className={`header-icon-button ${state.isDirty ? "header-icon-button-primary" : ""}`}
+                className={`header-icon-button ${state.isDraft || state.isDirty ? "header-icon-button-primary" : ""}`}
                 type="button"
-                aria-label={state.isDirty ? t`Save` : t`No unsaved changes`}
-                aria-disabled={!canSaveCurrent || !state.isDirty}
-                {...tooltipProps(state.isDirty ? t`Save` : t`No unsaved changes`)}
+                aria-label={state.isDraft ? t`Save as…` : state.isDirty ? t`Save` : t`No unsaved changes`}
+                aria-disabled={state.isDraft ? false : (!canSaveCurrent || !state.isDirty)}
+                {...tooltipProps(state.isDraft ? t`Save as…` : state.isDirty ? t`Save` : t`No unsaved changes`)}
                 onClick={() => {
+                  // Drafts route to the "save as" flow (no disk path yet).
+                  if (state.isDraft) {
+                    void fs.saveDraftAs();
+                    return;
+                  }
                   if (!canSaveCurrent || !state.isDirty) return;
                   const relPath = state.currentRelativePath;
                   const content = state.editorContent;
@@ -792,8 +852,8 @@ export function EditorShell() {
           <textarea
             id="editor"
             ref={editorRef}
-            className="h-full min-h-0 w-full resize-none bg-white/40 p-8 font-mono text-[13px] leading-7 text-stone-800 outline-none placeholder:text-[#9aa6a1]"
-            style={{ position: "relative", zIndex: 2 }}
+            className="h-full min-h-0 w-full resize-none bg-white/40 p-8 font-mono leading-7 text-stone-800 outline-none placeholder:text-[#9aa6a1]"
+            style={{ position: "relative", zIndex: 2, fontSize: "calc(13px * var(--jtype-zoom, 1))" }}
             spellCheck={false}
             aria-label={t`Markdown editor`}
             placeholder={t`Open or drop a Markdown file to start editing.`}
@@ -806,7 +866,7 @@ export function EditorShell() {
             id="preview"
             ref={previewRef}
             className="preview empty min-h-0 overflow-y-auto overflow-x-hidden border-l border-black/[0.04] bg-[#f8fbf9] p-10"
-            style={{ position: "relative", zIndex: 1 }}
+            style={{ position: "relative", zIndex: 1, fontSize: "calc(16px * var(--jtype-zoom, 1))" }}
             onClick={handlePreviewClick}
           >
             <h2><Trans>Select a Markdown file</Trans></h2>

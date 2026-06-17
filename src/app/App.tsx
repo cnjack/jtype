@@ -1,6 +1,6 @@
 import React, { useReducer, useCallback, useEffect, useRef, useState, createContext, useContext } from "react";
 import { appReducer, initialState, AppStateContext, AppDispatchContext } from "./AppState";
-import { useFileSystem, useCloudSync, useKeyboardShortcuts, useCommands } from "../hooks";
+import { useFileSystem, useCloudSync, useKeyboardShortcuts, useCommands, useDraftCloseGuard } from "../hooks";
 import { usePeriodicSync } from "../hooks/usePeriodicSync";
 import { useCloudEvents } from "../hooks/useCloudEvents";
 import { useFileWatcher } from "../hooks/useFileWatcher";
@@ -145,6 +145,7 @@ function AppContent() {
   }, [findCommand, fs, dispatch]);
 
   useKeyboardShortcuts(handleAction);
+  useDraftCloseGuard();
 
   const currentBinding = state.vaultBindings.find(
     (b) => b.localVaultPath === state.workspace?.rootPath
@@ -419,7 +420,12 @@ function AppContent() {
 
   const showWelcome = state.mode === "empty";
   const showVaultHome = state.mode === "workspace" && !state.currentPath;
-  const sidebarVisible = state.mode === "workspace" && !state.focusMode;
+  // Sidebar shows whenever a vault is open — including draft mode, so the user
+  // can browse/reference notes while writing an untitled draft.
+  const sidebarVisible = Boolean(state.workspace) && state.mode !== "empty" && !state.focusMode;
+  // Draft mode renders the editor for an in-memory untitled document (no
+  // currentPath yet). Must be checked before the currentPath fallback.
+  const showEditor = state.mode === "draft" || Boolean(state.currentPath);
 
   // Resizable sidebar width (drag the right edge), persisted across launches.
   const [sidebarWidth, setSidebarWidth] = useState(() => {
@@ -432,7 +438,7 @@ function AppContent() {
 
   return (
     <CommandsContext.Provider value={commands}>
-      <div className={`${state.mode === "empty" ? "app-empty" : state.mode === "workspace" ? "workspace-mode" : "single-file-mode"} ${state.focusMode ? "focus-mode" : ""} h-screen overflow-hidden bg-[#f5f8f6] text-stone-950 antialiased`}>
+      <div className={`${state.mode === "empty" && !state.workspace ? "app-empty" : state.workspace ? "workspace-mode" : "single-file-mode"} ${state.focusMode ? "focus-mode" : ""} h-screen overflow-hidden bg-[#f5f8f6] text-stone-950 antialiased`}>
         <main className="grid h-screen grid-rows-[auto_1fr_auto]">
           <Header />
           <section
@@ -445,7 +451,7 @@ function AppContent() {
                 sidebar, status bar) wraps around — no divider lines, just a soft
                 tinted lift. */}
             <div className="m-2.5 grid min-h-0 grid-cols-1 overflow-hidden rounded-2xl bg-[#fbfdfb] shadow-[0_1px_2px_rgba(20,45,38,0.04),0_16px_38px_-24px_rgba(20,45,38,0.22)] ring-1 ring-black/[0.035]">
-              {showWelcome ? <WelcomeScreen /> : showVaultHome ? <VaultHome /> : state.currentPath ? <EditorShell /> : <WelcomeScreen />}
+              {showWelcome ? <WelcomeScreen /> : showVaultHome ? <VaultHome /> : showEditor ? <EditorShell /> : <WelcomeScreen />}
             </div>
           </section>
           <div id="operation-log" className="flex items-center justify-between bg-transparent px-5 pb-1.5 pt-1 text-xs text-[#6b7773]">

@@ -267,6 +267,10 @@ msgstr "Close account dialog"
 msgid "Close conflicts dialog"
 msgstr "Close conflicts dialog"
 
+#: src/components/editor/FindBar.tsx
+msgid "Close find bar"
+msgstr "Close find bar"
+
 #: src/components/sidebar/Sidebar.tsx
 msgid "Close vault"
 msgstr "Close vault"
@@ -474,6 +478,19 @@ msgid "Diagram name"
 msgstr "Diagram name"
 
 #: src/components/layout/Header.tsx
+#: src/hooks/useFileSystem.ts
+msgid "Discard draft"
+msgstr "Discard draft"
+
+#: src/hooks/useFileSystem.ts
+msgid "Discard this untitled document and open another file?"
+msgstr "Discard this untitled document and open another file?"
+
+#: src/components/layout/Header.tsx
+msgid "Discard this untitled document?"
+msgstr "Discard this untitled document?"
+
+#: src/components/layout/Header.tsx
 msgid "Discard unsaved changes and return to home?"
 msgstr "Discard unsaved changes and return to home?"
 
@@ -608,6 +625,14 @@ msgstr "Favorites"
 #: src/components/BoardView.tsx
 #~ msgid "Filter"
 #~ msgstr "Filter"
+
+#: src/components/editor/FindBar.tsx
+msgid "Find"
+msgstr "Find"
+
+#: src/components/editor/FindBar.tsx
+msgid "Find in document"
+msgstr "Find in document"
 
 #: src/components/editor/EditorShell.tsx
 msgid "Focus mode"
@@ -846,6 +871,10 @@ msgstr "New Mermaid diagram"
 msgid "New resource"
 msgstr "New resource"
 
+#: src/components/editor/FindBar.tsx
+msgid "Next match"
+msgstr "Next match"
+
 #: src/components/BoardTable.tsx
 #~ msgid "No cards"
 #~ msgstr "No cards"
@@ -901,6 +930,10 @@ msgstr "No outgoing links."
 #: src/components/layout/WelcomeScreen.tsx
 msgid "No recent vaults or Markdown files yet."
 msgstr "No recent vaults or Markdown files yet."
+
+#: src/components/editor/FindBar.tsx
+msgid "No results"
+msgstr "No results"
 
 #: src/components/editor/EditorShell.tsx
 msgid "No unsaved changes"
@@ -1037,6 +1070,10 @@ msgstr "Preparing PDF export..."
 msgid "Preview is available in the desktop app."
 msgstr "Preview is available in the desktop app."
 
+#: src/components/editor/FindBar.tsx
+msgid "Previous match"
+msgstr "Previous match"
+
 #: src/components/BoardTable.tsx
 #: src/components/BoardView.tsx
 #: src/components/CardPeek.tsx
@@ -1160,6 +1197,10 @@ msgstr "Rename to:"
 msgid "Republish"
 msgstr "Republish"
 
+#: src/components/editor/ZoomIndicator.tsx
+msgid "Reset zoom"
+msgstr "Reset zoom"
+
 #: src/components/modals/AccountDialog.tsx
 msgid "Restart your terminal to pick up the updated PATH."
 msgstr "Restart your terminal to pick up the updated PATH."
@@ -1179,6 +1220,31 @@ msgstr "Save"
 #: src/components/BoardView.tsx
 #~ msgid "Save as template"
 #~ msgstr "Save as template"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Save as…"
+msgstr "Save as…"
+
+#: src/components/modals/NewResourceDialog.tsx
+msgid "Save draft as…"
+msgstr "Save draft as…"
+
+#: src/components/modals/NewResourceDialog.tsx
+msgid "Save your untitled document into the vault"
+msgstr "Save your untitled document into the vault"
+
+#. placeholder {0}: basename(selected)
+#: src/hooks/useFileSystem.ts
+msgid "Saved {0}."
+msgstr "Saved {0}."
+
+#: src/hooks/useFileSystem.ts
+msgid "Saved {trimmed}."
+msgstr "Saved {trimmed}."
+
+#: src/hooks/useFileSystem.ts
+msgid "Saving..."
+msgstr "Saving..."
 
 #: src/components/BoardView.tsx
 #~ msgid "Search cards"
@@ -1375,9 +1441,18 @@ msgstr "Unsaved"
 msgid "Unsaved changes"
 msgstr "Unsaved changes"
 
+#: src/hooks/useDraftCloseGuard.ts
+msgid "Unsaved draft"
+msgstr "Unsaved draft"
+
 #: src/components/BoardView.tsx
 #~ msgid "Unset done column"
 #~ msgstr "Unset done column"
+
+#: src/components/editor/EditorShell.tsx
+#: src/components/layout/Header.tsx
+msgid "Untitled"
+msgstr "Untitled"
 
 #: src/components/CardPeek.tsx
 #~ msgid "Untitled card"
@@ -1440,6 +1515,10 @@ msgstr "Workspace files"
 #~ msgid "Write"
 #~ msgstr "Write"
 
+#: src/hooks/useDraftCloseGuard.ts
+msgid "You have an unsaved draft. Discard it and close?"
+msgstr "You have an unsaved draft. Discard it and close?"
+
 #: src/components/modals/AccountDialog.tsx
 msgid "You have unsaved changes. Switching cloud workspace before saving may cause "
 "conflicts.\n"
@@ -1457,6 +1536,14 @@ msgstr "your account"
 #: src/components/editor/EditorShell.tsx
 msgid "Your rendered document will appear here."
 msgstr "Your rendered document will appear here."
+
+#: src/components/editor/ZoomIndicator.tsx
+msgid "Zoom in"
+msgstr "Zoom in"
+
+#: src/components/editor/ZoomIndicator.tsx
+msgid "Zoom out"
+msgstr "Zoom out"
 
 #. placeholder {0}: item.name
 #: src/components/layout/WelcomeScreen.tsx

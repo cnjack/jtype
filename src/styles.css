@@ -31,6 +31,17 @@
     -webkit-user-select: text;
     user-select: text;
   }
+
+  /* Remove the native WebKit focus ring (the rounded blue "glow" that appears
+     after clicking the avatar, vault switcher, menus, etc.). macOS WebKit
+     treats pointer clicks as :focus-visible too, so a :not(:focus-visible)
+     carve-out does not catch it — suppress the outline on :focus outright.
+     Interactive surfaces (inputs, board controls, etc.) carry their own
+     border/ring focus styles, so this only drops the redundant UA outline. */
+  :focus,
+  :focus-visible {
+    outline: none;
+  }
 }
 
 @layer components {

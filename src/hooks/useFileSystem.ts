@@ -65,6 +65,15 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
 
   const openMarkdownFile = useCallback(async (path: string, relativePath = "") => {
     if (!isMarkdownPath(path)) return;
+    // Opening another file discards the current draft. Confirm first when the
+    // draft has real content, mirroring the close/discard guards elsewhere.
+    if (state.isDraft && state.editorContent.trim() !== "") {
+      const ok = await confirm(t`Discard this untitled document and open another file?`, {
+        title: t`Discard draft`,
+        destructive: true,
+      });
+      if (!ok) return;
+    }
     try {
       dispatch({ type: "SET_LOADING", isLoading: true });
       dispatch({ type: "SET_STATUS", message: "Opening..." });
@@ -82,7 +91,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, state.workspace]);
+  }, [dispatch, confirm, state.workspace, state.isDraft, state.editorContent]);
 
   const openDiagramFile = useCallback(async (path: string, relativePath = "") => {
     try {
@@ -162,10 +171,89 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     }
   }, [dispatch]);
 
+  // Promote a draft into a file inside the current workspace. Mirrors
+  // createDocument() but writes the draft's existing content and dispatches
+  // COMMIT_DRAFT (not OPEN_FILE) so we don't re-read the file from disk.
+  const commitDraftToWorkspace = useCallback(async (relativePath: string, baseDir = "") => {
+    if (!state.workspace) return;
+    if (!state.isDraft) return;
+    let trimmed = relativePath.trim();
+    if (!trimmed) return;
+    if (!isMarkdownPath(trimmed)) {
+      trimmed = `${trimmed}.md`;
+    }
+    // Bare names are created in the active folder (where the user is), not the root.
+    if (baseDir && !trimmed.includes("/")) {
+      trimmed = `${baseDir.replace(/\/+$/, "")}/${trimmed}`;
+    }
+    const content = state.editorContent;
+    try {
+      dispatch({ type: "SET_LOADING", isLoading: true });
+      dispatch({ type: "SET_STATUS", message: t`Saving...` });
+      // createEntry writes an empty placeholder + guards against name collisions.
+      const workspace = await tauri.createEntry(state.workspace.rootPath, trimmed, "markdown");
+      await tauri.writeFile(`${workspace.rootPath}/${trimmed}`, content);
+      dispatch({ type: "UPDATE_WORKSPACE", workspace });
+      dispatch({ type: "COMMIT_DRAFT", path: `${workspace.rootPath}/${trimmed}`, relativePath: trimmed });
+      addRecent({ kind: "file", name: basename(`${workspace.rootPath}/${trimmed}`), path: `${workspace.rootPath}/${trimmed}` });
+      dispatch({ type: "SET_STATUS", message: t`Saved ${trimmed}.` });
+      // Notify cloud so web clients see the new document immediately.
+      if (tauri.isAvailable && getCloudContext()) {
+        try {
+          await cloudRest("/documents/save", "POST", { relativePath: trimmed, title: "", content });
+        } catch (e) {
+          console.log("[commitDraft] /documents/save failed for:", trimmed, e);
+        }
+      }
+      await onAfterSaveRef.current?.();
+    } catch (error) {
+      dispatch({ type: "SET_STATUS", message: String(error) });
+    } finally {
+      dispatch({ type: "SET_LOADING", isLoading: false });
+    }
+  }, [dispatch, state.workspace, state.isDraft, state.editorContent, getCloudContext, cloudRest]);
+
+  // "Save as" for a draft. Inside a workspace, open the NewResourceDialog so
+  // the user picks a name/folder with the familiar vault UX. Outside any
+  // workspace (empty/single-file origin), fall back to the OS save() dialog.
+  const saveDraftAs = useCallback(async () => {
+    if (!state.isDraft) return;
+    if (state.workspace) {
+      dispatch({ type: "SET_CREATE_NOTE_DIALOG", open: true, fromDraft: true });
+      return;
+    }
+    try {
+      dispatch({ type: "SET_LOADING", isLoading: true });
+      dispatch({ type: "SET_STATUS", message: t`Saving...` });
+      const selected = await save({
+        defaultPath: "Untitled.md",
+        filters: [{ name: "Markdown", extensions: ["md", "markdown", "mdown", "mkd"] }],
+      });
+      if (!selected) {
+        dispatch({ type: "SET_LOADING", isLoading: false });
+        return;
+      }
+      await tauri.writeFile(selected, state.editorContent);
+      // No workspace is open in this branch (the workspace branch returns early
+      // above), so the saved file is a standalone single file with no relative path.
+      dispatch({ type: "COMMIT_DRAFT", path: selected, relativePath: "" });
+      addRecent({ kind: "file", name: basename(selected), path: selected });
+      dispatch({ type: "SET_STATUS", message: t`Saved ${basename(selected)}.` });
+      await onAfterSaveRef.current?.();
+    } catch (error) {
+      dispatch({ type: "SET_STATUS", message: String(error) });
+    } finally {
+      dispatch({ type: "SET_LOADING", isLoading: false });
+    }
+  }, [dispatch, state.isDraft, state.workspace, state.editorContent]);
+
   // `contentOverride` lets a canvas editor (Excalidraw) hand us the latest
   // serialized scene synchronously on Ctrl+S, bypassing its onChange debounce so
   // we never persist a stale snapshot.
   const saveCurrentFile = useCallback(async (contentOverride?: string) => {
+    // A draft has no disk path yet — route to the "save as" flow instead of
+    // silently no-op'ing (which the old `if (!state.currentPath) return` did).
+    if (state.isDraft) return saveDraftAs();
     if (!state.currentPath) return;
     const isMarkdownDoc = state.currentKind === "markdown";
     // Editable diagram resources (Mermaid `.mmd`, Excalidraw) save as text too.
@@ -197,7 +285,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, isCloudViewer, state.currentPath, state.currentKind, state.editorContent, state.currentRelativePath]);
+  }, [dispatch, isCloudViewer, saveDraftAs, state.isDraft, state.currentPath, state.currentKind, state.editorContent, state.currentRelativePath]);
 
   const exportCurrentMarkdown = useCallback(async () => {
     if (!state.currentPath || state.currentKind !== "markdown") return;
@@ -969,6 +1057,8 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     openWorkspace,
     openDefaultVault,
     saveCurrentFile,
+    saveDraftAs,
+    commitDraftToWorkspace,
     exportCurrentMarkdown,
     createDocument,
     createDiagram,

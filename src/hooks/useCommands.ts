@@ -46,15 +46,27 @@ export function useCommands(fs: ReturnType<typeof import("./useFileSystem").useF
       title: "Save current file",
       aliases: ["write"],
       shortcut: "Ctrl+S",
-      scope: ["file"],
+      scope: ["file", "draft"],
       // Markdown and editable diagram resources (Mermaid/Excalidraw) are saveable.
+      // Drafts (in-memory untitled docs) trigger the "save as" flow.
       isEnabled: () =>
-        (state.currentKind === "markdown" ||
+        state.isDraft ||
+        ((state.currentKind === "markdown" ||
           (state.currentKind === "diagram" && isEditableResourcePath(state.currentPath))) &&
-        state.isDirty &&
-        !isCloudViewer,
+        state.isDirty),
       disabledReason: () => isCloudViewer ? "Viewer access is read-only" : "No unsaved changes",
       run: () => fs.saveCurrentFile(),
+    },
+    {
+      id: "file.newDraft",
+      title: "New untitled document",
+      aliases: ["new", "untitled"],
+      shortcut: "Ctrl+N",
+      scope: ["global"],
+      // Works in every mode — including empty (welcome) and single-file —
+      // because a draft has no disk path and no workspace dependency.
+      isEnabled: () => !isCloudViewer,
+      run: () => dispatch({ type: "NEW_DRAFT" }),
     },
     {
       id: "file.new",
@@ -207,6 +219,15 @@ export function useCommands(fs: ReturnType<typeof import("./useFileSystem").useF
       scope: ["global"],
       isEnabled: () => true,
       run: () => dispatch({ type: "SET_EDITOR_MODE", mode: state.editorMode === "preview" ? "write" : "preview" }),
+    },
+    {
+      id: "view.find",
+      title: "Find in document",
+      aliases: ["search", "find"],
+      shortcut: "Ctrl+F",
+      scope: ["file", "draft"],
+      isEnabled: () => Boolean(state.currentPath) || state.isDraft,
+      run: () => dispatch({ type: "SET_FINDBAR", open: true }),
     },
     {
       id: "editor.bold",
