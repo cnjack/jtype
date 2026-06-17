@@ -16,7 +16,7 @@
     "@lingui/react": "^6.0.1",
     "@maxgraph/core": "^0.23.0",
     "@remotion/player": "^4.0.477",
-    "dompurify": "^3.4.2",
+    "dompurify": "^3.4.10",
     "fflate": "^0.8.3",
     "katex": "^0.16.45",
     "marked": "^18.0.3",
