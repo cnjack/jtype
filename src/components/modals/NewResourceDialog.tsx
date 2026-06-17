@@ -59,11 +59,17 @@ export function NewResourceDialog() {
   // Reset to the first step whenever the dialog re-opens.
   useEffect(() => {
     if (open) {
-      setStep("choose");
+      // When invoked from "save draft as…", skip the kind picker — a draft is
+      // always markdown — and go straight to naming.
+      if (state.createNoteFromDraft) {
+        setStep("name");
+        setNameFor("markdown");
+      } else {
+        setStep("choose");
+      }
       setName("");
-      setNameFor("markdown");
     }
-  }, [open]);
+  }, [open, state.createNoteFromDraft]);
 
   const close = () => dispatch({ type: "SET_CREATE_NOTE_DIALOG", open: false });
 
@@ -131,6 +137,10 @@ export function NewResourceDialog() {
       void fs.createDiagram(withExt, MERMAID_STARTER, activeDir);
     } else if (nameFor === "excalidraw") {
       void fs.createDiagram(withExt, EXCALIDRAW_STARTER, activeDir);
+    } else if (state.createNoteFromDraft) {
+      // Promote the in-memory draft into the vault instead of creating an
+      // empty file and discarding what the user already typed.
+      void fs.commitDraftToWorkspace(withExt, activeDir);
     } else {
       void fs.createDocument(withExt, activeDir);
     }
@@ -139,12 +149,14 @@ export function NewResourceDialog() {
 
   const NameIcon = { markdown: DocumentTextIcon, board: ViewColumnsIcon, mermaid: ShareIcon, excalidraw: PencilSquareIcon }[nameFor];
   const nameTitle =
-    nameFor === "board" ? <Trans>New board</Trans>
+    state.createNoteFromDraft ? <Trans>Save draft as…</Trans>
+    : nameFor === "board" ? <Trans>New board</Trans>
     : nameFor === "mermaid" ? <Trans>New Mermaid diagram</Trans>
     : nameFor === "excalidraw" ? <Trans>New Excalidraw drawing</Trans>
     : <Trans>New document</Trans>;
   const nameSubtitle =
-    nameFor === "board" ? <Trans>A kanban board over your notes</Trans>
+    state.createNoteFromDraft ? <Trans>Save your untitled document into the vault</Trans>
+    : nameFor === "board" ? <Trans>A kanban board over your notes</Trans>
     : nameFor === "mermaid" ? <Trans>A text-based diagram with a live preview</Trans>
     : nameFor === "excalidraw" ? <Trans>A hand-drawn style whiteboard canvas</Trans>
     : <Trans>A Markdown document you write and preview</Trans>;
