@@ -253,6 +253,10 @@ msgstr "계정 대화상자 닫기"
 msgid "Close conflicts dialog"
 msgstr "충돌 대화상자 닫기"
 
+#: src/components/editor/FindBar.tsx
+msgid "Close find bar"
+msgstr "검색 창 닫기"
+
 #: src/components/sidebar/Sidebar.tsx
 msgid "Close vault"
 msgstr "볼트 닫기"
@@ -451,6 +455,19 @@ msgid "Diagram name"
 msgstr "다이어그램 이름"
 
 #: src/components/layout/Header.tsx
+#: src/hooks/useFileSystem.ts
+msgid "Discard draft"
+msgstr "초안 삭제"
+
+#: src/hooks/useFileSystem.ts
+msgid "Discard this untitled document and open another file?"
+msgstr "이 제목 없는 문서를 삭제하고 다른 파일을 여시겠습니까?"
+
+#: src/components/layout/Header.tsx
+msgid "Discard this untitled document?"
+msgstr "이 제목 없는 문서를 삭제하시겠습니까?"
+
+#: src/components/layout/Header.tsx
 msgid "Discard unsaved changes and return to home?"
 msgstr "저장하지 않은 변경 사항을 버리고 홈으로 돌아가시겠습니까?"
 
@@ -577,6 +594,14 @@ msgstr "즐겨찾기"
 
 #~ msgid "Filter"
 #~ msgstr ""
+
+#: src/components/editor/FindBar.tsx
+msgid "Find"
+msgstr "찾기"
+
+#: src/components/editor/FindBar.tsx
+msgid "Find in document"
+msgstr "문서에서 찾기"
 
 #: src/components/editor/EditorShell.tsx
 msgid "Focus mode"
@@ -807,6 +832,10 @@ msgstr "새 Mermaid 다이어그램"
 msgid "New resource"
 msgstr "새 리소스"
 
+#: src/components/editor/FindBar.tsx
+msgid "Next match"
+msgstr "다음 일치"
+
 #~ msgid "No cards"
 #~ msgstr ""
 
@@ -859,6 +888,10 @@ msgstr "나가는 링크가 없습니다."
 #: src/components/layout/WelcomeScreen.tsx
 msgid "No recent vaults or Markdown files yet."
 msgstr "최근 볼트나 Markdown 파일이 아직 없습니다."
+
+#: src/components/editor/FindBar.tsx
+msgid "No results"
+msgstr "결과 없음"
 
 #: src/components/editor/EditorShell.tsx
 msgid "No unsaved changes"
@@ -989,6 +1022,10 @@ msgstr "PDF 내보내기 준비 중..."
 msgid "Preview is available in the desktop app."
 msgstr "미리보기는 데스크톱 앱에서 사용할 수 있습니다."
 
+#: src/components/editor/FindBar.tsx
+msgid "Previous match"
+msgstr "이전 일치"
+
 #~ msgid "Priority"
 #~ msgstr ""
 
@@ -1106,6 +1143,10 @@ msgstr "이름 변경:"
 msgid "Republish"
 msgstr "다시 게시"
 
+#: src/components/editor/ZoomIndicator.tsx
+msgid "Reset zoom"
+msgstr "줌 재설정"
+
 #: src/components/modals/AccountDialog.tsx
 msgid "Restart your terminal to pick up the updated PATH."
 msgstr "업데이트된 PATH를 적용하려면 터미널을 다시 시작하세요."
@@ -1124,6 +1165,31 @@ msgstr "저장"
 
 #~ msgid "Save as template"
 #~ msgstr ""
+
+#: src/components/editor/EditorShell.tsx
+msgid "Save as…"
+msgstr "다른 이름으로 저장…"
+
+#: src/components/modals/NewResourceDialog.tsx
+msgid "Save draft as…"
+msgstr "초안 다른 이름으로 저장…"
+
+#: src/components/modals/NewResourceDialog.tsx
+msgid "Save your untitled document into the vault"
+msgstr "제목 없는 문서를 볼트에 저장"
+
+#. placeholder {0}: basename(selected)
+#: src/hooks/useFileSystem.ts
+msgid "Saved {0}."
+msgstr ""
+
+#: src/hooks/useFileSystem.ts
+msgid "Saved {trimmed}."
+msgstr ""
+
+#: src/hooks/useFileSystem.ts
+msgid "Saving..."
+msgstr ""
 
 #~ msgid "Search cards"
 #~ msgstr ""
@@ -1303,8 +1369,17 @@ msgstr "저장되지 않음"
 msgid "Unsaved changes"
 msgstr "저장되지 않은 변경 사항"
 
+#: src/hooks/useDraftCloseGuard.ts
+msgid "Unsaved draft"
+msgstr "저장되지 않은 초안"
+
 #~ msgid "Unset done column"
 #~ msgstr ""
+
+#: src/components/editor/EditorShell.tsx
+#: src/components/layout/Header.tsx
+msgid "Untitled"
+msgstr "제목 없음"
 
 #~ msgid "Untitled card"
 #~ msgstr ""
@@ -1364,6 +1439,10 @@ msgstr "워크스페이스 파일"
 #~ msgid "Write"
 #~ msgstr ""
 
+#: src/hooks/useDraftCloseGuard.ts
+msgid "You have an unsaved draft. Discard it and close?"
+msgstr "저장되지 않은 초안이 있습니다. 삭제하고 닫으시겠습니까?"
+
 #: src/components/modals/AccountDialog.tsx
 msgid "You have unsaved changes. Switching cloud workspace before saving may cause "
 "conflicts.\n"
@@ -1380,6 +1459,14 @@ msgstr "내 계정"
 #: src/components/editor/EditorShell.tsx
 msgid "Your rendered document will appear here."
 msgstr "렌더링된 문서가 여기에 표시됩니다."
+
+#: src/components/editor/ZoomIndicator.tsx
+msgid "Zoom in"
+msgstr "확대"
+
+#: src/components/editor/ZoomIndicator.tsx
+msgid "Zoom out"
+msgstr "축소"
 
 #. placeholder {0}: item.name
 #: src/components/layout/WelcomeScreen.tsx

@@ -13,6 +13,7 @@ import { openPath } from "@tauri-apps/plugin-opener";
 import { tauri } from "../../lib/tauri";
 import { basename } from "../../lib/utils";
 import { resourceTypeForPath, mimeForPath } from "@shared/lib/fileTypes";
+import { useAppState } from "../../app/AppState";
 
 // pdf.js is heavy; only load it when a PDF is actually opened.
 const PdfView = lazy(() => import("@shared/components/viewers/PdfView"));
@@ -50,6 +51,7 @@ function iconForType(id: string) {
  */
 export function ResourceViewer({ path, relativePath }: { path: string; relativePath?: string }) {
   const [state, setState] = useState<LoadState>({ status: "loading" });
+  const { zoomLevel } = useAppState();
   const def = resourceTypeForPath(path);
   const name = relativePath ? basename(relativePath) : basename(path);
   const TypeIcon = iconForType(def.id);
@@ -164,7 +166,7 @@ export function ResourceViewer({ path, relativePath }: { path: string; relativeP
               </div>
             }
           >
-            <PdfView data={state.bytes} />
+            <PdfView data={state.bytes} scale={zoomLevel} />
           </Suspense>
         )}
 

@@ -253,6 +253,10 @@ msgstr "关闭账户对话框"
 msgid "Close conflicts dialog"
 msgstr "关闭冲突对话框"
 
+#: src/components/editor/FindBar.tsx
+msgid "Close find bar"
+msgstr "关闭查找栏"
+
 #: src/components/sidebar/Sidebar.tsx
 msgid "Close vault"
 msgstr "关闭库"
@@ -451,6 +455,19 @@ msgid "Diagram name"
 msgstr "图表名称"
 
 #: src/components/layout/Header.tsx
+#: src/hooks/useFileSystem.ts
+msgid "Discard draft"
+msgstr "放弃草稿"
+
+#: src/hooks/useFileSystem.ts
+msgid "Discard this untitled document and open another file?"
+msgstr "放弃这个未命名文档并打开另一个文件？"
+
+#: src/components/layout/Header.tsx
+msgid "Discard this untitled document?"
+msgstr "放弃这个未命名文档？"
+
+#: src/components/layout/Header.tsx
 msgid "Discard unsaved changes and return to home?"
 msgstr "放弃未保存的更改并返回主页？"
 
@@ -577,6 +594,14 @@ msgstr "收藏"
 
 #~ msgid "Filter"
 #~ msgstr "筛选"
+
+#: src/components/editor/FindBar.tsx
+msgid "Find"
+msgstr "查找"
+
+#: src/components/editor/FindBar.tsx
+msgid "Find in document"
+msgstr "在文档中查找"
 
 #: src/components/editor/EditorShell.tsx
 msgid "Focus mode"
@@ -807,6 +832,10 @@ msgstr "新建 Mermaid 图表"
 msgid "New resource"
 msgstr "新建资源"
 
+#: src/components/editor/FindBar.tsx
+msgid "Next match"
+msgstr "下一个匹配"
+
 #~ msgid "No cards"
 #~ msgstr "暂无卡片"
 
@@ -859,6 +888,10 @@ msgstr "无出站链接。"
 #: src/components/layout/WelcomeScreen.tsx
 msgid "No recent vaults or Markdown files yet."
 msgstr "暂无最近的库或 Markdown 文件。"
+
+#: src/components/editor/FindBar.tsx
+msgid "No results"
+msgstr "无结果"
 
 #: src/components/editor/EditorShell.tsx
 msgid "No unsaved changes"
@@ -989,6 +1022,10 @@ msgstr "正在准备 PDF 导出…"
 msgid "Preview is available in the desktop app."
 msgstr "预览功能仅在桌面应用中可用。"
 
+#: src/components/editor/FindBar.tsx
+msgid "Previous match"
+msgstr "上一个匹配"
+
 #~ msgid "Priority"
 #~ msgstr "优先级"
 
@@ -1106,6 +1143,10 @@ msgstr "重命名为："
 msgid "Republish"
 msgstr "重新发布"
 
+#: src/components/editor/ZoomIndicator.tsx
+msgid "Reset zoom"
+msgstr "重设缩放"
+
 #: src/components/modals/AccountDialog.tsx
 msgid "Restart your terminal to pick up the updated PATH."
 msgstr "重启终端以使更新后的 PATH 生效。"
@@ -1124,6 +1165,31 @@ msgstr "保存"
 
 #~ msgid "Save as template"
 #~ msgstr "存为模板"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Save as…"
+msgstr "另存为…"
+
+#: src/components/modals/NewResourceDialog.tsx
+msgid "Save draft as…"
+msgstr "另存草稿为…"
+
+#: src/components/modals/NewResourceDialog.tsx
+msgid "Save your untitled document into the vault"
+msgstr "将未命名文档保存到知识库"
+
+#. placeholder {0}: basename(selected)
+#: src/hooks/useFileSystem.ts
+msgid "Saved {0}."
+msgstr ""
+
+#: src/hooks/useFileSystem.ts
+msgid "Saved {trimmed}."
+msgstr ""
+
+#: src/hooks/useFileSystem.ts
+msgid "Saving..."
+msgstr ""
 
 #~ msgid "Search cards"
 #~ msgstr "搜索卡片"
@@ -1303,8 +1369,17 @@ msgstr "未保存"
 msgid "Unsaved changes"
 msgstr "有未保存的更改"
 
+#: src/hooks/useDraftCloseGuard.ts
+msgid "Unsaved draft"
+msgstr "未保存的草稿"
+
 #~ msgid "Unset done column"
 #~ msgstr "取消完成列"
+
+#: src/components/editor/EditorShell.tsx
+#: src/components/layout/Header.tsx
+msgid "Untitled"
+msgstr "未命名"
 
 #~ msgid "Untitled card"
 #~ msgstr "无标题卡片"
@@ -1364,6 +1439,10 @@ msgstr "工作区文件"
 #~ msgid "Write"
 #~ msgstr "编辑"
 
+#: src/hooks/useDraftCloseGuard.ts
+msgid "You have an unsaved draft. Discard it and close?"
+msgstr "您有未保存的草稿。放弃并关闭？"
+
 #: src/components/modals/AccountDialog.tsx
 msgid "You have unsaved changes. Switching cloud workspace before saving may cause "
 "conflicts.\n"
@@ -1380,6 +1459,14 @@ msgstr "您的账户"
 #: src/components/editor/EditorShell.tsx
 msgid "Your rendered document will appear here."
 msgstr "渲染后的文档将显示在此处。"
+
+#: src/components/editor/ZoomIndicator.tsx
+msgid "Zoom in"
+msgstr "放大"
+
+#: src/components/editor/ZoomIndicator.tsx
+msgid "Zoom out"
+msgstr "缩小"
 
 #. placeholder {0}: item.name
 #: src/components/layout/WelcomeScreen.tsx

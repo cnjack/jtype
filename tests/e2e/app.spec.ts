@@ -138,6 +138,14 @@ test.beforeEach(async ({ page }) => {
             const options = args.options as { directory?: boolean };
             return options.directory ? "C:/workspace" : "C:/workspace/intro.md";
           }
+          if (cmd === "plugin:dialog|save") {
+            // "Save as" used by the draft flow when no workspace is open.
+            const options = args.options as { defaultPath?: string };
+            const name = (options.defaultPath ?? "Untitled.md").replace(/\\/g, "/");
+            const path = name.includes("/") ? `C:${name.startsWith("/") ? "" : "/"}${name}` : `C:/workspace/${name}`;
+            files[path] = "";
+            return path;
+          }
           if (cmd === "open_workspace") return workspaceSnapshot();
           if (cmd === "read_markdown_file") return files[String(args.path)] ?? "";
           if (cmd === "write_markdown_file") {
@@ -366,6 +374,21 @@ async function openFile(page: import("@playwright/test").Page) {
 async function openProfileSettings(page: import("@playwright/test").Page) {
   await page.locator("#sync-panel-button").click();
   await page.getByRole("menuitem", { name: "Profile" }).click();
+}
+
+// Start an in-memory draft via the command palette. We don't use Ctrl+N here
+// because Chromium intercepts it as a browser-level "new window" shortcut and
+// never delivers the keydown to the page. The Tauri desktop shell does not
+// intercept it, so the binding itself is exercised manually.
+async function createDraft(page: import("@playwright/test").Page) {
+  // Wait for the app shell to render before firing the shortcut — pressing it
+  // during the initial async startup (vault restore, etc.) is a no-op.
+  await expect(page.locator("main")).toBeVisible();
+  await page.keyboard.press("Control+Shift+P");
+  const search = page.getByLabel("Search commands");
+  await search.waitFor();
+  await search.fill("untitled");
+  await page.locator("#command-results").getByRole("button", { name: /untitled/i }).click();
 }
 
 test("opens a workspace and renders a markdown file", async ({ page }) => {
@@ -917,4 +940,131 @@ test("accepts workspace invite and creates local vault binding", async ({ page }
       localVaultPath: "C:/workspace",
     }),
   ]);
+});
+
+test("creates a draft via Cmd+N from the welcome screen", async ({ page }) => {
+  await expect(page.locator("#welcome-screen")).toBeVisible();
+  await createDraft(page);
+  // Draft renders the editor with an "Untitled" title instead of the welcome screen.
+  await expect(page.locator("#app-context-title")).toHaveText("Untitled");
+  await expect(page.getByLabel("Markdown editor")).toBeVisible();
+  // No vault is open, so the sidebar stays hidden in draft mode.
+  await expect(page.locator("#workspace-sidebar")).toBeHidden();
+});
+
+test("draft inside a vault shows the sidebar", async ({ page }) => {
+  await openWorkspace(page);
+  await createDraft(page);
+  // Draft editor renders…
+  await expect(page.locator("#app-context-title")).toHaveText("Untitled");
+  // …and the vault sidebar stays visible so the user can browse notes.
+  await expect(page.locator("#workspace-sidebar")).toBeVisible();
+});
+
+test("draft is dirty after editing and can be discarded", async ({ page }) => {
+  await createDraft(page);
+  await page.getByLabel("Markdown editor").fill("# Hello draft");
+  // Header shows the "Unsaved" status chip while the draft has content.
+  await expect(page.locator("header").getByText("Unsaved")).toBeVisible();
+  // Discard via the header close button. The confirm dialog is a React
+  // Headless-UI Dialog (not a native window.confirm), so click its OK button.
+  await page.getByRole("button", { name: "Discard draft" }).click();
+  await page.getByRole("button", { name: "OK", exact: true }).click();
+  // After discarding we return to the welcome screen.
+  await expect(page.locator("#welcome-screen")).toBeVisible();
+});
+
+test("saves a draft to the vault via the name dialog", async ({ page }) => {
+  await openWorkspace(page);
+  await createDraft(page);
+  await page.getByLabel("Markdown editor").fill("# Draft content");
+  // Trigger the "save as" flow — the save button routes drafts to the dialog.
+  await page.getByRole("button", { name: "Save as…" }).click();
+  // The dialog skips the kind picker and goes straight to naming.
+  await expect(page.getByText("Save draft as…")).toBeVisible();
+  await page.getByPlaceholder("Document name").fill("Saved Draft");
+  await page.getByRole("button", { name: "Create" }).click();
+
+  // The draft is promoted to a real file inside the vault.
+  await expect(page.locator("#operation-log")).toContainText("Saved");
+  const saved = await page.evaluate(() => window.__E2E_FS__["C:/workspace/Saved Draft.md"]);
+  expect(saved).toBe("# Draft content");
+});
+
+test("saves a draft via OS dialog when no workspace is open", async ({ page }) => {
+  await createDraft(page);
+  await page.getByLabel("Markdown editor").fill("# Standalone draft");
+  await page.getByRole("button", { name: "Save as…" }).click();
+  // plugin:dialog|save mock returns C:/workspace/Untitled.md.
+  await expect(page.locator("#operation-log")).toContainText("Saved");
+  const saved = await page.evaluate(() => window.__E2E_FS__);
+  expect(Object.values(saved)).toContain("# Standalone draft");
+});
+
+test("second Cmd+N focuses the existing draft instead of replacing it", async ({ page }) => {
+  await createDraft(page);
+  await page.getByLabel("Markdown editor").fill("keep this content");
+  // Trigger the draft command again while a draft is already open.
+  await createDraft(page);
+  // Single-draft semantics: the existing content is preserved.
+  await expect(page.getByLabel("Markdown editor")).toHaveValue("keep this content");
+});
+
+test("Cmd+/- zooms the markdown editor and resets with Cmd+0", async ({ page }) => {
+  await openWorkspace(page);
+  await page.locator("#workspace-sidebar").getByRole("button", { name: /intro\.md/ }).click();
+  const editor = page.getByLabel("Markdown editor");
+  await expect(editor).toBeVisible();
+  const before = await editor.evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
+
+  await page.keyboard.press("Control+Equal"); // Cmd/Ctrl + = (zoom in)
+  const after = await editor.evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
+  expect(after).toBeGreaterThan(before);
+
+  await page.keyboard.press("Control+0"); // reset
+  const reset = await editor.evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
+  expect(reset).toBeCloseTo(before, 0);
+});
+
+test("zoom indicator appears and its buttons change the level", async ({ page }) => {
+  await openWorkspace(page);
+  await page.locator("#workspace-sidebar").getByRole("button", { name: /intro\.md/ }).click();
+  // Zooming reveals the transient indicator.
+  await page.keyboard.press("Control+Equal");
+  const indicator = page.locator("#zoom-indicator");
+  await expect(indicator).toBeVisible();
+  // The percentage readout reflects the new level (110%).
+  await expect(indicator).toContainText("110%");
+
+  // Hover to pin it (otherwise it auto-hides), then click zoom-in again.
+  await indicator.hover();
+  await indicator.getByRole("button", { name: "Zoom in" }).click();
+  await expect(indicator).toContainText("120%");
+
+  // The percentage button resets to 100%.
+  await indicator.getByRole("button", { name: "Reset zoom" }).first().click();
+  await expect(indicator).toContainText("100%");
+});
+
+test("Cmd+F opens the find bar and highlights matches in preview", async ({ page }) => {
+  await openWorkspace(page);
+  await page.locator("#workspace-sidebar").getByRole("button", { name: /intro\.md/ }).click();
+  // Switch to preview mode via the command palette. Control+R (the shortcut)
+  // is intercepted by Chromium as page reload in the test browser, so we drive
+  // the same command through the palette.
+  await page.keyboard.press("Control+Shift+P");
+  await page.getByLabel("Search commands").fill("preview");
+  await page.locator("#command-results").getByRole("button", { name: /Toggle preview/ }).click();
+  await expect(page.locator("#preview")).toContainText("Intro");
+
+  // Chromium intercepts Ctrl+F as its own find UI, so drive the find bar via
+  // the command palette instead. The Cmd+F shortcut itself is exercised in the
+  // Tauri desktop shell (which doesn't ship a native find bar).
+  await page.keyboard.press("Control+Shift+P");
+  await page.getByLabel("Search commands").fill("find");
+  await page.locator("#command-results").getByRole("button", { name: /Find in document/ }).click();
+  await expect(page.locator("#find-bar")).toBeVisible();
+  await page.locator("#find-input").fill("Intro");
+  // At least one highlight mark should appear inside the preview.
+  await expect(page.locator("#preview mark.find-highlight").first()).toBeVisible();
 });

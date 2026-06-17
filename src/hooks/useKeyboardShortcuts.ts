@@ -4,6 +4,7 @@ import { useAppDispatch, useAppState } from "../app/AppState";
 const shortcuts: Array<{ ctrl?: boolean; shift?: boolean; key: string; action: string }> = [
   { ctrl: true, shift: true, key: "p", action: "commandPalette" },
   { ctrl: true, key: "o", action: "quickSwitcher" },
+  { ctrl: true, key: "n", action: "file.newDraft" },
   { ctrl: true, key: "s", action: "file.save" },
   { ctrl: true, key: "r", action: "view.preview" },
   { ctrl: true, key: "4", action: "view.split" },

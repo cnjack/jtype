@@ -11,6 +11,7 @@ import {
   ArrowLeftOnRectangleIcon,
   GlobeAltIcon,
   HomeIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
@@ -27,7 +28,7 @@ export function Header() {
   const confirm = useConfirm();
   const [showLangPanel, setShowLangPanel] = useState(false);
 
-  const breadcrumbs = state.mode === "single-file" ? t`Markdown file` : "";
+  const breadcrumbs = state.mode === "single-file" ? t`Markdown file` : state.mode === "draft" ? t`Untitled` : "";
 
   const isSingleFile = state.mode === "single-file";
 
@@ -44,7 +45,20 @@ export function Header() {
     dispatch({ type: "CLEAR_DOCUMENT" });
   };
 
-  const hasDocument = Boolean(state.currentPath);
+  // Drop the in-memory draft (Cmd+N). Drafts are never persisted, so confirm
+  // whenever there's any real content.
+  const handleDiscardDraft = async () => {
+    if (state.editorContent.trim() !== "") {
+      const ok = await confirm(t`Discard this untitled document?`, {
+        title: t`Discard draft`,
+        destructive: true,
+      });
+      if (!ok) return;
+    }
+    dispatch({ type: "DISCARD_DRAFT" });
+  };
+
+  const hasDocument = Boolean(state.currentPath) || state.isDraft;
   const currentBinding = state.workspace
     ? state.vaultBindings.find((binding) => binding.localVaultPath === state.workspace?.rootPath)
     : null;
@@ -95,6 +109,11 @@ export function Header() {
               <FolderOpenIcon className="h-4 w-4" />
             </button>
           </>
+        )}
+        {state.mode === "draft" && (
+          <button className="toolbar-button aspect-square px-0" type="button" title={t`Discard draft`} onClick={handleDiscardDraft}>
+            <XMarkIcon className="h-4 w-4" />
+          </button>
         )}
         {hasDocument && state.isDirty && (
           <span className="status-chip status-chip-warning"><Trans>Unsaved</Trans></span>

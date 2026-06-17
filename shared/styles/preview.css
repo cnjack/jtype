@@ -127,3 +127,55 @@
   max-width: 100%;
   height: auto;
 }
+
+/* --------------------------------------------------------------------------
+   pdf.js text layer — overlaid on each page canvas so PDF text is selectable,
+   copyable, and searchable. The glyphs are transparent; only the selection
+   highlight is visible, mirroring pdf.js' official viewer.
+   -------------------------------------------------------------------------- */
+.textLayer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  opacity: 0.25;
+  line-height: 1;
+  forced-color-adjust: none;
+}
+
+.textLayer span,
+.textLayer br {
+  color: transparent;
+  position: absolute;
+  white-space: pre;
+  cursor: text;
+  transform-origin: 0% 0%;
+}
+
+/* Visible selection while dragging / keyboard-selecting inside the PDF. */
+.textLayer ::selection {
+  background: rgb(0 136 132 / 0.35);
+}
+
+.textLayer br {
+  user-select: none;
+}
+
+/* In-page find highlights for the markdown preview (<mark>) and PDF text layer
+   (mark.pdf-find-highlight). The active match gets a stronger outline. */
+.preview mark.find-highlight,
+mark.pdf-find-highlight {
+  background: rgb(252 211 77 / 0.55);
+  color: inherit;
+  border-radius: 2px;
+}
+
+.preview mark.find-highlight-active,
+mark.pdf-find-highlight.pdf-find-active {
+  background: rgb(217 119 6 / 0.7);
+  outline: 2px solid rgb(217 119 6);
+}
+
+.pdf-page-wrapper {
+  position: relative;
+}
+

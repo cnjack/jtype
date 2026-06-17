@@ -16,7 +16,7 @@ import type {
 import type { AICommandProposal } from "./aiCommands";
 import { appStorage } from "../lib/storage";
 
-export type AppMode = "empty" | "workspace" | "single-file";
+export type AppMode = "empty" | "workspace" | "single-file" | "draft";
 
 export interface AppState {
   mode: AppMode;
@@ -31,6 +31,9 @@ export interface AppState {
   originalContent: string;
   editorContent: string;
   isDirty: boolean;
+  // Draft mode: an in-memory untitled document with no disk path yet.
+  // Created via Cmd/Ctrl+N; saved through a "save as" flow (NEW_DRAFT/COMMIT_DRAFT).
+  isDraft: boolean;
   isLoading: boolean;
   workspace: WorkspaceSnapshot | null;
   syncToken: string;
@@ -51,6 +54,7 @@ export interface AppState {
   commandPaletteOpen: boolean;
   quickSwitcherOpen: boolean;
   createNoteDialogOpen: boolean;
+  createNoteFromDraft: boolean;
   conflictDialogOpen: boolean;
   accountDialogOpen: boolean;
   accountDialogSection: "account" | "workspace";
@@ -66,6 +70,11 @@ export interface AppState {
   lastWsEventType: string | null;
   editorContentVersion: number;
   expandedFolders: Set<string>;
+  // Shared document zoom level (1 = 100%). Persisted so it survives restarts.
+  zoomLevel: number;
+  // In-page find bar (Cmd+F). Open state lives in the reducer so it integrates
+  // with the keyboard shortcut + Escape handling.
+  findBarOpen: boolean;
 }
 
 export type AppAction =
@@ -81,6 +90,12 @@ export type AppAction =
   | { type: "SET_EDITOR_CONTENT"; content: string; sync?: boolean }
   | { type: "SAVE_FILE" }
   | { type: "CLEAR_DOCUMENT" }
+  // Draft lifecycle: NEW_DRAFT creates an in-memory untitled document (no disk
+  // path, never written to appStorage). COMMIT_DRAFT promotes a draft to a real
+  // file once the user picks a path via "save as". DISCARD_DRAFT drops the draft.
+  | { type: "NEW_DRAFT" }
+  | { type: "COMMIT_DRAFT"; path: string; relativePath: string }
+  | { type: "DISCARD_DRAFT" }
   | { type: "UPDATE_WORKSPACE"; workspace: WorkspaceSnapshot }
   | { type: "SET_SYNC_SESSION"; token: string; username: string; siteUrl: string; profile: CloudProfile }
   | { type: "SET_CLOUD_PROFILE"; profile: CloudProfile }
@@ -97,7 +112,7 @@ export type AppAction =
   | { type: "SET_CONTEXT_MENU"; menu: AppState["contextMenu"] }
   | { type: "SET_COMMAND_PALETTE"; open: boolean }
   | { type: "SET_QUICK_SWITCHER"; open: boolean }
-  | { type: "SET_CREATE_NOTE_DIALOG"; open: boolean }
+  | { type: "SET_CREATE_NOTE_DIALOG"; open: boolean; fromDraft?: boolean }
   | { type: "SET_CONFLICT_DIALOG"; open: boolean }
   | { type: "SET_ACCOUNT_DIALOG"; open: boolean; section?: "account" | "workspace" }
   | { type: "SET_SERVICE_URL"; url: string }
@@ -113,9 +128,14 @@ export type AppAction =
   | { type: "SET_WS_ACTIVITY"; msgType: string }
   | { type: "CLOSE_WORKSPACE" }
   | { type: "TOGGLE_EXPAND_FOLDER"; folderPath: string }
-  | { type: "SET_EXPANDED_FOLDERS"; folders: Set<string> };
+  | { type: "SET_EXPANDED_FOLDERS"; folders: Set<string> }
+  | { type: "SET_ZOOM"; level: number }
+  | { type: "SET_FINDBAR"; open: boolean };
 
-function getMode(state: Pick<AppState, "workspace" | "currentPath">): AppMode {
+function getMode(state: Pick<AppState, "workspace" | "currentPath" | "isDraft">): AppMode {
+  // Draft takes precedence: an in-memory untitled document renders the editor
+  // regardless of whether a workspace/file is also present.
+  if (state.isDraft) return "draft";
   if (state.workspace) return "workspace";
   if (state.currentPath) return "single-file";
   return "empty";
@@ -134,6 +154,7 @@ const initialState: AppState = {
   originalContent: "",
   editorContent: "",
   isDirty: false,
+  isDraft: false,
   isLoading: false,
   workspace: null,
   syncToken: appStorage.get("sync.token", ""),
@@ -154,6 +175,7 @@ const initialState: AppState = {
   commandPaletteOpen: false,
   quickSwitcherOpen: false,
   createNoteDialogOpen: false,
+  createNoteFromDraft: false,
   conflictDialogOpen: false,
   accountDialogOpen: false,
   accountDialogSection: "workspace",
@@ -169,6 +191,8 @@ const initialState: AppState = {
   lastWsEventType: null,
   editorContentVersion: 0,
   expandedFolders: new Set<string>(),
+  zoomLevel: appStorage.get("ui.zoomLevel", 1),
+  findBarOpen: false,
 };
 
 export function appReducer(state: AppState, action: AppAction): AppState {
@@ -202,6 +226,7 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         originalContent: "",
         editorContent: "",
         isDirty: false,
+        isDraft: false,
         pendingAiProposal: null,
         mode: "workspace" as AppMode,
         lastWorkspacePath: action.workspace.rootPath,
@@ -209,7 +234,7 @@ export function appReducer(state: AppState, action: AppAction): AppState {
       };
     case "OPEN_FILE": {
       appStorage.set("lastFilePath", action.path);
-      const fileMode = getMode({ workspace: state.workspace, currentPath: action.path });
+      const fileMode = getMode({ workspace: state.workspace, currentPath: action.path, isDraft: false });
       if (fileMode === "single-file") {
         appStorage.set("lastWorkspacePath", "");
       }
@@ -232,6 +257,7 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         originalContent: action.content,
         editorContent: action.content,
         isDirty: false,
+        isDraft: false,
         pendingAiProposal: null,
         mode: fileMode,
         lastFilePath: action.path,
@@ -263,9 +289,73 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         originalContent: "",
         editorContent: "",
         isDirty: false,
+        isDraft: false,
         pendingAiProposal: null,
-        mode: getMode({ workspace: state.workspace, currentPath: "" }),
+        mode: getMode({ workspace: state.workspace, currentPath: "", isDraft: false }),
         lastFilePath: "",
+      };
+    case "NEW_DRAFT":
+      // Single-draft semantics: if a draft is already open, keep it (this just
+      // refocuses the editor instead of wiping what the user typed).
+      if (state.isDraft) return state;
+      // In-memory untitled document. No disk path, no appStorage writes —
+      // drafts must never be persisted as lastFilePath (that would make the
+      // app try to re-open a non-existent path on next launch).
+      return {
+        ...state,
+        currentPath: "",
+        currentRelativePath: "",
+        currentKind: "markdown",
+        originalContent: "",
+        editorContent: "",
+        isDirty: false,
+        isDraft: true,
+        pendingAiProposal: null,
+        mode: "draft" as AppMode,
+        editorContentVersion: state.editorContentVersion + 1,
+      };
+    case "COMMIT_DRAFT": {
+      // Promote a draft to a real file: the content already lives in
+      // editorContent, so we skip the disk read that OPEN_FILE does.
+      appStorage.set("lastFilePath", action.path);
+      const fileMode = getMode({ workspace: state.workspace, currentPath: action.path, isDraft: false });
+      if (fileMode === "single-file") {
+        appStorage.set("lastWorkspacePath", "");
+      }
+      // Auto-expand parent folders so the saved file is visible in the sidebar.
+      const parentSegments = action.relativePath.split("/").slice(0, -1);
+      const expandedFolders = new Set(state.expandedFolders);
+      for (let i = 1; i <= parentSegments.length; i++) {
+        expandedFolders.add(parentSegments.slice(0, i).join("/"));
+      }
+      return {
+        ...state,
+        currentPath: action.path,
+        currentRelativePath: action.relativePath,
+        currentKind: "markdown",
+        // editorContent stays as-is — it's the draft the user just edited.
+        originalContent: state.editorContent,
+        isDirty: false,
+        isDraft: false,
+        pendingAiProposal: null,
+        mode: fileMode,
+        lastFilePath: action.path,
+        lastWorkspacePath: fileMode === "single-file" ? "" : state.lastWorkspacePath,
+        expandedFolders,
+      };
+    }
+    case "DISCARD_DRAFT":
+      return {
+        ...state,
+        currentPath: "",
+        currentRelativePath: "",
+        currentKind: "",
+        originalContent: "",
+        editorContent: "",
+        isDirty: false,
+        isDraft: false,
+        pendingAiProposal: null,
+        mode: getMode({ workspace: state.workspace, currentPath: "", isDraft: false }),
       };
     case "UPDATE_WORKSPACE":
       return { ...state, workspace: action.workspace };
@@ -339,7 +429,13 @@ export function appReducer(state: AppState, action: AppAction): AppState {
     case "SET_QUICK_SWITCHER":
       return { ...state, quickSwitcherOpen: action.open };
     case "SET_CREATE_NOTE_DIALOG":
-      return { ...state, createNoteDialogOpen: action.open };
+      return {
+        ...state,
+        createNoteDialogOpen: action.open,
+        // Track whether the dialog is being used to "save a draft as…" so the
+        // commit step can promote the draft instead of creating an empty file.
+        createNoteFromDraft: action.open ? Boolean(action.fromDraft) : false,
+      };
     case "SET_CONFLICT_DIALOG":
       return { ...state, conflictDialogOpen: action.open };
     case "SET_ACCOUNT_DIALOG":
@@ -363,6 +459,7 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         originalContent: "",
         editorContent: "",
         isDirty: false,
+        isDraft: false,
         pendingAiProposal: null,
       };
     case "DISCONNECT_ACCOUNT": {
@@ -420,6 +517,7 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         originalContent: "",
         editorContent: "",
         isDirty: false,
+        isDraft: false,
         pendingAiProposal: null,
         mode: "empty" as AppMode,
         lastWorkspacePath: "",
@@ -438,6 +536,15 @@ export function appReducer(state: AppState, action: AppAction): AppState {
     }
     case "SET_EXPANDED_FOLDERS":
       return { ...state, expandedFolders: action.folders };
+    case "SET_ZOOM": {
+      // Clamp to a sane range so documents stay readable and PDF re-renders
+      // (which scale canvas pixels) don't get pathologically expensive.
+      const clamped = Math.min(2.5, Math.max(0.5, Math.round(action.level * 100) / 100));
+      appStorage.set("ui.zoomLevel", clamped);
+      return { ...state, zoomLevel: clamped };
+    }
+    case "SET_FINDBAR":
+      return { ...state, findBarOpen: action.open };
     default:
       return state;
   }

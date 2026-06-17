@@ -253,6 +253,10 @@ msgstr "アカウントダイアログを閉じる"
 msgid "Close conflicts dialog"
 msgstr "競合ダイアログを閉じる"
 
+#: src/components/editor/FindBar.tsx
+msgid "Close find bar"
+msgstr "検索バーを閉じる"
+
 #: src/components/sidebar/Sidebar.tsx
 msgid "Close vault"
 msgstr "ボルトを閉じる"
@@ -451,6 +455,19 @@ msgid "Diagram name"
 msgstr "図の名前"
 
 #: src/components/layout/Header.tsx
+#: src/hooks/useFileSystem.ts
+msgid "Discard draft"
+msgstr "下書きを破棄"
+
+#: src/hooks/useFileSystem.ts
+msgid "Discard this untitled document and open another file?"
+msgstr "この無題ドキュメントを破棄して別のファイルを開きますか？"
+
+#: src/components/layout/Header.tsx
+msgid "Discard this untitled document?"
+msgstr "この無題ドキュメントを破棄しますか？"
+
+#: src/components/layout/Header.tsx
 msgid "Discard unsaved changes and return to home?"
 msgstr "保存していない変更を破棄してホームに戻りますか？"
 
@@ -577,6 +594,14 @@ msgstr "お気に入り"
 
 #~ msgid "Filter"
 #~ msgstr ""
+
+#: src/components/editor/FindBar.tsx
+msgid "Find"
+msgstr "検索"
+
+#: src/components/editor/FindBar.tsx
+msgid "Find in document"
+msgstr "ドキュメント内を検索"
 
 #: src/components/editor/EditorShell.tsx
 msgid "Focus mode"
@@ -807,6 +832,10 @@ msgstr "新規 Mermaid 図"
 msgid "New resource"
 msgstr "新規リソース"
 
+#: src/components/editor/FindBar.tsx
+msgid "Next match"
+msgstr "次の一致"
+
 #~ msgid "No cards"
 #~ msgstr ""
 
@@ -859,6 +888,10 @@ msgstr "発信リンクがありません。"
 #: src/components/layout/WelcomeScreen.tsx
 msgid "No recent vaults or Markdown files yet."
 msgstr "最近のボルトや Markdown ファイルはまだありません。"
+
+#: src/components/editor/FindBar.tsx
+msgid "No results"
+msgstr "結果なし"
 
 #: src/components/editor/EditorShell.tsx
 msgid "No unsaved changes"
@@ -989,6 +1022,10 @@ msgstr "PDF エクスポートを準備中..."
 msgid "Preview is available in the desktop app."
 msgstr "プレビューはデスクトップアプリで利用できます。"
 
+#: src/components/editor/FindBar.tsx
+msgid "Previous match"
+msgstr "前の一致"
+
 #~ msgid "Priority"
 #~ msgstr ""
 
@@ -1106,6 +1143,10 @@ msgstr "次の名前に変更："
 msgid "Republish"
 msgstr "再公開"
 
+#: src/components/editor/ZoomIndicator.tsx
+msgid "Reset zoom"
+msgstr "ズームをリセット"
+
 #: src/components/modals/AccountDialog.tsx
 msgid "Restart your terminal to pick up the updated PATH."
 msgstr "更新された PATH を反映するにはターミナルを再起動してください。"
@@ -1124,6 +1165,31 @@ msgstr "保存"
 
 #~ msgid "Save as template"
 #~ msgstr ""
+
+#: src/components/editor/EditorShell.tsx
+msgid "Save as…"
+msgstr "名前を付けて保存…"
+
+#: src/components/modals/NewResourceDialog.tsx
+msgid "Save draft as…"
+msgstr "下書きを名前を付けて保存…"
+
+#: src/components/modals/NewResourceDialog.tsx
+msgid "Save your untitled document into the vault"
+msgstr "無題ドキュメントを金庫に保存"
+
+#. placeholder {0}: basename(selected)
+#: src/hooks/useFileSystem.ts
+msgid "Saved {0}."
+msgstr ""
+
+#: src/hooks/useFileSystem.ts
+msgid "Saved {trimmed}."
+msgstr ""
+
+#: src/hooks/useFileSystem.ts
+msgid "Saving..."
+msgstr ""
 
 #~ msgid "Search cards"
 #~ msgstr ""
@@ -1303,8 +1369,17 @@ msgstr "未保存"
 msgid "Unsaved changes"
 msgstr "未保存の変更"
 
+#: src/hooks/useDraftCloseGuard.ts
+msgid "Unsaved draft"
+msgstr "未保存の下書き"
+
 #~ msgid "Unset done column"
 #~ msgstr ""
+
+#: src/components/editor/EditorShell.tsx
+#: src/components/layout/Header.tsx
+msgid "Untitled"
+msgstr "無題"
 
 #~ msgid "Untitled card"
 #~ msgstr ""
@@ -1364,6 +1439,10 @@ msgstr "ワークスペースファイル"
 #~ msgid "Write"
 #~ msgstr ""
 
+#: src/hooks/useDraftCloseGuard.ts
+msgid "You have an unsaved draft. Discard it and close?"
+msgstr "未保存の下書きがあります。破棄して閉じますか？"
+
 #: src/components/modals/AccountDialog.tsx
 msgid "You have unsaved changes. Switching cloud workspace before saving may cause "
 "conflicts.\n"
@@ -1380,6 +1459,14 @@ msgstr "あなたのアカウント"
 #: src/components/editor/EditorShell.tsx
 msgid "Your rendered document will appear here."
 msgstr "レンダリングされたドキュメントがここに表示されます。"
+
+#: src/components/editor/ZoomIndicator.tsx
+msgid "Zoom in"
+msgstr "拡大"
+
+#: src/components/editor/ZoomIndicator.tsx
+msgid "Zoom out"
+msgstr "縮小"
 
 #. placeholder {0}: item.name
 #: src/components/layout/WelcomeScreen.tsx
