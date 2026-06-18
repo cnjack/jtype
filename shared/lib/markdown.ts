@@ -155,6 +155,34 @@ function replaceBoardEmbeds(html: string): string {
   );
 }
 
+// Stamp the source line number onto the first tag of a rendered block so the
+// split-view scroll sync can align the preview with the editor (see useScrollSync).
+function injectSourceLine(htmlPiece: string, line: number): string {
+  return htmlPiece.replace(/^(\s*)<([a-zA-Z][\w-]*)/, (_match, ws: string, tag: string) => `${ws}<${tag} data-source-line="${line}"`);
+}
+
+/**
+ * Render the body block-by-block so each top-level element carries a
+ * `data-source-line` attribute (the 0-based line of the body where that block
+ * begins). marked has no native line tracking, so we walk the lexer's top-level
+ * tokens and accumulate the newline count of each token's raw text. The links
+ * table is carried onto each single-token list so reference-style links resolve.
+ */
+function renderBodyWithSourceLines(body: string): string {
+  const transformed = renderWikilinks(renderMath(body));
+  const tokens = marked.lexer(transformed);
+  let line = 0;
+  let html = "";
+  for (const token of tokens) {
+    const single = [token] as typeof tokens;
+    single.links = tokens.links;
+    const piece = marked.parser(single);
+    html += token.type === "space" ? piece : injectSourceLine(piece, line);
+    line += (token.raw.match(/\n/g) ?? []).length;
+  }
+  return html;
+}
+
 export async function renderMarkdownToHtml(content: string): Promise<string> {
   if (!content.trim()) {
     return '<h2>Empty document</h2><p>Start typing Markdown to preview it here.</p>';
@@ -162,8 +190,8 @@ export async function renderMarkdownToHtml(content: string): Promise<string> {
   // Frontmatter (title/metadata) is not document content, so it is not rendered
   // into the preview body — the title belongs to the card/property UI, not here.
   const { body } = parseFrontmatter(content);
-  const rendered = await marked.parse(renderWikilinks(renderMath(body)));
-  return DOMPurify.sanitize(replaceBoardEmbeds(rendered), { ADD_ATTR: ["data-wikilink", "data-board"] });
+  const rendered = renderBodyWithSourceLines(body);
+  return DOMPurify.sanitize(replaceBoardEmbeds(rendered), { ADD_ATTR: ["data-wikilink", "data-board", "data-source-line"] });
 }
 
 export async function renderToContainer(content: string, container: HTMLElement): Promise<boolean> {
