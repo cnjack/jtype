@@ -90,8 +90,8 @@ pub async fn forgot_password(
             let token = random_token();
             let token_hash = sha256_hex(&token);
             sqlx::query(
-                r#"INSERT INTO password_reset_tokens (token_hash, user_id)
-                   VALUES (?, ?)"#,
+                r#"INSERT INTO password_reset_tokens (token_hash, user_id, expires_at)
+                   VALUES (?, ?, DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 10 MINUTE))"#,
             )
             .bind(&token_hash)
             .bind(&user_id)
@@ -212,8 +212,8 @@ pub async fn send_email_verification(
     let token = random_token();
     let token_hash = sha256_hex(&token);
     sqlx::query(
-        r#"INSERT INTO email_verification_tokens (token_hash, user_id, email)
-           VALUES (?, ?, ?)"#,
+        r#"INSERT INTO email_verification_tokens (token_hash, user_id, email, expires_at)
+           VALUES (?, ?, ?, DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 1 DAY))"#,
     )
     .bind(&token_hash)
     .bind(&user.id)
@@ -342,8 +342,8 @@ pub async fn otp_send(
             let code = short_user_code();
             let token_hash = sha256_hex(&code);
             sqlx::query(
-                r#"INSERT INTO login_otp_tokens (token_hash, user_id, email)
-                   VALUES (?, ?, ?)"#,
+                r#"INSERT INTO login_otp_tokens (token_hash, user_id, email, expires_at)
+                   VALUES (?, ?, ?, DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 10 MINUTE))"#,
             )
             .bind(&token_hash)
             .bind(&user_id)
