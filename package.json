@@ -31,7 +31,7 @@
     "@tauri-apps/plugin-dialog": "^2.7.0",
     "@tauri-apps/plugin-fs": "^2.5.0",
     "@tauri-apps/plugin-opener": "^2",
-    "dompurify": "^3.4.9",
+    "dompurify": "^3.4.11",
     "fflate": "^0.8.3",
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1",
