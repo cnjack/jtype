@@ -16,6 +16,10 @@ test-results
 target/
 *.local
 
+# Local secrets — never commit. SMTP credentials, DB passwords, etc. live here
+# and are loaded by docker compose automatically.
+.env
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

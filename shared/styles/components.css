@@ -169,4 +169,175 @@
   .soft-scrollbar::-webkit-scrollbar-thumb:hover {
     background-color: rgb(0 136 132 / 0.48);
   }
+
+  /* ============================================================
+     Authentication UI —— OTP, AuthCard, SegmentedTab, waiting view
+     Shared by Web Login/DeviceOAuth and Desktop AccountDialog.
+     Semantic tokens only, no hardcoded hex.
+     ============================================================ */
+
+  /* --- Segmented tab (login / register switch) --- */
+  .seg {
+    @apply relative mb-6 grid grid-cols-2 rounded-[10px] bg-stone-100 p-[3px];
+  }
+  .seg button {
+    @apply relative z-[1] rounded-[7px] border-none bg-transparent py-2 font-semibold text-stone-500 transition-colors;
+  }
+  .seg button.active {
+    @apply text-stone-900;
+  }
+  .seg-slider {
+    @apply absolute bottom-[3px] left-[3px] top-[3px] w-[calc(50%-3px)] rounded-[7px] bg-white shadow-sm transition-transform duration-200;
+  }
+  .seg[data-active="1"] .seg-slider {
+    @apply translate-x-full;
+  }
+
+  /* --- OTP (device-flow user_code input) --- */
+  .otp {
+    @apply flex justify-center gap-2.5;
+  }
+  .otp-cell {
+    @apply h-[62px] w-[52px] rounded-xl border-[1.5px] border-black/[0.08] bg-white/90 text-center font-mono text-[26px] font-bold text-stone-900 outline-none transition-all;
+    caret-color: var(--color-brand);
+  }
+  /* Compact variant for inline forms (e.g. login OTP inside the password slot). */
+  .otp-cell.otp-cell-sm {
+    @apply h-11 w-10 text-lg;
+  }
+  .otp-cell:focus {
+    @apply -translate-y-px border-brand bg-white;
+    box-shadow: 0 0 0 4px var(--color-brand);
+    box-shadow: 0 0 0 4px rgb(0 136 132 / 0.10);
+  }
+  .otp-cell.filled {
+    @apply border-brand/35 bg-brand-soft;
+  }
+  .otp-cell.complete {
+    @apply border-brand bg-brand-soft;
+    animation: otp-complete-pulse 0.5s ease;
+  }
+  .otp-cell.otp-error {
+    @apply border-red-400;
+  }
+  .otp-sep {
+    @apply flex w-2 items-center justify-center text-stone-400;
+  }
+  @keyframes otp-complete-pulse {
+    0% { box-shadow: 0 0 0 0 rgb(0 136 132 / 0.4); }
+    100% { box-shadow: 0 0 0 12px rgb(0 136 132 / 0); }
+  }
+
+  /* --- AuthCard (login + device oauth shell) --- */
+  .auth-card {
+    @apply w-full max-w-sm rounded-2xl border border-black/[0.06] bg-white p-8 shadow-sm shadow-emerald-950/5;
+  }
+  .auth-card-head {
+    @apply flex flex-col items-center text-center;
+  }
+  .auth-stage-icon {
+    @apply mb-3 flex h-12 w-12 items-center justify-center rounded-[14px] bg-brand-soft text-brand-dark;
+  }
+  .auth-card-title {
+    @apply mb-1 text-[22px] font-bold tracking-tight text-stone-900;
+  }
+  .auth-card-sub {
+    @apply mb-6 text-sm text-stone-500;
+  }
+
+  /* --- Display code (large, read-only, copyable) --- */
+  .display-code {
+    @apply flex justify-center gap-2;
+  }
+  .display-code span {
+    @apply flex h-[60px] w-[46px] items-center justify-center rounded-[10px] border-[1.5px] border-brand/20 bg-white font-mono text-[28px] font-bold text-brand-dark shadow-sm shadow-emerald-950/5;
+  }
+
+  /* --- Three-step progress (desktop waiting view) --- */
+  .auth-steps {
+    @apply mt-6 flex items-start text-left;
+  }
+  .auth-steps .step {
+    @apply relative flex flex-1 flex-col items-center gap-1.5 text-center text-[11px] text-stone-400;
+  }
+  .auth-steps .step-dot {
+    @apply relative z-[1] flex h-[26px] w-[26px] items-center justify-center rounded-full border-[1.5px] border-black/[0.08] bg-white font-mono text-[11px] font-bold text-stone-400;
+  }
+  .auth-steps .step.active .step-dot {
+    @apply border-brand text-brand-dark;
+    box-shadow: 0 0 0 4px rgb(0 136 132 / 0.10);
+  }
+  .auth-steps .step.active {
+    @apply font-semibold text-stone-700;
+  }
+  .auth-steps .step.done .step-dot {
+    @apply border-brand bg-brand text-white;
+  }
+  .auth-steps .step.done {
+    @apply text-stone-700;
+  }
+  .auth-steps .step::before {
+    content: "";
+    @apply absolute left-[-50%] top-[13px] h-[1.5px] w-full bg-black/[0.08];
+  }
+  .auth-steps .step:first-child::before {
+    @apply hidden;
+  }
+  .auth-steps .step.done::before,
+  .auth-steps .step.active::before {
+    @apply bg-brand;
+  }
+
+  /* --- QR fallback (CSS placeholder, no library) --- */
+  .qr-fallback {
+    @apply mt-5 flex items-center gap-3.5 rounded-xl bg-stone-100 p-3.5 text-left;
+  }
+  .qr-placeholder {
+    @apply h-16 w-16 shrink-0 rounded-lg bg-white p-1;
+  }
+  .qr-grid {
+    width: 100%;
+    height: 100%;
+    background:
+      linear-gradient(90deg, rgb(28 25 23) 50%, transparent 50%) 0 0 / 8px 8px,
+      linear-gradient(0deg, rgb(28 25 23) 50%, transparent 50%) 0 0 / 8px 8px,
+      #fff;
+    border-radius: 4px;
+    position: relative;
+  }
+  .copy-chip {
+    @apply mt-1.5 inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-black/[0.06] bg-white px-2 py-1 font-mono text-[11px] text-brand-dark;
+  }
+
+  /* --- Countdown ring (desktop waiting view) --- */
+  .ring-wrap {
+    @apply relative mx-auto mb-4 h-16 w-16;
+  }
+  .ring-wrap svg {
+    @apply block;
+    transform: rotate(-90deg);
+  }
+  .ring-bg {
+    stroke: var(--color-brand-soft);
+  }
+  .ring-fg {
+    stroke: var(--color-brand);
+    stroke-linecap: round;
+    transition: stroke-dashoffset 1s linear;
+  }
+  .ring-fg.expired {
+    stroke: #dc2626;
+  }
+  .ring-center {
+    @apply absolute inset-0 flex flex-col items-center justify-center leading-none;
+  }
+  .ring-time {
+    @apply font-mono text-[15px] font-bold text-brand-dark;
+  }
+  .ring-time.expired {
+    @apply text-red-600;
+  }
+  .ring-label {
+    @apply mt-0.5 text-[8.5px] uppercase tracking-wider text-stone-400;
+  }
 }

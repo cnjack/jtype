@@ -52,6 +52,15 @@ services:
       JTYPED_STORAGE_ACCESS_KEY: ${RUSTFS_ACCESS_KEY:-jtype}
       JTYPED_STORAGE_SECRET_KEY: ${RUSTFS_SECRET_KEY:-jtype-local-secret}
       JTYPED_STORAGE_REGION: us-east-1
+      # Outbound email (SMTP) for password reset + email verification. Left
+      # blank by default; set JTYPED_SMTP_* (or configure in Admin → Email) to
+      # enable. Disabled = these features return a clear error instead of mail.
+      JTYPED_SMTP_HOST: ${JTYPED_SMTP_HOST:-}
+      JTYPED_SMTP_PORT: ${JTYPED_SMTP_PORT:-587}
+      JTYPED_SMTP_USERNAME: ${JTYPED_SMTP_USERNAME:-}
+      JTYPED_SMTP_PASSWORD: ${JTYPED_SMTP_PASSWORD:-}
+      JTYPED_SMTP_FROM: ${JTYPED_SMTP_FROM:-}
+      JTYPED_SMTP_ENCRYPTION: ${JTYPED_SMTP_ENCRYPTION:-starttls}
     ports:
       - "13345:13345"
     depends_on:

@@ -75,6 +75,12 @@ msgstr "📁 {0} subfolder{1}"
 msgid "📄 {0} document{1}"
 msgstr "📄 {0} document{1}"
 
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "A browser opened to the authorization page. Enter the code below to "
+"finish signing in."
+msgstr "A browser opened to the authorization page. Enter the code below to "
+"finish signing in."
+
 #: src/components/modals/NewResourceDialog.tsx
 msgid "A hand-drawn style whiteboard canvas"
 msgstr "A hand-drawn style whiteboard canvas"
@@ -210,8 +216,13 @@ msgid "Browser authorization is open. This sync will continue after sign-in "
 msgstr "Browser authorization is open. This sync will continue after sign-in "
 "completes."
 
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Browser opened"
+msgstr "Browser opened"
+
 #: src/components/modals/CreateFolderDialog.tsx
 #: src/components/modals/DeleteFolderDialog.tsx
+#: src/components/modals/DeviceAuthWaiting.tsx
 #: src/components/modals/MoveFolderDialog.tsx
 #: src/components/modals/NewResourceDialog.tsx
 msgid "Cancel"
@@ -253,6 +264,14 @@ msgstr "Choose what you want to create."
 #: src/components/BoardView.tsx
 #~ msgid "Clear filter"
 #~ msgstr "Clear filter"
+
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Click code to copy"
+msgstr "Click code to copy"
+
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Click to copy"
+msgstr "Click to copy"
 
 #: src/components/modals/AccountDialog.tsx
 #: src/components/modals/ConflictDialog.tsx
@@ -300,6 +319,10 @@ msgstr "Cloud workspace: {0}"
 #: src/components/modals/AccountDialog.tsx
 msgid "Cloud workspaces"
 msgstr "Cloud workspaces"
+
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Codes expire after 10 minutes. Generate a new one to continue."
+msgstr "Codes expire after 10 minutes. Generate a new one to continue."
 
 #: src/components/sidebar/Sidebar.tsx
 msgid "Collapse all"
@@ -359,6 +382,10 @@ msgstr "Connect to load workspaces."
 #: src/components/modals/AccountDialog.tsx
 msgid "Connected as {0}. Sync vaults with cloud workspaces."
 msgstr "Connected as {0}. Sync vaults with cloud workspaces."
+
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Copied"
+msgstr "Copied"
 
 #: src/components/BoardView.tsx
 #~ msgid "Copy link"
@@ -541,6 +568,10 @@ msgstr "Document unpublished."
 msgid "Documents"
 msgstr "Documents"
 
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Done"
+msgstr "Done"
+
 #: src/components/BoardView.tsx
 #~ msgid "Done column"
 #~ msgstr "Done column"
@@ -590,6 +621,10 @@ msgstr "Enable cloud sync"
 msgid "Enable cloud sync for this vault first"
 msgstr "Enable cloud sync for this vault first"
 
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Enter this code on the web"
+msgstr "Enter this code on the web"
+
 #: src/components/modals/NewResourceDialog.tsx
 msgid "Excalidraw drawing"
 msgstr "Excalidraw drawing"
@@ -601,6 +636,10 @@ msgstr "Expand all"
 #: src/components/BoardView.tsx
 #~ msgid "Expand column"
 #~ msgstr "Expand column"
+
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Expired"
+msgstr "Expired"
 
 #: src/components/editor/EditorShell.tsx
 msgid "Export"
@@ -1134,6 +1173,10 @@ msgstr "Recent"
 #~ msgid "Refresh"
 #~ msgstr "Refresh"
 
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "remaining"
+msgstr "remaining"
+
 #. placeholder {0}: item.name
 #. placeholder {0}: vault.name
 #: src/components/layout/WelcomeScreen.tsx
@@ -1192,6 +1235,10 @@ msgstr "Rename folder to:"
 #: src/components/sidebar/Sidebar.tsx
 msgid "Rename to:"
 msgstr "Rename to:"
+
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Reopen browser"
+msgstr "Reopen browser"
 
 #: src/components/editor/EditorShell.tsx
 msgid "Republish"
@@ -1306,6 +1353,10 @@ msgstr "Sign in"
 #: src/components/BoardView.tsx
 #~ msgid "Sort: Title"
 #~ msgstr "Sort: Title"
+
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Start again"
+msgstr "Start again"
 
 #: src/components/modals/AccountDialog.tsx
 msgid "Start cloud sync"
@@ -1482,6 +1533,10 @@ msgstr "Vault ready"
 msgid "vault root"
 msgstr "vault root"
 
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Verification code expired"
+msgstr "Verification code expired"
+
 #: src/components/editor/EditorShell.tsx
 msgid "View published page"
 msgstr "View published page"
@@ -1494,6 +1549,14 @@ msgstr "Viewer access is read-only."
 #: src/components/modals/AccountDialog.tsx
 msgid "Waiting for browser authorization (code {0})..."
 msgstr "Waiting for browser authorization (code {0})..."
+
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Waiting for web confirmation"
+msgstr "Waiting for web confirmation"
+
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Web confirmation"
+msgstr "Web confirmation"
 
 #: src/components/BoardView.tsx
 msgid "WIP limit (blank to clear)"

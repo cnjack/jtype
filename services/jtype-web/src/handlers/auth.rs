@@ -19,6 +19,9 @@ pub async fn register(
     let site_title = payload
         .site_title
         .unwrap_or_else(|| format!("{} Docs", username));
+    // Optional email at signup; normalize + lowercase. Verified stays NULL until
+    // the user confirms via the verification email.
+    let email = payload.email.as_deref().map(str::trim).filter(|e| !e.is_empty()).map(|e| e.to_ascii_lowercase());
 
     let existing_users: i64 = sqlx::query("SELECT COUNT(*) AS count FROM users")
         .fetch_one(&state.pool)
@@ -27,19 +30,26 @@ pub async fn register(
     let role = if existing_users == 0 { "admin" } else { "user" };
 
     sqlx::query(
-        r#"INSERT INTO users (id, username, password_hash, site_title, role)
-           VALUES (?, ?, ?, ?, ?)"#,
+        r#"INSERT INTO users (id, username, password_hash, site_title, role, email)
+           VALUES (?, ?, ?, ?, ?, ?)"#,
     )
     .bind(&user_id)
     .bind(&username)
     .bind(password_hash)
     .bind(&site_title)
     .bind(role)
+    .bind(&email)
     .execute(&state.pool)
     .await
     .map_err(|e| match e {
         sqlx::Error::Database(db_err) if db_err.is_unique_violation() => {
-            AppError::BadRequest("username already exists".to_string())
+            // Distinguish username vs email collision by the message content.
+            let msg = db_err.message().to_ascii_lowercase();
+            if msg.contains("email") {
+                AppError::BadRequest("email already in use".to_string())
+            } else {
+                AppError::BadRequest("username already exists".to_string())
+            }
         }
         other => AppError::Database(other),
     })?;
@@ -58,13 +68,41 @@ pub async fn login(
     State(state): State<AppState>,
     Json(payload): Json<LoginRequest>,
 ) -> Result<Json<AuthResponse>, AppError> {
-    let username = normalize_username(&payload.username)?;
-    let row =
-        sqlx::query("SELECT id, password_hash, role, CASE WHEN disabled_at IS NOT NULL THEN 1 ELSE 0 END AS is_disabled FROM users WHERE username = ?")
-            .bind(&username)
-            .fetch_optional(&state.pool)
-            .await?
-            .ok_or(AppError::Unauthorized)?;
+    // The "username" field also accepts an email: if it contains "@", look the
+    // user up by a verified email instead of by username. Email login requires
+    // the address to be verified (email_verified_at IS NOT NULL), mirroring the
+    // password-reset gate. Both paths share password verification + session
+    // creation; on any failure the error is the same to avoid enumeration.
+    let input = payload.username.trim();
+    let is_email = input.contains('@');
+
+    let (row, resolved_username) = if is_email {
+        let email = input.to_ascii_lowercase();
+        let r = sqlx::query(
+            r#"SELECT id, username, password_hash, role,
+                      CASE WHEN disabled_at IS NOT NULL THEN 1 ELSE 0 END AS is_disabled
+               FROM users
+               WHERE LOWER(email) = ? AND email_verified_at IS NOT NULL"#,
+        )
+        .bind(&email)
+        .fetch_optional(&state.pool)
+        .await?
+        .ok_or(AppError::Unauthorized)?;
+        let u: String = r.try_get("username")?;
+        (r, u)
+    } else {
+        let username = normalize_username(input)?;
+        let r = sqlx::query(
+            r#"SELECT id, username, password_hash, role,
+                      CASE WHEN disabled_at IS NOT NULL THEN 1 ELSE 0 END AS is_disabled
+               FROM users WHERE username = ?"#,
+        )
+        .bind(&username)
+        .fetch_optional(&state.pool)
+        .await?
+        .ok_or(AppError::Unauthorized)?;
+        (r, username)
+    };
 
     let is_disabled: i8 = row.try_get("is_disabled").unwrap_or(0);
     if is_disabled != 0 {
@@ -77,10 +115,10 @@ pub async fn login(
     verify_password(&payload.password, &pw_hash)?;
 
     let token = create_session(&state.pool, &user_id).await?;
-    let site = site_url(&state.public_base_url, &username);
+    let site = site_url(&state.public_base_url, &resolved_username);
     Ok(Json(AuthResponse {
         token,
-        username,
+        username: resolved_username,
         site_url: site,
         role,
     }))

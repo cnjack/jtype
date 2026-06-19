@@ -79,6 +79,10 @@ msgstr "•••••••• — leave blank to keep current"
 msgid "© {0} JType"
 msgstr "© {0} JType"
 
+#: src/pages/Login.tsx
+#~ msgid "← Back to password sign in"
+#~ msgstr "← Back to password sign in"
+
 #. placeholder {0}: preview.invitedByUsername
 #. placeholder {1}: preview.workspaceName
 #. placeholder {2}: preview.role
@@ -91,6 +95,14 @@ msgstr "<0>{0}</0> has invited you to join <1>{1}</1> as <2>{2}</2>."
 #: src/pages/Workspace.tsx
 msgid "⚠ Modified by {0}{1}"
 msgstr "⚠ Modified by {0}{1}"
+
+#: src/pages/Admin.tsx
+msgid "587 (STARTTLS) · 465 (TLS) · 25 (none)"
+msgstr "587 (STARTTLS) · 465 (TLS) · 25 (none)"
+
+#: src/pages/Login.tsx
+#~ msgid "A 6-digit code was sent to {otpEmail}."
+#~ msgstr "A 6-digit code was sent to {otpEmail}."
 
 #: src/components/NewResourceDialog.tsx
 msgid "A hand-drawn style whiteboard canvas"
@@ -136,6 +148,10 @@ msgstr "Access token"
 msgid "Account"
 msgstr "Account"
 
+#: src/pages/Login.tsx
+msgid "Account email"
+msgstr "Account email"
+
 #: src/pages/Admin.tsx
 msgid "Actions"
 msgstr "Actions"
@@ -157,10 +173,8 @@ msgid "Add domain"
 msgstr "Add domain"
 
 #: src/pages/Workspace.tsx
-msgid "Add domains, verify DNS ownership, bind them to this workspace, and "
-"manage SSL certificates from one place."
-msgstr "Add domains, verify DNS ownership, bind them to this workspace, and "
-"manage SSL certificates from one place."
+msgid "Add domains, verify DNS ownership, bind them to this workspace, and manage SSL certificates from one place."
+msgstr "Add domains, verify DNS ownership, bind them to this workspace, and manage SSL certificates from one place."
 
 #: src/pages/Workspace.tsx
 msgid "Add table row below"
@@ -226,6 +240,10 @@ msgstr "Articles"
 msgid "Articles for this topic are on the way."
 msgstr "Articles for this topic are on the way."
 
+#: src/pages/ResetPassword.tsx
+msgid "At least 8 characters"
+msgstr "At least 8 characters"
+
 #: src/pages/DeviceOAuth.tsx
 msgid "Authentication failed"
 msgstr "Authentication failed"
@@ -235,12 +253,16 @@ msgid "Authorization failed"
 msgstr "Authorization failed"
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Authorize Desktop"
-msgstr "Authorize Desktop"
+#~ msgid "Authorize Desktop"
+#~ msgstr "Authorize Desktop"
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Authorize Device"
-msgstr "Authorize Device"
+msgid "Authorize device"
+msgstr "Authorize device"
+
+#: src/pages/DeviceOAuth.tsx
+#~ msgid "Authorize Device"
+#~ msgstr "Authorize Device"
 
 #: src/pages/DeviceOAuth.tsx
 msgid "Authorizing..."
@@ -250,6 +272,10 @@ msgstr "Authorizing..."
 msgid "Back"
 msgstr "Back"
 
+#: src/pages/ResetPassword.tsx
+msgid "Back to sign in"
+msgstr "Back to sign in"
+
 #: src/components/SiteThemePanel.tsx
 msgid "Background"
 msgstr "Background"
@@ -258,9 +284,17 @@ msgstr "Background"
 msgid "Base size"
 msgstr "Base size"
 
+#: src/components/Layout.tsx
+msgid "Bind an email to enable password reset and email-code sign in."
+msgstr "Bind an email to enable password reset and email-code sign in."
+
 #: src/pages/Workspace.tsx
 msgid "Bind custom domains and manage certificates."
 msgstr "Bind custom domains and manage certificates."
+
+#: src/components/Layout.tsx
+msgid "Bind email"
+msgstr "Bind email"
 
 #: src/pages/Workspace.tsx
 msgid "Bind here"
@@ -324,12 +358,8 @@ msgid "Bucket"
 msgstr "Bucket"
 
 #: src/pages/Landing.tsx
-msgid "Calm desktop writing, workspace-scoped sync, and public Markdown "
-"publishing in one product flow. Your notes stay local until a cloud "
-"workspace has a job to do."
-msgstr "Calm desktop writing, workspace-scoped sync, and public Markdown "
-"publishing in one product flow. Your notes stay local until a cloud "
-"workspace has a job to do."
+msgid "Calm desktop writing, workspace-scoped sync, and public Markdown publishing in one product flow. Your notes stay local until a cloud workspace has a job to do."
+msgstr "Calm desktop writing, workspace-scoped sync, and public Markdown publishing in one product flow. Your notes stay local until a cloud workspace has a job to do."
 
 #: src/components/NewResourceDialog.tsx
 #: src/pages/Workspace.tsx
@@ -361,6 +391,10 @@ msgstr "Checking session"
 #: src/pages/Workspace.tsx
 msgid "Choose a cloud workspace"
 msgstr "Choose a cloud workspace"
+
+#: src/pages/ResetPassword.tsx
+msgid "Choose a new password"
+msgstr "Choose a new password"
 
 #: src/pages/Workspace.tsx
 msgid "Choose a note or create a new one."
@@ -442,20 +476,28 @@ msgid "Compact"
 msgstr "Compact"
 
 #: src/pages/Admin.tsx
+msgid "Configure outbound email (SMTP). Used for password reset and email verification. Saved values override the JTYPED_SMTP_* environment variables."
+msgstr "Configure outbound email (SMTP). Used for password reset and email verification. Saved values override the JTYPED_SMTP_* environment variables."
+
+#: src/pages/Admin.tsx
 msgid "Configure server object storage."
 msgstr "Configure server object storage."
 
 #: src/pages/Admin.tsx
-msgid "Configure server object storage. Saved values override the "
-"JTYPED_STORAGE_* environment variables and apply immediately."
-msgstr "Configure server object storage. Saved values override the "
-"JTYPED_STORAGE_* environment variables and apply immediately."
+msgid "Configure server object storage. Saved values override the JTYPED_STORAGE_* environment variables and apply immediately."
+msgstr "Configure server object storage. Saved values override the JTYPED_STORAGE_* environment variables and apply immediately."
+
+#: src/pages/ResetPassword.tsx
+msgid "Confirm password"
+msgstr "Confirm password"
+
+#: src/pages/VerifyEmail.tsx
+msgid "Confirming your email address."
+msgstr "Confirming your email address."
 
 #: src/pages/AiConnections.tsx
-msgid "Connect Claude, Cursor, Cline, or jcode to your notes & kanban through "
-"the built-in MCP server."
-msgstr "Connect Claude, Cursor, Cline, or jcode to your notes & kanban through "
-"the built-in MCP server."
+msgid "Connect Claude, Cursor, Cline, or jcode to your notes & kanban through the built-in MCP server."
+msgstr "Connect Claude, Cursor, Cline, or jcode to your notes & kanban through the built-in MCP server."
 
 #: src/pages/Landing.tsx
 msgid "Connect your AI"
@@ -477,9 +519,21 @@ msgstr "Connecting..."
 msgid "Content width"
 msgstr "Content width"
 
+#: src/pages/VerifyEmail.tsx
+msgid "Continue"
+msgstr "Continue"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Copied"
+msgstr "Copied"
+
 #: src/pages/AiConnections.tsx
 msgid "Copy"
 msgstr "Copy"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Copy code"
+msgstr "Copy code"
 
 #: src/pages/AiConnections.tsx
 msgid "Copy it now — it won't be shown again."
@@ -510,12 +564,8 @@ msgid "Create"
 msgstr "Create"
 
 #: src/pages/Landing.tsx
-msgid "Create a workspace for sync, publishing, and account settings. Local "
-"vault copy stays precise: folders are vaults, server-side collaboration "
-"is a cloud workspace."
-msgstr "Create a workspace for sync, publishing, and account settings. Local "
-"vault copy stays precise: folders are vaults, server-side collaboration "
-"is a cloud workspace."
+msgid "Create a workspace for sync, publishing, and account settings. Local vault copy stays precise: folders are vaults, server-side collaboration is a cloud workspace."
+msgstr "Create a workspace for sync, publishing, and account settings. Local vault copy stays precise: folders are vaults, server-side collaboration is a cloud workspace."
 
 #: src/pages/Login.tsx
 msgid "Create account"
@@ -528,6 +578,10 @@ msgstr "Create your first Markdown note."
 #: src/components/NewResourceDialog.tsx
 msgid "Creates in"
 msgstr "Creates in"
+
+#: src/pages/Login.tsx
+msgid "Creating..."
+msgstr "Creating..."
 
 #: src/pages/AiConnections.tsx
 msgid "current"
@@ -620,8 +674,12 @@ msgid "Device authorized! You can return to the JType desktop app."
 msgstr "Device authorized! You can return to the JType desktop app."
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Device Code"
-msgstr "Device Code"
+msgid "Device code"
+msgstr "Device code"
+
+#: src/pages/DeviceOAuth.tsx
+#~ msgid "Device Code"
+#~ msgstr "Device Code"
 
 #: src/components/NewResourceDialog.tsx
 msgid "Diagram name"
@@ -719,20 +777,38 @@ msgid "Drawing name"
 msgstr "Drawing name"
 
 #: src/pages/DeviceOAuth.tsx
-msgid "e.g. 456478"
-msgstr "e.g. 456478"
+#~ msgid "e.g. 456478"
+#~ msgstr "e.g. 456478"
 
 #: src/pages/Workspace.tsx
 msgid "Edits are written back to YAML frontmatter."
 msgstr "Edits are written back to YAML frontmatter."
 
 #: src/components/Layout.tsx
+#: src/pages/Admin.tsx
+#: src/pages/Login.tsx
 msgid "Email"
 msgstr "Email"
 
 #: src/pages/Workspace.tsx
 msgid "Email (optional)"
 msgstr "Email (optional)"
+
+#: src/components/Layout.tsx
+msgid "Email address"
+msgstr "Email address"
+
+#: src/components/Layout.tsx
+msgid "Email saved."
+msgstr "Email saved."
+
+#: src/components/Layout.tsx
+msgid "Email saved. Send a verification email to confirm it."
+msgstr "Email saved. Send a verification email to confirm it."
+
+#: src/pages/VerifyEmail.tsx
+msgid "Email verified"
+msgstr "Email verified"
 
 #: src/pages/Workspace.tsx
 msgid "Empty trash"
@@ -743,12 +819,40 @@ msgid "Enable"
 msgstr "Enable"
 
 #: src/pages/Admin.tsx
+msgid "Enabled"
+msgstr "Enabled"
+
+#: src/pages/Admin.tsx
+msgid "Encryption"
+msgstr "Encryption"
+
+#: src/pages/ResetPassword.tsx
+msgid "Enter a new password for your JType account."
+msgstr "Enter a new password for your JType account."
+
+#: src/pages/Admin.tsx
 msgid "Enter secret key"
 msgstr "Enter secret key"
+
+#: src/pages/Admin.tsx
+msgid "Enter SMTP password"
+msgstr "Enter SMTP password"
+
+#: src/pages/Login.tsx
+msgid "Enter the 6-digit code"
+msgstr "Enter the 6-digit code"
+
+#: src/pages/Login.tsx
+#~ msgid "Enter the code"
+#~ msgstr "Enter the code"
 
 #: src/pages/DeviceOAuth.tsx
 msgid "Enter the code shown in your JType desktop app"
 msgstr "Enter the code shown in your JType desktop app"
+
+#: src/pages/Login.tsx
+#~ msgid "Enter the code to sign in."
+#~ msgstr "Enter the code to sign in."
 
 #: src/pages/Login.tsx
 msgid "Enter your password"
@@ -759,10 +863,8 @@ msgid "Enter your username"
 msgstr "Enter your username"
 
 #: src/help/pages/HelpHome.tsx
-msgid "Everything you need to write in a local-first vault, sync to the cloud, "
-"run a kanban board, publish a site, and connect AI."
-msgstr "Everything you need to write in a local-first vault, sync to the cloud, "
-"run a kanban board, publish a site, and connect AI."
+msgid "Everything you need to write in a local-first vault, sync to the cloud, run a kanban board, publish a site, and connect AI."
+msgstr "Everything you need to write in a local-first vault, sync to the cloud, run a kanban board, publish a site, and connect AI."
 
 #: src/components/NewResourceDialog.tsx
 msgid "Excalidraw drawing"
@@ -800,6 +902,10 @@ msgstr "Failed to delete workspace."
 msgid "Failed to leave workspace."
 msgstr "Failed to leave workspace."
 
+#: src/pages/Login.tsx
+msgid "Failed to send code"
+msgstr "Failed to send code"
+
 #: src/pages/Workspace.tsx
 msgid "Favorite"
 msgstr "Favorite"
@@ -825,12 +931,16 @@ msgid "Footer HTML"
 msgstr "Footer HTML"
 
 #: src/pages/AiConnections.tsx
-msgid "For clients that only accept a static header (e.g. jcode). Tokens are "
-"<0>mcp</0>-scoped (notes & kanban only, never admin) and expire in 90 "
-"days."
-msgstr "For clients that only accept a static header (e.g. jcode). Tokens are "
-"<0>mcp</0>-scoped (notes & kanban only, never admin) and expire in 90 "
-"days."
+msgid "For clients that only accept a static header (e.g. jcode). Tokens are <0>mcp</0>-scoped (notes & kanban only, never admin) and expire in 90 days."
+msgstr "For clients that only accept a static header (e.g. jcode). Tokens are <0>mcp</0>-scoped (notes & kanban only, never admin) and expire in 90 days."
+
+#: src/pages/Login.tsx
+msgid "Forgot password?"
+msgstr "Forgot password?"
+
+#: src/pages/Admin.tsx
+msgid "From address"
+msgstr "From address"
 
 #: src/pages/Admin.tsx
 msgid "from env"
@@ -901,6 +1011,10 @@ msgstr "How can we help?"
 #: src/pages/Admin.tsx
 msgid "https://s3.example.com — leave blank to use local files"
 msgstr "https://s3.example.com — leave blank to use local files"
+
+#: src/pages/Login.tsx
+msgid "If an account exists for that email, a reset link is on its way."
+msgstr "If an account exists for that email, a reset link is on its way."
 
 #: src/pages/Workspace.tsx
 msgid "Image upload failed"
@@ -982,15 +1096,13 @@ msgstr "Italic (Ctrl+I)"
 msgid "Joining…"
 msgstr "Joining…"
 
+#: src/pages/Admin.tsx
+msgid "JType <noreply@example.com>"
+msgstr "JType <noreply@example.com>"
+
 #: src/pages/Landing.tsx
-msgid "JType ships a built-in MCP server. Connect Claude, Cursor, or any MCP "
-"client over a secure OAuth flow, then ask it to search your notes, draft "
-"a doc, or triage your board. Tokens are scoped, expiring, and revocable "
-"— and admin always stays off-limits."
-msgstr "JType ships a built-in MCP server. Connect Claude, Cursor, or any MCP "
-"client over a secure OAuth flow, then ask it to search your notes, "
-"draft a doc, or triage your board. Tokens are scoped, expiring, and "
-"revocable — and admin always stays off-limits."
+msgid "JType ships a built-in MCP server. Connect Claude, Cursor, or any MCP client over a secure OAuth flow, then ask it to search your notes, draft a doc, or triage your board. Tokens are scoped, expiring, and revocable — and admin always stays off-limits."
+msgstr "JType ships a built-in MCP server. Connect Claude, Cursor, or any MCP client over a secure OAuth flow, then ask it to search your notes, draft a doc, or triage your board. Tokens are scoped, expiring, and revocable — and admin always stays off-limits."
 
 #: src/components/NewResourceDialog.tsx
 msgid "Kanban board"
@@ -1001,10 +1113,8 @@ msgid "Kanban tools"
 msgstr "Kanban tools"
 
 #: src/pages/Workspace.tsx
-msgid "Keep the publish name and workspace name here. The workspace slug and "
-"storage limit are assigned by the service."
-msgstr "Keep the publish name and workspace name here. The workspace slug and "
-"storage limit are assigned by the service."
+msgid "Keep the publish name and workspace name here. The workspace slug and storage limit are assigned by the service."
+msgstr "Keep the publish name and workspace name here. The workspace slug and storage limit are assigned by the service."
 
 #: src/pages/Login.tsx
 msgid "Keep your vaults in sync across all devices."
@@ -1039,6 +1149,10 @@ msgstr "Layout"
 #: src/pages/Workspace.tsx
 msgid "Leave"
 msgstr "Leave"
+
+#: src/pages/Admin.tsx
+msgid "leave blank if your server needs no auth"
+msgstr "leave blank if your server needs no auth"
 
 #: src/pages/Workspace.tsx
 msgid "Leave workspace"
@@ -1122,10 +1236,8 @@ msgid "Local-first Markdown vault"
 msgstr "Local-first Markdown vault"
 
 #: src/help/HelpLayout.tsx
-msgid "Local-first Markdown vault editing with cloud sync, kanban, publishing, "
-"and AI."
-msgstr "Local-first Markdown vault editing with cloud sync, kanban, publishing, "
-"and AI."
+msgid "Local-first Markdown vault editing with cloud sync, kanban, publishing, and AI."
+msgstr "Local-first Markdown vault editing with cloud sync, kanban, publishing, and AI."
 
 #: src/pages/Login.tsx
 msgid "Local-first notes with cloud sync, publishing, and AI-ready indexing."
@@ -1134,6 +1246,10 @@ msgstr "Local-first notes with cloud sync, publishing, and AI-ready indexing."
 #: src/pages/InviteAccept.tsx
 msgid "Log in to accept"
 msgstr "Log in to accept"
+
+#: src/pages/Login.tsx
+msgid "Login code"
+msgstr "Login code"
 
 #: src/pages/Workspace.tsx
 msgid "Manage cloud workspace name, publishing title, and storage."
@@ -1262,6 +1378,10 @@ msgstr "New folder name:"
 msgid "New Mermaid diagram"
 msgstr "New Mermaid diagram"
 
+#: src/pages/ResetPassword.tsx
+msgid "New password"
+msgstr "New password"
+
 #: src/components/NewResourceDialog.tsx
 msgid "New resource"
 msgstr "New resource"
@@ -1326,9 +1446,17 @@ msgstr "No results. Try another term."
 msgid "No unsaved changes"
 msgstr "No unsaved changes"
 
+#: src/pages/Admin.tsx
+msgid "None (port 25, not recommended)"
+msgstr "None (port 25, not recommended)"
+
 #: src/pages/Workspace.tsx
 msgid "Not published"
 msgstr "Not published"
+
+#: src/components/Layout.tsx
+msgid "Not verified — email-code sign in is disabled until verified."
+msgstr "Not verified — email-code sign in is disabled until verified."
 
 #: src/pages/Landing.tsx
 msgid "Notes tools"
@@ -1351,12 +1479,8 @@ msgid "On this page"
 msgstr "On this page"
 
 #: src/pages/Landing.tsx
-msgid "One Markdown source shows up everywhere it matters: local files on your "
-"machine, sync state in the cloud, and published output for readers — all "
-"visible at once."
-msgstr "One Markdown source shows up everywhere it matters: local files on your "
-"machine, sync state in the cloud, and published output for readers — "
-"all visible at once."
+msgid "One Markdown source shows up everywhere it matters: local files on your machine, sync state in the cloud, and published output for readers — all visible at once."
+msgstr "One Markdown source shows up everywhere it matters: local files on your machine, sync state in the cloud, and published output for readers — all visible at once."
 
 #: src/pages/Landing.tsx
 msgid "One Markdown source, three calm surfaces."
@@ -1375,10 +1499,8 @@ msgid "Open"
 msgstr "Open"
 
 #: src/pages/Landing.tsx
-msgid "Open a local Markdown vault, keep normal folders, and edit without "
-"turning notes into remote-only data."
-msgstr "Open a local Markdown vault, keep normal folders, and edit without "
-"turning notes into remote-only data."
+msgid "Open a local Markdown vault, keep normal folders, and edit without turning notes into remote-only data."
+msgstr "Open a local Markdown vault, keep normal folders, and edit without turning notes into remote-only data."
 
 #: src/help/HelpLayout.tsx
 msgid "Open app"
@@ -1413,10 +1535,12 @@ msgid "Open sidebar"
 msgstr "Open sidebar"
 
 #: src/help/pages/CaseStudy.tsx
-msgid "Open the example vault in JType and follow along. It lives in the repo "
-"at:"
-msgstr "Open the example vault in JType and follow along. It lives in the repo "
-"at:"
+msgid "Open the example vault in JType and follow along. It lives in the repo at:"
+msgstr "Open the example vault in JType and follow along. It lives in the repo at:"
+
+#: src/pages/Login.tsx
+msgid "optional"
+msgstr "optional"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Optional. A small set of inline tags is allowed (links, emphasis)."
@@ -1442,10 +1566,19 @@ msgstr "Ownership transferred."
 msgid "Pass ownership to another admin member."
 msgstr "Pass ownership to another admin member."
 
+#: src/pages/Admin.tsx
 #: src/pages/DeviceOAuth.tsx
 #: src/pages/Login.tsx
 msgid "Password"
 msgstr "Password"
+
+#: src/pages/ResetPassword.tsx
+msgid "Password must be at least 8 characters"
+msgstr "Password must be at least 8 characters"
+
+#: src/pages/ResetPassword.tsx
+msgid "Password reset"
+msgstr "Password reset"
 
 #: src/pages/Workspace.tsx
 msgid "Pending invites"
@@ -1472,13 +1605,16 @@ msgid "Play the explainer video"
 msgstr "Play the explainer video"
 
 #: src/pages/DeviceOAuth.tsx
-#: src/pages/Login.tsx
 msgid "Please wait..."
 msgstr "Please wait..."
 
 #: src/help/pages/HelpHome.tsx
 msgid "Popular articles"
 msgstr "Popular articles"
+
+#: src/pages/Admin.tsx
+msgid "Port"
+msgstr "Port"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Preset…"
@@ -1552,20 +1688,20 @@ msgid "Publishing details saved"
 msgstr "Publishing details saved"
 
 #: src/pages/Workspace.tsx
-msgid "Publishing uses a server snapshot; frontmatter status is treated as user "
-"metadata."
-msgstr "Publishing uses a server snapshot; frontmatter status is treated as "
-"user metadata."
+msgid "Publishing uses a server snapshot; frontmatter status is treated as user metadata."
+msgstr "Publishing uses a server snapshot; frontmatter status is treated as user metadata."
 
 #: src/pages/Landing.tsx
-msgid "Push and pull versions, resolve conflicts, and keep collaboration scoped "
-"to the workspace you choose."
-msgstr "Push and pull versions, resolve conflicts, and keep collaboration "
-"scoped to the workspace you choose."
+msgid "Push and pull versions, resolve conflicts, and keep collaboration scoped to the workspace you choose."
+msgstr "Push and pull versions, resolve conflicts, and keep collaboration scoped to the workspace you choose."
 
 #: src/pages/Workspace.tsx
 msgid "Quick open"
 msgstr "Quick open"
+
+#: src/pages/ResetPassword.tsx
+msgid "Re-enter new password"
+msgstr "Re-enter new password"
 
 #: src/help/pages/CasesIndex.tsx
 msgid "Read case study"
@@ -1580,16 +1716,12 @@ msgid "Ready for the cloud layer"
 msgstr "Ready for the cloud layer"
 
 #: src/help/pages/CasesIndex.tsx
-msgid "Real, end-to-end scenarios you can reproduce. Each one ships with an "
-"example vault you can open in JType."
-msgstr "Real, end-to-end scenarios you can reproduce. Each one ships with an "
-"example vault you can open in JType."
+msgid "Real, end-to-end scenarios you can reproduce. Each one ships with an example vault you can open in JType."
+msgstr "Real, end-to-end scenarios you can reproduce. Each one ships with an example vault you can open in JType."
 
 #: src/pages/AiConnections.tsx
-msgid "Recommended: paste this URL into an OAuth-capable client (Claude, "
-"Cursor) — you'll approve in the browser, no token to copy."
-msgstr "Recommended: paste this URL into an OAuth-capable client (Claude, "
-"Cursor) — you'll approve in the browser, no token to copy."
+msgid "Recommended: paste this URL into an OAuth-capable client (Claude, Cursor) — you'll approve in the browser, no token to copy."
+msgstr "Recommended: paste this URL into an OAuth-capable client (Claude, Cursor) — you'll approve in the browser, no token to copy."
 
 #: src/pages/Admin.tsx
 msgid "Region"
@@ -1601,13 +1733,21 @@ msgid "Register"
 msgstr "Register"
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Register & Authorize"
-msgstr "Register & Authorize"
+msgid "Register & authorize"
+msgstr "Register & authorize"
+
+#: src/pages/DeviceOAuth.tsx
+#~ msgid "Register & Authorize"
+#~ msgstr "Register & Authorize"
 
 #. placeholder {0}: staleWarning.wasDirty ? ' (discard)' : ''
 #: src/pages/Workspace.tsx
 msgid "Reload{0}"
 msgstr "Reload{0}"
+
+#: src/pages/Login.tsx
+msgid "Remember me"
+msgstr "Remember me"
 
 #: src/help/components/HelpVideo.tsx
 msgid "Remotion"
@@ -1655,14 +1795,29 @@ msgstr "Republish live docs"
 msgid "Request failed"
 msgstr "Request failed"
 
+#: src/pages/Login.tsx
+msgid "Resend code"
+msgstr "Resend code"
+
+#: src/components/Layout.tsx
+msgid "Resend verification"
+msgstr "Resend verification"
+
+#: src/pages/ResetPassword.tsx
+msgid "Reset failed"
+msgstr "Reset failed"
+
+#: src/pages/ResetPassword.tsx
+msgid "Reset password"
+msgstr "Reset password"
+
 #: src/pages/Workspace.tsx
 msgid "Restore"
 msgstr "Restore"
 
 #: src/pages/Workspace.tsx
 msgid "Restore cloud workspace documents or permanently remove them from trash."
-msgstr "Restore cloud workspace documents or permanently remove them from "
-"trash."
+msgstr "Restore cloud workspace documents or permanently remove them from trash."
 
 #: src/pages/Workspace.tsx
 msgid "Restore deleted documents or remove them permanently."
@@ -1721,6 +1876,10 @@ msgid "Save site settings"
 msgstr "Save site settings"
 
 #: src/pages/Admin.tsx
+msgid "Save SMTP settings"
+msgstr "Save SMTP settings"
+
+#: src/pages/Admin.tsx
 msgid "Save storage settings"
 msgstr "Save storage settings"
 
@@ -1736,6 +1895,11 @@ msgstr "Saved."
 msgid "Saving verifies the connection before applying."
 msgstr "Saving verifies the connection before applying."
 
+#: src/pages/Admin.tsx
+msgid "Saving verifies the SMTP connection before applying."
+msgstr "Saving verifies the SMTP connection before applying."
+
+#: src/components/Layout.tsx
 #: src/pages/Admin.tsx
 #: src/pages/Workspace.tsx
 msgid "Saving..."
@@ -1785,6 +1949,30 @@ msgstr "Select a domain"
 msgid "Select a Markdown file"
 msgstr "Select a Markdown file"
 
+#: src/pages/Login.tsx
+#~ msgid "Self-service reset isn't available yet. Ask an admin to reset your password."
+#~ msgstr "Self-service reset isn't available yet. Ask an admin to reset your password."
+
+#: src/pages/Login.tsx
+msgid "Send"
+msgstr "Send"
+
+#: src/pages/Login.tsx
+msgid "Send code"
+msgstr "Send code"
+
+#: src/components/Layout.tsx
+msgid "Send verification email"
+msgstr "Send verification email"
+
+#: src/components/Layout.tsx
+msgid "Sending..."
+msgstr "Sending..."
+
+#: src/pages/Login.tsx
+msgid "Sending…"
+msgstr "Sending…"
+
 #: src/components/Layout.tsx
 msgid "Settings"
 msgstr "Settings"
@@ -1816,12 +2004,24 @@ msgid "Sign in"
 msgstr "Sign in"
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Sign in & Authorize"
-msgstr "Sign in & Authorize"
+msgid "Sign in & authorize"
+msgstr "Sign in & authorize"
+
+#: src/pages/DeviceOAuth.tsx
+#~ msgid "Sign in & Authorize"
+#~ msgstr "Sign in & Authorize"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Sign in to approve this device"
+msgstr "Sign in to approve this device"
 
 #: src/pages/Login.tsx
 msgid "Sign in to your JType Cloud account."
 msgstr "Sign in to your JType Cloud account."
+
+#: src/pages/Login.tsx
+msgid "Sign in with email code"
+msgstr "Sign in with email code"
 
 #: src/components/Layout.tsx
 #: src/pages/Landing.tsx
@@ -1838,8 +2038,16 @@ msgid "Signed in as {0}"
 msgstr "Signed in as {0}"
 
 #: src/pages/DeviceOAuth.tsx
+msgid "Signed in as <0>{loggedInName}</0>"
+msgstr "Signed in as <0>{loggedInName}</0>"
+
+#: src/pages/DeviceOAuth.tsx
 msgid "Signed in. Ready to authorize device."
 msgstr "Signed in. Ready to authorize device."
+
+#: src/pages/Login.tsx
+msgid "Signing in..."
+msgstr "Signing in..."
 
 #: src/pages/Workspace.tsx
 msgid "Site & theme"
@@ -1852,6 +2060,18 @@ msgstr "Site name"
 #: src/pages/Workspace.tsx
 msgid "Site settings"
 msgstr "Site settings"
+
+#: src/pages/Admin.tsx
+msgid "SMTP host"
+msgstr "SMTP host"
+
+#: src/pages/Admin.tsx
+msgid "SMTP settings saved. Connection verified."
+msgstr "SMTP settings saved. Connection verified."
+
+#: src/pages/Admin.tsx
+msgid "smtp.example.com — leave blank to disable email"
+msgstr "smtp.example.com — leave blank to disable email"
 
 #: src/pages/Login.tsx
 msgid "Something went wrong"
@@ -1904,6 +2124,10 @@ msgstr "Start writing"
 #: src/pages/Workspace.tsx
 msgid "Start writing Markdown..."
 msgstr "Start writing Markdown..."
+
+#: src/pages/Admin.tsx
+msgid "STARTTLS (recommended, port 587)"
+msgstr "STARTTLS (recommended, port 587)"
 
 #: src/pages/Admin.tsx
 msgid "Status"
@@ -1966,6 +2190,10 @@ msgstr "Thanks for the feedback!"
 msgid "The landing story follows the real JType loop."
 msgstr "The landing story follows the real JType loop."
 
+#: src/pages/ResetPassword.tsx
+msgid "The passwords you entered do not match"
+msgstr "The passwords you entered do not match"
+
 #: src/pages/Workspace.tsx
 msgid "The public snapshot is behind the current document."
 msgstr "The public snapshot is behind the current document."
@@ -2006,12 +2234,22 @@ msgstr "This invite link has been revoked and is no longer valid."
 msgid "This invite link is invalid or has expired."
 msgstr "This invite link is invalid or has expired."
 
+#: src/pages/ResetPassword.tsx
+msgid "This reset link is missing its token."
+msgstr "This reset link is missing its token."
+
+#: src/pages/VerifyEmail.tsx
+msgid "This verification link is missing its token."
+msgstr "This verification link is missing its token."
+
 #. placeholder {0}: workspace.name
 #: src/pages/Workspace.tsx
-msgid "This will permanently delete <0>{0}</0> and all its documents. This "
-"cannot be undone."
-msgstr "This will permanently delete <0>{0}</0> and all its documents. This "
-"cannot be undone."
+msgid "This will permanently delete <0>{0}</0> and all its documents. This cannot be undone."
+msgstr "This will permanently delete <0>{0}</0> and all its documents. This cannot be undone."
+
+#: src/pages/Admin.tsx
+msgid "TLS / SSL (port 465)"
+msgstr "TLS / SSL (port 465)"
 
 #: src/pages/Workspace.tsx
 msgid "Toggle favorite"
@@ -2059,10 +2297,8 @@ msgid "Try it yourself"
 msgstr "Try it yourself"
 
 #: src/pages/Landing.tsx
-msgid "Turn selected documents into a public `/u/:username` site while your "
-"source stays Markdown."
-msgstr "Turn selected documents into a public `/u/:username` site while your "
-"source stays Markdown."
+msgid "Turn selected documents into a public `/u/:username` site while your source stays Markdown."
+msgstr "Turn selected documents into a public `/u/:username` site while your source stays Markdown."
 
 #: src/pages/Workspace.tsx
 msgid "Type the workspace name to confirm:"
@@ -2104,15 +2340,21 @@ msgstr "Unsaved"
 msgid "Untitled document"
 msgstr "Untitled document"
 
+#: src/components/Layout.tsx
+msgid "Update email"
+msgstr "Update email"
+
 #: src/pages/Workspace.tsx
-msgid "Upload a PEM certificate for a verified domain. The private key is "
-"stored as a hash in the current backend model."
-msgstr "Upload a PEM certificate for a verified domain. The private key is "
-"stored as a hash in the current backend model."
+msgid "Upload a PEM certificate for a verified domain. The private key is stored as a hash in the current backend model."
+msgstr "Upload a PEM certificate for a verified domain. The private key is stored as a hash in the current backend model."
 
 #: src/components/DownloadPromo.tsx
 msgid "Use JType beyond the browser"
 msgstr "Use JType beyond the browser"
+
+#: src/pages/Login.tsx
+msgid "Use password instead"
+msgstr "Use password instead"
 
 #: src/pages/Admin.tsx
 msgid "User"
@@ -2128,6 +2370,10 @@ msgstr "User menu"
 #: src/pages/Login.tsx
 msgid "Username"
 msgstr "Username"
+
+#: src/pages/Login.tsx
+msgid "Username or email"
+msgstr "Username or email"
 
 #: src/pages/Admin.tsx
 msgid "Users"
@@ -2149,6 +2395,19 @@ msgstr "vault root"
 msgid "Vault space"
 msgstr "Vault space"
 
+#: src/components/Layout.tsx
+msgid "Verification email sent. Check your inbox."
+msgstr "Verification email sent. Check your inbox."
+
+#: src/pages/Login.tsx
+#: src/pages/VerifyEmail.tsx
+msgid "Verification failed"
+msgstr "Verification failed"
+
+#: src/components/Layout.tsx
+msgid "Verified"
+msgstr "Verified"
+
 #: src/pages/Workspace.tsx
 msgid "Verified domain"
 msgstr "Verified domain"
@@ -2156,6 +2415,11 @@ msgstr "Verified domain"
 #: src/pages/Workspace.tsx
 msgid "Verify DNS"
 msgstr "Verify DNS"
+
+#: src/pages/Login.tsx
+#: src/pages/VerifyEmail.tsx
+msgid "Verifying…"
+msgstr "Verifying…"
 
 #: src/pages/Workspace.tsx
 msgid "View public page"
@@ -2180,6 +2444,14 @@ msgstr "Watch the explainer"
 #: src/pages/Landing.tsx
 msgid "Watch the flow"
 msgstr "Watch the flow"
+
+#: src/pages/Login.tsx
+#~ msgid "We'll send a 6-digit code to your verified email."
+#~ msgstr "We'll send a 6-digit code to your verified email."
+
+#: src/pages/Login.tsx
+msgid "We'll send a 6-digit sign-in code to this email."
+msgstr "We'll send a 6-digit sign-in code to this email."
 
 #: src/pages/Landing.tsx
 msgid "Web dashboard"
@@ -2227,14 +2499,20 @@ msgid "You will lose access to all cloud documents."
 msgstr "You will lose access to all cloud documents."
 
 #: src/pages/Workspace.tsx
-msgid "You will lose access to all cloud documents. Your local files are "
-"unaffected."
-msgstr "You will lose access to all cloud documents. Your local files are "
-"unaffected."
+msgid "You will lose access to all cloud documents. Your local files are unaffected."
+msgstr "You will lose access to all cloud documents. Your local files are unaffected."
 
 #: src/pages/InviteAccept.tsx
 msgid "You're invited"
 msgstr "You're invited"
+
+#: src/pages/Login.tsx
+msgid "you@example.com"
+msgstr "you@example.com"
+
+#: src/pages/VerifyEmail.tsx
+msgid "Your email address is now confirmed."
+msgstr "Your email address is now confirmed."
 
 #: src/pages/Login.tsx
 msgid "Your files stay on your machine. Always."
@@ -2247,6 +2525,10 @@ msgstr "Your Markdown workspace,<0/>synced to the cloud."
 #: src/pages/AiConnections.tsx
 msgid "Your MCP server"
 msgstr "Your MCP server"
+
+#: src/pages/ResetPassword.tsx
+msgid "Your password has been changed. You can sign in now."
+msgstr "Your password has been changed. You can sign in now."
 
 #: src/pages/Workspace.tsx
 msgid "Your rendered document will appear here."

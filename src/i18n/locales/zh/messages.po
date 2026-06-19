@@ -76,6 +76,11 @@ msgstr "📁 {0} 个子文件夹{1}"
 msgid "📄 {0} document{1}"
 msgstr "📄 {0} 个文档{1}"
 
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "A browser opened to the authorization page. Enter the code below to "
+"finish signing in."
+msgstr ""
+
 #: src/components/modals/NewResourceDialog.tsx
 msgid "A hand-drawn style whiteboard canvas"
 msgstr "手绘风格的白板画布"
@@ -200,8 +205,13 @@ msgid "Browser authorization is open. This sync will continue after sign-in "
 "completes."
 msgstr "浏览器授权页面已打开。登录完成后同步将继续。"
 
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Browser opened"
+msgstr "浏览器已打开"
+
 #: src/components/modals/CreateFolderDialog.tsx
 #: src/components/modals/DeleteFolderDialog.tsx
+#: src/components/modals/DeviceAuthWaiting.tsx
 #: src/components/modals/MoveFolderDialog.tsx
 #: src/components/modals/NewResourceDialog.tsx
 msgid "Cancel"
@@ -239,6 +249,14 @@ msgstr "选择要创建的内容。"
 
 #~ msgid "Clear filter"
 #~ msgstr "清除筛选"
+
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Click code to copy"
+msgstr "点击代码复制"
+
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Click to copy"
+msgstr "点击复制"
 
 #: src/components/modals/AccountDialog.tsx
 #: src/components/modals/ConflictDialog.tsx
@@ -286,6 +304,10 @@ msgstr "云工作区：{0}"
 #: src/components/modals/AccountDialog.tsx
 msgid "Cloud workspaces"
 msgstr "云工作区"
+
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Codes expire after 10 minutes. Generate a new one to continue."
+msgstr "代码 10 分钟后过期。请重新生成以继续。"
 
 #: src/components/sidebar/Sidebar.tsx
 msgid "Collapse all"
@@ -340,6 +362,10 @@ msgstr "连接以加载工作区。"
 #: src/components/modals/AccountDialog.tsx
 msgid "Connected as {0}. Sync vaults with cloud workspaces."
 msgstr "已以 {0} 身份连接。将库与云工作区同步。"
+
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Copied"
+msgstr "已复制"
 
 #~ msgid "Copy link"
 #~ msgstr "复制链接"
@@ -517,6 +543,10 @@ msgstr "文档已取消发布。"
 msgid "Documents"
 msgstr "文档"
 
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Done"
+msgstr "完成"
+
 #~ msgid "Done column"
 #~ msgstr "完成列"
 
@@ -561,6 +591,10 @@ msgstr "启用云同步"
 msgid "Enable cloud sync for this vault first"
 msgstr "请先为此库启用云同步"
 
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Enter this code on the web"
+msgstr "在网页上输入此代码"
+
 #: src/components/modals/NewResourceDialog.tsx
 msgid "Excalidraw drawing"
 msgstr "Excalidraw 绘图"
@@ -571,6 +605,10 @@ msgstr "全部展开"
 
 #~ msgid "Expand column"
 #~ msgstr "展开列"
+
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Expired"
+msgstr "已过期"
 
 #: src/components/editor/EditorShell.tsx
 msgid "Export"
@@ -1081,6 +1119,10 @@ msgstr "最近"
 #~ msgid "Refresh"
 #~ msgstr "刷新"
 
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "remaining"
+msgstr "剩余"
+
 #. placeholder {0}: item.name
 #. placeholder {0}: vault.name
 #: src/components/layout/WelcomeScreen.tsx
@@ -1139,6 +1181,10 @@ msgstr "重命名文件夹为："
 msgid "Rename to:"
 msgstr "重命名为："
 
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Reopen browser"
+msgstr "重新打开浏览器"
+
 #: src/components/editor/EditorShell.tsx
 msgid "Republish"
 msgstr "重新发布"
@@ -1181,15 +1227,15 @@ msgstr "将未命名文档保存到知识库"
 #. placeholder {0}: basename(selected)
 #: src/hooks/useFileSystem.ts
 msgid "Saved {0}."
-msgstr ""
+msgstr "已保存 {0}。"
 
 #: src/hooks/useFileSystem.ts
 msgid "Saved {trimmed}."
-msgstr ""
+msgstr "已保存 {trimmed}。"
 
 #: src/hooks/useFileSystem.ts
 msgid "Saving..."
-msgstr ""
+msgstr "保存中…"
 
 #~ msgid "Search cards"
 #~ msgstr "搜索卡片"
@@ -1244,6 +1290,10 @@ msgstr "登录"
 
 #~ msgid "Sort: Title"
 #~ msgstr "排序：标题"
+
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Start again"
+msgstr "重新开始"
 
 #: src/components/modals/AccountDialog.tsx
 msgid "Start cloud sync"
@@ -1408,6 +1458,10 @@ msgstr "库已就绪"
 msgid "vault root"
 msgstr "库根目录"
 
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Verification code expired"
+msgstr "验证码已过期"
+
 #: src/components/editor/EditorShell.tsx
 msgid "View published page"
 msgstr "查看已发布页面"
@@ -1420,6 +1474,14 @@ msgstr "查看者权限为只读。"
 #: src/components/modals/AccountDialog.tsx
 msgid "Waiting for browser authorization (code {0})..."
 msgstr "等待浏览器授权（代码 {0}）…"
+
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Waiting for web confirmation"
+msgstr "等待网页确认"
+
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Web confirmation"
+msgstr "网页确认"
 
 #: src/components/BoardView.tsx
 msgid "WIP limit (blank to clear)"

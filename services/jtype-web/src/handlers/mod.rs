@@ -7,6 +7,7 @@ pub mod domain;
 pub mod folder;
 pub mod kanban;
 pub mod live;
+pub mod mail;
 pub mod member;
 pub mod oauth;
 pub mod publish;

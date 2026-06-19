@@ -21,6 +21,7 @@ use std::collections::HashMap;
 use sqlx::{MySql, Pool, Row};
 
 use crate::error::AppError;
+use crate::mail::{Encryption, SmtpConfig};
 use crate::storage::{self, StorageConfig};
 
 // Keys used in the `server_settings` table.
@@ -38,6 +39,22 @@ pub const ENV_STORAGE_ACCESS_KEY: &str = "JTYPED_STORAGE_ACCESS_KEY";
 pub const ENV_STORAGE_SECRET_KEY: &str = "JTYPED_STORAGE_SECRET_KEY";
 pub const ENV_STORAGE_REGION: &str = "JTYPED_STORAGE_REGION";
 pub const ENV_STORAGE_LOCAL_DIR: &str = "JTYPED_STORAGE_LOCAL_DIR";
+
+// Keys used in the `server_settings` table for SMTP (email) configuration.
+pub const SMTP_HOST: &str = "smtp.host";
+pub const SMTP_PORT: &str = "smtp.port";
+pub const SMTP_USERNAME: &str = "smtp.username";
+pub const SMTP_PASSWORD: &str = "smtp.password";
+pub const SMTP_FROM: &str = "smtp.from";
+pub const SMTP_ENCRYPTION: &str = "smtp.encryption";
+
+// The environment variable backing each SMTP key.
+pub const ENV_SMTP_HOST: &str = "JTYPED_SMTP_HOST";
+pub const ENV_SMTP_PORT: &str = "JTYPED_SMTP_PORT";
+pub const ENV_SMTP_USERNAME: &str = "JTYPED_SMTP_USERNAME";
+pub const ENV_SMTP_PASSWORD: &str = "JTYPED_SMTP_PASSWORD";
+pub const ENV_SMTP_FROM: &str = "JTYPED_SMTP_FROM";
+pub const ENV_SMTP_ENCRYPTION: &str = "JTYPED_SMTP_ENCRYPTION";
 
 /// Where a resolved value came from. Surfaced in the admin API so the operator
 /// can see whether a field is overridden in the DB, inherited from the
@@ -137,6 +154,28 @@ pub fn resolve_storage_config(map: &HashMap<String, String>) -> StorageConfig {
 pub async fn load_storage_config(pool: &Pool<MySql>) -> Result<StorageConfig, AppError> {
     let map = load_map(pool).await?;
     Ok(resolve_storage_config(&map))
+}
+
+/// Build the effective [`SmtpConfig`] from a settings map plus environment
+/// fallbacks and defaults. An empty `host` means SMTP is unconfigured.
+pub fn resolve_smtp_config(map: &HashMap<String, String>) -> SmtpConfig {
+    let port_str = resolve_value(map, SMTP_PORT, ENV_SMTP_PORT, "");
+    let port = port_str.trim().parse::<u16>().unwrap_or(0);
+    let encryption_str = resolve_value(map, SMTP_ENCRYPTION, ENV_SMTP_ENCRYPTION, "starttls");
+    SmtpConfig {
+        host: resolve_value(map, SMTP_HOST, ENV_SMTP_HOST, ""),
+        port,
+        username: resolve_value(map, SMTP_USERNAME, ENV_SMTP_USERNAME, ""),
+        password: resolve_value(map, SMTP_PASSWORD, ENV_SMTP_PASSWORD, ""),
+        from: resolve_value(map, SMTP_FROM, ENV_SMTP_FROM, ""),
+        encryption: Encryption::parse(&encryption_str),
+    }
+}
+
+/// Convenience: load the map and resolve the SMTP config in one step.
+pub async fn load_smtp_config(pool: &Pool<MySql>) -> Result<SmtpConfig, AppError> {
+    let map = load_map(pool).await?;
+    Ok(resolve_smtp_config(&map))
 }
 
 /// Insert or update a single setting key.

@@ -28,3 +28,9 @@ export type { FileTreeProps, FileTreeNodeProps } from "./FileTreeNode";
 
 export { DiagramView } from "./viewers/DiagramView";
 export type { DiagramViewProps } from "./viewers/DiagramView";
+
+export { OTPInput } from "./OTPInput";
+export type { OTPInputProps } from "./OTPInput";
+
+export { AuthCard, JTypeWordmark } from "./AuthCard";
+export type { AuthCardProps } from "./AuthCard";

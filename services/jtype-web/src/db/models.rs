@@ -24,6 +24,7 @@ pub struct User {
     pub site_title: String,
     pub display_name: Option<String>,
     pub email: Option<String>,
+    pub email_verified_at: Option<String>,
     pub enabled: bool,
     pub storage_budget_bytes: i64,
     pub created_at: String,
@@ -47,6 +48,7 @@ pub struct RegisterRequest {
     pub username: String,
     pub password: String,
     pub site_title: Option<String>,
+    pub email: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -87,6 +89,7 @@ pub struct ProfileResponse {
     pub role: String,
     pub display_name: Option<String>,
     pub email: Option<String>,
+    pub email_verified: bool,
     pub site_title: String,
     pub enabled: bool,
     pub storage_budget_bytes: i64,

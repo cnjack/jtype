@@ -3,6 +3,7 @@ import { useCloudSync } from "../../hooks";
 import { useConfirm } from "@shared/components/PromptDialogContext";
 import type { CloudWorkspace } from "../../lib/types";
 import { tauri, type CliStatus } from "../../lib/tauri";
+import { DeviceAuthWaiting } from "./DeviceAuthWaiting";
 import { useEffect, useState } from "react";
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
 import { CloudArrowUpIcon, CommandLineIcon, LinkSlashIcon, XMarkIcon } from "@heroicons/react/24/outline";
@@ -123,40 +124,56 @@ export function AccountDialog() {
 
           <main className="min-h-0 overflow-y-auto p-6">
             {activeSection === "account" && (
-              <section className="max-w-2xl">
-                <h2 className="text-2xl font-semibold text-stone-950"><Trans>Profile</Trans></h2>
-                <p className="mt-1 text-sm text-[#6b7773]"><Trans>Connect desktop sync through the browser and choose the service endpoint.</Trans></p>
-                <div className="mt-6 space-y-3">
-                  <input
-                    className="sync-input"
-                    value={state.serviceUrl}
-                    onChange={(e) => dispatch({ type: "SET_SERVICE_URL", url: e.target.value })}
-                    aria-label={t`Account service URL`}
-                  />
-                  <div className="grid grid-cols-2 gap-2">
-                    {!state.syncToken ? (
-                      <button className="sidebar-action" type="button" onClick={() => sync.startBrowserOAuth()}><Trans>Connect in browser</Trans></button>
-                    ) : (
-                      <button className="sidebar-action" type="button" onClick={() => sync.disconnectAccount()}><Trans>Disconnect</Trans></button>
+              state.oauthUserCode && !state.syncToken ? (
+                <DeviceAuthWaiting
+                  userCode={state.oauthUserCode}
+                  startedAt={state.oauthStartedAt}
+                  onCancel={() => sync.cancelBrowserOAuth()}
+                  onReopenBrowser={() => {
+                    // If expired, start a fresh flow (new code); otherwise just reopen the same URL.
+                    if (!state.oauthStartedAt) {
+                      sync.startBrowserOAuth();
+                    } else {
+                      sync.reopenBrowser();
+                    }
+                  }}
+                />
+              ) : (
+                <section className="max-w-2xl">
+                  <h2 className="text-2xl font-semibold text-stone-950"><Trans>Profile</Trans></h2>
+                  <p className="mt-1 text-sm text-[#6b7773]"><Trans>Connect desktop sync through the browser and choose the service endpoint.</Trans></p>
+                  <div className="mt-6 space-y-3">
+                    <input
+                      className="sync-input"
+                      value={state.serviceUrl}
+                      onChange={(e) => dispatch({ type: "SET_SERVICE_URL", url: e.target.value })}
+                      aria-label={t`Account service URL`}
+                    />
+                    <div className="grid grid-cols-2 gap-2">
+                      {!state.syncToken ? (
+                        <button className="sidebar-action" type="button" onClick={() => sync.startBrowserOAuth()}><Trans>Connect in browser</Trans></button>
+                      ) : (
+                        <button className="sidebar-action" type="button" onClick={() => sync.disconnectAccount()}><Trans>Disconnect</Trans></button>
+                      )}
+                      <button
+                        id="account-sync"
+                        className="sidebar-action"
+                        type="button"
+                        disabled={!canSyncCurrentVault || state.isLoading}
+                        onClick={() => activeVaultBinding ? sync.syncWorkspaceToWeb() : sync.autoCreateAndBindWorkspace()}
+                        title={isLocalMode ? t`Enable cloud sync for this vault first` : t`Sync current vault`}
+                      >
+                        {activeVaultBinding ? t`Sync now` : t`Start sync`}
+                      </button>
+                    </div>
+                    {displaySiteUrl && (
+                      <a id="account-site-link" className="block truncate text-xs font-semibold text-teal-700" href={displaySiteUrl} target="_blank" rel="noreferrer">
+                        <Trans>Open site: {displaySiteUrl}</Trans>
+                      </a>
                     )}
-                    <button
-                      id="account-sync"
-                      className="sidebar-action"
-                      type="button"
-                      disabled={!canSyncCurrentVault || state.isLoading}
-                      onClick={() => activeVaultBinding ? sync.syncWorkspaceToWeb() : sync.autoCreateAndBindWorkspace()}
-                      title={isLocalMode ? t`Enable cloud sync for this vault first` : t`Sync current vault`}
-                    >
-                      {activeVaultBinding ? t`Sync now` : t`Start sync`}
-                    </button>
                   </div>
-                  {displaySiteUrl && (
-                    <a id="account-site-link" className="block truncate text-xs font-semibold text-teal-700" href={displaySiteUrl} target="_blank" rel="noreferrer">
-                      <Trans>Open site: {displaySiteUrl}</Trans>
-                    </a>
-                  )}
-                </div>
-              </section>
+                </section>
+              )
             )}
 
             {activeSection === "workspace" && (

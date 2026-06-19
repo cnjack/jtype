@@ -2,7 +2,14 @@ import { useState, useEffect, type FormEvent } from 'react'
 import { t } from '@lingui/core/macro'
 import { Trans } from '@lingui/react/macro'
 import { useSearchParams } from 'react-router-dom'
-import { api, setToken, setStoredUsername } from '../api'
+import { api, setToken, setStoredUsername, getStoredUsername } from '../api'
+import { AuthCard, JTypeWordmark, OTPInput } from '@shared/components'
+import {
+  ComputerDesktopIcon,
+  ExclamationCircleIcon,
+  CheckCircleIcon,
+  ArrowPathIcon,
+} from '@heroicons/react/24/outline'
 
 export function DeviceOAuth() {
   const [searchParams] = useSearchParams()
@@ -11,17 +18,21 @@ export function DeviceOAuth() {
   const [password, setPassword] = useState('')
   const [isRegister, setIsRegister] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [loggedInName, setLoggedInName] = useState('')
   const [loading, setLoading] = useState(false)
   const [status, setStatus] = useState('')
   const [error, setError] = useState('')
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     const token = localStorage.getItem('jtype.token')
     if (token) {
       setIsLoggedIn(true)
+      setLoggedInName(getStoredUsername() || '')
       api.me().catch(() => {
         localStorage.removeItem('jtype.token')
         setIsLoggedIn(false)
+        setLoggedInName('')
       })
     }
   }, [])
@@ -38,6 +49,7 @@ export function DeviceOAuth() {
       setToken(res.token)
       setStoredUsername(res.username)
       setIsLoggedIn(true)
+      setLoggedInName(res.username)
       setStatus(t`Signed in. Ready to authorize device.`)
     } catch (err) {
       setError(err instanceof Error ? err.message : t`Authentication failed`)
@@ -60,94 +72,151 @@ export function DeviceOAuth() {
     }
   }
 
+  // Auto-submit when all 6 digits are filled AND user is already logged in.
+  const codeComplete = userCode.replace(/\D/g, '').length === 6
+  useEffect(() => {
+    if (codeComplete && isLoggedIn && !loading && !status) {
+      void handleApprove()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [codeComplete, isLoggedIn])
+
+  const copyCode = () => {
+    if (!userCode) return
+    navigator.clipboard?.writeText(userCode).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    })
+  }
+
+  const icon = (
+    <ComputerDesktopIcon className="h-6 w-6" />
+  )
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-zinc-900">
-      <div className="w-full max-w-sm rounded-xl border border-zinc-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-        <h2 className="mb-2 text-center text-2xl font-bold text-zinc-900 dark:text-white">
-          <Trans>Authorize Desktop</Trans>
-        </h2>
-        <p className="mb-6 text-center text-sm text-zinc-500">
-          <Trans>Enter the code shown in your JType desktop app</Trans>
+    <AuthCard
+      title={t`Authorize device`}
+      subtitle={t`Enter the code shown in your JType desktop app`}
+      icon={icon}
+      footer={
+        <p className="mt-5 text-center text-xs text-stone-400">
+          <JTypeWordmark variant="dark" />
         </p>
+      }
+    >
+      {/* OTP input — unified with brand design system */}
+      <OTPInput
+        value={userCode}
+        onChange={setUserCode}
+        onComplete={(v) => { /* auto-submit handled by effect above */ void v }}
+        error={!!error}
+        autoFocus
+        ariaLabel={t`Device code`}
+      />
+      <p className="otp-hint mt-3 text-center text-xs text-stone-500">
+        {copied ? <Trans>Copied</Trans> : (
+          <button type="button" onClick={copyCode} className="font-semibold text-brand hover:underline">
+            <Trans>Copy code</Trans>
+          </button>
+        )}
+      </p>
 
-        <div className="mb-6">
-          <label htmlFor="device-code" className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            <Trans>Device Code</Trans>
-          </label>
-          <input
-            id="device-code"
-            type="text"
-            value={userCode}
-            onChange={e => setUserCode(e.target.value)}
-            placeholder={t`e.g. 456478`}
-            className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
-          />
-        </div>
+      {/* Logged-in / logged-out sections separated by a divider */}
+      <div className="mt-6 border-t border-black/[0.06] pt-5">
+        {isLoggedIn ? (
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-2.5 text-sm text-stone-600">
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-soft font-bold text-brand-dark">
+                {loggedInName.charAt(0).toUpperCase() || '?'}
+              </span>
+              <Trans>Signed in as <b className="text-stone-800">{loggedInName}</b></Trans>
+            </div>
 
-        {!isLoggedIn ? (
-          <form onSubmit={handleLogin} className="flex flex-col gap-4">
+            {status && (
+              <p className="flex items-start gap-2 rounded-lg bg-brand-soft px-3 py-2 text-sm text-brand-dark">
+                <CheckCircleIcon className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>{status}</span>
+              </p>
+            )}
+            {error && (
+              <p className="flex items-start gap-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
+                <ExclamationCircleIcon className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>{error}</span>
+              </p>
+            )}
+
+            <button
+              onClick={handleApprove}
+              disabled={loading || !codeComplete}
+              className="toolbar-button toolbar-button-primary h-10 justify-center disabled:opacity-50"
+            >
+              {loading && <ArrowPathIcon className="h-4 w-4 animate-spin" />}
+              {loading ? t`Authorizing...` : t`Authorize device`}
+            </button>
+          </div>
+        ) : (
+          <form onSubmit={handleLogin} className="flex flex-col gap-3">
+            <p className="text-center text-xs text-stone-500">
+              <Trans>Sign in to approve this device</Trans>
+            </p>
             <div>
-              <label htmlFor="do-username" className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              <label htmlFor="do-username" className="field-label mb-1.5 block">
                 <Trans>Username</Trans>
               </label>
               <input
                 id="do-username"
                 type="text"
                 value={username}
-                onChange={e => setUsername(e.target.value)}
+                onChange={(e) => setUsername(e.target.value)}
                 required
-                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
+                className="sync-input h-10"
+                autoComplete="username"
               />
             </div>
             <div>
-              <label htmlFor="do-password" className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              <label htmlFor="do-password" className="field-label mb-1.5 block">
                 <Trans>Password</Trans>
               </label>
               <input
                 id="do-password"
                 type="password"
                 value={password}
-                onChange={e => setPassword(e.target.value)}
+                onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
+                className="sync-input h-10"
+                autoComplete="current-password"
               />
             </div>
 
-            {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+            {error && (
+              <p className="flex items-start gap-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
+                <ExclamationCircleIcon className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>{error}</span>
+              </p>
+            )}
 
             <button
               type="submit"
               disabled={loading}
-              className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-dark disabled:opacity-50"
+              className="toolbar-button toolbar-button-primary h-10 justify-center"
             >
-              {loading ? t`Please wait...` : isRegister ? t`Register & Authorize` : t`Sign in & Authorize`}
+              {loading && <ArrowPathIcon className="h-4 w-4 animate-spin" />}
+              {loading ? t`Please wait...` : isRegister ? t`Register & authorize` : t`Sign in & authorize`}
             </button>
 
-            <p className="text-center text-sm text-zinc-500">
-              {isRegister ? t`Already have an account?` : t`Don't have an account?`}{' '}
+            <p className="text-center text-sm text-stone-500">
+              {isRegister ? <Trans>Already have an account?</Trans> : <Trans>Don't have an account?</Trans>}{' '}
               <button
                 type="button"
                 onClick={() => setIsRegister(!isRegister)}
                 className="font-medium text-brand hover:underline"
               >
-                {isRegister ? t`Sign in` : t`Register`}
+                {isRegister ? <Trans>Sign in</Trans> : <Trans>Register</Trans>}
               </button>
             </p>
           </form>
-        ) : (
-          <div className="flex flex-col gap-4">
-            {status && <p className="text-sm text-green-600 dark:text-green-400">{status}</p>}
-            {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
-            <button
-              onClick={handleApprove}
-              disabled={loading || !userCode}
-              className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-dark disabled:opacity-50"
-            >
-              {loading ? t`Authorizing...` : t`Authorize Device`}
-            </button>
-          </div>
         )}
       </div>
-    </div>
+    </AuthCard>
   )
 }

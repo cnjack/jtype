@@ -76,6 +76,11 @@ msgstr "📁 하위 폴더 {0}개{1}"
 msgid "📄 {0} document{1}"
 msgstr "📄 문서 {0}개{1}"
 
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "A browser opened to the authorization page. Enter the code below to "
+"finish signing in."
+msgstr ""
+
 #: src/components/modals/NewResourceDialog.tsx
 msgid "A hand-drawn style whiteboard canvas"
 msgstr "손그림 스타일의 화이트보드 캔버스"
@@ -200,8 +205,13 @@ msgid "Browser authorization is open. This sync will continue after sign-in "
 "completes."
 msgstr "브라우저 인증이 열려 있습니다. 로그인 완료 후 이 동기화가 계속됩니다."
 
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Browser opened"
+msgstr ""
+
 #: src/components/modals/CreateFolderDialog.tsx
 #: src/components/modals/DeleteFolderDialog.tsx
+#: src/components/modals/DeviceAuthWaiting.tsx
 #: src/components/modals/MoveFolderDialog.tsx
 #: src/components/modals/NewResourceDialog.tsx
 msgid "Cancel"
@@ -239,6 +249,14 @@ msgstr "생성할 항목을 선택하세요."
 
 #~ msgid "Clear filter"
 #~ msgstr ""
+
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Click code to copy"
+msgstr ""
+
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Click to copy"
+msgstr ""
 
 #: src/components/modals/AccountDialog.tsx
 #: src/components/modals/ConflictDialog.tsx
@@ -286,6 +304,10 @@ msgstr "클라우드 워크스페이스: {0}"
 #: src/components/modals/AccountDialog.tsx
 msgid "Cloud workspaces"
 msgstr "클라우드 워크스페이스"
+
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Codes expire after 10 minutes. Generate a new one to continue."
+msgstr ""
 
 #: src/components/sidebar/Sidebar.tsx
 msgid "Collapse all"
@@ -340,6 +362,10 @@ msgstr "연결하여 워크스페이스를 불러옵니다."
 #: src/components/modals/AccountDialog.tsx
 msgid "Connected as {0}. Sync vaults with cloud workspaces."
 msgstr "{0}(으)로 연결됨. 볼트를 클라우드 워크스페이스와 동기화합니다."
+
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Copied"
+msgstr ""
 
 #~ msgid "Copy link"
 #~ msgstr ""
@@ -517,6 +543,10 @@ msgstr "문서 게시가 취소되었습니다."
 msgid "Documents"
 msgstr "문서"
 
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Done"
+msgstr ""
+
 #~ msgid "Done column"
 #~ msgstr ""
 
@@ -561,6 +591,10 @@ msgstr "클라우드 동기화 활성화"
 msgid "Enable cloud sync for this vault first"
 msgstr "먼저 이 볼트의 클라우드 동기화를 활성화하세요"
 
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Enter this code on the web"
+msgstr ""
+
 #: src/components/modals/NewResourceDialog.tsx
 msgid "Excalidraw drawing"
 msgstr "Excalidraw 그림"
@@ -571,6 +605,10 @@ msgstr "모두 펼치기"
 
 #~ msgid "Expand column"
 #~ msgstr ""
+
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Expired"
+msgstr ""
 
 #: src/components/editor/EditorShell.tsx
 msgid "Export"
@@ -1081,6 +1119,10 @@ msgstr "최근"
 #~ msgid "Refresh"
 #~ msgstr ""
 
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "remaining"
+msgstr ""
+
 #. placeholder {0}: item.name
 #. placeholder {0}: vault.name
 #: src/components/layout/WelcomeScreen.tsx
@@ -1138,6 +1180,10 @@ msgstr "폴더 이름 변경:"
 #: src/components/sidebar/Sidebar.tsx
 msgid "Rename to:"
 msgstr "이름 변경:"
+
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Reopen browser"
+msgstr ""
 
 #: src/components/editor/EditorShell.tsx
 msgid "Republish"
@@ -1244,6 +1290,10 @@ msgstr "로그인"
 
 #~ msgid "Sort: Title"
 #~ msgstr ""
+
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Start again"
+msgstr ""
 
 #: src/components/modals/AccountDialog.tsx
 msgid "Start cloud sync"
@@ -1408,6 +1458,10 @@ msgstr "볼트 준비 완료"
 msgid "vault root"
 msgstr "볼트 루트"
 
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Verification code expired"
+msgstr ""
+
 #: src/components/editor/EditorShell.tsx
 msgid "View published page"
 msgstr "게시된 페이지 보기"
@@ -1420,6 +1474,14 @@ msgstr "뷰어 접근은 읽기 전용입니다."
 #: src/components/modals/AccountDialog.tsx
 msgid "Waiting for browser authorization (code {0})..."
 msgstr "브라우저 인증 대기 중 (코드 {0})..."
+
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Waiting for web confirmation"
+msgstr ""
+
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Web confirmation"
+msgstr ""
 
 #: src/components/BoardView.tsx
 msgid "WIP limit (blank to clear)"

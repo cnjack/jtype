@@ -18,392 +18,394 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: shared/components/ConflictResolver.tsx
+#: ../../../shared/components/ConflictResolver.tsx
 msgid "← Back to list"
 msgstr "← リストに戻る"
 
 #. placeholder {0}: conflicts.length
 #. placeholder {1}: conflicts.length > 1 ? "s" : ""
-#: shared/components/ConflictResolver.tsx
+#: ../../../shared/components/ConflictResolver.tsx
 msgid "⚠ {0} Conflict{1} to Resolve"
 msgstr "⚠ {0} 件の競合{1}を解決中"
 
-#: shared/components/ConflictResolver.tsx
+#: ../../../shared/components/ConflictResolver.tsx
 msgid "Accept cloud"
 msgstr "クラウドを採用"
 
-#: shared/components/ConflictResolver.tsx
+#: ../../../shared/components/ConflictResolver.tsx
 msgid "Accept local"
 msgstr "ローカルを採用"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Add column"
 msgstr "列を追加"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Add details..."
 msgstr "詳細を追加..."
 
-#: shared/components/board/controls.tsx
+#: ../../../shared/components/board/controls.tsx
 msgid "Add labels"
 msgstr "ラベルを追加"
 
-#: shared/components/board/BoardPeek.tsx
-#: shared/components/board/BoardSurface.tsx
-#: shared/components/board/BoardTable.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardTable.tsx
 msgid "Assignee"
 msgstr "担当者"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Blank card"
 msgstr "空のカード"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Board"
 msgstr "ボード"
 
-#: shared/components/EditorToolbar.tsx
+#: ../../../shared/components/EditorToolbar.tsx
 msgid "Bold"
 msgstr "太字"
 
-#: shared/components/EditorToolbar.tsx
+#: ../../../shared/components/EditorToolbar.tsx
 msgid "Bold (Ctrl+B)"
 msgstr "太字 (Ctrl+B)"
 
-#: shared/components/ConfirmDialog.tsx
-#: shared/components/PromptDialog.tsx
+#: ../../../shared/components/ConfirmDialog.tsx
+#: ../../../shared/components/PromptDialog.tsx
 msgid "Cancel"
 msgstr "キャンセル"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Card"
 msgstr "カード"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Card title (Enter to add, Esc to cancel)"
 msgstr "カードのタイトル（Enter で追加、Esc でキャンセル）"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "cards"
 msgstr "枚のカード"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Clear filter"
 msgstr "フィルターをクリア"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Close"
 msgstr "閉じる"
 
-#: shared/components/ConflictResolver.tsx
+#: ../../../shared/components/ConflictResolver.tsx
 msgid "Cloud (remote)"
 msgstr "クラウド（リモート）"
 
-#: shared/components/EditorToolbar.tsx
+#: ../../../shared/components/EditorToolbar.tsx
 msgid "Code"
 msgstr "コード"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Collapse column"
 msgstr "列を折りたたむ"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Color"
 msgstr "カラー"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Color columns"
 msgstr "色付き列"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Column name"
 msgstr "列名"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "comma, separated"
 msgstr "カンマ区切り"
 
-#: shared/components/ConfirmDialog.tsx
+#: ../../../shared/components/ConfirmDialog.tsx
 msgid "Confirm"
 msgstr "確認"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Copy link"
 msgstr "リンクをコピー"
 
-#: shared/components/viewers/SwaggerView.tsx
+#: ../../../shared/components/viewers/SwaggerView.tsx
 msgid "Could not render this API specification."
 msgstr "この API 仕様をレンダリングできませんでした。"
 
-#: shared/components/viewers/DrawioView.tsx
+#: ../../../shared/components/viewers/DrawioView.tsx
 msgid "Could not render this Draw.io diagram."
 msgstr "この Draw.io 図をレンダリングできませんでした。"
 
-#: shared/components/viewers/PdfView.tsx
+#: ../../../shared/components/viewers/PdfView.tsx
 msgid "Could not render this PDF."
 msgstr "この PDF をレンダリングできませんでした。"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Delete"
 msgstr "削除"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Delete card"
 msgstr "カードを削除"
 
-#: shared/components/viewers/MermaidView.tsx
+#: ../../../shared/components/viewers/MermaidView.tsx
 msgid "Diagram error"
 msgstr "図のエラー"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Done column"
 msgstr "完了列"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Drag to resize"
 msgstr "ドラッグしてサイズ変更"
 
-#: shared/components/viewers/DrawioView.tsx
+#: ../../../shared/components/viewers/DrawioView.tsx
 msgid "Draw.io diagram"
 msgstr "Draw.io 図"
 
-#: shared/components/board/BoardPeek.tsx
-#: shared/components/board/BoardTable.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardTable.tsx
 msgid "Due"
 msgstr "期限"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Duplicate"
 msgstr "複製"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Expand column"
 msgstr "列を展開"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Filter"
 msgstr "フィルター"
 
-#: shared/components/viewers/MermaidView.tsx
-msgid "flowchart TD\n"
+#: ../../../shared/components/viewers/MermaidView.tsx
+msgid ""
+"flowchart TD\n"
 "  A[Start] --> B[End]"
-msgstr "flowchart TD\n"
+msgstr ""
+"flowchart TD\n"
 "  A[開始] --> B[終了]"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Group: Assignee"
 msgstr "グループ：担当者"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Group: Priority"
 msgstr "グループ：優先度"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Group: Status"
 msgstr "グループ：ステータス"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Icon"
 msgstr "アイコン"
 
-#: shared/components/EditorToolbar.tsx
+#: ../../../shared/components/EditorToolbar.tsx
 msgid "Inline Code"
 msgstr "インラインコード"
 
-#: shared/components/EditorToolbar.tsx
+#: ../../../shared/components/EditorToolbar.tsx
 msgid "Italic"
 msgstr "イタリック"
 
-#: shared/components/EditorToolbar.tsx
+#: ../../../shared/components/EditorToolbar.tsx
 msgid "Italic (Ctrl+I)"
 msgstr "イタリック (Ctrl+I)"
 
-#: shared/components/EditorToolbar.tsx
+#: ../../../shared/components/EditorToolbar.tsx
 msgid "Link"
 msgstr "リンク"
 
-#: shared/components/EditorToolbar.tsx
+#: ../../../shared/components/EditorToolbar.tsx
 msgid "Link (Ctrl+K)"
 msgstr "リンク (Ctrl+K)"
 
-#: shared/components/ConflictResolver.tsx
+#: ../../../shared/components/ConflictResolver.tsx
 msgid "Local (yours)"
 msgstr "ローカル（自分の）"
 
-#: shared/components/viewers/MermaidView.tsx
+#: ../../../shared/components/viewers/MermaidView.tsx
 msgid "Mermaid diagram"
 msgstr "Mermaid 図"
 
-#: shared/components/viewers/MermaidView.tsx
+#: ../../../shared/components/viewers/MermaidView.tsx
 msgid "Mermaid source"
 msgstr "Mermaid ソース"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "New card"
 msgstr "新規カード"
 
-#: shared/components/board/BoardTable.tsx
+#: ../../../shared/components/board/BoardTable.tsx
 msgid "No cards"
 msgstr "カードなし"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "No color"
 msgstr "色なし"
 
-#: shared/components/board/controls.tsx
+#: ../../../shared/components/board/controls.tsx
 msgid "No icon"
 msgstr "アイコンなし"
 
-#: shared/components/board/controls.tsx
+#: ../../../shared/components/board/controls.tsx
 msgid "No labels"
 msgstr "ラベルなし"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Notes"
 msgstr "ノート"
 
-#: shared/components/ConfirmDialog.tsx
-#: shared/components/PromptDialog.tsx
+#: ../../../shared/components/ConfirmDialog.tsx
+#: ../../../shared/components/PromptDialog.tsx
 msgid "OK"
 msgstr "OK"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Open in editor"
 msgstr "エディターで開く"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Open in full editor"
 msgstr "フルエディターで開く"
 
-#: shared/components/viewers/PdfView.tsx
+#: ../../../shared/components/viewers/PdfView.tsx
 msgid "PDF document"
 msgstr "PDF ドキュメント"
 
-#: shared/components/PromptDialog.tsx
+#: ../../../shared/components/PromptDialog.tsx
 msgid "Please enter a value."
 msgstr "値を入力してください。"
 
-#: shared/components/board/BoardPeek.tsx
-#: shared/components/ViewModeToggle.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/ViewModeToggle.tsx
 msgid "Preview"
 msgstr "プレビュー"
 
-#: shared/components/board/BoardPeek.tsx
-#: shared/components/board/BoardSurface.tsx
-#: shared/components/board/BoardTable.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardTable.tsx
 msgid "Priority"
 msgstr "優先度"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Refresh"
 msgstr "更新"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Rename"
 msgstr "名前を変更"
 
-#: shared/components/ConflictResolver.tsx
+#: ../../../shared/components/ConflictResolver.tsx
 msgid "Result (editable)"
 msgstr "結果（編集可能）"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Save as template"
 msgstr "テンプレートとして保存"
 
-#: shared/components/ConflictResolver.tsx
+#: ../../../shared/components/ConflictResolver.tsx
 msgid "Save merged result"
 msgstr "マージ結果を保存"
 
-#: shared/components/ConflictResolver.tsx
+#: ../../../shared/components/ConflictResolver.tsx
 msgid "Saving…"
 msgstr "保存中…"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Search cards"
 msgstr "カードを検索"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Set as done column"
 msgstr "完了列に設定"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Set WIP limit"
 msgstr "WIP 制限を設定"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Sort: Due"
 msgstr "並べ替え：期限"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Sort: Manual"
 msgstr "並べ替え：手動"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Sort: Priority"
 msgstr "並べ替え：優先度"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Sort: Title"
 msgstr "並べ替え：タイトル"
 
-#: shared/components/ViewModeToggle.tsx
+#: ../../../shared/components/ViewModeToggle.tsx
 msgid "Split"
 msgstr "分割"
 
-#: shared/components/board/BoardPeek.tsx
-#: shared/components/board/BoardTable.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardTable.tsx
 msgid "Status"
 msgstr "ステータス"
 
-#: shared/components/board/BoardSurface.tsx
-#: shared/components/EditorToolbar.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/EditorToolbar.tsx
 msgid "Table"
 msgstr "表"
 
-#: shared/components/board/BoardPeek.tsx
-#: shared/components/board/BoardSurface.tsx
-#: shared/components/board/BoardTable.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardTable.tsx
 msgid "Tags"
 msgstr "タグ"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Templates"
 msgstr "テンプレート"
 
-#: shared/components/viewers/DiagramView.tsx
+#: ../../../shared/components/viewers/DiagramView.tsx
 msgid "This file type can not be previewed yet."
 msgstr "このファイル形式はまだプレビューできません。"
 
-#: shared/components/board/BoardTable.tsx
+#: ../../../shared/components/board/BoardTable.tsx
 msgid "Title"
 msgstr "タイトル"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Unassigned"
 msgstr "未割り当て"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Unset done column"
 msgstr "完了列を解除"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Untitled card"
 msgstr "無題のカード"
 
-#: shared/components/ConflictResolver.tsx
+#: ../../../shared/components/ConflictResolver.tsx
 msgid "Use this"
 msgstr "これを使用"
 
 #. placeholder {0}: col.limit
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "WIP limit {0}"
 msgstr "WIP 制限 {0}"
 
-#: shared/components/board/BoardPeek.tsx
-#: shared/components/ViewModeToggle.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/ViewModeToggle.tsx
 msgid "Write"
 msgstr "記述"
 
-#: shared/components/viewers/MermaidView.tsx
+#: ../../../shared/components/viewers/MermaidView.tsx
 msgid "Write Mermaid syntax to see the diagram."
 msgstr "Mermaid 構文を書くと図が表示されます。"

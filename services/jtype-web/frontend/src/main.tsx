@@ -21,6 +21,8 @@ import { Admin } from './pages/Admin'
 import { Workspace } from './pages/Workspace'
 import { Kanban } from './pages/Kanban'
 import { DeviceOAuth } from './pages/DeviceOAuth'
+import { ResetPassword } from './pages/ResetPassword'
+import { VerifyEmail } from './pages/VerifyEmail'
 import { InviteAccept } from './pages/InviteAccept'
 import { AiConnections } from './pages/AiConnections'
 import { DownloadPromo } from './components/DownloadPromo'
@@ -41,7 +43,10 @@ async function loadPlatformMessages(locale: SupportedLocale): Promise<Record<str
 function renderApp() {
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
-      <I18nProvider i18n={i18n}>
+      {/* `i18n` comes from @shared/i18n (root node_modules @lingui/core); the
+          provider's type expects web's own copy. They are the same instance at
+          runtime (vite dedupes @lingui/core), so cast past the type mismatch. */}
+      <I18nProvider i18n={i18n as never}>
         <AuthProvider>
           <PromptDialogProvider>
             <BrowserRouter>
@@ -57,6 +62,8 @@ function renderApp() {
                 />
                 <Route path="/login" element={<Login />} />
                 <Route path="/oauth/device" element={<DeviceOAuth />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/verify-email" element={<VerifyEmail />} />
                 <Route path="/invites/:token" element={<InviteAccept />} />
                 <Route element={<Layout />}>
                   <Route path="/dashboard" element={<WorkspaceRedirect />} />

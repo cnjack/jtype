@@ -12,7 +12,9 @@ interface AuthState {
   user: AuthResponse | null
   loading: boolean
   login: (username: string, password: string) => Promise<void>
-  register: (username: string, password: string) => Promise<void>
+  register: (username: string, password: string, email?: string) => Promise<void>
+  /** Persist a session obtained out-of-band (e.g. email OTP) and set the user. */
+  completeLogin: (res: AuthResponse) => void
   logout: () => void
 }
 
@@ -57,13 +59,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function login(username: string, password: string) {
     const res = await api.login(username, password)
-    setToken(res.token)
-    setStoredUsername(res.username)
-    setUser(res)
+    completeLogin(res)
   }
 
-  async function register(username: string, password: string) {
-    const res = await api.register(username, password)
+  async function register(username: string, password: string, email?: string) {
+    const res = await api.register(username, password, undefined, email)
+    completeLogin(res)
+  }
+
+  function completeLogin(res: AuthResponse) {
     setToken(res.token)
     setStoredUsername(res.username)
     setUser(res)
@@ -75,7 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, completeLogin, logout }}>
       {children}
     </AuthContext.Provider>
   )
