@@ -6,12 +6,32 @@
 --     InnoDB allows multiple NULLs, so users without an email never collide.
 --   * `password_reset_tokens` — single-use, SHA-256-hashed, 10-min expiry,
 --     mirroring the oauth_device_codes pattern (atomic claim in the handler).
+--
+-- Idempotent: every DDL is guarded so a partially-applied database (e.g. one
+-- where `email_verified_at` was added manually before the migration was
+-- recorded) can re-run without a "Duplicate column / key" failure. This matters
+-- because the migration runner records the version only after the whole file
+-- succeeds, so a mid-file crash or manual partial apply leaves the schema ahead
+-- of `_schema_migrations` and the next run replays the whole file.
 
-ALTER TABLE `users` ADD COLUMN `email_verified_at` timestamp NULL DEFAULT NULL;
+-- email_verified_at column (skip if already present).
+SET @col_exists = (SELECT COUNT(*) FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users'
+                     AND COLUMN_NAME = 'email_verified_at');
+SET @sql = IF(@col_exists = 0,
+  'ALTER TABLE `users` ADD COLUMN `email_verified_at` timestamp NULL DEFAULT NULL',
+  'SELECT "email_verified_at already exists" AS msg');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
--- Unique on a nullable column: multiple NULLs are allowed by InnoDB, so this
--- only constrains users who actually set an email.
-ALTER TABLE `users` ADD UNIQUE INDEX `users_email_unique` (`email`);
+-- Unique index on email (skip if already present). InnoDB allows multiple
+-- NULLs, so this only constrains users who actually set an email.
+SET @idx_exists = (SELECT COUNT(*) FROM information_schema.STATISTICS
+                   WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users'
+                     AND INDEX_NAME = 'users_email_unique');
+SET @sql = IF(@idx_exists = 0,
+  'ALTER TABLE `users` ADD UNIQUE INDEX `users_email_unique` (`email`)',
+  'SELECT "users_email_unique already exists" AS msg');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
 CREATE TABLE IF NOT EXISTS `password_reset_tokens` (
   `token_hash` char(64) NOT NULL,
