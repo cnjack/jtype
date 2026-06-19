@@ -53,7 +53,7 @@ export function useCloudSync() {
       });
       if (!response.ok) throw new Error(await response.text());
       const start = (await response.json()) as { deviceCode: string; userCode: string; verificationUrl: string };
-      dispatch({ type: "SET_OAUTH", deviceCode: start.deviceCode, userCode: start.userCode });
+      dispatch({ type: "SET_OAUTH", deviceCode: start.deviceCode, userCode: start.userCode, startedAt: Date.now() });
       dispatch({ type: "SET_STATUS", message: `Browser authorization opened. Use code ${start.userCode}.` });
       if (tauri.isAvailable) await openUrl(start.verificationUrl);
 
@@ -107,6 +107,23 @@ export function useCloudSync() {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
   }, [dispatch, getServiceUrl, state.cloudProfile, stopDevicePolling]);
+
+  // Cancel an in-progress browser authorization: stop polling and clear OAuth state.
+  const cancelBrowserOAuth = useCallback(async () => {
+    stopDevicePolling();
+    dispatch({ type: "CLEAR_OAUTH" });
+    dispatch({ type: "SET_STATUS", message: "Browser authorization canceled." });
+  }, [dispatch, stopDevicePolling]);
+
+  // Reopen the browser at the device authorization page using the current user code.
+  // The code is unchanged; this just re-opens the same verification URL.
+  const reopenBrowser = useCallback(async () => {
+    if (!state.oauthUserCode) return;
+    const url = `${getServiceUrl()}/oauth/device?code=${state.oauthUserCode}`;
+    if (tauri.isAvailable) {
+      try { await openUrl(url); } catch { /* ignore opener errors */ }
+    }
+  }, [getServiceUrl, state.oauthUserCode]);
 
   const disconnectAccount = useCallback(async () => {
     stopDevicePolling();
@@ -1182,6 +1199,8 @@ export function useCloudSync() {
   return {
     getServiceUrl,
     startBrowserOAuth,
+    cancelBrowserOAuth,
+    reopenBrowser,
     disconnectAccount,
     refreshCloudWorkspaces,
     syncWorkspaceToWeb,

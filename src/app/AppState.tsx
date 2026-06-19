@@ -46,6 +46,7 @@ export interface AppState {
   cloudWorkspaces: CloudWorkspace[];
   oauthDeviceCode: string;
   oauthUserCode: string;
+  oauthStartedAt: number | null;
   activeConflicts: SyncConflict[];
   contextNode: FileTreeNode | null;
   pendingAiProposal: AICommandProposal | null;
@@ -103,7 +104,7 @@ export type AppAction =
   | { type: "SET_VAULT_SETTINGS"; vaultPath: string; settings: VaultSettings | null }
   | { type: "DISCONNECT_WORKSPACE"; workspaceId: string; vaultPath: string; settings?: VaultSettings }
   | { type: "SET_CLOUD_WORKSPACES"; workspaces: CloudWorkspace[] }
-  | { type: "SET_OAUTH"; deviceCode: string; userCode: string }
+  | { type: "SET_OAUTH"; deviceCode: string; userCode: string; startedAt: number }
   | { type: "CLEAR_OAUTH" }
   | { type: "SET_CONFLICTS"; conflicts: SyncConflict[] }
   | { type: "REMOVE_CONFLICT"; conflictId: string }
@@ -167,6 +168,7 @@ const initialState: AppState = {
   cloudWorkspaces: [],
   oauthDeviceCode: "",
   oauthUserCode: "",
+  oauthStartedAt: null,
   activeConflicts: [],
   contextNode: null,
   pendingAiProposal: null,
@@ -371,6 +373,7 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         cloudProfile: action.profile,
         oauthDeviceCode: "",
         oauthUserCode: "",
+        oauthStartedAt: null,
       };
     }
     case "SET_CLOUD_PROFILE":
@@ -401,9 +404,9 @@ export function appReducer(state: AppState, action: AppAction): AppState {
     case "SET_CLOUD_WORKSPACES":
       return { ...state, cloudWorkspaces: action.workspaces };
     case "SET_OAUTH":
-      return { ...state, oauthDeviceCode: action.deviceCode, oauthUserCode: action.userCode };
+      return { ...state, oauthDeviceCode: action.deviceCode, oauthUserCode: action.userCode, oauthStartedAt: action.startedAt };
     case "CLEAR_OAUTH":
-      return { ...state, oauthDeviceCode: "", oauthUserCode: "" };
+      return { ...state, oauthDeviceCode: "", oauthUserCode: "", oauthStartedAt: null };
     case "SET_CONFLICTS": {
       // Merge incoming conflicts with existing ones.
       // Incoming conflicts update/replace by relativePath; existing ones are kept.
@@ -477,6 +480,7 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         cloudWorkspaces: [],
         oauthDeviceCode: "",
         oauthUserCode: "",
+        oauthStartedAt: null,
         activeConflicts: [],
       };
     }
