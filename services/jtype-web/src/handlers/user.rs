@@ -20,7 +20,10 @@ pub async fn get_profile(
     let user = extract_user(&state.pool, &headers).await?;
     let row = sqlx::query(
         r#"SELECT id, username, role, site_title,
-                  display_name, email, disabled_at, storage_budget_bytes
+                  display_name, email,
+                  CASE WHEN email_verified_at IS NOT NULL THEN 1 ELSE 0 END AS email_verified,
+                  CASE WHEN disabled_at IS NOT NULL THEN 1 ELSE 0 END AS is_disabled,
+                  storage_budget_bytes
            FROM users WHERE id = ?"#,
     )
     .bind(&user.id)
@@ -33,11 +36,9 @@ pub async fn get_profile(
         role: row.try_get("role")?,
         display_name: row.try_get("display_name").unwrap_or(None),
         email: row.try_get("email").unwrap_or(None),
+        email_verified: row.try_get::<i64, _>("email_verified").unwrap_or(0) != 0,
         site_title: row.try_get("site_title")?,
-        enabled: row
-            .try_get::<Option<String>, _>("disabled_at")
-            .unwrap_or(None)
-            .is_none(),
+        enabled: row.try_get::<i64, _>("is_disabled").unwrap_or(0) == 0,
         storage_budget_bytes: row.try_get("storage_budget_bytes").unwrap_or(1_073_741_824),
     }))
 }
@@ -69,11 +70,20 @@ pub async fn update_profile(
         } else {
             Some(email.trim().to_ascii_lowercase())
         };
-        sqlx::query("UPDATE users SET email = ? WHERE id = ?")
+        // A change of address invalidates prior verification; the user must
+        // re-verify via the verification email. Clearing is done unconditionally
+        // so even setting the same address is idempotent + re-verifiable.
+        sqlx::query("UPDATE users SET email = ?, email_verified_at = NULL WHERE id = ?")
             .bind(&email_val)
             .bind(&user.id)
             .execute(&state.pool)
-            .await?;
+            .await
+            .map_err(|e| match e {
+                sqlx::Error::Database(db_err) if db_err.is_unique_violation() => {
+                    AppError::BadRequest("email already in use".to_string())
+                }
+                other => AppError::Database(other),
+            })?;
     }
 
     get_profile(State(state), headers).await

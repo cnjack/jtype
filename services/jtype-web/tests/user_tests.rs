@@ -44,16 +44,17 @@ async fn update_profile_email() {
     let (app, _pool) = common::setup().await;
     let username = common::uid();
     let (token, _) = common::register_user(app.clone(), &username).await;
+    let email = format!("{username}@example.com");
     let (status, body) = common::req(
         app,
         "PUT",
         "/api/me/profile",
         Some(&token),
-        Some(json!({ "email": "user@example.com" })),
+        Some(json!({ "email": &email })),
     )
     .await;
     assert_eq!(status, StatusCode::OK);
-    assert_eq!(body["email"].as_str().unwrap(), "user@example.com");
+    assert_eq!(body["email"].as_str().unwrap(), email);
 }
 
 #[tokio::test]
@@ -77,6 +78,7 @@ async fn update_profile_clear_email() {
     let (app, _pool) = common::setup().await;
     let username = common::uid();
     let (token, _) = common::register_user(app.clone(), &username).await;
+    let email = format!("{username}@example.com");
 
     // First set an email
     let (status, _) = common::req(
@@ -84,7 +86,7 @@ async fn update_profile_clear_email() {
         "PUT",
         "/api/me/profile",
         Some(&token),
-        Some(json!({ "email": "user@example.com" })),
+        Some(json!({ "email": &email })),
     )
     .await;
     assert_eq!(status, StatusCode::OK);

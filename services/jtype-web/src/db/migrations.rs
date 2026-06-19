@@ -86,6 +86,18 @@ fn all_migrations() -> Vec<Migration> {
             up: include_str!("../../migrations/0013_purge_binary_document_rows.up.sql"),
             down: include_str!("../../migrations/0013_purge_binary_document_rows.down.sql"),
         },
+        Migration {
+            version: 14,
+            name: "email_and_password_reset",
+            up: include_str!("../../migrations/0014_email_and_password_reset.up.sql"),
+            down: include_str!("../../migrations/0014_email_and_password_reset.down.sql"),
+        },
+        Migration {
+            version: 15,
+            name: "login_otp",
+            up: include_str!("../../migrations/0015_login_otp.up.sql"),
+            down: include_str!("../../migrations/0015_login_otp.down.sql"),
+        },
     ]
 }
 

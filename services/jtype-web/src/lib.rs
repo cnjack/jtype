@@ -2,6 +2,7 @@ pub mod db;
 pub mod error;
 pub mod handlers;
 pub mod hub;
+pub mod mail;
 pub mod mcp;
 pub mod middleware;
 pub mod settings;
@@ -30,6 +31,7 @@ pub struct AppState {
     pub public_base_url: String,
     pub hub: hub::ConnectionHub,
     pub storage: storage::SharedStore,
+    pub mailer: mail::SharedMailer,
 }
 
 impl AppState {
@@ -49,6 +51,23 @@ impl AppState {
     pub fn set_storage(&self, store: storage::DynStore) {
         *self.storage.write().unwrap_or_else(|e| e.into_inner()) = store;
     }
+
+    /// Snapshot the active mailer (`None` when SMTP is unconfigured) by cloning
+    /// it out under a brief read lock — never across `.await`. The caller then
+    /// sends on the owned [`mail::Mailer`], so a concurrent admin save can't
+    /// observe a borrow half-way through a send.
+    pub fn mailer_snapshot(&self) -> Option<mail::Mailer> {
+        self.mailer
+            .read()
+            .unwrap_or_else(|e| e.into_inner())
+            .clone()
+    }
+
+    /// Atomically replace the live mailer (used when an admin saves SMTP
+    /// settings). Pass `None` to disable mail.
+    pub fn set_mailer(&self, mailer: Option<mail::Mailer>) {
+        *self.mailer.write().unwrap_or_else(|e| e.into_inner()) = mailer;
+    }
 }
 
 #[derive(Embed)]
@@ -66,7 +85,10 @@ pub async fn run_from_env() -> Result<(), AppError> {
     // Storage config resolves DB (admin UI) → env (`JTYPED_STORAGE_*`) → default.
     let storage_cfg = settings::load_storage_config(&pool).await?;
     let storage = storage::from_config(&storage_cfg);
-    let (app, _hub) = build_app(pool.clone(), public_base_url, storage);
+    // SMTP config resolves DB (admin UI) → env (`JTYPED_SMTP_*`) → default.
+    let smtp_cfg = settings::load_smtp_config(&pool).await?;
+    let mailer = mail::from_config(&smtp_cfg);
+    let (app, _hub) = build_app(pool.clone(), public_base_url, storage, mailer);
     let listener = tokio::net::TcpListener::bind(&bind_addr)
         .await
         .map_err(|e| AppError::Server(e.to_string()))?;
@@ -89,7 +111,7 @@ pub fn build_router_with_hub(
     pool: Pool<MySql>,
     public_base_url: String,
 ) -> (Router, hub::ConnectionHub) {
-    build_app(pool, public_base_url, storage::in_memory())
+    build_app(pool, public_base_url, storage::in_memory(), None)
 }
 
 /// Core router builder: wires the app state (including object storage) and all
@@ -98,6 +120,7 @@ pub fn build_app(
     pool: Pool<MySql>,
     public_base_url: String,
     storage: storage::DynStore,
+    mailer: Option<mail::Mailer>,
 ) -> (Router, hub::ConnectionHub) {
     let hub = hub::ConnectionHub::new();
     let cleanup_hub = hub.clone();
@@ -113,6 +136,7 @@ pub fn build_app(
         public_base_url,
         hub,
         storage: storage::shared(storage),
+        mailer: mail::shared(mailer),
     };
 
     let return_hub = state.hub.clone();
@@ -159,10 +183,26 @@ pub fn build_app(
             get(handlers::settings::get_storage_settings)
                 .put(handlers::settings::update_storage_settings),
         )
+        .route(
+            "/api/admin/settings/smtp",
+            get(handlers::settings::get_smtp_settings)
+                .put(handlers::settings::update_smtp_settings),
+        )
         // OAuth device flow
         .route("/api/oauth/device/start", post(handlers::oauth::start))
         .route("/api/oauth/device/approve", post(handlers::oauth::approve))
         .route("/api/oauth/device/poll", post(handlers::oauth::poll))
+        // Email verification + password reset (via SMTP)
+        .route("/api/auth/forgot-password", post(handlers::mail::forgot_password))
+        .route("/api/auth/reset-password", post(handlers::mail::reset_password))
+        .route("/api/auth/verify-email", post(handlers::mail::verify_email))
+        .route(
+            "/api/me/send-email-verification",
+            post(handlers::mail::send_email_verification),
+        )
+        // Email OTP login (passwordless, requires SMTP configured)
+        .route("/api/auth/otp/send", post(handlers::mail::otp_send))
+        .route("/api/auth/otp/verify", post(handlers::mail::otp_verify))
         // Workspaces API
         .route(
             "/api/v1/workspaces",
