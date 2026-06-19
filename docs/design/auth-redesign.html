@@ -1,0 +1,1495 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>JType · 登录与授权体验改进设计稿</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet" />
+<style>
+  /* ============================================================
+     JType 设计系统 —— 严格沿用 shared/styles/tokens.css
+     ============================================================ */
+  :root {
+    --brand: #008884;
+    --brand-light: #22b8ad;
+    --brand-dark: #006f6b;
+    --brand-soft: #e8f6f2;
+    --brand-gray: #6f817a;
+    --line: rgb(13 13 12 / 0.06);
+
+    --bg-app: #f5f8f6;
+    --bg-card-glow: #fbfdfb;
+    --ink: #1c1917;            /* stone-950 */
+    --ink-700: #44403c;        /* stone-800 */
+    --ink-500: #78716c;        /* stone-500 */
+    --ink-400: #a8a29e;        /* stone-400 */
+    --border: rgb(13 13 12 / 0.06);
+    --border-strong: rgb(13 13 12 / 0.08);
+    --ring: rgb(0 136 132 / 0.10);
+
+    --red-50: #fef2f2;
+    --red-600: #dc2626;
+    --amber-50: #fffbeb;
+    --amber-700: #b45309;
+    --teal-50: #eff6ff;
+    --teal-700: #0f766e;
+
+    --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+
+    --radius-card: 16px;   /* rounded-2xl */
+    --radius-panel: 12px;  /* rounded-xl */
+    --radius-control: 10px;
+    --shadow-card: 0 1px 2px rgb(5 46 22 / 0.04), 0 4px 12px rgb(5 46 22 / 0.04);
+    --shadow-card-ring: 0 0 0 1px rgb(13 13 12 / 0.03);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-sans);
+    color: var(--ink);
+    background: #eef2ef;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    line-height: 1.5;
+  }
+
+  /* ---------- 页面骨架 ---------- */
+  .page {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 56px 28px 120px;
+  }
+  .page-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 40px;
+  }
+  .page-title h1 {
+    margin: 0 0 6px;
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  .page-title p {
+    margin: 0;
+    font-size: 14.5px;
+    color: var(--ink-500);
+    max-width: 62ch;
+  }
+  .page-meta {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--brand-gray);
+    white-space: nowrap;
+    text-align: right;
+  }
+
+  /* ---------- 品牌字标 ---------- */
+  .wordmark {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    user-select: none;
+  }
+  .wordmark-lg { font-size: 28px; }
+  .wordmark-sm { font-size: 18px; }
+  .wm-bracket { opacity: 0.4; }
+
+  /* ---------- 区块 ---------- */
+  .section {
+    margin-top: 64px;
+  }
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    margin-bottom: 6px;
+  }
+  .section-num {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--brand);
+  }
+  .section-title {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    margin: 0;
+  }
+  .section-sub {
+    margin: 0 0 28px;
+    font-size: 14px;
+    color: var(--ink-500);
+    max-width: 70ch;
+  }
+
+  /* ---------- Before / After 对照 ---------- */
+  .compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  @media (max-width: 980px) {
+    .compare { grid-template-columns: 1fr; }
+  }
+  .compare-col {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .compare-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    align-self: flex-start;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 999px;
+  }
+  .compare-tag-before {
+    background: #f1f0ee;
+    color: var(--ink-500);
+  }
+  .compare-tag-after {
+    background: var(--brand-soft);
+    color: var(--brand-dark);
+  }
+  .compare-tag::before {
+    content: "";
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.6;
+  }
+  .compare-note {
+    font-size: 12.5px;
+    color: var(--ink-500);
+    line-height: 1.6;
+    padding: 0 2px;
+  }
+  .compare-note b { color: var(--ink-700); font-weight: 600; }
+
+  /* ---------- 模拟浏览器/窗口外框 ---------- */
+  .window {
+    background: var(--bg-app);
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+    min-height: 480px;
+    display: flex;
+    flex-direction: column;
+  }
+  .window-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: #eef2ef;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .traffic { display: flex; gap: 6px; }
+  .traffic span { width: 11px; height: 11px; border-radius: 50%; background: #d4d8d5; }
+  .traffic span:nth-child(1){ background:#ed6a5e; }
+  .traffic span:nth-child(2){ background:#f4be4f; }
+  .traffic span:nth-child(3){ background:#61c554; }
+  .window-url {
+    flex: 1;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--ink-500);
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 3px 10px;
+    max-width: 420px;
+    margin: 0 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .window-body {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* 桌面 App 窗口（带侧栏） */
+  .desktop-window { min-height: 540px; }
+  .desktop-window .window-body {
+    display: flex;
+    background: var(--bg-card-glow);
+  }
+  .desktop-titlebar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: var(--bg-card-glow);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .desktop-titlebar-l { display:flex; align-items:center; gap:10px; }
+  .desktop-titlebar .wordmark-sm { color: var(--brand); }
+
+  /* ============================================================
+     组件库 —— 复刻 components.css 的语义 class
+     ============================================================ */
+  .card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card), var(--shadow-card-ring);
+  }
+  .panel-card {
+    background: rgba(255,255,255,0.85);
+    border: 1px solid rgba(255,255,255,0.8);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card), var(--shadow-card-ring);
+    padding: 16px;
+  }
+  .field-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--ink-500);
+    letter-spacing: 0.02em;
+    margin-bottom: 6px;
+  }
+  .sync-input {
+    width: 100%;
+    height: 40px;
+    border-radius: var(--radius-control);
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.85);
+    padding: 0 14px;
+    font-size: 13.5px;
+    font-family: inherit;
+    color: var(--ink-700);
+    outline: none;
+    transition: border-color .15s, box-shadow .15s, background .15s;
+  }
+  .sync-input::placeholder { color: var(--brand-gray); }
+  .sync-input:focus {
+    border-color: rgba(0,136,132,0.45);
+    background: #fff;
+    box-shadow: 0 0 0 4px var(--ring);
+  }
+  .btn {
+    display: inline-flex;
+    height: 40px;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 16px;
+    border-radius: var(--radius-control);
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.85);
+    font-family: inherit;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--ink-700);
+    cursor: pointer;
+    transition: all .15s;
+    box-shadow: var(--shadow-card);
+  }
+  .btn:hover { background:#fff; border-color: rgba(0,136,132,0.2); }
+  .btn-primary {
+    border-color: var(--brand);
+    background: var(--brand);
+    color: #fff;
+    box-shadow: 0 1px 2px rgb(0 136 132 / 0.25);
+  }
+  .btn-primary:hover { background: var(--brand-dark); border-color: var(--brand-dark); }
+  .btn-ghost {
+    border-color: transparent;
+    background: transparent;
+    box-shadow: none;
+    color: var(--ink-500);
+    font-weight: 500;
+    height: 36px;
+  }
+  .btn-ghost:hover { background: var(--brand-soft); color: var(--brand-dark); }
+  .btn-sm { height: 34px; padding: 0 12px; font-size: 12.5px; }
+  .btn-icon {
+    width: 32px; height: 32px; padding: 0;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--ink-500);
+    cursor: pointer;
+    display:inline-flex; align-items:center; justify-content:center;
+    transition: all .15s;
+  }
+  .btn-icon:hover { background: var(--brand-soft); color: var(--brand-dark); }
+  .spinner {
+    width: 15px; height: 15px;
+    border: 2px solid rgba(255,255,255,0.35);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .link {
+    background: none; border: none; padding: 0;
+    font-family: inherit; font-size: inherit;
+    color: var(--brand); font-weight: 600;
+    cursor: pointer; text-decoration: none;
+  }
+  .link:hover { text-decoration: underline; }
+
+  .alert {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 12px;
+    border-radius: var(--radius-control);
+    font-size: 13px;
+    line-height: 1.45;
+  }
+  .alert-error { background: var(--red-50); color: var(--red-600); }
+  .alert-success { background: var(--brand-soft); color: var(--brand-dark); }
+  .alert svg { flex-shrink: 0; margin-top: 1px; }
+
+  /* ============================================================
+     1. Web 登录页
+     ============================================================ */
+  .login-split {
+    display: flex;
+    height: 100%;
+    min-height: 480px;
+  }
+  .login-brand {
+    flex: 1;
+    background: linear-gradient(150deg, #008884 0%, #006f6b 100%);
+    color: #fff;
+    padding: 44px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+  }
+  .login-brand::after {
+    content: "";
+    position: absolute;
+    right: -80px; top: -80px;
+    width: 320px; height: 320px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,0.08), transparent 70%);
+    pointer-events: none;
+  }
+  .login-brand h2 {
+    margin: 0 0 12px;
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+  .login-brand p { margin: 0; font-size: 14px; color: rgba(255,255,255,0.8); line-height: 1.6; max-width: 34ch; }
+  .feature-list { margin-top: 28px; display: flex; flex-direction: column; gap: 16px; }
+  .feature {
+    display: flex; gap: 12px; align-items: flex-start;
+  }
+  .feature .ic {
+    width: 34px; height: 34px; flex-shrink: 0;
+    border-radius: 9px;
+    background: rgba(255,255,255,0.12);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff;
+  }
+  .feature .ft { font-size: 13.5px; font-weight: 600; }
+  .feature .fd { font-size: 12.5px; color: rgba(255,255,255,0.7); margin-top: 2px; }
+  .login-brand-foot { font-size: 11px; color: rgba(255,255,255,0.5); }
+  .login-form-wrap {
+    flex: 1;
+    display: flex; align-items: center; justify-content: center;
+    padding: 32px;
+    background: var(--bg-app);
+  }
+  .login-card { width: 100%; max-width: 340px; padding: 30px; }
+
+  /* segmented tab (改进点) */
+  .seg {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    background: #f1f0ee;
+    border-radius: var(--radius-control);
+    padding: 3px;
+    margin-bottom: 22px;
+    position: relative;
+  }
+  .seg button {
+    border: none; background: transparent;
+    padding: 8px 0;
+    font-family: inherit; font-size: 13px; font-weight: 600;
+    color: var(--ink-500);
+    cursor: pointer;
+    border-radius: 7px;
+    transition: color .15s;
+    position: relative; z-index: 1;
+  }
+  .seg button.active { color: var(--ink); }
+  .seg-slider {
+    position: absolute;
+    top: 3px; bottom: 3px; left: 3px;
+    width: calc(50% - 3px);
+    background: #fff;
+    border-radius: 7px;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.06);
+    transition: transform .2s cubic-bezier(.4,.0,.2,1);
+  }
+  .seg[data-active="1"] .seg-slider { transform: translateX(100%); }
+
+  .login-card h3 {
+    margin: 0 0 4px;
+    font-size: 22px; font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .login-card .sub { margin: 0 0 22px; font-size: 13px; color: var(--ink-500); }
+
+  .form-row { margin-bottom: 14px; }
+  .form-row-actions {
+    display: flex; align-items: center; justify-content: space-between;
+    margin: -4px 0 16px;
+  }
+  .remember {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-size: 12.5px; color: var(--ink-700); cursor: pointer;
+  }
+  .checkbox {
+    width: 15px; height: 15px;
+    border: 1.5px solid var(--ink-400);
+    border-radius: 4px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: #fff;
+    transition: all .15s;
+  }
+  .remember.on .checkbox {
+    background: var(--brand); border-color: var(--brand);
+  }
+  .remember.on .checkbox svg { display: block; }
+  .checkbox svg { display: none; color: #fff; }
+
+  .switch-line {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--ink-500);
+  }
+
+  /* divider with text */
+  .divider {
+    display: flex; align-items: center; gap: 12px;
+    margin: 20px 0;
+    color: var(--ink-400);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .divider::before, .divider::after {
+    content: ""; flex: 1; height: 1px; background: var(--border);
+  }
+
+  /* ============================================================
+     2. OTP 输入组件（验证码）
+     ============================================================ */
+  .otp {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+  }
+  .otp-cell {
+    width: 52px; height: 62px;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--ink);
+    border: 1.5px solid var(--border-strong);
+    border-radius: 12px;
+    background: rgba(255,255,255,0.9);
+    outline: none;
+    transition: all .15s;
+    caret-color: var(--brand);
+  }
+  .otp-cell:focus {
+    border-color: var(--brand);
+    background: #fff;
+    box-shadow: 0 0 0 4px var(--ring);
+    transform: translateY(-1px);
+  }
+  .otp-cell.filled {
+    border-color: rgba(0,136,132,0.35);
+    background: var(--brand-soft);
+  }
+  .otp-cell.complete {
+    border-color: var(--brand);
+    background: var(--brand-soft);
+    animation: otp-pulse .5s ease;
+  }
+  @keyframes otp-pulse {
+    0% { box-shadow: 0 0 0 0 rgb(0 136 132 / 0.4); }
+    100% { box-shadow: 0 0 0 12px rgb(0 136 132 / 0); }
+  }
+  .otp-sep {
+    width: 8px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--ink-400);
+  }
+  .otp-hint {
+    text-align: center;
+    margin-top: 14px;
+    font-size: 12.5px;
+    color: var(--ink-500);
+  }
+
+  /* 大号展示码（桌面端） */
+  .display-code {
+    display: flex; gap: 8px; justify-content: center;
+  }
+  .display-code span {
+    width: 46px; height: 60px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 28px; font-weight: 700;
+    color: var(--brand-dark);
+    background: #fff;
+    border: 1.5px solid rgba(0,136,132,0.2);
+    border-radius: 10px;
+    box-shadow: var(--shadow-card);
+  }
+
+  /* ============================================================
+     3. 桌面端授权等待视图
+     ============================================================ */
+  .auth-stage {
+    padding: 28px 30px;
+    max-width: 520px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  .auth-stage-icon {
+    width: 64px; height: 64px;
+    margin: 0 auto 16px;
+    border-radius: 18px;
+    background: var(--brand-soft);
+    color: var(--brand-dark);
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+  /* 圆环进度（倒计时） */
+  .ring-wrap {
+    position: relative;
+    width: 64px; height: 64px;
+    margin: 0 auto 18px;
+  }
+  .ring-wrap svg { transform: rotate(-90deg); display: block; }
+  .ring-bg { stroke: var(--brand-soft); }
+  .ring-fg {
+    stroke: var(--brand);
+    stroke-linecap: round;
+    transition: stroke-dashoffset 1s linear;
+  }
+  .ring-center {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    line-height: 1;
+  }
+  .ring-time {
+    font-family: var(--font-mono);
+    font-size: 15px; font-weight: 700;
+    color: var(--brand-dark);
+  }
+  .ring-label {
+    font-size: 8.5px;
+    color: var(--ink-400);
+    margin-top: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .auth-stage h3 {
+    margin: 0 0 6px;
+    font-size: 18px; font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .auth-stage p {
+    margin: 0 0 18px;
+    font-size: 13px; color: var(--ink-500);
+    line-height: 1.6;
+  }
+  .auth-stage .code-label {
+    font-size: 11px; font-weight: 700;
+    text-transform: uppercase;
+    color: var(--ink-500);
+    letter-spacing: 0.05em;
+    margin-bottom: 10px;
+  }
+  .auth-stage .code-label b { color: var(--brand); }
+
+  /* 三步进度 */
+  .steps {
+    display: flex; align-items: flex-start;
+    margin: 22px 0;
+    text-align: left;
+  }
+  .step {
+    flex: 1;
+    display: flex; flex-direction: column; align-items: center;
+    gap: 6px;
+    position: relative;
+    font-size: 11px;
+    color: var(--ink-400);
+    text-align: center;
+  }
+  .step-dot {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    border: 1.5px solid var(--border-strong);
+    background: #fff;
+    color: var(--ink-400);
+    font-size: 11px; font-weight: 700;
+    font-family: var(--font-mono);
+    position: relative; z-index: 1;
+  }
+  .step.done .step-dot {
+    background: var(--brand); border-color: var(--brand); color: #fff;
+  }
+  .step.active .step-dot {
+    border-color: var(--brand); color: var(--brand-dark);
+    box-shadow: 0 0 0 4px var(--ring);
+  }
+  .step.active { color: var(--ink-700); font-weight: 600; }
+  .step.done { color: var(--ink-700); }
+  .step::before {
+    content: "";
+    position: absolute;
+    top: 13px; left: -50%;
+    width: 100%; height: 1.5px;
+    background: var(--border-strong);
+  }
+  .step:first-child::before { display: none; }
+  .step.done::before, .step.active::before { background: var(--brand); }
+
+  .auth-actions {
+    display: flex; gap: 8px; justify-content: center;
+    margin-top: 18px;
+  }
+
+  /* fallback / 二维码 */
+  .fallback {
+    margin-top: 18px;
+    padding: 14px;
+    border-radius: var(--radius-panel);
+    background: #f1f0ee;
+    display: flex; align-items: center; gap: 14px;
+    text-align: left;
+  }
+  .qr {
+    width: 64px; height: 64px;
+    border-radius: 8px;
+    background: #fff;
+    padding: 4px;
+    flex-shrink: 0;
+  }
+  .qr-grid {
+    width: 100%; height: 100%;
+    background:
+      linear-gradient(90deg, var(--ink) 50%, transparent 50%) 0 0/8px 8px,
+      linear-gradient(0deg, var(--ink) 50%, transparent 50%) 0 0/8px 8px,
+      #fff;
+    border-radius: 4px;
+    position: relative;
+  }
+  .qr-grid::before, .qr-grid::after {
+    content:""; position:absolute;
+    width: 16px; height: 16px;
+    border: 4px solid var(--ink);
+    background: #fff;
+  }
+  .qr-grid::before { top:0; left:0; box-shadow: inset 0 0 0 4px #fff, inset 0 0 0 8px var(--ink); }
+  .qr-grid::after { top:0; right:0; box-shadow: inset 0 0 0 4px #fff, inset 0 0 0 8px var(--ink); }
+  .fallback-text { font-size: 12px; color: var(--ink-500); line-height: 1.5; }
+  .fallback-text b { color: var(--ink-700); display:block; margin-bottom: 2px; }
+  .copy-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    margin-top: 6px;
+    font-family: var(--font-mono); font-size: 11px;
+    color: var(--brand-dark);
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 3px 8px;
+    cursor: pointer;
+  }
+
+  /* 过期 / 失败态 */
+  .auth-stage.expired .auth-stage-icon,
+  .auth-stage.failed .auth-stage-icon {
+    background: var(--red-50); color: var(--red-600);
+  }
+
+  /* ============================================================
+     4. 桌面对话框容器（模拟 AccountDialog 形态）
+     ============================================================ */
+  .acct-dialog {
+    background: #fff;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    box-shadow: 0 20px 50px rgb(0 0 0 / 0.12);
+    width: 100%;
+    max-width: 560px;
+    margin: 30px auto;
+    overflow: hidden;
+  }
+  .acct-head {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255,255,255,0.7);
+  }
+  .acct-head h4 { margin: 0; font-size: 18px; font-weight: 600; }
+  .acct-head .sub { margin: 3px 0 0; font-size: 12px; color: var(--ink-500); }
+  .acct-body { padding: 24px; }
+
+  /* ============================================================
+     5. 组件 props 草图
+     ============================================================ */
+  .props-card {
+    background: #1c1917;
+    border-radius: var(--radius-panel);
+    padding: 18px 20px;
+    overflow-x: auto;
+  }
+  .props-card pre {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    line-height: 1.7;
+    color: #e7e5e4;
+  }
+  .props-card .k { color: #5eead4; }     /* key */
+  .props-card .s { color: #fcd34d; }     /* string */
+  .props-card .c { color: #78716c; font-style: italic; }
+  .props-card .t { color: #c4b5fd; }     /* type */
+
+  .props-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 900px) { .props-grid { grid-template-columns: 1fr; } }
+  .props-title {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--brand);
+    margin-bottom: 10px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .props-desc {
+    font-size: 13px; color: var(--ink-500);
+    margin: 10px 0 0; line-height: 1.6;
+  }
+
+  /* highlight pill */
+  .pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11px; font-weight: 600;
+    padding: 2px 8px; border-radius: 999px;
+    background: var(--brand-soft); color: var(--brand-dark);
+  }
+
+  /* 交互提示 */
+  .tryit {
+    margin-top: 14px;
+    font-size: 11.5px;
+    color: var(--brand);
+    display: inline-flex; align-items: center; gap: 6px;
+    font-weight: 600;
+  }
+  .tryit::before { content: "▲"; font-size: 9px; }
+
+  /* footnote */
+  .footnote {
+    margin-top: 80px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    font-size: 12.5px;
+    color: var(--ink-500);
+    line-height: 1.7;
+    max-width: 70ch;
+  }
+  .footnote b { color: var(--ink-700); }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ===================== 页头 ===================== -->
+  <div class="page-head">
+    <div class="page-title">
+      <h1>登录与授权体验 · 改进设计稿</h1>
+      <p>
+        解决三处入口的问题：<b>桌面端授权流程"戛然而止"</b>、<b>Web 验证码输入框不够好看</b>、<b>三处视觉不统一</b>。
+        所有设计严格沿用现有 design tokens（brand <code>#008884</code>、rounded-2xl 卡片、focus-ring 反馈、JetBrains Mono 品牌字）。
+        设计稿中"验证码"指的是 OAuth device-flow 的 6 位 <code>user_code</code>，不是短信/邮箱验证码。
+      </p>
+    </div>
+    <div class="page-meta">
+      [JTYPE] · DESIGN<br/>
+      2026-06-18 · v1
+    </div>
+  </div>
+
+  <!-- ===================== 1. 桌面端授权流程 ===================== -->
+  <section class="section">
+    <div class="section-head">
+      <span class="section-num">01</span>
+      <h2 class="section-title">桌面端授权等待视图</h2>
+      <span class="pill">核心痛点</span>
+    </div>
+    <p class="section-sub">
+      点 "Connect in browser" 之后，AccountDialog 的副标题只剩一行小字
+      <code>Waiting for browser authorization (code XXXXXX)</code>——
+      没有进度感、没有倒计时、没有取消按钮、不知道码会不会过期。这是"戛然而止"的根源。
+      改进方案：在对话框内嵌入一个真正的<b>等待状态视图</b>。
+    </p>
+
+    <div class="compare">
+      <!-- BEFORE -->
+      <div class="compare-col">
+        <span class="compare-tag compare-tag-before">现状 · Before</span>
+        <div class="window desktop-window">
+          <div class="desktop-titlebar">
+            <div class="desktop-titlebar-l">
+              <span class="wordmark wordmark-sm"><span class="wm-bracket">[</span><span style="color:var(--brand)">J</span>TYPE<span class="wm-bracket">]</span></span>
+            </div>
+            <span style="font-size:11px;color:var(--ink-400)">Settings</span>
+          </div>
+          <div class="window-body">
+            <div style="padding:24px;width:100%">
+              <h4 style="margin:0 0 4px;font-size:16px;font-weight:600">Profile</h4>
+              <p style="margin:0 0 18px;font-size:12.5px;color:var(--ink-500)">
+                Waiting for browser authorization (code <b>456478</b>)...
+              </p>
+              <input class="sync-input" value="http://localhost:13345" style="margin-bottom:14px" readonly />
+              <div style="display:flex;gap:8px">
+                <button class="btn btn-sm">Connect in browser</button>
+                <button class="btn btn-sm">Sync now</button>
+              </div>
+              <p style="margin-top:24px;font-size:11px;color:var(--ink-400);line-height:1.5">
+                浏览器已弹出，但窗口里看不到任何进度。<br/>
+                用户不知道：还要等多久？码会过期吗？能取消吗？
+              </p>
+            </div>
+          </div>
+        </div>
+        <p class="compare-note">
+          唯一的反馈是副标题那一行 12px 灰字。主体内容完全不变，<b>等同于"点了按钮就没下文"</b>。
+        </p>
+      </div>
+
+      <!-- AFTER -->
+      <div class="compare-col">
+        <span class="compare-tag compare-tag-after">改进 · After</span>
+        <div class="window desktop-window">
+          <div class="desktop-titlebar">
+            <div class="desktop-titlebar-l">
+              <span class="wordmark wordmark-sm"><span class="wm-bracket">[</span><span style="color:var(--brand)">J</span>TYPE<span class="wm-bracket">]</span></span>
+            </div>
+            <span style="font-size:11px;color:var(--ink-400)">Settings · 连接中</span>
+          </div>
+          <div class="window-body">
+            <div class="auth-stage">
+              <div class="ring-wrap" id="ringWrap">
+                <svg width="64" height="64" viewBox="0 0 64 64">
+                  <circle class="ring-bg" cx="32" cy="32" r="27" fill="none" stroke-width="4"/>
+                  <circle class="ring-fg" id="ringFg" cx="32" cy="32" r="27" fill="none" stroke-width="4"
+                          stroke-dasharray="169.6" stroke-dashoffset="0"/>
+                </svg>
+                <div class="ring-center">
+                  <span class="ring-time" id="ringTime">9:42</span>
+                  <span class="ring-label">剩余</span>
+                </div>
+              </div>
+              <h3>等待网页确认</h3>
+              <p>浏览器已打开授权页。请在网页上输入下方代码完成登录。</p>
+
+              <div class="code-label">在网页输入此代码 <b>· 可直接复制</b></div>
+              <div class="display-code" id="displayCode">
+                <span>4</span><span>5</span><span>6</span><span>4</span><span>7</span><span>8</span>
+              </div>
+
+              <div class="steps">
+                <div class="step done">
+                  <div class="step-dot"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div>
+                  浏览器已打开
+                </div>
+                <div class="step active">
+                  <div class="step-dot">2</div>
+                  等待网页确认
+                </div>
+                <div class="step">
+                  <div class="step-dot">3</div>
+                  完成
+                </div>
+              </div>
+
+              <div class="auth-actions">
+                <button class="btn btn-sm btn-ghost" onclick="resetRing()">取消</button>
+                <button class="btn btn-sm">重新打开浏览器</button>
+              </div>
+
+              <div class="fallback">
+                <div class="qr"><div class="qr-grid"></div></div>
+                <div class="fallback-text">
+                  <b>浏览器没自动打开？</b>
+                  扫码或手动复制链接到浏览器
+                  <br/>
+                  <span class="copy-chip" onclick="copyLink(this)">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                    jtype.app/device
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="compare-note">
+          <b>补全了反馈闭环：</b>圆环倒计时（10 分钟过期，对齐后端 <code>short_user_code</code> 生命周期）、
+          大号可复制展示码、三步进度、明确的取消/重开动作、二维码 fallback。
+          用户始终知道<b>现在在哪一步、还要等多久、能做什么</b>。
+        </p>
+      </div>
+    </div>
+
+    <!-- 状态变体 -->
+    <div style="margin-top:28px">
+      <div class="section-head" style="margin-bottom:14px">
+        <span class="section-num" style="color:var(--ink-400)">↳</span>
+        <span style="font-size:14px;font-weight:700;color:var(--ink-700)">状态变体</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px">
+        <!-- 成功 -->
+        <div class="window" style="min-height:auto">
+          <div class="auth-stage" style="padding:24px">
+            <div class="auth-stage-icon" style="background:var(--brand);color:#fff;width:54px;height:54px;border-radius:16px">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <h3 style="font-size:16px">已连接</h3>
+            <p>已连接为 <b>jack</b>，正在同步工作区…</p>
+            <div class="alert alert-success" style="justify-content:center">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg>
+              授权成功
+            </div>
+          </div>
+        </div>
+        <!-- 过期 -->
+        <div class="window" style="min-height:auto">
+          <div class="auth-stage expired" style="padding:24px">
+            <div class="auth-stage-icon">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            </div>
+            <h3 style="font-size:16px">验证码已过期</h3>
+            <p>代码有效期 10 分钟。请重新生成一个新的授权码。</p>
+            <button class="btn btn-sm btn-primary">重新开始</button>
+          </div>
+        </div>
+        <!-- 失败 -->
+        <div class="window" style="min-height:auto">
+          <div class="auth-stage failed" style="padding:24px">
+            <div class="auth-stage-icon">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>
+            </div>
+            <h3 style="font-size:16px">授权被拒绝</h3>
+            <p>你在网页上拒绝了本次授权。可以重新尝试。</p>
+            <div class="auth-actions" style="margin-top:14px">
+              <button class="btn btn-sm btn-ghost">关闭</button>
+              <button class="btn btn-sm btn-primary">重新授权</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 2. Web 验证码页 ===================== -->
+  <section class="section">
+    <div class="section-head">
+      <span class="section-num">02</span>
+      <h2 class="section-title">Web 验证码页（DeviceOAuth）</h2>
+      <span class="pill">可交互</span>
+    </div>
+    <p class="section-sub">
+      现状是一个普通 <code>&lt;input&gt;</code> 填 6 位数字，而且用了 zinc 色阶 + 内联 Tailwind，
+      和 Login 页视觉割裂。改进：升级为<b>分格 OTP 组件</b>，统一到 brand 卡片视觉，
+      支持自动跳格 / 粘贴拆分 / 填满自动提交。
+    </p>
+
+    <div class="compare">
+      <!-- BEFORE -->
+      <div class="compare-col">
+        <span class="compare-tag compare-tag-before">现状 · Before</span>
+        <div class="window">
+          <div class="window-bar">
+            <div class="traffic"><span></span><span></span><span></span></div>
+            <div class="window-url">jtype.app/oauth/device</div>
+          </div>
+          <div class="window-body" style="background:#fafafa;display:flex;align-items:center;justify-content:center;padding:32px">
+            <div style="width:100%;max-width:340px;background:#fff;border:1px solid #e4e4e7;border-radius:12px;padding:30px;box-shadow:0 1px 2px rgb(0 0 0 /0.05)">
+              <h3 style="margin:0 0 6px;text-align:center;font-size:20px;font-weight:700;color:#18181b">Authorize Desktop</h3>
+              <p style="margin:0 0 22px;text-align:center;font-size:13px;color:#71717a">Enter the code shown in your JType desktop app</p>
+              <label style="display:block;font-size:12px;font-weight:500;color:#3f3f46;margin-bottom:4px">Device Code</label>
+              <input style="width:100%;border:1px solid #d4d4d8;border-radius:8px;padding:8px 12px;font-size:13px;outline:none" placeholder="e.g. 456478" />
+              <p style="margin:16px 0 0;font-size:11px;color:#a1a1aa;text-align:center">
+                视觉用 zinc 色阶，与登录页的 <code>#f5f8f6</code> + brand 完全不同。<br/>
+                普通输入框，6 位数字挤在一起，难输入难核对。
+              </p>
+            </div>
+          </div>
+        </div>
+        <p class="compare-note">
+          问题：① 用了 <code>bg-zinc-50</code> + <code>border-zinc-300</code>，和登录页色系割裂；
+          ② 6 位码塞进一个普通 input，无分隔、无自动跳格、粘贴需手动定位光标；
+          ③ 已登录/未登录状态硬切。
+        </p>
+      </div>
+
+      <!-- AFTER -->
+      <div class="compare-col">
+        <span class="compare-tag compare-tag-after">改进 · After</span>
+        <div class="window">
+          <div class="window-bar">
+            <div class="traffic"><span></span><span></span><span></span></div>
+            <div class="window-url">jtype.app/oauth/device</div>
+          </div>
+          <div class="window-body" style="background:var(--bg-app);display:flex;align-items:center;justify-content:center;padding:32px">
+            <div class="login-card" style="padding:30px;max-width:380px">
+              <!-- 品牌头 -->
+              <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:18px">
+                <div class="wordmark wordmark-sm" style="margin-bottom:14px">
+                  <span class="wm-bracket">[</span><span style="color:var(--brand)">J</span><span style="color:var(--ink)">TYPE</span><span class="wm-bracket">]</span>
+                </div>
+                <div class="auth-stage-icon" style="width:48px;height:48px;border-radius:14px;margin-bottom:12px">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <rect x="2" y="3" width="20" height="14" rx="2"/>
+                    <path d="M8 21h8M12 17v4"/>
+                  </svg>
+                </div>
+                <h3 style="margin:0 0 4px;font-size:18px;font-weight:700">授权桌面应用</h3>
+                <p style="margin:0;font-size:12.5px;color:var(--ink-500);text-align:center;max-width:28ch">
+                  输入桌面 App 上显示的 6 位代码
+                </p>
+              </div>
+
+              <!-- OTP -->
+              <div class="otp" id="otpWeb">
+                <input class="otp-cell" maxlength="1" inputmode="numeric" data-idx="0" />
+                <input class="otp-cell" maxlength="1" inputmode="numeric" data-idx="1" />
+                <input class="otp-cell" maxlength="1" inputmode="numeric" data-idx="2" />
+                <div class="otp-sep"><svg width="6" height="2"><rect width="6" height="2" rx="1" fill="currentColor"/></svg></div>
+                <input class="otp-cell" maxlength="1" inputmode="numeric" data-idx="3" />
+                <input class="otp-cell" maxlength="1" inputmode="numeric" data-idx="4" />
+                <input class="otp-cell" maxlength="1" inputmode="numeric" data-idx="5" />
+              </div>
+              <p class="otp-hint">填满后自动提交 · 也可直接粘贴整串代码</p>
+
+              <!-- 已登录提示（平滑过渡） -->
+              <div style="margin-top:20px;padding-top:18px;border-top:1px solid var(--border)">
+                <div style="display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--ink-500)">
+                  <div style="width:26px;height:26px;border-radius:50%;background:var(--brand-soft);color:var(--brand-dark);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px">J</div>
+                  <span>已登录为 <b style="color:var(--ink-700)">jack</b>，确认后即可授权</span>
+                </div>
+                <button class="btn btn-primary" style="width:100%;margin-top:14px;opacity:.5;pointer-events:none">
+                  授权设备
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="compare-note">
+          <b>统一了视觉语言</b>：同样的 <code>#f5f8f6</code> 背景、rounded-2xl 卡片、brand 色、品牌字标。
+          6 格 OTP 每格独立、自动跳格、粘贴自动拆分、3-3 分组提升可读性。
+          已登录态用淡入分隔线过渡，而非硬切表单。
+        </p>
+        <span class="tryit">上方验证码框可直接键入 / 粘贴体验</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 3. Web 登录页 ===================== -->
+  <section class="section">
+    <div class="section-head">
+      <span class="section-num">03</span>
+      <h2 class="section-title">Web 登录页（Login.tsx）</h2>
+      <span class="pill">收尾细节</span>
+    </div>
+    <p class="section-sub">
+      现状已经较好，但缺收尾：登录/注册切换藏在底部文字链、按钮加载态只有文字、没有"忘记密码"、错误反馈单薄。
+      改进：顶部 segmented tab、记住我 + 忘记密码、spinner 加载态、精致错误卡片。
+    </p>
+
+    <div class="compare">
+      <!-- BEFORE -->
+      <div class="compare-col">
+        <span class="compare-tag compare-tag-before">现状 · Before</span>
+        <div class="window">
+          <div class="window-bar">
+            <div class="traffic"><span></span><span></span><span></span></div>
+            <div class="window-url">jtype.app/login</div>
+          </div>
+          <div class="window-body">
+            <div class="login-split">
+              <div class="login-brand">
+                <div class="wordmark wordmark-lg"><span class="wm-bracket">[</span><span>J</span><span style="opacity:.9">TYPE</span><span class="wm-bracket">]</span></div>
+                <div>
+                  <h2>Your Markdown workspace,<br/>synced to the cloud.</h2>
+                  <p>Local-first notes with cloud sync, publishing, and AI-ready indexing.</p>
+                </div>
+                <div class="login-brand-foot">© 2026 JType</div>
+              </div>
+              <div class="login-form-wrap">
+                <div class="login-card">
+                  <h3>Welcome back</h3>
+                  <p class="sub">Sign in to your JType Cloud account.</p>
+                  <div class="form-row">
+                    <label class="field-label">Username</label>
+                    <input class="sync-input" placeholder="Enter your username" />
+                  </div>
+                  <div class="form-row">
+                    <label class="field-label">Password</label>
+                    <input class="sync-input" type="password" placeholder="Enter your password" />
+                  </div>
+                  <button class="btn btn-primary" style="width:100%;margin-top:4px">Sign in</button>
+                  <p class="switch-line">
+                    Don't have an account? <button class="link">Register</button>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="compare-note">
+          问题：登录/注册切换在<b>底部</b>不显眼；无"忘记密码"；按钮无 spinner；
+          切到注册态时标题/副标题换了，但切换入口本身没有强提示。
+        </p>
+      </div>
+
+      <!-- AFTER -->
+      <div class="compare-col">
+        <span class="compare-tag compare-tag-after">改进 · After</span>
+        <div class="window">
+          <div class="window-bar">
+            <div class="traffic"><span></span><span></span><span></span></div>
+            <div class="window-url">jtype.app/login</div>
+          </div>
+          <div class="window-body">
+            <div class="login-split">
+              <div class="login-brand">
+                <div class="wordmark wordmark-lg"><span class="wm-bracket">[</span><span>J</span><span style="opacity:.9">TYPE</span><span class="wm-bracket">]</span></div>
+                <div>
+                  <h2>Your Markdown workspace,<br/>synced to the cloud.</h2>
+                  <p>Local-first notes with cloud sync, publishing, and AI-ready indexing.</p>
+                  <div class="feature-list">
+                    <div class="feature">
+                      <div class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg></div>
+                      <div><div class="ft">Cloud Sync</div><div class="fd">Keep your vaults in sync across all devices.</div></div>
+                    </div>
+                    <div class="feature">
+                      <div class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+                      <div><div class="ft">AI-Ready</div><div class="fd">Indexed and ready for intelligent assistance.</div></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="login-brand-foot">© 2026 JType</div>
+              </div>
+              <div class="login-form-wrap">
+                <div class="login-card">
+                  <!-- segmented tab -->
+                  <div class="seg" id="loginSeg" data-active="0">
+                    <div class="seg-slider"></div>
+                    <button class="active" data-tab="0" onclick="switchTab(0)">登录</button>
+                    <button data-tab="1" onclick="switchTab(1)">注册</button>
+                  </div>
+
+                  <div id="loginForm">
+                    <h3 id="loginTitle">欢迎回来</h3>
+                    <p class="sub" id="loginSub">登录到你的 JType Cloud 账户。</p>
+
+                    <div class="form-row">
+                      <label class="field-label">用户名</label>
+                      <input class="sync-input" placeholder="输入用户名" />
+                    </div>
+                    <div class="form-row">
+                      <label class="field-label">密码</label>
+                      <input class="sync-input" type="password" placeholder="输入密码" />
+                    </div>
+
+                    <div class="form-row-actions">
+                      <label class="remember on" onclick="this.classList.toggle('on')">
+                        <span class="checkbox"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><path d="M5 13l4 4L19 7"/></svg></span>
+                        记住我
+                      </label>
+                      <button class="link" style="font-size:12.5px">忘记密码？</button>
+                    </div>
+
+                    <button class="btn btn-primary" style="width:100%" id="loginBtn" onclick="fakeSubmit(this)">
+                      <span id="loginBtnText">登录</span>
+                    </button>
+
+                    <div class="switch-line">
+                      没有账户？<button class="link" onclick="switchTab(1)">立即注册</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="compare-note">
+          <b>顶部 segmented tab</b> 让登录/注册切换更显眼且有滑动动效；
+          <b>记住我 + 忘记密码</b> 补全常规登录页应有的细节；
+          按钮 <b>spinner 加载态</b>（点击"登录"试试）；错误用图标卡片。
+        </p>
+        <span class="tryit">点击顶部"登录/注册"切换 · 点击"登录"看加载态</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 4. 共享组件草图 ===================== -->
+  <section class="section">
+    <div class="section-head">
+      <span class="section-num">04</span>
+      <h2 class="section-title">共享组件抽取草图</h2>
+    </div>
+    <p class="section-sub">
+      按现有 <code>shared/</code> 架构（Props-in / Callbacks-out），把上面三处复用的部分抽成共享组件，
+      桌面端和 Web 端共用同一套实现，避免再次分裂。下面是 props 设计草图（未实现）。
+    </p>
+
+    <div class="props-grid">
+      <!-- OTPInput -->
+      <div>
+        <div class="props-title">
+          <span style="color:var(--ink-400)">{</span> shared/components/OTPInput.tsx
+        </div>
+        <div class="props-card">
+<pre><span class="c">// 6 位验证码输入（device-flow user_code 专用）</span>
+<span class="c">// Web DeviceOAuth 页 + 未来桌面端 fallback 共用</span>
+
+<span class="k">interface</span> <span class="t">OTPInputProps</span> {
+  <span class="k">length</span>: <span class="t">number</span>;              <span class="c">// 默认 6</span>
+  <span class="k">value</span>: <span class="t">string</span>;              <span class="c">// 受控值</span>
+  <span class="k">onChange</span>: (v: <span class="t">string</span>) =&gt; <span class="t">void</span>;
+  <span class="k">onComplete</span>?: (v: <span class="t">string</span>) =&gt; <span class="t">void</span>;  <span class="c">// 填满自动提交</span>
+  <span class="k">error</span>?: <span class="t">boolean</span>;           <span class="c">// 红色高亮</span>
+  <span class="k">groupSize</span>?: <span class="t">number</span>;       <span class="c">// 分组，默认 3-3</span>
+  <span class="k">autoFocus</span>?: <span class="t">boolean</span>;
+}
+
+<span class="c">// 内置能力：自动跳格 / Backspace 回退 /</span>
+<span class="c">// 整串粘贴拆分 / inputmode=numeric</span></pre>
+        </div>
+        <p class="props-desc">
+          纯 props 驱动，无任何平台耦合。Web 和桌面端各自传入 <code>onChange</code>/<code>onComplete</code>
+          调各自的 API。
+        </p>
+      </div>
+
+      <!-- AuthCard -->
+      <div>
+        <div class="props-title">
+          <span style="color:var(--ink-400)">{</span> shared/components/AuthCard.tsx
+        </div>
+        <div class="props-card">
+<pre><span class="c">// 统一的认证卡片外壳（brand 背景 + 白色表单卡片）</span>
+<span class="c">// Login 页 + DeviceOAuth 页共用</span>
+
+<span class="k">interface</span> <span class="t">AuthCardProps</span> {
+  <span class="k">brand</span>?: <span class="t">ReactNode</span>;          <span class="c">// 左侧品牌面板，可省略</span>
+  <span class="k">title</span>: <span class="t">ReactNode</span>;
+  <span class="k">subtitle</span>?: <span class="t">ReactNode</span>;
+  <span class="k">icon</span>?: <span class="t">ReactNode</span>;           <span class="c">// 顶部图标</span>
+  <span class="k">children</span>: <span class="t">ReactNode</span>;       <span class="c">// 表单内容</span>
+  <span class="k">footer</span>?: <span class="t">ReactNode</span>;         <span class="c">// 底部切换链接</span>
+  <span class="k">split</span>?: <span class="t">boolean</span>;           <span class="c">// 是否分屏，默认 true</span>
+}
+
+<span class="c">// 视觉一致性保证：</span>
+<span class="c">// - 固定 #f5f8f6 背景</span>
+<span class="c">// - rounded-2xl + ring-1 ring-black/[0.03]</span>
+<span class="c">// - JetBrains Mono 品牌字标</span></pre>
+        </div>
+        <p class="props-desc">
+          把"卡片质感"固化在一个组件里，从此三处认证页<b>天然视觉统一</b>，
+          后续新增认证页（如邀请接受、密码重置）也自动复用。
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 脚注 ===================== -->
+  <div class="footnote">
+    <p><b>设计原则：</b>克制、延续现有"local-first 安静工具"的气质，不堆装饰。核心是补全<b>反馈闭环</b>
+    （倒计时、进度、状态可见性、明确的动作）和<b>视觉统一</b>，而非换皮。</p>
+    <p style="margin-top:10px"><b>取舍说明：</b>本轮聚焦明色模式，未做暗色变体（后续可补）；
+    未引入第三方社交登录（后端无此能力）；"验证码"仅指 device-flow <code>user_code</code>，
+    未臆造短信/邮箱 OTP 功能。所有倒计时（10 分钟）对齐后端
+    <code>services/jtype-web/src/util.rs</code> 的 <code>short_user_code</code> 生命周期。</p>
+    <p style="margin-top:10px"><b>下一步：</b>选定方向后，进入实现阶段——抽 <code>OTPInput</code> / <code>AuthCard</code> 到
+    <code>shared/components/</code>，改造 Login.tsx / DeviceOAuth.tsx / AccountDialog.tsx，并保持桌面端与 Web 端同步。</p>
+  </div>
+
+</div>
+
+<script>
+  /* ============================================================
+     交互逻辑
+     ============================================================ */
+
+  /* ---- OTP 输入：自动跳格 / 粘贴拆分 / 填满反馈 ---- */
+  function bindOTP(root) {
+    if (!root) return;
+    const cells = Array.from(root.querySelectorAll('.otp-cell'));
+    cells.forEach((cell, i) => {
+      cell.addEventListener('input', (e) => {
+        const v = e.target.value.replace(/\D/g, '').slice(-1);
+        e.target.value = v;
+        cells.forEach(c => c.classList.remove('complete'));
+        if (v) {
+          cell.classList.add('filled');
+          if (i < cells.length - 1) cells[i + 1].focus();
+        } else {
+          cell.classList.remove('filled');
+        }
+        if (cells.every(c => c.value)) {
+          cells.forEach(c => c.classList.add('complete'));
+        }
+      });
+      cell.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && !cell.value && i > 0) {
+          cells[i - 1].focus();
+          cells[i - 1].value = '';
+          cells[i - 1].classList.remove('filled');
+        }
+        if (e.key === 'ArrowLeft' && i > 0) cells[i - 1].focus();
+        if (e.key === 'ArrowRight' && i < cells.length - 1) cells[i + 1].focus();
+      });
+      cell.addEventListener('paste', (e) => {
+        e.preventDefault();
+        const text = (e.clipboardData || window.clipboardData).getData('text');
+        const digits = text.replace(/\D/g, '').slice(0, cells.length);
+        digits.split('').forEach((d, idx) => {
+          if (cells[idx]) {
+            cells[idx].value = d;
+            cells[idx].classList.add('filled');
+          }
+        });
+        if (cells.every(c => c.value)) {
+          cells.forEach(c => c.classList.add('complete'));
+        } else {
+          const nextEmpty = cells.findIndex(c => !c.value);
+          if (nextEmpty >= 0) cells[nextEmpty].focus();
+        }
+      });
+    });
+  }
+  document.querySelectorAll('.otp').forEach(bindOTP);
+
+  /* ---- 桌面端圆环倒计时（演示用） ---- */
+  const CIRC = 2 * Math.PI * 27; // 169.6
+  let ringTimer = null;
+  let ringTotal = 600; // 10 分钟
+  function startRing() {
+    const fg = document.getElementById('ringFg');
+    const time = document.getElementById('ringTime');
+    if (!fg || !time) return;
+    let left = ringTotal;
+    fg.setAttribute('stroke-dasharray', CIRC);
+    clearInterval(ringTimer);
+    ringTimer = setInterval(() => {
+      left -= 1;
+      if (left < 0) { clearInterval(ringTimer); left = 0; }
+      const m = String(Math.floor(left / 60)).padStart(1, '0');
+      const s = String(left % 60).padStart(2, '0');
+      time.textContent = `${m}:${s}`;
+      const progress = left / ringTotal;
+      fg.setAttribute('stroke-dashoffset', CIRC * (1 - progress));
+    }, 1000);
+  }
+  function resetRing() {
+    clearInterval(ringTimer);
+    const fg = document.getElementById('ringFg');
+    if (fg) fg.setAttribute('stroke-dashoffset', '0');
+    const time = document.getElementById('ringTime');
+    if (time) time.textContent = '9:42';
+  }
+  startRing();
+
+  /* ---- 登录页 segmented tab ---- */
+  function switchTab(idx) {
+    const seg = document.getElementById('loginSeg');
+    if (!seg) return;
+    seg.setAttribute('data-active', idx);
+    seg.querySelectorAll('button').forEach((b, i) => b.classList.toggle('active', i === idx));
+    const title = document.getElementById('loginTitle');
+    const sub = document.getElementById('loginSub');
+    const btnText = document.getElementById('loginBtnText');
+    const switchLine = document.querySelector('#loginForm .switch-line');
+    if (idx === 0) {
+      title.textContent = '欢迎回来';
+      sub.textContent = '登录到你的 JType Cloud 账户。';
+      btnText.textContent = '登录';
+      switchLine.innerHTML = '没有账户？<button class="link" onclick="switchTab(1)">立即注册</button>';
+    } else {
+      title.textContent = '创建账户';
+      sub.textContent = '注册开始同步你的 vaults。';
+      btnText.textContent = '创建账户';
+      switchLine.innerHTML = '已有账户？<button class="link" onclick="switchTab(0)">去登录</button>';
+    }
+  }
+
+  /* ---- 登录按钮加载态演示 ---- */
+  function fakeSubmit(btn) {
+    const text = document.getElementById('loginBtnText');
+    const orig = text.textContent;
+    btn.disabled = true;
+    btn.style.opacity = '0.85';
+    text.innerHTML = '<span class="spinner"></span>';
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.style.opacity = '';
+      text.textContent = orig;
+    }, 1600);
+  }
+
+  /* ---- 复制链接演示 ---- */
+  function copyLink(chip) {
+    const orig = chip.innerHTML;
+    chip.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg> 已复制';
+    setTimeout(() => { chip.innerHTML = orig; }, 1500);
+  }
+</script>
+</body>
+</html>
