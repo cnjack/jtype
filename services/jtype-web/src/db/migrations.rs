@@ -148,6 +148,15 @@ async fn remove_version(pool: &Pool<MySql>, version: i64) -> Result<(), AppError
 
 /// Execute a SQL script that may contain multiple statements separated by `;`.
 /// Skips empty statements and strips full-line SQL comments (`--`).
+///
+/// Idempotent-tolerant: a "duplicate object" MySQL error (column/index/table/
+/// constraint already exists) is treated as success rather than failure. This
+/// lets a migration re-apply cleanly when the schema is already ahead of
+/// `_schema_migrations` (e.g. a column was added manually, or a prior run
+/// crashed mid-file after applying some DDL but before recording the version).
+/// MySQL has no `ADD COLUMN IF NOT EXISTS`, and `PREPARE/EXECUTE` workarounds
+/// are rejected by sqlx's prepared-statement protocol (error 1295), so the
+/// tolerance is implemented here at the executor instead.
 async fn exec_sql(pool: &Pool<MySql>, sql: &str) -> Result<(), AppError> {
     // Strip full-line `--` comments BEFORE splitting on `;`. A semicolon inside a
     // comment must not split a statement: otherwise the `--` and the rest of its
@@ -162,11 +171,82 @@ async fn exec_sql(pool: &Pool<MySql>, sql: &str) -> Result<(), AppError> {
         if stmt.is_empty() {
             continue;
         }
-        sqlx::query(stmt).execute(pool).await.map_err(|e| {
-            AppError::Server(format!("migration SQL error: {e}\n  statement: {stmt}"))
-        })?;
+        if let Err(e) = sqlx::query(stmt).execute(pool).await {
+            if is_duplicate_object_error(&e) {
+                // Object already exists — the intended end state for this DDL.
+                // Log and continue rather than aborting the migration.
+                eprintln!("[migrations] ignoring duplicate-object error (already applied): {e}");
+                continue;
+            }
+            return Err(AppError::Server(format!(
+                "migration SQL error: {e}\n  statement: {stmt}"
+            )));
+        }
     }
     Ok(())
+}
+
+/// True when a MySQL error means the DDL target already exists, i.e. the
+/// statement is idempotently satisfied.
+///
+/// sqlx surfaces the **SQLSTATE** via `DatabaseError::code()` (not the MySQL
+/// native error number, which lives only in the message). The relevant states:
+///   `42S01` — base table / view already exists (ER_TABLE_EXISTS_ERROR, 1050)
+///   `42S11` — index/key already exists (ER_DUP_KEYNAME, 1061)
+///   `42S21` — column already exists (ER_DUP_FIELDNAME, 1060)
+/// Foreign-key "already exists" surfaces with varying states, so a message
+/// keyword fallback covers it.
+fn is_duplicate_object_error(err: &sqlx::Error) -> bool {
+    let Some(db_err) = err.as_database_error() else {
+        return false;
+    };
+    let code = db_err.code().map(|c| c.to_string());
+    is_duplicate_state_or_message(code.as_deref(), db_err.message())
+}
+
+/// Pure core of [`is_duplicate_object_error`], factored out so it can be unit
+/// tested without constructing a `sqlx::Error`.
+fn is_duplicate_state_or_message(code: Option<&str>, msg: &str) -> bool {
+    if code.map(|c| matches!(c, "42S11" | "42S21" | "42S01")).unwrap_or(false) {
+        return true;
+    }
+    let msg = msg.to_ascii_lowercase();
+    msg.contains("duplicate foreign key")
+        || msg.contains("already exists")
+        || msg.contains("duplicate key name")
+        || msg.contains("duplicate column")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn detects_duplicate_column_state() {
+        assert!(is_duplicate_state_or_message(Some("42S21"), "Duplicate column name 'email_verified_at'"));
+    }
+
+    #[test]
+    fn detects_duplicate_index_state() {
+        assert!(is_duplicate_state_or_message(Some("42S11"), "Duplicate key name 'users_email_unique'"));
+    }
+
+    #[test]
+    fn detects_duplicate_table_state() {
+        assert!(is_duplicate_state_or_message(Some("42S01"), "Table 'x' already exists"));
+    }
+
+    #[test]
+    fn detects_duplicate_fk_by_message_even_without_known_state() {
+        assert!(is_duplicate_state_or_message(Some("HY000"), "Duplicate foreign key constraint name 'fk_x'"));
+    }
+
+    #[test]
+    fn non_duplicate_error_is_not_tolerated() {
+        // A syntax error or connection failure must NOT be swallowed.
+        assert!(!is_duplicate_state_or_message(Some("42000"), "You have an error in your SQL syntax"));
+        assert!(!is_duplicate_state_or_message(None, "connection refused"));
+    }
 }
 
 // ---------------------------------------------------------------------------
