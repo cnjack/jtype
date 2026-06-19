@@ -76,6 +76,11 @@ msgstr "📁 サブフォルダー {0} 件{1}"
 msgid "📄 {0} document{1}"
 msgstr "📄 ドキュメント {0} 件{1}"
 
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "A browser opened to the authorization page. Enter the code below to "
+"finish signing in."
+msgstr ""
+
 #: src/components/modals/NewResourceDialog.tsx
 msgid "A hand-drawn style whiteboard canvas"
 msgstr "手描き風のホワイトボードキャンバス"
@@ -200,8 +205,13 @@ msgid "Browser authorization is open. This sync will continue after sign-in "
 "completes."
 msgstr "ブラウザ認証が開かれています。サインイン完了後にこの同期が続きます。"
 
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Browser opened"
+msgstr ""
+
 #: src/components/modals/CreateFolderDialog.tsx
 #: src/components/modals/DeleteFolderDialog.tsx
+#: src/components/modals/DeviceAuthWaiting.tsx
 #: src/components/modals/MoveFolderDialog.tsx
 #: src/components/modals/NewResourceDialog.tsx
 msgid "Cancel"
@@ -239,6 +249,14 @@ msgstr "作成するものを選んでください。"
 
 #~ msgid "Clear filter"
 #~ msgstr ""
+
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Click code to copy"
+msgstr ""
+
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Click to copy"
+msgstr ""
 
 #: src/components/modals/AccountDialog.tsx
 #: src/components/modals/ConflictDialog.tsx
@@ -286,6 +304,10 @@ msgstr "クラウドワークスペース：{0}"
 #: src/components/modals/AccountDialog.tsx
 msgid "Cloud workspaces"
 msgstr "クラウドワークスペース"
+
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Codes expire after 10 minutes. Generate a new one to continue."
+msgstr ""
 
 #: src/components/sidebar/Sidebar.tsx
 msgid "Collapse all"
@@ -340,6 +362,10 @@ msgstr "接続してワークスペースを読み込みます。"
 #: src/components/modals/AccountDialog.tsx
 msgid "Connected as {0}. Sync vaults with cloud workspaces."
 msgstr "{0} として接続済み。ボルトをクラウドワークスペースと同期します。"
+
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Copied"
+msgstr ""
 
 #~ msgid "Copy link"
 #~ msgstr ""
@@ -517,6 +543,10 @@ msgstr "ドキュメントの公開を取り消しました。"
 msgid "Documents"
 msgstr "ドキュメント"
 
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Done"
+msgstr ""
+
 #~ msgid "Done column"
 #~ msgstr ""
 
@@ -561,6 +591,10 @@ msgstr "クラウド同期を有効化"
 msgid "Enable cloud sync for this vault first"
 msgstr "最初にこのボルトのクラウド同期を有効にしてください"
 
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Enter this code on the web"
+msgstr ""
+
 #: src/components/modals/NewResourceDialog.tsx
 msgid "Excalidraw drawing"
 msgstr "Excalidraw の描画"
@@ -571,6 +605,10 @@ msgstr "すべて展開"
 
 #~ msgid "Expand column"
 #~ msgstr ""
+
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Expired"
+msgstr ""
 
 #: src/components/editor/EditorShell.tsx
 msgid "Export"
@@ -1081,6 +1119,10 @@ msgstr "最近"
 #~ msgid "Refresh"
 #~ msgstr ""
 
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "remaining"
+msgstr ""
+
 #. placeholder {0}: item.name
 #. placeholder {0}: vault.name
 #: src/components/layout/WelcomeScreen.tsx
@@ -1138,6 +1180,10 @@ msgstr "フォルダーを次の名前に変更："
 #: src/components/sidebar/Sidebar.tsx
 msgid "Rename to:"
 msgstr "次の名前に変更："
+
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Reopen browser"
+msgstr ""
 
 #: src/components/editor/EditorShell.tsx
 msgid "Republish"
@@ -1244,6 +1290,10 @@ msgstr "サインイン"
 
 #~ msgid "Sort: Title"
 #~ msgstr ""
+
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Start again"
+msgstr ""
 
 #: src/components/modals/AccountDialog.tsx
 msgid "Start cloud sync"
@@ -1408,6 +1458,10 @@ msgstr "ボルト準備完了"
 msgid "vault root"
 msgstr "ボルトルート"
 
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Verification code expired"
+msgstr ""
+
 #: src/components/editor/EditorShell.tsx
 msgid "View published page"
 msgstr "公開ページを表示"
@@ -1420,6 +1474,14 @@ msgstr "ビューアーアクセスは読み取り専用です。"
 #: src/components/modals/AccountDialog.tsx
 msgid "Waiting for browser authorization (code {0})..."
 msgstr "ブラウザ認証を待機中（コード {0}）..."
+
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Waiting for web confirmation"
+msgstr ""
+
+#: src/components/modals/DeviceAuthWaiting.tsx
+msgid "Web confirmation"
+msgstr ""
 
 #: src/components/BoardView.tsx
 msgid "WIP limit (blank to clear)"

@@ -8,11 +8,12 @@ import {
   type AdminDomain,
   type AdminStats,
   type StorageSettings as StorageSettingsData,
+  type SmtpSettings as SmtpSettingsData,
 } from '../api'
 import { t } from '@lingui/core/macro'
 import { Trans } from '@lingui/react/macro'
 
-type AdminTab = 'users' | 'workspaces' | 'domains' | 'storage'
+type AdminTab = 'users' | 'workspaces' | 'domains' | 'storage' | 'smtp'
 
 export function Admin() {
   const navigate = useNavigate()
@@ -33,8 +34,8 @@ export function AdminDialog({ onClose }: { onClose: () => void }) {
   }, [])
 
   useEffect(() => {
-    // The storage tab manages its own loading; the table tabs load here.
-    if (tab === 'storage') return
+    // The storage and smtp tabs manage their own loading; the table tabs load here.
+    if (tab === 'storage' || tab === 'smtp') return
     setLoading(true)
     const load =
       tab === 'users'
@@ -62,6 +63,7 @@ export function AdminDialog({ onClose }: { onClose: () => void }) {
           <AdminNavButton active={tab === 'workspaces'} onClick={() => setTab('workspaces')} label={t`Cloud workspaces`} />
           <AdminNavButton active={tab === 'domains'} onClick={() => setTab('domains')} label={t`Domains`} />
           <AdminNavButton active={tab === 'storage'} onClick={() => setTab('storage')} label={t`Storage`} />
+          <AdminNavButton active={tab === 'smtp'} onClick={() => setTab('smtp')} label={t`Email`} />
         </aside>
 
         <main className="min-h-0 overflow-y-auto p-8">
@@ -71,7 +73,9 @@ export function AdminDialog({ onClose }: { onClose: () => void }) {
               <p className="mt-1 text-sm text-zinc-500">
                 {tab === 'storage'
                   ? <Trans>Configure server object storage. Saved values override the JTYPED_STORAGE_* environment variables and apply immediately.</Trans>
-                  : <Trans>Manage users, cloud workspaces, domains, and service activity.</Trans>}
+                  : tab === 'smtp'
+                    ? <Trans>Configure outbound email (SMTP). Used for password reset and email verification. Saved values override the JTYPED_SMTP_* environment variables.</Trans>
+                    : <Trans>Manage users, cloud workspaces, domains, and service activity.</Trans>}
               </p>
             </div>
             <button className="subtle-button" type="button" onClick={onClose}><Trans>Close</Trans></button>
@@ -80,6 +84,8 @@ export function AdminDialog({ onClose }: { onClose: () => void }) {
           <div className="max-w-4xl space-y-6">
             {tab === 'storage' ? (
               <StorageSettingsPanel />
+            ) : tab === 'smtp' ? (
+              <SmtpSettingsPanel />
             ) : (
               <>
                 {stats && (
@@ -382,5 +388,132 @@ function StorageField({ label, value, onChange, type = 'text', placeholder, sour
         spellCheck={false}
       />
     </label>
+  )
+}
+
+function SmtpSettingsPanel() {
+  const [settings, setSettings] = useState<SmtpSettingsData | null>(null)
+  const [host, setHost] = useState('')
+  const [port, setPort] = useState('')
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [from, setFrom] = useState('')
+  const [encryption, setEncryption] = useState('starttls')
+  const [saving, setSaving] = useState(false)
+  const [message, setMessage] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null)
+
+  function apply(s: SmtpSettingsData) {
+    setSettings(s)
+    setHost(s.host)
+    setPort(s.port ? String(s.port) : '')
+    setUsername(s.username)
+    setFrom(s.from)
+    setEncryption(s.encryption || 'starttls')
+    setPassword('')
+  }
+
+  useEffect(() => {
+    api.getSmtpSettings().then(apply).catch(err => setMessage({ kind: 'err', text: String(err?.message || err) }))
+  }, [])
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault()
+    setSaving(true)
+    setMessage(null)
+    try {
+      const portNum = parseInt(port, 10)
+      const updated = await api.updateSmtpSettings({
+        host,
+        ...(Number.isNaN(portNum) ? {} : { port: portNum }),
+        username,
+        from,
+        encryption,
+        ...(password.trim() ? { password } : {}),
+      })
+      apply(updated)
+      setMessage({ kind: 'ok', text: t`SMTP settings saved. Connection verified.` })
+    } catch (err) {
+      setMessage({ kind: 'err', text: String(err instanceof Error ? err.message : err) })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (!settings) {
+    return <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand border-t-transparent" />
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="max-w-2xl space-y-5">
+      {message && (
+        <p className={`rounded-lg px-3 py-2 text-sm font-semibold ${message.kind === 'ok' ? 'bg-[#e8f6f2] text-brand' : 'bg-red-50 text-red-700'}`}>
+          {message.text}
+        </p>
+      )}
+
+      <div className="flex items-center gap-2">
+        <span className="field-label">{t`Status`}</span>
+        <span className={`status-chip ${settings.enabled ? 'status-chip-success' : 'status-chip-neutral'}`}>
+          {settings.enabled ? t`Enabled` : t`Disabled`}
+        </span>
+      </div>
+
+      <StorageField
+        label={t`SMTP host`}
+        value={host}
+        onChange={setHost}
+        placeholder={t`smtp.example.com — leave blank to disable email`}
+        source={settings.sources.host}
+      />
+      <StorageField
+        label={t`Port`}
+        value={port}
+        onChange={setPort}
+        placeholder={t`587 (STARTTLS) · 465 (TLS) · 25 (none)`}
+        source={settings.sources.port}
+      />
+      <StorageField
+        label={t`Username`}
+        value={username}
+        onChange={setUsername}
+        placeholder={t`leave blank if your server needs no auth`}
+        source={settings.sources.username}
+      />
+      <StorageField
+        label={t`Password`}
+        value={password}
+        onChange={setPassword}
+        type="password"
+        placeholder={settings.passwordSet ? t`•••••••• — leave blank to keep current` : t`Enter SMTP password`}
+        source={settings.sources.password}
+      />
+      <StorageField
+        label={t`From address`}
+        value={from}
+        onChange={setFrom}
+        placeholder={t`JType <noreply@example.com>`}
+        source={settings.sources.from}
+      />
+
+      <label className="block">
+        <span className="field-label">{t`Encryption`}</span>
+        <select
+          value={encryption}
+          onChange={e => setEncryption(e.target.value)}
+          className="field-input"
+        >
+          <option value="starttls">{t`STARTTLS (recommended, port 587)`}</option>
+          <option value="tls">{t`TLS / SSL (port 465)`}</option>
+          <option value="none">{t`None (port 25, not recommended)`}</option>
+        </select>
+      </label>
+
+      <div className="flex items-center gap-3">
+        <button type="submit" disabled={saving} className="sidebar-action bg-brand text-white hover:bg-brand-dark hover:text-white">
+          {saving ? t`Saving...` : t`Save SMTP settings`}
+        </button>
+        <span className="text-xs text-stone-500"><Trans>Saving verifies the SMTP connection before applying.</Trans></span>
+      </div>
+    </form>
   )
 }

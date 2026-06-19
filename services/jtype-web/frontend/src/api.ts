@@ -64,11 +64,26 @@ function encodeBlobPath(relativePath: string): string {
 
 // Auth
 export const api = {
-  register: (username: string, password: string, siteTitle?: string) =>
-    request<AuthResponse>('/api/register', { method: 'POST', body: JSON.stringify({ username, password, siteTitle }) }),
+  register: (username: string, password: string, siteTitle?: string, email?: string) =>
+    request<AuthResponse>('/api/register', { method: 'POST', body: JSON.stringify({ username, password, siteTitle, email }) }),
   login: (username: string, password: string) =>
     request<AuthResponse>('/api/login', { method: 'POST', body: JSON.stringify({ username, password }) }),
   me: () => request<AuthResponse>('/api/me'),
+
+  // Password reset + email verification
+  forgotPassword: (email: string) =>
+    request<void>('/api/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) }),
+  resetPassword: (token: string, password: string) =>
+    request<void>('/api/auth/reset-password', { method: 'POST', body: JSON.stringify({ token, password }) }),
+  verifyEmail: (token: string) =>
+    request<void>('/api/auth/verify-email', { method: 'POST', body: JSON.stringify({ token }) }),
+  sendEmailVerification: () =>
+    request<void>('/api/me/send-email-verification', { method: 'POST' }),
+  // Email OTP login (passwordless; requires SMTP configured server-side).
+  loginOtpSend: (email: string) =>
+    request<void>('/api/auth/otp/send', { method: 'POST', body: JSON.stringify({ email }) }),
+  loginOtpVerify: (email: string, code: string) =>
+    request<AuthResponse>('/api/auth/otp/verify', { method: 'POST', body: JSON.stringify({ email, code }) }),
 
   // Profile
   getProfile: () => request<ProfileResponse>('/api/me/profile'),
@@ -97,6 +112,10 @@ export const api = {
   getStorageSettings: () => request<StorageSettings>('/api/admin/settings/storage'),
   updateStorageSettings: (data: UpdateStorageSettings) =>
     request<StorageSettings>('/api/admin/settings/storage', { method: 'PUT', body: JSON.stringify(data) }),
+  // Server SMTP (email) settings (DB overrides JTYPED_SMTP_* env vars).
+  getSmtpSettings: () => request<SmtpSettings>('/api/admin/settings/smtp'),
+  updateSmtpSettings: (data: UpdateSmtpSettings) =>
+    request<SmtpSettings>('/api/admin/settings/smtp', { method: 'PUT', body: JSON.stringify(data) }),
 
   // Workspaces
   listWorkspaces: () => request<{ workspaces: WorkspaceSummary[] }>('/api/v1/workspaces'),
@@ -338,6 +357,7 @@ export interface ProfileResponse {
   role: string
   displayName: string | null
   email: string | null
+  emailVerified: boolean
   siteTitle: string
   enabled: boolean
   storageBudgetBytes: number
@@ -445,6 +465,40 @@ export interface UpdateStorageSettings {
   secretKey?: string
   region?: string
   localDir?: string
+}
+
+/** SMTP (email) settings — mirrors StorageSettings shape. */
+export interface SmtpSettingsSources {
+  host: string
+  port: string
+  username: string
+  password: string
+  from: string
+  encryption: string
+}
+
+export interface SmtpSettings {
+  /** Whether SMTP is configured (non-empty host). */
+  enabled: boolean
+  host: string
+  port: number
+  username: string
+  from: string
+  /** "starttls" | "tls" | "none" */
+  encryption: string
+  /** The password is never returned — only whether one is set. */
+  passwordSet: boolean
+  sources: SmtpSettingsSources
+}
+
+export interface UpdateSmtpSettings {
+  host?: string
+  port?: number
+  username?: string
+  /** Omit or leave blank to keep the existing password unchanged. */
+  password?: string
+  from?: string
+  encryption?: string
 }
 
 export interface WorkspaceSummary {

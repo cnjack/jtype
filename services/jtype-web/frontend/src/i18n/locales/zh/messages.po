@@ -80,6 +80,10 @@ msgstr "•••••••• — 留空则保持当前值"
 msgid "© {0} JType"
 msgstr "© {0} JType"
 
+#: src/pages/Login.tsx
+#~ msgid "← Back to password sign in"
+#~ msgstr "← 返回密码登录"
+
 #. placeholder {0}: preview.invitedByUsername
 #. placeholder {1}: preview.workspaceName
 #. placeholder {2}: preview.role
@@ -92,6 +96,14 @@ msgstr "<0>{0}</0> 邀请您以 <2>{2}</2> 身份加入 <1>{1}</1>。"
 #: src/pages/Workspace.tsx
 msgid "⚠ Modified by {0}{1}"
 msgstr "⚠ 由 {0} 修改{1}"
+
+#: src/pages/Admin.tsx
+msgid "587 (STARTTLS) · 465 (TLS) · 25 (none)"
+msgstr "587 (STARTTLS) · 465 (TLS) · 25 (无)"
+
+#: src/pages/Login.tsx
+#~ msgid "A 6-digit code was sent to {otpEmail}."
+#~ msgstr "6 位验证码已发送至 {otpEmail}。"
 
 #: src/components/NewResourceDialog.tsx
 msgid "A hand-drawn style whiteboard canvas"
@@ -137,6 +149,10 @@ msgstr "访问令牌"
 msgid "Account"
 msgstr "账户"
 
+#: src/pages/Login.tsx
+msgid "Account email"
+msgstr "账户邮箱"
+
 #: src/pages/Admin.tsx
 msgid "Actions"
 msgstr "操作"
@@ -158,8 +174,7 @@ msgid "Add domain"
 msgstr "添加域名"
 
 #: src/pages/Workspace.tsx
-msgid "Add domains, verify DNS ownership, bind them to this workspace, and "
-"manage SSL certificates from one place."
+msgid "Add domains, verify DNS ownership, bind them to this workspace, and manage SSL certificates from one place."
 msgstr "在一处添加域名、验证 DNS 所有权、绑定到此工作区并管理 SSL 证书。"
 
 #: src/pages/Workspace.tsx
@@ -226,6 +241,10 @@ msgstr "文章"
 msgid "Articles for this topic are on the way."
 msgstr "该主题的文章即将上线。"
 
+#: src/pages/ResetPassword.tsx
+msgid "At least 8 characters"
+msgstr "至少 8 个字符"
+
 #: src/pages/DeviceOAuth.tsx
 msgid "Authentication failed"
 msgstr "认证失败"
@@ -235,12 +254,16 @@ msgid "Authorization failed"
 msgstr "授权失败"
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Authorize Desktop"
-msgstr "授权桌面端"
+#~ msgid "Authorize Desktop"
+#~ msgstr "授权桌面端"
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Authorize Device"
+msgid "Authorize device"
 msgstr "授权设备"
+
+#: src/pages/DeviceOAuth.tsx
+#~ msgid "Authorize Device"
+#~ msgstr "授权设备"
 
 #: src/pages/DeviceOAuth.tsx
 msgid "Authorizing..."
@@ -250,6 +273,10 @@ msgstr "授权中…"
 msgid "Back"
 msgstr "返回"
 
+#: src/pages/ResetPassword.tsx
+msgid "Back to sign in"
+msgstr "返回登录"
+
 #: src/components/SiteThemePanel.tsx
 msgid "Background"
 msgstr "背景"
@@ -258,9 +285,17 @@ msgstr "背景"
 msgid "Base size"
 msgstr "基础字号"
 
+#: src/components/Layout.tsx
+msgid "Bind an email to enable password reset and email-code sign in."
+msgstr "绑定邮箱以启用密码重置和邮箱验证码登录。"
+
 #: src/pages/Workspace.tsx
 msgid "Bind custom domains and manage certificates."
 msgstr "绑定自定义域名并管理证书。"
+
+#: src/components/Layout.tsx
+msgid "Bind email"
+msgstr "绑定邮箱"
 
 #: src/pages/Workspace.tsx
 msgid "Bind here"
@@ -324,9 +359,7 @@ msgid "Bucket"
 msgstr "存储桶"
 
 #: src/pages/Landing.tsx
-msgid "Calm desktop writing, workspace-scoped sync, and public Markdown "
-"publishing in one product flow. Your notes stay local until a cloud "
-"workspace has a job to do."
+msgid "Calm desktop writing, workspace-scoped sync, and public Markdown publishing in one product flow. Your notes stay local until a cloud workspace has a job to do."
 msgstr "平静的桌面写作、工作区范围同步和公开 Markdown 发布集于一体。您的笔记保持本地，直到云工作区需要时才上云。"
 
 #: src/components/NewResourceDialog.tsx
@@ -359,6 +392,10 @@ msgstr "检查会话中"
 #: src/pages/Workspace.tsx
 msgid "Choose a cloud workspace"
 msgstr "选择云工作区"
+
+#: src/pages/ResetPassword.tsx
+msgid "Choose a new password"
+msgstr "设置新密码"
 
 #: src/pages/Workspace.tsx
 msgid "Choose a note or create a new one."
@@ -440,17 +477,27 @@ msgid "Compact"
 msgstr "紧凑"
 
 #: src/pages/Admin.tsx
+msgid "Configure outbound email (SMTP). Used for password reset and email verification. Saved values override the JTYPED_SMTP_* environment variables."
+msgstr "配置出站邮件 (SMTP)。用于密码重置和邮箱验证。保存的值会覆盖 JTYPED_SMTP_* 环境变量。"
+
+#: src/pages/Admin.tsx
 msgid "Configure server object storage."
 msgstr "配置服务端对象存储。"
 
 #: src/pages/Admin.tsx
-msgid "Configure server object storage. Saved values override the "
-"JTYPED_STORAGE_* environment variables and apply immediately."
+msgid "Configure server object storage. Saved values override the JTYPED_STORAGE_* environment variables and apply immediately."
 msgstr "配置服务端对象存储。保存的值会覆盖 JTYPED_STORAGE_* 环境变量并立即生效。"
 
+#: src/pages/ResetPassword.tsx
+msgid "Confirm password"
+msgstr "确认密码"
+
+#: src/pages/VerifyEmail.tsx
+msgid "Confirming your email address."
+msgstr "正在确认你的邮箱地址。"
+
 #: src/pages/AiConnections.tsx
-msgid "Connect Claude, Cursor, Cline, or jcode to your notes & kanban through "
-"the built-in MCP server."
+msgid "Connect Claude, Cursor, Cline, or jcode to your notes & kanban through the built-in MCP server."
 msgstr "通过内置 MCP 服务器，将 Claude、Cursor、Cline 或 jcode 连接到你的笔记和看板。"
 
 #: src/pages/Landing.tsx
@@ -473,9 +520,21 @@ msgstr "连接中…"
 msgid "Content width"
 msgstr "内容宽度"
 
+#: src/pages/VerifyEmail.tsx
+msgid "Continue"
+msgstr "继续"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Copied"
+msgstr "已复制"
+
 #: src/pages/AiConnections.tsx
 msgid "Copy"
 msgstr "复制"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Copy code"
+msgstr "复制代码"
 
 #: src/pages/AiConnections.tsx
 msgid "Copy it now — it won't be shown again."
@@ -506,9 +565,7 @@ msgid "Create"
 msgstr "创建"
 
 #: src/pages/Landing.tsx
-msgid "Create a workspace for sync, publishing, and account settings. Local "
-"vault copy stays precise: folders are vaults, server-side collaboration "
-"is a cloud workspace."
+msgid "Create a workspace for sync, publishing, and account settings. Local vault copy stays precise: folders are vaults, server-side collaboration is a cloud workspace."
 msgstr "创建工作区用于同步、发布和账户设置。本地库副本保持精确：文件夹是库，服务端协作是云工作区。"
 
 #: src/pages/Login.tsx
@@ -522,6 +579,10 @@ msgstr "创建第一篇 Markdown 笔记。"
 #: src/components/NewResourceDialog.tsx
 msgid "Creates in"
 msgstr "创建于"
+
+#: src/pages/Login.tsx
+msgid "Creating..."
+msgstr "创建中…"
 
 #: src/pages/AiConnections.tsx
 msgid "current"
@@ -614,8 +675,12 @@ msgid "Device authorized! You can return to the JType desktop app."
 msgstr "设备已授权！您可以返回 JType 桌面应用。"
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Device Code"
+msgid "Device code"
 msgstr "设备代码"
+
+#: src/pages/DeviceOAuth.tsx
+#~ msgid "Device Code"
+#~ msgstr "设备代码"
 
 #: src/components/NewResourceDialog.tsx
 msgid "Diagram name"
@@ -713,20 +778,38 @@ msgid "Drawing name"
 msgstr "绘图名称"
 
 #: src/pages/DeviceOAuth.tsx
-msgid "e.g. 456478"
-msgstr "例如 456478"
+#~ msgid "e.g. 456478"
+#~ msgstr "例如 456478"
 
 #: src/pages/Workspace.tsx
 msgid "Edits are written back to YAML frontmatter."
 msgstr "编辑内容将写回 YAML frontmatter。"
 
 #: src/components/Layout.tsx
+#: src/pages/Admin.tsx
+#: src/pages/Login.tsx
 msgid "Email"
 msgstr "邮箱"
 
 #: src/pages/Workspace.tsx
 msgid "Email (optional)"
 msgstr "邮箱（可选）"
+
+#: src/components/Layout.tsx
+msgid "Email address"
+msgstr "邮箱地址"
+
+#: src/components/Layout.tsx
+msgid "Email saved."
+msgstr "邮箱已保存。"
+
+#: src/components/Layout.tsx
+msgid "Email saved. Send a verification email to confirm it."
+msgstr "邮箱已保存。请发送验证邮件以确认。"
+
+#: src/pages/VerifyEmail.tsx
+msgid "Email verified"
+msgstr "邮箱已验证"
 
 #: src/pages/Workspace.tsx
 msgid "Empty trash"
@@ -737,12 +820,40 @@ msgid "Enable"
 msgstr "启用"
 
 #: src/pages/Admin.tsx
+msgid "Enabled"
+msgstr "已启用"
+
+#: src/pages/Admin.tsx
+msgid "Encryption"
+msgstr "加密方式"
+
+#: src/pages/ResetPassword.tsx
+msgid "Enter a new password for your JType account."
+msgstr "为你的 JType 账户输入新密码。"
+
+#: src/pages/Admin.tsx
 msgid "Enter secret key"
 msgstr "输入私有密钥"
+
+#: src/pages/Admin.tsx
+msgid "Enter SMTP password"
+msgstr "输入 SMTP 密码"
+
+#: src/pages/Login.tsx
+msgid "Enter the 6-digit code"
+msgstr "输入 6 位验证码"
+
+#: src/pages/Login.tsx
+#~ msgid "Enter the code"
+#~ msgstr "输入验证码"
 
 #: src/pages/DeviceOAuth.tsx
 msgid "Enter the code shown in your JType desktop app"
 msgstr "输入 JType 桌面应用中显示的代码"
+
+#: src/pages/Login.tsx
+#~ msgid "Enter the code to sign in."
+#~ msgstr "输入验证码以登录。"
 
 #: src/pages/Login.tsx
 msgid "Enter your password"
@@ -753,8 +864,7 @@ msgid "Enter your username"
 msgstr "输入用户名"
 
 #: src/help/pages/HelpHome.tsx
-msgid "Everything you need to write in a local-first vault, sync to the cloud, "
-"run a kanban board, publish a site, and connect AI."
+msgid "Everything you need to write in a local-first vault, sync to the cloud, run a kanban board, publish a site, and connect AI."
 msgstr "在本地优先的仓库中写作、同步到云端、运行看板、发布站点并接入 AI——你需要的一切都在这里。"
 
 #: src/components/NewResourceDialog.tsx
@@ -793,6 +903,10 @@ msgstr "删除工作区失败。"
 msgid "Failed to leave workspace."
 msgstr "离开工作区失败。"
 
+#: src/pages/Login.tsx
+msgid "Failed to send code"
+msgstr "发送验证码失败"
+
 #: src/pages/Workspace.tsx
 msgid "Favorite"
 msgstr "收藏"
@@ -818,11 +932,16 @@ msgid "Footer HTML"
 msgstr "页脚 HTML"
 
 #: src/pages/AiConnections.tsx
-msgid "For clients that only accept a static header (e.g. jcode). Tokens are "
-"<0>mcp</0>-scoped (notes & kanban only, never admin) and expire in 90 "
-"days."
-msgstr "适用于仅接受静态请求头的客户端（例如 jcode）。令牌为 <0>mcp</0> 作用域（仅限笔记和看板，绝不包含管理员权限），90 "
-"天后过期。"
+msgid "For clients that only accept a static header (e.g. jcode). Tokens are <0>mcp</0>-scoped (notes & kanban only, never admin) and expire in 90 days."
+msgstr "适用于仅接受静态请求头的客户端（例如 jcode）。令牌为 <0>mcp</0> 作用域（仅限笔记和看板，绝不包含管理员权限），90 天后过期。"
+
+#: src/pages/Login.tsx
+msgid "Forgot password?"
+msgstr "忘记密码？"
+
+#: src/pages/Admin.tsx
+msgid "From address"
+msgstr "发件地址"
 
 #: src/pages/Admin.tsx
 msgid "from env"
@@ -893,6 +1012,10 @@ msgstr "需要什么帮助？"
 #: src/pages/Admin.tsx
 msgid "https://s3.example.com — leave blank to use local files"
 msgstr "https://s3.example.com — 留空则使用本地文件"
+
+#: src/pages/Login.tsx
+msgid "If an account exists for that email, a reset link is on its way."
+msgstr "若该邮箱对应账户存在，重置链接已发出。"
 
 #: src/pages/Workspace.tsx
 msgid "Image upload failed"
@@ -974,13 +1097,13 @@ msgstr "斜体 (Ctrl+I)"
 msgid "Joining…"
 msgstr "加入中…"
 
+#: src/pages/Admin.tsx
+msgid "JType <noreply@example.com>"
+msgstr "JType <noreply@example.com>"
+
 #: src/pages/Landing.tsx
-msgid "JType ships a built-in MCP server. Connect Claude, Cursor, or any MCP "
-"client over a secure OAuth flow, then ask it to search your notes, draft "
-"a doc, or triage your board. Tokens are scoped, expiring, and revocable "
-"— and admin always stays off-limits."
-msgstr "JType 内置 MCP 服务器。通过安全的 OAuth 流程连接 Claude、Cursor 或任意 MCP "
-"客户端，即可让它搜索笔记、起草文档或整理看板。令牌均为限定范围、自动过期、可随时撤销，且始终无法触及管理员权限。"
+msgid "JType ships a built-in MCP server. Connect Claude, Cursor, or any MCP client over a secure OAuth flow, then ask it to search your notes, draft a doc, or triage your board. Tokens are scoped, expiring, and revocable — and admin always stays off-limits."
+msgstr "JType 内置 MCP 服务器。通过安全的 OAuth 流程连接 Claude、Cursor 或任意 MCP 客户端，即可让它搜索笔记、起草文档或整理看板。令牌均为限定范围、自动过期、可随时撤销，且始终无法触及管理员权限。"
 
 #: src/components/NewResourceDialog.tsx
 msgid "Kanban board"
@@ -991,8 +1114,7 @@ msgid "Kanban tools"
 msgstr "看板工具"
 
 #: src/pages/Workspace.tsx
-msgid "Keep the publish name and workspace name here. The workspace slug and "
-"storage limit are assigned by the service."
+msgid "Keep the publish name and workspace name here. The workspace slug and storage limit are assigned by the service."
 msgstr "在此保留发布名称和工作区名称。工作区标识和存储限制由服务分配。"
 
 #: src/pages/Login.tsx
@@ -1028,6 +1150,10 @@ msgstr "布局"
 #: src/pages/Workspace.tsx
 msgid "Leave"
 msgstr "离开"
+
+#: src/pages/Admin.tsx
+msgid "leave blank if your server needs no auth"
+msgstr "若服务器无需认证则留空"
 
 #: src/pages/Workspace.tsx
 msgid "Leave workspace"
@@ -1111,8 +1237,7 @@ msgid "Local-first Markdown vault"
 msgstr "本地优先 Markdown 库"
 
 #: src/help/HelpLayout.tsx
-msgid "Local-first Markdown vault editing with cloud sync, kanban, publishing, "
-"and AI."
+msgid "Local-first Markdown vault editing with cloud sync, kanban, publishing, and AI."
 msgstr "本地优先的 Markdown 仓库编辑，支持云端同步、看板、发布与 AI。"
 
 #: src/pages/Login.tsx
@@ -1122,6 +1247,10 @@ msgstr "本地优先笔记，支持云同步、发布和 AI 就绪索引。"
 #: src/pages/InviteAccept.tsx
 msgid "Log in to accept"
 msgstr "登录以接受"
+
+#: src/pages/Login.tsx
+msgid "Login code"
+msgstr "登录验证码"
 
 #: src/pages/Workspace.tsx
 msgid "Manage cloud workspace name, publishing title, and storage."
@@ -1250,6 +1379,10 @@ msgstr "新文件夹名称："
 msgid "New Mermaid diagram"
 msgstr "新建 Mermaid 图表"
 
+#: src/pages/ResetPassword.tsx
+msgid "New password"
+msgstr "新密码"
+
 #: src/components/NewResourceDialog.tsx
 msgid "New resource"
 msgstr "新建资源"
@@ -1314,9 +1447,17 @@ msgstr "没有结果，换个关键词试试。"
 msgid "No unsaved changes"
 msgstr "无未保存的更改"
 
+#: src/pages/Admin.tsx
+msgid "None (port 25, not recommended)"
+msgstr "无 (端口 25，不推荐)"
+
 #: src/pages/Workspace.tsx
 msgid "Not published"
 msgstr "未发布"
+
+#: src/components/Layout.tsx
+msgid "Not verified — email-code sign in is disabled until verified."
+msgstr "未验证 — 验证前邮箱验证码登录不可用。"
 
 #: src/pages/Landing.tsx
 msgid "Notes tools"
@@ -1339,9 +1480,7 @@ msgid "On this page"
 msgstr "本页目录"
 
 #: src/pages/Landing.tsx
-msgid "One Markdown source shows up everywhere it matters: local files on your "
-"machine, sync state in the cloud, and published output for readers — all "
-"visible at once."
+msgid "One Markdown source shows up everywhere it matters: local files on your machine, sync state in the cloud, and published output for readers — all visible at once."
 msgstr "同一份 Markdown 源文件，出现在每一处需要它的地方：你机器上的本地文件、云端的同步状态，以及面向读者的发布输出——尽收眼底。"
 
 #: src/pages/Landing.tsx
@@ -1361,8 +1500,7 @@ msgid "Open"
 msgstr "打开"
 
 #: src/pages/Landing.tsx
-msgid "Open a local Markdown vault, keep normal folders, and edit without "
-"turning notes into remote-only data."
+msgid "Open a local Markdown vault, keep normal folders, and edit without turning notes into remote-only data."
 msgstr "打开本地 Markdown 库，保持普通文件夹结构，编辑笔记而不将其变为仅远程数据。"
 
 #: src/help/HelpLayout.tsx
@@ -1398,9 +1536,12 @@ msgid "Open sidebar"
 msgstr "打开侧栏"
 
 #: src/help/pages/CaseStudy.tsx
-msgid "Open the example vault in JType and follow along. It lives in the repo "
-"at:"
+msgid "Open the example vault in JType and follow along. It lives in the repo at:"
 msgstr "在 JType 中打开示例仓库，跟着一起操作。它就在代码仓库的："
+
+#: src/pages/Login.tsx
+msgid "optional"
+msgstr "可选"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Optional. A small set of inline tags is allowed (links, emphasis)."
@@ -1426,10 +1567,19 @@ msgstr "所有权已转让。"
 msgid "Pass ownership to another admin member."
 msgstr "将所有权转让给另一个管理员成员。"
 
+#: src/pages/Admin.tsx
 #: src/pages/DeviceOAuth.tsx
 #: src/pages/Login.tsx
 msgid "Password"
 msgstr "密码"
+
+#: src/pages/ResetPassword.tsx
+msgid "Password must be at least 8 characters"
+msgstr "密码至少需要 8 个字符"
+
+#: src/pages/ResetPassword.tsx
+msgid "Password reset"
+msgstr "密码已重置"
 
 #: src/pages/Workspace.tsx
 msgid "Pending invites"
@@ -1456,13 +1606,16 @@ msgid "Play the explainer video"
 msgstr "播放讲解视频"
 
 #: src/pages/DeviceOAuth.tsx
-#: src/pages/Login.tsx
 msgid "Please wait..."
 msgstr "请稍候…"
 
 #: src/help/pages/HelpHome.tsx
 msgid "Popular articles"
 msgstr "热门文章"
+
+#: src/pages/Admin.tsx
+msgid "Port"
+msgstr "端口"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Preset…"
@@ -1536,18 +1689,20 @@ msgid "Publishing details saved"
 msgstr "发布详情已保存"
 
 #: src/pages/Workspace.tsx
-msgid "Publishing uses a server snapshot; frontmatter status is treated as user "
-"metadata."
+msgid "Publishing uses a server snapshot; frontmatter status is treated as user metadata."
 msgstr "发布使用服务器快照；frontmatter 状态被视为用户元数据。"
 
 #: src/pages/Landing.tsx
-msgid "Push and pull versions, resolve conflicts, and keep collaboration scoped "
-"to the workspace you choose."
+msgid "Push and pull versions, resolve conflicts, and keep collaboration scoped to the workspace you choose."
 msgstr "推送和拉取版本、解决冲突，并将协作范围限定在您选择的工作区内。"
 
 #: src/pages/Workspace.tsx
 msgid "Quick open"
 msgstr "快速打开"
+
+#: src/pages/ResetPassword.tsx
+msgid "Re-enter new password"
+msgstr "再次输入新密码"
 
 #: src/help/pages/CasesIndex.tsx
 msgid "Read case study"
@@ -1562,13 +1717,11 @@ msgid "Ready for the cloud layer"
 msgstr "已为云层做好准备"
 
 #: src/help/pages/CasesIndex.tsx
-msgid "Real, end-to-end scenarios you can reproduce. Each one ships with an "
-"example vault you can open in JType."
+msgid "Real, end-to-end scenarios you can reproduce. Each one ships with an example vault you can open in JType."
 msgstr "可复现的真实端到端场景。每个案例都附带可在 JType 中打开的示例仓库。"
 
 #: src/pages/AiConnections.tsx
-msgid "Recommended: paste this URL into an OAuth-capable client (Claude, "
-"Cursor) — you'll approve in the browser, no token to copy."
+msgid "Recommended: paste this URL into an OAuth-capable client (Claude, Cursor) — you'll approve in the browser, no token to copy."
 msgstr "推荐：将此 URL 粘贴到支持 OAuth 的客户端（Claude、Cursor）中 —— 你将在浏览器中授权，无需复制令牌。"
 
 #: src/pages/Admin.tsx
@@ -1581,13 +1734,21 @@ msgid "Register"
 msgstr "注册"
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Register & Authorize"
+msgid "Register & authorize"
 msgstr "注册并授权"
+
+#: src/pages/DeviceOAuth.tsx
+#~ msgid "Register & Authorize"
+#~ msgstr "注册并授权"
 
 #. placeholder {0}: staleWarning.wasDirty ? ' (discard)' : ''
 #: src/pages/Workspace.tsx
 msgid "Reload{0}"
 msgstr "重新加载{0}"
+
+#: src/pages/Login.tsx
+msgid "Remember me"
+msgstr "记住我"
 
 #: src/help/components/HelpVideo.tsx
 msgid "Remotion"
@@ -1634,6 +1795,22 @@ msgstr "重新发布已发布文档"
 #: src/pages/AiConnections.tsx
 msgid "Request failed"
 msgstr "请求失败"
+
+#: src/pages/Login.tsx
+msgid "Resend code"
+msgstr "重新发送验证码"
+
+#: src/components/Layout.tsx
+msgid "Resend verification"
+msgstr "重新发送验证邮件"
+
+#: src/pages/ResetPassword.tsx
+msgid "Reset failed"
+msgstr "重置失败"
+
+#: src/pages/ResetPassword.tsx
+msgid "Reset password"
+msgstr "重置密码"
 
 #: src/pages/Workspace.tsx
 msgid "Restore"
@@ -1700,6 +1877,10 @@ msgid "Save site settings"
 msgstr "保存站点设置"
 
 #: src/pages/Admin.tsx
+msgid "Save SMTP settings"
+msgstr "保存 SMTP 设置"
+
+#: src/pages/Admin.tsx
 msgid "Save storage settings"
 msgstr "保存存储设置"
 
@@ -1715,6 +1896,11 @@ msgstr "已保存。"
 msgid "Saving verifies the connection before applying."
 msgstr "保存时会先验证连接再应用。"
 
+#: src/pages/Admin.tsx
+msgid "Saving verifies the SMTP connection before applying."
+msgstr "保存时会先验证 SMTP 连接再应用。"
+
+#: src/components/Layout.tsx
 #: src/pages/Admin.tsx
 #: src/pages/Workspace.tsx
 msgid "Saving..."
@@ -1764,6 +1950,30 @@ msgstr "选择域名"
 msgid "Select a Markdown file"
 msgstr "选择 Markdown 文件"
 
+#: src/pages/Login.tsx
+#~ msgid "Self-service reset isn't available yet. Ask an admin to reset your password."
+#~ msgstr "暂不支持自助重置。请联系管理员重置你的密码。"
+
+#: src/pages/Login.tsx
+msgid "Send"
+msgstr "发送"
+
+#: src/pages/Login.tsx
+msgid "Send code"
+msgstr "发送验证码"
+
+#: src/components/Layout.tsx
+msgid "Send verification email"
+msgstr "发送验证邮件"
+
+#: src/components/Layout.tsx
+msgid "Sending..."
+msgstr "发送中…"
+
+#: src/pages/Login.tsx
+msgid "Sending…"
+msgstr "发送中…"
+
 #: src/components/Layout.tsx
 msgid "Settings"
 msgstr "设置"
@@ -1795,12 +2005,24 @@ msgid "Sign in"
 msgstr "登录"
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Sign in & Authorize"
+msgid "Sign in & authorize"
 msgstr "登录并授权"
+
+#: src/pages/DeviceOAuth.tsx
+#~ msgid "Sign in & Authorize"
+#~ msgstr "登录并授权"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Sign in to approve this device"
+msgstr "登录以批准此设备"
 
 #: src/pages/Login.tsx
 msgid "Sign in to your JType Cloud account."
 msgstr "登录您的 JType Cloud 账户。"
+
+#: src/pages/Login.tsx
+msgid "Sign in with email code"
+msgstr "用邮箱验证码登录"
 
 #: src/components/Layout.tsx
 #: src/pages/Landing.tsx
@@ -1817,8 +2039,16 @@ msgid "Signed in as {0}"
 msgstr "已以 {0} 身份登录"
 
 #: src/pages/DeviceOAuth.tsx
+msgid "Signed in as <0>{loggedInName}</0>"
+msgstr "已登录为 <0>{loggedInName}</0>"
+
+#: src/pages/DeviceOAuth.tsx
 msgid "Signed in. Ready to authorize device."
 msgstr "已登录。准备授权设备。"
+
+#: src/pages/Login.tsx
+msgid "Signing in..."
+msgstr "登录中…"
 
 #: src/pages/Workspace.tsx
 msgid "Site & theme"
@@ -1831,6 +2061,18 @@ msgstr "站点名称"
 #: src/pages/Workspace.tsx
 msgid "Site settings"
 msgstr "站点设置"
+
+#: src/pages/Admin.tsx
+msgid "SMTP host"
+msgstr "SMTP 主机"
+
+#: src/pages/Admin.tsx
+msgid "SMTP settings saved. Connection verified."
+msgstr "SMTP 设置已保存，连接已验证。"
+
+#: src/pages/Admin.tsx
+msgid "smtp.example.com — leave blank to disable email"
+msgstr "smtp.example.com — 留空则禁用邮件"
 
 #: src/pages/Login.tsx
 msgid "Something went wrong"
@@ -1883,6 +2125,10 @@ msgstr "开始写作"
 #: src/pages/Workspace.tsx
 msgid "Start writing Markdown..."
 msgstr "开始写 Markdown…"
+
+#: src/pages/Admin.tsx
+msgid "STARTTLS (recommended, port 587)"
+msgstr "STARTTLS (推荐，端口 587)"
 
 #: src/pages/Admin.tsx
 msgid "Status"
@@ -1945,6 +2191,10 @@ msgstr "感谢你的反馈！"
 msgid "The landing story follows the real JType loop."
 msgstr "落地页故事遵循真实的 JType 循环。"
 
+#: src/pages/ResetPassword.tsx
+msgid "The passwords you entered do not match"
+msgstr "两次输入的密码不一致"
+
 #: src/pages/Workspace.tsx
 msgid "The public snapshot is behind the current document."
 msgstr "公开快照落后于当前文档。"
@@ -1985,11 +2235,22 @@ msgstr "此邀请链接已被撤销，不再有效。"
 msgid "This invite link is invalid or has expired."
 msgstr "此邀请链接无效或已过期。"
 
+#: src/pages/ResetPassword.tsx
+msgid "This reset link is missing its token."
+msgstr "此重置链接缺少令牌。"
+
+#: src/pages/VerifyEmail.tsx
+msgid "This verification link is missing its token."
+msgstr "此验证链接缺少令牌。"
+
 #. placeholder {0}: workspace.name
 #: src/pages/Workspace.tsx
-msgid "This will permanently delete <0>{0}</0> and all its documents. This "
-"cannot be undone."
+msgid "This will permanently delete <0>{0}</0> and all its documents. This cannot be undone."
 msgstr "这将永久删除 <0>{0}</0> 及其所有文档。此操作无法撤销。"
+
+#: src/pages/Admin.tsx
+msgid "TLS / SSL (port 465)"
+msgstr "TLS / SSL (端口 465)"
 
 #: src/pages/Workspace.tsx
 msgid "Toggle favorite"
@@ -2037,8 +2298,7 @@ msgid "Try it yourself"
 msgstr "自己试一试"
 
 #: src/pages/Landing.tsx
-msgid "Turn selected documents into a public `/u/:username` site while your "
-"source stays Markdown."
+msgid "Turn selected documents into a public `/u/:username` site while your source stays Markdown."
 msgstr "将选定文档发布为公开的 `/u/:username` 站点，同时源文件保持 Markdown 格式。"
 
 #: src/pages/Workspace.tsx
@@ -2081,14 +2341,21 @@ msgstr "未保存"
 msgid "Untitled document"
 msgstr "未命名文档"
 
+#: src/components/Layout.tsx
+msgid "Update email"
+msgstr "更新邮箱"
+
 #: src/pages/Workspace.tsx
-msgid "Upload a PEM certificate for a verified domain. The private key is "
-"stored as a hash in the current backend model."
+msgid "Upload a PEM certificate for a verified domain. The private key is stored as a hash in the current backend model."
 msgstr "为已验证域名上传 PEM 证书。私钥在当前后端模型中以哈希形式存储。"
 
 #: src/components/DownloadPromo.tsx
 msgid "Use JType beyond the browser"
 msgstr "在浏览器之外使用 JType"
+
+#: src/pages/Login.tsx
+msgid "Use password instead"
+msgstr "改用密码登录"
 
 #: src/pages/Admin.tsx
 msgid "User"
@@ -2104,6 +2371,10 @@ msgstr "用户菜单"
 #: src/pages/Login.tsx
 msgid "Username"
 msgstr "用户名"
+
+#: src/pages/Login.tsx
+msgid "Username or email"
+msgstr "用户名或邮箱"
 
 #: src/pages/Admin.tsx
 msgid "Users"
@@ -2125,6 +2396,19 @@ msgstr "库根目录"
 msgid "Vault space"
 msgstr "库空间"
 
+#: src/components/Layout.tsx
+msgid "Verification email sent. Check your inbox."
+msgstr "验证邮件已发送，请查收。"
+
+#: src/pages/Login.tsx
+#: src/pages/VerifyEmail.tsx
+msgid "Verification failed"
+msgstr "验证失败"
+
+#: src/components/Layout.tsx
+msgid "Verified"
+msgstr "已验证"
+
 #: src/pages/Workspace.tsx
 msgid "Verified domain"
 msgstr "已验证域名"
@@ -2132,6 +2416,11 @@ msgstr "已验证域名"
 #: src/pages/Workspace.tsx
 msgid "Verify DNS"
 msgstr "验证 DNS"
+
+#: src/pages/Login.tsx
+#: src/pages/VerifyEmail.tsx
+msgid "Verifying…"
+msgstr "验证中…"
 
 #: src/pages/Workspace.tsx
 msgid "View public page"
@@ -2156,6 +2445,14 @@ msgstr "观看讲解"
 #: src/pages/Landing.tsx
 msgid "Watch the flow"
 msgstr "查看流程"
+
+#: src/pages/Login.tsx
+#~ msgid "We'll send a 6-digit code to your verified email."
+#~ msgstr "我们会向你的已验证邮箱发送 6 位验证码。"
+
+#: src/pages/Login.tsx
+msgid "We'll send a 6-digit sign-in code to this email."
+msgstr "我们会向此邮箱发送 6 位登录验证码。"
 
 #: src/pages/Landing.tsx
 msgid "Web dashboard"
@@ -2203,13 +2500,20 @@ msgid "You will lose access to all cloud documents."
 msgstr "您将失去所有云文档的访问权限。"
 
 #: src/pages/Workspace.tsx
-msgid "You will lose access to all cloud documents. Your local files are "
-"unaffected."
+msgid "You will lose access to all cloud documents. Your local files are unaffected."
 msgstr "您将失去所有云文档的访问权限。您的本地文件不受影响。"
 
 #: src/pages/InviteAccept.tsx
 msgid "You're invited"
 msgstr "您被邀请了"
+
+#: src/pages/Login.tsx
+msgid "you@example.com"
+msgstr "you@example.com"
+
+#: src/pages/VerifyEmail.tsx
+msgid "Your email address is now confirmed."
+msgstr "你的邮箱地址已确认。"
 
 #: src/pages/Login.tsx
 msgid "Your files stay on your machine. Always."
@@ -2222,6 +2526,10 @@ msgstr "您的 Markdown 工作区，<0/>同步到云端。"
 #: src/pages/AiConnections.tsx
 msgid "Your MCP server"
 msgstr "你的 MCP 服务器"
+
+#: src/pages/ResetPassword.tsx
+msgid "Your password has been changed. You can sign in now."
+msgstr "你的密码已更改，现在可以登录了。"
 
 #: src/pages/Workspace.tsx
 msgid "Your rendered document will appear here."

@@ -26,6 +26,9 @@ import {
   ShieldCheckIcon,
   SparklesIcon,
   ArrowLeftOnRectangleIcon,
+  EnvelopeIcon,
+  CheckCircleIcon,
+  ExclamationCircleIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline'
 import { LanguageSwitcherMenuPanel } from '@shared/components/LanguageSwitcher'
@@ -179,22 +182,71 @@ function UserSettingsDialog({ onClose }: { onClose: () => void }) {
   const [displayName, setDisplayName] = useState('')
   const [email, setEmail] = useState('')
   const [message, setMessage] = useState('')
+  const [settingsTab, setSettingsTab] = useState<'profile' | 'email'>('profile')
+  // Email binding/verification sub-state.
+  const [emailSaving, setEmailSaving] = useState(false)
+  const [emailMessage, setEmailMessage] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null)
+  const [verifySending, setVerifySending] = useState(false)
 
-  useEffect(() => {
+  const refreshProfile = () => {
     api.getProfile().then(p => {
       setProfile(p)
       setDisplayName(p.displayName || '')
       setEmail(p.email || '')
     })
+  }
+
+  useEffect(() => {
+    refreshProfile()
     api.getStorage().then(setStorage)
     api.getDevices().then(setDevices)
+    // Email verification happens in a separate tab (/verify-email). When the
+    // user returns to this dialog, re-fetch the profile so the "verified"
+    // badge updates without a manual reload.
+    const onFocus = () => refreshProfile()
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
   }, [])
 
   async function handleProfileSubmit(e: FormEvent) {
     e.preventDefault()
-    await api.updateProfile({ displayName: displayName || undefined, email: email || undefined })
+    await api.updateProfile({ displayName: displayName || undefined })
     setMessage(t`Profile updated`)
     setTimeout(() => setMessage(''), 2500)
+  }
+
+  async function handleEmailSubmit(e: FormEvent) {
+    e.preventDefault()
+    setEmailSaving(true)
+    setEmailMessage(null)
+    try {
+      const updated = await api.updateProfile({ email: email.trim() || undefined })
+      setProfile(updated)
+      // A change clears verification; prompt the user to verify.
+      setEmailMessage({
+        kind: 'ok',
+        text: updated.emailVerified
+          ? t`Email saved.`
+          : t`Email saved. Send a verification email to confirm it.`,
+      })
+    } catch (err) {
+      setEmailMessage({ kind: 'err', text: String(err instanceof Error ? err.message : err) })
+    } finally {
+      setEmailSaving(false)
+    }
+  }
+
+  async function handleSendVerification() {
+    setVerifySending(true)
+    setEmailMessage(null)
+    try {
+      await api.sendEmailVerification()
+      setEmailMessage({ kind: 'ok', text: t`Verification email sent. Check your inbox.` })
+    } catch (err) {
+      setEmailMessage({ kind: 'err', text: String(err instanceof Error ? err.message : err) })
+    } finally {
+      setVerifySending(false)
+    }
   }
 
   return (
@@ -204,7 +256,31 @@ function UserSettingsDialog({ onClose }: { onClose: () => void }) {
         <DialogPanel className="grid h-[min(720px,92vh)] w-full max-w-5xl overflow-hidden rounded-2xl border border-white/70 bg-[#fbfdfb] shadow-2xl shadow-stone-900/25 md:grid-cols-[220px_minmax(0,1fr)]">
         <aside className="border-r border-black/[0.04] bg-[#f7faf8] p-4">
           <p className="mb-2 text-xs font-semibold uppercase text-stone-500"><Trans>Account</Trans></p>
-          <div className="rounded-lg bg-white px-3 py-2 text-sm font-semibold text-brand shadow-sm shadow-emerald-950/5 ring-1 ring-brand/10"><Trans>Profile</Trans></div>
+          <button
+            type="button"
+            onClick={() => setSettingsTab('profile')}
+            className={`mb-1 w-full rounded-lg px-3 py-2 text-left text-sm font-semibold transition ${
+              settingsTab === 'profile'
+                ? 'bg-white text-brand shadow-sm shadow-emerald-950/5 ring-1 ring-brand/10'
+                : 'text-stone-600 hover:bg-white/70 hover:text-stone-950'
+            }`}
+          >
+            <Trans>Profile</Trans>
+          </button>
+          <button
+            type="button"
+            onClick={() => setSettingsTab('email')}
+            className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-semibold transition ${
+              settingsTab === 'email'
+                ? 'bg-white text-brand shadow-sm shadow-emerald-950/5 ring-1 ring-brand/10'
+                : 'text-stone-600 hover:bg-white/70 hover:text-stone-950'
+            }`}
+          >
+            <span className="inline-flex items-center gap-2"><EnvelopeIcon className="h-4 w-4" /><Trans>Email</Trans></span>
+            {profile?.emailVerified && (
+              <CheckCircleIcon className="h-4 w-4 text-brand" />
+            )}
+          </button>
         </aside>
         <main className="soft-scrollbar min-h-0 overflow-y-auto p-8">
           <div className="mb-7 flex items-start justify-between gap-4">
@@ -219,15 +295,29 @@ function UserSettingsDialog({ onClose }: { onClose: () => void }) {
             <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand border-t-transparent" />
           ) : (
             <div className="max-w-3xl space-y-8">
-              {message && <p className="rounded-lg bg-[#e8f6f2] px-3 py-2 text-sm font-semibold text-brand">{message}</p>}
-              <form onSubmit={handleProfileSubmit} className="space-y-4">
-                <SettingsField label={t`Username`} value={profile.username} disabled />
-                <SettingsField label={t`Display name`} value={displayName} onChange={setDisplayName} />
-                <SettingsField label={t`Email`} value={email} onChange={setEmail} type="email" />
-                <button type="submit" className="sidebar-action bg-brand text-white hover:bg-brand-dark hover:text-white"><Trans>Save profile</Trans></button>
-              </form>
+              {settingsTab === 'email' ? (
+                <EmailSection
+                  profile={profile}
+                  email={email}
+                  setEmail={setEmail}
+                  emailSaving={emailSaving}
+                  emailMessage={emailMessage}
+                  verifySending={verifySending}
+                  onSubmit={handleEmailSubmit}
+                  onSendVerification={handleSendVerification}
+                />
+              ) : (
+                <>
+                  {message && <p className="rounded-lg bg-[#e8f6f2] px-3 py-2 text-sm font-semibold text-brand">{message}</p>}
+                  <form onSubmit={handleProfileSubmit} className="space-y-4">
+                    <SettingsField label={t`Username`} value={profile.username} disabled />
+                    <SettingsField label={t`Display name`} value={displayName} onChange={setDisplayName} />
+                    <button type="submit" className="sidebar-action bg-brand text-white hover:bg-brand-dark hover:text-white"><Trans>Save profile</Trans></button>
+                  </form>
+                </>
+              )}
 
-              {storage && (
+              {settingsTab !== 'email' && storage && (
                 <section>
                   <h3 className="text-sm font-semibold text-zinc-950"><Trans>Storage</Trans></h3>
                   <div className="mt-3 rounded-2xl bg-[#f7faf8] p-5 ring-1 ring-black/[0.04]">
@@ -242,7 +332,7 @@ function UserSettingsDialog({ onClose }: { onClose: () => void }) {
                 </section>
               )}
 
-              {devices.length > 0 && (
+              {settingsTab !== 'email' && devices.length > 0 && (
                 <section>
                   <h3 className="text-sm font-semibold text-zinc-950"><Trans>Connected devices</Trans></h3>
                   <div className="mt-3 space-y-2">
@@ -264,6 +354,82 @@ function UserSettingsDialog({ onClose }: { onClose: () => void }) {
       </DialogPanel>
     </div>
   </Dialog>
+  )
+}
+
+function EmailSection({ profile, email, setEmail, emailSaving, emailMessage, verifySending, onSubmit, onSendVerification }: {
+  profile: ProfileResponse
+  email: string
+  setEmail: (v: string) => void
+  emailSaving: boolean
+  emailMessage: { kind: 'ok' | 'err'; text: string } | null
+  verifySending: boolean
+  onSubmit: (e: FormEvent) => void
+  onSendVerification: () => void
+}) {
+  return (
+    <section className="space-y-5">
+      <div>
+        <h3 className="text-sm font-semibold text-zinc-950"><Trans>Email</Trans></h3>
+        <p className="mt-1 text-xs text-zinc-500">
+          <Trans>Bind an email to enable password reset and email-code sign in.</Trans>
+        </p>
+      </div>
+
+      {/* Verification status badge */}
+      {profile.email && (
+        <div className={`flex items-center gap-2 rounded-xl px-4 py-3 text-sm ring-1 ${
+          profile.emailVerified
+            ? 'bg-[#e8f6f2] text-brand ring-brand/10'
+            : 'bg-amber-50 text-amber-700 ring-amber-100'
+        }`}>
+          {profile.emailVerified
+            ? <><CheckCircleIcon className="h-4 w-4" /><Trans>Verified</Trans></>
+            : <><ExclamationCircleIcon className="h-4 w-4" /><Trans>Not verified — email-code sign in is disabled until verified.</Trans></>}
+        </div>
+      )}
+
+      <form onSubmit={onSubmit} className="space-y-4">
+        <SettingsField label={t`Email address`} value={email} onChange={setEmail} type="email" />
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="submit"
+            disabled={emailSaving}
+            className="sidebar-action bg-brand text-white hover:bg-brand-dark hover:text-white"
+          >
+            {emailSaving ? t`Saving...` : profile.email ? t`Update email` : t`Bind email`}
+          </button>
+          {profile.email && !profile.emailVerified && (
+            <button
+              type="button"
+              onClick={onSendVerification}
+              disabled={verifySending}
+              className="sidebar-action"
+            >
+              {verifySending ? t`Sending...` : t`Send verification email`}
+            </button>
+          )}
+          {profile.email && profile.emailVerified && (
+            <button
+              type="button"
+              onClick={onSendVerification}
+              disabled={verifySending}
+              className="sidebar-action"
+            >
+              {verifySending ? t`Sending...` : t`Resend verification`}
+            </button>
+          )}
+        </div>
+      </form>
+
+      {emailMessage && (
+        <p className={`rounded-lg px-3 py-2 text-sm font-semibold ${
+          emailMessage.kind === 'ok' ? 'bg-[#e8f6f2] text-brand' : 'bg-red-50 text-red-700'
+        }`}>
+          {emailMessage.text}
+        </p>
+      )}
+    </section>
   )
 }
 

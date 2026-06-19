@@ -80,6 +80,10 @@ msgstr "•••••••• — 現在のままにする場合は空欄"
 msgid "© {0} JType"
 msgstr "© {0} JType"
 
+#: src/pages/Login.tsx
+#~ msgid "← Back to password sign in"
+#~ msgstr ""
+
 #. placeholder {0}: preview.invitedByUsername
 #. placeholder {1}: preview.workspaceName
 #. placeholder {2}: preview.role
@@ -92,6 +96,14 @@ msgstr "<0>{0}</0> があなたを <2>{2}</2> として <1>{1}</1> に招待し�
 #: src/pages/Workspace.tsx
 msgid "⚠ Modified by {0}{1}"
 msgstr "⚠ {0} によって変更{1}"
+
+#: src/pages/Admin.tsx
+msgid "587 (STARTTLS) · 465 (TLS) · 25 (none)"
+msgstr ""
+
+#: src/pages/Login.tsx
+#~ msgid "A 6-digit code was sent to {otpEmail}."
+#~ msgstr ""
 
 #: src/components/NewResourceDialog.tsx
 msgid "A hand-drawn style whiteboard canvas"
@@ -137,6 +149,10 @@ msgstr "アクセストークン"
 msgid "Account"
 msgstr "アカウント"
 
+#: src/pages/Login.tsx
+msgid "Account email"
+msgstr ""
+
 #: src/pages/Admin.tsx
 msgid "Actions"
 msgstr "操作"
@@ -158,8 +174,7 @@ msgid "Add domain"
 msgstr "ドメインを追加"
 
 #: src/pages/Workspace.tsx
-msgid "Add domains, verify DNS ownership, bind them to this workspace, and "
-"manage SSL certificates from one place."
+msgid "Add domains, verify DNS ownership, bind them to this workspace, and manage SSL certificates from one place."
 msgstr "ドメインの追加、DNS 所有権の確認、ワークスペースへのバインド、SSL 証書の管理を一か所で行います。"
 
 #: src/pages/Workspace.tsx
@@ -226,6 +241,10 @@ msgstr "記事"
 msgid "Articles for this topic are on the way."
 msgstr "このトピックの記事は近日公開です。"
 
+#: src/pages/ResetPassword.tsx
+msgid "At least 8 characters"
+msgstr ""
+
 #: src/pages/DeviceOAuth.tsx
 msgid "Authentication failed"
 msgstr "認証に失敗しました"
@@ -235,12 +254,16 @@ msgid "Authorization failed"
 msgstr "承認に失敗しました"
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Authorize Desktop"
-msgstr "デスクトップを承認"
+#~ msgid "Authorize Desktop"
+#~ msgstr "デスクトップを承認"
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Authorize Device"
-msgstr "デバイスを承認"
+msgid "Authorize device"
+msgstr ""
+
+#: src/pages/DeviceOAuth.tsx
+#~ msgid "Authorize Device"
+#~ msgstr "デバイスを承認"
 
 #: src/pages/DeviceOAuth.tsx
 msgid "Authorizing..."
@@ -250,6 +273,10 @@ msgstr "承認中..."
 msgid "Back"
 msgstr "戻る"
 
+#: src/pages/ResetPassword.tsx
+msgid "Back to sign in"
+msgstr ""
+
 #: src/components/SiteThemePanel.tsx
 msgid "Background"
 msgstr "背景"
@@ -258,9 +285,17 @@ msgstr "背景"
 msgid "Base size"
 msgstr "ベースサイズ"
 
+#: src/components/Layout.tsx
+msgid "Bind an email to enable password reset and email-code sign in."
+msgstr ""
+
 #: src/pages/Workspace.tsx
 msgid "Bind custom domains and manage certificates."
 msgstr "カスタムドメインをバインドし、証明書を管理します。"
+
+#: src/components/Layout.tsx
+msgid "Bind email"
+msgstr ""
 
 #: src/pages/Workspace.tsx
 msgid "Bind here"
@@ -324,11 +359,8 @@ msgid "Bucket"
 msgstr "バケット"
 
 #: src/pages/Landing.tsx
-msgid "Calm desktop writing, workspace-scoped sync, and public Markdown "
-"publishing in one product flow. Your notes stay local until a cloud "
-"workspace has a job to do."
-msgstr "落ち着いたデスクトップ執筆、ワークスペーススコープの同期、パブリック Markdown 公開が 1 "
-"つの製品フローに。クラウドワークスペースが必要になるまで、ノートはローカルに保たれます。"
+msgid "Calm desktop writing, workspace-scoped sync, and public Markdown publishing in one product flow. Your notes stay local until a cloud workspace has a job to do."
+msgstr "落ち着いたデスクトップ執筆、ワークスペーススコープの同期、パブリック Markdown 公開が 1 つの製品フローに。クラウドワークスペースが必要になるまで、ノートはローカルに保たれます。"
 
 #: src/components/NewResourceDialog.tsx
 #: src/pages/Workspace.tsx
@@ -360,6 +392,10 @@ msgstr "セッションを確認中"
 #: src/pages/Workspace.tsx
 msgid "Choose a cloud workspace"
 msgstr "クラウドワークスペースを選択"
+
+#: src/pages/ResetPassword.tsx
+msgid "Choose a new password"
+msgstr ""
 
 #: src/pages/Workspace.tsx
 msgid "Choose a note or create a new one."
@@ -441,17 +477,27 @@ msgid "Compact"
 msgstr "コンパクト"
 
 #: src/pages/Admin.tsx
+msgid "Configure outbound email (SMTP). Used for password reset and email verification. Saved values override the JTYPED_SMTP_* environment variables."
+msgstr ""
+
+#: src/pages/Admin.tsx
 msgid "Configure server object storage."
 msgstr "サーバーのオブジェクトストレージを設定します。"
 
 #: src/pages/Admin.tsx
-msgid "Configure server object storage. Saved values override the "
-"JTYPED_STORAGE_* environment variables and apply immediately."
+msgid "Configure server object storage. Saved values override the JTYPED_STORAGE_* environment variables and apply immediately."
 msgstr "サーバーのオブジェクトストレージを設定します。保存した値は JTYPED_STORAGE_* 環境変数より優先され、即座に適用されます。"
 
+#: src/pages/ResetPassword.tsx
+msgid "Confirm password"
+msgstr ""
+
+#: src/pages/VerifyEmail.tsx
+msgid "Confirming your email address."
+msgstr ""
+
 #: src/pages/AiConnections.tsx
-msgid "Connect Claude, Cursor, Cline, or jcode to your notes & kanban through "
-"the built-in MCP server."
+msgid "Connect Claude, Cursor, Cline, or jcode to your notes & kanban through the built-in MCP server."
 msgstr "組み込みの MCP サーバーを経由して、Claude、Cursor、Cline、jcode をあなたのノート＆カンバンに接続しましょう。"
 
 #: src/pages/Landing.tsx
@@ -474,9 +520,21 @@ msgstr "接続中..."
 msgid "Content width"
 msgstr "コンテンツ幅"
 
+#: src/pages/VerifyEmail.tsx
+msgid "Continue"
+msgstr ""
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Copied"
+msgstr ""
+
 #: src/pages/AiConnections.tsx
 msgid "Copy"
 msgstr "コピー"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Copy code"
+msgstr ""
 
 #: src/pages/AiConnections.tsx
 msgid "Copy it now — it won't be shown again."
@@ -507,11 +565,8 @@ msgid "Create"
 msgstr "作成"
 
 #: src/pages/Landing.tsx
-msgid "Create a workspace for sync, publishing, and account settings. Local "
-"vault copy stays precise: folders are vaults, server-side collaboration "
-"is a cloud workspace."
-msgstr "同期、公開、アカウント設定のためのワークスペースを作成します。ローカルボルトのコピーは正確に保たれます：フォルダーはボルト、サーバーサイドのコ"
-"ラボレーションはクラウドワークスペースです。"
+msgid "Create a workspace for sync, publishing, and account settings. Local vault copy stays precise: folders are vaults, server-side collaboration is a cloud workspace."
+msgstr "同期、公開、アカウント設定のためのワークスペースを作成します。ローカルボルトのコピーは正確に保たれます：フォルダーはボルト、サーバーサイドのコラボレーションはクラウドワークスペースです。"
 
 #: src/pages/Login.tsx
 msgid "Create account"
@@ -524,6 +579,10 @@ msgstr "最初の Markdown ノートを作成します。"
 #: src/components/NewResourceDialog.tsx
 msgid "Creates in"
 msgstr "作成先"
+
+#: src/pages/Login.tsx
+msgid "Creating..."
+msgstr ""
 
 #: src/pages/AiConnections.tsx
 msgid "current"
@@ -616,8 +675,12 @@ msgid "Device authorized! You can return to the JType desktop app."
 msgstr "デバイスが承認されました！JType デスクトップアプリに戻れます。"
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Device Code"
-msgstr "デバイスコード"
+msgid "Device code"
+msgstr ""
+
+#: src/pages/DeviceOAuth.tsx
+#~ msgid "Device Code"
+#~ msgstr "デバイスコード"
 
 #: src/components/NewResourceDialog.tsx
 msgid "Diagram name"
@@ -715,20 +778,38 @@ msgid "Drawing name"
 msgstr "描画の名前"
 
 #: src/pages/DeviceOAuth.tsx
-msgid "e.g. 456478"
-msgstr "例：456478"
+#~ msgid "e.g. 456478"
+#~ msgstr "例：456478"
 
 #: src/pages/Workspace.tsx
 msgid "Edits are written back to YAML frontmatter."
 msgstr "編集内容は YAML フロントマターに書き戻されます。"
 
 #: src/components/Layout.tsx
+#: src/pages/Admin.tsx
+#: src/pages/Login.tsx
 msgid "Email"
 msgstr "メール"
 
 #: src/pages/Workspace.tsx
 msgid "Email (optional)"
 msgstr "メール（任意）"
+
+#: src/components/Layout.tsx
+msgid "Email address"
+msgstr ""
+
+#: src/components/Layout.tsx
+msgid "Email saved."
+msgstr ""
+
+#: src/components/Layout.tsx
+msgid "Email saved. Send a verification email to confirm it."
+msgstr ""
+
+#: src/pages/VerifyEmail.tsx
+msgid "Email verified"
+msgstr ""
 
 #: src/pages/Workspace.tsx
 msgid "Empty trash"
@@ -739,12 +820,40 @@ msgid "Enable"
 msgstr "有効化"
 
 #: src/pages/Admin.tsx
+msgid "Enabled"
+msgstr ""
+
+#: src/pages/Admin.tsx
+msgid "Encryption"
+msgstr ""
+
+#: src/pages/ResetPassword.tsx
+msgid "Enter a new password for your JType account."
+msgstr ""
+
+#: src/pages/Admin.tsx
 msgid "Enter secret key"
 msgstr "シークレットキーを入力"
+
+#: src/pages/Admin.tsx
+msgid "Enter SMTP password"
+msgstr ""
+
+#: src/pages/Login.tsx
+msgid "Enter the 6-digit code"
+msgstr ""
+
+#: src/pages/Login.tsx
+#~ msgid "Enter the code"
+#~ msgstr ""
 
 #: src/pages/DeviceOAuth.tsx
 msgid "Enter the code shown in your JType desktop app"
 msgstr "JType デスクトップアプリに表示されたコードを入力"
+
+#: src/pages/Login.tsx
+#~ msgid "Enter the code to sign in."
+#~ msgstr ""
 
 #: src/pages/Login.tsx
 msgid "Enter your password"
@@ -755,10 +864,8 @@ msgid "Enter your username"
 msgstr "ユーザー名を入力"
 
 #: src/help/pages/HelpHome.tsx
-msgid "Everything you need to write in a local-first vault, sync to the cloud, "
-"run a kanban board, publish a site, and connect AI."
-msgstr "ローカルファーストのボルトで執筆し、クラウドに同期し、カンバンボードを運用し、サイトを公開し、AI "
-"を接続するために必要なすべてが揃っています。"
+msgid "Everything you need to write in a local-first vault, sync to the cloud, run a kanban board, publish a site, and connect AI."
+msgstr "ローカルファーストのボルトで執筆し、クラウドに同期し、カンバンボードを運用し、サイトを公開し、AI を接続するために必要なすべてが揃っています。"
 
 #: src/components/NewResourceDialog.tsx
 msgid "Excalidraw drawing"
@@ -796,6 +903,10 @@ msgstr "ワークスペースの削除に失敗しました。"
 msgid "Failed to leave workspace."
 msgstr "ワークスペースの退出に失敗しました。"
 
+#: src/pages/Login.tsx
+msgid "Failed to send code"
+msgstr ""
+
 #: src/pages/Workspace.tsx
 msgid "Favorite"
 msgstr "お気に入り"
@@ -821,11 +932,16 @@ msgid "Footer HTML"
 msgstr "フッター HTML"
 
 #: src/pages/AiConnections.tsx
-msgid "For clients that only accept a static header (e.g. jcode). Tokens are "
-"<0>mcp</0>-scoped (notes & kanban only, never admin) and expire in 90 "
-"days."
-msgstr "静的ヘッダーのみを受け付けるクライアント（例：jcode）向けです。トークンは <0>mcp</0> "
-"スコープ（ノートとカンバンのみ、管理者権限なし）で、90 日で期限切れになります。"
+msgid "For clients that only accept a static header (e.g. jcode). Tokens are <0>mcp</0>-scoped (notes & kanban only, never admin) and expire in 90 days."
+msgstr "静的ヘッダーのみを受け付けるクライアント（例：jcode）向けです。トークンは <0>mcp</0> スコープ（ノートとカンバンのみ、管理者権限なし）で、90 日で期限切れになります。"
+
+#: src/pages/Login.tsx
+msgid "Forgot password?"
+msgstr ""
+
+#: src/pages/Admin.tsx
+msgid "From address"
+msgstr ""
 
 #: src/pages/Admin.tsx
 msgid "from env"
@@ -896,6 +1012,10 @@ msgstr "何かお困りですか？"
 #: src/pages/Admin.tsx
 msgid "https://s3.example.com — leave blank to use local files"
 msgstr "https://s3.example.com — ローカルファイルを使う場合は空欄"
+
+#: src/pages/Login.tsx
+msgid "If an account exists for that email, a reset link is on its way."
+msgstr ""
 
 #: src/pages/Workspace.tsx
 msgid "Image upload failed"
@@ -977,14 +1097,13 @@ msgstr "斜体 (Ctrl+I)"
 msgid "Joining…"
 msgstr "参加中…"
 
+#: src/pages/Admin.tsx
+msgid "JType <noreply@example.com>"
+msgstr ""
+
 #: src/pages/Landing.tsx
-msgid "JType ships a built-in MCP server. Connect Claude, Cursor, or any MCP "
-"client over a secure OAuth flow, then ask it to search your notes, draft "
-"a doc, or triage your board. Tokens are scoped, expiring, and revocable "
-"— and admin always stays off-limits."
-msgstr "JType には MCP サーバーが組み込まれています。安全な OAuth フローで Claude や Cursor などの MCP "
-"クライアントを接続すれば、ノートの検索、ドキュメントの下書き、ボードの整理を任せられます。トークンはスコープ付き・期限付き・取り消し可能で、管"
-"理者権限には決して触れません。"
+msgid "JType ships a built-in MCP server. Connect Claude, Cursor, or any MCP client over a secure OAuth flow, then ask it to search your notes, draft a doc, or triage your board. Tokens are scoped, expiring, and revocable — and admin always stays off-limits."
+msgstr "JType には MCP サーバーが組み込まれています。安全な OAuth フローで Claude や Cursor などの MCP クライアントを接続すれば、ノートの検索、ドキュメントの下書き、ボードの整理を任せられます。トークンはスコープ付き・期限付き・取り消し可能で、管理者権限には決して触れません。"
 
 #: src/components/NewResourceDialog.tsx
 msgid "Kanban board"
@@ -995,8 +1114,7 @@ msgid "Kanban tools"
 msgstr "カンバンツール"
 
 #: src/pages/Workspace.tsx
-msgid "Keep the publish name and workspace name here. The workspace slug and "
-"storage limit are assigned by the service."
+msgid "Keep the publish name and workspace name here. The workspace slug and storage limit are assigned by the service."
 msgstr "ここで公開名とワークスペース名を管理します。ワークスペーススラッグとストレージ制限はサービスによって割り当てられます。"
 
 #: src/pages/Login.tsx
@@ -1032,6 +1150,10 @@ msgstr "レイアウト"
 #: src/pages/Workspace.tsx
 msgid "Leave"
 msgstr "退出"
+
+#: src/pages/Admin.tsx
+msgid "leave blank if your server needs no auth"
+msgstr ""
 
 #: src/pages/Workspace.tsx
 msgid "Leave workspace"
@@ -1115,8 +1237,7 @@ msgid "Local-first Markdown vault"
 msgstr "ローカルファースト Markdown ボルト"
 
 #: src/help/HelpLayout.tsx
-msgid "Local-first Markdown vault editing with cloud sync, kanban, publishing, "
-"and AI."
+msgid "Local-first Markdown vault editing with cloud sync, kanban, publishing, and AI."
 msgstr "クラウド同期、カンバン、公開、AI を備えたローカルファーストの Markdown ボルト編集。"
 
 #: src/pages/Login.tsx
@@ -1126,6 +1247,10 @@ msgstr "クラウド同期、公開、AI 対応インデックスを備えたロ
 #: src/pages/InviteAccept.tsx
 msgid "Log in to accept"
 msgstr "ログインして承諾"
+
+#: src/pages/Login.tsx
+msgid "Login code"
+msgstr ""
 
 #: src/pages/Workspace.tsx
 msgid "Manage cloud workspace name, publishing title, and storage."
@@ -1254,6 +1379,10 @@ msgstr "新規フォルダー名："
 msgid "New Mermaid diagram"
 msgstr "新規 Mermaid 図"
 
+#: src/pages/ResetPassword.tsx
+msgid "New password"
+msgstr ""
+
 #: src/components/NewResourceDialog.tsx
 msgid "New resource"
 msgstr "新規リソース"
@@ -1318,9 +1447,17 @@ msgstr "結果がありません。別の語句でお試しください。"
 msgid "No unsaved changes"
 msgstr "未保存の変更はありません"
 
+#: src/pages/Admin.tsx
+msgid "None (port 25, not recommended)"
+msgstr ""
+
 #: src/pages/Workspace.tsx
 msgid "Not published"
 msgstr "未公開"
+
+#: src/components/Layout.tsx
+msgid "Not verified — email-code sign in is disabled until verified."
+msgstr ""
 
 #: src/pages/Landing.tsx
 msgid "Notes tools"
@@ -1343,11 +1480,8 @@ msgid "On this page"
 msgstr "このページの内容"
 
 #: src/pages/Landing.tsx
-msgid "One Markdown source shows up everywhere it matters: local files on your "
-"machine, sync state in the cloud, and published output for readers — all "
-"visible at once."
-msgstr "ひとつの Markdown "
-"ソースが、必要なすべての場所に現れます。手元のローカルファイル、クラウドの同期状態、読者向けの公開出力——そのすべてを一度に。"
+msgid "One Markdown source shows up everywhere it matters: local files on your machine, sync state in the cloud, and published output for readers — all visible at once."
+msgstr "ひとつの Markdown ソースが、必要なすべての場所に現れます。手元のローカルファイル、クラウドの同期状態、読者向けの公開出力——そのすべてを一度に。"
 
 #: src/pages/Landing.tsx
 msgid "One Markdown source, three calm surfaces."
@@ -1366,8 +1500,7 @@ msgid "Open"
 msgstr "開く"
 
 #: src/pages/Landing.tsx
-msgid "Open a local Markdown vault, keep normal folders, and edit without "
-"turning notes into remote-only data."
+msgid "Open a local Markdown vault, keep normal folders, and edit without turning notes into remote-only data."
 msgstr "ローカル Markdown ボルトを開き、通常のフォルダー構造を保ち、ノートをリモート専用データにせずに編集します。"
 
 #: src/help/HelpLayout.tsx
@@ -1403,9 +1536,12 @@ msgid "Open sidebar"
 msgstr "サイドバーを開く"
 
 #: src/help/pages/CaseStudy.tsx
-msgid "Open the example vault in JType and follow along. It lives in the repo "
-"at:"
+msgid "Open the example vault in JType and follow along. It lives in the repo at:"
 msgstr "JType でサンプルボルトを開いて一緒に進めましょう。リポジトリの場所："
+
+#: src/pages/Login.tsx
+msgid "optional"
+msgstr ""
 
 #: src/components/SiteThemePanel.tsx
 msgid "Optional. A small set of inline tags is allowed (links, emphasis)."
@@ -1431,10 +1567,19 @@ msgstr "所有権を移転しました。"
 msgid "Pass ownership to another admin member."
 msgstr "別の管理者メンバーに所有権を渡します。"
 
+#: src/pages/Admin.tsx
 #: src/pages/DeviceOAuth.tsx
 #: src/pages/Login.tsx
 msgid "Password"
 msgstr "パスワード"
+
+#: src/pages/ResetPassword.tsx
+msgid "Password must be at least 8 characters"
+msgstr ""
+
+#: src/pages/ResetPassword.tsx
+msgid "Password reset"
+msgstr ""
 
 #: src/pages/Workspace.tsx
 msgid "Pending invites"
@@ -1461,13 +1606,16 @@ msgid "Play the explainer video"
 msgstr "解説動画を再生"
 
 #: src/pages/DeviceOAuth.tsx
-#: src/pages/Login.tsx
 msgid "Please wait..."
 msgstr "しばらくお待ちください..."
 
 #: src/help/pages/HelpHome.tsx
 msgid "Popular articles"
 msgstr "人気の記事"
+
+#: src/pages/Admin.tsx
+msgid "Port"
+msgstr ""
 
 #: src/components/SiteThemePanel.tsx
 msgid "Preset…"
@@ -1541,18 +1689,20 @@ msgid "Publishing details saved"
 msgstr "公開詳細を保存しました"
 
 #: src/pages/Workspace.tsx
-msgid "Publishing uses a server snapshot; frontmatter status is treated as user "
-"metadata."
+msgid "Publishing uses a server snapshot; frontmatter status is treated as user metadata."
 msgstr "公開はサーバースナップショットを使用します。フロントマターのステータスはユーザーメタデータとして扱われます。"
 
 #: src/pages/Landing.tsx
-msgid "Push and pull versions, resolve conflicts, and keep collaboration scoped "
-"to the workspace you choose."
+msgid "Push and pull versions, resolve conflicts, and keep collaboration scoped to the workspace you choose."
 msgstr "バージョンのプッシュ/プル、競合の解決、コラボレーションを選択したワークスペースに限定します。"
 
 #: src/pages/Workspace.tsx
 msgid "Quick open"
 msgstr "クイックオープン"
+
+#: src/pages/ResetPassword.tsx
+msgid "Re-enter new password"
+msgstr ""
 
 #: src/help/pages/CasesIndex.tsx
 msgid "Read case study"
@@ -1567,15 +1717,12 @@ msgid "Ready for the cloud layer"
 msgstr "クラウドレイヤーの準備完了"
 
 #: src/help/pages/CasesIndex.tsx
-msgid "Real, end-to-end scenarios you can reproduce. Each one ships with an "
-"example vault you can open in JType."
+msgid "Real, end-to-end scenarios you can reproduce. Each one ships with an example vault you can open in JType."
 msgstr "再現可能な実エンドツーエンドのシナリオ。それぞれ JType で開けるサンプルボルトが付属します。"
 
 #: src/pages/AiConnections.tsx
-msgid "Recommended: paste this URL into an OAuth-capable client (Claude, "
-"Cursor) — you'll approve in the browser, no token to copy."
-msgstr "推奨：この URL を OAuth "
-"対応クライアント（Claude、Cursor）に貼り付けてください。ブラウザで承認するだけで、トークンのコピーは不要です。"
+msgid "Recommended: paste this URL into an OAuth-capable client (Claude, Cursor) — you'll approve in the browser, no token to copy."
+msgstr "推奨：この URL を OAuth 対応クライアント（Claude、Cursor）に貼り付けてください。ブラウザで承認するだけで、トークンのコピーは不要です。"
 
 #: src/pages/Admin.tsx
 msgid "Region"
@@ -1587,13 +1734,21 @@ msgid "Register"
 msgstr "登録"
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Register & Authorize"
-msgstr "登録して承認"
+msgid "Register & authorize"
+msgstr ""
+
+#: src/pages/DeviceOAuth.tsx
+#~ msgid "Register & Authorize"
+#~ msgstr "登録して承認"
 
 #. placeholder {0}: staleWarning.wasDirty ? ' (discard)' : ''
 #: src/pages/Workspace.tsx
 msgid "Reload{0}"
 msgstr "再読み込み{0}"
+
+#: src/pages/Login.tsx
+msgid "Remember me"
+msgstr ""
 
 #: src/help/components/HelpVideo.tsx
 msgid "Remotion"
@@ -1640,6 +1795,22 @@ msgstr "公開済みドキュメントを再公開"
 #: src/pages/AiConnections.tsx
 msgid "Request failed"
 msgstr "リクエストに失敗しました"
+
+#: src/pages/Login.tsx
+msgid "Resend code"
+msgstr ""
+
+#: src/components/Layout.tsx
+msgid "Resend verification"
+msgstr ""
+
+#: src/pages/ResetPassword.tsx
+msgid "Reset failed"
+msgstr ""
+
+#: src/pages/ResetPassword.tsx
+msgid "Reset password"
+msgstr ""
 
 #: src/pages/Workspace.tsx
 msgid "Restore"
@@ -1706,6 +1877,10 @@ msgid "Save site settings"
 msgstr "サイト設定を保存"
 
 #: src/pages/Admin.tsx
+msgid "Save SMTP settings"
+msgstr ""
+
+#: src/pages/Admin.tsx
 msgid "Save storage settings"
 msgstr "ストレージ設定を保存"
 
@@ -1721,6 +1896,11 @@ msgstr "保存しました。"
 msgid "Saving verifies the connection before applying."
 msgstr "保存時に接続を検証してから適用します。"
 
+#: src/pages/Admin.tsx
+msgid "Saving verifies the SMTP connection before applying."
+msgstr ""
+
+#: src/components/Layout.tsx
 #: src/pages/Admin.tsx
 #: src/pages/Workspace.tsx
 msgid "Saving..."
@@ -1770,6 +1950,30 @@ msgstr "ドメインを選択"
 msgid "Select a Markdown file"
 msgstr "Markdown ファイルを選択"
 
+#: src/pages/Login.tsx
+#~ msgid "Self-service reset isn't available yet. Ask an admin to reset your password."
+#~ msgstr ""
+
+#: src/pages/Login.tsx
+msgid "Send"
+msgstr ""
+
+#: src/pages/Login.tsx
+msgid "Send code"
+msgstr ""
+
+#: src/components/Layout.tsx
+msgid "Send verification email"
+msgstr ""
+
+#: src/components/Layout.tsx
+msgid "Sending..."
+msgstr ""
+
+#: src/pages/Login.tsx
+msgid "Sending…"
+msgstr ""
+
 #: src/components/Layout.tsx
 msgid "Settings"
 msgstr "設定"
@@ -1801,12 +2005,24 @@ msgid "Sign in"
 msgstr "サインイン"
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Sign in & Authorize"
-msgstr "サインインして承認"
+msgid "Sign in & authorize"
+msgstr ""
+
+#: src/pages/DeviceOAuth.tsx
+#~ msgid "Sign in & Authorize"
+#~ msgstr "サインインして承認"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Sign in to approve this device"
+msgstr ""
 
 #: src/pages/Login.tsx
 msgid "Sign in to your JType Cloud account."
 msgstr "JType Cloud アカウントにサインインします。"
+
+#: src/pages/Login.tsx
+msgid "Sign in with email code"
+msgstr ""
 
 #: src/components/Layout.tsx
 #: src/pages/Landing.tsx
@@ -1823,8 +2039,16 @@ msgid "Signed in as {0}"
 msgstr "{0} としてサインイン済み"
 
 #: src/pages/DeviceOAuth.tsx
+msgid "Signed in as <0>{loggedInName}</0>"
+msgstr ""
+
+#: src/pages/DeviceOAuth.tsx
 msgid "Signed in. Ready to authorize device."
 msgstr "サインイン済み。デバイスを承認する準備ができています。"
+
+#: src/pages/Login.tsx
+msgid "Signing in..."
+msgstr ""
 
 #: src/pages/Workspace.tsx
 msgid "Site & theme"
@@ -1837,6 +2061,18 @@ msgstr "サイト名"
 #: src/pages/Workspace.tsx
 msgid "Site settings"
 msgstr "サイト設定"
+
+#: src/pages/Admin.tsx
+msgid "SMTP host"
+msgstr ""
+
+#: src/pages/Admin.tsx
+msgid "SMTP settings saved. Connection verified."
+msgstr ""
+
+#: src/pages/Admin.tsx
+msgid "smtp.example.com — leave blank to disable email"
+msgstr ""
 
 #: src/pages/Login.tsx
 msgid "Something went wrong"
@@ -1889,6 +2125,10 @@ msgstr "書き始める"
 #: src/pages/Workspace.tsx
 msgid "Start writing Markdown..."
 msgstr "Markdown を書き始める..."
+
+#: src/pages/Admin.tsx
+msgid "STARTTLS (recommended, port 587)"
+msgstr ""
 
 #: src/pages/Admin.tsx
 msgid "Status"
@@ -1951,6 +2191,10 @@ msgstr "フィードバックありがとうございます！"
 msgid "The landing story follows the real JType loop."
 msgstr "ランディングページのストーリーは実際の JType ループに従います。"
 
+#: src/pages/ResetPassword.tsx
+msgid "The passwords you entered do not match"
+msgstr ""
+
 #: src/pages/Workspace.tsx
 msgid "The public snapshot is behind the current document."
 msgstr "公開スナップショットが現在のドキュメントより古くなっています。"
@@ -1991,11 +2235,22 @@ msgstr "この招待リンクは取り消されており、無効です。"
 msgid "This invite link is invalid or has expired."
 msgstr "この招待リンクは無効か期限切れです。"
 
+#: src/pages/ResetPassword.tsx
+msgid "This reset link is missing its token."
+msgstr ""
+
+#: src/pages/VerifyEmail.tsx
+msgid "This verification link is missing its token."
+msgstr ""
+
 #. placeholder {0}: workspace.name
 #: src/pages/Workspace.tsx
-msgid "This will permanently delete <0>{0}</0> and all its documents. This "
-"cannot be undone."
+msgid "This will permanently delete <0>{0}</0> and all its documents. This cannot be undone."
 msgstr "<0>{0}</0> とそのすべてのドキュメントが完全に削除されます。この操作は取り消せません。"
+
+#: src/pages/Admin.tsx
+msgid "TLS / SSL (port 465)"
+msgstr ""
 
 #: src/pages/Workspace.tsx
 msgid "Toggle favorite"
@@ -2043,8 +2298,7 @@ msgid "Try it yourself"
 msgstr "自分で試す"
 
 #: src/pages/Landing.tsx
-msgid "Turn selected documents into a public `/u/:username` site while your "
-"source stays Markdown."
+msgid "Turn selected documents into a public `/u/:username` site while your source stays Markdown."
 msgstr "選択したドキュメントをパブリック `/u/:username` サイトにしながら、ソースは Markdown のまま保ちます。"
 
 #: src/pages/Workspace.tsx
@@ -2087,14 +2341,21 @@ msgstr "未保存"
 msgid "Untitled document"
 msgstr "無題のドキュメント"
 
+#: src/components/Layout.tsx
+msgid "Update email"
+msgstr ""
+
 #: src/pages/Workspace.tsx
-msgid "Upload a PEM certificate for a verified domain. The private key is "
-"stored as a hash in the current backend model."
+msgid "Upload a PEM certificate for a verified domain. The private key is stored as a hash in the current backend model."
 msgstr "確認済みドメインの PEM 証明書をアップロードします。秘密鍵は現在のバックエンドモデルでハッシュとして保存されます。"
 
 #: src/components/DownloadPromo.tsx
 msgid "Use JType beyond the browser"
 msgstr "ブラウザの外でも JType を"
+
+#: src/pages/Login.tsx
+msgid "Use password instead"
+msgstr ""
 
 #: src/pages/Admin.tsx
 msgid "User"
@@ -2110,6 +2371,10 @@ msgstr "ユーザーメニュー"
 #: src/pages/Login.tsx
 msgid "Username"
 msgstr "ユーザー名"
+
+#: src/pages/Login.tsx
+msgid "Username or email"
+msgstr ""
 
 #: src/pages/Admin.tsx
 msgid "Users"
@@ -2131,6 +2396,19 @@ msgstr "ボルトルート"
 msgid "Vault space"
 msgstr "ボルトスペース"
 
+#: src/components/Layout.tsx
+msgid "Verification email sent. Check your inbox."
+msgstr ""
+
+#: src/pages/Login.tsx
+#: src/pages/VerifyEmail.tsx
+msgid "Verification failed"
+msgstr ""
+
+#: src/components/Layout.tsx
+msgid "Verified"
+msgstr ""
+
 #: src/pages/Workspace.tsx
 msgid "Verified domain"
 msgstr "確認済みドメイン"
@@ -2138,6 +2416,11 @@ msgstr "確認済みドメイン"
 #: src/pages/Workspace.tsx
 msgid "Verify DNS"
 msgstr "DNS を確認"
+
+#: src/pages/Login.tsx
+#: src/pages/VerifyEmail.tsx
+msgid "Verifying…"
+msgstr ""
 
 #: src/pages/Workspace.tsx
 msgid "View public page"
@@ -2162,6 +2445,14 @@ msgstr "解説を見る"
 #: src/pages/Landing.tsx
 msgid "Watch the flow"
 msgstr "フローを見る"
+
+#: src/pages/Login.tsx
+#~ msgid "We'll send a 6-digit code to your verified email."
+#~ msgstr ""
+
+#: src/pages/Login.tsx
+msgid "We'll send a 6-digit sign-in code to this email."
+msgstr ""
 
 #: src/pages/Landing.tsx
 msgid "Web dashboard"
@@ -2209,13 +2500,20 @@ msgid "You will lose access to all cloud documents."
 msgstr "すべてのクラウドドキュメントへのアクセスを失います。"
 
 #: src/pages/Workspace.tsx
-msgid "You will lose access to all cloud documents. Your local files are "
-"unaffected."
+msgid "You will lose access to all cloud documents. Your local files are unaffected."
 msgstr "すべてのクラウドドキュメントへのアクセスを失います。ローカルファイルは影響を受けません。"
 
 #: src/pages/InviteAccept.tsx
 msgid "You're invited"
 msgstr "招待されました"
+
+#: src/pages/Login.tsx
+msgid "you@example.com"
+msgstr ""
+
+#: src/pages/VerifyEmail.tsx
+msgid "Your email address is now confirmed."
+msgstr ""
 
 #: src/pages/Login.tsx
 msgid "Your files stay on your machine. Always."
@@ -2228,6 +2526,10 @@ msgstr "あなたの Markdown ワークスペース、<0/>クラウドに同期�
 #: src/pages/AiConnections.tsx
 msgid "Your MCP server"
 msgstr "あなたの MCP サーバー"
+
+#: src/pages/ResetPassword.tsx
+msgid "Your password has been changed. You can sign in now."
+msgstr ""
 
 #: src/pages/Workspace.tsx
 msgid "Your rendered document will appear here."

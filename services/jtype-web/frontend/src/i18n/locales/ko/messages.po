@@ -80,6 +80,10 @@ msgstr "•••••••• — 현재값 유지 시 비워두세요"
 msgid "© {0} JType"
 msgstr "© {0} JType"
 
+#: src/pages/Login.tsx
+#~ msgid "← Back to password sign in"
+#~ msgstr ""
+
 #. placeholder {0}: preview.invitedByUsername
 #. placeholder {1}: preview.workspaceName
 #. placeholder {2}: preview.role
@@ -92,6 +96,14 @@ msgstr "<0>{0}</0>님이 <2>{2}</2>(으)로 <1>{1}</1>에 초대했습니다."
 #: src/pages/Workspace.tsx
 msgid "⚠ Modified by {0}{1}"
 msgstr "⚠ {0}{1}에 의해 수정됨"
+
+#: src/pages/Admin.tsx
+msgid "587 (STARTTLS) · 465 (TLS) · 25 (none)"
+msgstr ""
+
+#: src/pages/Login.tsx
+#~ msgid "A 6-digit code was sent to {otpEmail}."
+#~ msgstr ""
 
 #: src/components/NewResourceDialog.tsx
 msgid "A hand-drawn style whiteboard canvas"
@@ -137,6 +149,10 @@ msgstr "액세스 토큰"
 msgid "Account"
 msgstr "계정"
 
+#: src/pages/Login.tsx
+msgid "Account email"
+msgstr ""
+
 #: src/pages/Admin.tsx
 msgid "Actions"
 msgstr "작업"
@@ -158,8 +174,7 @@ msgid "Add domain"
 msgstr "도메인 추가"
 
 #: src/pages/Workspace.tsx
-msgid "Add domains, verify DNS ownership, bind them to this workspace, and "
-"manage SSL certificates from one place."
+msgid "Add domains, verify DNS ownership, bind them to this workspace, and manage SSL certificates from one place."
 msgstr "한 곳에서 도메인 추가, DNS 소유권 확인, 워크스페이스 바인딩 및 SSL 인증서 관리."
 
 #: src/pages/Workspace.tsx
@@ -226,6 +241,10 @@ msgstr "문서"
 msgid "Articles for this topic are on the way."
 msgstr "이 주제의 문서가 곧 게시됩니다."
 
+#: src/pages/ResetPassword.tsx
+msgid "At least 8 characters"
+msgstr ""
+
 #: src/pages/DeviceOAuth.tsx
 msgid "Authentication failed"
 msgstr "인증 실패"
@@ -235,12 +254,16 @@ msgid "Authorization failed"
 msgstr "권한 부여 실패"
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Authorize Desktop"
-msgstr "데스크탑 인증"
+#~ msgid "Authorize Desktop"
+#~ msgstr "데스크탑 인증"
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Authorize Device"
-msgstr "기기 인증"
+msgid "Authorize device"
+msgstr ""
+
+#: src/pages/DeviceOAuth.tsx
+#~ msgid "Authorize Device"
+#~ msgstr "기기 인증"
 
 #: src/pages/DeviceOAuth.tsx
 msgid "Authorizing..."
@@ -250,6 +273,10 @@ msgstr "인증 중..."
 msgid "Back"
 msgstr "뒤로"
 
+#: src/pages/ResetPassword.tsx
+msgid "Back to sign in"
+msgstr ""
+
 #: src/components/SiteThemePanel.tsx
 msgid "Background"
 msgstr "배경"
@@ -258,9 +285,17 @@ msgstr "배경"
 msgid "Base size"
 msgstr "기본 크기"
 
+#: src/components/Layout.tsx
+msgid "Bind an email to enable password reset and email-code sign in."
+msgstr ""
+
 #: src/pages/Workspace.tsx
 msgid "Bind custom domains and manage certificates."
 msgstr "커스텀 도메인을 바인딩하고 인증서를 관리합니다."
+
+#: src/components/Layout.tsx
+msgid "Bind email"
+msgstr ""
 
 #: src/pages/Workspace.tsx
 msgid "Bind here"
@@ -324,11 +359,8 @@ msgid "Bucket"
 msgstr "버킷"
 
 #: src/pages/Landing.tsx
-msgid "Calm desktop writing, workspace-scoped sync, and public Markdown "
-"publishing in one product flow. Your notes stay local until a cloud "
-"workspace has a job to do."
-msgstr "차분한 데스크탑 글쓰기, 워크스페이스 범위 동기화, 공개 Markdown 게시가 하나의 제품 흐름으로. 노트는 클라우드 "
-"워크스페이스가 필요할 때까지 로컬에 보관됩니다."
+msgid "Calm desktop writing, workspace-scoped sync, and public Markdown publishing in one product flow. Your notes stay local until a cloud workspace has a job to do."
+msgstr "차분한 데스크탑 글쓰기, 워크스페이스 범위 동기화, 공개 Markdown 게시가 하나의 제품 흐름으로. 노트는 클라우드 워크스페이스가 필요할 때까지 로컬에 보관됩니다."
 
 #: src/components/NewResourceDialog.tsx
 #: src/pages/Workspace.tsx
@@ -360,6 +392,10 @@ msgstr "세션 확인 중"
 #: src/pages/Workspace.tsx
 msgid "Choose a cloud workspace"
 msgstr "클라우드 워크스페이스 선택"
+
+#: src/pages/ResetPassword.tsx
+msgid "Choose a new password"
+msgstr ""
 
 #: src/pages/Workspace.tsx
 msgid "Choose a note or create a new one."
@@ -441,17 +477,27 @@ msgid "Compact"
 msgstr "컴팩트"
 
 #: src/pages/Admin.tsx
+msgid "Configure outbound email (SMTP). Used for password reset and email verification. Saved values override the JTYPED_SMTP_* environment variables."
+msgstr ""
+
+#: src/pages/Admin.tsx
 msgid "Configure server object storage."
 msgstr "서버 객체 스토리지를 구성합니다."
 
 #: src/pages/Admin.tsx
-msgid "Configure server object storage. Saved values override the "
-"JTYPED_STORAGE_* environment variables and apply immediately."
+msgid "Configure server object storage. Saved values override the JTYPED_STORAGE_* environment variables and apply immediately."
 msgstr "서버 객체 스토리지를 구성합니다. 저장된 값은 JTYPED_STORAGE_* 환경 변수보다 우선하며 즉시 적용됩니다."
 
+#: src/pages/ResetPassword.tsx
+msgid "Confirm password"
+msgstr ""
+
+#: src/pages/VerifyEmail.tsx
+msgid "Confirming your email address."
+msgstr ""
+
 #: src/pages/AiConnections.tsx
-msgid "Connect Claude, Cursor, Cline, or jcode to your notes & kanban through "
-"the built-in MCP server."
+msgid "Connect Claude, Cursor, Cline, or jcode to your notes & kanban through the built-in MCP server."
 msgstr "내장 MCP 서버를 통해 Claude, Cursor, Cline, 또는 jcode를 내 노트와 칸반에 연결하세요."
 
 #: src/pages/Landing.tsx
@@ -474,9 +520,21 @@ msgstr "연결 중..."
 msgid "Content width"
 msgstr "콘텐츠 너비"
 
+#: src/pages/VerifyEmail.tsx
+msgid "Continue"
+msgstr ""
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Copied"
+msgstr ""
+
 #: src/pages/AiConnections.tsx
 msgid "Copy"
 msgstr "복사"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Copy code"
+msgstr ""
 
 #: src/pages/AiConnections.tsx
 msgid "Copy it now — it won't be shown again."
@@ -507,11 +565,8 @@ msgid "Create"
 msgstr "만들기"
 
 #: src/pages/Landing.tsx
-msgid "Create a workspace for sync, publishing, and account settings. Local "
-"vault copy stays precise: folders are vaults, server-side collaboration "
-"is a cloud workspace."
-msgstr "동기화, 게시, 계정 설정을 위한 워크스페이스를 만듭니다. 로컬 볼트 복사본은 정확하게 유지됩니다: 폴더는 볼트, 서버 측 "
-"협업은 클라우드 워크스페이스."
+msgid "Create a workspace for sync, publishing, and account settings. Local vault copy stays precise: folders are vaults, server-side collaboration is a cloud workspace."
+msgstr "동기화, 게시, 계정 설정을 위한 워크스페이스를 만듭니다. 로컬 볼트 복사본은 정확하게 유지됩니다: 폴더는 볼트, 서버 측 협업은 클라우드 워크스페이스."
 
 #: src/pages/Login.tsx
 msgid "Create account"
@@ -524,6 +579,10 @@ msgstr "첫 번째 Markdown 노트를 만드세요."
 #: src/components/NewResourceDialog.tsx
 msgid "Creates in"
 msgstr "생성 위치"
+
+#: src/pages/Login.tsx
+msgid "Creating..."
+msgstr ""
 
 #: src/pages/AiConnections.tsx
 msgid "current"
@@ -616,8 +675,12 @@ msgid "Device authorized! You can return to the JType desktop app."
 msgstr "기기가 인증되었습니다! JType 데스크탑 앱으로 돌아갈 수 있습니다."
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Device Code"
-msgstr "기기 코드"
+msgid "Device code"
+msgstr ""
+
+#: src/pages/DeviceOAuth.tsx
+#~ msgid "Device Code"
+#~ msgstr "기기 코드"
 
 #: src/components/NewResourceDialog.tsx
 msgid "Diagram name"
@@ -715,20 +778,38 @@ msgid "Drawing name"
 msgstr "그림 이름"
 
 #: src/pages/DeviceOAuth.tsx
-msgid "e.g. 456478"
-msgstr "예: 456478"
+#~ msgid "e.g. 456478"
+#~ msgstr "예: 456478"
 
 #: src/pages/Workspace.tsx
 msgid "Edits are written back to YAML frontmatter."
 msgstr "편집 내용이 YAML 프론트매터에 다시 기록됩니다."
 
 #: src/components/Layout.tsx
+#: src/pages/Admin.tsx
+#: src/pages/Login.tsx
 msgid "Email"
 msgstr "이메일"
 
 #: src/pages/Workspace.tsx
 msgid "Email (optional)"
 msgstr "이메일 (선택사항)"
+
+#: src/components/Layout.tsx
+msgid "Email address"
+msgstr ""
+
+#: src/components/Layout.tsx
+msgid "Email saved."
+msgstr ""
+
+#: src/components/Layout.tsx
+msgid "Email saved. Send a verification email to confirm it."
+msgstr ""
+
+#: src/pages/VerifyEmail.tsx
+msgid "Email verified"
+msgstr ""
 
 #: src/pages/Workspace.tsx
 msgid "Empty trash"
@@ -739,12 +820,40 @@ msgid "Enable"
 msgstr "활성화"
 
 #: src/pages/Admin.tsx
+msgid "Enabled"
+msgstr ""
+
+#: src/pages/Admin.tsx
+msgid "Encryption"
+msgstr ""
+
+#: src/pages/ResetPassword.tsx
+msgid "Enter a new password for your JType account."
+msgstr ""
+
+#: src/pages/Admin.tsx
 msgid "Enter secret key"
 msgstr "시크릿 키 입력"
+
+#: src/pages/Admin.tsx
+msgid "Enter SMTP password"
+msgstr ""
+
+#: src/pages/Login.tsx
+msgid "Enter the 6-digit code"
+msgstr ""
+
+#: src/pages/Login.tsx
+#~ msgid "Enter the code"
+#~ msgstr ""
 
 #: src/pages/DeviceOAuth.tsx
 msgid "Enter the code shown in your JType desktop app"
 msgstr "JType 데스크탑 앱에 표시된 코드를 입력하세요"
+
+#: src/pages/Login.tsx
+#~ msgid "Enter the code to sign in."
+#~ msgstr ""
 
 #: src/pages/Login.tsx
 msgid "Enter your password"
@@ -755,10 +864,8 @@ msgid "Enter your username"
 msgstr "사용자 이름을 입력하세요"
 
 #: src/help/pages/HelpHome.tsx
-msgid "Everything you need to write in a local-first vault, sync to the cloud, "
-"run a kanban board, publish a site, and connect AI."
-msgstr "로컬 우선 볼트에서 작성하고, 클라우드에 동기화하고, 칸반 보드를 운영하고, 사이트를 게시하고, AI를 연결하는 데 필요한 모든 "
-"것."
+msgid "Everything you need to write in a local-first vault, sync to the cloud, run a kanban board, publish a site, and connect AI."
+msgstr "로컬 우선 볼트에서 작성하고, 클라우드에 동기화하고, 칸반 보드를 운영하고, 사이트를 게시하고, AI를 연결하는 데 필요한 모든 것."
 
 #: src/components/NewResourceDialog.tsx
 msgid "Excalidraw drawing"
@@ -796,6 +903,10 @@ msgstr "워크스페이스 삭제에 실패했습니다."
 msgid "Failed to leave workspace."
 msgstr "워크스페이스 나가기에 실패했습니다."
 
+#: src/pages/Login.tsx
+msgid "Failed to send code"
+msgstr ""
+
 #: src/pages/Workspace.tsx
 msgid "Favorite"
 msgstr "즐겨찾기"
@@ -821,11 +932,16 @@ msgid "Footer HTML"
 msgstr "푸터 HTML"
 
 #: src/pages/AiConnections.tsx
-msgid "For clients that only accept a static header (e.g. jcode). Tokens are "
-"<0>mcp</0>-scoped (notes & kanban only, never admin) and expire in 90 "
-"days."
-msgstr "정적 헤더만 허용하는 클라이언트(예: jcode)용입니다. 토큰은 <0>mcp</0> 범위(노트와 칸반만, 관리자 권한 "
-"없음)이며 90일 후 만료됩니다."
+msgid "For clients that only accept a static header (e.g. jcode). Tokens are <0>mcp</0>-scoped (notes & kanban only, never admin) and expire in 90 days."
+msgstr "정적 헤더만 허용하는 클라이언트(예: jcode)용입니다. 토큰은 <0>mcp</0> 범위(노트와 칸반만, 관리자 권한 없음)이며 90일 후 만료됩니다."
+
+#: src/pages/Login.tsx
+msgid "Forgot password?"
+msgstr ""
+
+#: src/pages/Admin.tsx
+msgid "From address"
+msgstr ""
 
 #: src/pages/Admin.tsx
 msgid "from env"
@@ -896,6 +1012,10 @@ msgstr "무엇을 도와드릴까요?"
 #: src/pages/Admin.tsx
 msgid "https://s3.example.com — leave blank to use local files"
 msgstr "https://s3.example.com — 로컬 파일을 사용하려면 비워두세요"
+
+#: src/pages/Login.tsx
+msgid "If an account exists for that email, a reset link is on its way."
+msgstr ""
 
 #: src/pages/Workspace.tsx
 msgid "Image upload failed"
@@ -977,14 +1097,13 @@ msgstr "기울임꼴 (Ctrl+I)"
 msgid "Joining…"
 msgstr "참가 중…"
 
+#: src/pages/Admin.tsx
+msgid "JType <noreply@example.com>"
+msgstr ""
+
 #: src/pages/Landing.tsx
-msgid "JType ships a built-in MCP server. Connect Claude, Cursor, or any MCP "
-"client over a secure OAuth flow, then ask it to search your notes, draft "
-"a doc, or triage your board. Tokens are scoped, expiring, and revocable "
-"— and admin always stays off-limits."
-msgstr "JType에는 MCP 서버가 내장되어 있습니다. 안전한 OAuth 흐름으로 Claude, Cursor 등 모든 MCP "
-"클라이언트를 연결하면 노트 검색, 문서 초안 작성, 보드 정리를 맡길 수 있습니다. 토큰은 범위가 제한되고 만료되며 취소할 수 "
-"있으며, 관리자 권한에는 절대 접근하지 않습니다."
+msgid "JType ships a built-in MCP server. Connect Claude, Cursor, or any MCP client over a secure OAuth flow, then ask it to search your notes, draft a doc, or triage your board. Tokens are scoped, expiring, and revocable — and admin always stays off-limits."
+msgstr "JType에는 MCP 서버가 내장되어 있습니다. 안전한 OAuth 흐름으로 Claude, Cursor 등 모든 MCP 클라이언트를 연결하면 노트 검색, 문서 초안 작성, 보드 정리를 맡길 수 있습니다. 토큰은 범위가 제한되고 만료되며 취소할 수 있으며, 관리자 권한에는 절대 접근하지 않습니다."
 
 #: src/components/NewResourceDialog.tsx
 msgid "Kanban board"
@@ -995,8 +1114,7 @@ msgid "Kanban tools"
 msgstr "칸반 도구"
 
 #: src/pages/Workspace.tsx
-msgid "Keep the publish name and workspace name here. The workspace slug and "
-"storage limit are assigned by the service."
+msgid "Keep the publish name and workspace name here. The workspace slug and storage limit are assigned by the service."
 msgstr "여기서 게시 이름과 워크스페이스 이름을 관리합니다. 워크스페이스 슬러그와 저장소 한도는 서비스에서 할당됩니다."
 
 #: src/pages/Login.tsx
@@ -1032,6 +1150,10 @@ msgstr "레이아웃"
 #: src/pages/Workspace.tsx
 msgid "Leave"
 msgstr "나가기"
+
+#: src/pages/Admin.tsx
+msgid "leave blank if your server needs no auth"
+msgstr ""
 
 #: src/pages/Workspace.tsx
 msgid "Leave workspace"
@@ -1115,8 +1237,7 @@ msgid "Local-first Markdown vault"
 msgstr "로컬 우선 Markdown 볼트"
 
 #: src/help/HelpLayout.tsx
-msgid "Local-first Markdown vault editing with cloud sync, kanban, publishing, "
-"and AI."
+msgid "Local-first Markdown vault editing with cloud sync, kanban, publishing, and AI."
 msgstr "클라우드 동기화, 칸반, 게시, AI를 갖춘 로컬 우선 Markdown 볼트 편집."
 
 #: src/pages/Login.tsx
@@ -1126,6 +1247,10 @@ msgstr "클라우드 동기화, 게시 및 AI 준비 인덱싱을 갖춘 로컬 
 #: src/pages/InviteAccept.tsx
 msgid "Log in to accept"
 msgstr "로그인하여 수락"
+
+#: src/pages/Login.tsx
+msgid "Login code"
+msgstr ""
 
 #: src/pages/Workspace.tsx
 msgid "Manage cloud workspace name, publishing title, and storage."
@@ -1254,6 +1379,10 @@ msgstr "새 폴더 이름:"
 msgid "New Mermaid diagram"
 msgstr "새 Mermaid 다이어그램"
 
+#: src/pages/ResetPassword.tsx
+msgid "New password"
+msgstr ""
+
 #: src/components/NewResourceDialog.tsx
 msgid "New resource"
 msgstr "새 리소스"
@@ -1318,9 +1447,17 @@ msgstr "결과가 없습니다. 다른 검색어로 시도해 보세요."
 msgid "No unsaved changes"
 msgstr "저장되지 않은 변경 사항 없음"
 
+#: src/pages/Admin.tsx
+msgid "None (port 25, not recommended)"
+msgstr ""
+
 #: src/pages/Workspace.tsx
 msgid "Not published"
 msgstr "게시 안 됨"
+
+#: src/components/Layout.tsx
+msgid "Not verified — email-code sign in is disabled until verified."
+msgstr ""
 
 #: src/pages/Landing.tsx
 msgid "Notes tools"
@@ -1343,11 +1480,8 @@ msgid "On this page"
 msgstr "이 페이지에서"
 
 #: src/pages/Landing.tsx
-msgid "One Markdown source shows up everywhere it matters: local files on your "
-"machine, sync state in the cloud, and published output for readers — all "
-"visible at once."
-msgstr "하나의 Markdown 소스가 필요한 모든 곳에 나타납니다: 내 컴퓨터의 로컬 파일, 클라우드의 동기화 상태, 독자를 위한 게시 "
-"출력 — 한 번에 모두."
+msgid "One Markdown source shows up everywhere it matters: local files on your machine, sync state in the cloud, and published output for readers — all visible at once."
+msgstr "하나의 Markdown 소스가 필요한 모든 곳에 나타납니다: 내 컴퓨터의 로컬 파일, 클라우드의 동기화 상태, 독자를 위한 게시 출력 — 한 번에 모두."
 
 #: src/pages/Landing.tsx
 msgid "One Markdown source, three calm surfaces."
@@ -1366,8 +1500,7 @@ msgid "Open"
 msgstr "열기"
 
 #: src/pages/Landing.tsx
-msgid "Open a local Markdown vault, keep normal folders, and edit without "
-"turning notes into remote-only data."
+msgid "Open a local Markdown vault, keep normal folders, and edit without turning notes into remote-only data."
 msgstr "로컬 Markdown 볼트를 열고, 일반 폴더 구조를 유지하며, 노트를 원격 전용 데이터로 만들지 않고 편집합니다."
 
 #: src/help/HelpLayout.tsx
@@ -1403,9 +1536,12 @@ msgid "Open sidebar"
 msgstr "사이드바 열기"
 
 #: src/help/pages/CaseStudy.tsx
-msgid "Open the example vault in JType and follow along. It lives in the repo "
-"at:"
+msgid "Open the example vault in JType and follow along. It lives in the repo at:"
 msgstr "JType에서 예제 볼트를 열고 따라 해보세요. 저장소 위치:"
+
+#: src/pages/Login.tsx
+msgid "optional"
+msgstr ""
 
 #: src/components/SiteThemePanel.tsx
 msgid "Optional. A small set of inline tags is allowed (links, emphasis)."
@@ -1431,10 +1567,19 @@ msgstr "소유권이 이전되었습니다."
 msgid "Pass ownership to another admin member."
 msgstr "다른 관리자 멤버에게 소유권을 넘깁니다."
 
+#: src/pages/Admin.tsx
 #: src/pages/DeviceOAuth.tsx
 #: src/pages/Login.tsx
 msgid "Password"
 msgstr "비밀번호"
+
+#: src/pages/ResetPassword.tsx
+msgid "Password must be at least 8 characters"
+msgstr ""
+
+#: src/pages/ResetPassword.tsx
+msgid "Password reset"
+msgstr ""
 
 #: src/pages/Workspace.tsx
 msgid "Pending invites"
@@ -1461,13 +1606,16 @@ msgid "Play the explainer video"
 msgstr "설명 영상 재생"
 
 #: src/pages/DeviceOAuth.tsx
-#: src/pages/Login.tsx
 msgid "Please wait..."
 msgstr "잠시 기다려 주세요..."
 
 #: src/help/pages/HelpHome.tsx
 msgid "Popular articles"
 msgstr "인기 문서"
+
+#: src/pages/Admin.tsx
+msgid "Port"
+msgstr ""
 
 #: src/components/SiteThemePanel.tsx
 msgid "Preset…"
@@ -1541,18 +1689,20 @@ msgid "Publishing details saved"
 msgstr "게시 세부 정보가 저장되었습니다"
 
 #: src/pages/Workspace.tsx
-msgid "Publishing uses a server snapshot; frontmatter status is treated as user "
-"metadata."
+msgid "Publishing uses a server snapshot; frontmatter status is treated as user metadata."
 msgstr "게시는 서버 스냅샷을 사용합니다. 프론트매터 상태는 사용자 메타데이터로 처리됩니다."
 
 #: src/pages/Landing.tsx
-msgid "Push and pull versions, resolve conflicts, and keep collaboration scoped "
-"to the workspace you choose."
+msgid "Push and pull versions, resolve conflicts, and keep collaboration scoped to the workspace you choose."
 msgstr "버전 푸시/풀, 충돌 해결, 선택한 워크스페이스 내에서 협업 유지."
 
 #: src/pages/Workspace.tsx
 msgid "Quick open"
 msgstr "빠른 열기"
+
+#: src/pages/ResetPassword.tsx
+msgid "Re-enter new password"
+msgstr ""
 
 #: src/help/pages/CasesIndex.tsx
 msgid "Read case study"
@@ -1567,15 +1717,12 @@ msgid "Ready for the cloud layer"
 msgstr "클라우드 레이어 준비 완료"
 
 #: src/help/pages/CasesIndex.tsx
-msgid "Real, end-to-end scenarios you can reproduce. Each one ships with an "
-"example vault you can open in JType."
+msgid "Real, end-to-end scenarios you can reproduce. Each one ships with an example vault you can open in JType."
 msgstr "재현 가능한 실제 엔드투엔드 시나리오입니다. 각각 JType에서 열 수 있는 예제 볼트를 제공합니다."
 
 #: src/pages/AiConnections.tsx
-msgid "Recommended: paste this URL into an OAuth-capable client (Claude, "
-"Cursor) — you'll approve in the browser, no token to copy."
-msgstr "권장: 이 URL을 OAuth 지원 클라이언트(Claude, Cursor)에 붙여넣으세요. 브라우저에서 승인만 하면 되며 토큰을 "
-"복사할 필요가 없습니다."
+msgid "Recommended: paste this URL into an OAuth-capable client (Claude, Cursor) — you'll approve in the browser, no token to copy."
+msgstr "권장: 이 URL을 OAuth 지원 클라이언트(Claude, Cursor)에 붙여넣으세요. 브라우저에서 승인만 하면 되며 토큰을 복사할 필요가 없습니다."
 
 #: src/pages/Admin.tsx
 msgid "Region"
@@ -1587,13 +1734,21 @@ msgid "Register"
 msgstr "등록"
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Register & Authorize"
-msgstr "등록 및 인증"
+msgid "Register & authorize"
+msgstr ""
+
+#: src/pages/DeviceOAuth.tsx
+#~ msgid "Register & Authorize"
+#~ msgstr "등록 및 인증"
 
 #. placeholder {0}: staleWarning.wasDirty ? ' (discard)' : ''
 #: src/pages/Workspace.tsx
 msgid "Reload{0}"
 msgstr "새로고침{0}"
+
+#: src/pages/Login.tsx
+msgid "Remember me"
+msgstr ""
 
 #: src/help/components/HelpVideo.tsx
 msgid "Remotion"
@@ -1640,6 +1795,22 @@ msgstr "게시된 문서 다시 게시"
 #: src/pages/AiConnections.tsx
 msgid "Request failed"
 msgstr "요청 실패"
+
+#: src/pages/Login.tsx
+msgid "Resend code"
+msgstr ""
+
+#: src/components/Layout.tsx
+msgid "Resend verification"
+msgstr ""
+
+#: src/pages/ResetPassword.tsx
+msgid "Reset failed"
+msgstr ""
+
+#: src/pages/ResetPassword.tsx
+msgid "Reset password"
+msgstr ""
 
 #: src/pages/Workspace.tsx
 msgid "Restore"
@@ -1706,6 +1877,10 @@ msgid "Save site settings"
 msgstr "사이트 설정 저장"
 
 #: src/pages/Admin.tsx
+msgid "Save SMTP settings"
+msgstr ""
+
+#: src/pages/Admin.tsx
 msgid "Save storage settings"
 msgstr "스토리지 설정 저장"
 
@@ -1721,6 +1896,11 @@ msgstr "저장됨."
 msgid "Saving verifies the connection before applying."
 msgstr "저장 시 연결을 검증한 후 적용합니다."
 
+#: src/pages/Admin.tsx
+msgid "Saving verifies the SMTP connection before applying."
+msgstr ""
+
+#: src/components/Layout.tsx
 #: src/pages/Admin.tsx
 #: src/pages/Workspace.tsx
 msgid "Saving..."
@@ -1770,6 +1950,30 @@ msgstr "도메인 선택"
 msgid "Select a Markdown file"
 msgstr "Markdown 파일 선택"
 
+#: src/pages/Login.tsx
+#~ msgid "Self-service reset isn't available yet. Ask an admin to reset your password."
+#~ msgstr ""
+
+#: src/pages/Login.tsx
+msgid "Send"
+msgstr ""
+
+#: src/pages/Login.tsx
+msgid "Send code"
+msgstr ""
+
+#: src/components/Layout.tsx
+msgid "Send verification email"
+msgstr ""
+
+#: src/components/Layout.tsx
+msgid "Sending..."
+msgstr ""
+
+#: src/pages/Login.tsx
+msgid "Sending…"
+msgstr ""
+
 #: src/components/Layout.tsx
 msgid "Settings"
 msgstr "설정"
@@ -1801,12 +2005,24 @@ msgid "Sign in"
 msgstr "로그인"
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Sign in & Authorize"
-msgstr "로그인 및 인증"
+msgid "Sign in & authorize"
+msgstr ""
+
+#: src/pages/DeviceOAuth.tsx
+#~ msgid "Sign in & Authorize"
+#~ msgstr "로그인 및 인증"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Sign in to approve this device"
+msgstr ""
 
 #: src/pages/Login.tsx
 msgid "Sign in to your JType Cloud account."
 msgstr "JType Cloud 계정에 로그인하세요."
+
+#: src/pages/Login.tsx
+msgid "Sign in with email code"
+msgstr ""
 
 #: src/components/Layout.tsx
 #: src/pages/Landing.tsx
@@ -1823,8 +2039,16 @@ msgid "Signed in as {0}"
 msgstr "{0}(으)로 로그인됨"
 
 #: src/pages/DeviceOAuth.tsx
+msgid "Signed in as <0>{loggedInName}</0>"
+msgstr ""
+
+#: src/pages/DeviceOAuth.tsx
 msgid "Signed in. Ready to authorize device."
 msgstr "로그인됨. 기기 인증 준비 완료."
+
+#: src/pages/Login.tsx
+msgid "Signing in..."
+msgstr ""
 
 #: src/pages/Workspace.tsx
 msgid "Site & theme"
@@ -1837,6 +2061,18 @@ msgstr "사이트 이름"
 #: src/pages/Workspace.tsx
 msgid "Site settings"
 msgstr "사이트 설정"
+
+#: src/pages/Admin.tsx
+msgid "SMTP host"
+msgstr ""
+
+#: src/pages/Admin.tsx
+msgid "SMTP settings saved. Connection verified."
+msgstr ""
+
+#: src/pages/Admin.tsx
+msgid "smtp.example.com — leave blank to disable email"
+msgstr ""
 
 #: src/pages/Login.tsx
 msgid "Something went wrong"
@@ -1889,6 +2125,10 @@ msgstr "작성 시작"
 #: src/pages/Workspace.tsx
 msgid "Start writing Markdown..."
 msgstr "Markdown 작성 시작..."
+
+#: src/pages/Admin.tsx
+msgid "STARTTLS (recommended, port 587)"
+msgstr ""
 
 #: src/pages/Admin.tsx
 msgid "Status"
@@ -1951,6 +2191,10 @@ msgstr "피드백 감사합니다!"
 msgid "The landing story follows the real JType loop."
 msgstr "랜딩 페이지 스토리는 실제 JType 루프를 따릅니다."
 
+#: src/pages/ResetPassword.tsx
+msgid "The passwords you entered do not match"
+msgstr ""
+
 #: src/pages/Workspace.tsx
 msgid "The public snapshot is behind the current document."
 msgstr "공개 스냅샷이 현재 문서보다 오래되었습니다."
@@ -1991,11 +2235,22 @@ msgstr "이 초대 링크는 취소되었으며 더 이상 유효하지 않습�
 msgid "This invite link is invalid or has expired."
 msgstr "이 초대 링크는 유효하지 않거나 만료되었습니다."
 
+#: src/pages/ResetPassword.tsx
+msgid "This reset link is missing its token."
+msgstr ""
+
+#: src/pages/VerifyEmail.tsx
+msgid "This verification link is missing its token."
+msgstr ""
+
 #. placeholder {0}: workspace.name
 #: src/pages/Workspace.tsx
-msgid "This will permanently delete <0>{0}</0> and all its documents. This "
-"cannot be undone."
+msgid "This will permanently delete <0>{0}</0> and all its documents. This cannot be undone."
 msgstr "<0>{0}</0>과(와) 모든 문서가 영구 삭제됩니다. 이 작업은 취소할 수 없습니다."
+
+#: src/pages/Admin.tsx
+msgid "TLS / SSL (port 465)"
+msgstr ""
 
 #: src/pages/Workspace.tsx
 msgid "Toggle favorite"
@@ -2043,8 +2298,7 @@ msgid "Try it yourself"
 msgstr "직접 시도"
 
 #: src/pages/Landing.tsx
-msgid "Turn selected documents into a public `/u/:username` site while your "
-"source stays Markdown."
+msgid "Turn selected documents into a public `/u/:username` site while your source stays Markdown."
 msgstr "소스는 Markdown으로 유지하면서 선택한 문서를 공개 `/u/:username` 사이트로 만듭니다."
 
 #: src/pages/Workspace.tsx
@@ -2087,14 +2341,21 @@ msgstr "저장되지 않음"
 msgid "Untitled document"
 msgstr "제목 없는 문서"
 
+#: src/components/Layout.tsx
+msgid "Update email"
+msgstr ""
+
 #: src/pages/Workspace.tsx
-msgid "Upload a PEM certificate for a verified domain. The private key is "
-"stored as a hash in the current backend model."
+msgid "Upload a PEM certificate for a verified domain. The private key is stored as a hash in the current backend model."
 msgstr "확인된 도메인에 대한 PEM 인증서를 업로드합니다. 개인 키는 현재 백엔드 모델에서 해시로 저장됩니다."
 
 #: src/components/DownloadPromo.tsx
 msgid "Use JType beyond the browser"
 msgstr "브라우저 밖에서도 JType 사용"
+
+#: src/pages/Login.tsx
+msgid "Use password instead"
+msgstr ""
 
 #: src/pages/Admin.tsx
 msgid "User"
@@ -2110,6 +2371,10 @@ msgstr "사용자 메뉴"
 #: src/pages/Login.tsx
 msgid "Username"
 msgstr "사용자 이름"
+
+#: src/pages/Login.tsx
+msgid "Username or email"
+msgstr ""
 
 #: src/pages/Admin.tsx
 msgid "Users"
@@ -2131,6 +2396,19 @@ msgstr "볼트 루트"
 msgid "Vault space"
 msgstr "볼트 공간"
 
+#: src/components/Layout.tsx
+msgid "Verification email sent. Check your inbox."
+msgstr ""
+
+#: src/pages/Login.tsx
+#: src/pages/VerifyEmail.tsx
+msgid "Verification failed"
+msgstr ""
+
+#: src/components/Layout.tsx
+msgid "Verified"
+msgstr ""
+
 #: src/pages/Workspace.tsx
 msgid "Verified domain"
 msgstr "확인된 도메인"
@@ -2138,6 +2416,11 @@ msgstr "확인된 도메인"
 #: src/pages/Workspace.tsx
 msgid "Verify DNS"
 msgstr "DNS 확인"
+
+#: src/pages/Login.tsx
+#: src/pages/VerifyEmail.tsx
+msgid "Verifying…"
+msgstr ""
 
 #: src/pages/Workspace.tsx
 msgid "View public page"
@@ -2162,6 +2445,14 @@ msgstr "설명 보기"
 #: src/pages/Landing.tsx
 msgid "Watch the flow"
 msgstr "흐름 보기"
+
+#: src/pages/Login.tsx
+#~ msgid "We'll send a 6-digit code to your verified email."
+#~ msgstr ""
+
+#: src/pages/Login.tsx
+msgid "We'll send a 6-digit sign-in code to this email."
+msgstr ""
 
 #: src/pages/Landing.tsx
 msgid "Web dashboard"
@@ -2209,13 +2500,20 @@ msgid "You will lose access to all cloud documents."
 msgstr "모든 클라우드 문서에 대한 접근 권한을 잃게 됩니다."
 
 #: src/pages/Workspace.tsx
-msgid "You will lose access to all cloud documents. Your local files are "
-"unaffected."
+msgid "You will lose access to all cloud documents. Your local files are unaffected."
 msgstr "모든 클라우드 문서에 대한 접근 권한을 잃게 됩니다. 로컬 파일은 영향을 받지 않습니다."
 
 #: src/pages/InviteAccept.tsx
 msgid "You're invited"
 msgstr "초대받으셨습니다"
+
+#: src/pages/Login.tsx
+msgid "you@example.com"
+msgstr ""
+
+#: src/pages/VerifyEmail.tsx
+msgid "Your email address is now confirmed."
+msgstr ""
 
 #: src/pages/Login.tsx
 msgid "Your files stay on your machine. Always."
@@ -2228,6 +2526,10 @@ msgstr "당신의 Markdown 워크스페이스,<0/>클라우드에 동기화됩�
 #: src/pages/AiConnections.tsx
 msgid "Your MCP server"
 msgstr "내 MCP 서버"
+
+#: src/pages/ResetPassword.tsx
+msgid "Your password has been changed. You can sign in now."
+msgstr ""
 
 #: src/pages/Workspace.tsx
 msgid "Your rendered document will appear here."
