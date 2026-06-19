@@ -59,7 +59,7 @@ function buildEditorOffsets(editor: HTMLTextAreaElement): number[] | null {
   const computed = getComputedStyle(editor);
   const mirror = document.createElement("div");
   const style = mirror.style as unknown as Record<string, string>;
-  for (const prop of MIRROR_PROPS) style[prop] = (computed as unknown as Record<string, string>)[prop];
+  for (const prop of MIRROR_PROPS) style[prop] = (computed as unknown as Record<string, string>)[prop] ?? "";
   style.position = "absolute";
   style.top = "0";
   style.left = "-9999px";
@@ -99,7 +99,9 @@ function readPreviewAnchors(preview: HTMLElement): Anchor[] {
   // Enforce non-decreasing tops so interpolation stays monotonic even if an
   // out-of-flow element reports a smaller offsetTop than an earlier block.
   for (let i = 1; i < anchors.length; i += 1) {
-    if (anchors[i].top < anchors[i - 1].top) anchors[i].top = anchors[i - 1].top;
+    const cur = anchors[i]!;
+    const prev = anchors[i - 1]!;
+    if (cur.top < prev.top) cur.top = prev.top;
   }
   return anchors;
 }
@@ -110,18 +112,21 @@ function interpolate(anchors: Anchor[], x: number, byLine: boolean): number {
   if (anchors.length === 0) return 0;
   const at = (a: Anchor) => (byLine ? a.line : a.top);
   const to = (a: Anchor) => (byLine ? a.top : a.line);
-  if (x <= at(anchors[0])) return to(anchors[0]);
+  const first = anchors[0]!;
+  if (x <= at(first)) return to(first);
   const last = anchors.length - 1;
-  if (x >= at(anchors[last])) return to(anchors[last]);
+  const lastAnchor = anchors[last]!;
+  if (x >= at(lastAnchor)) return to(lastAnchor);
   let lo = 0;
   let hi = last;
   while (lo < hi) {
     const mid = (lo + hi + 1) >> 1;
-    if (at(anchors[mid]) <= x) lo = mid;
+    const midAnchor = anchors[mid]!;
+    if (at(midAnchor) <= x) lo = mid;
     else hi = mid - 1;
   }
-  const a = anchors[lo];
-  const b = anchors[lo + 1];
+  const a = anchors[lo]!;
+  const b = anchors[lo + 1]!;
   const span = at(b) - at(a) || 1;
   return to(a) + (to(b) - to(a)) * ((x - at(a)) / span);
 }
@@ -181,7 +186,7 @@ export function useScrollSync(
       for (const anchor of real) {
         if (anchor.line > 0 && anchor.line < bodyLines) anchors.push(anchor);
       }
-      const lastReal = real.length > 0 ? real[real.length - 1].line : 0;
+      const lastReal = real.length > 0 ? real[real.length - 1]!.line : 0;
       anchors.push({ line: Math.max(bodyLines, lastReal + 1), top: maxScroll });
       previewCache = { key, anchors };
       return anchors;
@@ -240,25 +245,31 @@ export function useScrollSync(
 // scrollTop to the fractional source line it currently shows.
 function interpolateScrollTopToLine(offsets: number[], scrollTop: number): number {
   if (offsets.length === 0) return 0;
-  if (scrollTop <= offsets[0]) return 0;
+  const first = offsets[0]!;
+  if (scrollTop <= first) return 0;
   const last = offsets.length - 1;
-  if (scrollTop >= offsets[last]) return last;
+  const lastOff = offsets[last]!;
+  if (scrollTop >= lastOff) return last;
   let lo = 0;
   let hi = last;
   while (lo < hi) {
     const mid = (lo + hi + 1) >> 1;
-    if (offsets[mid] <= scrollTop) lo = mid;
+    const midOff = offsets[mid]!;
+    if (midOff <= scrollTop) lo = mid;
     else hi = mid - 1;
   }
-  const span = offsets[lo + 1] - offsets[lo] || 1;
-  return lo + (scrollTop - offsets[lo]) / span;
+  const loOff = offsets[lo]!;
+  const span = offsets[lo + 1]! - loOff || 1;
+  return lo + (scrollTop - loOff) / span;
 }
 
 function interpolateLineToScrollTop(offsets: number[], line: number): number {
   if (offsets.length === 0) return 0;
-  if (line <= 0) return offsets[0];
+  const first = offsets[0]!;
+  if (line <= 0) return first;
   const last = offsets.length - 1;
-  if (line >= last) return offsets[last];
+  const lastOff = offsets[last]!;
+  if (line >= last) return lastOff;
   const i = Math.floor(line);
-  return offsets[i] + (offsets[i + 1] - offsets[i]) * (line - i);
+  return offsets[i]! + (offsets[i + 1]! - offsets[i]!) * (line - i);
 }
