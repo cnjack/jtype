@@ -13,7 +13,9 @@ CREATE TABLE IF NOT EXISTS `login_otp_tokens` (
   `user_id` char(36) NOT NULL,
   `email` varchar(255) NOT NULL,
   `attempts` int NOT NULL DEFAULT 0,
-  `expires_at` timestamp NOT NULL DEFAULT (CURRENT_TIMESTAMP + INTERVAL 10 MINUTE),
+  -- Expiry set at INSERT time (DATE_ADD in the handler); see 0014 for why the
+  -- DEFAULT is NULL rather than an expression (TiDB compatibility).
+  `expires_at` timestamp NULL DEFAULT NULL,
   `consumed_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`token_hash`),

@@ -16,7 +16,11 @@ ALTER TABLE `users` ADD UNIQUE INDEX `users_email_unique` (`email`);
 CREATE TABLE IF NOT EXISTS `password_reset_tokens` (
   `token_hash` char(64) NOT NULL,
   `user_id` char(36) NOT NULL,
-  `expires_at` timestamp NOT NULL DEFAULT (CURRENT_TIMESTAMP + INTERVAL 10 MINUTE),
+  -- Expiry is set explicitly at INSERT time (DATE_ADD in the handler), not via
+  -- a DEFAULT expression: TiDB rejects `DEFAULT (CURRENT_TIMESTAMP + INTERVAL ...)`
+  -- (ER_PARSE_ERROR 1064), and MySQL 5.7 doesn't support expression defaults
+  -- either. Mirrors the oauth_device_codes pattern.
+  `expires_at` timestamp NULL DEFAULT NULL,
   `consumed_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`token_hash`),
@@ -30,7 +34,7 @@ CREATE TABLE IF NOT EXISTS `email_verification_tokens` (
   `token_hash` char(64) NOT NULL,
   `user_id` char(36) NOT NULL,
   `email` varchar(255) NOT NULL,
-  `expires_at` timestamp NOT NULL DEFAULT (CURRENT_TIMESTAMP + INTERVAL 1 DAY),
+  `expires_at` timestamp NULL DEFAULT NULL,
   `consumed_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`token_hash`),
