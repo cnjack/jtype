@@ -56,6 +56,10 @@ export interface AppState {
   quickSwitcherOpen: boolean;
   createNoteDialogOpen: boolean;
   createNoteFromDraft: boolean;
+  // When the dialog is opened from a folder's right-click menu, the new resource
+  // is created inside this directory instead of the active file's folder.
+  // `null` means "no explicit target" (fall back to the active file's folder).
+  createNoteTargetDir: string | null;
   conflictDialogOpen: boolean;
   accountDialogOpen: boolean;
   accountDialogSection: "account" | "workspace";
@@ -113,7 +117,7 @@ export type AppAction =
   | { type: "SET_CONTEXT_MENU"; menu: AppState["contextMenu"] }
   | { type: "SET_COMMAND_PALETTE"; open: boolean }
   | { type: "SET_QUICK_SWITCHER"; open: boolean }
-  | { type: "SET_CREATE_NOTE_DIALOG"; open: boolean; fromDraft?: boolean }
+  | { type: "SET_CREATE_NOTE_DIALOG"; open: boolean; fromDraft?: boolean; targetDir?: string }
   | { type: "SET_CONFLICT_DIALOG"; open: boolean }
   | { type: "SET_ACCOUNT_DIALOG"; open: boolean; section?: "account" | "workspace" }
   | { type: "SET_SERVICE_URL"; url: string }
@@ -178,6 +182,7 @@ const initialState: AppState = {
   quickSwitcherOpen: false,
   createNoteDialogOpen: false,
   createNoteFromDraft: false,
+  createNoteTargetDir: null,
   conflictDialogOpen: false,
   accountDialogOpen: false,
   accountDialogSection: "workspace",
@@ -438,6 +443,9 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         // Track whether the dialog is being used to "save a draft as…" so the
         // commit step can promote the draft instead of creating an empty file.
         createNoteFromDraft: action.open ? Boolean(action.fromDraft) : false,
+        // Remember the folder the dialog was launched from (right-click menu);
+        // cleared on close so the next open falls back to the active folder.
+        createNoteTargetDir: action.open ? (action.targetDir ?? null) : null,
       };
     case "SET_CONFLICT_DIALOG":
       return { ...state, conflictDialogOpen: action.open };
