@@ -40,4 +40,12 @@ export type BoardSurfaceProps = {
   tagOptions?: BoardTag[];
   /** Lazily load a card's notes/body when opening the peek (desktop). */
   loadNotes?: (cardId: string) => Promise<string>;
+  /**
+   * Fullscreen ("focus mode") state, owned by the platform shell. When provided,
+   * the surface shows a toggle button. Both platforms hide the sidebar + keep the
+   * app header (so the macOS traffic-light area stays clear) rather than overlaying
+   * the whole window. Omit to hide the button (e.g. inline embeds).
+   */
+  fullscreen?: boolean;
+  onToggleFullscreen?: () => void;
 };

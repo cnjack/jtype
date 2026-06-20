@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
@@ -13,6 +13,7 @@ import {
   PencilIcon,
   TrashIcon,
   ArrowsPointingOutIcon,
+  ArrowsPointingInIcon,
   LinkIcon,
   DocumentDuplicateIcon,
   ChevronRightIcon,
@@ -65,6 +66,8 @@ export function BoardSurface({
   assigneeOptions,
   tagOptions,
   loadNotes,
+  fullscreen,
+  onToggleFullscreen,
 }: BoardSurfaceProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<DropTarget | null>(null);
@@ -91,6 +94,17 @@ export function BoardSurface({
   const colorColumns = (config.colorColumns ?? false) && editableColumns && viewType === "board";
   const manualSort = sortBy === "manual" && editableColumns && viewType === "board";
   const today = todayStr();
+
+  // Escape exits fullscreen — but only when no card peek is open, so Escape
+  // closes the peek first (handled in BoardPeek).
+  useEffect(() => {
+    if (!fullscreen || !onToggleFullscreen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !selectedId) onToggleFullscreen();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [fullscreen, selectedId, onToggleFullscreen]);
 
   const columns = useMemo(
     () => effectiveColumns(config, cards, groupKey, t`Unassigned`),
@@ -285,6 +299,20 @@ export function BoardSurface({
             >
               <ArrowPathIcon className="h-3.5 w-3.5" />
               <Trans>Refresh</Trans>
+            </button>
+          )}
+          {onToggleFullscreen && (
+            <button
+              type="button"
+              className={`inline-flex items-center justify-center rounded-lg border p-1.5 ${
+                fullscreen ? "border-brand/40 bg-brand-soft/50 text-brand-dark" : "border-stone-200 text-stone-600 hover:border-brand/40 hover:text-brand-dark"
+              }`}
+              onClick={onToggleFullscreen}
+              title={fullscreen ? t`Exit fullscreen` : t`Fullscreen`}
+              aria-label={fullscreen ? t`Exit fullscreen` : t`Fullscreen`}
+              aria-pressed={fullscreen}
+            >
+              {fullscreen ? <ArrowsPointingInIcon className="h-3.5 w-3.5" /> : <ArrowsPointingOutIcon className="h-3.5 w-3.5" />}
             </button>
           )}
           </div>

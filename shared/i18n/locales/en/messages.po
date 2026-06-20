@@ -18,394 +18,400 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: ../../../shared/components/ConflictResolver.tsx
+#: shared/components/ConflictResolver.tsx
 msgid "← Back to list"
 msgstr "← Back to list"
 
 #. placeholder {0}: conflicts.length
 #. placeholder {1}: conflicts.length > 1 ? "s" : ""
-#: ../../../shared/components/ConflictResolver.tsx
+#: shared/components/ConflictResolver.tsx
 msgid "⚠ {0} Conflict{1} to Resolve"
 msgstr "⚠ {0} Conflict{1} to Resolve"
 
-#: ../../../shared/components/ConflictResolver.tsx
+#: shared/components/ConflictResolver.tsx
 msgid "Accept cloud"
 msgstr "Accept cloud"
 
-#: ../../../shared/components/ConflictResolver.tsx
+#: shared/components/ConflictResolver.tsx
 msgid "Accept local"
 msgstr "Accept local"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Add column"
 msgstr "Add column"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Add details..."
 msgstr "Add details..."
 
-#: ../../../shared/components/board/controls.tsx
+#: shared/components/board/controls.tsx
 msgid "Add labels"
 msgstr "Add labels"
 
-#: ../../../shared/components/board/BoardPeek.tsx
-#: ../../../shared/components/board/BoardSurface.tsx
-#: ../../../shared/components/board/BoardTable.tsx
+#: shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardTable.tsx
 msgid "Assignee"
 msgstr "Assignee"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Blank card"
 msgstr "Blank card"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Board"
 msgstr "Board"
 
-#: ../../../shared/components/EditorToolbar.tsx
+#: shared/components/EditorToolbar.tsx
 msgid "Bold"
 msgstr "Bold"
 
-#: ../../../shared/components/EditorToolbar.tsx
+#: shared/components/EditorToolbar.tsx
 msgid "Bold (Ctrl+B)"
 msgstr "Bold (Ctrl+B)"
 
-#: ../../../shared/components/ConfirmDialog.tsx
-#: ../../../shared/components/PromptDialog.tsx
+#: shared/components/ConfirmDialog.tsx
+#: shared/components/PromptDialog.tsx
 msgid "Cancel"
 msgstr "Cancel"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Card"
 msgstr "Card"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Card title (Enter to add, Esc to cancel)"
 msgstr "Card title (Enter to add, Esc to cancel)"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "cards"
 msgstr "cards"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Clear filter"
 msgstr "Clear filter"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Close"
 msgstr "Close"
 
-#: ../../../shared/components/ConflictResolver.tsx
+#: shared/components/ConflictResolver.tsx
 msgid "Cloud (remote)"
 msgstr "Cloud (remote)"
 
-#: ../../../shared/components/EditorToolbar.tsx
+#: shared/components/EditorToolbar.tsx
 msgid "Code"
 msgstr "Code"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Collapse column"
 msgstr "Collapse column"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Color"
 msgstr "Color"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Color columns"
 msgstr "Color columns"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Column name"
 msgstr "Column name"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "comma, separated"
 msgstr "comma, separated"
 
-#: ../../../shared/components/ConfirmDialog.tsx
+#: shared/components/ConfirmDialog.tsx
 msgid "Confirm"
 msgstr "Confirm"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Copy link"
 msgstr "Copy link"
 
-#: ../../../shared/components/viewers/SwaggerView.tsx
+#: shared/components/viewers/SwaggerView.tsx
 msgid "Could not render this API specification."
 msgstr "Could not render this API specification."
 
-#: ../../../shared/components/viewers/DrawioView.tsx
+#: shared/components/viewers/DrawioView.tsx
 msgid "Could not render this Draw.io diagram."
 msgstr "Could not render this Draw.io diagram."
 
-#: ../../../shared/components/viewers/PdfView.tsx
+#: shared/components/viewers/PdfView.tsx
 msgid "Could not render this PDF."
 msgstr "Could not render this PDF."
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Delete"
 msgstr "Delete"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Delete card"
 msgstr "Delete card"
 
-#: ../../../shared/components/viewers/MermaidView.tsx
+#: shared/components/viewers/MermaidView.tsx
 msgid "Diagram error"
 msgstr "Diagram error"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Done column"
 msgstr "Done column"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Drag to resize"
 msgstr "Drag to resize"
 
-#: ../../../shared/components/viewers/DrawioView.tsx
+#: shared/components/viewers/DrawioView.tsx
 msgid "Draw.io diagram"
 msgstr "Draw.io diagram"
 
-#: ../../../shared/components/board/BoardPeek.tsx
-#: ../../../shared/components/board/BoardTable.tsx
+#: shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardTable.tsx
 msgid "Due"
 msgstr "Due"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Duplicate"
 msgstr "Duplicate"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
+msgid "Exit fullscreen"
+msgstr "Exit fullscreen"
+
+#: shared/components/board/BoardSurface.tsx
 msgid "Expand column"
 msgstr "Expand column"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Filter"
 msgstr "Filter"
 
-#: ../../../shared/components/viewers/MermaidView.tsx
-msgid ""
-"flowchart TD\n"
+#: shared/components/viewers/MermaidView.tsx
+msgid "flowchart TD\n"
 "  A[Start] --> B[End]"
-msgstr ""
-"flowchart TD\n"
+msgstr "flowchart TD\n"
 "  A[Start] --> B[End]"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
+msgid "Fullscreen"
+msgstr "Fullscreen"
+
+#: shared/components/board/BoardSurface.tsx
 msgid "Group: Assignee"
 msgstr "Group: Assignee"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Group: Priority"
 msgstr "Group: Priority"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Group: Status"
 msgstr "Group: Status"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Icon"
 msgstr "Icon"
 
-#: ../../../shared/components/EditorToolbar.tsx
+#: shared/components/EditorToolbar.tsx
 msgid "Inline Code"
 msgstr "Inline Code"
 
-#: ../../../shared/components/EditorToolbar.tsx
+#: shared/components/EditorToolbar.tsx
 msgid "Italic"
 msgstr "Italic"
 
-#: ../../../shared/components/EditorToolbar.tsx
+#: shared/components/EditorToolbar.tsx
 msgid "Italic (Ctrl+I)"
 msgstr "Italic (Ctrl+I)"
 
-#: ../../../shared/components/EditorToolbar.tsx
+#: shared/components/EditorToolbar.tsx
 msgid "Link"
 msgstr "Link"
 
-#: ../../../shared/components/EditorToolbar.tsx
+#: shared/components/EditorToolbar.tsx
 msgid "Link (Ctrl+K)"
 msgstr "Link (Ctrl+K)"
 
-#: ../../../shared/components/ConflictResolver.tsx
+#: shared/components/ConflictResolver.tsx
 msgid "Local (yours)"
 msgstr "Local (yours)"
 
-#: ../../../shared/components/viewers/MermaidView.tsx
+#: shared/components/viewers/MermaidView.tsx
 msgid "Mermaid diagram"
 msgstr "Mermaid diagram"
 
-#: ../../../shared/components/viewers/MermaidView.tsx
+#: shared/components/viewers/MermaidView.tsx
 msgid "Mermaid source"
 msgstr "Mermaid source"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "New card"
 msgstr "New card"
 
-#: ../../../shared/components/board/BoardTable.tsx
+#: shared/components/board/BoardTable.tsx
 msgid "No cards"
 msgstr "No cards"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "No color"
 msgstr "No color"
 
-#: ../../../shared/components/board/controls.tsx
+#: shared/components/board/controls.tsx
 msgid "No icon"
 msgstr "No icon"
 
-#: ../../../shared/components/board/controls.tsx
+#: shared/components/board/controls.tsx
 msgid "No labels"
 msgstr "No labels"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Notes"
 msgstr "Notes"
 
-#: ../../../shared/components/ConfirmDialog.tsx
-#: ../../../shared/components/PromptDialog.tsx
+#: shared/components/ConfirmDialog.tsx
+#: shared/components/PromptDialog.tsx
 msgid "OK"
 msgstr "OK"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Open in editor"
 msgstr "Open in editor"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Open in full editor"
 msgstr "Open in full editor"
 
-#: ../../../shared/components/viewers/PdfView.tsx
+#: shared/components/viewers/PdfView.tsx
 msgid "PDF document"
 msgstr "PDF document"
 
-#: ../../../shared/components/PromptDialog.tsx
+#: shared/components/PromptDialog.tsx
 msgid "Please enter a value."
 msgstr "Please enter a value."
 
-#: ../../../shared/components/board/BoardPeek.tsx
-#: ../../../shared/components/ViewModeToggle.tsx
+#: shared/components/board/BoardPeek.tsx
+#: shared/components/ViewModeToggle.tsx
 msgid "Preview"
 msgstr "Preview"
 
-#: ../../../shared/components/board/BoardPeek.tsx
-#: ../../../shared/components/board/BoardSurface.tsx
-#: ../../../shared/components/board/BoardTable.tsx
+#: shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardTable.tsx
 msgid "Priority"
 msgstr "Priority"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Refresh"
 msgstr "Refresh"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Rename"
 msgstr "Rename"
 
-#: ../../../shared/components/ConflictResolver.tsx
+#: shared/components/ConflictResolver.tsx
 msgid "Result (editable)"
 msgstr "Result (editable)"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Save as template"
 msgstr "Save as template"
 
-#: ../../../shared/components/ConflictResolver.tsx
+#: shared/components/ConflictResolver.tsx
 msgid "Save merged result"
 msgstr "Save merged result"
 
-#: ../../../shared/components/ConflictResolver.tsx
+#: shared/components/ConflictResolver.tsx
 msgid "Saving…"
 msgstr "Saving…"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Search cards"
 msgstr "Search cards"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Set as done column"
 msgstr "Set as done column"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Set WIP limit"
 msgstr "Set WIP limit"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Sort: Due"
 msgstr "Sort: Due"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Sort: Manual"
 msgstr "Sort: Manual"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Sort: Priority"
 msgstr "Sort: Priority"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Sort: Title"
 msgstr "Sort: Title"
 
-#: ../../../shared/components/ViewModeToggle.tsx
+#: shared/components/ViewModeToggle.tsx
 msgid "Split"
 msgstr "Split"
 
-#: ../../../shared/components/board/BoardPeek.tsx
-#: ../../../shared/components/board/BoardTable.tsx
+#: shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardTable.tsx
 msgid "Status"
 msgstr "Status"
 
-#: ../../../shared/components/board/BoardSurface.tsx
-#: ../../../shared/components/EditorToolbar.tsx
+#: shared/components/board/BoardSurface.tsx
+#: shared/components/EditorToolbar.tsx
 msgid "Table"
 msgstr "Table"
 
-#: ../../../shared/components/board/BoardPeek.tsx
-#: ../../../shared/components/board/BoardSurface.tsx
-#: ../../../shared/components/board/BoardTable.tsx
+#: shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardTable.tsx
 msgid "Tags"
 msgstr "Tags"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Templates"
 msgstr "Templates"
 
-#: ../../../shared/components/viewers/DiagramView.tsx
+#: shared/components/viewers/DiagramView.tsx
 msgid "This file type can not be previewed yet."
 msgstr "This file type can not be previewed yet."
 
-#: ../../../shared/components/board/BoardTable.tsx
+#: shared/components/board/BoardTable.tsx
 msgid "Title"
 msgstr "Title"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Unassigned"
 msgstr "Unassigned"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Unset done column"
 msgstr "Unset done column"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Untitled card"
 msgstr "Untitled card"
 
-#: ../../../shared/components/ConflictResolver.tsx
+#: shared/components/ConflictResolver.tsx
 msgid "Use this"
 msgstr "Use this"
 
 #. placeholder {0}: col.limit
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "WIP limit {0}"
 msgstr "WIP limit {0}"
 
-#: ../../../shared/components/board/BoardPeek.tsx
-#: ../../../shared/components/ViewModeToggle.tsx
+#: shared/components/board/BoardPeek.tsx
+#: shared/components/ViewModeToggle.tsx
 msgid "Write"
 msgstr "Write"
 
-#: ../../../shared/components/viewers/MermaidView.tsx
+#: shared/components/viewers/MermaidView.tsx
 msgid "Write Mermaid syntax to see the diagram."
 msgstr "Write Mermaid syntax to see the diagram."
