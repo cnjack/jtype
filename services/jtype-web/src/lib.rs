@@ -178,6 +178,7 @@ pub fn build_app(
         )
         .route("/api/admin/domains", get(handlers::admin::list_domains))
         .route("/api/admin/stats", get(handlers::admin::stats))
+        .route("/api/admin/version", get(handlers::admin::version_info))
         .route(
             "/api/admin/settings/storage",
             get(handlers::settings::get_storage_settings)

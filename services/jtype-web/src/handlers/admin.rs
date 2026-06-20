@@ -1,9 +1,14 @@
+use std::sync::OnceLock;
+use std::time::{Duration, Instant};
+
 use axum::{
     extract::{Path, State},
     http::HeaderMap,
     Json,
 };
+use serde::Serialize;
 use sqlx::Row;
+use tokio::sync::Mutex;
 
 use crate::db::models::*;
 use crate::error::AppError;
@@ -266,4 +271,174 @@ pub async fn stats(
         total_storage_bytes: storage,
         total_domains: domains,
     }))
+}
+
+// ── Version / update check ───────────────────────────────────────────────────
+
+const RELEASE_REPO: &str = "cnjack/jtype";
+const VERSION_CACHE_TTL: Duration = Duration::from_secs(3600);
+
+/// What the running server build reports as its version. Docker stamps the
+/// release tag in via `JTYPE_VERSION` at build time (see the Dockerfile); a
+/// plain `cargo run` falls back to the crate version.
+fn current_version() -> &'static str {
+    option_env!("JTYPE_VERSION").unwrap_or(env!("CARGO_PKG_VERSION"))
+}
+
+#[derive(Clone)]
+struct GithubRelease {
+    tag_name: String,
+    html_url: String,
+    name: Option<String>,
+    published_at: Option<String>,
+    body: Option<String>,
+}
+
+struct CachedRelease {
+    fetched_at: Instant,
+    release: Option<GithubRelease>,
+}
+
+fn release_cache() -> &'static Mutex<Option<CachedRelease>> {
+    static CACHE: OnceLock<Mutex<Option<CachedRelease>>> = OnceLock::new();
+    CACHE.get_or_init(|| Mutex::new(None))
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AdminVersionResponse {
+    /// Version the running server reports (release tag in prod, crate version in dev).
+    current: String,
+    /// Latest published release tag (without the leading `v`), if any.
+    latest: Option<String>,
+    update_available: bool,
+    release_url: Option<String>,
+    release_name: Option<String>,
+    published_at: Option<String>,
+    notes: Option<String>,
+    /// Convenience `docker pull` target for the operator.
+    image: String,
+    /// Non-fatal note when the GitHub lookup failed (stale/empty data served).
+    error: Option<String>,
+}
+
+pub async fn version_info(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+) -> Result<Json<AdminVersionResponse>, AppError> {
+    let user = extract_user(&state.pool, &headers).await?;
+    require_admin(&user)?;
+
+    let current = current_version().to_string();
+    let (release, error) = latest_release().await;
+
+    let latest = release
+        .as_ref()
+        .map(|r| r.tag_name.trim_start_matches('v').to_string());
+    let update_available = latest
+        .as_deref()
+        .map(|l| is_newer(l, &current))
+        .unwrap_or(false);
+    let image = format!("ghcr.io/{RELEASE_REPO}:{}", latest.as_deref().unwrap_or("latest"));
+
+    Ok(Json(AdminVersionResponse {
+        current,
+        latest,
+        update_available,
+        release_url: release.as_ref().map(|r| r.html_url.clone()),
+        release_name: release.as_ref().and_then(|r| r.name.clone()),
+        published_at: release.as_ref().and_then(|r| r.published_at.clone()),
+        notes: release.as_ref().and_then(|r| r.body.clone()),
+        image,
+        error,
+    }))
+}
+
+/// Returns the latest release (cached for an hour) and a non-fatal error string
+/// if the live lookup failed. A failed refresh serves the last good value when
+/// one exists, so a flaky GitHub never breaks the admin page.
+async fn latest_release() -> (Option<GithubRelease>, Option<String>) {
+    let mut guard = release_cache().lock().await;
+    if let Some(cached) = guard.as_ref() {
+        if cached.fetched_at.elapsed() < VERSION_CACHE_TTL {
+            return (cached.release.clone(), None);
+        }
+    }
+    match fetch_latest_release().await {
+        Ok(release) => {
+            *guard = Some(CachedRelease {
+                fetched_at: Instant::now(),
+                release: release.clone(),
+            });
+            (release, None)
+        }
+        Err(e) => {
+            let stale = guard.as_ref().and_then(|c| c.release.clone());
+            (stale, Some(e))
+        }
+    }
+}
+
+async fn fetch_latest_release() -> Result<Option<GithubRelease>, String> {
+    let client = reqwest::Client::builder()
+        .user_agent("jtype-web")
+        .timeout(Duration::from_secs(10))
+        .build()
+        .map_err(|e| e.to_string())?;
+    let url = format!("https://api.github.com/repos/{RELEASE_REPO}/releases/latest");
+    let resp = client
+        .get(&url)
+        .header("accept", "application/vnd.github+json")
+        .send()
+        .await
+        .map_err(|e| format!("contacting GitHub: {e}"))?;
+    if resp.status() == reqwest::StatusCode::NOT_FOUND {
+        return Ok(None); // no published release yet
+    }
+    if !resp.status().is_success() {
+        return Err(format!("GitHub API returned {}", resp.status()));
+    }
+    let json: serde_json::Value = resp.json().await.map_err(|e| e.to_string())?;
+    Ok(Some(GithubRelease {
+        tag_name: json["tag_name"].as_str().unwrap_or_default().to_string(),
+        html_url: json["html_url"].as_str().unwrap_or_default().to_string(),
+        name: json["name"].as_str().map(str::to_string),
+        published_at: json["published_at"].as_str().map(str::to_string),
+        body: json["body"].as_str().map(str::to_string),
+    }))
+}
+
+/// Compares the dotted numeric core of two versions (ignoring any `-pre`/`+build`
+/// suffix). Good enough for an "update available" hint.
+fn parse_core(v: &str) -> (u64, u64, u64) {
+    let core = v.trim_start_matches('v');
+    let core = core.split(['-', '+']).next().unwrap_or(core);
+    let mut it = core.split('.').map(|p| p.parse::<u64>().unwrap_or(0));
+    (
+        it.next().unwrap_or(0),
+        it.next().unwrap_or(0),
+        it.next().unwrap_or(0),
+    )
+}
+
+fn is_newer(latest: &str, current: &str) -> bool {
+    parse_core(latest) > parse_core(current)
+}
+
+#[cfg(test)]
+mod version_tests {
+    use super::{is_newer, parse_core};
+
+    #[test]
+    fn parses_and_compares_cores() {
+        assert_eq!(parse_core("v0.2.8"), (0, 2, 8));
+        assert_eq!(parse_core("0.2.0+abc1234"), (0, 2, 0));
+        assert_eq!(parse_core("1.0.0-rc.1"), (1, 0, 0));
+        assert!(is_newer("0.2.8", "0.2.0"));
+        assert!(is_newer("v0.3.0", "0.2.9"));
+        assert!(!is_newer("0.2.0", "0.2.0"));
+        assert!(!is_newer("0.1.0", "0.2.0"));
+        // A build-metadata suffix on the current version must not trip the check.
+        assert!(is_newer("0.2.1", "0.2.0+deadbee"));
+    }
 }

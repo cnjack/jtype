@@ -129,6 +129,10 @@ msgstr "書いてプレビューできるテキストドキュメント"
 msgid "A text-based diagram with a live preview"
 msgstr "ライブプレビュー付きのテキストベースの図"
 
+#: src/pages/Admin.tsx
+msgid "About / Version"
+msgstr ""
+
 #: src/components/SiteThemePanel.tsx
 msgid "Accent"
 msgstr "アクセント"
@@ -385,6 +389,10 @@ msgstr "証明書管理"
 msgid "Changed"
 msgstr "変更済み"
 
+#: src/pages/Admin.tsx
+msgid "Check the running server version against the latest published release."
+msgstr ""
+
 #: src/pages/Landing.tsx
 msgid "Checking session"
 msgstr "セッションを確認中"
@@ -524,10 +532,12 @@ msgstr "コンテンツ幅"
 msgid "Continue"
 msgstr ""
 
+#: src/pages/Admin.tsx
 #: src/pages/DeviceOAuth.tsx
 msgid "Copied"
 msgstr ""
 
+#: src/pages/Admin.tsx
 #: src/pages/AiConnections.tsx
 msgid "Copy"
 msgstr "コピー"
@@ -555,6 +565,11 @@ msgstr "角の丸み"
 #: src/pages/Workspace.tsx
 msgid "Could not load this PDF."
 msgstr "この PDF を読み込めませんでした。"
+
+#. placeholder {0}: info.error
+#: src/pages/Admin.tsx
+msgid "Could not reach GitHub for the latest release ({0}). Showing the last known value."
+msgstr ""
 
 #: src/components/SiteThemePanel.tsx
 msgid "Cozy"
@@ -1010,6 +1025,10 @@ msgid "How can we help?"
 msgstr "何かお困りですか？"
 
 #: src/pages/Admin.tsx
+msgid "How to update"
+msgstr ""
+
+#: src/pages/Admin.tsx
 msgid "https://s3.example.com — leave blank to use local files"
 msgstr "https://s3.example.com — ローカルファイルを使う場合は空欄"
 
@@ -1131,6 +1150,8 @@ msgstr "ラベル（例：私のラップトップの jcode）"
 
 #: src/components/Layout.tsx
 #: src/help/HelpLayout.tsx
+#: src/pages/Landing.tsx
+#: src/pages/Login.tsx
 msgid "Language"
 msgstr "言語"
 
@@ -1142,6 +1163,10 @@ msgstr "最近アクティブ"
 #: src/help/pages/Article.tsx
 msgid "Last updated {0}"
 msgstr "最終更新 {0}"
+
+#: src/pages/Admin.tsx
+msgid "Latest release"
+msgstr ""
 
 #: src/components/SiteThemePanel.tsx
 msgid "Layout"
@@ -1212,6 +1237,7 @@ msgstr "ビューアーを読み込み中…"
 msgid "Loading..."
 msgstr "読み込み中..."
 
+#: src/pages/Admin.tsx
 #: src/pages/AiConnections.tsx
 msgid "Loading…"
 msgstr "読み込み中…"
@@ -1434,6 +1460,10 @@ msgstr "ノートがまだありません。"
 #: src/pages/Workspace.tsx
 msgid "No outgoing links."
 msgstr "発信リンクがありません。"
+
+#: src/pages/Admin.tsx
+msgid "No published release"
+msgstr ""
 
 #: src/pages/Admin.tsx
 msgid "No records."
@@ -1667,6 +1697,7 @@ msgstr "下書きを公開"
 msgid "Publish title"
 msgstr "公開タイトル"
 
+#: src/pages/Admin.tsx
 #: src/pages/Workspace.tsx
 msgid "Published"
 msgstr "公開済み"
@@ -1691,6 +1722,10 @@ msgstr "公開詳細を保存しました"
 #: src/pages/Workspace.tsx
 msgid "Publishing uses a server snapshot; frontmatter status is treated as user metadata."
 msgstr "公開はサーバースナップショットを使用します。フロントマターのステータスはユーザーメタデータとして扱われます。"
+
+#: src/pages/Admin.tsx
+msgid "Pull the new image and restart your deployment (docker compose / helm)."
+msgstr ""
 
 #: src/pages/Landing.tsx
 msgid "Push and pull versions, resolve conflicts, and keep collaboration scoped to the workspace you choose."
@@ -1851,6 +1886,10 @@ msgstr "このトークンを取り消しますか？これを使用している
 #: src/pages/Admin.tsx
 msgid "Role"
 msgstr "ロール"
+
+#: src/pages/Admin.tsx
+msgid "Running version"
+msgstr ""
 
 #: src/pages/Admin.tsx
 msgid "S3 endpoint"
@@ -2341,6 +2380,14 @@ msgstr "未保存"
 msgid "Untitled document"
 msgstr "無題のドキュメント"
 
+#: src/pages/Admin.tsx
+msgid "Up to date"
+msgstr ""
+
+#: src/pages/Admin.tsx
+msgid "Update available"
+msgstr ""
+
 #: src/components/Layout.tsx
 msgid "Update email"
 msgstr ""
@@ -2422,6 +2469,10 @@ msgstr "DNS を確認"
 msgid "Verifying…"
 msgstr ""
 
+#: src/pages/Admin.tsx
+msgid "View latest release notes →"
+msgstr ""
+
 #: src/pages/Workspace.tsx
 msgid "View public page"
 msgstr "公開ページを表示"
@@ -2429,6 +2480,10 @@ msgstr "公開ページを表示"
 #: src/components/SiteThemePanel.tsx
 msgid "View published site"
 msgstr "公開サイトを表示"
+
+#: src/pages/Admin.tsx
+msgid "View release notes →"
+msgstr ""
 
 #: src/pages/Workspace.tsx
 msgid "Viewer access is read-only."

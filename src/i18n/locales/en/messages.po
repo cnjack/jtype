@@ -93,6 +93,10 @@ msgstr "A kanban board over your notes"
 msgid "A Markdown document you write and preview"
 msgstr "A Markdown document you write and preview"
 
+#: src/components/layout/UpdateBanner.tsx
+msgid "A new version is available"
+msgstr "A new version is available"
+
 #: src/components/modals/NewResourceDialog.tsx
 msgid "A text document you write and preview"
 msgstr "A text document you write and preview"
@@ -544,6 +548,10 @@ msgstr "Disconnect cloud sync"
 msgid "Disconnect workspace"
 msgstr "Disconnect workspace"
 
+#: src/components/layout/UpdateBanner.tsx
+msgid "Dismiss"
+msgstr "Dismiss"
+
 #: src/components/editor/EditorShell.tsx
 msgid "Document info"
 msgstr "Document info"
@@ -575,6 +583,10 @@ msgstr "Done"
 #: src/components/BoardView.tsx
 #~ msgid "Done column"
 #~ msgstr "Done column"
+
+#: src/components/layout/UpdateBanner.tsx
+msgid "Downloading update…"
+msgstr "Downloading update…"
 
 #: src/components/modals/AccountDialog.tsx
 msgid "Downloads"
@@ -779,6 +791,7 @@ msgstr "Kanban board"
 msgid "Language"
 msgstr "Language"
 
+#: src/components/layout/UpdateBanner.tsx
 #: src/components/modals/SyncPromptDialog.tsx
 msgid "Later"
 msgstr "Later"
@@ -883,8 +896,8 @@ msgid "New Document"
 msgstr "New Document"
 
 #: src/components/sidebar/Sidebar.tsx
-msgid "New document name (e.g. note.md):"
-msgstr "New document name (e.g. note.md):"
+#~ msgid "New document name (e.g. note.md):"
+#~ msgstr "New document name (e.g. note.md):"
 
 #: src/components/modals/NewResourceDialog.tsx
 msgid "New Excalidraw drawing"
@@ -1252,6 +1265,10 @@ msgstr "Reset zoom"
 msgid "Restart your terminal to pick up the updated PATH."
 msgstr "Restart your terminal to pick up the updated PATH."
 
+#: src/components/layout/UpdateBanner.tsx
+msgid "Restarting to finish update…"
+msgstr "Restarting to finish update…"
+
 #: src/components/sidebar/Sidebar.tsx
 msgid "Restore"
 msgstr "Restore"
@@ -1259,6 +1276,10 @@ msgstr "Restore"
 #: src/components/sidebar/Sidebar.tsx
 msgid "Restore queued. Will sync on next push."
 msgstr "Restore queued. Will sync on next push."
+
+#: src/components/layout/UpdateBanner.tsx
+msgid "Retry"
+msgstr "Retry"
 
 #: src/components/editor/EditorShell.tsx
 msgid "Save"
@@ -1512,6 +1533,14 @@ msgstr "Untitled"
 #: src/components/modals/AccountDialog.tsx
 msgid "Untitled workspace"
 msgstr "Untitled workspace"
+
+#: src/components/layout/UpdateBanner.tsx
+msgid "Update & restart"
+msgstr "Update & restart"
+
+#: src/components/layout/UpdateBanner.tsx
+msgid "Update to {newVersion}"
+msgstr "Update to {newVersion}"
 
 #: src/components/layout/WelcomeScreen.tsx
 msgid "Use default vault"

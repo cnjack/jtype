@@ -108,6 +108,7 @@ export const api = {
   adminWorkspaces: () => request<AdminWorkspace[]>('/api/admin/workspaces'),
   adminDomains: () => request<AdminDomain[]>('/api/admin/domains'),
   adminStats: () => request<AdminStats>('/api/admin/stats'),
+  adminVersion: () => request<AdminVersion>('/api/admin/version'),
   // Server object-storage settings (DB overrides JTYPED_STORAGE_* env vars).
   getStorageSettings: () => request<StorageSettings>('/api/admin/settings/storage'),
   updateStorageSettings: (data: UpdateStorageSettings) =>
@@ -432,6 +433,22 @@ export interface AdminStats {
   totalDocuments: number
   totalStorageBytes: number
   totalDomains: number
+}
+
+export interface AdminVersion {
+  /** Version the running server reports. */
+  current: string
+  /** Latest published release tag (no leading `v`), if any. */
+  latest: string | null
+  updateAvailable: boolean
+  releaseUrl: string | null
+  releaseName: string | null
+  publishedAt: string | null
+  notes: string | null
+  /** Convenience `docker pull` target for the operator. */
+  image: string
+  /** Non-fatal note when the GitHub lookup failed. */
+  error: string | null
 }
 
 /** Where each resolved storage field comes from: 'db' | 'env' | 'default'. */

@@ -7,13 +7,14 @@ import {
   type AdminWorkspace,
   type AdminDomain,
   type AdminStats,
+  type AdminVersion,
   type StorageSettings as StorageSettingsData,
   type SmtpSettings as SmtpSettingsData,
 } from '../api'
 import { t } from '@lingui/core/macro'
 import { Trans } from '@lingui/react/macro'
 
-type AdminTab = 'users' | 'workspaces' | 'domains' | 'storage' | 'smtp'
+type AdminTab = 'users' | 'workspaces' | 'domains' | 'storage' | 'smtp' | 'about'
 
 export function Admin() {
   const navigate = useNavigate()
@@ -34,8 +35,8 @@ export function AdminDialog({ onClose }: { onClose: () => void }) {
   }, [])
 
   useEffect(() => {
-    // The storage and smtp tabs manage their own loading; the table tabs load here.
-    if (tab === 'storage' || tab === 'smtp') return
+    // The storage, smtp, and about tabs manage their own loading; the table tabs load here.
+    if (tab === 'storage' || tab === 'smtp' || tab === 'about') return
     setLoading(true)
     const load =
       tab === 'users'
@@ -64,6 +65,7 @@ export function AdminDialog({ onClose }: { onClose: () => void }) {
           <AdminNavButton active={tab === 'domains'} onClick={() => setTab('domains')} label={t`Domains`} />
           <AdminNavButton active={tab === 'storage'} onClick={() => setTab('storage')} label={t`Storage`} />
           <AdminNavButton active={tab === 'smtp'} onClick={() => setTab('smtp')} label={t`Email`} />
+          <AdminNavButton active={tab === 'about'} onClick={() => setTab('about')} label={t`About / Version`} />
         </aside>
 
         <main className="min-h-0 overflow-y-auto p-8">
@@ -75,7 +77,9 @@ export function AdminDialog({ onClose }: { onClose: () => void }) {
                   ? <Trans>Configure server object storage. Saved values override the JTYPED_STORAGE_* environment variables and apply immediately.</Trans>
                   : tab === 'smtp'
                     ? <Trans>Configure outbound email (SMTP). Used for password reset and email verification. Saved values override the JTYPED_SMTP_* environment variables.</Trans>
-                    : <Trans>Manage users, cloud workspaces, domains, and service activity.</Trans>}
+                    : tab === 'about'
+                      ? <Trans>Check the running server version against the latest published release.</Trans>
+                      : <Trans>Manage users, cloud workspaces, domains, and service activity.</Trans>}
               </p>
             </div>
             <button className="subtle-button" type="button" onClick={onClose}><Trans>Close</Trans></button>
@@ -86,6 +90,8 @@ export function AdminDialog({ onClose }: { onClose: () => void }) {
               <StorageSettingsPanel />
             ) : tab === 'smtp' ? (
               <SmtpSettingsPanel />
+            ) : tab === 'about' ? (
+              <AboutPanel />
             ) : (
               <>
                 {stats && (
@@ -254,6 +260,109 @@ function adminTabDescription(tab: AdminTab): string {
   if (tab === 'workspaces') return t`Inspect cloud workspace ownership and document counts.`
   if (tab === 'domains') return t`Review published custom domains and SSL state.`
   return t`Configure server object storage.`
+}
+
+function formatVersion(v: string): string {
+  const clean = v.trim()
+  if (!clean) return '—'
+  return clean.startsWith('v') ? clean : `v${clean}`
+}
+
+function AboutPanel() {
+  const [info, setInfo] = useState<AdminVersion | null>(null)
+  const [loadError, setLoadError] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    api.adminVersion()
+      .then(v => { if (!cancelled) setInfo(v) })
+      .catch(e => { if (!cancelled) setLoadError(String(e)) })
+    return () => { cancelled = true }
+  }, [])
+
+  async function copyPull() {
+    if (!info) return
+    try {
+      await navigator.clipboard.writeText(`docker pull ${info.image}`)
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 1500)
+    } catch { /* clipboard unavailable */ }
+  }
+
+  if (loadError) {
+    return <p className="text-sm text-red-600">{loadError}</p>
+  }
+  if (!info) {
+    return <p className="text-sm text-stone-400"><Trans>Loading…</Trans></p>
+  }
+
+  const upToDate = !info.updateAvailable && info.latest !== null
+
+  return (
+    <div className="space-y-6">
+      <section className="rounded-2xl border border-white/80 bg-white/80 p-5 shadow-sm shadow-emerald-950/5 ring-1 ring-black/[0.03]">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-stone-400"><Trans>Running version</Trans></p>
+            <p className="mt-1 text-2xl font-semibold tabular-nums text-zinc-950">{formatVersion(info.current)}</p>
+          </div>
+          {info.updateAvailable ? (
+            <span className="status-chip status-chip-warning"><Trans>Update available</Trans></span>
+          ) : upToDate ? (
+            <span className="status-chip status-chip-neutral"><Trans>Up to date</Trans></span>
+          ) : null}
+        </div>
+
+        <div className="mt-5 grid gap-4 sm:grid-cols-2">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-stone-400"><Trans>Latest release</Trans></p>
+            <p className="mt-1 text-sm font-semibold text-zinc-950">
+              {info.latest ? formatVersion(info.latest) : <span className="text-stone-400"><Trans>No published release</Trans></span>}
+            </p>
+          </div>
+          {info.publishedAt && (
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-stone-400"><Trans>Published</Trans></p>
+              <p className="mt-1 text-sm text-stone-600">{new Date(info.publishedAt).toLocaleDateString()}</p>
+            </div>
+          )}
+        </div>
+
+        {info.error && (
+          <p className="mt-4 text-xs text-amber-700">
+            <Trans>Could not reach GitHub for the latest release ({info.error}). Showing the last known value.</Trans>
+          </p>
+        )}
+      </section>
+
+      {info.updateAvailable && (
+        <section className="rounded-2xl border border-amber-200/70 bg-amber-50/60 p-5">
+          <h3 className="text-base font-semibold text-zinc-950"><Trans>How to update</Trans></h3>
+          <p className="mt-1 text-xs text-stone-500">
+            <Trans>Pull the new image and restart your deployment (docker compose / helm).</Trans>
+          </p>
+          <div className="mt-3 flex items-center gap-2">
+            <code className="flex-1 truncate rounded-lg bg-white px-3 py-2 text-xs text-zinc-800 ring-1 ring-black/[0.06]">docker pull {info.image}</code>
+            <button type="button" onClick={copyPull} className="subtle-button shrink-0">
+              {copied ? <Trans>Copied</Trans> : <Trans>Copy</Trans>}
+            </button>
+          </div>
+          {info.releaseUrl && (
+            <a href={info.releaseUrl} target="_blank" rel="noreferrer" className="mt-3 inline-block text-xs font-semibold text-brand hover:text-brand-dark">
+              <Trans>View release notes →</Trans>
+            </a>
+          )}
+        </section>
+      )}
+
+      {!info.updateAvailable && info.releaseUrl && (
+        <a href={info.releaseUrl} target="_blank" rel="noreferrer" className="inline-block text-xs font-semibold text-brand hover:text-brand-dark">
+          <Trans>View latest release notes →</Trans>
+        </a>
+      )}
+    </div>
+  )
 }
 
 function StorageSettingsPanel() {

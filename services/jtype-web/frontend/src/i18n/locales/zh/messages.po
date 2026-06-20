@@ -129,6 +129,10 @@ msgstr "可编辑、可预览的文本文档"
 msgid "A text-based diagram with a live preview"
 msgstr "带实时预览的文本图表"
 
+#: src/pages/Admin.tsx
+msgid "About / Version"
+msgstr "关于 / 版本"
+
 #: src/components/SiteThemePanel.tsx
 msgid "Accent"
 msgstr "强调色"
@@ -385,6 +389,10 @@ msgstr "证书管理"
 msgid "Changed"
 msgstr "已更改"
 
+#: src/pages/Admin.tsx
+msgid "Check the running server version against the latest published release."
+msgstr "将运行中的服务器版本与最新发布版本进行比对。"
+
 #: src/pages/Landing.tsx
 msgid "Checking session"
 msgstr "检查会话中"
@@ -524,10 +532,12 @@ msgstr "内容宽度"
 msgid "Continue"
 msgstr "继续"
 
+#: src/pages/Admin.tsx
 #: src/pages/DeviceOAuth.tsx
 msgid "Copied"
 msgstr "已复制"
 
+#: src/pages/Admin.tsx
 #: src/pages/AiConnections.tsx
 msgid "Copy"
 msgstr "复制"
@@ -555,6 +565,11 @@ msgstr "圆角"
 #: src/pages/Workspace.tsx
 msgid "Could not load this PDF."
 msgstr "无法加载此 PDF。"
+
+#. placeholder {0}: info.error
+#: src/pages/Admin.tsx
+msgid "Could not reach GitHub for the latest release ({0}). Showing the last known value."
+msgstr "无法从 GitHub 获取最新版本（{0}）。显示上次已知的值。"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Cozy"
@@ -1010,6 +1025,10 @@ msgid "How can we help?"
 msgstr "需要什么帮助？"
 
 #: src/pages/Admin.tsx
+msgid "How to update"
+msgstr "如何更新"
+
+#: src/pages/Admin.tsx
 msgid "https://s3.example.com — leave blank to use local files"
 msgstr "https://s3.example.com — 留空则使用本地文件"
 
@@ -1131,6 +1150,8 @@ msgstr "标签（例如：我笔记本上的 jcode）"
 
 #: src/components/Layout.tsx
 #: src/help/HelpLayout.tsx
+#: src/pages/Landing.tsx
+#: src/pages/Login.tsx
 msgid "Language"
 msgstr "语言"
 
@@ -1142,6 +1163,10 @@ msgstr "最近活跃"
 #: src/help/pages/Article.tsx
 msgid "Last updated {0}"
 msgstr "最后更新于 {0}"
+
+#: src/pages/Admin.tsx
+msgid "Latest release"
+msgstr "最新版本"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Layout"
@@ -1212,6 +1237,7 @@ msgstr "正在加载查看器…"
 msgid "Loading..."
 msgstr "加载中…"
 
+#: src/pages/Admin.tsx
 #: src/pages/AiConnections.tsx
 msgid "Loading…"
 msgstr "加载中…"
@@ -1434,6 +1460,10 @@ msgstr "暂无笔记。"
 #: src/pages/Workspace.tsx
 msgid "No outgoing links."
 msgstr "无出站链接。"
+
+#: src/pages/Admin.tsx
+msgid "No published release"
+msgstr "暂无发布版本"
 
 #: src/pages/Admin.tsx
 msgid "No records."
@@ -1667,6 +1697,7 @@ msgstr "发布草稿"
 msgid "Publish title"
 msgstr "发布标题"
 
+#: src/pages/Admin.tsx
 #: src/pages/Workspace.tsx
 msgid "Published"
 msgstr "已发布"
@@ -1691,6 +1722,10 @@ msgstr "发布详情已保存"
 #: src/pages/Workspace.tsx
 msgid "Publishing uses a server snapshot; frontmatter status is treated as user metadata."
 msgstr "发布使用服务器快照；frontmatter 状态被视为用户元数据。"
+
+#: src/pages/Admin.tsx
+msgid "Pull the new image and restart your deployment (docker compose / helm)."
+msgstr "拉取新镜像并重启你的部署（docker compose / helm）。"
 
 #: src/pages/Landing.tsx
 msgid "Push and pull versions, resolve conflicts, and keep collaboration scoped to the workspace you choose."
@@ -1851,6 +1886,10 @@ msgstr "撤销此令牌？任何使用它的客户端都将停止工作。"
 #: src/pages/Admin.tsx
 msgid "Role"
 msgstr "角色"
+
+#: src/pages/Admin.tsx
+msgid "Running version"
+msgstr "运行版本"
 
 #: src/pages/Admin.tsx
 msgid "S3 endpoint"
@@ -2341,6 +2380,14 @@ msgstr "未保存"
 msgid "Untitled document"
 msgstr "未命名文档"
 
+#: src/pages/Admin.tsx
+msgid "Up to date"
+msgstr "已是最新"
+
+#: src/pages/Admin.tsx
+msgid "Update available"
+msgstr "有可用更新"
+
 #: src/components/Layout.tsx
 msgid "Update email"
 msgstr "更新邮箱"
@@ -2422,6 +2469,10 @@ msgstr "验证 DNS"
 msgid "Verifying…"
 msgstr "验证中…"
 
+#: src/pages/Admin.tsx
+msgid "View latest release notes →"
+msgstr "查看最新发布说明 →"
+
 #: src/pages/Workspace.tsx
 msgid "View public page"
 msgstr "查看公开页面"
@@ -2429,6 +2480,10 @@ msgstr "查看公开页面"
 #: src/components/SiteThemePanel.tsx
 msgid "View published site"
 msgstr "查看已发布站点"
+
+#: src/pages/Admin.tsx
+msgid "View release notes →"
+msgstr "查看发布说明 →"
 
 #: src/pages/Workspace.tsx
 msgid "Viewer access is read-only."

@@ -1,9 +1,18 @@
 name: Build Desktop App
 
-# Reusable: builds the macOS (.dmg) and Windows (.nsis) installers and uploads
-# them to the release for the given tag. Invoked by release.yml; PR/main compile
-# checks live in ci.yml (Linux, no installers). Can also be run manually against
-# an existing tag via the Actions UI.
+# Reusable: builds the macOS (.dmg) and Windows (.nsis) installers, signs the
+# auto-updater artifacts, and uploads them — plus a `latest.json` manifest — to
+# the release for the given tag. Invoked by release.yml; PR/main compile checks
+# live in ci.yml (Linux, no installers). Can also be run manually against an
+# existing tag via the Actions UI.
+#
+# Auto-updater: `bundle.createUpdaterArtifacts` (tauri.conf.json) makes the build
+# emit a signed updater bundle per platform (macOS `.app.tar.gz`, Windows NSIS
+# `-setup.exe`) alongside its `.sig`. The signature is produced from the
+# TAURI_SIGNING_PRIVATE_KEY secret and verified in-app against the public key
+# baked into tauri.conf.json. The `updater-manifest` job stitches the per-runner
+# `.sig` files into a single `latest.json` that the app polls at
+# releases/latest/download/latest.json.
 on:
   workflow_call:
     inputs:
@@ -30,12 +39,22 @@ jobs:
         include:
           - name: Windows
             os: windows-latest
-            bundle: nsis
-            artifact-path: src-tauri/target/release/bundle/nsis/*-setup.exe
+            # NSIS with createUpdaterArtifacts: the -setup.exe is both the
+            # installer and the updater artifact (a sibling .sig is emitted).
+            bundles: nsis
+            platform-key: windows-x86_64
+            installer-glob: src-tauri/target/release/bundle/nsis/*-setup.exe
+            updater-glob: src-tauri/target/release/bundle/nsis/*-setup.exe
           - name: macOS
             os: macos-latest
-            bundle: dmg
-            artifact-path: src-tauri/target/release/bundle/dmg/*.dmg
+            # `app` is required so the updater `.app.tar.gz` is emitted; `dmg`
+            # is the user-facing installer. macos-latest is Apple Silicon, so the
+            # updater key is darwin-aarch64 (Intel Macs fall back to a manual
+            # download, same as the dmg matrix today).
+            bundles: app dmg
+            platform-key: darwin-aarch64
+            installer-glob: src-tauri/target/release/bundle/dmg/*.dmg
+            updater-glob: src-tauri/target/release/bundle/macos/*.app.tar.gz
 
     steps:
       - name: Checkout
@@ -129,15 +148,95 @@ jobs:
 
       # Build directly with the tauri CLI instead of tauri-action@v0, which
       # crashes on the runner with "unsettled top-level await" (a bundled-JS /
-      # Node-version issue).
+      # Node-version issue). TAURI_SIGNING_* makes the build emit `.sig` files
+      # for the updater artifacts; an unset key would silently skip them.
       - name: Build desktop app
         env:
           VITE_JTYPE_VERSION: ${{ steps.version.outputs.version }}
-        run: pnpm exec tauri build --bundles ${{ matrix.bundle }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: pnpm exec tauri build --bundles ${{ matrix.bundles }}
 
-      - name: Upload desktop app to release
+      - name: Upload installer + updater artifacts to release
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ inputs.tag }}
-        run: gh release upload "$TAG" ${{ matrix.artifact-path }} --clobber
+        run: |
+          set -euo pipefail
+          gh release upload "$TAG" ${{ matrix.installer-glob }} --clobber
+          gh release upload "$TAG" ${{ matrix.updater-glob }} ${{ matrix.updater-glob }}.sig --clobber
+
+      # Each runner emits a one-platform fragment of latest.json. The
+      # updater-manifest job merges them once every platform has built.
+      - name: Build updater manifest fragment
+        shell: bash
+        env:
+          TAG: ${{ inputs.tag }}
+          PLATFORM_KEY: ${{ matrix.platform-key }}
+        run: |
+          set -euo pipefail
+          asset="$(ls ${{ matrix.updater-glob }} | head -n1)"
+          name="$(basename "$asset")"
+          export ASSET_SIG="$(cat "${asset}.sig")"
+          export ASSET_URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/${name}"
+          mkdir -p fragments
+          node -e '
+            const fs = require("fs");
+            const key = process.env.PLATFORM_KEY;
+            const out = { [key]: { signature: process.env.ASSET_SIG, url: process.env.ASSET_URL } };
+            fs.writeFileSync(`fragments/${key}.json`, JSON.stringify(out));
+          '
+
+      - name: Upload fragment artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: updater-fragment-${{ matrix.platform-key }}
+          path: fragments/*.json
+          retention-days: 1
+
+  updater-manifest:
+    name: Publish updater manifest
+    needs: build-desktop
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download fragments
+        uses: actions/download-artifact@v4
+        with:
+          pattern: updater-fragment-*
+          path: fragments
+          merge-multiple: true
+
+      - name: Assemble and upload latest.json
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          export MANIFEST_VERSION="${TAG#v}"
+          export MANIFEST_NOTES="$(gh release view "$TAG" --json body -q .body 2>/dev/null || true)"
+          export MANIFEST_PUB_DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          node -e '
+            const fs = require("fs");
+            const platforms = {};
+            for (const f of fs.readdirSync("fragments")) {
+              if (!f.endsWith(".json")) continue;
+              Object.assign(platforms, JSON.parse(fs.readFileSync(`fragments/${f}`, "utf8")));
+            }
+            if (Object.keys(platforms).length === 0) {
+              throw new Error("no updater fragments found — refusing to publish an empty latest.json");
+            }
+            const manifest = {
+              version: process.env.MANIFEST_VERSION,
+              notes: process.env.MANIFEST_NOTES || "",
+              pub_date: process.env.MANIFEST_PUB_DATE,
+              platforms,
+            };
+            fs.writeFileSync("latest.json", JSON.stringify(manifest, null, 2));
+          '
+          cat latest.json
+          gh release upload "$TAG" latest.json --clobber

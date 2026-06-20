@@ -6,6 +6,7 @@ import { useCloudEvents } from "../hooks/useCloudEvents";
 import { useFileWatcher } from "../hooks/useFileWatcher";
 import type { CommandDef } from "../hooks/useCommands";
 import { Header } from "../components/layout/Header";
+import { UpdateBanner } from "../components/layout/UpdateBanner";
 import { WelcomeScreen } from "../components/layout/WelcomeScreen";
 import { VaultHome } from "../components/layout/VaultHome";
 import { Sidebar } from "../components/sidebar/Sidebar";
@@ -489,6 +490,7 @@ function AppContent() {
         <NewResourceDialog />
         <AccountDialog />
         <ConflictDialog />
+        <UpdateBanner />
       </div>
     </CommandsContext.Provider>
   );

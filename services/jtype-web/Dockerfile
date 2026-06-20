@@ -17,6 +17,11 @@ RUN cd services/jtype-web/frontend && npm run build
 
 FROM rust:1.89 AS builder
 WORKDIR /app
+# Stamp the release version into the binary (read via option_env!("JTYPE_VERSION")
+# so the admin "About" page reports the running build, not the static crate
+# version). Defaults are per-stage in Docker, so re-declare the ARG here.
+ARG JTYPE_VERSION=0.1.0
+ENV JTYPE_VERSION=$JTYPE_VERSION
 COPY services/jtype-web/Cargo.toml ./Cargo.toml
 COPY services/jtype-web/src ./src
 COPY services/jtype-web/migrations ./migrations

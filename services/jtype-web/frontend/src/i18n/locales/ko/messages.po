@@ -129,6 +129,10 @@ msgstr "작성하고 미리 볼 수 있는 텍스트 문서"
 msgid "A text-based diagram with a live preview"
 msgstr "실시간 미리보기가 있는 텍스트 기반 다이어그램"
 
+#: src/pages/Admin.tsx
+msgid "About / Version"
+msgstr ""
+
 #: src/components/SiteThemePanel.tsx
 msgid "Accent"
 msgstr "강조"
@@ -385,6 +389,10 @@ msgstr "인증서 관리"
 msgid "Changed"
 msgstr "변경됨"
 
+#: src/pages/Admin.tsx
+msgid "Check the running server version against the latest published release."
+msgstr ""
+
 #: src/pages/Landing.tsx
 msgid "Checking session"
 msgstr "세션 확인 중"
@@ -524,10 +532,12 @@ msgstr "콘텐츠 너비"
 msgid "Continue"
 msgstr ""
 
+#: src/pages/Admin.tsx
 #: src/pages/DeviceOAuth.tsx
 msgid "Copied"
 msgstr ""
 
+#: src/pages/Admin.tsx
 #: src/pages/AiConnections.tsx
 msgid "Copy"
 msgstr "복사"
@@ -555,6 +565,11 @@ msgstr "모서리 반경"
 #: src/pages/Workspace.tsx
 msgid "Could not load this PDF."
 msgstr "이 PDF를 불러올 수 없습니다."
+
+#. placeholder {0}: info.error
+#: src/pages/Admin.tsx
+msgid "Could not reach GitHub for the latest release ({0}). Showing the last known value."
+msgstr ""
 
 #: src/components/SiteThemePanel.tsx
 msgid "Cozy"
@@ -1010,6 +1025,10 @@ msgid "How can we help?"
 msgstr "무엇을 도와드릴까요?"
 
 #: src/pages/Admin.tsx
+msgid "How to update"
+msgstr ""
+
+#: src/pages/Admin.tsx
 msgid "https://s3.example.com — leave blank to use local files"
 msgstr "https://s3.example.com — 로컬 파일을 사용하려면 비워두세요"
 
@@ -1131,6 +1150,8 @@ msgstr "레이블 (예: 내 노트북의 jcode)"
 
 #: src/components/Layout.tsx
 #: src/help/HelpLayout.tsx
+#: src/pages/Landing.tsx
+#: src/pages/Login.tsx
 msgid "Language"
 msgstr "언어"
 
@@ -1142,6 +1163,10 @@ msgstr "최근 활동"
 #: src/help/pages/Article.tsx
 msgid "Last updated {0}"
 msgstr "최근 업데이트 {0}"
+
+#: src/pages/Admin.tsx
+msgid "Latest release"
+msgstr ""
 
 #: src/components/SiteThemePanel.tsx
 msgid "Layout"
@@ -1212,6 +1237,7 @@ msgstr "뷰어 불러오는 중…"
 msgid "Loading..."
 msgstr "불러오는 중..."
 
+#: src/pages/Admin.tsx
 #: src/pages/AiConnections.tsx
 msgid "Loading…"
 msgstr "불러오는 중…"
@@ -1434,6 +1460,10 @@ msgstr "노트가 아직 없습니다."
 #: src/pages/Workspace.tsx
 msgid "No outgoing links."
 msgstr "나가는 링크가 없습니다."
+
+#: src/pages/Admin.tsx
+msgid "No published release"
+msgstr ""
 
 #: src/pages/Admin.tsx
 msgid "No records."
@@ -1667,6 +1697,7 @@ msgstr "초안 게시"
 msgid "Publish title"
 msgstr "게시 제목"
 
+#: src/pages/Admin.tsx
 #: src/pages/Workspace.tsx
 msgid "Published"
 msgstr "게시됨"
@@ -1691,6 +1722,10 @@ msgstr "게시 세부 정보가 저장되었습니다"
 #: src/pages/Workspace.tsx
 msgid "Publishing uses a server snapshot; frontmatter status is treated as user metadata."
 msgstr "게시는 서버 스냅샷을 사용합니다. 프론트매터 상태는 사용자 메타데이터로 처리됩니다."
+
+#: src/pages/Admin.tsx
+msgid "Pull the new image and restart your deployment (docker compose / helm)."
+msgstr ""
 
 #: src/pages/Landing.tsx
 msgid "Push and pull versions, resolve conflicts, and keep collaboration scoped to the workspace you choose."
@@ -1851,6 +1886,10 @@ msgstr "이 토큰을 철회하시겠습니까? 이 토큰을 사용하는 모�
 #: src/pages/Admin.tsx
 msgid "Role"
 msgstr "역할"
+
+#: src/pages/Admin.tsx
+msgid "Running version"
+msgstr ""
 
 #: src/pages/Admin.tsx
 msgid "S3 endpoint"
@@ -2341,6 +2380,14 @@ msgstr "저장되지 않음"
 msgid "Untitled document"
 msgstr "제목 없는 문서"
 
+#: src/pages/Admin.tsx
+msgid "Up to date"
+msgstr ""
+
+#: src/pages/Admin.tsx
+msgid "Update available"
+msgstr ""
+
 #: src/components/Layout.tsx
 msgid "Update email"
 msgstr ""
@@ -2422,6 +2469,10 @@ msgstr "DNS 확인"
 msgid "Verifying…"
 msgstr ""
 
+#: src/pages/Admin.tsx
+msgid "View latest release notes →"
+msgstr ""
+
 #: src/pages/Workspace.tsx
 msgid "View public page"
 msgstr "공개 페이지 보기"
@@ -2429,6 +2480,10 @@ msgstr "공개 페이지 보기"
 #: src/components/SiteThemePanel.tsx
 msgid "View published site"
 msgstr "게시된 사이트 보기"
+
+#: src/pages/Admin.tsx
+msgid "View release notes →"
+msgstr ""
 
 #: src/pages/Workspace.tsx
 msgid "Viewer access is read-only."
