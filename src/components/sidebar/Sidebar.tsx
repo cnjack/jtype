@@ -553,9 +553,10 @@ function ExplorerPanel() {
                   <button
                     type="button"
                     className="context-menu-button"
-                    onClick={async () => {
-                      const name = await prompt(t`New document name (e.g. note.md):`);
-                      if (name) void fs.createDocument(`${contextMenu.node.relativePath}/${name.trim()}`);
+                    onClick={() => {
+                      // Reuse the polished "New Document" dialog, targeted at the
+                      // right-clicked folder, instead of a bare name prompt.
+                      dispatch({ type: "SET_CREATE_NOTE_DIALOG", open: true, targetDir: contextMenu.node.relativePath });
                       setContextMenu(null);
                     }}
                   >

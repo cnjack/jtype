@@ -116,9 +116,11 @@ export function NewResourceDialog() {
     setStep("name");
   };
 
-  // Create new resources in the folder of the currently-open file (where the
-  // user is), falling back to the vault root.
+  // Create new resources in the folder the dialog was launched from (when opened
+  // from a folder's right-click menu), otherwise the folder of the currently-open
+  // file (where the user is), falling back to the vault root.
   const activeDir = (() => {
+    if (state.createNoteTargetDir != null) return state.createNoteTargetDir;
     const rel = state.currentRelativePath;
     if (!rel) return "";
     const slash = rel.lastIndexOf("/");
