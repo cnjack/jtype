@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react'
 import { t, msg } from '@lingui/core/macro'
 import { Trans } from '@lingui/react/macro'
 import { useLingui } from '@lingui/react'
@@ -18,6 +19,7 @@ import {
   SparklesIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline'
+import { LanguageSwitcher } from '@shared/components/LanguageSwitcher'
 import { useAuth } from '../components/AuthContext'
 
 const markdownLines = [
@@ -108,6 +110,18 @@ export function Landing() {
             <Link className="rounded-lg px-3 py-2 transition hover:bg-[#e8f6f2] hover:text-brand-dark" to="/help"><Trans>Help</Trans></Link>
           </div>
           <div className="flex items-center gap-2">
+            <Popover className="relative">
+              <PopoverButton
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-black/[0.06] bg-white/80 text-[#4b5753] shadow-sm shadow-emerald-950/5 transition hover:border-brand/30 hover:bg-white hover:text-brand-dark"
+                title={t`Language`}
+                aria-label={t`Language`}
+              >
+                <GlobeAltIcon className="h-4 w-4" />
+              </PopoverButton>
+              <PopoverPanel className="absolute right-0 z-40 mt-2 w-44 rounded-xl border border-black/[0.08] bg-white p-1.5 shadow-xl shadow-emerald-950/10">
+                <LanguageSwitcher variant="inline" />
+              </PopoverPanel>
+            </Popover>
             <a
               href="https://github.com/cnjack/jtype"
               target="_blank"
