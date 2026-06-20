@@ -128,6 +128,10 @@ msgstr "A text document you write and preview"
 msgid "A text-based diagram with a live preview"
 msgstr "A text-based diagram with a live preview"
 
+#: src/pages/Admin.tsx
+msgid "About / Version"
+msgstr "About / Version"
+
 #: src/components/SiteThemePanel.tsx
 msgid "Accent"
 msgstr "Accent"
@@ -384,6 +388,10 @@ msgstr "Certificate management"
 msgid "Changed"
 msgstr "Changed"
 
+#: src/pages/Admin.tsx
+msgid "Check the running server version against the latest published release."
+msgstr "Check the running server version against the latest published release."
+
 #: src/pages/Landing.tsx
 msgid "Checking session"
 msgstr "Checking session"
@@ -523,10 +531,12 @@ msgstr "Content width"
 msgid "Continue"
 msgstr "Continue"
 
+#: src/pages/Admin.tsx
 #: src/pages/DeviceOAuth.tsx
 msgid "Copied"
 msgstr "Copied"
 
+#: src/pages/Admin.tsx
 #: src/pages/AiConnections.tsx
 msgid "Copy"
 msgstr "Copy"
@@ -554,6 +564,11 @@ msgstr "Corner radius"
 #: src/pages/Workspace.tsx
 msgid "Could not load this PDF."
 msgstr "Could not load this PDF."
+
+#. placeholder {0}: info.error
+#: src/pages/Admin.tsx
+msgid "Could not reach GitHub for the latest release ({0}). Showing the last known value."
+msgstr "Could not reach GitHub for the latest release ({0}). Showing the last known value."
 
 #: src/components/SiteThemePanel.tsx
 msgid "Cozy"
@@ -1009,6 +1024,10 @@ msgid "How can we help?"
 msgstr "How can we help?"
 
 #: src/pages/Admin.tsx
+msgid "How to update"
+msgstr "How to update"
+
+#: src/pages/Admin.tsx
 msgid "https://s3.example.com — leave blank to use local files"
 msgstr "https://s3.example.com — leave blank to use local files"
 
@@ -1130,6 +1149,8 @@ msgstr "Label (e.g. jcode on my laptop)"
 
 #: src/components/Layout.tsx
 #: src/help/HelpLayout.tsx
+#: src/pages/Landing.tsx
+#: src/pages/Login.tsx
 msgid "Language"
 msgstr "Language"
 
@@ -1141,6 +1162,10 @@ msgstr "Last seen recently"
 #: src/help/pages/Article.tsx
 msgid "Last updated {0}"
 msgstr "Last updated {0}"
+
+#: src/pages/Admin.tsx
+msgid "Latest release"
+msgstr "Latest release"
 
 #: src/components/SiteThemePanel.tsx
 msgid "Layout"
@@ -1211,6 +1236,7 @@ msgstr "Loading viewer…"
 msgid "Loading..."
 msgstr "Loading..."
 
+#: src/pages/Admin.tsx
 #: src/pages/AiConnections.tsx
 msgid "Loading…"
 msgstr "Loading…"
@@ -1433,6 +1459,10 @@ msgstr "No notes yet."
 #: src/pages/Workspace.tsx
 msgid "No outgoing links."
 msgstr "No outgoing links."
+
+#: src/pages/Admin.tsx
+msgid "No published release"
+msgstr "No published release"
 
 #: src/pages/Admin.tsx
 msgid "No records."
@@ -1666,6 +1696,7 @@ msgstr "Publish drafts"
 msgid "Publish title"
 msgstr "Publish title"
 
+#: src/pages/Admin.tsx
 #: src/pages/Workspace.tsx
 msgid "Published"
 msgstr "Published"
@@ -1690,6 +1721,10 @@ msgstr "Publishing details saved"
 #: src/pages/Workspace.tsx
 msgid "Publishing uses a server snapshot; frontmatter status is treated as user metadata."
 msgstr "Publishing uses a server snapshot; frontmatter status is treated as user metadata."
+
+#: src/pages/Admin.tsx
+msgid "Pull the new image and restart your deployment (docker compose / helm)."
+msgstr "Pull the new image and restart your deployment (docker compose / helm)."
 
 #: src/pages/Landing.tsx
 msgid "Push and pull versions, resolve conflicts, and keep collaboration scoped to the workspace you choose."
@@ -1850,6 +1885,10 @@ msgstr "Revoke this token? Any client using it will stop working."
 #: src/pages/Admin.tsx
 msgid "Role"
 msgstr "Role"
+
+#: src/pages/Admin.tsx
+msgid "Running version"
+msgstr "Running version"
 
 #: src/pages/Admin.tsx
 msgid "S3 endpoint"
@@ -2340,6 +2379,14 @@ msgstr "Unsaved"
 msgid "Untitled document"
 msgstr "Untitled document"
 
+#: src/pages/Admin.tsx
+msgid "Up to date"
+msgstr "Up to date"
+
+#: src/pages/Admin.tsx
+msgid "Update available"
+msgstr "Update available"
+
 #: src/components/Layout.tsx
 msgid "Update email"
 msgstr "Update email"
@@ -2421,6 +2468,10 @@ msgstr "Verify DNS"
 msgid "Verifying…"
 msgstr "Verifying…"
 
+#: src/pages/Admin.tsx
+msgid "View latest release notes →"
+msgstr "View latest release notes →"
+
 #: src/pages/Workspace.tsx
 msgid "View public page"
 msgstr "View public page"
@@ -2428,6 +2479,10 @@ msgstr "View public page"
 #: src/components/SiteThemePanel.tsx
 msgid "View published site"
 msgstr "View published site"
+
+#: src/pages/Admin.tsx
+msgid "View release notes →"
+msgstr "View release notes →"
 
 #: src/pages/Workspace.tsx
 msgid "Viewer access is read-only."

@@ -16,6 +16,8 @@
     {
       "identifier": "opener:allow-open-path",
       "allow": [{ "path": "$HOME/**" }, { "path": "/**" }]
-    }
+    },
+    "updater:default",
+    "process:allow-restart"
   ]
 }

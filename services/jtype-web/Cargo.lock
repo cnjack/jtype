@@ -789,6 +789,7 @@ dependencies = [
  "tokio",
  "tokio-rustls",
  "tower-service",
+ "webpki-roots 1.0.7",
 ]
 
 [[package]]
@@ -1017,6 +1018,7 @@ dependencies = [
  "object_store",
  "pulldown-cmark",
  "rand_core 0.6.4",
+ "reqwest",
  "rust-embed",
  "serde",
  "serde_json",
@@ -1639,6 +1641,7 @@ dependencies = [
  "wasm-bindgen-futures",
  "wasm-streams",
  "web-sys",
+ "webpki-roots 1.0.7",
 ]
 
 [[package]]

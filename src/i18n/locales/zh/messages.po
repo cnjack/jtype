@@ -93,6 +93,10 @@ msgstr "基于笔记的看板视图"
 msgid "A Markdown document you write and preview"
 msgstr "可编辑、可预览的 Markdown 文档"
 
+#: src/components/layout/UpdateBanner.tsx
+msgid "A new version is available"
+msgstr "有新版本可用"
+
 #: src/components/modals/NewResourceDialog.tsx
 msgid "A text document you write and preview"
 msgstr "可编辑、可预览的文本文档"
@@ -519,6 +523,10 @@ msgstr "断开云同步"
 msgid "Disconnect workspace"
 msgstr "断开工作区"
 
+#: src/components/layout/UpdateBanner.tsx
+msgid "Dismiss"
+msgstr "关闭"
+
 #: src/components/editor/EditorShell.tsx
 msgid "Document info"
 msgstr "文档信息"
@@ -549,6 +557,10 @@ msgstr "完成"
 
 #~ msgid "Done column"
 #~ msgstr "完成列"
+
+#: src/components/layout/UpdateBanner.tsx
+msgid "Downloading update…"
+msgstr "正在下载更新…"
 
 #: src/components/modals/AccountDialog.tsx
 msgid "Downloads"
@@ -742,6 +754,7 @@ msgstr "看板"
 msgid "Language"
 msgstr "语言"
 
+#: src/components/layout/UpdateBanner.tsx
 #: src/components/modals/SyncPromptDialog.tsx
 msgid "Later"
 msgstr "稍后"
@@ -843,8 +856,8 @@ msgid "New Document"
 msgstr "新建文档"
 
 #: src/components/sidebar/Sidebar.tsx
-msgid "New document name (e.g. note.md):"
-msgstr "新文档名称（如 note.md）："
+#~ msgid "New document name (e.g. note.md):"
+#~ msgstr "新文档名称（如 note.md）："
 
 #: src/components/modals/NewResourceDialog.tsx
 msgid "New Excalidraw drawing"
@@ -1197,6 +1210,10 @@ msgstr "重设缩放"
 msgid "Restart your terminal to pick up the updated PATH."
 msgstr "重启终端以使更新后的 PATH 生效。"
 
+#: src/components/layout/UpdateBanner.tsx
+msgid "Restarting to finish update…"
+msgstr "正在重启以完成更新…"
+
 #: src/components/sidebar/Sidebar.tsx
 msgid "Restore"
 msgstr "恢复"
@@ -1204,6 +1221,10 @@ msgstr "恢复"
 #: src/components/sidebar/Sidebar.tsx
 msgid "Restore queued. Will sync on next push."
 msgstr "恢复已排队。下次推送时同步。"
+
+#: src/components/layout/UpdateBanner.tsx
+msgid "Retry"
+msgstr "重试"
 
 #: src/components/editor/EditorShell.tsx
 msgid "Save"
@@ -1437,6 +1458,14 @@ msgstr "未命名"
 #: src/components/modals/AccountDialog.tsx
 msgid "Untitled workspace"
 msgstr "未命名工作区"
+
+#: src/components/layout/UpdateBanner.tsx
+msgid "Update & restart"
+msgstr "更新并重启"
+
+#: src/components/layout/UpdateBanner.tsx
+msgid "Update to {newVersion}"
+msgstr "更新到 {newVersion}"
 
 #: src/components/layout/WelcomeScreen.tsx
 msgid "Use default vault"

@@ -93,6 +93,10 @@ msgstr "내 노트 위의 칸반 보드"
 msgid "A Markdown document you write and preview"
 msgstr "작성하고 미리 볼 수 있는 Markdown 문서"
 
+#: src/components/layout/UpdateBanner.tsx
+msgid "A new version is available"
+msgstr ""
+
 #: src/components/modals/NewResourceDialog.tsx
 msgid "A text document you write and preview"
 msgstr "작성하고 미리 볼 수 있는 텍스트 문서"
@@ -519,6 +523,10 @@ msgstr "클라우드 동기화 연결 끊기"
 msgid "Disconnect workspace"
 msgstr "워크스페이스 연결 끊기"
 
+#: src/components/layout/UpdateBanner.tsx
+msgid "Dismiss"
+msgstr ""
+
 #: src/components/editor/EditorShell.tsx
 msgid "Document info"
 msgstr "문서 정보"
@@ -549,6 +557,10 @@ msgstr ""
 
 #~ msgid "Done column"
 #~ msgstr ""
+
+#: src/components/layout/UpdateBanner.tsx
+msgid "Downloading update…"
+msgstr ""
 
 #: src/components/modals/AccountDialog.tsx
 msgid "Downloads"
@@ -742,6 +754,7 @@ msgstr "칸반 보드"
 msgid "Language"
 msgstr "언어"
 
+#: src/components/layout/UpdateBanner.tsx
 #: src/components/modals/SyncPromptDialog.tsx
 msgid "Later"
 msgstr "나중에"
@@ -843,8 +856,8 @@ msgid "New Document"
 msgstr "새 문서"
 
 #: src/components/sidebar/Sidebar.tsx
-msgid "New document name (e.g. note.md):"
-msgstr "새 문서 이름 (예: note.md):"
+#~ msgid "New document name (e.g. note.md):"
+#~ msgstr "새 문서 이름 (예: note.md):"
 
 #: src/components/modals/NewResourceDialog.tsx
 msgid "New Excalidraw drawing"
@@ -1197,6 +1210,10 @@ msgstr "줌 재설정"
 msgid "Restart your terminal to pick up the updated PATH."
 msgstr "업데이트된 PATH를 적용하려면 터미널을 다시 시작하세요."
 
+#: src/components/layout/UpdateBanner.tsx
+msgid "Restarting to finish update…"
+msgstr ""
+
 #: src/components/sidebar/Sidebar.tsx
 msgid "Restore"
 msgstr "복원"
@@ -1204,6 +1221,10 @@ msgstr "복원"
 #: src/components/sidebar/Sidebar.tsx
 msgid "Restore queued. Will sync on next push."
 msgstr "복원이 대기 중입니다. 다음 푸시 시 동기화됩니다."
+
+#: src/components/layout/UpdateBanner.tsx
+msgid "Retry"
+msgstr ""
 
 #: src/components/editor/EditorShell.tsx
 msgid "Save"
@@ -1437,6 +1458,14 @@ msgstr "제목 없음"
 #: src/components/modals/AccountDialog.tsx
 msgid "Untitled workspace"
 msgstr "제목 없는 워크스페이스"
+
+#: src/components/layout/UpdateBanner.tsx
+msgid "Update & restart"
+msgstr ""
+
+#: src/components/layout/UpdateBanner.tsx
+msgid "Update to {newVersion}"
+msgstr ""
 
 #: src/components/layout/WelcomeScreen.tsx
 msgid "Use default vault"
