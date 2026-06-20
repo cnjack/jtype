@@ -39,10 +39,14 @@ export function WebBoardView({
   workspaceId,
   boardDocId,
   boardRelativePath,
+  fullscreen,
+  onToggleFullscreen,
 }: {
   workspaceId: string
   boardDocId: string
   boardRelativePath: string
+  fullscreen?: boolean
+  onToggleFullscreen?: () => void
 }) {
   const prompt = usePrompt()
   const confirm = useConfirm()
@@ -344,7 +348,14 @@ export function WebBoardView({
 
   return (
     <div className="h-full min-h-0">
-      <BoardSurface config={viewConfig} cards={cards} actions={actions} error={error} />
+      <BoardSurface
+        config={viewConfig}
+        cards={cards}
+        actions={actions}
+        error={error}
+        fullscreen={fullscreen}
+        onToggleFullscreen={onToggleFullscreen}
+      />
     </div>
   )
 }

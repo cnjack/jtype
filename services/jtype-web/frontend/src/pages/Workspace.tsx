@@ -983,7 +983,7 @@ export function Workspace() {
             />
           ) : selectedDoc ? (
             isBoardFile && selectedDocument && workspaceId ? (
-              <WebBoardView workspaceId={workspaceId} boardDocId={selectedDoc} boardRelativePath={selectedDocument.relativePath} />
+              <WebBoardView workspaceId={workspaceId} boardDocId={selectedDoc} boardRelativePath={selectedDocument.relativePath} fullscreen={focusMode} onToggleFullscreen={() => setFocusMode(p => !p)} />
             ) : (
             <>
               <div className="flex min-h-[56px] items-center justify-between gap-3 bg-white/60 px-5 backdrop-blur-xl">

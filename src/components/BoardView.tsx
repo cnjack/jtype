@@ -377,6 +377,8 @@ export function BoardView({ boardPath, boardRelativePath }: { boardPath: string;
       templates={templates.map((tp) => ({ id: tp.path, name: tp.name }))}
       createFromTemplate={createFromTemplate}
       loadNotes={loadNotes}
+      fullscreen={state.focusMode}
+      onToggleFullscreen={() => dispatch({ type: "TOGGLE_FOCUS_MODE" })}
     />
   );
 }
