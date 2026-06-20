@@ -39,7 +39,11 @@ export function useDraftCloseGuard() {
         if (cancelled) return;
         if (confirmed) {
           dispatch({ type: "DISCARD_DRAFT" });
-          await win.close();
+          // Use destroy() rather than close(): close() re-emits CloseRequested,
+          // which re-enters this same handler with stale (still-draft) state and
+          // prevents the close again — an infinite loop the user can't escape.
+          // destroy() forces the window shut without firing the event.
+          await win.destroy();
         }
       })
       .then((unlisten) => unlisten)
