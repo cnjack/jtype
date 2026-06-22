@@ -35,6 +35,7 @@ import {
   PRIORITY_STYLE,
   effectiveColumns,
   groupValueOf,
+  slugify,
   sortCards as sortCardsFn,
   todayStr,
   visibleCards as visibleCardsFn,
@@ -818,6 +819,17 @@ export function BoardSurface({
             statusOptions={config.columns.map((c) => ({ value: c.key, label: c.name }))}
             assigneeOptions={assigneeOptions}
             tagOptions={tagOptions}
+            fields={config.fields}
+            onAddField={(label) => {
+              const existing = new Set((config.fields ?? []).map((f) => f.key));
+              let key = slugify(label);
+              if (existing.has(key)) {
+                let n = 2;
+                while (existing.has(`${key}-${n}`)) n += 1;
+                key = `${key}-${n}`;
+              }
+              void actions.setConfig({ fields: [...(config.fields ?? []), { key, label }] });
+            }}
             loadNotes={loadNotes}
             onChange={(patch) => void actions.updateCard(selected.id, patch)}
             onClose={() => setSelectedId(null)}

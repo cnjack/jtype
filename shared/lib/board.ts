@@ -15,6 +15,10 @@ export type BoardGroupKey = "status" | "priority" | "assignee";
 export type BoardSortKey = "manual" | "due" | "priority" | "title";
 export type BoardViewType = "board" | "table";
 
+export type BoardFieldType = "text" | "number" | "date";
+/** A user-defined custom field on a board's cards (stored in frontmatter / properties). */
+export type BoardFieldDef = { key: string; label: string; type?: BoardFieldType };
+
 export type BoardViewConfig = {
   title: string;
   columns: BoardViewColumn[];
@@ -24,6 +28,8 @@ export type BoardViewConfig = {
   colorColumns?: boolean;
   viewType?: BoardViewType;
   groupBy?: BoardGroupKey;
+  /** User-defined custom fields shown/edited on cards (board-level schema). */
+  fields?: BoardFieldDef[];
 };
 
 export type BoardTag = { id?: string; label: string; color?: string | null };
@@ -46,7 +52,23 @@ export type BoardViewCard = {
   taskDone?: number;
   taskTotal?: number;
   excerpt?: string | null;
+  /** Values for the board's user-defined custom fields, keyed by field key. */
+  custom?: Record<string, string>;
 };
+
+/** Read the declared custom-field values out of a flat property/frontmatter map. */
+export function pickCustomFields(
+  props: Record<string, string> | null | undefined,
+  fields: BoardFieldDef[] | undefined,
+): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (!props || !fields) return out;
+  for (const f of fields) {
+    const v = props[f.key];
+    if (v !== undefined && v !== "") out[f.key] = v;
+  }
+  return out;
+}
 
 export type CardFilter = { prop: "priority" | "assignee" | "tag"; value: string };
 

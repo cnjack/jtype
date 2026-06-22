@@ -21,6 +21,8 @@ export type BoardConfig = {
   colorColumns?: boolean;
   /** Which renderer this board shows: kanban columns or a flat table. Defaults to "board". */
   viewType?: "board" | "table";
+  /** User-defined custom fields shown/edited on this board's cards. */
+  fields?: { key: string; label: string; type?: "text" | "number" | "date" }[];
 };
 
 /** A card = a real `.md` note that belongs to a board (frontmatter `board == id`). */
@@ -38,6 +40,8 @@ export type BoardCard = {
   taskTotal?: number;
   icon?: string | null;
   excerpt?: string | null;
+  /** Full frontmatter map (for custom fields declared in the board config). */
+  properties?: Record<string, string>;
 };
 
 /** A reusable card template (`.md` in `<boardDir>/.templates/`). */

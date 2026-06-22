@@ -16,7 +16,7 @@ import {
 } from '../api'
 import { useConfirm, usePrompt } from '@shared/components/PromptDialogContext'
 import { BoardSurface, type BoardActions } from '@shared/components/board'
-import { countTasks, bodyExcerpt, type BoardViewCard, type BoardViewConfig } from '@shared/lib/board'
+import { countTasks, bodyExcerpt, pickCustomFields, type BoardViewCard, type BoardViewConfig } from '@shared/lib/board'
 import { useWorkspaceSocket } from '../hooks/useWorkspaceSocket'
 
 const VIEW_KEY = (boardId: string) => `kanban-view:${boardId}`
@@ -122,6 +122,9 @@ export function Kanban() {
       .filter(c => !c.archivedAt)
       .map(c => {
         const tasks = countTasks(c.description ?? '')
+        const propsObj = c.propertiesExtra && typeof c.propertiesExtra === 'object' ? (c.propertiesExtra as Record<string, unknown>) : {}
+        const propsStr: Record<string, string> = {}
+        for (const [k, v] of Object.entries(propsObj)) if (typeof v === 'string') propsStr[k] = v
         return {
           id: c.id,
           columnKey: c.columnId,
@@ -136,9 +139,10 @@ export function Kanban() {
           taskDone: tasks.done,
           taskTotal: tasks.total,
           excerpt: bodyExcerpt(c.description ?? ''),
+          custom: pickCustomFields(propsStr, view.fields),
         }
       })
-  }, [board, memberName])
+  }, [board, memberName, view.fields])
 
   const viewConfig: BoardViewConfig = useMemo(
     () =>
@@ -148,6 +152,7 @@ export function Kanban() {
             columns: board.columns.slice().sort((a, b) => a.position - b.position).map(c => ({ key: c.id, name: c.name, color: c.color, limit: c.wipLimit })),
             groupBy: (view.groupBy as BoardViewConfig['groupBy']) ?? 'status',
             viewType: view.viewType ?? 'board',
+            fields: view.fields,
             colorColumns: view.colorColumns,
             doneColumn: view.doneColumn,
           }
@@ -242,10 +247,13 @@ export function Kanban() {
         if (patch.due !== undefined) body.dueAt = patch.due ? `${patch.due} 00:00:00` : null
         if (patch.tags !== undefined) body.labelIds = patch.tags.map(t => t.id).filter(Boolean) as string[]
         if (patch.notes !== undefined) body.description = patch.notes
-        if (patch.icon !== undefined) {
+        if (patch.icon !== undefined || patch.custom !== undefined) {
           const cur = raw.propertiesExtra && typeof raw.propertiesExtra === 'object' ? { ...(raw.propertiesExtra as Record<string, unknown>) } : {}
-          if (patch.icon) cur.icon = patch.icon
-          else delete cur.icon
+          if (patch.icon !== undefined) {
+            if (patch.icon) cur.icon = patch.icon
+            else delete cur.icon
+          }
+          if (patch.custom !== undefined) for (const [k, v] of Object.entries(patch.custom)) { if (v) cur[k] = v; else delete cur[k] }
           body.propertiesExtra = cur
         }
         try {

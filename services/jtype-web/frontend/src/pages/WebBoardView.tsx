@@ -8,6 +8,7 @@ import {
   bodyExcerpt,
   countTasks,
   parseTagList,
+  pickCustomFields,
   slugify,
   type BoardViewCard,
   type BoardViewConfig,
@@ -23,6 +24,7 @@ type BoardConfigJSON = {
   doneColumn?: string
   colorColumns?: boolean
   viewType?: 'board' | 'table'
+  fields?: { key: string; label: string; type?: 'text' | 'number' | 'date' }[]
 }
 
 function rand() {
@@ -92,6 +94,7 @@ export function WebBoardView({
           taskDone: tasks.done,
           taskTotal: tasks.total,
           excerpt: bodyExcerpt(fm.body),
+          custom: pickCustomFields(fm.data, cfg.fields),
         })
       }
       setMetaByPath(nextMeta)
@@ -175,6 +178,7 @@ export function WebBoardView({
             doneColumn: config.doneColumn,
             colorColumns: config.colorColumns,
             viewType: config.viewType,
+            fields: config.fields,
             groupBy: (config.groupBy as BoardViewConfig['groupBy']) || 'status',
           }
         : { title: boardDir, columns: [] },
@@ -215,6 +219,7 @@ export function WebBoardView({
         if (patch.due !== undefined) next.due = patch.due ?? ''
         if (patch.icon !== undefined) next.icon = patch.icon ?? ''
         if (patch.tags !== undefined) next.tags = patch.tags.map((t) => t.label).join(', ')
+        if (patch.custom !== undefined) for (const [k, v] of Object.entries(patch.custom)) next[k] = v ?? ''
         const newBody = patch.notes !== undefined ? patch.notes : body
         try {
           await saveCard(id, next, newBody)
