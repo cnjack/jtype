@@ -370,6 +370,10 @@ pub fn build_app(
             "/api/v1/workspaces/:workspace_id/kanban/cards/:card_id/restore",
             post(handlers::kanban::card::restore_card),
         )
+        .route(
+            "/api/v1/workspaces/:workspace_id/kanban/cards/:card_id/activity",
+            get(handlers::kanban::card::card_activity),
+        )
         // Labels
         .route(
             "/api/v1/workspaces/:workspace_id/kanban/boards/:board_id/labels",

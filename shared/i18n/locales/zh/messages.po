@@ -36,6 +36,10 @@ msgstr "接受云端"
 msgid "Accept local"
 msgstr "接受本地"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Activity"
+msgstr "活动"
+
 #: shared/components/board/BoardSurface.tsx
 msgid "Add column"
 msgstr "添加列"
@@ -47,6 +51,10 @@ msgstr "添加详情..."
 #: shared/components/board/controls.tsx
 msgid "Add labels"
 msgstr "添加标签"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Archived"
+msgstr "归档"
 
 #: shared/components/board/BoardPeek.tsx
 #: shared/components/board/BoardSurface.tsx
@@ -142,6 +150,10 @@ msgstr "无法渲染此 Draw.io 图表。"
 #: shared/components/viewers/PdfView.tsx
 msgid "Could not render this PDF."
 msgstr "无法渲染此 PDF。"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Created"
+msgstr "创建"
 
 #: shared/components/board/BoardSurface.tsx
 msgid "Delete"
@@ -310,6 +322,10 @@ msgstr "刷新"
 msgid "Rename"
 msgstr "重命名"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Restored"
+msgstr "恢复"
+
 #: shared/components/ConflictResolver.tsx
 msgid "Result (editable)"
 msgstr "结果（可编辑）"
@@ -397,6 +413,10 @@ msgstr "取消完成列"
 #: shared/components/board/BoardPeek.tsx
 msgid "Untitled card"
 msgstr "未命名卡片"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Updated"
+msgstr "更新"
 
 #: shared/components/ConflictResolver.tsx
 msgid "Use this"

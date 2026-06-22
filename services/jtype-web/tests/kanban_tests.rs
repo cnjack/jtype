@@ -1582,3 +1582,61 @@ async fn conflict_response_includes_latest_card_snapshot() {
     assert!(body["latest"]["updatedClock"].as_i64().unwrap() > base_clock);
     assert_eq!(body["baseUpdatedClock"], base_clock);
 }
+
+#[tokio::test]
+async fn card_activity_reports_created_and_archived() {
+    let (app, _pool) = common::setup().await;
+    let (token, _) = common::register_user(app.clone(), &common::uid()).await;
+    let ws_id = common::create_workspace(app.clone(), &token, &common::wname()).await;
+    let (_s, board) = common::req(
+        app.clone(),
+        "POST",
+        &format!("/api/v1/workspaces/{ws_id}/kanban/boards"),
+        Some(&token),
+        Some(json!({ "name": "B" })),
+    )
+    .await;
+    let board_id = board["id"].as_str().unwrap().to_string();
+    let col = board["columns"][0]["id"].as_str().unwrap().to_string();
+    let (_s, card) = common::req(
+        app.clone(),
+        "POST",
+        &format!("/api/v1/workspaces/{ws_id}/kanban/boards/{board_id}/cards"),
+        Some(&token),
+        Some(json!({ "columnId": col, "title": "X" })),
+    )
+    .await;
+    let card_id = card["id"].as_str().unwrap().to_string();
+
+    // After create: a "created" event carrying the creator's username.
+    let (status, acts) = common::req(
+        app.clone(),
+        "GET",
+        &format!("/api/v1/workspaces/{ws_id}/kanban/cards/{card_id}/activity"),
+        Some(&token),
+        None,
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    let created = acts.as_array().unwrap().iter().find(|e| e["kind"] == "created").expect("created event");
+    assert!(created["by"].is_string());
+
+    // After archive: an "archived" event appears.
+    let _ = common::req(
+        app.clone(),
+        "POST",
+        &format!("/api/v1/workspaces/{ws_id}/kanban/cards/{card_id}/archive"),
+        Some(&token),
+        None,
+    )
+    .await;
+    let (_s, acts2) = common::req(
+        app,
+        "GET",
+        &format!("/api/v1/workspaces/{ws_id}/kanban/cards/{card_id}/activity"),
+        Some(&token),
+        None,
+    )
+    .await;
+    assert!(acts2.as_array().unwrap().iter().any(|e| e["kind"] == "archived"));
+}

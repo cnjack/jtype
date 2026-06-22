@@ -50,6 +50,9 @@ export type BoardViewCard = {
 
 export type CardFilter = { prop: "priority" | "assignee" | "tag"; value: string };
 
+/** One entry in a card's activity timeline (newest first). */
+export type BoardActivityEvent = { kind: string; at: string; by?: string | null };
+
 export const PRIORITIES = ["none", "low", "medium", "high", "urgent"];
 export const PRIORITY_ORDER = ["urgent", "high", "medium", "low", "none"];
 export const PRIORITY_RANK: Record<string, number> = { urgent: 0, high: 1, medium: 2, low: 3, none: 4 };

@@ -36,6 +36,10 @@ msgstr "クラウドを採用"
 msgid "Accept local"
 msgstr "ローカルを採用"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Activity"
+msgstr ""
+
 #: shared/components/board/BoardSurface.tsx
 msgid "Add column"
 msgstr "列を追加"
@@ -47,6 +51,10 @@ msgstr "詳細を追加..."
 #: shared/components/board/controls.tsx
 msgid "Add labels"
 msgstr "ラベルを追加"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Archived"
+msgstr ""
 
 #: shared/components/board/BoardPeek.tsx
 #: shared/components/board/BoardSurface.tsx
@@ -142,6 +150,10 @@ msgstr "この Draw.io 図をレンダリングできませんでした。"
 #: shared/components/viewers/PdfView.tsx
 msgid "Could not render this PDF."
 msgstr "この PDF をレンダリングできませんでした。"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Created"
+msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
 msgid "Delete"
@@ -310,6 +322,10 @@ msgstr "更新"
 msgid "Rename"
 msgstr "名前を変更"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Restored"
+msgstr ""
+
 #: shared/components/ConflictResolver.tsx
 msgid "Result (editable)"
 msgstr "結果（編集可能）"
@@ -397,6 +413,10 @@ msgstr "完了列を解除"
 #: shared/components/board/BoardPeek.tsx
 msgid "Untitled card"
 msgstr "無題のカード"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Updated"
+msgstr ""
 
 #: shared/components/ConflictResolver.tsx
 msgid "Use this"
