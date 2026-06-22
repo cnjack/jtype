@@ -36,6 +36,10 @@ msgstr "接受云端"
 msgid "Accept local"
 msgstr "接受本地"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Add a comment…"
+msgstr "添加评论…"
+
 #: shared/components/board/BoardSurface.tsx
 msgid "Add column"
 msgstr "添加列"
@@ -123,6 +127,14 @@ msgstr "列名称"
 msgid "comma, separated"
 msgstr "用逗号分隔"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Comment"
+msgstr "评论"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Comments"
+msgstr "评论"
+
 #: shared/components/ConfirmDialog.tsx
 msgid "Confirm"
 msgstr "确认"
@@ -150,6 +162,10 @@ msgstr "删除"
 #: shared/components/board/BoardPeek.tsx
 msgid "Delete card"
 msgstr "删除卡片"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Delete comment"
+msgstr "删除评论"
 
 #: shared/components/viewers/MermaidView.tsx
 msgid "Diagram error"
@@ -258,6 +274,10 @@ msgstr "暂无卡片"
 msgid "No color"
 msgstr "无颜色"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "No comments yet"
+msgstr "暂无评论"
+
 #: shared/components/board/controls.tsx
 msgid "No icon"
 msgstr "无图标"
@@ -337,6 +357,10 @@ msgstr "设为完成列"
 #: shared/components/board/BoardSurface.tsx
 msgid "Set WIP limit"
 msgstr "设置 WIP 限制"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Someone"
+msgstr "某人"
 
 #: shared/components/board/BoardSurface.tsx
 msgid "Sort: Due"

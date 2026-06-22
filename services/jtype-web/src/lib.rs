@@ -370,6 +370,14 @@ pub fn build_app(
             "/api/v1/workspaces/:workspace_id/kanban/cards/:card_id/restore",
             post(handlers::kanban::card::restore_card),
         )
+        .route(
+            "/api/v1/workspaces/:workspace_id/kanban/cards/:card_id/comments",
+            get(handlers::kanban::comment::list_comments).post(handlers::kanban::comment::create_comment),
+        )
+        .route(
+            "/api/v1/workspaces/:workspace_id/kanban/comments/:comment_id",
+            axum::routing::delete(handlers::kanban::comment::delete_comment),
+        )
         // Labels
         .route(
             "/api/v1/workspaces/:workspace_id/kanban/boards/:board_id/labels",

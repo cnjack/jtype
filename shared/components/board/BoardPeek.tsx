@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { XMarkIcon, TrashIcon, ArrowsPointingOutIcon, EyeIcon, PencilSquareIcon } from "@heroicons/react/24/outline";
+import { XMarkIcon, TrashIcon, ArrowsPointingOutIcon, EyeIcon, PencilSquareIcon, ChatBubbleLeftIcon } from "@heroicons/react/24/outline";
 import { renderToContainer } from "../../lib/markdown";
 import { PRIORITIES, type BoardViewCard } from "../../lib/board";
 import { fieldCls, EmojiField, ListboxSelect, TagMultiSelect } from "./controls";
 import type { BoardOption } from "./types";
-import type { BoardTag } from "../../lib/board";
+import type { BoardTag, BoardComment } from "../../lib/board";
 
 /**
  * Side peek for editing a card without leaving the board. Platform-agnostic: it
@@ -19,6 +19,10 @@ export function BoardPeek({
   assigneeOptions,
   tagOptions,
   loadNotes,
+  loadComments,
+  addComment,
+  deleteComment,
+  currentUser,
   onChange,
   onClose,
   onDelete,
@@ -29,6 +33,10 @@ export function BoardPeek({
   assigneeOptions?: BoardOption[];
   tagOptions?: BoardTag[];
   loadNotes?: (id: string) => Promise<string>;
+  loadComments?: (id: string) => Promise<BoardComment[]>;
+  addComment?: (id: string, body: string) => Promise<BoardComment>;
+  deleteComment?: (commentId: string) => Promise<void>;
+  currentUser?: string;
   onChange: (patch: Partial<BoardViewCard>) => void;
   onClose: () => void;
   onDelete: () => void;
@@ -37,6 +45,8 @@ export function BoardPeek({
   const [draft, setDraft] = useState<BoardViewCard>(card);
   const [notes, setNotes] = useState(card.notes ?? "");
   const [mode, setMode] = useState<"write" | "preview">("write");
+  const [comments, setComments] = useState<BoardComment[]>([]);
+  const [newComment, setNewComment] = useState("");
   const previewRef = useRef<HTMLElement>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -55,6 +65,46 @@ export function BoardPeek({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [card.id]);
+
+  // Load comments when a card opens (DB board only).
+  useEffect(() => {
+    if (!loadComments) {
+      setComments([]);
+      return;
+    }
+    let cancelled = false;
+    setNewComment("");
+    void loadComments(card.id)
+      .then((cs) => {
+        if (!cancelled) setComments(cs);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [card.id]);
+
+  const submitComment = async () => {
+    const body = newComment.trim();
+    if (!body || !addComment) return;
+    try {
+      const created = await addComment(card.id, body);
+      setComments((cs) => [...cs, created]);
+      setNewComment("");
+    } catch {
+      /* surfaced by the caller's error state */
+    }
+  };
+  const removeComment = async (id: string) => {
+    if (!deleteComment) return;
+    try {
+      await deleteComment(id);
+      setComments((cs) => cs.filter((c) => c.id !== id));
+    } catch {
+      /* ignore */
+    }
+  };
 
   const debouncedPatch = useCallback(
     (patch: Partial<BoardViewCard>) => {
@@ -238,6 +288,73 @@ export function BoardPeek({
           />
         ) : (
           <article ref={previewRef} className="preview mt-1.5 min-h-[220px] rounded-lg border border-stone-100 p-2 text-sm" />
+        )}
+
+        {loadComments && (
+          <div className="mt-4">
+            <span className="inline-flex items-center gap-1 text-xs font-medium text-brand-gray">
+              <ChatBubbleLeftIcon className="h-3.5 w-3.5" />
+              <Trans>Comments</Trans>
+            </span>
+            <ul className="mt-1.5 space-y-2">
+              {comments.map((c) => (
+                <li key={c.id} className="group rounded-lg border border-stone-100 bg-stone-50/60 p-2 text-xs">
+                  <div className="flex items-baseline gap-2">
+                    <span className="font-medium text-stone-700">{c.author ?? <Trans>Someone</Trans>}</span>
+                    <span className="text-stone-400">{c.createdAt.slice(0, 16)}</span>
+                    {deleteComment && currentUser && c.author === currentUser && (
+                      <button
+                        type="button"
+                        onClick={() => void removeComment(c.id)}
+                        title={t`Delete comment`}
+                        className="ml-auto rounded p-0.5 text-stone-300 opacity-0 hover:text-red-600 group-hover:opacity-100"
+                      >
+                        <XMarkIcon className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
+                  <div className="mt-0.5 whitespace-pre-wrap text-stone-700">{c.body}</div>
+                </li>
+              ))}
+              {comments.length === 0 && (
+                <li className="text-xs text-stone-400">
+                  <Trans>No comments yet</Trans>
+                </li>
+              )}
+            </ul>
+            {addComment && (
+              <form
+                className="mt-2"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  void submitComment();
+                }}
+              >
+                <textarea
+                  className="w-full resize-y rounded-lg border border-stone-200 p-2 text-xs text-stone-800 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+                  rows={2}
+                  placeholder={t`Add a comment…`}
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                      e.preventDefault();
+                      void submitComment();
+                    }
+                  }}
+                />
+                <div className="mt-1 flex justify-end">
+                  <button
+                    type="submit"
+                    disabled={!newComment.trim()}
+                    className="rounded-md bg-brand px-2.5 py-1 text-xs font-medium text-white disabled:opacity-40"
+                  >
+                    <Trans>Comment</Trans>
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
         )}
       </div>
     </aside>

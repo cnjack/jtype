@@ -36,6 +36,10 @@ msgstr "クラウドを採用"
 msgid "Accept local"
 msgstr "ローカルを採用"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Add a comment…"
+msgstr ""
+
 #: shared/components/board/BoardSurface.tsx
 msgid "Add column"
 msgstr "列を追加"
@@ -123,6 +127,14 @@ msgstr "列名"
 msgid "comma, separated"
 msgstr "カンマ区切り"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Comment"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Comments"
+msgstr ""
+
 #: shared/components/ConfirmDialog.tsx
 msgid "Confirm"
 msgstr "確認"
@@ -150,6 +162,10 @@ msgstr "削除"
 #: shared/components/board/BoardPeek.tsx
 msgid "Delete card"
 msgstr "カードを削除"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Delete comment"
+msgstr ""
 
 #: shared/components/viewers/MermaidView.tsx
 msgid "Diagram error"
@@ -258,6 +274,10 @@ msgstr "カードなし"
 msgid "No color"
 msgstr "色なし"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "No comments yet"
+msgstr ""
+
 #: shared/components/board/controls.tsx
 msgid "No icon"
 msgstr "アイコンなし"
@@ -337,6 +357,10 @@ msgstr "完了列に設定"
 #: shared/components/board/BoardSurface.tsx
 msgid "Set WIP limit"
 msgstr "WIP 制限を設定"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Someone"
+msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
 msgid "Sort: Due"
