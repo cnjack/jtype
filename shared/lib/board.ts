@@ -46,7 +46,32 @@ export type BoardViewCard = {
   taskDone?: number;
   taskTotal?: number;
   excerpt?: string | null;
+  /** Attachment URLs / vault paths (frontmatter `attachments`). */
+  attachments?: string[];
 };
+
+/** Parse a frontmatter `attachments` value (comma-separated URLs/paths) into a list. */
+export function parseAttachments(raw: string): string[] {
+  return raw
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+/** Serialize attachment URLs/paths back to a frontmatter value. */
+export function serializeAttachments(list: string[]): string {
+  return list.join(", ");
+}
+
+/** The display name for an attachment: its last path segment (decoded). */
+export function attachmentName(url: string): string {
+  const last = url.split(/[\\/]/).pop() || url;
+  try {
+    return decodeURIComponent(last.split("?")[0] || last);
+  } catch {
+    return last;
+  }
+}
 
 export type CardFilter = { prop: "priority" | "assignee" | "tag"; value: string };
 

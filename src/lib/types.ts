@@ -38,6 +38,7 @@ export type BoardCard = {
   taskTotal?: number;
   icon?: string | null;
   excerpt?: string | null;
+  attachments?: string[];
 };
 
 /** A reusable card template (`.md` in `<boardDir>/.templates/`). */

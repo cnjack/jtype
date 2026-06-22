@@ -7,7 +7,9 @@ import {
   DEFAULT_DONE_COLUMN,
   bodyExcerpt,
   countTasks,
+  parseAttachments,
   parseTagList,
+  serializeAttachments,
   slugify,
   type BoardViewCard,
   type BoardViewConfig,
@@ -92,6 +94,7 @@ export function WebBoardView({
           taskDone: tasks.done,
           taskTotal: tasks.total,
           excerpt: bodyExcerpt(fm.body),
+          attachments: fm.data.attachments ? parseAttachments(fm.data.attachments) : [],
         })
       }
       setMetaByPath(nextMeta)
@@ -215,6 +218,7 @@ export function WebBoardView({
         if (patch.due !== undefined) next.due = patch.due ?? ''
         if (patch.icon !== undefined) next.icon = patch.icon ?? ''
         if (patch.tags !== undefined) next.tags = patch.tags.map((t) => t.label).join(', ')
+        if (patch.attachments !== undefined) next.attachments = serializeAttachments(patch.attachments)
         const newBody = patch.notes !== undefined ? patch.notes : body
         try {
           await saveCard(id, next, newBody)
@@ -353,6 +357,7 @@ export function WebBoardView({
         cards={cards}
         actions={actions}
         error={error}
+        onUploadAttachment={(file) => api.uploadAsset(workspaceId, file).then((a) => a.url)}
         fullscreen={fullscreen}
         onToggleFullscreen={onToggleFullscreen}
       />

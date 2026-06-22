@@ -8,6 +8,7 @@ import { BoardSurface } from "@shared/components/board";
 import type { BoardActions } from "@shared/components/board";
 import {
   DEFAULT_DONE_COLUMN,
+  serializeAttachments,
   slugify,
   type BoardViewCard,
   type BoardViewConfig,
@@ -86,6 +87,7 @@ export function BoardView({ boardPath, boardRelativePath }: { boardPath: string;
         taskDone: c.taskDone,
         taskTotal: c.taskTotal,
         excerpt: c.excerpt ?? null,
+        attachments: c.attachments ?? [],
       })),
     [rawCards],
   );
@@ -168,6 +170,7 @@ export function BoardView({ boardPath, boardRelativePath }: { boardPath: string;
           if (patch.due !== undefined) next.due = patch.due ?? "";
           if (patch.icon !== undefined) next.icon = patch.icon ?? "";
           if (patch.tags !== undefined) next.tags = patch.tags.map((tg) => tg.label).join(", ");
+          if (patch.attachments !== undefined) next.attachments = serializeAttachments(patch.attachments);
           const newBody = patch.notes !== undefined ? patch.notes : body;
           await tauri.writeFile(id, writeFrontmatter(newBody, next));
           await load();

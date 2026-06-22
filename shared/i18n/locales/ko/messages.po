@@ -54,6 +54,10 @@ msgstr "라벨 추가"
 msgid "Assignee"
 msgstr "담당자"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Attachments"
+msgstr ""
+
 #: shared/components/board/BoardSurface.tsx
 msgid "Blank card"
 msgstr "빈 카드"
@@ -283,6 +287,10 @@ msgstr "에디터에서 열기"
 msgid "Open in full editor"
 msgstr "전체 에디터에서 열기"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Paste a URL or path"
+msgstr ""
+
 #: shared/components/viewers/PdfView.tsx
 msgid "PDF document"
 msgstr "PDF 문서"
@@ -305,6 +313,10 @@ msgstr "우선순위"
 #: shared/components/board/BoardSurface.tsx
 msgid "Refresh"
 msgstr "새로고침"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Remove"
+msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
 msgid "Rename"
@@ -397,6 +409,14 @@ msgstr "완료 열 해제"
 #: shared/components/board/BoardPeek.tsx
 msgid "Untitled card"
 msgstr "제목 없는 카드"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Upload"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Uploading…"
+msgstr ""
 
 #: shared/components/ConflictResolver.tsx
 msgid "Use this"

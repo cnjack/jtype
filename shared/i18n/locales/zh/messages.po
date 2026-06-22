@@ -54,6 +54,10 @@ msgstr "添加标签"
 msgid "Assignee"
 msgstr "负责人"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Attachments"
+msgstr "附件"
+
 #: shared/components/board/BoardSurface.tsx
 msgid "Blank card"
 msgstr "空白卡片"
@@ -283,6 +287,10 @@ msgstr "在编辑器中打开"
 msgid "Open in full editor"
 msgstr "在完整编辑器中打开"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Paste a URL or path"
+msgstr "粘贴 URL 或路径"
+
 #: shared/components/viewers/PdfView.tsx
 msgid "PDF document"
 msgstr "PDF 文档"
@@ -305,6 +313,10 @@ msgstr "优先级"
 #: shared/components/board/BoardSurface.tsx
 msgid "Refresh"
 msgstr "刷新"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Remove"
+msgstr "移除"
 
 #: shared/components/board/BoardSurface.tsx
 msgid "Rename"
@@ -397,6 +409,14 @@ msgstr "取消完成列"
 #: shared/components/board/BoardPeek.tsx
 msgid "Untitled card"
 msgstr "未命名卡片"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Upload"
+msgstr "上传"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Uploading…"
+msgstr "上传中…"
 
 #: shared/components/ConflictResolver.tsx
 msgid "Use this"

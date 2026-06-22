@@ -54,6 +54,10 @@ msgstr "ラベルを追加"
 msgid "Assignee"
 msgstr "担当者"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Attachments"
+msgstr ""
+
 #: shared/components/board/BoardSurface.tsx
 msgid "Blank card"
 msgstr "空のカード"
@@ -283,6 +287,10 @@ msgstr "エディターで開く"
 msgid "Open in full editor"
 msgstr "フルエディターで開く"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Paste a URL or path"
+msgstr ""
+
 #: shared/components/viewers/PdfView.tsx
 msgid "PDF document"
 msgstr "PDF ドキュメント"
@@ -305,6 +313,10 @@ msgstr "優先度"
 #: shared/components/board/BoardSurface.tsx
 msgid "Refresh"
 msgstr "更新"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Remove"
+msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
 msgid "Rename"
@@ -397,6 +409,14 @@ msgstr "完了列を解除"
 #: shared/components/board/BoardPeek.tsx
 msgid "Untitled card"
 msgstr "無題のカード"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Upload"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Uploading…"
+msgstr ""
 
 #: shared/components/ConflictResolver.tsx
 msgid "Use this"

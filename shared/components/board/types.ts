@@ -40,6 +40,8 @@ export type BoardSurfaceProps = {
   tagOptions?: BoardTag[];
   /** Lazily load a card's notes/body when opening the peek (desktop). */
   loadNotes?: (cardId: string) => Promise<string>;
+  /** Upload a file as a card attachment, returning its URL/path. Omit to allow only URL/path entry. */
+  onUploadAttachment?: (file: File) => Promise<string>;
   /**
    * Fullscreen ("focus mode") state, owned by the platform shell. When provided,
    * the surface shows a toggle button. Both platforms hide the sidebar + keep the

@@ -54,6 +54,10 @@ msgstr "Add labels"
 msgid "Assignee"
 msgstr "Assignee"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Attachments"
+msgstr "Attachments"
+
 #: shared/components/board/BoardSurface.tsx
 msgid "Blank card"
 msgstr "Blank card"
@@ -283,6 +287,10 @@ msgstr "Open in editor"
 msgid "Open in full editor"
 msgstr "Open in full editor"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Paste a URL or path"
+msgstr "Paste a URL or path"
+
 #: shared/components/viewers/PdfView.tsx
 msgid "PDF document"
 msgstr "PDF document"
@@ -305,6 +313,10 @@ msgstr "Priority"
 #: shared/components/board/BoardSurface.tsx
 msgid "Refresh"
 msgstr "Refresh"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Remove"
+msgstr "Remove"
 
 #: shared/components/board/BoardSurface.tsx
 msgid "Rename"
@@ -397,6 +409,14 @@ msgstr "Unset done column"
 #: shared/components/board/BoardPeek.tsx
 msgid "Untitled card"
 msgstr "Untitled card"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Upload"
+msgstr "Upload"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Uploading…"
+msgstr "Uploading…"
 
 #: shared/components/ConflictResolver.tsx
 msgid "Use this"

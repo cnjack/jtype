@@ -136,6 +136,9 @@ export function Kanban() {
           taskDone: tasks.done,
           taskTotal: tasks.total,
           excerpt: bodyExcerpt(c.description ?? ''),
+          attachments: c.propertiesExtra && typeof c.propertiesExtra === 'object' && Array.isArray((c.propertiesExtra as Record<string, unknown>).attachments)
+            ? ((c.propertiesExtra as Record<string, unknown>).attachments as unknown[]).filter((x): x is string => typeof x === 'string')
+            : [],
         }
       })
   }, [board, memberName])
@@ -242,10 +245,16 @@ export function Kanban() {
         if (patch.due !== undefined) body.dueAt = patch.due ? `${patch.due} 00:00:00` : null
         if (patch.tags !== undefined) body.labelIds = patch.tags.map(t => t.id).filter(Boolean) as string[]
         if (patch.notes !== undefined) body.description = patch.notes
-        if (patch.icon !== undefined) {
+        if (patch.icon !== undefined || patch.attachments !== undefined) {
           const cur = raw.propertiesExtra && typeof raw.propertiesExtra === 'object' ? { ...(raw.propertiesExtra as Record<string, unknown>) } : {}
-          if (patch.icon) cur.icon = patch.icon
-          else delete cur.icon
+          if (patch.icon !== undefined) {
+            if (patch.icon) cur.icon = patch.icon
+            else delete cur.icon
+          }
+          if (patch.attachments !== undefined) {
+            if (patch.attachments.length) cur.attachments = patch.attachments
+            else delete cur.attachments
+          }
           body.propertiesExtra = cur
         }
         try {
@@ -385,6 +394,7 @@ export function Kanban() {
             error={error}
             assigneeOptions={assigneeOptions}
             tagOptions={tagOptions}
+            onUploadAttachment={workspaceId ? (file) => api.uploadAsset(workspaceId, file).then((a) => a.url) : undefined}
           />
         </div>
       )}
