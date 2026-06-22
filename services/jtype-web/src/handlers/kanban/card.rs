@@ -274,6 +274,15 @@ pub async fn create_card(
         )
         .await;
 
+    super::webhook::enqueue_event(
+        &state.pool,
+        &workspace_id,
+        &board_id,
+        "kanban:card-updated",
+        json!({ "event": "kanban:card-updated", "cardId": card_id, "boardId": board_id }),
+    )
+    .await;
+
     // Re-fetch with DB timestamps
     fetch_card_response(&state, &workspace_id, &card_id).await
 }
@@ -721,6 +730,15 @@ pub async fn move_card(
         )
         .await;
 
+    super::webhook::enqueue_event(
+        &state.pool,
+        &workspace_id,
+        &card.board_id,
+        "kanban:card-updated",
+        json!({ "event": "kanban:card-updated", "cardId": card.id, "boardId": card.board_id }),
+    )
+    .await;
+
     Ok(Json(card).into_response())
 }
 
@@ -852,6 +870,15 @@ pub async fn archive_card(
             session_id.as_deref(),
         )
         .await;
+
+    super::webhook::enqueue_event(
+        &state.pool,
+        &workspace_id,
+        &board_id,
+        "kanban:card-archived",
+        json!({ "event": "kanban:card-archived", "cardId": card_id, "boardId": board_id }),
+    )
+    .await;
 
     Ok(Json(json!({
         "id": trash_id,

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Dialog, DialogPanel, Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/react'
-import { PlusIcon, EllipsisHorizontalIcon, TrashIcon, ArchiveBoxIcon, ArrowUturnLeftIcon, TagIcon, XMarkIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
+import { PlusIcon, EllipsisHorizontalIcon, TrashIcon, ArchiveBoxIcon, ArrowUturnLeftIcon, TagIcon, XMarkIcon, ChevronDownIcon, BoltIcon } from '@heroicons/react/24/outline'
 import {
   api,
   setSessionId,
@@ -11,6 +11,8 @@ import {
   type KanbanLabel,
   type KanbanTrashItem,
   type KanbanPriority,
+  type KanbanWebhook,
+  type KanbanWebhookCreated,
   type UpdateKanbanCardRequest,
   type MemberInfo,
 } from '../api'
@@ -40,6 +42,7 @@ export function Kanban() {
   const [error, setError] = useState('')
   const [showLabels, setShowLabels] = useState(false)
   const [showTrash, setShowTrash] = useState(false)
+  const [showWebhooks, setShowWebhooks] = useState(false)
   const [view, setView] = useState<Partial<BoardViewConfig>>({})
 
   const { sessionId: wsSessionId, subscribe: wsSubscribe, status: wsStatus } = useWorkspaceSocket(workspaceId)
@@ -360,6 +363,7 @@ export function Kanban() {
           <div className="flex items-center gap-1.5">
             <button onClick={() => setShowLabels(true)} className="sidebar-action" title="Manage labels"><TagIcon className="h-4 w-4" /></button>
             <button onClick={() => setShowTrash(true)} className="sidebar-action" title="Archived cards"><ArchiveBoxIcon className="h-4 w-4" /></button>
+            <button onClick={() => setShowWebhooks(true)} className="sidebar-action" title="Webhooks"><BoltIcon className="h-4 w-4" /></button>
             <Menu as="div" className="relative">
               <MenuButton className="sidebar-action px-2"><EllipsisHorizontalIcon className="h-4 w-4" /></MenuButton>
               <MenuItems className="absolute right-0 z-20 mt-1 w-48 rounded-xl border border-black/[0.06] bg-white p-1 shadow-lg focus:outline-none">
@@ -394,6 +398,9 @@ export function Kanban() {
       )}
       {showTrash && board && workspaceId && (
         <TrashDialog workspaceId={workspaceId} boardId={board.id} onClose={() => setShowTrash(false)} onChanged={reload} />
+      )}
+      {showWebhooks && workspaceId && (
+        <WebhooksDialog workspaceId={workspaceId} boardId={board?.id ?? null} onClose={() => setShowWebhooks(false)} />
       )}
 
       <button onClick={() => navigate(`/workspaces/${workspaceId}`)} className="absolute bottom-4 left-4 rounded-full bg-white px-3 py-1.5 text-xs font-medium text-zinc-500 shadow ring-1 ring-black/[0.05] hover:text-brand">
@@ -497,6 +504,94 @@ function TrashDialog(props: { workspaceId: string; boardId: string; onClose: () 
             </div>
           )}
           {err && <p className="mt-2 text-xs font-medium text-red-600">{err}</p>}
+        </DialogPanel>
+      </div>
+    </Dialog>
+  )
+}
+
+const WEBHOOK_EVENTS = ['kanban:card-updated', 'kanban:card-archived', '*']
+
+function WebhooksDialog(props: { workspaceId: string; boardId: string | null; onClose: () => void }) {
+  const { workspaceId, boardId, onClose } = props
+  const [hooks, setHooks] = useState<KanbanWebhook[]>([])
+  const [name, setName] = useState('')
+  const [url, setUrl] = useState('')
+  const [scope, setScope] = useState<'all' | 'board'>('all')
+  const [events, setEvents] = useState<string[]>(['kanban:card-updated'])
+  const [revealed, setRevealed] = useState<KanbanWebhookCreated | null>(null)
+  const [error, setError] = useState('')
+
+  const load = useCallback(() => {
+    api.kanban.listWebhooks(workspaceId).then(setHooks).catch((e) => setError(String(e)))
+  }, [workspaceId])
+  useEffect(() => { load() }, [load])
+
+  const toggleEvent = (e: string) => setEvents((prev) => (prev.includes(e) ? prev.filter((x) => x !== e) : [...prev, e]))
+
+  const create = async () => {
+    if (!name.trim() || !url.trim() || events.length === 0) return
+    try {
+      const created = await api.kanban.createWebhook(workspaceId, {
+        name: name.trim(),
+        targetUrl: url.trim(),
+        boardId: scope === 'board' ? boardId : null,
+        eventTypes: events,
+      })
+      setRevealed(created); setName(''); setUrl(''); setError(''); load()
+    } catch (e) { setError(String(e)) }
+  }
+  const remove = async (id: string) => {
+    try { await api.kanban.deleteWebhook(workspaceId, id); load() } catch (e) { setError(String(e)) }
+  }
+
+  return (
+    <Dialog open onClose={onClose} className="relative z-30">
+      <div className="fixed inset-0 bg-black/20" aria-hidden />
+      <div className="fixed inset-0 flex items-center justify-center p-4">
+        <DialogPanel className="w-full max-w-lg rounded-2xl bg-white p-5 shadow-xl">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800"><BoltIcon className="h-4 w-4" /> Webhooks</h2>
+            <button onClick={onClose} className="rounded p-1 text-zinc-400 hover:bg-zinc-100"><XMarkIcon className="h-4 w-4" /></button>
+          </div>
+          {error && <p className="mb-2 text-xs text-red-600">{error}</p>}
+          {revealed && (
+            <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 p-2 text-xs text-amber-800">
+              <div className="font-medium">Signing secret — shown once, copy it now:</div>
+              <code className="break-all">{revealed.secret}</code>
+            </div>
+          )}
+          <ul className="mb-3 max-h-48 space-y-1.5 overflow-auto">
+            {hooks.map((h) => (
+              <li key={h.id} className="flex items-center gap-2 rounded-lg border border-zinc-100 p-2 text-xs">
+                <div className="min-w-0 flex-1">
+                  <div className="font-medium text-zinc-800">{h.name}</div>
+                  <div className="truncate text-zinc-500">{h.targetUrl}</div>
+                  <div className="text-zinc-400">{h.eventTypes.join(', ')}{h.boardId ? ' · this board' : ' · all boards'}{h.lastStatus ? ` · last: ${h.lastStatus}` : ''}</div>
+                </div>
+                <button onClick={() => remove(h.id)} className="rounded p-1 text-zinc-400 hover:text-red-600" title="Delete"><TrashIcon className="h-4 w-4" /></button>
+              </li>
+            ))}
+            {hooks.length === 0 && <li className="text-xs text-zinc-400">No webhooks yet.</li>}
+          </ul>
+          <form onSubmit={(e) => { e.preventDefault(); void create() }} className="space-y-2 border-t border-zinc-100 pt-3">
+            <input className="w-full rounded-lg border border-zinc-200 px-2 py-1.5 text-sm" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
+            <input className="w-full rounded-lg border border-zinc-200 px-2 py-1.5 text-sm" placeholder="https://example.com/hook" value={url} onChange={(e) => setUrl(e.target.value)} />
+            <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-600">
+              {WEBHOOK_EVENTS.map((ev) => (
+                <label key={ev} className="inline-flex items-center gap-1">
+                  <input type="checkbox" checked={events.includes(ev)} onChange={() => toggleEvent(ev)} /> {ev}
+                </label>
+              ))}
+            </div>
+            <div className="flex items-center gap-3 text-xs text-zinc-600">
+              <label className="inline-flex items-center gap-1"><input type="radio" checked={scope === 'all'} onChange={() => setScope('all')} /> All boards</label>
+              {boardId && <label className="inline-flex items-center gap-1"><input type="radio" checked={scope === 'board'} onChange={() => setScope('board')} /> This board</label>}
+            </div>
+            <div className="flex justify-end">
+              <button type="submit" className="rounded-lg bg-brand px-3 py-1.5 text-xs font-medium text-white">Add webhook</button>
+            </div>
+          </form>
         </DialogPanel>
       </div>
     </Dialog>
