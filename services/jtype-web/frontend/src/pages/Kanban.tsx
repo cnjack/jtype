@@ -148,6 +148,7 @@ export function Kanban() {
             columns: board.columns.slice().sort((a, b) => a.position - b.position).map(c => ({ key: c.id, name: c.name, color: c.color, limit: c.wipLimit })),
             groupBy: (view.groupBy as BoardViewConfig['groupBy']) ?? 'status',
             viewType: view.viewType ?? 'board',
+            swimlaneBy: view.swimlaneBy,
             colorColumns: view.colorColumns,
             doneColumn: view.doneColumn,
           }

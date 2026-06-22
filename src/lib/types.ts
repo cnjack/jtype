@@ -21,6 +21,8 @@ export type BoardConfig = {
   colorColumns?: boolean;
   /** Which renderer this board shows: kanban columns or a flat table. Defaults to "board". */
   viewType?: "board" | "table";
+  /** Optional second grouping dimension rendered as swimlane rows in the board view. */
+  swimlaneBy?: "status" | "priority" | "assignee";
 };
 
 /** A card = a real `.md` note that belongs to a board (frontmatter `board == id`). */

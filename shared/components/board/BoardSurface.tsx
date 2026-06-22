@@ -23,6 +23,7 @@ import {
   MagnifyingGlassIcon,
   FunnelIcon,
   BarsArrowDownIcon,
+  Bars3Icon,
   RectangleGroupIcon,
   XMarkIcon,
   TableCellsIcon,
@@ -46,6 +47,7 @@ import {
 } from "../../lib/board";
 import { BoardPeek } from "./BoardPeek";
 import { BoardTable } from "./BoardTable";
+import { BoardSwimlanes } from "./BoardSwimlanes";
 import type { BoardSurfaceProps } from "./types";
 
 type DropTarget = { col: string; index: number };
@@ -109,6 +111,15 @@ export function BoardSurface({
   const columns = useMemo(
     () => effectiveColumns(config, cards, groupKey, t`Unassigned`),
     [config, cards, groupKey],
+  );
+  // Swimlanes: a second grouping dimension rendered as rows (must differ from
+  // the column dimension). Only meaningful in the board view.
+  const swimlaneKey: BoardGroupKey | null =
+    config.swimlaneBy && config.swimlaneBy !== groupKey ? config.swimlaneBy : null;
+  const swimlaneActive = viewType === "board" && !!swimlaneKey;
+  const lanes = useMemo(
+    () => (swimlaneKey ? effectiveColumns(config, cards, swimlaneKey, t`Unassigned`) : []),
+    [config, cards, swimlaneKey],
   );
   const vis = useMemo(() => visibleCardsFn(cards, search, filter), [cards, search, filter]);
   const assignees = useMemo(() => [...new Set(cards.map((c) => c.assignee).filter(Boolean) as string[])], [cards]);
@@ -334,6 +345,25 @@ export function BoardSurface({
               </select>
             </label>
           )}
+          {viewType === "board" && (
+            <label className="inline-flex items-center gap-1 text-xs text-brand-gray">
+              <Bars3Icon className="h-3.5 w-3.5" />
+              <select
+                className={ctrlCls}
+                value={swimlaneKey ?? ""}
+                onChange={(e) => void actions.setConfig({ swimlaneBy: (e.target.value || undefined) as BoardGroupKey | undefined })}
+              >
+                <option value="">{t`Swimlane: None`}</option>
+                {(["status", "priority", "assignee"] as BoardGroupKey[])
+                  .filter((k) => k !== groupKey)
+                  .map((k) => (
+                    <option key={k} value={k}>
+                      {k === "status" ? t`Swimlane: Status` : k === "priority" ? t`Swimlane: Priority` : t`Swimlane: Assignee`}
+                    </option>
+                  ))}
+              </select>
+            </label>
+          )}
           <label className="inline-flex items-center gap-1 text-xs text-brand-gray">
             <BarsArrowDownIcon className="h-3.5 w-3.5" />
             <select className={ctrlCls} value={sortBy} onChange={(e) => setSortBy(e.target.value as BoardSortKey)}>
@@ -424,6 +454,18 @@ export function BoardSurface({
           <BoardTable
             cards={sortCardsFn(vis, sortBy)}
             statusName={statusName}
+            today={today}
+            doneKey={doneKey}
+            selectedId={selected?.id}
+            onSelect={(c) => setSelectedId(c.id)}
+          />
+        ) : swimlaneActive && swimlaneKey ? (
+          <BoardSwimlanes
+            cards={vis}
+            columns={columns}
+            lanes={lanes}
+            groupKey={groupKey}
+            swimlaneKey={swimlaneKey}
             today={today}
             doneKey={doneKey}
             selectedId={selected?.id}

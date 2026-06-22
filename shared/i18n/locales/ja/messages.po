@@ -250,6 +250,7 @@ msgstr "Mermaid ソース"
 msgid "New card"
 msgstr "新規カード"
 
+#: shared/components/board/BoardSwimlanes.tsx
 #: shared/components/board/BoardTable.tsx
 msgid "No cards"
 msgstr "カードなし"
@@ -362,6 +363,22 @@ msgstr "分割"
 #: shared/components/board/BoardTable.tsx
 msgid "Status"
 msgstr "ステータス"
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Swimlane: Assignee"
+msgstr ""
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Swimlane: None"
+msgstr ""
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Swimlane: Priority"
+msgstr ""
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Swimlane: Status"
+msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
 #: shared/components/EditorToolbar.tsx
