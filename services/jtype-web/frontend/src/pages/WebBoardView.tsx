@@ -22,7 +22,8 @@ type BoardConfigJSON = {
   columns: { key: string; name: string; color?: string | null; limit?: number | null }[]
   doneColumn?: string
   colorColumns?: boolean
-  viewType?: 'board' | 'table'
+  viewType?: 'board' | 'table' | 'calendar'
+  calendarMode?: 'month' | 'agenda'
 }
 
 function rand() {
@@ -175,6 +176,7 @@ export function WebBoardView({
             doneColumn: config.doneColumn,
             colorColumns: config.colorColumns,
             viewType: config.viewType,
+            calendarMode: config.calendarMode,
             groupBy: (config.groupBy as BoardViewConfig['groupBy']) || 'status',
           }
         : { title: boardDir, columns: [] },

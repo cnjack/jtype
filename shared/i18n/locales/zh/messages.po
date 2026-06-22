@@ -48,6 +48,10 @@ msgstr "添加详情..."
 msgid "Add labels"
 msgstr "添加标签"
 
+#: shared/components/board/BoardCalendar.tsx
+msgid "Agenda"
+msgstr "日程"
+
 #: shared/components/board/BoardPeek.tsx
 #: shared/components/board/BoardSurface.tsx
 #: shared/components/board/BoardTable.tsx
@@ -69,6 +73,10 @@ msgstr "粗体"
 #: shared/components/EditorToolbar.tsx
 msgid "Bold (Ctrl+B)"
 msgstr "粗体 (Ctrl+B)"
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Calendar"
+msgstr "日历"
 
 #: shared/components/ConfirmDialog.tsx
 #: shared/components/PromptDialog.tsx
@@ -246,10 +254,19 @@ msgstr "Mermaid 图表"
 msgid "Mermaid source"
 msgstr "Mermaid 源码"
 
+#: shared/components/board/BoardCalendar.tsx
+msgid "Month"
+msgstr "月"
+
 #: shared/components/board/BoardSurface.tsx
 msgid "New card"
 msgstr "新建卡片"
 
+#: shared/components/board/BoardCalendar.tsx
+msgid "Next month"
+msgstr "下个月"
+
+#: shared/components/board/BoardCalendar.tsx
 #: shared/components/board/BoardTable.tsx
 msgid "No cards"
 msgstr "暂无卡片"
@@ -295,6 +312,10 @@ msgstr "请输入内容。"
 #: shared/components/ViewModeToggle.tsx
 msgid "Preview"
 msgstr "预览"
+
+#: shared/components/board/BoardCalendar.tsx
+msgid "Previous month"
+msgstr "上个月"
 
 #: shared/components/board/BoardPeek.tsx
 #: shared/components/board/BoardSurface.tsx
@@ -386,9 +407,17 @@ msgstr "暂不支持预览此文件类型。"
 msgid "Title"
 msgstr "标题"
 
+#: shared/components/board/BoardCalendar.tsx
+msgid "Today"
+msgstr "今天"
+
 #: shared/components/board/BoardSurface.tsx
 msgid "Unassigned"
 msgstr "未分配"
+
+#: shared/components/board/BoardCalendar.tsx
+msgid "Unscheduled"
+msgstr "未排期"
 
 #: shared/components/board/BoardSurface.tsx
 msgid "Unset done column"

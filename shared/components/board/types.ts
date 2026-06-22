@@ -20,7 +20,10 @@ export type BoardActions = {
   setColumnColor?: (key: string, color: string | null) => Promise<void> | void;
   setColumnLimit?: (key: string) => Promise<void> | void;
   toggleDoneColumn?: (key: string) => Promise<void> | void;
-  /** Persist a view-config patch (desktop → .board; web → localStorage). */
+  /**
+   * Persist a view-config patch. Desktop + web file boards write the `.board`
+   * document; the web DB kanban stores it per-board in localStorage.
+   */
   setConfig: (patch: Partial<BoardViewConfig>) => Promise<void> | void;
   refresh?: () => Promise<void> | void;
 };

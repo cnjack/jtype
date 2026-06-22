@@ -48,6 +48,10 @@ msgstr "Add details..."
 msgid "Add labels"
 msgstr "Add labels"
 
+#: shared/components/board/BoardCalendar.tsx
+msgid "Agenda"
+msgstr "Agenda"
+
 #: shared/components/board/BoardPeek.tsx
 #: shared/components/board/BoardSurface.tsx
 #: shared/components/board/BoardTable.tsx
@@ -69,6 +73,10 @@ msgstr "Bold"
 #: shared/components/EditorToolbar.tsx
 msgid "Bold (Ctrl+B)"
 msgstr "Bold (Ctrl+B)"
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Calendar"
+msgstr "Calendar"
 
 #: shared/components/ConfirmDialog.tsx
 #: shared/components/PromptDialog.tsx
@@ -246,10 +254,19 @@ msgstr "Mermaid diagram"
 msgid "Mermaid source"
 msgstr "Mermaid source"
 
+#: shared/components/board/BoardCalendar.tsx
+msgid "Month"
+msgstr "Month"
+
 #: shared/components/board/BoardSurface.tsx
 msgid "New card"
 msgstr "New card"
 
+#: shared/components/board/BoardCalendar.tsx
+msgid "Next month"
+msgstr "Next month"
+
+#: shared/components/board/BoardCalendar.tsx
 #: shared/components/board/BoardTable.tsx
 msgid "No cards"
 msgstr "No cards"
@@ -295,6 +312,10 @@ msgstr "Please enter a value."
 #: shared/components/ViewModeToggle.tsx
 msgid "Preview"
 msgstr "Preview"
+
+#: shared/components/board/BoardCalendar.tsx
+msgid "Previous month"
+msgstr "Previous month"
 
 #: shared/components/board/BoardPeek.tsx
 #: shared/components/board/BoardSurface.tsx
@@ -386,9 +407,17 @@ msgstr "This file type can not be previewed yet."
 msgid "Title"
 msgstr "Title"
 
+#: shared/components/board/BoardCalendar.tsx
+msgid "Today"
+msgstr "Today"
+
 #: shared/components/board/BoardSurface.tsx
 msgid "Unassigned"
 msgstr "Unassigned"
+
+#: shared/components/board/BoardCalendar.tsx
+msgid "Unscheduled"
+msgstr "Unscheduled"
 
 #: shared/components/board/BoardSurface.tsx
 msgid "Unset done column"

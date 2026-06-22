@@ -19,8 +19,10 @@ export type BoardConfig = {
   doneColumn?: string;
   /** When true, tint each column header by its column color. */
   colorColumns?: boolean;
-  /** Which renderer this board shows: kanban columns or a flat table. Defaults to "board". */
-  viewType?: "board" | "table";
+  /** Which renderer this board shows: kanban columns, a flat table, or a calendar. Defaults to "board". */
+  viewType?: "board" | "table" | "calendar";
+  /** Calendar sub-mode (month grid vs agenda list) when viewType === "calendar". Defaults to "month". */
+  calendarMode?: "month" | "agenda";
 };
 
 /** A card = a real `.md` note that belongs to a board (frontmatter `board == id`). */
