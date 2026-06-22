@@ -58,6 +58,18 @@ msgstr "负责人"
 msgid "Blank card"
 msgstr "空白卡片"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Blocked by"
+msgstr "被阻塞于"
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Blocked by {blockedCount} unfinished card(s)"
+msgstr "被 {blockedCount} 项未完成卡片阻塞"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Blocks"
+msgstr "阻塞"
+
 #: shared/components/board/BoardSurface.tsx
 msgid "Board"
 msgstr "看板"
@@ -305,6 +317,10 @@ msgstr "优先级"
 #: shared/components/board/BoardSurface.tsx
 msgid "Refresh"
 msgstr "刷新"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Relates"
+msgstr "关联"
 
 #: shared/components/board/BoardSurface.tsx
 msgid "Rename"

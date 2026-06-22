@@ -58,6 +58,18 @@ msgstr "担当者"
 msgid "Blank card"
 msgstr "空のカード"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Blocked by"
+msgstr ""
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Blocked by {blockedCount} unfinished card(s)"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Blocks"
+msgstr ""
+
 #: shared/components/board/BoardSurface.tsx
 msgid "Board"
 msgstr "ボード"
@@ -305,6 +317,10 @@ msgstr "優先度"
 #: shared/components/board/BoardSurface.tsx
 msgid "Refresh"
 msgstr "更新"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Relates"
+msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
 msgid "Rename"

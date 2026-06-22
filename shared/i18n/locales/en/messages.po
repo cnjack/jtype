@@ -58,6 +58,18 @@ msgstr "Assignee"
 msgid "Blank card"
 msgstr "Blank card"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Blocked by"
+msgstr "Blocked by"
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Blocked by {blockedCount} unfinished card(s)"
+msgstr "Blocked by {blockedCount} unfinished card(s)"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Blocks"
+msgstr "Blocks"
+
 #: shared/components/board/BoardSurface.tsx
 msgid "Board"
 msgstr "Board"
@@ -305,6 +317,10 @@ msgstr "Priority"
 #: shared/components/board/BoardSurface.tsx
 msgid "Refresh"
 msgstr "Refresh"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Relates"
+msgstr "Relates"
 
 #: shared/components/board/BoardSurface.tsx
 msgid "Rename"

@@ -58,6 +58,18 @@ msgstr "담당자"
 msgid "Blank card"
 msgstr "빈 카드"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Blocked by"
+msgstr ""
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Blocked by {blockedCount} unfinished card(s)"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Blocks"
+msgstr ""
+
 #: shared/components/board/BoardSurface.tsx
 msgid "Board"
 msgstr "보드"
@@ -305,6 +317,10 @@ msgstr "우선순위"
 #: shared/components/board/BoardSurface.tsx
 msgid "Refresh"
 msgstr "새로고침"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Relates"
+msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
 msgid "Rename"

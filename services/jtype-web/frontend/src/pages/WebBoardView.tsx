@@ -7,7 +7,9 @@ import {
   DEFAULT_DONE_COLUMN,
   bodyExcerpt,
   countTasks,
+  parseLinks,
   parseTagList,
+  serializeLinks,
   slugify,
   type BoardViewCard,
   type BoardViewConfig,
@@ -92,6 +94,9 @@ export function WebBoardView({
           taskDone: tasks.done,
           taskTotal: tasks.total,
           excerpt: bodyExcerpt(fm.body),
+          blockedBy: fm.data.blocked_by ? parseLinks(fm.data.blocked_by) : [],
+          blocks: fm.data.blocks ? parseLinks(fm.data.blocks) : [],
+          relates: fm.data.relates ? parseLinks(fm.data.relates) : [],
         })
       }
       setMetaByPath(nextMeta)
@@ -215,6 +220,9 @@ export function WebBoardView({
         if (patch.due !== undefined) next.due = patch.due ?? ''
         if (patch.icon !== undefined) next.icon = patch.icon ?? ''
         if (patch.tags !== undefined) next.tags = patch.tags.map((t) => t.label).join(', ')
+        if (patch.blockedBy !== undefined) next.blocked_by = serializeLinks(patch.blockedBy)
+        if (patch.blocks !== undefined) next.blocks = serializeLinks(patch.blocks)
+        if (patch.relates !== undefined) next.relates = serializeLinks(patch.relates)
         const newBody = patch.notes !== undefined ? patch.notes : body
         try {
           await saveCard(id, next, newBody)
