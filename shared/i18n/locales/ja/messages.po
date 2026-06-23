@@ -70,6 +70,10 @@ msgstr ""
 msgid "Assignee"
 msgstr "担当者"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Attachments"
+msgstr ""
+
 #: shared/components/board/BoardSurface.tsx
 msgid "Blank card"
 msgstr "空のカード"
@@ -332,6 +336,10 @@ msgstr "エディターで開く"
 msgid "Open in full editor"
 msgstr "フルエディターで開く"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Paste a URL or path"
+msgstr ""
+
 #: shared/components/viewers/PdfView.tsx
 msgid "PDF document"
 msgstr "PDF ドキュメント"
@@ -357,6 +365,10 @@ msgstr "更新"
 
 #: shared/components/board/BoardPeek.tsx
 msgid "Relates"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Remove"
 msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
@@ -467,6 +479,14 @@ msgstr "タイトル"
 msgid "Unassigned"
 msgstr "未割り当て"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "unsafe"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Unsafe link blocked: {url}"
+msgstr ""
+
 #: shared/components/board/BoardSurface.tsx
 msgid "Unset done column"
 msgstr "完了列を解除"
@@ -477,6 +497,14 @@ msgstr "無題のカード"
 
 #: shared/components/board/BoardPeek.tsx
 msgid "Updated"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Upload"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Uploading…"
 msgstr ""
 
 #: shared/components/ConflictResolver.tsx

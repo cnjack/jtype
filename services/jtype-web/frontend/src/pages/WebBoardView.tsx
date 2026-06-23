@@ -7,9 +7,11 @@ import {
   DEFAULT_DONE_COLUMN,
   bodyExcerpt,
   countTasks,
+  parseAttachments,
   parseLinks,
   parseTagList,
   pickCustomFields,
+  serializeAttachments,
   serializeLinks,
   slugify,
   type BoardViewCard,
@@ -97,6 +99,7 @@ export function WebBoardView({
           taskDone: tasks.done,
           taskTotal: tasks.total,
           excerpt: bodyExcerpt(fm.body),
+          attachments: fm.data.attachments ? parseAttachments(fm.data.attachments) : [],
           custom: pickCustomFields(fm.data, cfg.fields),
           blockedBy: fm.data.blocked_by ? parseLinks(fm.data.blocked_by) : [],
           blocks: fm.data.blocks ? parseLinks(fm.data.blocks) : [],
@@ -226,6 +229,7 @@ export function WebBoardView({
         if (patch.due !== undefined) next.due = patch.due ?? ''
         if (patch.icon !== undefined) next.icon = patch.icon ?? ''
         if (patch.tags !== undefined) next.tags = patch.tags.map((t) => t.label).join(', ')
+        if (patch.attachments !== undefined) next.attachments = serializeAttachments(patch.attachments)
         if (patch.custom !== undefined) for (const [k, v] of Object.entries(patch.custom)) next[k] = v ?? ''
         if (patch.blockedBy !== undefined) next.blocked_by = serializeLinks(patch.blockedBy)
         if (patch.blocks !== undefined) next.blocks = serializeLinks(patch.blocks)
@@ -368,6 +372,7 @@ export function WebBoardView({
         cards={cards}
         actions={actions}
         error={error}
+        onUploadAttachment={(file) => api.uploadAsset(workspaceId, file).then((a) => a.url)}
         fullscreen={fullscreen}
         onToggleFullscreen={onToggleFullscreen}
       />

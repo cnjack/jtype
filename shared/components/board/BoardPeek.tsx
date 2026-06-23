@@ -1,9 +1,9 @@
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { XMarkIcon, TrashIcon, ArrowsPointingOutIcon, EyeIcon, PencilSquareIcon, ChatBubbleLeftIcon, ClockIcon } from "@heroicons/react/24/outline";
+import { XMarkIcon, TrashIcon, ArrowsPointingOutIcon, EyeIcon, PencilSquareIcon, PaperClipIcon, ArrowUpTrayIcon, ChatBubbleLeftIcon, ClockIcon } from "@heroicons/react/24/outline";
 import { renderToContainer } from "../../lib/markdown";
-import { PRIORITIES, type BoardViewCard } from "../../lib/board";
+import { PRIORITIES, attachmentName, isSafeAttachmentUrl, type BoardViewCard } from "../../lib/board";
 import { fieldCls, EmojiField, ListboxSelect, TagMultiSelect } from "./controls";
 import type { BoardOption } from "./types";
 import type { BoardTag, BoardFieldDef, BoardComment, BoardActivityEvent } from "../../lib/board";
@@ -22,6 +22,7 @@ export function BoardPeek({
   onAddField,
   dependencyCards,
   loadNotes,
+  onUploadAttachment,
   loadComments,
   addComment,
   deleteComment,
@@ -43,6 +44,7 @@ export function BoardPeek({
   /** Sibling cards (excluding this one) offered as dependency targets. */
   dependencyCards?: { slug: string; title: string }[];
   loadNotes?: (id: string) => Promise<string>;
+  onUploadAttachment?: (file: File) => Promise<string>;
   loadComments?: (id: string) => Promise<BoardComment[]>;
   addComment?: (id: string, body: string) => Promise<BoardComment>;
   deleteComment?: (commentId: string) => Promise<void>;
@@ -57,6 +59,8 @@ export function BoardPeek({
   const [draft, setDraft] = useState<BoardViewCard>(card);
   const [notes, setNotes] = useState(card.notes ?? "");
   const [mode, setMode] = useState<"write" | "preview">("write");
+  const [newAttach, setNewAttach] = useState("");
+  const [uploading, setUploading] = useState(false);
   const [comments, setComments] = useState<BoardComment[]>([]);
   const [newComment, setNewComment] = useState("");
   const [activity, setActivity] = useState<BoardActivityEvent[]>([]);
@@ -166,6 +170,22 @@ export function BoardPeek({
   }, [mode, notes]);
 
   const tagLabels = draft.tags.map((t2) => t2.label);
+
+  const attachments = draft.attachments ?? [];
+  const setAttachments = (next: string[]) => setField({ attachments: next }, true);
+  const addAttachment = (url: string) => {
+    const u = url.trim();
+    if (u && !attachments.includes(u)) setAttachments([...attachments, u]);
+  };
+  const handleUpload = async (file: File | undefined) => {
+    if (!file || !onUploadAttachment) return;
+    setUploading(true);
+    try {
+      addAttachment(await onUploadAttachment(file));
+    } finally {
+      setUploading(false);
+    }
+  };
 
   // Dependency editing maps slug<->title so the picker shows titles while the
   // card stores slugs. Unresolved slugs (renamed/cross-board) are preserved as-is.
@@ -352,6 +372,65 @@ export function BoardPeek({
               {depField("relates")}
             </>
           )}
+        </div>
+
+        <div className="mt-4">
+          <span className="text-xs font-medium text-brand-gray">
+            <Trans>Attachments</Trans>
+          </span>
+          {attachments.length > 0 && (
+            <div className="mt-1 space-y-1">
+              {attachments.map((url) => (
+                <div key={url} className="flex items-center gap-1.5 rounded border border-stone-200 px-2 py-1 text-xs">
+                  <PaperClipIcon className="h-3.5 w-3.5 shrink-0 text-stone-400" />
+                  {isSafeAttachmentUrl(url) ? (
+                    <a href={url} target="_blank" rel="noreferrer" className="flex-1 truncate text-brand-dark hover:underline" title={url}>
+                      {attachmentName(url)}
+                    </a>
+                  ) : (
+                    <span className="flex-1 truncate text-stone-500" title={t`Unsafe link blocked: ${url}`}>
+                      {attachmentName(url)} <span className="text-red-500">({t`unsafe`})</span>
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setAttachments(attachments.filter((a) => a !== url))}
+                    title={t`Remove`}
+                    className="rounded p-0.5 text-stone-400 hover:text-red-600"
+                  >
+                    <XMarkIcon className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="mt-1.5 flex items-center gap-1.5">
+            <form
+              className="flex-1"
+              onSubmit={(e) => {
+                e.preventDefault();
+                addAttachment(newAttach);
+                setNewAttach("");
+              }}
+            >
+              <input className={fieldCls} placeholder={t`Paste a URL or path`} value={newAttach} onChange={(e) => setNewAttach(e.target.value)} />
+            </form>
+            {onUploadAttachment && (
+              <label className="inline-flex shrink-0 cursor-pointer items-center gap-1 rounded-md border border-stone-200 px-2 py-1 text-xs text-stone-600 hover:border-brand/40 hover:text-brand-dark">
+                <ArrowUpTrayIcon className="h-3.5 w-3.5" />
+                {uploading ? <Trans>Uploading…</Trans> : <Trans>Upload</Trans>}
+                <input
+                  type="file"
+                  className="hidden"
+                  disabled={uploading}
+                  onChange={(e) => {
+                    void handleUpload(e.target.files?.[0]);
+                    e.target.value = "";
+                  }}
+                />
+              </label>
+            )}
+          </div>
         </div>
 
         <div className="mt-4 flex items-center justify-between">

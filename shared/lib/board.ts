@@ -57,6 +57,8 @@ export type BoardViewCard = {
   taskDone?: number;
   taskTotal?: number;
   excerpt?: string | null;
+  /** Attachment URLs / vault paths (frontmatter `attachments`). */
+  attachments?: string[];
   /** Values for the board's user-defined custom fields, keyed by field key. */
   custom?: Record<string, string>;
   /** Card slugs this card is blocked by (frontmatter `blocked_by`). */
@@ -66,6 +68,44 @@ export type BoardViewCard = {
   /** Card slugs this card relates to, no direction (frontmatter `relates`). */
   relates?: string[];
 };
+
+/** Parse a frontmatter `attachments` value (comma-separated URLs/paths) into a list. */
+export function parseAttachments(raw: string): string[] {
+  return raw
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+/** Serialize attachment URLs/paths back to a frontmatter value. */
+export function serializeAttachments(list: string[]): string {
+  return list.join(", ");
+}
+
+/** The display name for an attachment: its last path segment (decoded). */
+export function attachmentName(url: string): string {
+  const last = url.split(/[\\/]/).pop() || url;
+  try {
+    return decodeURIComponent(last.split("?")[0] || last);
+  } catch {
+    return last;
+  }
+}
+
+/**
+ * Whether an attachment value is safe to render as a clickable `href`. Blocks
+ * dangerous schemes (`javascript:`, `data:`, `vbscript:`, `file:`, …); allows
+ * http(s) and scheme-less relative/vault paths. An attachment may carry a
+ * user-supplied URL, so this guards against stored XSS via the link.
+ */
+export function isSafeAttachmentUrl(url: string): boolean {
+  const u = url.trim();
+  if (!u) return false;
+  const scheme = /^([a-z][a-z0-9+.-]*):/i.exec(u);
+  if (!scheme) return true; // no scheme → relative path
+  const s = scheme[1]!.toLowerCase();
+  return s === "http" || s === "https";
+}
 
 /** Read the declared custom-field values out of a flat property/frontmatter map. */
 export function pickCustomFields(

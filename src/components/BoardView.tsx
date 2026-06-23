@@ -9,6 +9,7 @@ import type { BoardActions } from "@shared/components/board";
 import {
   DEFAULT_DONE_COLUMN,
   pickCustomFields,
+  serializeAttachments,
   serializeLinks,
   slugify,
   type BoardViewCard,
@@ -88,6 +89,7 @@ export function BoardView({ boardPath, boardRelativePath }: { boardPath: string;
         taskDone: c.taskDone,
         taskTotal: c.taskTotal,
         excerpt: c.excerpt ?? null,
+        attachments: c.attachments ?? [],
         custom: pickCustomFields(c.properties, config?.fields),
         blockedBy: c.blockedBy ?? [],
         blocks: c.blocks ?? [],
@@ -176,6 +178,7 @@ export function BoardView({ boardPath, boardRelativePath }: { boardPath: string;
           if (patch.due !== undefined) next.due = patch.due ?? "";
           if (patch.icon !== undefined) next.icon = patch.icon ?? "";
           if (patch.tags !== undefined) next.tags = patch.tags.map((tg) => tg.label).join(", ");
+          if (patch.attachments !== undefined) next.attachments = serializeAttachments(patch.attachments);
           if (patch.custom !== undefined) for (const [k, v] of Object.entries(patch.custom)) next[k] = v ?? "";
           if (patch.blockedBy !== undefined) next.blocked_by = serializeLinks(patch.blockedBy);
           if (patch.blocks !== undefined) next.blocks = serializeLinks(patch.blocks);

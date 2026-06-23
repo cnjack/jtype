@@ -73,6 +73,7 @@ export function BoardSurface({
   assigneeOptions,
   tagOptions,
   loadNotes,
+  onUploadAttachment,
   loadComments,
   addComment,
   deleteComment,
@@ -898,6 +899,7 @@ export function BoardSurface({
             }}
             dependencyCards={cards.filter((c) => c.id !== selected.id).map((c) => ({ slug: cardSlug(c), title: c.title }))}
             loadNotes={loadNotes}
+            onUploadAttachment={onUploadAttachment}
             loadComments={loadComments}
             addComment={addComment}
             deleteComment={deleteComment}

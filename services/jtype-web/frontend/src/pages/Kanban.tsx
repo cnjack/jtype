@@ -143,6 +143,9 @@ export function Kanban() {
           taskDone: tasks.done,
           taskTotal: tasks.total,
           excerpt: bodyExcerpt(c.description ?? ''),
+          attachments: c.propertiesExtra && typeof c.propertiesExtra === 'object' && Array.isArray((c.propertiesExtra as Record<string, unknown>).attachments)
+            ? ((c.propertiesExtra as Record<string, unknown>).attachments as unknown[]).filter((x): x is string => typeof x === 'string')
+            : [],
           custom: pickCustomFields(propsStr, view.fields),
         }
       })
@@ -252,11 +255,15 @@ export function Kanban() {
         if (patch.due !== undefined) body.dueAt = patch.due ? `${patch.due} 00:00:00` : null
         if (patch.tags !== undefined) body.labelIds = patch.tags.map(t => t.id).filter(Boolean) as string[]
         if (patch.notes !== undefined) body.description = patch.notes
-        if (patch.icon !== undefined || patch.custom !== undefined) {
+        if (patch.icon !== undefined || patch.attachments !== undefined || patch.custom !== undefined) {
           const cur = raw.propertiesExtra && typeof raw.propertiesExtra === 'object' ? { ...(raw.propertiesExtra as Record<string, unknown>) } : {}
           if (patch.icon !== undefined) {
             if (patch.icon) cur.icon = patch.icon
             else delete cur.icon
+          }
+          if (patch.attachments !== undefined) {
+            if (patch.attachments.length) cur.attachments = patch.attachments
+            else delete cur.attachments
           }
           if (patch.custom !== undefined) for (const [k, v] of Object.entries(patch.custom)) { if (v) cur[k] = v; else delete cur[k] }
           body.propertiesExtra = cur
@@ -411,6 +418,7 @@ export function Kanban() {
             error={error}
             assigneeOptions={assigneeOptions}
             tagOptions={tagOptions}
+            onUploadAttachment={workspaceId ? (file) => api.uploadAsset(workspaceId, file).then((a) => a.url) : undefined}
             currentUser={getStoredUsername() ?? undefined}
             loadComments={workspaceId ? (cardId) => api.kanban.listComments(workspaceId, cardId) : undefined}
             addComment={workspaceId ? (cardId, body) => api.kanban.createComment(workspaceId, cardId, body) : undefined}

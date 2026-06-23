@@ -70,6 +70,10 @@ msgstr "归档"
 msgid "Assignee"
 msgstr "负责人"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Attachments"
+msgstr "附件"
+
 #: shared/components/board/BoardSurface.tsx
 msgid "Blank card"
 msgstr "空白卡片"
@@ -332,6 +336,10 @@ msgstr "在编辑器中打开"
 msgid "Open in full editor"
 msgstr "在完整编辑器中打开"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Paste a URL or path"
+msgstr "粘贴 URL 或路径"
+
 #: shared/components/viewers/PdfView.tsx
 msgid "PDF document"
 msgstr "PDF 文档"
@@ -358,6 +366,10 @@ msgstr "刷新"
 #: shared/components/board/BoardPeek.tsx
 msgid "Relates"
 msgstr "相关"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Remove"
+msgstr "移除"
 
 #: shared/components/board/BoardSurface.tsx
 msgid "Rename"
@@ -467,6 +479,14 @@ msgstr "标题"
 msgid "Unassigned"
 msgstr "未分配"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "unsafe"
+msgstr "不安全"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Unsafe link blocked: {url}"
+msgstr "已拦截不安全链接：{url}"
+
 #: shared/components/board/BoardSurface.tsx
 msgid "Unset done column"
 msgstr "取消完成列"
@@ -478,6 +498,14 @@ msgstr "未命名卡片"
 #: shared/components/board/BoardPeek.tsx
 msgid "Updated"
 msgstr "更新"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Upload"
+msgstr "上传"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Uploading…"
+msgstr "上传中…"
 
 #: shared/components/ConflictResolver.tsx
 msgid "Use this"

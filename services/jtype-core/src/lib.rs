@@ -1349,6 +1349,8 @@ pub struct BoardCardInfo {
     pub task_total: i64,
     pub icon: Option<String>,
     pub excerpt: Option<String>,
+    /// Attachment URLs/paths (frontmatter `attachments`, comma-separated).
+    pub attachments: Vec<String>,
     /// Full frontmatter key/values, so the board can surface user-defined custom
     /// fields declared in the `.board` config without re-reading the file.
     pub properties: HashMap<String, String>,
@@ -1358,6 +1360,16 @@ pub struct BoardCardInfo {
     pub blocks: Vec<String>,
     /// Card slugs this card relates to without direction (frontmatter `relates`).
     pub relates: Vec<String>,
+}
+
+/// Parse a frontmatter `attachments` value (comma-separated URLs/paths) into a
+/// list. Unlike tags, values are kept verbatim (no `#`/`[]` stripping).
+fn parse_attachments(raw: &str) -> Vec<String> {
+    raw.split(',')
+        .map(|s| s.trim())
+        .filter(|s| !s.is_empty())
+        .map(str::to_string)
+        .collect()
 }
 
 /// The body content after the frontmatter block (for previews/excerpts).
@@ -1508,6 +1520,7 @@ fn scan_board_cards_inner(
                 task_total,
                 icon: fm.get("icon").cloned().filter(|v| !v.is_empty()),
                 excerpt: body_excerpt(&content),
+                attachments: fm.get("attachments").map(|v| parse_attachments(v)).unwrap_or_default(),
                 properties: fm.clone(),
                 blocked_by: fm.get("blocked_by").map(|v| parse_card_links(v)).unwrap_or_default(),
                 blocks: fm.get("blocks").map(|v| parse_card_links(v)).unwrap_or_default(),

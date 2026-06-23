@@ -42,6 +42,7 @@ export type BoardCard = {
   taskTotal?: number;
   icon?: string | null;
   excerpt?: string | null;
+  attachments?: string[];
   /** Full frontmatter map (for custom fields declared in the board config). */
   properties?: Record<string, string>;
   blockedBy?: string[];
