@@ -334,6 +334,8 @@ export const api = {
       request<void>(`/api/v1/workspaces/${workspaceId}/kanban/cards/${cardId}`, { method: 'DELETE' }),
     listTrash: (workspaceId: string, boardId: string) =>
       request<KanbanTrashItem[]>(`/api/v1/workspaces/${workspaceId}/kanban/boards/${boardId}/trash`),
+    getCardActivity: (workspaceId: string, cardId: string) =>
+      request<KanbanActivityEvent[]>(`/api/v1/workspaces/${workspaceId}/kanban/cards/${cardId}/activity`),
 
     listLabels: (workspaceId: string, boardId: string) =>
       request<KanbanLabel[]>(`/api/v1/workspaces/${workspaceId}/kanban/boards/${boardId}/labels`),
@@ -825,6 +827,12 @@ export interface KanbanBoardFull extends KanbanBoardSummary {
   columns: KanbanColumn[]
   cards: KanbanCard[]
   labels: KanbanLabel[]
+}
+
+export interface KanbanActivityEvent {
+  kind: string
+  at: string
+  by?: string | null
 }
 
 export interface KanbanTrashItem {

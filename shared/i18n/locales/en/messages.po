@@ -36,6 +36,10 @@ msgstr "Accept cloud"
 msgid "Accept local"
 msgstr "Accept local"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Activity"
+msgstr "Activity"
+
 #: shared/components/board/BoardSurface.tsx
 msgid "Add column"
 msgstr "Add column"
@@ -47,6 +51,10 @@ msgstr "Add details..."
 #: shared/components/board/controls.tsx
 msgid "Add labels"
 msgstr "Add labels"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Archived"
+msgstr "Archived"
 
 #: shared/components/board/BoardPeek.tsx
 #: shared/components/board/BoardSurface.tsx
@@ -142,6 +150,10 @@ msgstr "Could not render this Draw.io diagram."
 #: shared/components/viewers/PdfView.tsx
 msgid "Could not render this PDF."
 msgstr "Could not render this PDF."
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Created"
+msgstr "Created"
 
 #: shared/components/board/BoardSurface.tsx
 msgid "Delete"
@@ -310,6 +322,10 @@ msgstr "Refresh"
 msgid "Rename"
 msgstr "Rename"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Restored"
+msgstr "Restored"
+
 #: shared/components/ConflictResolver.tsx
 msgid "Result (editable)"
 msgstr "Result (editable)"
@@ -397,6 +413,10 @@ msgstr "Unset done column"
 #: shared/components/board/BoardPeek.tsx
 msgid "Untitled card"
 msgstr "Untitled card"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Updated"
+msgstr "Updated"
 
 #: shared/components/ConflictResolver.tsx
 msgid "Use this"

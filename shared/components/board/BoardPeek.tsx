@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { XMarkIcon, TrashIcon, ArrowsPointingOutIcon, EyeIcon, PencilSquareIcon } from "@heroicons/react/24/outline";
+import { XMarkIcon, TrashIcon, ArrowsPointingOutIcon, EyeIcon, PencilSquareIcon, ClockIcon } from "@heroicons/react/24/outline";
 import { renderToContainer } from "../../lib/markdown";
 import { PRIORITIES, type BoardViewCard } from "../../lib/board";
 import { fieldCls, EmojiField, ListboxSelect, TagMultiSelect } from "./controls";
 import type { BoardOption } from "./types";
-import type { BoardTag } from "../../lib/board";
+import type { BoardTag, BoardActivityEvent } from "../../lib/board";
 
 /**
  * Side peek for editing a card without leaving the board. Platform-agnostic: it
@@ -19,6 +19,7 @@ export function BoardPeek({
   assigneeOptions,
   tagOptions,
   loadNotes,
+  loadActivity,
   onChange,
   onClose,
   onDelete,
@@ -29,6 +30,7 @@ export function BoardPeek({
   assigneeOptions?: BoardOption[];
   tagOptions?: BoardTag[];
   loadNotes?: (id: string) => Promise<string>;
+  loadActivity?: (id: string) => Promise<BoardActivityEvent[]>;
   onChange: (patch: Partial<BoardViewCard>) => void;
   onClose: () => void;
   onDelete: () => void;
@@ -37,6 +39,7 @@ export function BoardPeek({
   const [draft, setDraft] = useState<BoardViewCard>(card);
   const [notes, setNotes] = useState(card.notes ?? "");
   const [mode, setMode] = useState<"write" | "preview">("write");
+  const [activity, setActivity] = useState<BoardActivityEvent[]>([]);
   const previewRef = useRef<HTMLElement>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -53,6 +56,24 @@ export function BoardPeek({
         cancelled = true;
       };
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [card.id]);
+
+  // Load the activity timeline when a card opens (DB board only).
+  useEffect(() => {
+    if (!loadActivity) {
+      setActivity([]);
+      return;
+    }
+    let cancelled = false;
+    void loadActivity(card.id)
+      .then((evs) => {
+        if (!cancelled) setActivity(evs);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [card.id]);
 
@@ -238,6 +259,36 @@ export function BoardPeek({
           />
         ) : (
           <article ref={previewRef} className="preview mt-1.5 min-h-[220px] rounded-lg border border-stone-100 p-2 text-sm" />
+        )}
+
+        {loadActivity && activity.length > 0 && (
+          <div className="mt-4">
+            <span className="inline-flex items-center gap-1 text-xs font-medium text-brand-gray">
+              <ClockIcon className="h-3.5 w-3.5" />
+              <Trans>Activity</Trans>
+            </span>
+            <ul className="mt-1.5 space-y-1">
+              {activity.map((ev, i) => (
+                <li key={i} className="flex items-baseline gap-2 text-xs text-stone-500">
+                  <span className="font-medium text-stone-700">
+                    {ev.kind === "created" ? (
+                      <Trans>Created</Trans>
+                    ) : ev.kind === "updated" ? (
+                      <Trans>Updated</Trans>
+                    ) : ev.kind === "archived" ? (
+                      <Trans>Archived</Trans>
+                    ) : ev.kind === "restored" ? (
+                      <Trans>Restored</Trans>
+                    ) : (
+                      ev.kind
+                    )}
+                  </span>
+                  {ev.by && <span className="text-stone-400">· {ev.by}</span>}
+                  <span className="ml-auto whitespace-nowrap text-stone-400">{ev.at.slice(0, 16)}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
       </div>
     </aside>

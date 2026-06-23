@@ -397,6 +397,7 @@ export function Kanban() {
             error={error}
             assigneeOptions={assigneeOptions}
             tagOptions={tagOptions}
+            loadActivity={workspaceId ? (cardId) => api.kanban.getCardActivity(workspaceId, cardId) : undefined}
           />
         </div>
       )}
