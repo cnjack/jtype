@@ -1,10 +1,12 @@
 # JType 看板（Kanban）技术设计文档
 
-状态：已实现（v1）；Desktop↔Cloud 同步接线（第 7 节）尚未接通，为设计意图
+状态：CLOUD（第 2–5、8–11 节）已实现 v1。**LOCAL（第 6 节）与 Desktop↔Cloud 同步（第 7 节）已撤回**——`kanban_local.rs` 曾实现后在提交 `1576515` 中整体删除（−672 行），当前 `main` 不存在。第 6/7 节保留为历史设计意图,**不反映当前代码**。桌面看板现为纯文件式（`.board` + `.md` 卡片）经文档同步管线收敛——详见 [`next-features-design.md` §0](./next-features-design.md) 与 [`gaps-and-roadmap.md`](./gaps-and-roadmap.md)。
 初始日期：2026-06-13
-更新日期：2026-06-13
+更新日期：2026-06-20（标注 §6/§7 已撤回）
 
-> 本文档描述 Kanban 功能在三种运行环境中的完整设计：**LOCAL**（桌面端离线存储 `kanban_local.rs`）、**CLOUD**（Axum REST + MySQL）、**MULTI-DEVICE**（WebSocket 广播 + 收敛）。
+> ⚠️ **过时警告**：下文将 **LOCAL（`kanban_local.rs`）** 描述为已实现,但该模块已删除,当前 `main` 不存在。**仅 CLOUD + MULTI-DEVICE 部分反映现状。**
+>
+> 本文档（原始）描述 Kanban 功能在三种运行环境中的完整设计：**LOCAL**（桌面端离线存储 `kanban_local.rs`,**已撤回**）、**CLOUD**（Axum REST + MySQL）、**MULTI-DEVICE**（WebSocket 广播 + 收敛）。
 >
 > Kanban 复用与文档/回收站同步完全一致的本地优先（local-first）模型：workspace 级单调 `sync_clock`、pending-ops 队列、pull/push、三方收敛。所有陈述均以当前实现为准，未实现项明确标注于第 12、13 节。
 
@@ -433,6 +435,8 @@ INDEX idx_card_trash_restored  (restored_at)
 
 ## 6. LOCAL — 桌面端离线存储（kanban_local.rs）
 
+> 🛑 **本节已撤回,不反映当前代码。** `src-tauri/src/kanban_local.rs`(`LocalKanbanStore`、`kanban_take_pending_ops`、`kanban_merge_remote_board` 等)在提交 `1576515` 中被整体删除(−672 行),当前 `main` 不存在这些符号。下文仅作历史设计记录。桌面看板现为纯文件式(`.board` + `.md` 卡片),无独立本地 store。
+
 ### 6.1 磁盘存储位置与 JSON 形态
 
 文件路径：`{vault_root}/.jtype/kanban.json`，经 `serde_json::to_string_pretty()` 写入。
@@ -555,7 +559,9 @@ where F: FnOnce(&mut LocalKanbanStore) -> Result<(), String> {
 
 ## 7. 同步数据流（Desktop）
 
-> 注：本节描述的 Desktop↔Cloud 同步接线（push 回放、pull 合并、WS 触发定向 pull）为**设计意图**，对应尚未实现的同步任务（开放项见第 13 节）。LOCAL store 与 cloud REST/WS 端点均已实现并具备测试覆盖，但二者之间的同步层尚未接通。下文的「每个 pending op 回放到对应 REST 端点」是与本地 `take_pending_ops` 一致的设计选择，而非已发布行为；最终接线也可能改为单一 `/kanban/sync/push` 批量端点。读者不应将 7.1 视为已发布实现。
+> 🛑 **本节已撤回,不反映当前代码。** 它依赖第 6 节的 `kanban_local.rs`(`take_pending_ops`/`merge_remote_board`),而该模块已在提交 `1576515` 中删除。结构化的 Desktop↔Cloud 看板同步**从未发布**,实现也已撤回。当前桌面看板的跨端收敛靠 **文档同步管线**(`.board`/`.md` 作为普通文档)——见 [`next-features-design.md` §0](./next-features-design.md)。下文仅作历史设计记录。
+>
+> （原注：本节描述的 push 回放 / pull 合并 / WS 触发定向 pull 为设计意图,非已发布行为。）
 
 ### 7.1 Push（本地 → 云端）
 
