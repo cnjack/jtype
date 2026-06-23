@@ -22,6 +22,10 @@ WORKDIR /app
 # version). Defaults are per-stage in Docker, so re-declare the ARG here.
 ARG JTYPE_VERSION=0.1.0
 ENV JTYPE_VERSION=$JTYPE_VERSION
+# jtype-web depends on the sibling crate via `jtype-core = { path = "../jtype-core" }`.
+# WORKDIR is /app, so that path resolves to /jtype-core — copy the crate there.
+# (`.dockerignore` strips its target/, so this stays lean.)
+COPY services/jtype-core /jtype-core
 COPY services/jtype-web/Cargo.toml ./Cargo.toml
 COPY services/jtype-web/src ./src
 COPY services/jtype-web/migrations ./migrations
