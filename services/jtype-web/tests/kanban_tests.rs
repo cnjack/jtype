@@ -1656,3 +1656,43 @@ async fn conflict_response_includes_latest_card_snapshot() {
     assert!(body["latest"]["updatedClock"].as_i64().unwrap() > base_clock);
     assert_eq!(body["baseUpdatedClock"], base_clock);
 }
+
+#[tokio::test]
+async fn delete_column_keeps_archived_cards_restorable() {
+    let (app, _pool) = common::setup().await;
+    let (token, _) = common::register_user(app.clone(), &common::uid()).await;
+    let ws_id = common::create_workspace(app.clone(), &token, &common::wname()).await;
+    let (_s, board) = common::req(
+        app.clone(), "POST", &format!("/api/v1/workspaces/{ws_id}/kanban/boards"),
+        Some(&token), Some(json!({ "name": "B" })),
+    ).await;
+    let board_id = board["id"].as_str().unwrap().to_string();
+    let col0 = board["columns"][0]["id"].as_str().unwrap().to_string();
+    let col1 = board["columns"][1]["id"].as_str().unwrap().to_string();
+
+    // card in col0, then archive it
+    let (_s, card) = common::req(
+        app.clone(), "POST", &format!("/api/v1/workspaces/{ws_id}/kanban/boards/{board_id}/cards"),
+        Some(&token), Some(json!({ "columnId": col0, "title": "X" })),
+    ).await;
+    let card_id = card["id"].as_str().unwrap().to_string();
+    let _ = common::req(
+        app.clone(), "POST", &format!("/api/v1/workspaces/{ws_id}/kanban/cards/{card_id}/archive"),
+        Some(&token), None,
+    ).await;
+
+    // delete the archived card's column
+    let (status, _) = common::req(
+        app.clone(), "DELETE", &format!("/api/v1/workspaces/{ws_id}/kanban/columns/{col0}"),
+        Some(&token), None,
+    ).await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
+
+    // the archived card must still be restorable — into the fallback column
+    let (status, restored) = common::req(
+        app, "POST", &format!("/api/v1/workspaces/{ws_id}/kanban/cards/{card_id}/restore"),
+        Some(&token), None,
+    ).await;
+    assert_eq!(status, StatusCode::OK, "archived card should still restore after column delete");
+    assert_eq!(restored["columnId"].as_str().unwrap(), col1, "restored into the fallback column");
+}

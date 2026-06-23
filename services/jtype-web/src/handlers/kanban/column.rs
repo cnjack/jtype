@@ -359,6 +359,15 @@ pub async fn delete_column(
         .bind(&column_id)
         .execute(&mut *tx)
         .await?;
+    // Repoint the trash snapshots too: restore_card reads the target column from
+    // kanban_card_trash, so a dangling column_id there would make archived cards
+    // un-restorable after the column is gone.
+    sqlx::query("UPDATE kanban_card_trash SET column_id = ? WHERE column_id = ? AND workspace_id = ?")
+        .bind(&fallback_id)
+        .bind(&column_id)
+        .bind(&workspace_id)
+        .execute(&mut *tx)
+        .await?;
 
     sqlx::query("DELETE FROM kanban_columns WHERE id = ?")
         .bind(&column_id)
