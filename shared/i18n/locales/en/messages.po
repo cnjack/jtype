@@ -22,6 +22,10 @@ msgstr ""
 msgid "← Back to list"
 msgstr "← Back to list"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "+ Add field"
+msgstr "+ Add field"
+
 #. placeholder {0}: conflicts.length
 #. placeholder {1}: conflicts.length > 1 ? "s" : ""
 #: shared/components/ConflictResolver.tsx
@@ -36,6 +40,14 @@ msgstr "Accept cloud"
 msgid "Accept local"
 msgstr "Accept local"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Activity"
+msgstr "Activity"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Add a comment…"
+msgstr "Add a comment…"
+
 #: shared/components/board/BoardSurface.tsx
 msgid "Add column"
 msgstr "Add column"
@@ -47,6 +59,10 @@ msgstr "Add details..."
 #: shared/components/board/controls.tsx
 msgid "Add labels"
 msgstr "Add labels"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Archived"
+msgstr "Archived"
 
 #: shared/components/board/BoardPeek.tsx
 #: shared/components/board/BoardSurface.tsx
@@ -61,6 +77,18 @@ msgstr "Attachments"
 #: shared/components/board/BoardSurface.tsx
 msgid "Blank card"
 msgstr "Blank card"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Blocked by"
+msgstr "Blocked by"
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Blocked by {blockedCount} unfinished card(s)"
+msgstr "Blocked by {blockedCount} unfinished card(s)"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Blocks"
+msgstr "Blocks"
 
 #: shared/components/board/BoardSurface.tsx
 msgid "Board"
@@ -127,6 +155,14 @@ msgstr "Column name"
 msgid "comma, separated"
 msgstr "comma, separated"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Comment"
+msgstr "Comment"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Comments"
+msgstr "Comments"
+
 #: shared/components/ConfirmDialog.tsx
 msgid "Confirm"
 msgstr "Confirm"
@@ -147,6 +183,10 @@ msgstr "Could not render this Draw.io diagram."
 msgid "Could not render this PDF."
 msgstr "Could not render this PDF."
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Created"
+msgstr "Created"
+
 #: shared/components/board/BoardSurface.tsx
 msgid "Delete"
 msgstr "Delete"
@@ -154,6 +194,10 @@ msgstr "Delete"
 #: shared/components/board/BoardPeek.tsx
 msgid "Delete card"
 msgstr "Delete card"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Delete comment"
+msgstr "Delete comment"
 
 #: shared/components/viewers/MermaidView.tsx
 msgid "Diagram error"
@@ -254,6 +298,7 @@ msgstr "Mermaid source"
 msgid "New card"
 msgstr "New card"
 
+#: shared/components/board/BoardSwimlanes.tsx
 #: shared/components/board/BoardTable.tsx
 msgid "No cards"
 msgstr "No cards"
@@ -261,6 +306,10 @@ msgstr "No cards"
 #: shared/components/board/BoardSurface.tsx
 msgid "No color"
 msgstr "No color"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "No comments yet"
+msgstr "No comments yet"
 
 #: shared/components/board/controls.tsx
 msgid "No icon"
@@ -315,12 +364,20 @@ msgid "Refresh"
 msgstr "Refresh"
 
 #: shared/components/board/BoardPeek.tsx
+msgid "Relates"
+msgstr "Relates"
+
+#: shared/components/board/BoardPeek.tsx
 msgid "Remove"
 msgstr "Remove"
 
 #: shared/components/board/BoardSurface.tsx
 msgid "Rename"
 msgstr "Rename"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Restored"
+msgstr "Restored"
 
 #: shared/components/ConflictResolver.tsx
 msgid "Result (editable)"
@@ -350,6 +407,10 @@ msgstr "Set as done column"
 msgid "Set WIP limit"
 msgstr "Set WIP limit"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Someone"
+msgstr "Someone"
+
 #: shared/components/board/BoardSurface.tsx
 msgid "Sort: Due"
 msgstr "Sort: Due"
@@ -374,6 +435,22 @@ msgstr "Split"
 #: shared/components/board/BoardTable.tsx
 msgid "Status"
 msgstr "Status"
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Swimlane: Assignee"
+msgstr "Swimlane: Assignee"
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Swimlane: None"
+msgstr "Swimlane: None"
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Swimlane: Priority"
+msgstr "Swimlane: Priority"
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Swimlane: Status"
+msgstr "Swimlane: Status"
 
 #: shared/components/board/BoardSurface.tsx
 #: shared/components/EditorToolbar.tsx
@@ -417,6 +494,10 @@ msgstr "Unset done column"
 #: shared/components/board/BoardPeek.tsx
 msgid "Untitled card"
 msgstr "Untitled card"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Updated"
+msgstr "Updated"
 
 #: shared/components/board/BoardPeek.tsx
 msgid "Upload"
