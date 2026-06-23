@@ -7,7 +7,12 @@ import {
   DEFAULT_DONE_COLUMN,
   bodyExcerpt,
   countTasks,
+  parseAttachments,
+  parseLinks,
   parseTagList,
+  pickCustomFields,
+  serializeAttachments,
+  serializeLinks,
   slugify,
   type BoardViewCard,
   type BoardViewConfig,
@@ -24,6 +29,8 @@ type BoardConfigJSON = {
   colorColumns?: boolean
   viewType?: 'board' | 'table' | 'calendar'
   calendarMode?: 'month' | 'agenda'
+  fields?: { key: string; label: string; type?: 'text' | 'number' | 'date' }[]
+  swimlaneBy?: 'status' | 'priority' | 'assignee'
 }
 
 function rand() {
@@ -93,6 +100,11 @@ export function WebBoardView({
           taskDone: tasks.done,
           taskTotal: tasks.total,
           excerpt: bodyExcerpt(fm.body),
+          attachments: fm.data.attachments ? parseAttachments(fm.data.attachments) : [],
+          custom: pickCustomFields(fm.data, cfg.fields),
+          blockedBy: fm.data.blocked_by ? parseLinks(fm.data.blocked_by) : [],
+          blocks: fm.data.blocks ? parseLinks(fm.data.blocks) : [],
+          relates: fm.data.relates ? parseLinks(fm.data.relates) : [],
         })
       }
       setMetaByPath(nextMeta)
@@ -177,6 +189,8 @@ export function WebBoardView({
             colorColumns: config.colorColumns,
             viewType: config.viewType,
             calendarMode: config.calendarMode,
+            fields: config.fields,
+            swimlaneBy: config.swimlaneBy as BoardViewConfig['swimlaneBy'],
             groupBy: (config.groupBy as BoardViewConfig['groupBy']) || 'status',
           }
         : { title: boardDir, columns: [] },
@@ -217,6 +231,11 @@ export function WebBoardView({
         if (patch.due !== undefined) next.due = patch.due ?? ''
         if (patch.icon !== undefined) next.icon = patch.icon ?? ''
         if (patch.tags !== undefined) next.tags = patch.tags.map((t) => t.label).join(', ')
+        if (patch.attachments !== undefined) next.attachments = serializeAttachments(patch.attachments)
+        if (patch.custom !== undefined) for (const [k, v] of Object.entries(patch.custom)) next[k] = v ?? ''
+        if (patch.blockedBy !== undefined) next.blocked_by = serializeLinks(patch.blockedBy)
+        if (patch.blocks !== undefined) next.blocks = serializeLinks(patch.blocks)
+        if (patch.relates !== undefined) next.relates = serializeLinks(patch.relates)
         const newBody = patch.notes !== undefined ? patch.notes : body
         try {
           await saveCard(id, next, newBody)
@@ -355,6 +374,7 @@ export function WebBoardView({
         cards={cards}
         actions={actions}
         error={error}
+        onUploadAttachment={(file) => api.uploadAsset(workspaceId, file).then((a) => a.url)}
         fullscreen={fullscreen}
         onToggleFullscreen={onToggleFullscreen}
       />

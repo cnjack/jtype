@@ -1,4 +1,4 @@
-import type { BoardViewCard, BoardViewConfig, BoardTag } from "../../lib/board";
+import type { BoardViewCard, BoardViewConfig, BoardTag, BoardComment, BoardActivityEvent } from "../../lib/board";
 
 /** Mutations the board surface performs; each platform wires these to its data layer. */
 export type BoardActions = {
@@ -43,6 +43,16 @@ export type BoardSurfaceProps = {
   tagOptions?: BoardTag[];
   /** Lazily load a card's notes/body when opening the peek (desktop). */
   loadNotes?: (cardId: string) => Promise<string>;
+  /** Upload a file as a card attachment, returning its URL/path. Omit to allow only URL/path entry. */
+  onUploadAttachment?: (file: File) => Promise<string>;
+  /** Card comments (DB board). Supply all three + currentUser to enable the section. */
+  loadComments?: (cardId: string) => Promise<BoardComment[]>;
+  addComment?: (cardId: string, body: string) => Promise<BoardComment>;
+  deleteComment?: (commentId: string) => Promise<void>;
+  /** Current user's display name, to show delete only on their own comments. */
+  currentUser?: string;
+  /** Load a card's activity timeline (DB board); omit to hide the Activity section. */
+  loadActivity?: (cardId: string) => Promise<BoardActivityEvent[]>;
   /**
    * Fullscreen ("focus mode") state, owned by the platform shell. When provided,
    * the surface shows a toggle button. Both platforms hide the sidebar + keep the
