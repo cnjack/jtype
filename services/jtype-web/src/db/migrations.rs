@@ -98,6 +98,18 @@ fn all_migrations() -> Vec<Migration> {
             up: include_str!("../../migrations/0015_login_otp.up.sql"),
             down: include_str!("../../migrations/0015_login_otp.down.sql"),
         },
+        Migration {
+            version: 16,
+            name: "kanban_comments",
+            up: include_str!("../../migrations/0016_kanban_comments.up.sql"),
+            down: include_str!("../../migrations/0016_kanban_comments.down.sql"),
+        },
+        Migration {
+            version: 17,
+            name: "kanban_webhooks",
+            up: include_str!("../../migrations/0017_kanban_webhooks.up.sql"),
+            down: include_str!("../../migrations/0017_kanban_webhooks.down.sql"),
+        },
     ]
 }
 

@@ -69,6 +69,11 @@ export function BoardSurface({
   assigneeOptions,
   tagOptions,
   loadNotes,
+  loadComments,
+  addComment,
+  deleteComment,
+  currentUser,
+  loadActivity,
   fullscreen,
   onToggleFullscreen,
 }: BoardSurfaceProps) {
@@ -836,6 +841,11 @@ export function BoardSurface({
             tagOptions={tagOptions}
             dependencyCards={cards.filter((c) => c.id !== selected.id).map((c) => ({ slug: cardSlug(c), title: c.title }))}
             loadNotes={loadNotes}
+            loadComments={loadComments}
+            addComment={addComment}
+            deleteComment={deleteComment}
+            currentUser={currentUser}
+            loadActivity={loadActivity}
             onChange={(patch) => void actions.updateCard(selected.id, patch)}
             onClose={() => setSelectedId(null)}
             onDelete={() => void actions.deleteCard(selected)}

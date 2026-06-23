@@ -36,6 +36,14 @@ msgstr "クラウドを採用"
 msgid "Accept local"
 msgstr "ローカルを採用"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Activity"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Add a comment…"
+msgstr ""
+
 #: shared/components/board/BoardSurface.tsx
 msgid "Add column"
 msgstr "列を追加"
@@ -47,6 +55,10 @@ msgstr "詳細を追加..."
 #: shared/components/board/controls.tsx
 msgid "Add labels"
 msgstr "ラベルを追加"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Archived"
+msgstr ""
 
 #: shared/components/board/BoardPeek.tsx
 #: shared/components/board/BoardSurface.tsx
@@ -135,6 +147,14 @@ msgstr "列名"
 msgid "comma, separated"
 msgstr "カンマ区切り"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Comment"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Comments"
+msgstr ""
+
 #: shared/components/ConfirmDialog.tsx
 msgid "Confirm"
 msgstr "確認"
@@ -155,6 +175,10 @@ msgstr "この Draw.io 図をレンダリングできませんでした。"
 msgid "Could not render this PDF."
 msgstr "この PDF をレンダリングできませんでした。"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Created"
+msgstr ""
+
 #: shared/components/board/BoardSurface.tsx
 msgid "Delete"
 msgstr "削除"
@@ -162,6 +186,10 @@ msgstr "削除"
 #: shared/components/board/BoardPeek.tsx
 msgid "Delete card"
 msgstr "カードを削除"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Delete comment"
+msgstr ""
 
 #: shared/components/viewers/MermaidView.tsx
 msgid "Diagram error"
@@ -270,6 +298,10 @@ msgstr "カードなし"
 msgid "No color"
 msgstr "色なし"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "No comments yet"
+msgstr ""
+
 #: shared/components/board/controls.tsx
 msgid "No icon"
 msgstr "アイコンなし"
@@ -326,6 +358,10 @@ msgstr ""
 msgid "Rename"
 msgstr "名前を変更"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Restored"
+msgstr ""
+
 #: shared/components/ConflictResolver.tsx
 msgid "Result (editable)"
 msgstr "結果（編集可能）"
@@ -353,6 +389,10 @@ msgstr "完了列に設定"
 #: shared/components/board/BoardSurface.tsx
 msgid "Set WIP limit"
 msgstr "WIP 制限を設定"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Someone"
+msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
 msgid "Sort: Due"
@@ -413,6 +453,10 @@ msgstr "完了列を解除"
 #: shared/components/board/BoardPeek.tsx
 msgid "Untitled card"
 msgstr "無題のカード"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Updated"
+msgstr ""
 
 #: shared/components/ConflictResolver.tsx
 msgid "Use this"
