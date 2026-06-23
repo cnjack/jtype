@@ -1,0 +1,42 @@
+CREATE TABLE kanban_webhooks (
+  id CHAR(36) NOT NULL,
+  workspace_id CHAR(36) NOT NULL,
+  board_id CHAR(36) NULL,
+  name VARCHAR(160) NOT NULL,
+  target_url VARCHAR(2048) NOT NULL,
+  secret CHAR(64) NOT NULL,
+  event_types JSON NOT NULL,
+  enabled TINYINT(1) NOT NULL DEFAULT 1,
+  created_by_user_id CHAR(36) NOT NULL,
+  last_delivery_at TIMESTAMP NULL,
+  last_status VARCHAR(32) NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_webhooks_workspace (workspace_id),
+  KEY idx_webhooks_enabled (workspace_id, enabled),
+  CONSTRAINT kanban_webhooks_workspace_fk FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE,
+  CONSTRAINT kanban_webhooks_board_fk FOREIGN KEY (board_id) REFERENCES kanban_boards(id) ON DELETE CASCADE,
+  CONSTRAINT kanban_webhooks_creator_fk FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE kanban_webhook_deliveries (
+  id CHAR(36) NOT NULL,
+  webhook_id CHAR(36) NOT NULL,
+  workspace_id CHAR(36) NOT NULL,
+  event_type VARCHAR(64) NOT NULL,
+  payload JSON NOT NULL,
+  status ENUM('pending','succeeded','failed','dead') NOT NULL DEFAULT 'pending',
+  attempt_count INT NOT NULL DEFAULT 0,
+  max_attempts INT NOT NULL DEFAULT 6,
+  last_status_code INT NULL,
+  last_error VARCHAR(512) NULL,
+  next_retry_at TIMESTAMP NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_deliveries_webhook (webhook_id),
+  KEY idx_deliveries_due (status, next_retry_at),
+  CONSTRAINT kanban_deliveries_webhook_fk FOREIGN KEY (webhook_id) REFERENCES kanban_webhooks(id) ON DELETE CASCADE,
+  CONSTRAINT kanban_deliveries_workspace_fk FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

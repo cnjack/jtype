@@ -13,6 +13,7 @@ pub mod card;
 pub mod column;
 pub mod comment;
 pub mod label;
+pub mod webhook;
 
 use sqlx::Row;
 

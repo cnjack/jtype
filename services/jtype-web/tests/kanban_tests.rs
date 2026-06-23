@@ -1658,6 +1658,68 @@ async fn conflict_response_includes_latest_card_snapshot() {
 }
 
 #[tokio::test]
+async fn webhook_crud_and_enqueue() {
+    let (app, pool) = common::setup().await;
+    let (token, _) = common::register_user(app.clone(), &common::uid()).await;
+    let ws_id = common::create_workspace(app.clone(), &token, &common::wname()).await;
+    let (_s, board) = common::req(
+        app.clone(), "POST", &format!("/api/v1/workspaces/{ws_id}/kanban/boards"),
+        Some(&token), Some(json!({ "name": "B" })),
+    ).await;
+    let board_id = board["id"].as_str().unwrap().to_string();
+    let col = board["columns"][0]["id"].as_str().unwrap().to_string();
+
+    // create a webhook subscribed to card-updated
+    let (status, wh) = common::req(
+        app.clone(), "POST", &format!("/api/v1/workspaces/{ws_id}/kanban/webhooks"),
+        Some(&token),
+        Some(json!({ "name": "CI", "targetUrl": "https://example.com/hook", "eventTypes": ["kanban:card-updated"] })),
+    ).await;
+    assert_eq!(status, StatusCode::OK);
+    assert!(wh["secret"].is_string(), "plaintext secret returned once");
+    assert_eq!(wh["secretMasked"], "whsec_••••");
+    let wh_id = wh["id"].as_str().unwrap().to_string();
+
+    // reject non-https and SSRF targets (incl. userinfo / private-IP / IPv6 bypasses)
+    for bad_url in [
+        "http://localhost/hook",
+        "https://user@127.0.0.1/hook",
+        "https://10.0.0.5/hook",
+        "https://192.168.1.10/hook",
+        "https://169.254.169.254/latest",
+        "https://[::1]/hook",
+        "https://foo.internal/hook",
+    ] {
+        let (bad, _b) = common::req(
+            app.clone(), "POST", &format!("/api/v1/workspaces/{ws_id}/kanban/webhooks"),
+            Some(&token), Some(json!({ "name": "x", "targetUrl": bad_url, "eventTypes": ["*"] })),
+        ).await;
+        assert_eq!(bad, StatusCode::BAD_REQUEST, "should reject {bad_url}");
+    }
+
+    // list → 1
+    let (_s, list) = common::req(
+        app.clone(), "GET", &format!("/api/v1/workspaces/{ws_id}/kanban/webhooks"), Some(&token), None,
+    ).await;
+    assert_eq!(list.as_array().unwrap().len(), 1);
+
+    // creating a card enqueues a delivery (synchronously, before the worker runs)
+    let _ = common::req(
+        app.clone(), "POST", &format!("/api/v1/workspaces/{ws_id}/kanban/boards/{board_id}/cards"),
+        Some(&token), Some(json!({ "columnId": col, "title": "X" })),
+    ).await;
+    let count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM kanban_webhook_deliveries WHERE webhook_id = ?")
+        .bind(&wh_id).fetch_one(&pool).await.unwrap();
+    assert!(count >= 1, "card create enqueued a webhook delivery");
+
+    // delete webhook → 204 (cascade removes deliveries)
+    let (status, _) = common::req(
+        app, "DELETE", &format!("/api/v1/workspaces/{ws_id}/kanban/webhooks/{wh_id}"), Some(&token), None,
+    ).await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
+}
+
+#[tokio::test]
 async fn card_comments_crud() {
     let (app, _pool) = common::setup().await;
     let (token, _) = common::register_user(app.clone(), &common::uid()).await;

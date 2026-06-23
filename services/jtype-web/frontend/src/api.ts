@@ -342,6 +342,12 @@ export const api = {
       request<void>(`/api/v1/workspaces/${workspaceId}/kanban/comments/${commentId}`, { method: 'DELETE' }),
     getCardActivity: (workspaceId: string, cardId: string) =>
       request<KanbanActivityEvent[]>(`/api/v1/workspaces/${workspaceId}/kanban/cards/${cardId}/activity`),
+    listWebhooks: (workspaceId: string) =>
+      request<KanbanWebhook[]>(`/api/v1/workspaces/${workspaceId}/kanban/webhooks`),
+    createWebhook: (workspaceId: string, data: { name: string; targetUrl: string; boardId?: string | null; eventTypes: string[] }) =>
+      request<KanbanWebhookCreated>(`/api/v1/workspaces/${workspaceId}/kanban/webhooks`, { method: 'POST', body: JSON.stringify(data) }),
+    deleteWebhook: (workspaceId: string, webhookId: string) =>
+      request<void>(`/api/v1/workspaces/${workspaceId}/kanban/webhooks/${webhookId}`, { method: 'DELETE' }),
 
     listLabels: (workspaceId: string, boardId: string) =>
       request<KanbanLabel[]>(`/api/v1/workspaces/${workspaceId}/kanban/boards/${boardId}/labels`),
@@ -833,6 +839,22 @@ export interface KanbanBoardFull extends KanbanBoardSummary {
   columns: KanbanColumn[]
   cards: KanbanCard[]
   labels: KanbanLabel[]
+}
+
+export interface KanbanWebhook {
+  id: string
+  boardId?: string | null
+  name: string
+  targetUrl: string
+  eventTypes: string[]
+  enabled: boolean
+  secretMasked: string
+  lastDeliveryAt?: string | null
+  lastStatus?: string | null
+  createdAt: string
+}
+export interface KanbanWebhookCreated extends KanbanWebhook {
+  secret: string
 }
 
 export interface KanbanComment {
