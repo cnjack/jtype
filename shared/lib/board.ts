@@ -50,6 +50,9 @@ export type BoardViewCard = {
 
 export type CardFilter = { prop: "priority" | "assignee" | "tag"; value: string };
 
+/** A card comment (DB board). */
+export type BoardComment = { id: string; author?: string | null; body: string; createdAt: string };
+
 /** One entry in a card's activity timeline (newest first). */
 export type BoardActivityEvent = { kind: string; at: string; by?: string | null };
 

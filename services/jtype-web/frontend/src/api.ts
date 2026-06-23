@@ -334,6 +334,12 @@ export const api = {
       request<void>(`/api/v1/workspaces/${workspaceId}/kanban/cards/${cardId}`, { method: 'DELETE' }),
     listTrash: (workspaceId: string, boardId: string) =>
       request<KanbanTrashItem[]>(`/api/v1/workspaces/${workspaceId}/kanban/boards/${boardId}/trash`),
+    listComments: (workspaceId: string, cardId: string) =>
+      request<KanbanComment[]>(`/api/v1/workspaces/${workspaceId}/kanban/cards/${cardId}/comments`),
+    createComment: (workspaceId: string, cardId: string, body: string) =>
+      request<KanbanComment>(`/api/v1/workspaces/${workspaceId}/kanban/cards/${cardId}/comments`, { method: 'POST', body: JSON.stringify({ body }) }),
+    deleteComment: (workspaceId: string, commentId: string) =>
+      request<void>(`/api/v1/workspaces/${workspaceId}/kanban/comments/${commentId}`, { method: 'DELETE' }),
     getCardActivity: (workspaceId: string, cardId: string) =>
       request<KanbanActivityEvent[]>(`/api/v1/workspaces/${workspaceId}/kanban/cards/${cardId}/activity`),
 
@@ -827,6 +833,16 @@ export interface KanbanBoardFull extends KanbanBoardSummary {
   columns: KanbanColumn[]
   cards: KanbanCard[]
   labels: KanbanLabel[]
+}
+
+export interface KanbanComment {
+  id: string
+  cardId: string
+  authorUserId: string
+  author?: string | null
+  body: string
+  createdAt: string
+  updatedAt: string
 }
 
 export interface KanbanActivityEvent {

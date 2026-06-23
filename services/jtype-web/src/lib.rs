@@ -371,6 +371,14 @@ pub fn build_app(
             post(handlers::kanban::card::restore_card),
         )
         .route(
+            "/api/v1/workspaces/:workspace_id/kanban/cards/:card_id/comments",
+            get(handlers::kanban::comment::list_comments).post(handlers::kanban::comment::create_comment),
+        )
+        .route(
+            "/api/v1/workspaces/:workspace_id/kanban/comments/:comment_id",
+            axum::routing::delete(handlers::kanban::comment::delete_comment),
+        )
+        .route(
             "/api/v1/workspaces/:workspace_id/kanban/cards/:card_id/activity",
             get(handlers::kanban::card::card_activity),
         )

@@ -5,6 +5,7 @@ import { PlusIcon, EllipsisHorizontalIcon, TrashIcon, ArchiveBoxIcon, ArrowUturn
 import {
   api,
   setSessionId,
+  getStoredUsername,
   isKanbanConflict,
   type KanbanBoardSummary,
   type KanbanBoardFull,
@@ -397,6 +398,10 @@ export function Kanban() {
             error={error}
             assigneeOptions={assigneeOptions}
             tagOptions={tagOptions}
+            currentUser={getStoredUsername() ?? undefined}
+            loadComments={workspaceId ? (cardId) => api.kanban.listComments(workspaceId, cardId) : undefined}
+            addComment={workspaceId ? (cardId, body) => api.kanban.createComment(workspaceId, cardId, body) : undefined}
+            deleteComment={workspaceId ? (commentId) => api.kanban.deleteComment(workspaceId, commentId) : undefined}
             loadActivity={workspaceId ? (cardId) => api.kanban.getCardActivity(workspaceId, cardId) : undefined}
           />
         </div>

@@ -66,6 +66,10 @@ export function BoardSurface({
   assigneeOptions,
   tagOptions,
   loadNotes,
+  loadComments,
+  addComment,
+  deleteComment,
+  currentUser,
   loadActivity,
   fullscreen,
   onToggleFullscreen,
@@ -820,6 +824,10 @@ export function BoardSurface({
             assigneeOptions={assigneeOptions}
             tagOptions={tagOptions}
             loadNotes={loadNotes}
+            loadComments={loadComments}
+            addComment={addComment}
+            deleteComment={deleteComment}
+            currentUser={currentUser}
             loadActivity={loadActivity}
             onChange={(patch) => void actions.updateCard(selected.id, patch)}
             onClose={() => setSelectedId(null)}

@@ -1658,6 +1658,53 @@ async fn conflict_response_includes_latest_card_snapshot() {
 }
 
 #[tokio::test]
+async fn card_comments_crud() {
+    let (app, _pool) = common::setup().await;
+    let (token, _) = common::register_user(app.clone(), &common::uid()).await;
+    let ws_id = common::create_workspace(app.clone(), &token, &common::wname()).await;
+    let (_s, board) = common::req(
+        app.clone(), "POST", &format!("/api/v1/workspaces/{ws_id}/kanban/boards"),
+        Some(&token), Some(json!({ "name": "B" })),
+    ).await;
+    let board_id = board["id"].as_str().unwrap().to_string();
+    let col = board["columns"][0]["id"].as_str().unwrap().to_string();
+    let (_s, card) = common::req(
+        app.clone(), "POST", &format!("/api/v1/workspaces/{ws_id}/kanban/boards/{board_id}/cards"),
+        Some(&token), Some(json!({ "columnId": col, "title": "X" })),
+    ).await;
+    let card_id = card["id"].as_str().unwrap().to_string();
+
+    // create
+    let (status, c) = common::req(
+        app.clone(), "POST", &format!("/api/v1/workspaces/{ws_id}/kanban/cards/{card_id}/comments"),
+        Some(&token), Some(json!({ "body": "Looks good" })),
+    ).await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(c["body"], "Looks good");
+    assert!(c["author"].is_string());
+    let comment_id = c["id"].as_str().unwrap().to_string();
+
+    // list → 1
+    let (_s, list) = common::req(
+        app.clone(), "GET", &format!("/api/v1/workspaces/{ws_id}/kanban/cards/{card_id}/comments"),
+        Some(&token), None,
+    ).await;
+    assert_eq!(list.as_array().unwrap().len(), 1);
+
+    // delete (author) → 204, then list → 0
+    let (status, _) = common::req(
+        app.clone(), "DELETE", &format!("/api/v1/workspaces/{ws_id}/kanban/comments/{comment_id}"),
+        Some(&token), None,
+    ).await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
+    let (_s, list2) = common::req(
+        app, "GET", &format!("/api/v1/workspaces/{ws_id}/kanban/cards/{card_id}/comments"),
+        Some(&token), None,
+    ).await;
+    assert_eq!(list2.as_array().unwrap().len(), 0);
+}
+
+#[tokio::test]
 async fn card_activity_reports_created_and_archived() {
     let (app, _pool) = common::setup().await;
     let (token, _) = common::register_user(app.clone(), &common::uid()).await;
