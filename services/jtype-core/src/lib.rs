@@ -1349,6 +1349,9 @@ pub struct BoardCardInfo {
     pub task_total: i64,
     pub icon: Option<String>,
     pub excerpt: Option<String>,
+    /// Full frontmatter key/values, so the board can surface user-defined custom
+    /// fields declared in the `.board` config without re-reading the file.
+    pub properties: HashMap<String, String>,
     /// Card slugs this card is blocked by (frontmatter `blocked_by`).
     pub blocked_by: Vec<String>,
     /// Card slugs this card blocks (frontmatter `blocks`).
@@ -1505,6 +1508,7 @@ fn scan_board_cards_inner(
                 task_total,
                 icon: fm.get("icon").cloned().filter(|v| !v.is_empty()),
                 excerpt: body_excerpt(&content),
+                properties: fm.clone(),
                 blocked_by: fm.get("blocked_by").map(|v| parse_card_links(v)).unwrap_or_default(),
                 blocks: fm.get("blocks").map(|v| parse_card_links(v)).unwrap_or_default(),
                 relates: fm.get("relates").map(|v| parse_card_links(v)).unwrap_or_default(),

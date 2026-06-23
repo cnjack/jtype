@@ -9,6 +9,7 @@ import {
   countTasks,
   parseLinks,
   parseTagList,
+  pickCustomFields,
   serializeLinks,
   slugify,
   type BoardViewCard,
@@ -25,6 +26,7 @@ type BoardConfigJSON = {
   doneColumn?: string
   colorColumns?: boolean
   viewType?: 'board' | 'table'
+  fields?: { key: string; label: string; type?: 'text' | 'number' | 'date' }[]
   swimlaneBy?: 'status' | 'priority' | 'assignee'
 }
 
@@ -95,6 +97,7 @@ export function WebBoardView({
           taskDone: tasks.done,
           taskTotal: tasks.total,
           excerpt: bodyExcerpt(fm.body),
+          custom: pickCustomFields(fm.data, cfg.fields),
           blockedBy: fm.data.blocked_by ? parseLinks(fm.data.blocked_by) : [],
           blocks: fm.data.blocks ? parseLinks(fm.data.blocks) : [],
           relates: fm.data.relates ? parseLinks(fm.data.relates) : [],
@@ -181,6 +184,7 @@ export function WebBoardView({
             doneColumn: config.doneColumn,
             colorColumns: config.colorColumns,
             viewType: config.viewType,
+            fields: config.fields,
             swimlaneBy: config.swimlaneBy as BoardViewConfig['swimlaneBy'],
             groupBy: (config.groupBy as BoardViewConfig['groupBy']) || 'status',
           }
@@ -222,6 +226,7 @@ export function WebBoardView({
         if (patch.due !== undefined) next.due = patch.due ?? ''
         if (patch.icon !== undefined) next.icon = patch.icon ?? ''
         if (patch.tags !== undefined) next.tags = patch.tags.map((t) => t.label).join(', ')
+        if (patch.custom !== undefined) for (const [k, v] of Object.entries(patch.custom)) next[k] = v ?? ''
         if (patch.blockedBy !== undefined) next.blocked_by = serializeLinks(patch.blockedBy)
         if (patch.blocks !== undefined) next.blocks = serializeLinks(patch.blocks)
         if (patch.relates !== undefined) next.relates = serializeLinks(patch.relates)

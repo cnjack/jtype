@@ -39,6 +39,8 @@ import {
   cardSlug,
   effectiveColumns,
   groupValueOf,
+  RESERVED_CARD_KEYS,
+  slugify,
   sortCards as sortCardsFn,
   todayStr,
   visibleCards as visibleCardsFn,
@@ -881,6 +883,19 @@ export function BoardSurface({
             statusOptions={config.columns.map((c) => ({ value: c.key, label: c.name }))}
             assigneeOptions={assigneeOptions}
             tagOptions={tagOptions}
+            fields={config.fields}
+            onAddField={(label) => {
+              // Seed with the reserved card keys so a custom field can never
+              // collide with (and clobber) a core frontmatter attribute.
+              const existing = new Set([...RESERVED_CARD_KEYS, ...(config.fields ?? []).map((f) => f.key)]);
+              let key = slugify(label);
+              if (existing.has(key)) {
+                let n = 2;
+                while (existing.has(`${key}-${n}`)) n += 1;
+                key = `${key}-${n}`;
+              }
+              void actions.setConfig({ fields: [...(config.fields ?? []), { key, label }] });
+            }}
             dependencyCards={cards.filter((c) => c.id !== selected.id).map((c) => ({ slug: cardSlug(c), title: c.title }))}
             loadNotes={loadNotes}
             loadComments={loadComments}

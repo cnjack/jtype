@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { XMarkIcon, TrashIcon, ArrowsPointingOutIcon, EyeIcon, PencilSquareIcon, ChatBubbleLeftIcon, ClockIcon } from "@heroicons/react/24/outline";
@@ -6,7 +6,7 @@ import { renderToContainer } from "../../lib/markdown";
 import { PRIORITIES, type BoardViewCard } from "../../lib/board";
 import { fieldCls, EmojiField, ListboxSelect, TagMultiSelect } from "./controls";
 import type { BoardOption } from "./types";
-import type { BoardTag, BoardComment, BoardActivityEvent } from "../../lib/board";
+import type { BoardTag, BoardFieldDef, BoardComment, BoardActivityEvent } from "../../lib/board";
 
 /**
  * Side peek for editing a card without leaving the board. Platform-agnostic: it
@@ -18,6 +18,8 @@ export function BoardPeek({
   statusOptions,
   assigneeOptions,
   tagOptions,
+  fields,
+  onAddField,
   dependencyCards,
   loadNotes,
   loadComments,
@@ -34,6 +36,10 @@ export function BoardPeek({
   statusOptions: BoardOption[];
   assigneeOptions?: BoardOption[];
   tagOptions?: BoardTag[];
+  /** Board-level custom field definitions to render as editable inputs. */
+  fields?: BoardFieldDef[];
+  /** Add a new custom field to the board (collected inline). */
+  onAddField?: (label: string) => void;
   /** Sibling cards (excluding this one) offered as dependency targets. */
   dependencyCards?: { slug: string; title: string }[];
   loadNotes?: (id: string) => Promise<string>;
@@ -47,6 +53,7 @@ export function BoardPeek({
   onDelete: () => void;
   onOpenFull?: () => void;
 }) {
+  const [newField, setNewField] = useState("");
   const [draft, setDraft] = useState<BoardViewCard>(card);
   const [notes, setNotes] = useState(card.notes ?? "");
   const [mode, setMode] = useState<"write" | "preview">("write");
@@ -292,6 +299,41 @@ export function BoardPeek({
             />
           )}
 
+          {fields?.map((f) => (
+            <Fragment key={f.key}>
+              <span className="truncate text-xs text-brand-gray" title={f.label}>
+                {f.label}
+              </span>
+              <input
+                type={f.type === "number" ? "number" : f.type === "date" ? "date" : "text"}
+                className={fieldCls}
+                value={draft.custom?.[f.key] ?? ""}
+                onChange={(e) => setField({ custom: { ...(draft.custom ?? {}), [f.key]: e.target.value } }, f.type === "date" || f.type === "number")}
+              />
+            </Fragment>
+          ))}
+          {onAddField && (
+            <>
+              <span className="text-xs text-brand-gray" />
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const label = newField.trim();
+                  if (label) {
+                    onAddField(label);
+                    setNewField("");
+                  }
+                }}
+              >
+                <input
+                  className={fieldCls}
+                  placeholder={t`+ Add field`}
+                  value={newField}
+                  onChange={(e) => setNewField(e.target.value)}
+                />
+              </form>
+            </>
+          )}
           {dependencyCards && (
             <>
               <span className="text-xs text-brand-gray">

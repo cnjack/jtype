@@ -21,6 +21,8 @@ export type BoardConfig = {
   colorColumns?: boolean;
   /** Which renderer this board shows: kanban columns or a flat table. Defaults to "board". */
   viewType?: "board" | "table";
+  /** User-defined custom fields shown/edited on this board's cards. */
+  fields?: { key: string; label: string; type?: "text" | "number" | "date" }[];
   /** Optional second grouping dimension rendered as swimlane rows in the board view. */
   swimlaneBy?: "status" | "priority" | "assignee";
 };
@@ -40,6 +42,8 @@ export type BoardCard = {
   taskTotal?: number;
   icon?: string | null;
   excerpt?: string | null;
+  /** Full frontmatter map (for custom fields declared in the board config). */
+  properties?: Record<string, string>;
   blockedBy?: string[];
   blocks?: string[];
   relates?: string[];

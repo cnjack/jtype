@@ -22,6 +22,10 @@ msgstr ""
 msgid "← Back to list"
 msgstr "← Back to list"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "+ Add field"
+msgstr "+ Add field"
+
 #. placeholder {0}: conflicts.length
 #. placeholder {1}: conflicts.length > 1 ? "s" : ""
 #: shared/components/ConflictResolver.tsx
