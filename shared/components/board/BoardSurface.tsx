@@ -18,6 +18,7 @@ import {
   DocumentDuplicateIcon,
   ChevronRightIcon,
   CheckCircleIcon,
+  LockClosedIcon,
   Squares2X2Icon,
   TagIcon,
   MagnifyingGlassIcon,
@@ -34,6 +35,8 @@ import {
   DEFAULT_DONE_COLUMN,
   PRIORITY_ORDER,
   PRIORITY_STYLE,
+  blockedCounts,
+  cardSlug,
   effectiveColumns,
   groupValueOf,
   sortCards as sortCardsFn,
@@ -68,6 +71,11 @@ export function BoardSurface({
   assigneeOptions,
   tagOptions,
   loadNotes,
+  loadComments,
+  addComment,
+  deleteComment,
+  currentUser,
+  loadActivity,
   fullscreen,
   onToggleFullscreen,
 }: BoardSurfaceProps) {
@@ -122,6 +130,8 @@ export function BoardSurface({
     [config, cards, swimlaneKey],
   );
   const vis = useMemo(() => visibleCardsFn(cards, search, filter), [cards, search, filter]);
+  // Blocker counts resolve against ALL cards (a blocker may be filtered out of view).
+  const blockers = useMemo(() => blockedCounts(cards, config.doneColumn), [cards, config.doneColumn]);
   const assignees = useMemo(() => [...new Set(cards.map((c) => c.assignee).filter(Boolean) as string[])], [cards]);
   const allTags = useMemo(() => [...new Set(cards.flatMap((c) => c.tags.map((tg) => tg.label)))], [cards]);
   const statusName = (key: string) => config.columns.find((c) => c.key === key)?.name || key || t`Unassigned`;
@@ -601,12 +611,14 @@ export function BoardSurface({
                   <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-2">
                     {colCards.map((card, idx) => {
                       const overdue = card.due && card.due < today && card.columnKey !== doneKey;
+                      const blockedCount = blockers.get(card.id) ?? 0;
                       const hasMeta =
                         (card.priority && card.priority !== "none") ||
                         card.assignee ||
                         card.due ||
                         (card.taskTotal ?? 0) > 0 ||
-                        card.tags.length > 0;
+                        card.tags.length > 0 ||
+                        blockedCount > 0;
                       return (
                         <Fragment key={card.id}>
                           {showLine(idx) && <div className="mx-1 h-0.5 rounded bg-brand" />}
@@ -688,6 +700,15 @@ export function BoardSurface({
                             )}
                             {hasMeta && (
                               <span className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                                {blockedCount > 0 && (
+                                  <span
+                                    className="inline-flex items-center gap-0.5 rounded bg-red-50 px-1.5 py-0.5 text-[11px] font-medium text-red-600"
+                                    title={t`Blocked by ${blockedCount} unfinished card(s)`}
+                                  >
+                                    <LockClosedIcon className="h-3 w-3" />
+                                    {blockedCount}
+                                  </span>
+                                )}
                                 {card.priority && card.priority !== "none" && (
                                   <span className={`rounded px-1.5 py-0.5 text-[11px] font-medium ${PRIORITY_STYLE[card.priority] ?? "bg-stone-100 text-stone-500"}`}>{card.priority}</span>
                                 )}
@@ -860,7 +881,13 @@ export function BoardSurface({
             statusOptions={config.columns.map((c) => ({ value: c.key, label: c.name }))}
             assigneeOptions={assigneeOptions}
             tagOptions={tagOptions}
+            dependencyCards={cards.filter((c) => c.id !== selected.id).map((c) => ({ slug: cardSlug(c), title: c.title }))}
             loadNotes={loadNotes}
+            loadComments={loadComments}
+            addComment={addComment}
+            deleteComment={deleteComment}
+            currentUser={currentUser}
+            loadActivity={loadActivity}
             onChange={(patch) => void actions.updateCard(selected.id, patch)}
             onClose={() => setSelectedId(null)}
             onDelete={() => void actions.deleteCard(selected)}

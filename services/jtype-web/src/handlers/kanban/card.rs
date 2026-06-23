@@ -18,7 +18,7 @@ use axum::{
     response::{IntoResponse, Response},
     Json,
 };
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::json;
 use sqlx::Row;
 use uuid::Uuid;
@@ -273,6 +273,15 @@ pub async fn create_card(
             session_id.as_deref(),
         )
         .await;
+
+    super::webhook::enqueue_event(
+        &state.pool,
+        &workspace_id,
+        &board_id,
+        "kanban:card-updated",
+        json!({ "event": "kanban:card-updated", "cardId": card_id, "boardId": board_id }),
+    )
+    .await;
 
     // Re-fetch with DB timestamps
     fetch_card_response(&state, &workspace_id, &card_id).await
@@ -721,6 +730,15 @@ pub async fn move_card(
         )
         .await;
 
+    super::webhook::enqueue_event(
+        &state.pool,
+        &workspace_id,
+        &card.board_id,
+        "kanban:card-updated",
+        json!({ "event": "kanban:card-updated", "cardId": card.id, "boardId": card.board_id }),
+    )
+    .await;
+
     Ok(Json(card).into_response())
 }
 
@@ -852,6 +870,15 @@ pub async fn archive_card(
             session_id.as_deref(),
         )
         .await;
+
+    super::webhook::enqueue_event(
+        &state.pool,
+        &workspace_id,
+        &board_id,
+        "kanban:card-archived",
+        json!({ "event": "kanban:card-archived", "cardId": card_id, "boardId": board_id }),
+    )
+    .await;
 
     Ok(Json(json!({
         "id": trash_id,
@@ -1217,4 +1244,85 @@ pub(crate) async fn fetch_card_value(
         created_at: r.try_get::<String, _>("created_at")?,
         updated_at: r.try_get::<String, _>("updated_at")?,
     })
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct KanbanActivityEvent {
+    /// One of: created | updated | archived | restored.
+    pub kind: String,
+    pub at: String,
+    pub by: Option<String>,
+}
+
+/// Derive a card's activity timeline from existing data — no activity table.
+/// Combines kanban_cards (created / last-updated) with kanban_card_trash
+/// (archive / restore audit). Newest first.
+pub async fn card_activity(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Path((workspace_id, card_id)): Path<(String, String)>,
+) -> Result<Response, AppError> {
+    let user = extract_user(&state.pool, &headers).await?;
+    require_workspace_role(
+        &state.pool,
+        &workspace_id,
+        &user.id,
+        &["owner", "admin", "editor", "viewer"],
+    )
+    .await?;
+
+    let card = sqlx::query(
+        r#"SELECT CAST(c.created_at AS CHAR) AS created_at,
+                  CAST(c.updated_at AS CHAR) AS updated_at,
+                  cu.username AS created_by
+           FROM kanban_cards c
+           JOIN users cu ON cu.id = c.created_by_user_id
+           WHERE c.id = ? AND c.workspace_id = ?"#,
+    )
+    .bind(&card_id)
+    .bind(&workspace_id)
+    .fetch_optional(&state.pool)
+    .await?
+    .ok_or(AppError::NotFound)?;
+
+    let created_at: String = card.try_get("created_at")?;
+    let updated_at: String = card.try_get("updated_at")?;
+    let created_by: Option<String> = card.try_get("created_by")?;
+
+    let mut events = vec![KanbanActivityEvent {
+        kind: "created".into(),
+        at: created_at.clone(),
+        by: created_by,
+    }];
+    if updated_at != created_at {
+        events.push(KanbanActivityEvent { kind: "updated".into(), at: updated_at, by: None });
+    }
+
+    let trash = sqlx::query(
+        r#"SELECT CAST(t.archived_at AS CHAR) AS archived_at,
+                  au.username AS archived_by,
+                  CAST(t.restored_at AS CHAR) AS restored_at,
+                  ru.username AS restored_by
+           FROM kanban_card_trash t
+           JOIN users au ON au.id = t.archived_by_user_id
+           LEFT JOIN users ru ON ru.id = t.restored_by_user_id
+           WHERE t.card_id = ? AND t.workspace_id = ?"#,
+    )
+    .bind(&card_id)
+    .bind(&workspace_id)
+    .fetch_all(&state.pool)
+    .await?;
+    for r in trash {
+        if let Some(at) = r.try_get::<Option<String>, _>("archived_at")? {
+            events.push(KanbanActivityEvent { kind: "archived".into(), at, by: r.try_get("archived_by")? });
+        }
+        if let Some(at) = r.try_get::<Option<String>, _>("restored_at")? {
+            events.push(KanbanActivityEvent { kind: "restored".into(), at, by: r.try_get("restored_by")? });
+        }
+    }
+
+    // Newest first (zero-padded timestamp strings sort lexically).
+    events.sort_by(|a, b| b.at.cmp(&a.at));
+    Ok(Json(events).into_response())
 }

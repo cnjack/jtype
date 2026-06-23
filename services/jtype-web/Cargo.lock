@@ -1013,6 +1013,7 @@ dependencies = [
  "bytes",
  "futures",
  "hex",
+ "hmac",
  "lettre",
  "mime_guess",
  "object_store",
@@ -1029,6 +1030,7 @@ dependencies = [
  "tokio",
  "tower",
  "tower-http",
+ "url",
  "uuid",
 ]
 

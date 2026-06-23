@@ -36,6 +36,14 @@ msgstr "Accept cloud"
 msgid "Accept local"
 msgstr "Accept local"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Activity"
+msgstr "Activity"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Add a comment…"
+msgstr "Add a comment…"
+
 #: shared/components/board/BoardSurface.tsx
 msgid "Add column"
 msgstr "Add column"
@@ -49,6 +57,10 @@ msgid "Add labels"
 msgstr "Add labels"
 
 #: shared/components/board/BoardPeek.tsx
+msgid "Archived"
+msgstr "Archived"
+
+#: shared/components/board/BoardPeek.tsx
 #: shared/components/board/BoardSurface.tsx
 #: shared/components/board/BoardTable.tsx
 msgid "Assignee"
@@ -57,6 +69,18 @@ msgstr "Assignee"
 #: shared/components/board/BoardSurface.tsx
 msgid "Blank card"
 msgstr "Blank card"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Blocked by"
+msgstr "Blocked by"
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Blocked by {blockedCount} unfinished card(s)"
+msgstr "Blocked by {blockedCount} unfinished card(s)"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Blocks"
+msgstr "Blocks"
 
 #: shared/components/board/BoardSurface.tsx
 msgid "Board"
@@ -123,6 +147,14 @@ msgstr "Column name"
 msgid "comma, separated"
 msgstr "comma, separated"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Comment"
+msgstr "Comment"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Comments"
+msgstr "Comments"
+
 #: shared/components/ConfirmDialog.tsx
 msgid "Confirm"
 msgstr "Confirm"
@@ -143,6 +175,10 @@ msgstr "Could not render this Draw.io diagram."
 msgid "Could not render this PDF."
 msgstr "Could not render this PDF."
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Created"
+msgstr "Created"
+
 #: shared/components/board/BoardSurface.tsx
 msgid "Delete"
 msgstr "Delete"
@@ -150,6 +186,10 @@ msgstr "Delete"
 #: shared/components/board/BoardPeek.tsx
 msgid "Delete card"
 msgstr "Delete card"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Delete comment"
+msgstr "Delete comment"
 
 #: shared/components/viewers/MermaidView.tsx
 msgid "Diagram error"
@@ -259,6 +299,10 @@ msgstr "No cards"
 msgid "No color"
 msgstr "No color"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "No comments yet"
+msgstr "No comments yet"
+
 #: shared/components/board/controls.tsx
 msgid "No icon"
 msgstr "No icon"
@@ -307,9 +351,17 @@ msgstr "Priority"
 msgid "Refresh"
 msgstr "Refresh"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Relates"
+msgstr "Relates"
+
 #: shared/components/board/BoardSurface.tsx
 msgid "Rename"
 msgstr "Rename"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Restored"
+msgstr "Restored"
 
 #: shared/components/ConflictResolver.tsx
 msgid "Result (editable)"
@@ -338,6 +390,10 @@ msgstr "Set as done column"
 #: shared/components/board/BoardSurface.tsx
 msgid "Set WIP limit"
 msgstr "Set WIP limit"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Someone"
+msgstr "Someone"
 
 #: shared/components/board/BoardSurface.tsx
 msgid "Sort: Due"
@@ -414,6 +470,10 @@ msgstr "Unset done column"
 #: shared/components/board/BoardPeek.tsx
 msgid "Untitled card"
 msgstr "Untitled card"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Updated"
+msgstr "Updated"
 
 #: shared/components/ConflictResolver.tsx
 msgid "Use this"

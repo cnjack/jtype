@@ -51,9 +51,21 @@ export type BoardViewCard = {
   taskDone?: number;
   taskTotal?: number;
   excerpt?: string | null;
+  /** Card slugs this card is blocked by (frontmatter `blocked_by`). */
+  blockedBy?: string[];
+  /** Card slugs this card blocks (frontmatter `blocks`). */
+  blocks?: string[];
+  /** Card slugs this card relates to, no direction (frontmatter `relates`). */
+  relates?: string[];
 };
 
 export type CardFilter = { prop: "priority" | "assignee" | "tag"; value: string };
+
+/** A card comment (DB board). */
+export type BoardComment = { id: string; author?: string | null; body: string; createdAt: string };
+
+/** One entry in a card's activity timeline (newest first). */
+export type BoardActivityEvent = { kind: string; at: string; by?: string | null };
 
 export const PRIORITIES = ["none", "low", "medium", "high", "urgent"];
 export const PRIORITY_ORDER = ["urgent", "high", "medium", "low", "none"];
@@ -103,6 +115,61 @@ export function parseTagList(raw: string): string[] {
     .split(",")
     .map((t) => t.trim().replace(/^#/, ""))
     .filter(Boolean);
+}
+
+/** Parse a dependency value (`[[a]], [[b]]` or `a, b`) into card slugs. */
+export function parseLinks(raw: string): string[] {
+  return raw
+    .split(",")
+    .map((t) => t.trim().replace(/^\[\[/, "").replace(/\]\]$/, "").trim())
+    .filter(Boolean);
+}
+
+/** Serialize card slugs back to a frontmatter dependency value (`[[a]], [[b]]`). */
+export function serializeLinks(slugs: string[]): string {
+  return slugs.map((s) => `[[${s}]]`).join(", ");
+}
+
+/** A card's slug — the basename of its id (file path / relativePath) without `.md`. */
+export function cardSlug(card: BoardViewCard): string {
+  const base = card.id.split(/[\\/]/).pop() ?? card.id;
+  return base.replace(/\.md$/i, "");
+}
+
+/**
+ * For each card, how many distinct *unfinished* cards block it — combining its own
+ * `blockedBy` with the reverse `blocks` edges of other cards. A card counts as
+ * unfinished when it is not in the done column. Slugs that resolve to no card (or
+ * to a finished one) don't count. Cycle-safe (no recursion).
+ */
+export function blockedCounts(cards: BoardViewCard[], doneColumn?: string): Map<string, number> {
+  const doneKey = doneColumn || DEFAULT_DONE_COLUMN;
+  const bySlug = new Map<string, BoardViewCard>();
+  for (const c of cards) bySlug.set(cardSlug(c), c);
+  const unfinished = (c: BoardViewCard | undefined): c is BoardViewCard => !!c && c.columnKey !== doneKey;
+  // cardId -> set of blocker card ids (dedups blockedBy + reverse blocks).
+  const blockers = new Map<string, Set<string>>();
+  const add = (cardId: string, blocker: BoardViewCard) => {
+    let set = blockers.get(cardId);
+    if (!set) blockers.set(cardId, (set = new Set()));
+    set.add(blocker.id);
+  };
+  for (const c of cards) {
+    for (const slug of c.blockedBy ?? []) {
+      const b = bySlug.get(slug);
+      if (unfinished(b) && b.id !== c.id) add(c.id, b);
+    }
+  }
+  for (const y of cards) {
+    if (!unfinished(y)) continue;
+    for (const slug of y.blocks ?? []) {
+      const x = bySlug.get(slug);
+      if (x && x.id !== y.id) add(x.id, y);
+    }
+  }
+  const counts = new Map<string, number>();
+  for (const [id, set] of blockers) counts.set(id, set.size);
+  return counts;
 }
 
 export function todayStr(): string {

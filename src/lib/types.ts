@@ -40,6 +40,9 @@ export type BoardCard = {
   taskTotal?: number;
   icon?: string | null;
   excerpt?: string | null;
+  blockedBy?: string[];
+  blocks?: string[];
+  relates?: string[];
 };
 
 /** A reusable card template (`.md` in `<boardDir>/.templates/`). */

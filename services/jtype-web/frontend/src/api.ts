@@ -315,6 +315,8 @@ export const api = {
       request<KanbanColumn>(`/api/v1/workspaces/${workspaceId}/kanban/columns/${columnId}`, { method: 'PATCH', body: JSON.stringify(data) }),
     reorderColumns: (workspaceId: string, boardId: string, columnIds: string[]) =>
       request<{ ok: boolean }>(`/api/v1/workspaces/${workspaceId}/kanban/columns/reorder`, { method: 'POST', body: JSON.stringify({ boardId, columnIds }) }),
+    deleteColumn: (workspaceId: string, columnId: string) =>
+      request<void>(`/api/v1/workspaces/${workspaceId}/kanban/columns/${columnId}`, { method: 'DELETE' }),
 
     listCards: (workspaceId: string, boardId: string, includeArchived = false) =>
       request<KanbanCard[]>(`/api/v1/workspaces/${workspaceId}/kanban/boards/${boardId}/cards${includeArchived ? '?includeArchived=true' : ''}`),
@@ -332,6 +334,20 @@ export const api = {
       request<void>(`/api/v1/workspaces/${workspaceId}/kanban/cards/${cardId}`, { method: 'DELETE' }),
     listTrash: (workspaceId: string, boardId: string) =>
       request<KanbanTrashItem[]>(`/api/v1/workspaces/${workspaceId}/kanban/boards/${boardId}/trash`),
+    listComments: (workspaceId: string, cardId: string) =>
+      request<KanbanComment[]>(`/api/v1/workspaces/${workspaceId}/kanban/cards/${cardId}/comments`),
+    createComment: (workspaceId: string, cardId: string, body: string) =>
+      request<KanbanComment>(`/api/v1/workspaces/${workspaceId}/kanban/cards/${cardId}/comments`, { method: 'POST', body: JSON.stringify({ body }) }),
+    deleteComment: (workspaceId: string, commentId: string) =>
+      request<void>(`/api/v1/workspaces/${workspaceId}/kanban/comments/${commentId}`, { method: 'DELETE' }),
+    getCardActivity: (workspaceId: string, cardId: string) =>
+      request<KanbanActivityEvent[]>(`/api/v1/workspaces/${workspaceId}/kanban/cards/${cardId}/activity`),
+    listWebhooks: (workspaceId: string) =>
+      request<KanbanWebhook[]>(`/api/v1/workspaces/${workspaceId}/kanban/webhooks`),
+    createWebhook: (workspaceId: string, data: { name: string; targetUrl: string; boardId?: string | null; eventTypes: string[] }) =>
+      request<KanbanWebhookCreated>(`/api/v1/workspaces/${workspaceId}/kanban/webhooks`, { method: 'POST', body: JSON.stringify(data) }),
+    deleteWebhook: (workspaceId: string, webhookId: string) =>
+      request<void>(`/api/v1/workspaces/${workspaceId}/kanban/webhooks/${webhookId}`, { method: 'DELETE' }),
 
     listLabels: (workspaceId: string, boardId: string) =>
       request<KanbanLabel[]>(`/api/v1/workspaces/${workspaceId}/kanban/boards/${boardId}/labels`),
@@ -823,6 +839,38 @@ export interface KanbanBoardFull extends KanbanBoardSummary {
   columns: KanbanColumn[]
   cards: KanbanCard[]
   labels: KanbanLabel[]
+}
+
+export interface KanbanWebhook {
+  id: string
+  boardId?: string | null
+  name: string
+  targetUrl: string
+  eventTypes: string[]
+  enabled: boolean
+  secretMasked: string
+  lastDeliveryAt?: string | null
+  lastStatus?: string | null
+  createdAt: string
+}
+export interface KanbanWebhookCreated extends KanbanWebhook {
+  secret: string
+}
+
+export interface KanbanComment {
+  id: string
+  cardId: string
+  authorUserId: string
+  author?: string | null
+  body: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface KanbanActivityEvent {
+  kind: string
+  at: string
+  by?: string | null
 }
 
 export interface KanbanTrashItem {

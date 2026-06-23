@@ -36,6 +36,14 @@ msgstr "클라우드 수낙"
 msgid "Accept local"
 msgstr "로컈 수낙"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Activity"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Add a comment…"
+msgstr ""
+
 #: shared/components/board/BoardSurface.tsx
 msgid "Add column"
 msgstr "열 추가"
@@ -49,6 +57,10 @@ msgid "Add labels"
 msgstr "라벨 추가"
 
 #: shared/components/board/BoardPeek.tsx
+msgid "Archived"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
 #: shared/components/board/BoardSurface.tsx
 #: shared/components/board/BoardTable.tsx
 msgid "Assignee"
@@ -57,6 +69,18 @@ msgstr "담당자"
 #: shared/components/board/BoardSurface.tsx
 msgid "Blank card"
 msgstr "빈 카드"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Blocked by"
+msgstr ""
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Blocked by {blockedCount} unfinished card(s)"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Blocks"
+msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
 msgid "Board"
@@ -123,6 +147,14 @@ msgstr "열 이름"
 msgid "comma, separated"
 msgstr "쉼표로 구분"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Comment"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Comments"
+msgstr ""
+
 #: shared/components/ConfirmDialog.tsx
 msgid "Confirm"
 msgstr "확인"
@@ -143,6 +175,10 @@ msgstr "이 Draw.io 다이어그램을 렌더링할 수 없습니다."
 msgid "Could not render this PDF."
 msgstr "이 PDF를 렌더링할 수 없습니다."
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Created"
+msgstr ""
+
 #: shared/components/board/BoardSurface.tsx
 msgid "Delete"
 msgstr "삭제"
@@ -150,6 +186,10 @@ msgstr "삭제"
 #: shared/components/board/BoardPeek.tsx
 msgid "Delete card"
 msgstr "카드 삭제"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Delete comment"
+msgstr ""
 
 #: shared/components/viewers/MermaidView.tsx
 msgid "Diagram error"
@@ -259,6 +299,10 @@ msgstr "카드 없음"
 msgid "No color"
 msgstr "색상 없음"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "No comments yet"
+msgstr ""
+
 #: shared/components/board/controls.tsx
 msgid "No icon"
 msgstr "아이콘 없음"
@@ -307,9 +351,17 @@ msgstr "우선순위"
 msgid "Refresh"
 msgstr "새로고침"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Relates"
+msgstr ""
+
 #: shared/components/board/BoardSurface.tsx
 msgid "Rename"
 msgstr "이름 변경"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Restored"
+msgstr ""
 
 #: shared/components/ConflictResolver.tsx
 msgid "Result (editable)"
@@ -338,6 +390,10 @@ msgstr "완료 열로 설정"
 #: shared/components/board/BoardSurface.tsx
 msgid "Set WIP limit"
 msgstr "WIP 한도 설정"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Someone"
+msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
 msgid "Sort: Due"
@@ -414,6 +470,10 @@ msgstr "완료 열 해제"
 #: shared/components/board/BoardPeek.tsx
 msgid "Untitled card"
 msgstr "제목 없는 카드"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Updated"
+msgstr ""
 
 #: shared/components/ConflictResolver.tsx
 msgid "Use this"
