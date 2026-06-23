@@ -290,6 +290,7 @@ msgstr "Mermaid source"
 msgid "New card"
 msgstr "New card"
 
+#: shared/components/board/BoardSwimlanes.tsx
 #: shared/components/board/BoardTable.tsx
 msgid "No cards"
 msgstr "No cards"
@@ -418,6 +419,22 @@ msgstr "Split"
 #: shared/components/board/BoardTable.tsx
 msgid "Status"
 msgstr "Status"
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Swimlane: Assignee"
+msgstr "Swimlane: Assignee"
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Swimlane: None"
+msgstr "Swimlane: None"
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Swimlane: Priority"
+msgstr "Swimlane: Priority"
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Swimlane: Status"
+msgstr "Swimlane: Status"
 
 #: shared/components/board/BoardSurface.tsx
 #: shared/components/EditorToolbar.tsx

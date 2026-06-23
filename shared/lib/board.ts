@@ -24,6 +24,11 @@ export type BoardViewConfig = {
   colorColumns?: boolean;
   viewType?: BoardViewType;
   groupBy?: BoardGroupKey;
+  /**
+   * Second grouping dimension rendered as horizontal swimlanes (rows) in the
+   * board view. Must differ from `groupBy`; unset = no swimlanes.
+   */
+  swimlaneBy?: BoardGroupKey;
 };
 
 export type BoardTag = { id?: string; label: string; color?: string | null };
@@ -202,6 +207,30 @@ export function effectiveColumns(
   return [...vals]
     .sort((a, b) => (a === "" ? 1 : b === "" ? -1 : a.localeCompare(b)))
     .map((v) => ({ key: v, name: v || unassignedLabel }));
+}
+
+/**
+ * Bucket cards into a swimlane grid: laneValue → columnValue → cards. Lane and
+ * column values come from `groupValueOf` under the two grouping dimensions. The
+ * board view renders rows (lanes) × columns from this. Order within a cell is the
+ * caller's responsibility (pre-sort, e.g. with sortCards).
+ */
+export function partitionSwimlanes(
+  cards: BoardViewCard[],
+  groupBy: BoardGroupKey,
+  swimlaneBy: BoardGroupKey,
+): Map<string, Map<string, BoardViewCard[]>> {
+  const grid = new Map<string, Map<string, BoardViewCard[]>>();
+  for (const c of cards) {
+    const lane = groupValueOf(c, swimlaneBy);
+    const col = groupValueOf(c, groupBy);
+    let row = grid.get(lane);
+    if (!row) grid.set(lane, (row = new Map()));
+    let cell = row.get(col);
+    if (!cell) row.set(col, (cell = []));
+    cell.push(c);
+  }
+  return grid;
 }
 
 export function cardMatchesFilter(card: BoardViewCard, filter: CardFilter | null): boolean {

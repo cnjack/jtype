@@ -290,6 +290,7 @@ msgstr "Mermaid 源码"
 msgid "New card"
 msgstr "新建卡片"
 
+#: shared/components/board/BoardSwimlanes.tsx
 #: shared/components/board/BoardTable.tsx
 msgid "No cards"
 msgstr "暂无卡片"
@@ -418,6 +419,22 @@ msgstr "分栏"
 #: shared/components/board/BoardTable.tsx
 msgid "Status"
 msgstr "状态"
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Swimlane: Assignee"
+msgstr "泳道：负责人"
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Swimlane: None"
+msgstr "泳道：无"
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Swimlane: Priority"
+msgstr "泳道：优先级"
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Swimlane: Status"
+msgstr "泳道：状态"
 
 #: shared/components/board/BoardSurface.tsx
 #: shared/components/EditorToolbar.tsx

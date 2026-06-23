@@ -25,6 +25,7 @@ type BoardConfigJSON = {
   doneColumn?: string
   colorColumns?: boolean
   viewType?: 'board' | 'table'
+  swimlaneBy?: 'status' | 'priority' | 'assignee'
 }
 
 function rand() {
@@ -180,6 +181,7 @@ export function WebBoardView({
             doneColumn: config.doneColumn,
             colorColumns: config.colorColumns,
             viewType: config.viewType,
+            swimlaneBy: config.swimlaneBy as BoardViewConfig['swimlaneBy'],
             groupBy: (config.groupBy as BoardViewConfig['groupBy']) || 'status',
           }
         : { title: boardDir, columns: [] },
