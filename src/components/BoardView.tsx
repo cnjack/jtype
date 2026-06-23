@@ -9,6 +9,7 @@ import type { BoardActions } from "@shared/components/board";
 import {
   DEFAULT_DONE_COLUMN,
   pickCustomFields,
+  serializeLinks,
   slugify,
   type BoardViewCard,
   type BoardViewConfig,
@@ -88,6 +89,9 @@ export function BoardView({ boardPath, boardRelativePath }: { boardPath: string;
         taskTotal: c.taskTotal,
         excerpt: c.excerpt ?? null,
         custom: pickCustomFields(c.properties, config?.fields),
+        blockedBy: c.blockedBy ?? [],
+        blocks: c.blocks ?? [],
+        relates: c.relates ?? [],
       })),
     [rawCards, config?.fields],
   );
@@ -102,6 +106,7 @@ export function BoardView({ boardPath, boardRelativePath }: { boardPath: string;
             colorColumns: config.colorColumns,
             viewType: config.viewType,
             fields: config.fields,
+            swimlaneBy: config.swimlaneBy as BoardViewConfig["swimlaneBy"],
             groupBy: (config.groupBy as BoardViewConfig["groupBy"]) || "status",
           }
         : { title: boardName, columns: [] },
@@ -172,6 +177,9 @@ export function BoardView({ boardPath, boardRelativePath }: { boardPath: string;
           if (patch.icon !== undefined) next.icon = patch.icon ?? "";
           if (patch.tags !== undefined) next.tags = patch.tags.map((tg) => tg.label).join(", ");
           if (patch.custom !== undefined) for (const [k, v] of Object.entries(patch.custom)) next[k] = v ?? "";
+          if (patch.blockedBy !== undefined) next.blocked_by = serializeLinks(patch.blockedBy);
+          if (patch.blocks !== undefined) next.blocks = serializeLinks(patch.blocks);
+          if (patch.relates !== undefined) next.relates = serializeLinks(patch.relates);
           const newBody = patch.notes !== undefined ? patch.notes : body;
           await tauri.writeFile(id, writeFrontmatter(newBody, next));
           await load();

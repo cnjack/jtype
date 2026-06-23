@@ -1352,6 +1352,12 @@ pub struct BoardCardInfo {
     /// Full frontmatter key/values, so the board can surface user-defined custom
     /// fields declared in the `.board` config without re-reading the file.
     pub properties: HashMap<String, String>,
+    /// Card slugs this card is blocked by (frontmatter `blocked_by`).
+    pub blocked_by: Vec<String>,
+    /// Card slugs this card blocks (frontmatter `blocks`).
+    pub blocks: Vec<String>,
+    /// Card slugs this card relates to without direction (frontmatter `relates`).
+    pub relates: Vec<String>,
 }
 
 /// The body content after the frontmatter block (for previews/excerpts).
@@ -1398,6 +1404,23 @@ fn parse_card_tags(raw: &str) -> Vec<String> {
         .split(',')
         .map(|tag| tag.trim().trim_start_matches('#').trim())
         .filter(|tag| !tag.is_empty())
+        .map(str::to_string)
+        .collect()
+}
+
+/// Parse a frontmatter dependency value (`[[slug-a]], [[slug-b]]`) into a list of
+/// card slugs, stripping the `[[ ]]` wikilink wrapper. Mirrors `parse_card_tags`
+/// (flat, comma-separated, lenient) but additionally unwraps the brackets so the
+/// stored references match the `[[name]]` link tokens used elsewhere.
+fn parse_card_links(raw: &str) -> Vec<String> {
+    raw.split(',')
+        .map(|tok| {
+            tok.trim()
+                .trim_start_matches("[[")
+                .trim_end_matches("]]")
+                .trim()
+        })
+        .filter(|tok| !tok.is_empty())
         .map(str::to_string)
         .collect()
 }
@@ -1486,6 +1509,9 @@ fn scan_board_cards_inner(
                 icon: fm.get("icon").cloned().filter(|v| !v.is_empty()),
                 excerpt: body_excerpt(&content),
                 properties: fm.clone(),
+                blocked_by: fm.get("blocked_by").map(|v| parse_card_links(v)).unwrap_or_default(),
+                blocks: fm.get("blocks").map(|v| parse_card_links(v)).unwrap_or_default(),
+                relates: fm.get("relates").map(|v| parse_card_links(v)).unwrap_or_default(),
             });
         }
     }
@@ -2635,5 +2661,39 @@ mod tests {
             .find(|e| e.name == "plan.board")
             .expect("board file listed in tree");
         assert!(matches!(board.kind, EntryKind::Board));
+    }
+
+    #[test]
+    fn parse_card_links_unwraps_wikilinks() {
+        assert_eq!(parse_card_links("[[a]], [[b]]"), vec!["a", "b"]);
+        assert_eq!(parse_card_links("a, b"), vec!["a", "b"]);
+        assert_eq!(parse_card_links("  [[x]]  "), vec!["x"]);
+        assert!(parse_card_links("").is_empty());
+        assert_eq!(parse_card_links("[[a]], , [[b]]"), vec!["a", "b"]);
+    }
+
+    #[test]
+    fn scan_board_cards_reads_dependency_frontmatter() {
+        let dir = tempdir().unwrap();
+        let root = dir.path();
+        fs::write(
+            root.join("login.md"),
+            "---\ntitle: Login\nboard: proj\nstatus: todo\nblocked_by: [[design]], [[api]]\nblocks: [[release]]\nrelates: [[research]]\n---\nbody",
+        )
+        .unwrap();
+        fs::write(
+            root.join("design.md"),
+            "---\ntitle: Design\nboard: proj\nstatus: todo\n---\n",
+        )
+        .unwrap();
+
+        let cards = scan_board_cards(root, "proj").unwrap();
+        let login = cards.iter().find(|c| c.title == "Login").unwrap();
+        assert_eq!(login.blocked_by, vec!["design", "api"]);
+        assert_eq!(login.blocks, vec!["release"]);
+        assert_eq!(login.relates, vec!["research"]);
+        // A card without the keys yields empty vecs (not missing).
+        let design = cards.iter().find(|c| c.title == "Design").unwrap();
+        assert!(design.blocked_by.is_empty());
     }
 }

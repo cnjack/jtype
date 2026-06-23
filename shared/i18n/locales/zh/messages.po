@@ -40,6 +40,14 @@ msgstr "接受云端"
 msgid "Accept local"
 msgstr "接受本地"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Activity"
+msgstr "活动"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Add a comment…"
+msgstr "添加评论…"
+
 #: shared/components/board/BoardSurface.tsx
 msgid "Add column"
 msgstr "添加列"
@@ -53,6 +61,10 @@ msgid "Add labels"
 msgstr "添加标签"
 
 #: shared/components/board/BoardPeek.tsx
+msgid "Archived"
+msgstr "归档"
+
+#: shared/components/board/BoardPeek.tsx
 #: shared/components/board/BoardSurface.tsx
 #: shared/components/board/BoardTable.tsx
 msgid "Assignee"
@@ -61,6 +73,18 @@ msgstr "负责人"
 #: shared/components/board/BoardSurface.tsx
 msgid "Blank card"
 msgstr "空白卡片"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Blocked by"
+msgstr "被阻塞于"
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Blocked by {blockedCount} unfinished card(s)"
+msgstr "被 {blockedCount} 张未完成卡片阻塞"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Blocks"
+msgstr "阻塞"
 
 #: shared/components/board/BoardSurface.tsx
 msgid "Board"
@@ -127,6 +151,14 @@ msgstr "列名称"
 msgid "comma, separated"
 msgstr "用逗号分隔"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Comment"
+msgstr "评论"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Comments"
+msgstr "评论"
+
 #: shared/components/ConfirmDialog.tsx
 msgid "Confirm"
 msgstr "确认"
@@ -147,6 +179,10 @@ msgstr "无法渲染此 Draw.io 图表。"
 msgid "Could not render this PDF."
 msgstr "无法渲染此 PDF。"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Created"
+msgstr "创建"
+
 #: shared/components/board/BoardSurface.tsx
 msgid "Delete"
 msgstr "删除"
@@ -154,6 +190,10 @@ msgstr "删除"
 #: shared/components/board/BoardPeek.tsx
 msgid "Delete card"
 msgstr "删除卡片"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Delete comment"
+msgstr "删除评论"
 
 #: shared/components/viewers/MermaidView.tsx
 msgid "Diagram error"
@@ -254,6 +294,7 @@ msgstr "Mermaid 源码"
 msgid "New card"
 msgstr "新建卡片"
 
+#: shared/components/board/BoardSwimlanes.tsx
 #: shared/components/board/BoardTable.tsx
 msgid "No cards"
 msgstr "暂无卡片"
@@ -261,6 +302,10 @@ msgstr "暂无卡片"
 #: shared/components/board/BoardSurface.tsx
 msgid "No color"
 msgstr "无颜色"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "No comments yet"
+msgstr "暂无评论"
 
 #: shared/components/board/controls.tsx
 msgid "No icon"
@@ -310,9 +355,17 @@ msgstr "优先级"
 msgid "Refresh"
 msgstr "刷新"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Relates"
+msgstr "相关"
+
 #: shared/components/board/BoardSurface.tsx
 msgid "Rename"
 msgstr "重命名"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Restored"
+msgstr "恢复"
 
 #: shared/components/ConflictResolver.tsx
 msgid "Result (editable)"
@@ -342,6 +395,10 @@ msgstr "设为完成列"
 msgid "Set WIP limit"
 msgstr "设置 WIP 限制"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Someone"
+msgstr "某人"
+
 #: shared/components/board/BoardSurface.tsx
 msgid "Sort: Due"
 msgstr "排序:截止"
@@ -366,6 +423,22 @@ msgstr "分栏"
 #: shared/components/board/BoardTable.tsx
 msgid "Status"
 msgstr "状态"
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Swimlane: Assignee"
+msgstr "泳道：负责人"
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Swimlane: None"
+msgstr "泳道：无"
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Swimlane: Priority"
+msgstr "泳道：优先级"
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Swimlane: Status"
+msgstr "泳道：状态"
 
 #: shared/components/board/BoardSurface.tsx
 #: shared/components/EditorToolbar.tsx
@@ -401,6 +474,10 @@ msgstr "取消完成列"
 #: shared/components/board/BoardPeek.tsx
 msgid "Untitled card"
 msgstr "未命名卡片"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Updated"
+msgstr "更新"
 
 #: shared/components/ConflictResolver.tsx
 msgid "Use this"

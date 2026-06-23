@@ -40,6 +40,14 @@ msgstr "クラウドを採用"
 msgid "Accept local"
 msgstr "ローカルを採用"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Activity"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Add a comment…"
+msgstr ""
+
 #: shared/components/board/BoardSurface.tsx
 msgid "Add column"
 msgstr "列を追加"
@@ -53,6 +61,10 @@ msgid "Add labels"
 msgstr "ラベルを追加"
 
 #: shared/components/board/BoardPeek.tsx
+msgid "Archived"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
 #: shared/components/board/BoardSurface.tsx
 #: shared/components/board/BoardTable.tsx
 msgid "Assignee"
@@ -61,6 +73,18 @@ msgstr "担当者"
 #: shared/components/board/BoardSurface.tsx
 msgid "Blank card"
 msgstr "空のカード"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Blocked by"
+msgstr ""
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Blocked by {blockedCount} unfinished card(s)"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Blocks"
+msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
 msgid "Board"
@@ -127,6 +151,14 @@ msgstr "列名"
 msgid "comma, separated"
 msgstr "カンマ区切り"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Comment"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Comments"
+msgstr ""
+
 #: shared/components/ConfirmDialog.tsx
 msgid "Confirm"
 msgstr "確認"
@@ -147,6 +179,10 @@ msgstr "この Draw.io 図をレンダリングできませんでした。"
 msgid "Could not render this PDF."
 msgstr "この PDF をレンダリングできませんでした。"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Created"
+msgstr ""
+
 #: shared/components/board/BoardSurface.tsx
 msgid "Delete"
 msgstr "削除"
@@ -154,6 +190,10 @@ msgstr "削除"
 #: shared/components/board/BoardPeek.tsx
 msgid "Delete card"
 msgstr "カードを削除"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Delete comment"
+msgstr ""
 
 #: shared/components/viewers/MermaidView.tsx
 msgid "Diagram error"
@@ -254,6 +294,7 @@ msgstr "Mermaid ソース"
 msgid "New card"
 msgstr "新規カード"
 
+#: shared/components/board/BoardSwimlanes.tsx
 #: shared/components/board/BoardTable.tsx
 msgid "No cards"
 msgstr "カードなし"
@@ -261,6 +302,10 @@ msgstr "カードなし"
 #: shared/components/board/BoardSurface.tsx
 msgid "No color"
 msgstr "色なし"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "No comments yet"
+msgstr ""
 
 #: shared/components/board/controls.tsx
 msgid "No icon"
@@ -310,9 +355,17 @@ msgstr "優先度"
 msgid "Refresh"
 msgstr "更新"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Relates"
+msgstr ""
+
 #: shared/components/board/BoardSurface.tsx
 msgid "Rename"
 msgstr "名前を変更"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Restored"
+msgstr ""
 
 #: shared/components/ConflictResolver.tsx
 msgid "Result (editable)"
@@ -342,6 +395,10 @@ msgstr "完了列に設定"
 msgid "Set WIP limit"
 msgstr "WIP 制限を設定"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Someone"
+msgstr ""
+
 #: shared/components/board/BoardSurface.tsx
 msgid "Sort: Due"
 msgstr "並べ替え：期限"
@@ -366,6 +423,22 @@ msgstr "分割"
 #: shared/components/board/BoardTable.tsx
 msgid "Status"
 msgstr "ステータス"
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Swimlane: Assignee"
+msgstr ""
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Swimlane: None"
+msgstr ""
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Swimlane: Priority"
+msgstr ""
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Swimlane: Status"
+msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
 #: shared/components/EditorToolbar.tsx
@@ -401,6 +474,10 @@ msgstr "完了列を解除"
 #: shared/components/board/BoardPeek.tsx
 msgid "Untitled card"
 msgstr "無題のカード"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Updated"
+msgstr ""
 
 #: shared/components/ConflictResolver.tsx
 msgid "Use this"

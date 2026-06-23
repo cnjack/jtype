@@ -23,6 +23,8 @@ export type BoardConfig = {
   viewType?: "board" | "table";
   /** User-defined custom fields shown/edited on this board's cards. */
   fields?: { key: string; label: string; type?: "text" | "number" | "date" }[];
+  /** Optional second grouping dimension rendered as swimlane rows in the board view. */
+  swimlaneBy?: "status" | "priority" | "assignee";
 };
 
 /** A card = a real `.md` note that belongs to a board (frontmatter `board == id`). */
@@ -42,6 +44,9 @@ export type BoardCard = {
   excerpt?: string | null;
   /** Full frontmatter map (for custom fields declared in the board config). */
   properties?: Record<string, string>;
+  blockedBy?: string[];
+  blocks?: string[];
+  relates?: string[];
 };
 
 /** A reusable card template (`.md` in `<boardDir>/.templates/`). */

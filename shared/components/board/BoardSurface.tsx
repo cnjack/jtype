@@ -18,11 +18,13 @@ import {
   DocumentDuplicateIcon,
   ChevronRightIcon,
   CheckCircleIcon,
+  LockClosedIcon,
   Squares2X2Icon,
   TagIcon,
   MagnifyingGlassIcon,
   FunnelIcon,
   BarsArrowDownIcon,
+  Bars3Icon,
   RectangleGroupIcon,
   XMarkIcon,
   TableCellsIcon,
@@ -33,6 +35,8 @@ import {
   DEFAULT_DONE_COLUMN,
   PRIORITY_ORDER,
   PRIORITY_STYLE,
+  blockedCounts,
+  cardSlug,
   effectiveColumns,
   groupValueOf,
   RESERVED_CARD_KEYS,
@@ -48,6 +52,7 @@ import {
 } from "../../lib/board";
 import { BoardPeek } from "./BoardPeek";
 import { BoardTable } from "./BoardTable";
+import { BoardSwimlanes } from "./BoardSwimlanes";
 import type { BoardSurfaceProps } from "./types";
 
 type DropTarget = { col: string; index: number };
@@ -68,6 +73,11 @@ export function BoardSurface({
   assigneeOptions,
   tagOptions,
   loadNotes,
+  loadComments,
+  addComment,
+  deleteComment,
+  currentUser,
+  loadActivity,
   fullscreen,
   onToggleFullscreen,
 }: BoardSurfaceProps) {
@@ -112,7 +122,18 @@ export function BoardSurface({
     () => effectiveColumns(config, cards, groupKey, t`Unassigned`),
     [config, cards, groupKey],
   );
+  // Swimlanes: a second grouping dimension rendered as rows (must differ from
+  // the column dimension). Only meaningful in the board view.
+  const swimlaneKey: BoardGroupKey | null =
+    config.swimlaneBy && config.swimlaneBy !== groupKey ? config.swimlaneBy : null;
+  const swimlaneActive = viewType === "board" && !!swimlaneKey;
+  const lanes = useMemo(
+    () => (swimlaneKey ? effectiveColumns(config, cards, swimlaneKey, t`Unassigned`) : []),
+    [config, cards, swimlaneKey],
+  );
   const vis = useMemo(() => visibleCardsFn(cards, search, filter), [cards, search, filter]);
+  // Blocker counts resolve against ALL cards (a blocker may be filtered out of view).
+  const blockers = useMemo(() => blockedCounts(cards, config.doneColumn), [cards, config.doneColumn]);
   const assignees = useMemo(() => [...new Set(cards.map((c) => c.assignee).filter(Boolean) as string[])], [cards]);
   const allTags = useMemo(() => [...new Set(cards.flatMap((c) => c.tags.map((tg) => tg.label)))], [cards]);
   const statusName = (key: string) => config.columns.find((c) => c.key === key)?.name || key || t`Unassigned`;
@@ -336,6 +357,25 @@ export function BoardSurface({
               </select>
             </label>
           )}
+          {viewType === "board" && (
+            <label className="inline-flex items-center gap-1 text-xs text-brand-gray">
+              <Bars3Icon className="h-3.5 w-3.5" />
+              <select
+                className={ctrlCls}
+                value={swimlaneKey ?? ""}
+                onChange={(e) => void actions.setConfig({ swimlaneBy: (e.target.value || undefined) as BoardGroupKey | undefined })}
+              >
+                <option value="">{t`Swimlane: None`}</option>
+                {(["status", "priority", "assignee"] as BoardGroupKey[])
+                  .filter((k) => k !== groupKey)
+                  .map((k) => (
+                    <option key={k} value={k}>
+                      {k === "status" ? t`Swimlane: Status` : k === "priority" ? t`Swimlane: Priority` : t`Swimlane: Assignee`}
+                    </option>
+                  ))}
+              </select>
+            </label>
+          )}
           <label className="inline-flex items-center gap-1 text-xs text-brand-gray">
             <BarsArrowDownIcon className="h-3.5 w-3.5" />
             <select className={ctrlCls} value={sortBy} onChange={(e) => setSortBy(e.target.value as BoardSortKey)}>
@@ -426,6 +466,18 @@ export function BoardSurface({
           <BoardTable
             cards={sortCardsFn(vis, sortBy)}
             statusName={statusName}
+            today={today}
+            doneKey={doneKey}
+            selectedId={selected?.id}
+            onSelect={(c) => setSelectedId(c.id)}
+          />
+        ) : swimlaneActive && swimlaneKey ? (
+          <BoardSwimlanes
+            cards={vis}
+            columns={columns}
+            lanes={lanes}
+            groupKey={groupKey}
+            swimlaneKey={swimlaneKey}
             today={today}
             doneKey={doneKey}
             selectedId={selected?.id}
@@ -561,12 +613,14 @@ export function BoardSurface({
                   <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-2">
                     {colCards.map((card, idx) => {
                       const overdue = card.due && card.due < today && card.columnKey !== doneKey;
+                      const blockedCount = blockers.get(card.id) ?? 0;
                       const hasMeta =
                         (card.priority && card.priority !== "none") ||
                         card.assignee ||
                         card.due ||
                         (card.taskTotal ?? 0) > 0 ||
-                        card.tags.length > 0;
+                        card.tags.length > 0 ||
+                        blockedCount > 0;
                       return (
                         <Fragment key={card.id}>
                           {showLine(idx) && <div className="mx-1 h-0.5 rounded bg-brand" />}
@@ -648,6 +702,15 @@ export function BoardSurface({
                             )}
                             {hasMeta && (
                               <span className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                                {blockedCount > 0 && (
+                                  <span
+                                    className="inline-flex items-center gap-0.5 rounded bg-red-50 px-1.5 py-0.5 text-[11px] font-medium text-red-600"
+                                    title={t`Blocked by ${blockedCount} unfinished card(s)`}
+                                  >
+                                    <LockClosedIcon className="h-3 w-3" />
+                                    {blockedCount}
+                                  </span>
+                                )}
                                 {card.priority && card.priority !== "none" && (
                                   <span className={`rounded px-1.5 py-0.5 text-[11px] font-medium ${PRIORITY_STYLE[card.priority] ?? "bg-stone-100 text-stone-500"}`}>{card.priority}</span>
                                 )}
@@ -833,7 +896,13 @@ export function BoardSurface({
               }
               void actions.setConfig({ fields: [...(config.fields ?? []), { key, label }] });
             }}
+            dependencyCards={cards.filter((c) => c.id !== selected.id).map((c) => ({ slug: cardSlug(c), title: c.title }))}
             loadNotes={loadNotes}
+            loadComments={loadComments}
+            addComment={addComment}
+            deleteComment={deleteComment}
+            currentUser={currentUser}
+            loadActivity={loadActivity}
             onChange={(patch) => void actions.updateCard(selected.id, patch)}
             onClose={() => setSelectedId(null)}
             onDelete={() => void actions.deleteCard(selected)}
