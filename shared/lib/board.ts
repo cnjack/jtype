@@ -85,6 +85,27 @@ export const PRIORITY_STYLE: Record<string, string> = {
 export const COLUMN_COLORS = ["#ef4444", "#f59e0b", "#eab308", "#22c55e", "#0ea5e9", "#6366f1", "#a855f7", "#ec4899", "#78716c"];
 export const DEFAULT_DONE_COLUMN = "done";
 
+/**
+ * Frontmatter / property keys the board itself owns. A user-defined custom-field
+ * key must never equal one of these, or writing the field value would clobber a
+ * core card attribute (e.g. a field called "Status" → key `status`).
+ */
+export const RESERVED_CARD_KEYS = [
+  "title",
+  "board",
+  "status",
+  "position",
+  "priority",
+  "assignee",
+  "due",
+  "tags",
+  "icon",
+  "blocked_by",
+  "blocks",
+  "relates",
+  "attachments",
+];
+
 /** Count Markdown task checkboxes (`- [ ]` / `- [x]`) in a body → (done, total). */
 export function countTasks(md: string): { done: number; total: number } {
   let done = 0;

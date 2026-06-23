@@ -35,6 +35,7 @@ import {
   PRIORITY_STYLE,
   effectiveColumns,
   groupValueOf,
+  RESERVED_CARD_KEYS,
   slugify,
   sortCards as sortCardsFn,
   todayStr,
@@ -821,7 +822,9 @@ export function BoardSurface({
             tagOptions={tagOptions}
             fields={config.fields}
             onAddField={(label) => {
-              const existing = new Set((config.fields ?? []).map((f) => f.key));
+              // Seed with the reserved card keys so a custom field can never
+              // collide with (and clobber) a core frontmatter attribute.
+              const existing = new Set([...RESERVED_CARD_KEYS, ...(config.fields ?? []).map((f) => f.key)]);
               let key = slugify(label);
               if (existing.has(key)) {
                 let n = 2;
