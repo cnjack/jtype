@@ -342,7 +342,7 @@ pub fn build_app(
         )
         .route(
             "/api/v1/workspaces/:workspace_id/kanban/columns/:column_id",
-            patch(handlers::kanban::column::patch_column),
+            patch(handlers::kanban::column::patch_column).delete(handlers::kanban::column::delete_column),
         )
         // Cards
         .route(

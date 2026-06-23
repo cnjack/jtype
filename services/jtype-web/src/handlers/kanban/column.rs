@@ -3,10 +3,11 @@
 //! Endpoints:
 //!   POST   /api/v1/workspaces/:workspace_id/kanban/boards/:board_id/columns
 //!   PATCH  /api/v1/workspaces/:workspace_id/kanban/columns/:column_id
+//!   DELETE /api/v1/workspaces/:workspace_id/kanban/columns/:column_id
 //!   POST   /api/v1/workspaces/:workspace_id/kanban/columns/reorder
 //!
-//! NO DELETE — columns are deleted only via board hard-delete cascade.
-//! Reorder is atomic (single transaction).
+//! DELETE merges the column's cards into a fallback column (never lost) and
+//! refuses to remove a board's last column. Reorder is atomic (single tx).
 //!
 //! `wip_limit` is advisory metadata for the UI to surface a warning; the server
 //! deliberately does NOT block card creation or moves into a full column, so a
@@ -276,6 +277,123 @@ pub async fn patch_column(
         .await;
 
     Ok(Json(col).into_response())
+}
+
+/// Delete a column, merging its cards into a fallback column. Mirrors the file
+/// board's delete-column behavior (cards move, never lost). The `kanban_cards`
+/// FK is `ON DELETE CASCADE`, so we MUST reassign every card (active + archived)
+/// off the column before deleting it. Refuses to delete a board's last column.
+pub async fn delete_column(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Path((workspace_id, column_id)): Path<(String, String)>,
+) -> Result<Response, AppError> {
+    let user = extract_user(&state.pool, &headers).await?;
+    require_workspace_role(
+        &state.pool,
+        &workspace_id,
+        &user.id,
+        &["owner", "admin", "editor"],
+    )
+    .await?;
+
+    let device_id = header_device_id(&headers);
+    let session_id = crate::handlers::extract_session_id(&headers);
+
+    let mut tx = state.pool.begin().await?;
+
+    // Resolve column → board, scoped to this workspace.
+    let board_id: Option<String> = sqlx::query_scalar(
+        r#"SELECT b.id FROM kanban_columns c
+           JOIN kanban_boards b ON b.id = c.board_id
+           WHERE c.id = ? AND b.workspace_id = ?"#,
+    )
+    .bind(&column_id)
+    .bind(&workspace_id)
+    .fetch_optional(&mut *tx)
+    .await?;
+    let Some(board_id) = board_id else {
+        return Err(AppError::NotFound);
+    };
+
+    // Fallback = first remaining column by position. Refuse if this is the last.
+    let fallback_id: Option<String> = sqlx::query_scalar(
+        r#"SELECT id FROM kanban_columns WHERE board_id = ? AND id != ? ORDER BY position, id LIMIT 1"#,
+    )
+    .bind(&board_id)
+    .bind(&column_id)
+    .fetch_optional(&mut *tx)
+    .await?;
+    let Some(fallback_id) = fallback_id else {
+        return Err(AppError::BadRequest(
+            "cannot delete the only column on a board".into(),
+        ));
+    };
+
+    let next_clock = next_workspace_clock(&mut tx, &workspace_id).await?;
+
+    // Active cards append to the fallback's tail, preserving their order.
+    let base: i32 = sqlx::query_scalar(
+        r#"SELECT COALESCE(MAX(position), -1) FROM kanban_cards WHERE column_id = ? AND archived_at IS NULL"#,
+    )
+    .bind(&fallback_id)
+    .fetch_one(&mut *tx)
+    .await?;
+    let active: Vec<String> = sqlx::query_scalar(
+        r#"SELECT id FROM kanban_cards WHERE column_id = ? AND archived_at IS NULL ORDER BY position, id"#,
+    )
+    .bind(&column_id)
+    .fetch_all(&mut *tx)
+    .await?;
+    for (i, cid) in active.iter().enumerate() {
+        sqlx::query("UPDATE kanban_cards SET column_id = ?, position = ? WHERE id = ?")
+            .bind(&fallback_id)
+            .bind(base + 1 + i as i32)
+            .bind(cid)
+            .execute(&mut *tx)
+            .await?;
+    }
+    // Archived (soft-deleted) cards just move column so the cascade can't drop them.
+    sqlx::query("UPDATE kanban_cards SET column_id = ? WHERE column_id = ? AND archived_at IS NOT NULL")
+        .bind(&fallback_id)
+        .bind(&column_id)
+        .execute(&mut *tx)
+        .await?;
+    // Repoint the trash snapshots too: restore_card reads the target column from
+    // kanban_card_trash, so a dangling column_id there would make archived cards
+    // un-restorable after the column is gone.
+    sqlx::query("UPDATE kanban_card_trash SET column_id = ? WHERE column_id = ? AND workspace_id = ?")
+        .bind(&fallback_id)
+        .bind(&column_id)
+        .bind(&workspace_id)
+        .execute(&mut *tx)
+        .await?;
+
+    sqlx::query("DELETE FROM kanban_columns WHERE id = ?")
+        .bind(&column_id)
+        .execute(&mut *tx)
+        .await?;
+
+    tx.commit().await?;
+
+    state
+        .hub
+        .publish_to_workspace(
+            &workspace_id,
+            WorkspaceEvent::KanbanColumnDeleted {
+                workspace_id: workspace_id.clone(),
+                source_session_id: session_id.clone(),
+                board_id,
+                column_id,
+                deleted_clock: next_clock,
+                source: "web".to_string(),
+                device_id,
+            },
+            session_id.as_deref(),
+        )
+        .await;
+
+    Ok(axum::http::StatusCode::NO_CONTENT.into_response())
 }
 
 pub async fn reorder_columns(

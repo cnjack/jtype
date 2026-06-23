@@ -315,6 +315,8 @@ export const api = {
       request<KanbanColumn>(`/api/v1/workspaces/${workspaceId}/kanban/columns/${columnId}`, { method: 'PATCH', body: JSON.stringify(data) }),
     reorderColumns: (workspaceId: string, boardId: string, columnIds: string[]) =>
       request<{ ok: boolean }>(`/api/v1/workspaces/${workspaceId}/kanban/columns/reorder`, { method: 'POST', body: JSON.stringify({ boardId, columnIds }) }),
+    deleteColumn: (workspaceId: string, columnId: string) =>
+      request<void>(`/api/v1/workspaces/${workspaceId}/kanban/columns/${columnId}`, { method: 'DELETE' }),
 
     listCards: (workspaceId: string, boardId: string, includeArchived = false) =>
       request<KanbanCard[]>(`/api/v1/workspaces/${workspaceId}/kanban/boards/${boardId}/cards${includeArchived ? '?includeArchived=true' : ''}`),
