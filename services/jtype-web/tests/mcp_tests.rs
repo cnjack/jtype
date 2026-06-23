@@ -122,6 +122,69 @@ async fn mcp_tools_list_has_all_tools() {
     }
 }
 
+// ── Kanban catalog (separate `/mcp/kanban` server) ──────────────────────────
+
+/// Send a JSON-RPC message to `/mcp/kanban` with a bearer token; return (status, json).
+async fn mcp_kanban(app: Router, token: Option<&str>, body: Value) -> (StatusCode, Value) {
+    common::req(app, "POST", "/mcp/kanban", token, Some(body)).await
+}
+
+/// The tool names from a `tools/list` response body.
+fn tool_names(body: &Value) -> Vec<&str> {
+    body["result"]["tools"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|t| t["name"].as_str().unwrap())
+        .collect()
+}
+
+/// Board/card tools — exposed by `/mcp/kanban`, must be absent from `/mcp`.
+const KANBAN_TOOLS: [&str; 6] =
+    ["list_boards", "get_board", "list_cards", "create_card", "move_card", "update_card"];
+
+#[tokio::test]
+async fn mcp_notes_catalog_omits_kanban_tools() {
+    let (app, _pool) = common::setup().await;
+    let username = common::uid();
+    let (token, _) = common::register_user(app.clone(), &username).await;
+
+    let (status, body) = mcp(
+        app,
+        Some(&token),
+        json!({"jsonrpc":"2.0","id":1,"method":"tools/list"}),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    let names = tool_names(&body);
+    for kanban in KANBAN_TOOLS {
+        assert!(!names.contains(&kanban), "/mcp must not expose kanban tool {kanban}; got {names:?}");
+    }
+}
+
+#[tokio::test]
+async fn mcp_kanban_catalog_has_board_card_tools() {
+    let (app, _pool) = common::setup().await;
+    let username = common::uid();
+    let (token, _) = common::register_user(app.clone(), &username).await;
+
+    let (status, body) = mcp_kanban(
+        app,
+        Some(&token),
+        json!({"jsonrpc":"2.0","id":1,"method":"tools/list"}),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    let names = tool_names(&body);
+    for expected in KANBAN_TOOLS {
+        assert!(names.contains(&expected), "missing kanban tool {expected}; got {names:?}");
+    }
+    // The kanban server must not leak the note-editing tools.
+    for note in ["create_note", "search_notes", "append_note", "get_note"] {
+        assert!(!names.contains(&note), "/mcp/kanban leaked note tool {note}; got {names:?}");
+    }
+}
+
 // ── Notes happy path ────────────────────────────────────────────────────────
 
 #[tokio::test]

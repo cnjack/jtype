@@ -482,7 +482,7 @@ export function WebBoardView({
   )
 
   return (
-    <div className="h-full min-h-0">
+    <div className="relative h-full min-h-0">
       <BoardSurface
         config={viewConfig}
         cards={displayCards}

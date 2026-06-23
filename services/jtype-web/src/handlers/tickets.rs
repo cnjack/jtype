@@ -1,8 +1,12 @@
-//! Jira-style ticket links (`/browse/OCCSV-3371`) — see internal-docs/kanban/ticket-links.md.
+//! Per-card ticket links (`OCCSV-3371`) — see internal-docs/kanban/ticket-links.md.
 //!
 //! The per-card number lives ONLY in the cloud index (`card_tickets`), keyed by the
 //! card's `documents.id`; `board_sequences` is the sole, monotonic allocator. The
 //! `ticket_key` + `number` are snapshotted so a minted id is stable forever.
+//!
+//! Tickets are scoped to a workspace (`ticket_key` is unique within a workspace,
+//! not globally), so every resolve route carries the workspace — there is no
+//! workspace-agnostic lookup, which would be ambiguous across workspaces.
 //!   POST /api/v1/workspaces/:workspace_id/tickets/allocate  {relativePath, ticketKey}
 //!   GET  /api/v1/workspaces/:workspace_id/tickets                 → all tickets (doc→ticket map)
 //!   GET  /api/v1/workspaces/:workspace_id/tickets/:ticket         → resolve OCCSV-3371 → card
@@ -53,17 +57,33 @@ fn validate_ticket_key(raw: &str) -> Result<String, AppError> {
     Ok(key)
 }
 
-async fn resolve_document_id(
+/// Resolve a document id, enforcing that the target is a board CARD and nothing
+/// else. A ticket is a per-card identity, so only `.md` notes carrying non-empty
+/// `board:` frontmatter may be allocated one — `.board` files and ordinary notes
+/// are rejected. This is the same card test [`fire_card_webhook`] uses, kept in
+/// lock-step so "what is a card" has a single definition.
+async fn resolve_card_document_id(
     pool: &sqlx::Pool<sqlx::MySql>,
     workspace_id: &str,
     relative_path: &str,
 ) -> Result<String, AppError> {
-    sqlx::query_scalar::<_, String>("SELECT id FROM documents WHERE workspace_id = ? AND relative_path = ?")
+    let row = sqlx::query("SELECT id, content FROM documents WHERE workspace_id = ? AND relative_path = ?")
         .bind(workspace_id)
         .bind(relative_path)
         .fetch_optional(pool)
         .await?
-        .ok_or(AppError::NotFound)
+        .ok_or(AppError::NotFound)?;
+    if !relative_path.to_ascii_lowercase().ends_with(".md") {
+        return Err(AppError::BadRequest("ticket target must be a card (.md) document".into()));
+    }
+    let content: String = row.try_get("content")?;
+    let is_card = jtype_core::parse_frontmatter(&content)
+        .get("board")
+        .is_some_and(|b| !b.trim().is_empty());
+    if !is_card {
+        return Err(AppError::BadRequest("ticket target must be a card with board: frontmatter".into()));
+    }
+    Ok(row.try_get("id")?)
 }
 
 pub async fn allocate(
@@ -76,7 +96,7 @@ pub async fn allocate(
     require_workspace_role(&state.pool, &workspace_id, &user.id, &["owner", "admin", "editor"]).await?;
 
     let ticket_key = validate_ticket_key(&payload.ticket_key)?;
-    let document_id = resolve_document_id(&state.pool, &workspace_id, &payload.relative_path).await?;
+    let document_id = resolve_card_document_id(&state.pool, &workspace_id, &payload.relative_path).await?;
 
     let mut tx = state.pool.begin().await?;
 
@@ -207,44 +227,6 @@ pub async fn resolve_ticket(
     .await?
     .ok_or(AppError::NotFound)?;
     Ok(Json(row_to_ticket(&row)?).into_response())
-}
-
-/// Workspace-agnostic resolve for the bare `/browse/OCCSV-3371` URL: finds the
-/// ticket in any workspace the caller is an active member of.
-pub async fn browse(
-    State(state): State<AppState>,
-    headers: HeaderMap,
-    Path(ticket): Path<String>,
-) -> Result<Response, AppError> {
-    let user = extract_user(&state.pool, &headers).await?;
-    let (key, number) = ticket
-        .rsplit_once('-')
-        .and_then(|(k, n)| n.parse::<i64>().ok().map(|num| (k.to_ascii_uppercase(), num)))
-        .ok_or_else(|| AppError::BadRequest("invalid ticket".into()))?;
-
-    let row = sqlx::query(
-        r#"SELECT t.workspace_id, t.document_id, d.relative_path
-           FROM card_tickets t
-           JOIN documents d ON d.id = t.document_id
-           JOIN workspace_members wm ON wm.workspace_id = t.workspace_id
-               AND wm.user_id = ? AND wm.status = 'active'
-           WHERE t.ticket_key = ? AND t.number = ?
-           LIMIT 1"#,
-    )
-    .bind(&user.id)
-    .bind(&key)
-    .bind(number)
-    .fetch_optional(&state.pool)
-    .await?
-    .ok_or(AppError::NotFound)?;
-
-    Ok(Json(serde_json::json!({
-        "workspaceId": row.try_get::<String, _>("workspace_id")?,
-        "documentId": row.try_get::<String, _>("document_id")?,
-        "relativePath": row.try_get::<String, _>("relative_path")?,
-        "ticket": format!("{key}-{number}"),
-    }))
-    .into_response())
 }
 
 fn row_to_ticket(r: &sqlx::mysql::MySqlRow) -> Result<Ticket, AppError> {

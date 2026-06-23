@@ -355,8 +355,9 @@ export function Workspace() {
     setDirty(false)
   }
 
-  // Deep link: `/workspaces/:id?doc=<documentId>` (from a /browse/OCCSV-3371 ticket
-  // link) opens that card document once the workspace is ready, then clears the param.
+  // Deep link: `/workspaces/:id?doc=<documentId>` (e.g. from a resolved
+  // OCCSV-3371 ticket link) opens that card document once the workspace is
+  // ready, then clears the param.
   const [searchParams, setSearchParams] = useSearchParams()
   useEffect(() => {
     const doc = searchParams.get('doc')

@@ -39,18 +39,18 @@ async function loadPlatformMessages(locale: SupportedLocale): Promise<Record<str
   return platformMessages
 }
 
-/** Resolve a Jira-style ticket (`/browse/OCCSV-3371`) to its card and open it. */
-function Browse() {
-  const { ticket } = useParams<{ ticket: string }>()
+/** Resolve a workspace-scoped ticket (`OCCSV-3371`) to its card and open it. */
+function TicketRedirect() {
+  const { workspaceId, ticket } = useParams<{ workspaceId: string; ticket: string }>()
   const navigate = useNavigate()
   const [error, setError] = useState('')
   useEffect(() => {
-    if (!ticket) return
+    if (!workspaceId || !ticket) return
     api
-      .browseTicket(ticket)
-      .then((r) => navigate(`/workspaces/${r.workspaceId}?doc=${encodeURIComponent(r.documentId)}`, { replace: true }))
+      .resolveTicket(workspaceId, ticket)
+      .then((r) => navigate(`/workspaces/${workspaceId}?doc=${encodeURIComponent(r.documentId)}`, { replace: true }))
       .catch(() => setError(`Ticket ${ticket} not found.`))
-  }, [ticket, navigate])
+  }, [workspaceId, ticket, navigate])
   return <div className="p-10 text-sm text-zinc-500">{error || `Opening ${ticket}…`}</div>
 }
 
@@ -85,7 +85,7 @@ function renderApp() {
                   <Route path="/admin" element={<Admin />} />
                   <Route path="/ai" element={<AiConnections />} />
                   <Route path="/workspaces/:workspaceId" element={<Workspace />} />
-                  <Route path="/browse/:ticket" element={<Browse />} />
+                  <Route path="/workspaces/:workspaceId/tickets/:ticket" element={<TicketRedirect />} />
                 </Route>
               </Routes>
               <DownloadPromo />

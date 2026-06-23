@@ -177,7 +177,15 @@ async fn run(st: &McpState, token: &str, name: &str, args: &Value) -> Result<Str
                 content = jtype_core::set_frontmatter_field(&content, "due", Some(&v));
             }
 
-            let rel = format!("{dir}/{}.md", slugify(&title));
+            // Don't clobber an existing card whose title slugifies the same: the
+            // save path overwrites by relative_path, so probe and suffix -2, -3, …
+            let slug = slugify(&title);
+            let mut rel = format!("{dir}/{slug}.md");
+            let mut n = 2;
+            while get_doc(st, token, &ws, &rel).await.is_ok() {
+                rel = format!("{dir}/{slug}-{n}.md");
+                n += 1;
+            }
             let res = api_post(
                 st,
                 token,
@@ -226,9 +234,11 @@ async fn run(st: &McpState, token: &str, name: &str, args: &Value) -> Result<Str
                 .unwrap_or(&path)
                 .to_string();
             let mut touched = false;
+            // Key off presence (not opt(), which drops empty strings) so an
+            // explicit "" clears the field, as documented; an omitted key is a no-op.
             for key in ["status", "priority", "assignee", "due"] {
-                if let Some(v) = opt(args, key) {
-                    let set = if v.is_empty() { None } else { Some(v.as_str()) };
+                if let Some(v) = args.get(key).and_then(|v| v.as_str()) {
+                    let set = if v.is_empty() { None } else { Some(v) };
                     content = jtype_core::set_frontmatter_field(&content, key, set);
                     touched = true;
                 }

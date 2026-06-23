@@ -1,10 +1,10 @@
-# JType 看板 — Jira 式 ticket link（`/browse/OCCSV-3371`）
+# JType 看板 — ticket link（`OCCSV-3371`）
 
 状态：设计已定稿（用户 2026-06-23 锁定关键决策），待实现
 初始日期：2026-06-23
 更新日期：2026-06-23
 
-> **目标**：支持 Jira 式工单链接 `/browse/OCCSV-3371`，其中 `OCCSV` = 看板的 ticket 前缀（board key），`3371` = 该看板内的顺序卡号。
+> **目标**：支持工单链接 `OCCSV-3371`，其中 `OCCSV` = 看板的 ticket 前缀（board key），`3371` = 该看板内的顺序卡号。链接在 workspace 上下文里解析（路由 `/workspaces/:id/tickets/:ticket`），不做 workspace-agnostic 的裸链接。
 > **配套**：本特性长在 [`unification-v2.md`](./unification-v2.md) 的文档型看板之上，复用其 §1.1 两条架构原则（`documents.id` 唯一键 + web 为主/desktop 为辅）。落地排在 v2 退役③、文件型看板坐稳之后。
 
 ---
@@ -15,7 +15,7 @@
 |---|---|---|
 | 号存哪 | **只存云端索引**（不进 `.md` frontmatter） | 号是云端特性；离线补号无需改写文档 content，实现更干净 |
 | 离线发号 | **A+C**：在线建卡实时发号；离线建卡先无号，首次同步补号 | 号单调连续、零碰撞、不可变 |
-| 主次 | **web 为主、desktop 为辅** | 桌面离线看不到号 / 解不了 `/browse` 可接受；只读缓存为可选增强 |
+| 主次 | **web 为主、desktop 为辅** | 桌面离线看不到号 / 解不了 ticket 链接可接受；只读缓存为可选增强 |
 
 **核心后果**：ticket 号变成**云端能力**。`.md` 文件不带号 → git/桌面离线看不到 `OCCSV-3371`。但 **board key 在 `.board` 里（会同步）**，桌面能识别 `OCCSV-` 是合法前缀、能 linkify，只是离线点不开具体卡。
 
@@ -39,7 +39,7 @@
 
 CREATE TABLE board_sequences (
   workspace_id CHAR(36) NOT NULL,
-  ticket_key VARCHAR(12) NOT NULL,
+  ticket_key VARCHAR(16) NOT NULL,
   last_number BIGINT NOT NULL DEFAULT 0,
   PRIMARY KEY (workspace_id, ticket_key),
   CONSTRAINT fk_board_seq_ws FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
@@ -49,7 +49,7 @@ CREATE TABLE card_tickets (
   id CHAR(36) NOT NULL PRIMARY KEY,
   workspace_id CHAR(36) NOT NULL,
   document_id CHAR(36) NOT NULL,
-  ticket_key VARCHAR(12) NOT NULL,
+  ticket_key VARCHAR(16) NOT NULL,
   number BIGINT NOT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   UNIQUE KEY uq_card_tickets_doc (document_id),
@@ -94,13 +94,13 @@ CREATE TABLE card_tickets (
 
 ## 3. 解析、路由与跳转
 
-### 3.1 `/browse/:ticket`（Web，主场）
+### 3.1 ticket 解析路由（Web，主场）
 1. 解析 `OCCSV-3371` → `(ticket_key=OCCSV, number=3371)`；非法格式 → 400。
 2. 查 `card_tickets`（按 `workspace_id + ticket_key + number`）→ `document_id` → 经 `documents` 取 `relative_path`。
 3. 跳到工作区并打开该卡（如 `/workspaces/:id?doc=<path>&card=<id>`，落进 `WebBoardView` 的 peek）。
 4. 查不到 → 404 / "已删除"页。**号删了永不复用**（`last_number` 不回退）。
 
-> `/browse/:ticket` 需在某 workspace 上下文里解析（ticket 作用域 = workspace）。若 URL 不含 workspace，需先按用户可见的 workspace 解析 `ticket_key`（key 在 workspace 内唯一，但跨 workspace 可能重名 → 需带 workspace 或做消歧）。
+> ticket 作用域 = workspace，故解析路由**带 workspace**：`/workspaces/:id/tickets/:ticket`（前端 `TicketRedirect`）。**不**提供 workspace-agnostic 的裸 ticket 解析——key 仅在 workspace 内唯一，跨 workspace 可能重名，裸链接会有歧义。
 
 ### 3.2 Desktop（辅）
 - 在线：调云端 resolve 端点，同 web。
@@ -130,7 +130,7 @@ CREATE TABLE card_tickets (
 |---|---|
 | 派生默认 | 从 board 标题取大写首字母/缩写（"OCC Services"→`OCCSV`），用户可改 |
 | 唯一性 | 创建/改 key 时校验 workspace 内不重复（云端唯一约束 + 桌面扫 `.board` 校验） |
-| 改名 | 已铸号在 `card_tickets` 是快照，不动 → 旧 ID 永久有效。可选：`.board` 存 `aliasKeys[]`，`/browse` 与 linkify 白名单也认旧前缀 |
+| 改名 | 已铸号在 `card_tickets` 是快照，不动 → 旧 ID 永久有效。可选：`.board` 存 `aliasKeys[]`，解析路由与 linkify 白名单也认旧前缀 |
 | 首卡后冻结 | 建议铸出首张号后默认锁定 key（或仅允许走 alias），避免链接面变动 |
 
 ---
@@ -140,13 +140,13 @@ CREATE TABLE card_tickets (
 - **迁移** `0019_card_tickets`（§1.3）+ 注册进 [`db/migrations.rs`](services/jtype-web/src/db/migrations.rs)（append-only，紧跟 v2 的 `0018_drop_kanban`）。
 - **allocate 端点**：`POST /api/v1/workspaces/:id/tickets/allocate { documentId }` → 解析该文档 board → 取 `ticketKey` → 事务发号 → 返回 `{ ticket, number }`。幂等。
 - **push handler 补号**：在 [`handlers/sync.rs`](services/jtype-web/src/handlers/sync.rs) push 处理里，对新到/变更的文档，若 frontmatter 有 `board:` 且 `card_tickets` 无行，则 allocate（纯插行，不改 content）。
-- **resolve 端点**：`GET /api/v1/workspaces/:id/browse/:ticket` 或页面路由 → 查表 → 返回/重定向到卡片。
+- **resolve 端点**：`GET /api/v1/workspaces/:id/tickets/:ticket` → 查表 → 返回卡片（前端 `TicketRedirect` 据此重定向）。
 - **board key 校验端点**：创建/改 `.board` 时校验 `ticketKey` 唯一与格式。
 
 ## 7. 前端改动点（`services/jtype-web/frontend/src/`）
 
 - `WebBoardView`：加载本看板时一并拉 `card_tickets`（`document_id → ticket` map），卡片渲染 ticket 徽标；创建卡片后调 `allocate` 拿号回填徽标。
-- `main.tsx`：加 `/browse/:ticket` 路由（解析 → 重定向到 workspace + 打开卡）。
+- `main.tsx`：加 `/workspaces/:workspaceId/tickets/:ticket` 路由（`TicketRedirect`：解析 → 重定向到 workspace + 打开卡）。
 - `shared/lib/markdown.ts`：`renderTicketLinks` + DOMPurify `ADD_ATTR: data-ticket`；平台层（web/desktop）实现 `data-ticket` 点击解析。
 - `.board` 编辑 UI：暴露 `ticketKey` 字段（带唯一性校验提示）。
 
@@ -156,7 +156,7 @@ CREATE TABLE card_tickets (
 
 1. **模型**：`.board` 加 `ticketKey` + 校验；迁移 `0019` 两表。
 2. **在线发号（A）**：`allocate` 端点 + `WebBoardView` 显示徽标 + 创建即发号。
-3. **解析/路由**：`/browse/:ticket` + resolve 端点。
+3. **解析/路由**：workspace-scoped ticket 路由 + resolve 端点。
 4. **离线补号（C）**：push handler 补号。
 5. **markdown linkify**：`renderTicketLinks` + board-key 白名单。
 6. **可选增强**：桌面 `tickets.json` 只读缓存（按需）。
@@ -171,15 +171,15 @@ CREATE TABLE card_tickets (
 
 - AC1：`.board` 设 `ticketKey=OCCSV`；同 workspace 再设一个 `OCCSV` 被拒（唯一性）。
 - AC2：web 新建卡 → 立即显示 `OCCSV-N`，N 较上一张 +1；`card_tickets` 有对应行（键 `document_id`）。
-- AC3：`/browse/OCCSV-3371` 打开对应卡；不存在的号 → 404；删卡后该号 `/browse` 仍 404 且**不被新卡复用**。
+- AC3：`/workspaces/:id/tickets/OCCSV-3371` 打开对应卡；不存在的号 → 404；删卡后该号仍 404 且**不被新卡复用**。
 - AC4：断网桌面建卡(无号) → 联网同步后，该卡在 web 显示号；重复同步不重号（幂等）。
 - AC5：正文写 `OCCSV-3371` 在预览渲成可点链接并跳转；写 `UTF-8`/`COVID-19` **不**被链接（白名单生效）。
 - AC6：把卡片 `board:` 改到另一 board → 其 ticket **不变**（移板保号）。
-- AC7：改 board 的 `ticketKey` → 已有卡的 `OCCSV-N` 不变（快照稳定）；若启用 alias，旧前缀 `/browse` 仍可达。
+- AC7：改 board 的 `ticketKey` → 已有卡的 `OCCSV-N` 不变（快照稳定）；若启用 alias，旧前缀仍可达。
 
 ## 10. 边界与未决
 
-- **跨 workspace 重名 key**：`/browse/:ticket` 需带 workspace 上下文或做消歧（key 仅 workspace 内唯一）。
+- **跨 workspace 重名 key**：已解决——解析路由带 workspace（`/workspaces/:id/tickets/:ticket`），不提供裸 ticket 解析（key 仅 workspace 内唯一）。
 - **桌面离线解析**：默认不支持，依赖可选 `tickets.json` 缓存。
 - **board key 派生算法**：标题→缩写规则需定（取大写首字母？前 N 字符?），可先用"标题大写去空格取前 5–6 位 + 去重后缀"，允许用户覆盖。
 - **大量离线卡补号顺序**：同一 board 多张离线卡在一次 sync 补号，顺序按 push 顺序/创建时间，需定一个确定性排序避免号序随机。

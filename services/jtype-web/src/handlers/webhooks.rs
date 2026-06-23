@@ -104,13 +104,23 @@ const SELECT_WEBHOOK: &str = r#"SELECT id, board_ref, name, target_url, event_ty
        CAST(created_at AS CHAR) AS created_at
 FROM webhooks"#;
 
+// We can't use the nicer `Ipv4Addr::is_global` / `is_shared` / `is_benchmarking`
+// helpers — they're still unstable (feature `ip`) on the stable toolchain — so
+// the non-global ranges are spelled out with bitmasks. `is_multicast` /
+// `is_documentation` ARE stable and used directly.
 pub(crate) fn is_blocked_v4(ip: std::net::Ipv4Addr) -> bool {
+    let o = ip.octets();
     ip.is_loopback()
         || ip.is_private()
         || ip.is_link_local()
         || ip.is_unspecified()
         || ip.is_broadcast()
-        || ip.octets()[0] == 0
+        || ip.is_multicast() // 224.0.0.0/4
+        || ip.is_documentation() // 192.0.2/24, 198.51.100/24, 203.0.113/24
+        || o[0] == 0 // 0.0.0.0/8
+        || (o[0] == 100 && (o[1] & 0xc0) == 0x40) // CGNAT 100.64.0.0/10
+        || (o[0] == 198 && (o[1] & 0xfe) == 0x12) // benchmark 198.18.0.0/15
+        || (o[0] & 0xf0) == 0xf0 // reserved 240.0.0.0/4
 }
 
 pub(crate) fn is_blocked_v6(ip: std::net::Ipv6Addr) -> bool {
@@ -119,10 +129,13 @@ pub(crate) fn is_blocked_v6(ip: std::net::Ipv6Addr) -> bool {
     if let Some(v4) = ip.to_ipv4_mapped().or_else(|| ip.to_ipv4()) {
         return is_blocked_v4(v4);
     }
+    let s = ip.segments();
     ip.is_loopback()
         || ip.is_unspecified()
-        || (ip.segments()[0] & 0xfe00) == 0xfc00 // ULA fc00::/7
-        || (ip.segments()[0] & 0xffc0) == 0xfe80 // link-local fe80::/10
+        || ip.is_multicast() // ff00::/8
+        || (s[0] & 0xfe00) == 0xfc00 // ULA fc00::/7
+        || (s[0] & 0xffc0) == 0xfe80 // link-local fe80::/10
+        || (s[0] == 0x2001 && s[1] == 0x0db8) // documentation 2001:db8::/32
 }
 
 /// True when an IP literal is an SSRF target we refuse. Shared with the delivery

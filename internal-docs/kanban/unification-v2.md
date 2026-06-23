@@ -64,11 +64,13 @@
 | 卫星 | 键 |
 |---|---|
 | `card_comments` | `document_id` |
-| `webhooks.board_document_id` | board 的 `document_id` |
+| `webhooks.board_ref` | board 的**逻辑 id**（frontmatter `board` 值，`VARCHAR`，NULL=全部看板）¹ |
 | `card_tickets`（见 [`ticket-links.md`](./ticket-links.md)） | `document_id` |
 | 活动流 | 派生自 `document_versions`（按 doc） |
 
-人类可读的 ticket 串（如 `OCCSV-3371`）**只是展示别名，永不做外键**——`document_id` 改名/移动都不变、且离线卡未铸号时就已存在；ticket 串会随 board key 改名而变。
+> ¹ webhook 作用域是唯一的例外：键挂 board 的**逻辑 ref**（frontmatter `board`），**不**用 `.board` 文件的 `document_id`。这样作用域在 `.board` 文件移动/改名后**不变**，与实际迁移契约一致。
+
+人类可读的 ticket 串（如 `OCCSV-3371`）**只是展示别名，永不做外键**——`document_id` 改名/移动都不变、且离线卡未铸号时就已存在；**已铸号的 ticket 串也保持不变**（`card_tickets` 里是 `ticket_key`+`number` 快照），只有**新发号**才会使用新的 board key。
 > 前提：卫星都是云端特性，`document_id` 在卡片进入云端 `documents` 表后才有；"web 为主"下这是常态。
 
 **② Web 为主，Desktop 为辅。** Web = 功能完整的主场（号 / 评论 / webhook / 活动这些富功能**在线才全**）；Desktop = 能离线读写同一批看板文件的**轻客户端**，离线不享有云端卫星。由此：
@@ -114,7 +116,7 @@
 - **重接触发源**：从 `handlers/kanban/card.rs` 的 3 处 `enqueue_event`，搬到 **`handlers/document.rs` 的 `save_document`**（及 sync push 的文档写入站点）：
   - 保存一个带 `board:` frontmatter 的 `.md` 卡片，或一个 `.board` 文件时，
   - 服务端**解析 frontmatter 的 `board` 字段**解出所属看板 → 匹配 `webhooks` 表中作用域命中的记录 → `enqueue_event`。
-- 表 `kanban_webhooks` → 重命名 `webhooks`，`board_id` 去掉对 `kanban_boards` 的 FK，改存 **board 文档 id**（nullable = 全部看板）。
+- 表 `kanban_webhooks` → 重命名 `webhooks`，`board_id` 去掉对 `kanban_boards` 的 FK，改存 **board 的逻辑 ref**（frontmatter `board` 值，`VARCHAR`，nullable = 全部看板）。用逻辑 ref 而非文档 id，作用域才能在文件移动/改名后不变。
 - 事件名沿用 `kanban:card-updated` / `kanban:card-archived` 等，保持 payload 兼容。
 - ⚠️ 需要服务端在文档保存路径上做 frontmatter 解析（已有 util 可复用）；若先求简，可先只支持 workspace 级作用域（不按 board 过滤），board 级作为二期。
 
@@ -155,7 +157,7 @@ CREATE TABLE card_comments (
 CREATE TABLE webhooks (
   id CHAR(36) NOT NULL PRIMARY KEY,
   workspace_id CHAR(36) NOT NULL,
-  board_document_id CHAR(36) NULL,
+  board_ref VARCHAR(255) NULL,
   name VARCHAR(120) NOT NULL,
   target_url VARCHAR(2048) NOT NULL,
   secret CHAR(64) NOT NULL,
@@ -166,7 +168,6 @@ CREATE TABLE webhooks (
   created_by_user_id CHAR(36) NOT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_webhooks_ws FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE,
-  CONSTRAINT fk_webhooks_doc FOREIGN KEY (board_document_id) REFERENCES documents(id) ON DELETE CASCADE,
   CONSTRAINT fk_webhooks_user FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 

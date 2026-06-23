@@ -337,13 +337,13 @@ async fn run() -> Result<()> {
                 .await?
             }
             CardCmd::Move { workspace, path, to, position } => {
-                let root = vault::vault_or_init(cli.vault.as_deref())?;
+                let root = vault::require_vault(cli.vault.as_deref())?;
                 kanban::move_card_local(&root, &cfg, workspace.as_deref(), &path, &to, position, json).await?
             }
             CardCmd::Set {
                 workspace, path, status, priority, assignee, due,
             } => {
-                let root = vault::vault_or_init(cli.vault.as_deref())?;
+                let root = vault::require_vault(cli.vault.as_deref())?;
                 kanban::set_card_local(
                     &root, &cfg, workspace.as_deref(), &path,
                     status.as_deref(), priority.as_deref(), assignee.as_deref(), due.as_deref(), json,

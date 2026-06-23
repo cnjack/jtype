@@ -304,7 +304,8 @@ pub fn build_app(
             "/api/v1/workspaces/:workspace_id/webhooks/:webhook_id",
             delete(handlers::webhooks::delete_webhook),
         )
-        // Ticket links (/browse/OCCSV-3371)
+        // Ticket links (OCCSV-3371) — always workspace-scoped; resolution is per
+        // workspace because ticket_key is unique within a workspace, not globally.
         .route(
             "/api/v1/workspaces/:workspace_id/tickets/allocate",
             post(handlers::tickets::allocate),
@@ -317,7 +318,6 @@ pub fn build_app(
             "/api/v1/workspaces/:workspace_id/tickets/:ticket",
             get(handlers::tickets::resolve_ticket),
         )
-        .route("/api/v1/browse/:ticket", get(handlers::tickets::browse))
         // Sync API
         .route(
             "/api/v1/workspaces/:workspace_id/sync/pull",

@@ -312,9 +312,11 @@ pub enum SaveDocumentOutcome {
 }
 
 /// Persist a document version, then fire the re-homed kanban webhook for card
-/// saves. The trigger lives HERE (not only in the REST `save_document`) so EVERY
-/// write path — REST, desktop sync push, conflict resolution, live collaborative
-/// edits — notifies on a real card change.
+/// saves. The trigger lives HERE (not only in the REST `save_document`) so the
+/// content write paths that flow through this wrapper — REST, desktop sync push,
+/// live collaborative edits — notify on a real card change. Paths that persist
+/// via [`save_merged_document`] directly (notably conflict resolution) do NOT
+/// fire here; they call [`fire_card_webhook`] explicitly after the merged save.
 pub async fn save_document_version(
     pool: &sqlx::Pool<sqlx::MySql>,
     workspace_id: &str,
@@ -335,7 +337,7 @@ pub async fn save_document_version(
 /// Fire a `kanban:card-updated` webhook for a saved card (`.md` carrying `board:`
 /// frontmatter), scoped to the board's logical id. Best-effort — never affects
 /// the save; a non-card document is a no-op.
-async fn fire_card_webhook(
+pub(crate) async fn fire_card_webhook(
     pool: &sqlx::Pool<sqlx::MySql>,
     workspace_id: &str,
     doc: &CloudDocument,

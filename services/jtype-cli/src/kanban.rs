@@ -66,6 +66,30 @@ pub fn list_cards_local(vault_root: &Path, board: &str, status: Option<&str>, js
     Ok(())
 }
 
+/// Reject a column key that matches no column on the board: board views render
+/// a card only under a matching column key, so a typo would orphan it invisibly.
+fn ensure_column(b: &jtype_core::BoardSummaryInfo, key: &str) -> Result<()> {
+    if !b.columns.iter().any(|c| c.key == key) {
+        let cols = b.columns.iter().map(|c| c.key.as_str()).collect::<Vec<_>>().join(", ");
+        return Err(anyhow!("'{key}' is not a column of board '{}' (columns: {cols})", b.id));
+    }
+    Ok(())
+}
+
+/// Resolve the board a card-note belongs to via its `board:` frontmatter; errors
+/// if the note isn't a card or points at an unknown board.
+fn card_board(vault_root: &Path, content: &str) -> Result<jtype_core::BoardSummaryInfo> {
+    let board_id = jtype_core::parse_frontmatter(content)
+        .get("board")
+        .cloned()
+        .ok_or_else(|| anyhow!("note has no `board:` frontmatter — not a board card"))?;
+    jtype_core::list_boards(vault_root)
+        .map_err(|e| anyhow!(e))?
+        .into_iter()
+        .find(|b| b.id == board_id)
+        .ok_or_else(|| anyhow!("card references unknown board '{board_id}'"))
+}
+
 #[allow(clippy::too_many_arguments)]
 pub async fn create_card_local(
     vault_root: &Path,
@@ -84,6 +108,7 @@ pub async fn create_card_local(
         .iter()
         .find(|b| b.id == board)
         .ok_or_else(|| anyhow!("no board with id '{board}' (try `jtype board list`)"))?;
+    ensure_column(b, status)?;
     // Cards live in the folder sibling to `<name>.board` (strip the extension).
     let dir = b.relative_path.strip_suffix(".board").unwrap_or(&b.relative_path);
     // Append to the end of the target column: max position there + 1.
@@ -95,7 +120,15 @@ pub async fn create_card_local(
         .max()
         .map(|m| m + 1)
         .unwrap_or(0);
-    let rel = format!("{dir}/{}.md", slugify(title));
+    // Don't clobber an existing card whose title slugifies the same: suffix
+    // -2, -3, … until the path is free (save_note_local truncate-writes).
+    let slug = slugify(title);
+    let mut rel = format!("{dir}/{slug}.md");
+    let mut n = 2;
+    while jtype_core::safe_join(vault_root, &rel).map_err(|e| anyhow!(e))?.exists() {
+        rel = format!("{dir}/{slug}-{n}.md");
+        n += 1;
+    }
     let content = build_card_content(board, status, next_pos, title, priority, assignee, due);
     notes::save_note_local(vault_root, cfg, workspace, &rel, &content, Some(title), json).await
 }
@@ -112,6 +145,7 @@ pub async fn move_card_local(
     let rel = notes::normalize_note_rel(path);
     let target = jtype_core::safe_join(vault_root, &rel).map_err(|e| anyhow!(e))?;
     let content = std::fs::read_to_string(&target).with_context(|| format!("reading {}", target.display()))?;
+    ensure_column(&card_board(vault_root, &content)?, to)?;
     let mut updated = jtype_core::set_frontmatter_field(&content, "status", Some(to));
     if let Some(p) = position {
         updated = jtype_core::set_frontmatter_field(&updated, "position", Some(&p.to_string()));
@@ -134,6 +168,10 @@ pub async fn set_card_local(
     let rel = notes::normalize_note_rel(path);
     let target = jtype_core::safe_join(vault_root, &rel).map_err(|e| anyhow!(e))?;
     let mut content = std::fs::read_to_string(&target).with_context(|| format!("reading {}", target.display()))?;
+    // A non-empty status must name a real column (empty clears it, which is fine).
+    if let Some(s) = status.filter(|s| !s.is_empty()) {
+        ensure_column(&card_board(vault_root, &content)?, s)?;
+    }
     let mut touched = false;
     for (key, val) in [
         ("status", status),

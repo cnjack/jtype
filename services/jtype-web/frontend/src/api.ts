@@ -275,13 +275,13 @@ export const api = {
     request<WebhookCreated>(`/api/v1/workspaces/${workspaceId}/webhooks`, { method: 'POST', body: JSON.stringify(data) }),
   deleteWebhook: (workspaceId: string, webhookId: string) =>
     request<void>(`/api/v1/workspaces/${workspaceId}/webhooks/${webhookId}`, { method: 'DELETE' }),
-  // Ticket links (/browse/OCCSV-3371): per-card number is cloud-indexed.
+  // Ticket links (OCCSV-3371): per-card number is cloud-indexed, scoped to a workspace.
   allocateTicket: (workspaceId: string, data: { relativePath: string; ticketKey: string }) =>
     request<Ticket>(`/api/v1/workspaces/${workspaceId}/tickets/allocate`, { method: 'POST', body: JSON.stringify(data) }),
   listTickets: (workspaceId: string) =>
     request<Ticket[]>(`/api/v1/workspaces/${workspaceId}/tickets`),
-  browseTicket: (ticket: string) =>
-    request<BrowseResult>(`/api/v1/browse/${encodeURIComponent(ticket)}`),
+  resolveTicket: (workspaceId: string, ticket: string) =>
+    request<Ticket>(`/api/v1/workspaces/${workspaceId}/tickets/${encodeURIComponent(ticket)}`),
   listTrash: (workspaceId: string) =>
     request<TrashItem[]>(`/api/v1/workspaces/${workspaceId}/trash`),
   restoreTrash: (workspaceId: string, trashId: string) =>
@@ -569,12 +569,6 @@ export interface Ticket {
   relativePath: string | null
   ticketKey: string
   number: number
-  ticket: string
-}
-export interface BrowseResult {
-  workspaceId: string
-  documentId: string
-  relativePath: string
   ticket: string
 }
 

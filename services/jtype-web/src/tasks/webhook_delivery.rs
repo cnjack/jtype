@@ -121,6 +121,12 @@ pub async fn run_once(pool: &Pool<MySql>) -> Result<u64, sqlx::Error> {
             .bind(&id)
             .execute(pool)
             .await?;
+            // Keep the denormalized webhook summary in step with the failure
+            // branch, else a repeatedly-blocked webhook keeps showing a stale "ok".
+            sqlx::query("UPDATE webhooks SET last_delivery_at=NOW(), last_status='failed' WHERE id=?")
+                .bind(&webhook_id)
+                .execute(pool)
+                .await?;
             attempted += 1;
             continue;
         }

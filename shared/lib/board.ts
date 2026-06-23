@@ -40,7 +40,7 @@ export type BoardViewConfig = {
    * auto-color, so tags are colored with zero config.
    */
   labels?: BoardLabelDef[];
-  /** Board ticket-id prefix (e.g. `OCCSV`) for Jira-style `/browse/OCCSV-3371` links. */
+  /** Board ticket-id prefix (e.g. `OCCSV`) for per-card `OCCSV-3371` ticket links. */
   ticketKey?: string;
   /**
    * Second grouping dimension rendered as horizontal swimlanes (rows) in the
@@ -217,7 +217,13 @@ export function parseTagList(raw: string): string[] {
     .filter(Boolean);
 }
 
-/** Palette for auto-assigned tag colors (deterministic by label). */
+/**
+ * Palette for auto-assigned tag colors (deterministic by label). These are
+ * intentional categorical hues, not theme colors — the shared token system only
+ * defines brand-accent semantics (no 10-way categorical scale), so raw hex is the
+ * right tool here. (Exempt from the shared "no hardcoded hex" rule, which targets
+ * brand/neutral surfaces.)
+ */
 export const TAG_COLORS = ["#ef4444", "#f59e0b", "#eab308", "#22c55e", "#14b8a6", "#0ea5e9", "#6366f1", "#a855f7", "#ec4899", "#78716c"];
 
 /**
