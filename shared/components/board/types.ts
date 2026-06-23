@@ -1,4 +1,4 @@
-import type { BoardViewCard, BoardViewConfig, BoardTag, BoardComment } from "../../lib/board";
+import type { BoardViewCard, BoardViewConfig, BoardTag, BoardComment, BoardActivityEvent } from "../../lib/board";
 
 /** Mutations the board surface performs; each platform wires these to its data layer. */
 export type BoardActions = {
@@ -46,6 +46,8 @@ export type BoardSurfaceProps = {
   deleteComment?: (commentId: string) => Promise<void>;
   /** Current user's display name, to show delete only on their own comments. */
   currentUser?: string;
+  /** Load a card's activity timeline (DB board); omit to hide the Activity section. */
+  loadActivity?: (cardId: string) => Promise<BoardActivityEvent[]>;
   /**
    * Fullscreen ("focus mode") state, owned by the platform shell. When provided,
    * the surface shows a toggle button. Both platforms hide the sidebar + keep the

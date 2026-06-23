@@ -342,7 +342,7 @@ pub fn build_app(
         )
         .route(
             "/api/v1/workspaces/:workspace_id/kanban/columns/:column_id",
-            patch(handlers::kanban::column::patch_column),
+            patch(handlers::kanban::column::patch_column).delete(handlers::kanban::column::delete_column),
         )
         // Cards
         .route(
@@ -377,6 +377,10 @@ pub fn build_app(
         .route(
             "/api/v1/workspaces/:workspace_id/kanban/comments/:comment_id",
             axum::routing::delete(handlers::kanban::comment::delete_comment),
+        )
+        .route(
+            "/api/v1/workspaces/:workspace_id/kanban/cards/:card_id/activity",
+            get(handlers::kanban::card::card_activity),
         )
         // Labels
         .route(

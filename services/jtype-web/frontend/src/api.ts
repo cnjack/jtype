@@ -315,6 +315,8 @@ export const api = {
       request<KanbanColumn>(`/api/v1/workspaces/${workspaceId}/kanban/columns/${columnId}`, { method: 'PATCH', body: JSON.stringify(data) }),
     reorderColumns: (workspaceId: string, boardId: string, columnIds: string[]) =>
       request<{ ok: boolean }>(`/api/v1/workspaces/${workspaceId}/kanban/columns/reorder`, { method: 'POST', body: JSON.stringify({ boardId, columnIds }) }),
+    deleteColumn: (workspaceId: string, columnId: string) =>
+      request<void>(`/api/v1/workspaces/${workspaceId}/kanban/columns/${columnId}`, { method: 'DELETE' }),
 
     listCards: (workspaceId: string, boardId: string, includeArchived = false) =>
       request<KanbanCard[]>(`/api/v1/workspaces/${workspaceId}/kanban/boards/${boardId}/cards${includeArchived ? '?includeArchived=true' : ''}`),
@@ -338,6 +340,8 @@ export const api = {
       request<KanbanComment>(`/api/v1/workspaces/${workspaceId}/kanban/cards/${cardId}/comments`, { method: 'POST', body: JSON.stringify({ body }) }),
     deleteComment: (workspaceId: string, commentId: string) =>
       request<void>(`/api/v1/workspaces/${workspaceId}/kanban/comments/${commentId}`, { method: 'DELETE' }),
+    getCardActivity: (workspaceId: string, cardId: string) =>
+      request<KanbanActivityEvent[]>(`/api/v1/workspaces/${workspaceId}/kanban/cards/${cardId}/activity`),
 
     listLabels: (workspaceId: string, boardId: string) =>
       request<KanbanLabel[]>(`/api/v1/workspaces/${workspaceId}/kanban/boards/${boardId}/labels`),
@@ -839,6 +843,12 @@ export interface KanbanComment {
   body: string
   createdAt: string
   updatedAt: string
+}
+
+export interface KanbanActivityEvent {
+  kind: string
+  at: string
+  by?: string | null
 }
 
 export interface KanbanTrashItem {

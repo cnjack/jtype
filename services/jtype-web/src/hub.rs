@@ -127,6 +127,16 @@ pub enum WorkspaceEvent {
         source: String,
         device_id: Option<String>,
     },
+    #[serde(rename = "kanban:column-deleted", rename_all = "camelCase")]
+    KanbanColumnDeleted {
+        workspace_id: String,
+        source_session_id: Option<String>,
+        board_id: String,
+        column_id: String,
+        deleted_clock: i64,
+        source: String,
+        device_id: Option<String>,
+    },
     #[serde(rename = "kanban:card-updated", rename_all = "camelCase")]
     KanbanCardUpdated {
         workspace_id: String,

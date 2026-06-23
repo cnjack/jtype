@@ -70,6 +70,7 @@ export function BoardSurface({
   addComment,
   deleteComment,
   currentUser,
+  loadActivity,
   fullscreen,
   onToggleFullscreen,
 }: BoardSurfaceProps) {
@@ -827,6 +828,7 @@ export function BoardSurface({
             addComment={addComment}
             deleteComment={deleteComment}
             currentUser={currentUser}
+            loadActivity={loadActivity}
             onChange={(patch) => void actions.updateCard(selected.id, patch)}
             onClose={() => setSelectedId(null)}
             onDelete={() => void actions.deleteCard(selected)}
