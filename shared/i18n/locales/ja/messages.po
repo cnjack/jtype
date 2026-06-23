@@ -60,6 +60,10 @@ msgstr "詳細を追加..."
 msgid "Add labels"
 msgstr "ラベルを追加"
 
+#: shared/components/board/BoardCalendar.tsx
+msgid "Agenda"
+msgstr ""
+
 #: shared/components/board/BoardPeek.tsx
 msgid "Archived"
 msgstr ""
@@ -101,6 +105,10 @@ msgstr "太字"
 #: shared/components/EditorToolbar.tsx
 msgid "Bold (Ctrl+B)"
 msgstr "太字 (Ctrl+B)"
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Calendar"
+msgstr ""
 
 #: shared/components/ConfirmDialog.tsx
 #: shared/components/PromptDialog.tsx
@@ -294,10 +302,19 @@ msgstr "Mermaid 図"
 msgid "Mermaid source"
 msgstr "Mermaid ソース"
 
+#: shared/components/board/BoardCalendar.tsx
+msgid "Month"
+msgstr ""
+
 #: shared/components/board/BoardSurface.tsx
 msgid "New card"
 msgstr "新規カード"
 
+#: shared/components/board/BoardCalendar.tsx
+msgid "Next month"
+msgstr ""
+
+#: shared/components/board/BoardCalendar.tsx
 #: shared/components/board/BoardSwimlanes.tsx
 #: shared/components/board/BoardTable.tsx
 msgid "No cards"
@@ -352,6 +369,10 @@ msgstr "値を入力してください。"
 #: shared/components/ViewModeToggle.tsx
 msgid "Preview"
 msgstr "プレビュー"
+
+#: shared/components/board/BoardCalendar.tsx
+msgid "Previous month"
+msgstr ""
 
 #: shared/components/board/BoardPeek.tsx
 #: shared/components/board/BoardSurface.tsx
@@ -475,6 +496,10 @@ msgstr "このファイル形式はまだプレビューできません。"
 msgid "Title"
 msgstr "タイトル"
 
+#: shared/components/board/BoardCalendar.tsx
+msgid "Today"
+msgstr ""
+
 #: shared/components/board/BoardSurface.tsx
 msgid "Unassigned"
 msgstr "未割り当て"
@@ -485,6 +510,10 @@ msgstr ""
 
 #: shared/components/board/BoardPeek.tsx
 msgid "Unsafe link blocked: {url}"
+msgstr ""
+
+#: shared/components/board/BoardCalendar.tsx
+msgid "Unscheduled"
 msgstr ""
 
 #: shared/components/board/BoardSurface.tsx

@@ -52,6 +52,7 @@ import {
 } from "../../lib/board";
 import { BoardPeek } from "./BoardPeek";
 import { BoardTable } from "./BoardTable";
+import { BoardCalendar } from "./BoardCalendar";
 import { BoardSwimlanes } from "./BoardSwimlanes";
 import type { BoardSurfaceProps } from "./types";
 
@@ -300,6 +301,16 @@ export function BoardSurface({
               <TableCellsIcon className="h-3.5 w-3.5" />
               <Trans>Table</Trans>
             </button>
+            <button
+              type="button"
+              onClick={() => void actions.setConfig({ viewType: "calendar" })}
+              className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium ${
+                viewType === "calendar" ? "bg-brand-soft text-brand-dark" : "text-stone-500 hover:text-brand-dark"
+              }`}
+            >
+              <CalendarDaysIcon className="h-3.5 w-3.5" />
+              <Trans>Calendar</Trans>
+            </button>
           </div>
           {editableColumns && viewType === "board" && (
             <button
@@ -377,15 +388,17 @@ export function BoardSurface({
               </select>
             </label>
           )}
-          <label className="inline-flex items-center gap-1 text-xs text-brand-gray">
-            <BarsArrowDownIcon className="h-3.5 w-3.5" />
-            <select className={ctrlCls} value={sortBy} onChange={(e) => setSortBy(e.target.value as BoardSortKey)}>
-              <option value="manual">{t`Sort: Manual`}</option>
-              <option value="due">{t`Sort: Due`}</option>
-              <option value="priority">{t`Sort: Priority`}</option>
-              <option value="title">{t`Sort: Title`}</option>
-            </select>
-          </label>
+          {viewType !== "calendar" && (
+            <label className="inline-flex items-center gap-1 text-xs text-brand-gray">
+              <BarsArrowDownIcon className="h-3.5 w-3.5" />
+              <select className={ctrlCls} value={sortBy} onChange={(e) => setSortBy(e.target.value as BoardSortKey)}>
+                <option value="manual">{t`Sort: Manual`}</option>
+                <option value="due">{t`Sort: Due`}</option>
+                <option value="priority">{t`Sort: Priority`}</option>
+                <option value="title">{t`Sort: Title`}</option>
+              </select>
+            </label>
+          )}
 
           <Menu as="div" className="relative">
             <MenuButton
@@ -462,13 +475,23 @@ export function BoardSurface({
           </div>
         )}
 
-        {/* Body: table or columns */}
+        {/* Body: table, calendar, or columns */}
         {viewType === "table" ? (
           <BoardTable
             cards={sortCardsFn(vis, sortBy)}
             statusName={statusName}
             today={today}
             doneKey={doneKey}
+            selectedId={selected?.id}
+            onSelect={(c) => setSelectedId(c.id)}
+          />
+        ) : viewType === "calendar" ? (
+          <BoardCalendar
+            cards={vis}
+            today={today}
+            doneKey={doneKey}
+            mode={config.calendarMode ?? "month"}
+            onModeChange={(m) => void actions.setConfig({ calendarMode: m })}
             selectedId={selected?.id}
             onSelect={(c) => setSelectedId(c.id)}
           />

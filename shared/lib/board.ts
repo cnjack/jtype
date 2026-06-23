@@ -13,7 +13,8 @@ export type BoardViewColumn = {
 
 export type BoardGroupKey = "status" | "priority" | "assignee";
 export type BoardSortKey = "manual" | "due" | "priority" | "title";
-export type BoardViewType = "board" | "table";
+export type BoardViewType = "board" | "table" | "calendar";
+export type CalendarMode = "month" | "agenda";
 
 export type BoardFieldType = "text" | "number" | "date";
 /** A user-defined custom field on a board's cards (stored in frontmatter / properties). */
@@ -28,6 +29,8 @@ export type BoardViewConfig = {
   colorColumns?: boolean;
   viewType?: BoardViewType;
   groupBy?: BoardGroupKey;
+  /** Sub-mode for the calendar view (month grid vs agenda list). Defaults to "month". */
+  calendarMode?: CalendarMode;
   /** User-defined custom fields shown/edited on cards (board-level schema). */
   fields?: BoardFieldDef[];
   /**
@@ -339,4 +342,68 @@ export function sortCards(list: BoardViewCard[], sortBy: BoardSortKey): BoardVie
   else if (sortBy === "title") arr.sort((a, b) => a.title.localeCompare(b.title));
   else arr.sort((a, b) => a.position - b.position);
   return arr;
+}
+
+// --- calendar helpers (C3) -------------------------------------------------
+// All dates are zero-padded ISO `YYYY-MM-DD` strings compared lexically, so the
+// calendar needs no external date library (matching sortCards/todayStr).
+
+/** Format a Date as a local `YYYY-MM-DD` string. */
+function isoDay(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+/** True when `s` is a well-formed zero-padded ISO date (`YYYY-MM-DD`). */
+export function isIsoDate(s: string | null | undefined): s is string {
+  return !!s && /^\d{4}-\d{2}-\d{2}$/.test(s);
+}
+
+/** Today's month as `YYYY-MM` (local). */
+export function currentMonth(): string {
+  return todayStr().slice(0, 7);
+}
+
+/** Shift a `YYYY-MM` month string by `delta` months, returning `YYYY-MM`. */
+export function shiftMonth(ym: string, delta: number): string {
+  const [ys, ms] = ym.split("-");
+  const d = new Date(Number(ys), Number(ms) - 1 + delta, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+/**
+ * Bucket cards by their due day (`YYYY-MM-DD`). Cards whose `due` is missing or
+ * not a valid ISO date are omitted (the agenda view surfaces them as unscheduled).
+ */
+export function groupCardsByDay(cards: BoardViewCard[]): Map<string, BoardViewCard[]> {
+  const map = new Map<string, BoardViewCard[]>();
+  for (const c of cards) {
+    if (!isIsoDate(c.due)) continue;
+    const list = map.get(c.due);
+    if (list) list.push(c);
+    else map.set(c.due, [c]);
+  }
+  return map;
+}
+
+/**
+ * A 6×7 matrix of ISO day strings covering the weeks that contain month `ym`
+ * (`YYYY-MM`). `weekStart` 0 = Sunday (default), 1 = Monday. Leading/trailing
+ * cells belong to the adjacent months.
+ */
+export function monthMatrix(ym: string, weekStart = 0): string[][] {
+  const [ys, ms] = ym.split("-");
+  const y = Number(ys);
+  const m = Number(ms);
+  const first = new Date(y, m - 1, 1);
+  const offset = (first.getDay() - weekStart + 7) % 7;
+  const start = new Date(y, m - 1, 1 - offset);
+  const weeks: string[][] = [];
+  for (let w = 0; w < 6; w++) {
+    const row: string[] = [];
+    for (let d = 0; d < 7; d++) {
+      row.push(isoDay(new Date(start.getFullYear(), start.getMonth(), start.getDate() + w * 7 + d)));
+    }
+    weeks.push(row);
+  }
+  return weeks;
 }

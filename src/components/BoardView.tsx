@@ -107,6 +107,7 @@ export function BoardView({ boardPath, boardRelativePath }: { boardPath: string;
             doneColumn: config.doneColumn,
             colorColumns: config.colorColumns,
             viewType: config.viewType,
+            calendarMode: config.calendarMode,
             fields: config.fields,
             swimlaneBy: config.swimlaneBy as BoardViewConfig["swimlaneBy"],
             groupBy: (config.groupBy as BoardViewConfig["groupBy"]) || "status",
