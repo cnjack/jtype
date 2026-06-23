@@ -402,6 +402,14 @@ msgstr "제목"
 msgid "Unassigned"
 msgstr "미할당"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "unsafe"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Unsafe link blocked: {url}"
+msgstr ""
+
 #: shared/components/board/BoardSurface.tsx
 msgid "Unset done column"
 msgstr "완료 열 해제"

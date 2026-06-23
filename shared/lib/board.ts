@@ -73,6 +73,21 @@ export function attachmentName(url: string): string {
   }
 }
 
+/**
+ * Whether an attachment value is safe to render as a clickable `href`. Blocks
+ * dangerous schemes (`javascript:`, `data:`, `vbscript:`, `file:`, …); allows
+ * http(s) and scheme-less relative/vault paths. An attachment may carry a
+ * user-supplied URL, so this guards against stored XSS via the link.
+ */
+export function isSafeAttachmentUrl(url: string): boolean {
+  const u = url.trim();
+  if (!u) return false;
+  const scheme = /^([a-z][a-z0-9+.-]*):/i.exec(u);
+  if (!scheme) return true; // no scheme → relative path
+  const s = scheme[1]!.toLowerCase();
+  return s === "http" || s === "https";
+}
+
 export type CardFilter = { prop: "priority" | "assignee" | "tag"; value: string };
 
 export const PRIORITIES = ["none", "low", "medium", "high", "urgent"];

@@ -3,7 +3,7 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { XMarkIcon, TrashIcon, ArrowsPointingOutIcon, EyeIcon, PencilSquareIcon, PaperClipIcon, ArrowUpTrayIcon } from "@heroicons/react/24/outline";
 import { renderToContainer } from "../../lib/markdown";
-import { PRIORITIES, attachmentName, type BoardViewCard } from "../../lib/board";
+import { PRIORITIES, attachmentName, isSafeAttachmentUrl, type BoardViewCard } from "../../lib/board";
 import { fieldCls, EmojiField, ListboxSelect, TagMultiSelect } from "./controls";
 import type { BoardOption } from "./types";
 import type { BoardTag } from "../../lib/board";
@@ -235,9 +235,15 @@ export function BoardPeek({
               {attachments.map((url) => (
                 <div key={url} className="flex items-center gap-1.5 rounded border border-stone-200 px-2 py-1 text-xs">
                   <PaperClipIcon className="h-3.5 w-3.5 shrink-0 text-stone-400" />
-                  <a href={url} target="_blank" rel="noreferrer" className="flex-1 truncate text-brand-dark hover:underline" title={url}>
-                    {attachmentName(url)}
-                  </a>
+                  {isSafeAttachmentUrl(url) ? (
+                    <a href={url} target="_blank" rel="noreferrer" className="flex-1 truncate text-brand-dark hover:underline" title={url}>
+                      {attachmentName(url)}
+                    </a>
+                  ) : (
+                    <span className="flex-1 truncate text-stone-500" title={t`Unsafe link blocked: ${url}`}>
+                      {attachmentName(url)} <span className="text-red-500">({t`unsafe`})</span>
+                    </span>
+                  )}
                   <button
                     type="button"
                     onClick={() => setAttachments(attachments.filter((a) => a !== url))}

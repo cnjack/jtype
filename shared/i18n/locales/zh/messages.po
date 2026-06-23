@@ -402,6 +402,14 @@ msgstr "标题"
 msgid "Unassigned"
 msgstr "未分配"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "unsafe"
+msgstr "不安全"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Unsafe link blocked: {url}"
+msgstr "已拦截不安全链接：{url}"
+
 #: shared/components/board/BoardSurface.tsx
 msgid "Unset done column"
 msgstr "取消完成列"

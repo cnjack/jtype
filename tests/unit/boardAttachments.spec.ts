@@ -23,3 +23,19 @@ test("attachmentName is the decoded basename without query string", () => {
   expect(attachmentName("https://x.com/My%20Doc.pdf")).toBe("My Doc.pdf");
   expect(attachmentName("plain")).toBe("plain");
 });
+
+test("isSafeAttachmentUrl blocks dangerous schemes, allows http(s) + relative", async () => {
+  const { isSafeAttachmentUrl } = await import("../../shared/lib/board");
+  // safe
+  expect(isSafeAttachmentUrl("https://x.com/a.pdf")).toBe(true);
+  expect(isSafeAttachmentUrl("http://x.com/a.pdf")).toBe(true);
+  expect(isSafeAttachmentUrl("design/mock.png")).toBe(true);
+  expect(isSafeAttachmentUrl("/vault/a.md")).toBe(true);
+  // dangerous
+  expect(isSafeAttachmentUrl("javascript:alert(1)")).toBe(false);
+  expect(isSafeAttachmentUrl("  JavaScript:alert(1)")).toBe(false);
+  expect(isSafeAttachmentUrl("data:text/html,<script>alert(1)</script>")).toBe(false);
+  expect(isSafeAttachmentUrl("vbscript:msgbox(1)")).toBe(false);
+  expect(isSafeAttachmentUrl("file:///etc/passwd")).toBe(false);
+  expect(isSafeAttachmentUrl("")).toBe(false);
+});

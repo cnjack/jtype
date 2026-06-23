@@ -402,6 +402,14 @@ msgstr "Title"
 msgid "Unassigned"
 msgstr "Unassigned"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "unsafe"
+msgstr "unsafe"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Unsafe link blocked: {url}"
+msgstr "Unsafe link blocked: {url}"
+
 #: shared/components/board/BoardSurface.tsx
 msgid "Unset done column"
 msgstr "Unset done column"

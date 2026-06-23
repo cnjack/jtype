@@ -402,6 +402,14 @@ msgstr "タイトル"
 msgid "Unassigned"
 msgstr "未割り当て"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "unsafe"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Unsafe link blocked: {url}"
+msgstr ""
+
 #: shared/components/board/BoardSurface.tsx
 msgid "Unset done column"
 msgstr "完了列を解除"
