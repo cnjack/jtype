@@ -5,6 +5,7 @@ import { PlusIcon, EllipsisHorizontalIcon, TrashIcon, ArchiveBoxIcon, ArrowUturn
 import {
   api,
   setSessionId,
+  getStoredUsername,
   isKanbanConflict,
   type KanbanBoardSummary,
   type KanbanBoardFull,
@@ -301,6 +302,18 @@ export function Kanban() {
         const name = (await prompt('Rename column', col?.name))?.trim(); if (!name) return
         try { await api.kanban.patchColumn(workspaceId, key, { name }); reload() } catch (e) { setError(String(e)) }
       },
+      deleteColumn: async (key) => {
+        if (!workspaceId || !board || board.columns.length <= 1) return
+        const col = board.columns.find(c => c.id === key)
+        const colName = col?.name ?? 'this column'
+        const fallback = board.columns.filter(c => c.id !== key).sort((a, b) => a.position - b.position)[0]
+        const count = board.cards.filter(c => c.columnId === key && !c.archivedAt).length
+        const msg = count > 0
+          ? `Delete column "${colName}"? Its ${count} card(s) move to "${fallback?.name}".`
+          : `Delete column "${colName}"?`
+        if (!(await confirm(msg, { title: 'Delete column', destructive: true }))) return
+        try { await api.kanban.deleteColumn(workspaceId, key); reload() } catch (e) { setError(String(e)) }
+      },
       setColumnColor: async (key, color) => {
         if (!workspaceId) return
         try { await api.kanban.patchColumn(workspaceId, key, { color }); reload() } catch (e) { setError(String(e)) }
@@ -389,6 +402,11 @@ export function Kanban() {
             error={error}
             assigneeOptions={assigneeOptions}
             tagOptions={tagOptions}
+            currentUser={getStoredUsername() ?? undefined}
+            loadComments={workspaceId ? (cardId) => api.kanban.listComments(workspaceId, cardId) : undefined}
+            addComment={workspaceId ? (cardId, body) => api.kanban.createComment(workspaceId, cardId, body) : undefined}
+            deleteComment={workspaceId ? (commentId) => api.kanban.deleteComment(workspaceId, commentId) : undefined}
+            loadActivity={workspaceId ? (cardId) => api.kanban.getCardActivity(workspaceId, cardId) : undefined}
           />
         </div>
       )}

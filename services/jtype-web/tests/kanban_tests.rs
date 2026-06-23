@@ -341,10 +341,9 @@ async fn reorder_columns_atomic() {
 }
 
 #[tokio::test]
-async fn delete_column_endpoint_returns_405() {
-    // There's no DELETE endpoint for columns (design 28C). The path IS registered
-    // (for PATCH), so DELETE returns 405 Method Not Allowed — the correct REST
-    // semantics for "route exists, method unsupported".
+async fn delete_column_merges_cards_into_fallback() {
+    // Deleting a column moves its cards into the first remaining column (by
+    // position) rather than cascade-deleting them.
     let (app, _pool) = common::setup().await;
     let (token, _) = common::register_user(app.clone(), &common::uid()).await;
     let ws_id = common::create_workspace(app.clone(), &token, &common::wname()).await;
@@ -356,17 +355,92 @@ async fn delete_column_endpoint_returns_405() {
         Some(json!({ "name": "B" })),
     )
     .await;
-    let col_id = board["columns"][0]["id"].as_str().unwrap();
+    let board_id = board["id"].as_str().unwrap().to_string();
+    let col0 = board["columns"][0]["id"].as_str().unwrap().to_string();
+    let col1 = board["columns"][1]["id"].as_str().unwrap().to_string();
+
+    // Two cards in the column we will delete.
+    for title in ["C1", "C2"] {
+        let _ = common::req(
+            app.clone(),
+            "POST",
+            &format!("/api/v1/workspaces/{ws_id}/kanban/boards/{board_id}/cards"),
+            Some(&token),
+            Some(json!({ "columnId": col0, "title": title })),
+        )
+        .await;
+    }
 
     let (status, _body) = common::req(
-        app,
+        app.clone(),
         "DELETE",
-        &format!("/api/v1/workspaces/{ws_id}/kanban/columns/{col_id}"),
+        &format!("/api/v1/workspaces/{ws_id}/kanban/columns/{col0}"),
         Some(&token),
         None,
     )
     .await;
-    assert_eq!(status, StatusCode::METHOD_NOT_ALLOWED);
+    assert_eq!(status, StatusCode::NO_CONTENT);
+
+    let (_status, board2) = common::req(
+        app,
+        "GET",
+        &format!("/api/v1/workspaces/{ws_id}/kanban/boards/{board_id}"),
+        Some(&token),
+        None,
+    )
+    .await;
+    // Column is gone; the board now has 2 columns.
+    let cols = board2["columns"].as_array().unwrap();
+    assert_eq!(cols.len(), 2);
+    assert!(cols.iter().all(|c| c["id"].as_str().unwrap() != col0));
+    // Both cards survived and moved to the fallback (first remaining column).
+    let cards = board2["cards"].as_array().unwrap();
+    assert_eq!(cards.len(), 2);
+    assert!(cards.iter().all(|c| c["columnId"].as_str().unwrap() == col1));
+}
+
+#[tokio::test]
+async fn delete_last_column_is_refused() {
+    let (app, _pool) = common::setup().await;
+    let (token, _) = common::register_user(app.clone(), &common::uid()).await;
+    let ws_id = common::create_workspace(app.clone(), &token, &common::wname()).await;
+    let (_status, board) = common::req(
+        app.clone(),
+        "POST",
+        &format!("/api/v1/workspaces/{ws_id}/kanban/boards"),
+        Some(&token),
+        Some(json!({ "name": "B" })),
+    )
+    .await;
+    let cols: Vec<String> = board["columns"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|c| c["id"].as_str().unwrap().to_string())
+        .collect();
+
+    // Delete the first two — both succeed.
+    for col in &cols[..2] {
+        let (status, _b) = common::req(
+            app.clone(),
+            "DELETE",
+            &format!("/api/v1/workspaces/{ws_id}/kanban/columns/{col}"),
+            Some(&token),
+            None,
+        )
+        .await;
+        assert_eq!(status, StatusCode::NO_CONTENT);
+    }
+    // The last column cannot be deleted.
+    let (status, _b) = common::req(
+        app,
+        "DELETE",
+        &format!("/api/v1/workspaces/{ws_id}/kanban/columns/{}", cols[2]),
+        Some(&token),
+        None,
+    )
+    .await;
+    assert_eq!(status, StatusCode::BAD_REQUEST);
 }
 
 // ── 3. Card CRUD + archive ──────────────────────────────────────────────────
@@ -1643,4 +1717,149 @@ async fn webhook_crud_and_enqueue() {
         app, "DELETE", &format!("/api/v1/workspaces/{ws_id}/kanban/webhooks/{wh_id}"), Some(&token), None,
     ).await;
     assert_eq!(status, StatusCode::NO_CONTENT);
+}
+
+#[tokio::test]
+async fn card_comments_crud() {
+    let (app, _pool) = common::setup().await;
+    let (token, _) = common::register_user(app.clone(), &common::uid()).await;
+    let ws_id = common::create_workspace(app.clone(), &token, &common::wname()).await;
+    let (_s, board) = common::req(
+        app.clone(), "POST", &format!("/api/v1/workspaces/{ws_id}/kanban/boards"),
+        Some(&token), Some(json!({ "name": "B" })),
+    ).await;
+    let board_id = board["id"].as_str().unwrap().to_string();
+    let col = board["columns"][0]["id"].as_str().unwrap().to_string();
+    let (_s, card) = common::req(
+        app.clone(), "POST", &format!("/api/v1/workspaces/{ws_id}/kanban/boards/{board_id}/cards"),
+        Some(&token), Some(json!({ "columnId": col, "title": "X" })),
+    ).await;
+    let card_id = card["id"].as_str().unwrap().to_string();
+
+    // create
+    let (status, c) = common::req(
+        app.clone(), "POST", &format!("/api/v1/workspaces/{ws_id}/kanban/cards/{card_id}/comments"),
+        Some(&token), Some(json!({ "body": "Looks good" })),
+    ).await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(c["body"], "Looks good");
+    assert!(c["author"].is_string());
+    let comment_id = c["id"].as_str().unwrap().to_string();
+
+    // list → 1
+    let (_s, list) = common::req(
+        app.clone(), "GET", &format!("/api/v1/workspaces/{ws_id}/kanban/cards/{card_id}/comments"),
+        Some(&token), None,
+    ).await;
+    assert_eq!(list.as_array().unwrap().len(), 1);
+
+    // delete (author) → 204, then list → 0
+    let (status, _) = common::req(
+        app.clone(), "DELETE", &format!("/api/v1/workspaces/{ws_id}/kanban/comments/{comment_id}"),
+        Some(&token), None,
+    ).await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
+    let (_s, list2) = common::req(
+        app, "GET", &format!("/api/v1/workspaces/{ws_id}/kanban/cards/{card_id}/comments"),
+        Some(&token), None,
+    ).await;
+    assert_eq!(list2.as_array().unwrap().len(), 0);
+}
+
+#[tokio::test]
+async fn card_activity_reports_created_and_archived() {
+    let (app, _pool) = common::setup().await;
+    let (token, _) = common::register_user(app.clone(), &common::uid()).await;
+    let ws_id = common::create_workspace(app.clone(), &token, &common::wname()).await;
+    let (_s, board) = common::req(
+        app.clone(),
+        "POST",
+        &format!("/api/v1/workspaces/{ws_id}/kanban/boards"),
+        Some(&token),
+        Some(json!({ "name": "B" })),
+    )
+    .await;
+    let board_id = board["id"].as_str().unwrap().to_string();
+    let col = board["columns"][0]["id"].as_str().unwrap().to_string();
+    let (_s, card) = common::req(
+        app.clone(),
+        "POST",
+        &format!("/api/v1/workspaces/{ws_id}/kanban/boards/{board_id}/cards"),
+        Some(&token),
+        Some(json!({ "columnId": col, "title": "X" })),
+    )
+    .await;
+    let card_id = card["id"].as_str().unwrap().to_string();
+
+    // After create: a "created" event carrying the creator's username.
+    let (status, acts) = common::req(
+        app.clone(),
+        "GET",
+        &format!("/api/v1/workspaces/{ws_id}/kanban/cards/{card_id}/activity"),
+        Some(&token),
+        None,
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    let created = acts.as_array().unwrap().iter().find(|e| e["kind"] == "created").expect("created event");
+    assert!(created["by"].is_string());
+
+    // After archive: an "archived" event appears.
+    let _ = common::req(
+        app.clone(),
+        "POST",
+        &format!("/api/v1/workspaces/{ws_id}/kanban/cards/{card_id}/archive"),
+        Some(&token),
+        None,
+    )
+    .await;
+    let (_s, acts2) = common::req(
+        app,
+        "GET",
+        &format!("/api/v1/workspaces/{ws_id}/kanban/cards/{card_id}/activity"),
+        Some(&token),
+        None,
+    )
+    .await;
+    assert!(acts2.as_array().unwrap().iter().any(|e| e["kind"] == "archived"));
+}
+
+#[tokio::test]
+async fn delete_column_keeps_archived_cards_restorable() {
+    let (app, _pool) = common::setup().await;
+    let (token, _) = common::register_user(app.clone(), &common::uid()).await;
+    let ws_id = common::create_workspace(app.clone(), &token, &common::wname()).await;
+    let (_s, board) = common::req(
+        app.clone(), "POST", &format!("/api/v1/workspaces/{ws_id}/kanban/boards"),
+        Some(&token), Some(json!({ "name": "B" })),
+    ).await;
+    let board_id = board["id"].as_str().unwrap().to_string();
+    let col0 = board["columns"][0]["id"].as_str().unwrap().to_string();
+    let col1 = board["columns"][1]["id"].as_str().unwrap().to_string();
+
+    // card in col0, then archive it
+    let (_s, card) = common::req(
+        app.clone(), "POST", &format!("/api/v1/workspaces/{ws_id}/kanban/boards/{board_id}/cards"),
+        Some(&token), Some(json!({ "columnId": col0, "title": "X" })),
+    ).await;
+    let card_id = card["id"].as_str().unwrap().to_string();
+    let _ = common::req(
+        app.clone(), "POST", &format!("/api/v1/workspaces/{ws_id}/kanban/cards/{card_id}/archive"),
+        Some(&token), None,
+    ).await;
+
+    // delete the archived card's column
+    let (status, _) = common::req(
+        app.clone(), "DELETE", &format!("/api/v1/workspaces/{ws_id}/kanban/columns/{col0}"),
+        Some(&token), None,
+    ).await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
+
+    // the archived card must still be restorable — into the fallback column
+    let (status, restored) = common::req(
+        app, "POST", &format!("/api/v1/workspaces/{ws_id}/kanban/cards/{card_id}/restore"),
+        Some(&token), None,
+    ).await;
+    assert_eq!(status, StatusCode::OK, "archived card should still restore after column delete");
+    assert_eq!(restored["columnId"].as_str().unwrap(), col1, "restored into the fallback column");
 }
