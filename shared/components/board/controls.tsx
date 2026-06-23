@@ -28,7 +28,10 @@ export function ListboxSelect({
   options: BoardOption[];
   onChange: (v: string) => void;
 }) {
-  const current = options.find((o) => o.value === value) ?? options[0];
+  // No `?? options[0]` fallback: an unmatched non-empty value (e.g. an assignee
+  // who isn't in the current member roster) must render itself, not collapse to
+  // the first option — see `{current?.label ?? value}` below.
+  const current = options.find((o) => o.value === value);
   return (
     <Listbox value={value} onChange={onChange}>
       <ListboxButton className={`${fieldCls} flex w-full items-center justify-between gap-1`}>

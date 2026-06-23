@@ -1,5 +1,7 @@
 # JType 看板（Kanban）技术设计文档
 
+> 🛑 **整体退役（2026-06-23）**：本文描述的**云端 DB 看板**（`kanban_*` 表 + `handlers/kanban/*` + `Kanban.tsx`）已决定**退役**，看板收敛到文档型（`.md` 卡片 + `.board` 视图）。当前真相源见 **[`unification-v2.md`](./unification-v2.md)**。本文仅作历史设计留存，不反映方向。
+
 状态：CLOUD（第 2–5、8–11 节）已实现 v1。**LOCAL（第 6 节）与 Desktop↔Cloud 同步（第 7 节）已撤回**——`kanban_local.rs` 曾实现后在提交 `1576515` 中整体删除（−672 行），当前 `main` 不存在。第 6/7 节保留为历史设计意图,**不反映当前代码**。桌面看板现为纯文件式（`.board` + `.md` 卡片）经文档同步管线收敛——详见 [`next-features-design.md` §0](./next-features-design.md) 与 [`gaps-and-roadmap.md`](./gaps-and-roadmap.md)。
 初始日期：2026-06-13
 更新日期：2026-06-20（标注 §6/§7 已撤回）

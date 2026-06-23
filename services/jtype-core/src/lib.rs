@@ -1150,7 +1150,7 @@ fn normalize_status(frontmatter: &HashMap<String, String>) -> &'static str {
     }
 }
 
-fn parse_frontmatter(content: &str) -> HashMap<String, String> {
+pub fn parse_frontmatter(content: &str) -> HashMap<String, String> {
     let mut frontmatter = HashMap::new();
     let normalized = content.replace("\r\n", "\n");
     let mut lines = normalized.lines();
@@ -1529,6 +1529,136 @@ fn scan_board_cards_inner(
         }
     }
     Ok(())
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BoardColumnInfo {
+    pub key: String,
+    pub name: String,
+}
+
+/// A `.board` view file's summary: id / title / columns, without loading cards.
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BoardSummaryInfo {
+    pub relative_path: String,
+    pub id: String,
+    pub title: String,
+    pub columns: Vec<BoardColumnInfo>,
+}
+
+/// Walk the vault for `.board` view files and parse each one's JSON config into a
+/// summary (id / title / columns). The board's cards are NOT loaded — call
+/// [`scan_board_cards`] with the returned `id` for that.
+pub fn list_boards(root: &Path) -> Result<Vec<BoardSummaryInfo>, String> {
+    let mut boards = Vec::new();
+    list_boards_inner(root, root, &mut boards)?;
+    boards.sort_by(|a, b| a.id.cmp(&b.id));
+    Ok(boards)
+}
+
+fn list_boards_inner(root: &Path, current: &Path, boards: &mut Vec<BoardSummaryInfo>) -> Result<(), String> {
+    for entry in fs::read_dir(current).map_err(|error| error.to_string())? {
+        let entry = entry.map_err(|error| error.to_string())?;
+        let path = entry.path();
+        let file_name = entry.file_name().to_string_lossy().to_string();
+        if file_name == ".git" || file_name == "node_modules" || file_name == "target" || file_name == ".jtype" {
+            continue;
+        }
+        if path.is_dir() {
+            list_boards_inner(root, &path, boards)?;
+        } else if is_board_path(&path) {
+            let content = fs::read_to_string(&path).unwrap_or_default();
+            let cfg: serde_json::Value = serde_json::from_str(&content).unwrap_or(serde_json::Value::Null);
+            let relative = path.strip_prefix(root).map_err(|error| error.to_string())?;
+            let stem = path
+                .file_stem()
+                .and_then(|s| s.to_str())
+                .unwrap_or("board")
+                .to_string();
+            let id = cfg
+                .get("id")
+                .and_then(|v| v.as_str())
+                .filter(|s| !s.is_empty())
+                .unwrap_or(&stem)
+                .to_string();
+            let title = cfg
+                .get("title")
+                .and_then(|v| v.as_str())
+                .filter(|s| !s.is_empty())
+                .unwrap_or(&id)
+                .to_string();
+            let columns = cfg
+                .get("columns")
+                .and_then(|v| v.as_array())
+                .map(|arr| {
+                    arr.iter()
+                        .filter_map(|c| {
+                            let key = c.get("key").and_then(|v| v.as_str())?.to_string();
+                            let name = c
+                                .get("name")
+                                .and_then(|v| v.as_str())
+                                .unwrap_or(&key)
+                                .to_string();
+                            Some(BoardColumnInfo { key, name })
+                        })
+                        .collect()
+                })
+                .unwrap_or_default();
+            boards.push(BoardSummaryInfo {
+                relative_path: path_to_string(relative),
+                id,
+                title,
+                columns,
+            });
+        }
+    }
+    Ok(())
+}
+
+/// Set (or, with `value == None`, remove) one flat frontmatter field, preserving
+/// every other frontmatter line and the body verbatim. Creates a frontmatter
+/// block if the content has none. The write-side counterpart to
+/// [`parse_frontmatter`]: card mutations compose on it — move = set `status` +
+/// `position`; edit = set `priority`/`assignee`/`due`/…; create = set the lot
+/// onto a `# Title` body.
+pub fn set_frontmatter_field(content: &str, key: &str, value: Option<&str>) -> String {
+    let normalized = content.replace("\r\n", "\n");
+    let (mut fm_lines, body): (Vec<String>, String) = match normalized.strip_prefix("---\n") {
+        Some(rest) => match rest.find("\n---") {
+            Some(end) => {
+                let fm = rest[..end].lines().map(str::to_string).collect();
+                // `rest[end + 1..]` starts at the closing `---`; drop it + leading newlines.
+                let body = rest[end + 1..]
+                    .strip_prefix("---")
+                    .map(|b| b.trim_start_matches('\n').to_string())
+                    .unwrap_or_default();
+                (fm, body)
+            }
+            None => (Vec::new(), normalized.clone()),
+        },
+        None => (Vec::new(), normalized.clone()),
+    };
+
+    let pos = fm_lines.iter().position(|line| {
+        line.split_once(':')
+            .map(|(k, _)| k.trim() == key)
+            .unwrap_or(false)
+    });
+    match (pos, value) {
+        (Some(i), Some(v)) => fm_lines[i] = format!("{key}: {v}"),
+        (Some(i), None) => {
+            fm_lines.remove(i);
+        }
+        (None, Some(v)) => fm_lines.push(format!("{key}: {v}")),
+        (None, None) => {}
+    }
+
+    if fm_lines.is_empty() {
+        return body;
+    }
+    format!("---\n{}\n---\n{}", fm_lines.join("\n"), body)
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -2609,6 +2739,48 @@ mod tests {
         assert!(b.priority.is_none());
         assert!(b.tags.is_empty());
         assert_eq!(b.task_total, 0);
+    }
+
+    #[test]
+    fn set_frontmatter_field_updates_inserts_and_removes() {
+        let base = "---\nboard: rm\nstatus: todo\n---\n# Card\n\nbody\n";
+        // Update an existing key — this is the card "move" (change status).
+        let moved = set_frontmatter_field(base, "status", Some("doing"));
+        let fm = parse_frontmatter(&moved);
+        assert_eq!(fm.get("status").map(String::as_str), Some("doing"));
+        assert_eq!(fm.get("board").map(String::as_str), Some("rm"));
+        assert!(moved.contains("# Card") && moved.contains("body"));
+        // Insert a key that was absent.
+        let with_pri = set_frontmatter_field(&moved, "priority", Some("high"));
+        assert_eq!(
+            parse_frontmatter(&with_pri).get("priority").map(String::as_str),
+            Some("high")
+        );
+        // Remove a key (clear field).
+        let cleared = set_frontmatter_field(&with_pri, "priority", None);
+        assert!(parse_frontmatter(&cleared).get("priority").is_none());
+        // Create a frontmatter block where the note had none.
+        let created = set_frontmatter_field("# Plain\n", "board", Some("rm"));
+        assert!(created.starts_with("---\nboard: rm\n---\n"));
+    }
+
+    #[test]
+    fn list_boards_parses_board_files() {
+        let dir = tempdir().unwrap();
+        let root = dir.path();
+        fs::write(
+            root.join("roadmap.board"),
+            r#"{"id":"rm","title":"Roadmap","columns":[{"key":"todo","name":"To do"},{"key":"doing","name":"Doing"}]}"#,
+        )
+        .unwrap();
+        fs::write(root.join("note.md"), "# note\n").unwrap();
+        let boards = list_boards(root).unwrap();
+        assert_eq!(boards.len(), 1);
+        assert_eq!(boards[0].id, "rm");
+        assert_eq!(boards[0].title, "Roadmap");
+        assert_eq!(boards[0].columns.len(), 2);
+        assert_eq!(boards[0].columns[0].key, "todo");
+        assert_eq!(boards[0].columns[0].name, "To do");
     }
 
     #[test]

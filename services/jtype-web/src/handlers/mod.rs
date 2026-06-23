@@ -2,10 +2,10 @@ pub mod admin;
 pub mod assets;
 pub mod blobs;
 pub mod auth;
+pub mod comments;
 pub mod document;
 pub mod domain;
 pub mod folder;
-pub mod kanban;
 pub mod live;
 pub mod mail;
 pub mod member;
@@ -14,8 +14,10 @@ pub mod publish;
 pub mod settings;
 pub mod site;
 pub mod sync;
+pub mod tickets;
 pub mod trash;
 pub mod user;
+pub mod webhooks;
 pub mod workspace;
 
 /// Extract the optional WS session ID from `X-Session-Id` header.

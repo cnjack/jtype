@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Dialog, DialogPanel } from '@headlessui/react'
+import { BoltIcon, TrashIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { useConfirm, usePrompt } from '@shared/components/PromptDialogContext'
 import { parseFrontmatter, writeFrontmatter } from '@shared/lib/frontmatter'
 import { BoardSurface, type BoardActions } from '@shared/components/board'
@@ -11,13 +13,16 @@ import {
   parseLinks,
   parseTagList,
   pickCustomFields,
+  resolveTags,
   serializeAttachments,
   serializeLinks,
   slugify,
+  type BoardActivityEvent,
+  type BoardComment,
   type BoardViewCard,
   type BoardViewConfig,
 } from '@shared/lib/board'
-import { api, setSessionId } from '../api'
+import { api, getStoredUsername, setSessionId, type MemberInfo, type Webhook, type WebhookCreated } from '../api'
 
 type CardMeta = { id: string; relativePath: string; content: string; contentHash: string }
 type BoardConfigJSON = {
@@ -30,6 +35,8 @@ type BoardConfigJSON = {
   viewType?: 'board' | 'table' | 'calendar'
   calendarMode?: 'month' | 'agenda'
   fields?: { key: string; label: string; type?: 'text' | 'number' | 'date' }[]
+  labels?: { label: string; color?: string | null }[]
+  ticketKey?: string
   swimlaneBy?: 'status' | 'priority' | 'assignee'
 }
 
@@ -65,6 +72,8 @@ export function WebBoardView({
   const [cards, setCards] = useState<BoardViewCard[]>([])
   const [metaByPath, setMetaByPath] = useState<Map<string, CardMeta>>(new Map())
   const [error, setError] = useState('')
+  const [showWebhooks, setShowWebhooks] = useState(false)
+  const [ticketByDoc, setTicketByDoc] = useState<Map<string, string>>(new Map())
 
   const load = useCallback(async () => {
     try {
@@ -95,7 +104,7 @@ export function WebBoardView({
           priority: fm.data.priority || null,
           assignee: fm.data.assignee || null,
           due: fm.data.due || null,
-          tags: (fm.data.tags ? parseTagList(fm.data.tags) : []).map((label) => ({ label })),
+          tags: resolveTags(fm.data.tags ? parseTagList(fm.data.tags) : [], cfg.labels),
           notes: fm.body,
           taskDone: tasks.done,
           taskTotal: tasks.total,
@@ -190,11 +199,116 @@ export function WebBoardView({
             viewType: config.viewType,
             calendarMode: config.calendarMode,
             fields: config.fields,
+            labels: config.labels,
+            ticketKey: config.ticketKey,
             swimlaneBy: config.swimlaneBy as BoardViewConfig['swimlaneBy'],
             groupBy: (config.groupBy as BoardViewConfig['groupBy']) || 'status',
           }
         : { title: boardDir, columns: [] },
     [config, boardDir],
+  )
+
+  // Members → assignee dropdown (web has a member system; desktop stays free text).
+  const [members, setMembers] = useState<MemberInfo[]>([])
+  useEffect(() => {
+    let cancelled = false
+    api.listMembers(workspaceId).then((m) => { if (!cancelled) setMembers(m) }).catch(() => {})
+    return () => { cancelled = true }
+  }, [workspaceId])
+  const assigneeOptions = useMemo(() => {
+    const memberNames = new Set(members.map((m) => m.username))
+    // Keep off-roster assignees (legacy values, removed members, or names typed on
+    // desktop's free-text field) both visible and selectable, never silently '—'.
+    const extra = [...new Set(cards.map((c) => c.assignee).filter((a): a is string => !!a && !memberNames.has(a)))]
+    return [
+      { value: '', label: '—' },
+      ...members.map((m) => ({ value: m.username, label: m.username })),
+      ...extra.map((a) => ({ value: a, label: a })),
+    ]
+  }, [members, cards])
+  // Activity timeline derived from the card document's version history. Tag colors
+  // ride on each card's tags (resolveTags), so no tag-vocabulary prop is needed —
+  // the peek keeps its free-text tag input for adding arbitrary new tags.
+  const loadActivity = useCallback(
+    async (cardId: string): Promise<BoardActivityEvent[]> => {
+      const meta = metaByPath.get(cardId)
+      if (!meta) return []
+      try {
+        const versions = await api.listVersions(workspaceId, meta.id)
+        // Newest-first; the version with no parent is the card's creation.
+        return versions.map((v) => ({
+          kind: v.parentVersionId ? 'updated' : 'created',
+          // Real author username; omit `by` (rather than show the write-channel
+          // token like 'web') when the author user no longer exists.
+          by: v.authorUsername ?? undefined,
+          at: v.createdAt,
+        }))
+      } catch {
+        return []
+      }
+    },
+    [workspaceId, metaByPath],
+  )
+
+  // Card comments — kept cloud-side, keyed by the card's document id.
+  const loadComments = useCallback(
+    async (cardId: string): Promise<BoardComment[]> => {
+      const meta = metaByPath.get(cardId)
+      if (!meta) return []
+      try {
+        return await api.listComments(workspaceId, meta.id)
+      } catch {
+        return []
+      }
+    },
+    [workspaceId, metaByPath],
+  )
+  const addComment = useCallback(
+    (cardId: string, body: string): Promise<BoardComment> => {
+      const meta = metaByPath.get(cardId)
+      if (!meta) return Promise.reject(new Error('card not found'))
+      return api.createComment(workspaceId, meta.id, body)
+    },
+    [workspaceId, metaByPath],
+  )
+  const deleteComment = useCallback(
+    (commentId: string) => api.deleteComment(workspaceId, commentId),
+    [workspaceId],
+  )
+
+  // Ticket links: fetch the workspace's ticket index, lazily allocating a number
+  // for any card that lacks one (allocation is idempotent server-side), then map
+  // documents.id → ticket so each card can show an OCCSV-3371 badge.
+  useEffect(() => {
+    const key = config?.ticketKey
+    if (!key) { setTicketByDoc(new Map()); return }
+    let cancelled = false
+    ;(async () => {
+      try {
+        const list = await api.listTickets(workspaceId)
+        const map = new Map(list.map((t) => [t.documentId, t.ticket]))
+        for (const meta of metaByPath.values()) {
+          if (!map.has(meta.id)) {
+            try {
+              const t = await api.allocateTicket(workspaceId, { relativePath: meta.relativePath, ticketKey: key })
+              map.set(meta.id, t.ticket)
+            } catch { /* best-effort */ }
+          }
+        }
+        if (!cancelled) setTicketByDoc(map)
+      } catch { /* ignore */ }
+    })()
+    return () => { cancelled = true }
+  }, [workspaceId, config?.ticketKey, metaByPath])
+
+  const displayCards = useMemo(
+    () =>
+      cards.map((c) => {
+        const docId = metaByPath.get(c.id)?.id
+        const ticket = docId ? ticketByDoc.get(docId) : undefined
+        return ticket ? { ...c, ticket } : c
+      }),
+    [cards, metaByPath, ticketByDoc],
   )
 
   const actions: BoardActions = useMemo(
@@ -371,13 +485,118 @@ export function WebBoardView({
     <div className="h-full min-h-0">
       <BoardSurface
         config={viewConfig}
-        cards={cards}
+        cards={displayCards}
         actions={actions}
         error={error}
+        assigneeOptions={assigneeOptions}
+        loadActivity={loadActivity}
+        loadComments={loadComments}
+        addComment={addComment}
+        deleteComment={deleteComment}
+        currentUser={getStoredUsername() ?? undefined}
         onUploadAttachment={(file) => api.uploadAsset(workspaceId, file).then((a) => a.url)}
         fullscreen={fullscreen}
         onToggleFullscreen={onToggleFullscreen}
       />
+      <button
+        onClick={() => setShowWebhooks(true)}
+        title="Webhooks"
+        className="absolute bottom-4 right-4 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white text-stone-500 shadow ring-1 ring-black/[0.06] hover:text-brand"
+      >
+        <BoltIcon className="h-4 w-4" />
+      </button>
+      {showWebhooks && (
+        <WebhooksDialog workspaceId={workspaceId} board={config?.id ?? null} onClose={() => setShowWebhooks(false)} />
+      )}
     </div>
+  )
+}
+
+const WEBHOOK_EVENTS = ['kanban:card-updated', '*']
+
+/** Register/list/delete outbound webhooks for this workspace, optionally scoped
+ *  to the current board (by its logical id). Fires on card `.md` saves. */
+function WebhooksDialog({ workspaceId, board, onClose }: { workspaceId: string; board: string | null; onClose: () => void }) {
+  const [hooks, setHooks] = useState<Webhook[]>([])
+  const [name, setName] = useState('')
+  const [url, setUrl] = useState('')
+  const [scope, setScope] = useState<'all' | 'board'>('all')
+  const [events, setEvents] = useState<string[]>(['kanban:card-updated'])
+  const [revealed, setRevealed] = useState<WebhookCreated | null>(null)
+  const [error, setError] = useState('')
+
+  const load = useCallback(() => {
+    api.listWebhooks(workspaceId).then(setHooks).catch((e) => setError(String(e)))
+  }, [workspaceId])
+  useEffect(() => { load() }, [load])
+
+  const toggleEvent = (e: string) => setEvents((prev) => (prev.includes(e) ? prev.filter((x) => x !== e) : [...prev, e]))
+
+  const create = async () => {
+    if (!name.trim() || !url.trim() || events.length === 0) return
+    try {
+      const created = await api.createWebhook(workspaceId, {
+        name: name.trim(),
+        targetUrl: url.trim(),
+        boardRef: scope === 'board' ? board : null,
+        eventTypes: events,
+      })
+      setRevealed(created); setName(''); setUrl(''); setError(''); load()
+    } catch (e) { setError(String(e)) }
+  }
+  const remove = async (id: string) => {
+    try { await api.deleteWebhook(workspaceId, id); load() } catch (e) { setError(String(e)) }
+  }
+
+  return (
+    <Dialog open onClose={onClose} className="relative z-30">
+      <div className="fixed inset-0 bg-black/20" aria-hidden />
+      <div className="fixed inset-0 flex items-center justify-center p-4">
+        <DialogPanel className="w-full max-w-lg rounded-2xl bg-white p-5 shadow-xl">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800"><BoltIcon className="h-4 w-4" /> Webhooks</h2>
+            <button onClick={onClose} className="rounded p-1 text-zinc-400 hover:bg-zinc-100"><XMarkIcon className="h-4 w-4" /></button>
+          </div>
+          {error && <p className="mb-2 text-xs text-red-600">{error}</p>}
+          {revealed && (
+            <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 p-2 text-xs text-amber-800">
+              <div className="font-medium">Signing secret — shown once, copy it now:</div>
+              <code className="break-all">{revealed.secret}</code>
+            </div>
+          )}
+          <ul className="mb-3 max-h-48 space-y-1.5 overflow-auto">
+            {hooks.map((h) => (
+              <li key={h.id} className="flex items-center gap-2 rounded-lg border border-zinc-100 p-2 text-xs">
+                <div className="min-w-0 flex-1">
+                  <div className="font-medium text-zinc-800">{h.name}</div>
+                  <div className="truncate text-zinc-500">{h.targetUrl}</div>
+                  <div className="text-zinc-400">{h.eventTypes.join(', ')}{h.boardRef ? ` · board: ${h.boardRef}` : ' · all boards'}{h.lastStatus ? ` · last: ${h.lastStatus}` : ''}</div>
+                </div>
+                <button onClick={() => remove(h.id)} className="rounded p-1 text-zinc-400 hover:text-red-600" title="Delete"><TrashIcon className="h-4 w-4" /></button>
+              </li>
+            ))}
+            {hooks.length === 0 && <li className="text-xs text-zinc-400">No webhooks yet.</li>}
+          </ul>
+          <form onSubmit={(e) => { e.preventDefault(); void create() }} className="space-y-2 border-t border-zinc-100 pt-3">
+            <input className="w-full rounded-lg border border-zinc-200 px-2 py-1.5 text-sm" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
+            <input className="w-full rounded-lg border border-zinc-200 px-2 py-1.5 text-sm" placeholder="https://example.com/hook" value={url} onChange={(e) => setUrl(e.target.value)} />
+            <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-600">
+              {WEBHOOK_EVENTS.map((ev) => (
+                <label key={ev} className="inline-flex items-center gap-1">
+                  <input type="checkbox" checked={events.includes(ev)} onChange={() => toggleEvent(ev)} /> {ev}
+                </label>
+              ))}
+            </div>
+            <div className="flex items-center gap-3 text-xs text-zinc-600">
+              <label className="inline-flex items-center gap-1"><input type="radio" checked={scope === 'all'} onChange={() => setScope('all')} /> All boards</label>
+              {board && <label className="inline-flex items-center gap-1"><input type="radio" checked={scope === 'board'} onChange={() => setScope('board')} /> This board</label>}
+            </div>
+            <div className="flex justify-end">
+              <button type="submit" className="rounded-lg bg-brand px-3 py-1.5 text-xs font-medium text-white">Add webhook</button>
+            </div>
+          </form>
+        </DialogPanel>
+      </div>
+    </Dialog>
   )
 }

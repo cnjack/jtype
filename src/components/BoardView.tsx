@@ -9,6 +9,7 @@ import type { BoardActions } from "@shared/components/board";
 import {
   DEFAULT_DONE_COLUMN,
   pickCustomFields,
+  resolveTags,
   serializeAttachments,
   serializeLinks,
   slugify,
@@ -85,7 +86,7 @@ export function BoardView({ boardPath, boardRelativePath }: { boardPath: string;
         priority: c.priority ?? null,
         assignee: c.assignee ?? null,
         due: c.due ?? null,
-        tags: (c.tags ?? []).map((label) => ({ label })),
+        tags: resolveTags(c.tags ?? [], config?.labels),
         taskDone: c.taskDone,
         taskTotal: c.taskTotal,
         excerpt: c.excerpt ?? null,
@@ -95,7 +96,7 @@ export function BoardView({ boardPath, boardRelativePath }: { boardPath: string;
         blocks: c.blocks ?? [],
         relates: c.relates ?? [],
       })),
-    [rawCards, config?.fields],
+    [rawCards, config?.fields, config?.labels],
   );
 
   const viewConfig: BoardViewConfig = useMemo(
@@ -109,6 +110,8 @@ export function BoardView({ boardPath, boardRelativePath }: { boardPath: string;
             viewType: config.viewType,
             calendarMode: config.calendarMode,
             fields: config.fields,
+            labels: config.labels,
+            ticketKey: config.ticketKey,
             swimlaneBy: config.swimlaneBy as BoardViewConfig["swimlaneBy"],
             groupBy: (config.groupBy as BoardViewConfig["groupBy"]) || "status",
           }

@@ -1,13 +1,15 @@
-//! Kanban webhook registration + outbound delivery enqueue (DB board).
+//! Webhook registration + outbound delivery enqueue (document-backed board).
 //!
 //! Endpoints (owner/admin only):
-//!   GET    /api/v1/workspaces/:workspace_id/kanban/webhooks
-//!   POST   /api/v1/workspaces/:workspace_id/kanban/webhooks
-//!   DELETE /api/v1/workspaces/:workspace_id/kanban/webhooks/:webhook_id
+//!   GET    /api/v1/workspaces/:workspace_id/webhooks
+//!   POST   /api/v1/workspaces/:workspace_id/webhooks
+//!   DELETE /api/v1/workspaces/:workspace_id/webhooks/:webhook_id
 //!
 //! On create the plaintext `secret` is returned ONCE; thereafter only a mask.
-//! `enqueue_event` is called from the card handlers' broadcast sites to queue
-//! deliveries; the `tasks::webhook_delivery` worker signs (HMAC-SHA256) and POSTs.
+//! `enqueue_event` is called from `handlers::document::save_document` when a card
+//! `.md` (with `board:` frontmatter) is written; the `tasks::webhook_delivery`
+//! worker signs (HMAC-SHA256) and POSTs. Board scope is the card's LOGICAL board
+//! id (frontmatter `board`), or all boards when `board_ref` is NULL.
 
 use axum::{
     extract::{Path, State},
@@ -20,7 +22,6 @@ use serde_json::Value as JsonValue;
 use sqlx::{MySql, Pool, Row};
 use uuid::Uuid;
 
-use super::clamp_str;
 use crate::error::AppError;
 use crate::handlers::workspace::require_workspace_role;
 use crate::middleware::auth::extract_user;
@@ -30,11 +31,24 @@ const MAX_NAME: usize = 160;
 const MAX_URL: usize = 2048;
 const MAX_WEBHOOKS_PER_WORKSPACE: i64 = 20;
 
+/// Truncate to at most `max` bytes without splitting a UTF-8 char.
+fn clamp_str(s: &str, max: usize) -> String {
+    if s.len() <= max {
+        return s.to_string();
+    }
+    let mut idx = max;
+    while idx > 0 && !s.is_char_boundary(idx) {
+        idx -= 1;
+    }
+    s[..idx].to_string()
+}
+
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct KanbanWebhook {
+pub struct Webhook {
     pub id: String,
-    pub board_id: Option<String>,
+    /// Board logical id this webhook is scoped to; null = all boards.
+    pub board_ref: Option<String>,
     pub name: String,
     pub target_url: String,
     pub event_types: Vec<String>,
@@ -47,33 +61,33 @@ pub struct KanbanWebhook {
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct KanbanWebhookCreated {
+pub struct WebhookCreated {
     #[serde(flatten)]
-    pub webhook: KanbanWebhook,
+    pub webhook: Webhook,
     /// Plaintext secret — returned only on create.
     pub secret: String,
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct CreateKanbanWebhookRequest {
+pub struct CreateWebhookRequest {
     pub name: String,
     pub target_url: String,
     #[serde(default)]
-    pub board_id: Option<String>,
+    pub board_ref: Option<String>,
     #[serde(default)]
     pub event_types: Vec<String>,
 }
 
-fn row_to_webhook(r: &sqlx::mysql::MySqlRow) -> Result<KanbanWebhook, AppError> {
+fn row_to_webhook(r: &sqlx::mysql::MySqlRow) -> Result<Webhook, AppError> {
     let event_types: JsonValue = r.try_get("event_types")?;
     let events = match event_types {
         JsonValue::Array(a) => a.into_iter().filter_map(|v| v.as_str().map(String::from)).collect(),
         _ => Vec::new(),
     };
-    Ok(KanbanWebhook {
+    Ok(Webhook {
         id: r.try_get("id")?,
-        board_id: r.try_get("board_id")?,
+        board_ref: r.try_get("board_ref")?,
         name: r.try_get("name")?,
         target_url: r.try_get("target_url")?,
         event_types: events,
@@ -85,14 +99,12 @@ fn row_to_webhook(r: &sqlx::mysql::MySqlRow) -> Result<KanbanWebhook, AppError> 
     })
 }
 
-const SELECT_WEBHOOK: &str = r#"SELECT id, board_id, name, target_url, event_types, enabled,
+const SELECT_WEBHOOK: &str = r#"SELECT id, board_ref, name, target_url, event_types, enabled,
        CAST(last_delivery_at AS CHAR) AS last_delivery_at, last_status,
        CAST(created_at AS CHAR) AS created_at
-FROM kanban_webhooks"#;
+FROM webhooks"#;
 
-fn is_blocked_v4(ip: std::net::Ipv4Addr) -> bool {
-    // loopback 127/8, private 10/8 + 172.16/12 + 192.168/16, link-local 169.254/16,
-    // unspecified 0.0.0.0, broadcast, and the 0/8 reserved block.
+pub(crate) fn is_blocked_v4(ip: std::net::Ipv4Addr) -> bool {
     ip.is_loopback()
         || ip.is_private()
         || ip.is_link_local()
@@ -101,14 +113,28 @@ fn is_blocked_v4(ip: std::net::Ipv4Addr) -> bool {
         || ip.octets()[0] == 0
 }
 
-fn is_blocked_v6(ip: std::net::Ipv6Addr) -> bool {
-    // loopback ::1, unspecified ::, and ULA fc00::/7.
-    ip.is_loopback() || ip.is_unspecified() || (ip.segments()[0] & 0xfe00) == 0xfc00
+pub(crate) fn is_blocked_v6(ip: std::net::Ipv6Addr) -> bool {
+    // Normalize IPv4-mapped (`::ffff:a.b.c.d`) and compat (`::a.b.c.d`) forms and
+    // apply the v4 rules — otherwise `::ffff:169.254.169.254` etc. slip past.
+    if let Some(v4) = ip.to_ipv4_mapped().or_else(|| ip.to_ipv4()) {
+        return is_blocked_v4(v4);
+    }
+    ip.is_loopback()
+        || ip.is_unspecified()
+        || (ip.segments()[0] & 0xfe00) == 0xfc00 // ULA fc00::/7
+        || (ip.segments()[0] & 0xffc0) == 0xfe80 // link-local fe80::/10
+}
+
+/// True when an IP literal is an SSRF target we refuse. Shared with the delivery
+/// worker for a resolve-time re-check (DNS-rebinding defense).
+pub(crate) fn is_blocked_ip(ip: std::net::IpAddr) -> bool {
+    match ip {
+        std::net::IpAddr::V4(v4) => is_blocked_v4(v4),
+        std::net::IpAddr::V6(v6) => is_blocked_v6(v6),
+    }
 }
 
 /// Reject SSRF targets (internal/loopback/private hosts) and non-HTTPS URLs.
-/// Parses the URL structurally so userinfo (`https://user@127.0.0.1/`) and IPv6
-/// literals can't slip past a prefix check, and classifies IP literals properly.
 fn validate_target_url(raw: &str) -> Result<(), AppError> {
     let parsed = url::Url::parse(raw).map_err(|_| AppError::BadRequest("invalid target_url".into()))?;
     if parsed.scheme() != "https" {
@@ -128,14 +154,9 @@ fn validate_target_url(raw: &str) -> Result<(), AppError> {
         }
         url::Host::Domain(d) => {
             let d = d.to_ascii_lowercase();
-            if d == "localhost"
-                || d.ends_with(".localhost")
-                || d.ends_with(".local")
-                || d.ends_with(".internal")
-            {
+            if d == "localhost" || d.ends_with(".localhost") || d.ends_with(".local") || d.ends_with(".internal") {
                 return Err(blocked());
             }
-            // A bare IP that url parsed as a domain (defensive).
             match d.parse::<std::net::IpAddr>() {
                 Ok(std::net::IpAddr::V4(v4)) if is_blocked_v4(v4) => return Err(blocked()),
                 Ok(std::net::IpAddr::V6(v6)) if is_blocked_v6(v6) => return Err(blocked()),
@@ -165,7 +186,7 @@ pub async fn create_webhook(
     State(state): State<AppState>,
     headers: HeaderMap,
     Path(workspace_id): Path<String>,
-    Json(payload): Json<CreateKanbanWebhookRequest>,
+    Json(payload): Json<CreateWebhookRequest>,
 ) -> Result<Response, AppError> {
     let user = extract_user(&state.pool, &headers).await?;
     require_workspace_role(&state.pool, &workspace_id, &user.id, &["owner", "admin"]).await?;
@@ -185,17 +206,16 @@ pub async fn create_webhook(
     if events.is_empty() {
         return Err(AppError::BadRequest("event_types cannot be empty".into()));
     }
-    if let Some(b) = &payload.board_id {
-        let ok: Option<String> = sqlx::query_scalar("SELECT id FROM kanban_boards WHERE id = ? AND workspace_id = ?")
-            .bind(b)
-            .bind(&workspace_id)
-            .fetch_optional(&state.pool)
-            .await?;
-        if ok.is_none() {
-            return Err(AppError::BadRequest("board_id not found in workspace".into()));
-        }
-    }
-    let count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM kanban_webhooks WHERE workspace_id = ?")
+    // board_ref is the board's logical id (frontmatter `board`); an empty string
+    // means "all boards" → store NULL.
+    let board_ref = payload
+        .board_ref
+        .as_deref()
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .map(|s| s.to_string());
+
+    let count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM webhooks WHERE workspace_id = ?")
         .bind(&workspace_id)
         .fetch_one(&state.pool)
         .await?;
@@ -207,11 +227,11 @@ pub async fn create_webhook(
     let secret = format!("{}{}", Uuid::new_v4().simple(), Uuid::new_v4().simple());
     let events_json = serde_json::to_value(&events).unwrap_or(JsonValue::Array(vec![]));
     sqlx::query(
-        "INSERT INTO kanban_webhooks (id, workspace_id, board_id, name, target_url, secret, event_types, created_by_user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO webhooks (id, workspace_id, board_ref, name, target_url, secret, event_types, created_by_user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
     )
     .bind(&id)
     .bind(&workspace_id)
-    .bind(&payload.board_id)
+    .bind(&board_ref)
     .bind(&name)
     .bind(&target_url)
     .bind(&secret)
@@ -224,7 +244,7 @@ pub async fn create_webhook(
         .bind(&id)
         .fetch_one(&state.pool)
         .await?;
-    Ok(Json(KanbanWebhookCreated { webhook: row_to_webhook(&row)?, secret }).into_response())
+    Ok(Json(WebhookCreated { webhook: row_to_webhook(&row)?, secret }).into_response())
 }
 
 pub async fn delete_webhook(
@@ -234,7 +254,7 @@ pub async fn delete_webhook(
 ) -> Result<Response, AppError> {
     let user = extract_user(&state.pool, &headers).await?;
     require_workspace_role(&state.pool, &workspace_id, &user.id, &["owner", "admin"]).await?;
-    let res = sqlx::query("DELETE FROM kanban_webhooks WHERE id = ? AND workspace_id = ?")
+    let res = sqlx::query("DELETE FROM webhooks WHERE id = ? AND workspace_id = ?")
         .bind(&webhook_id)
         .bind(&workspace_id)
         .execute(&state.pool)
@@ -245,21 +265,21 @@ pub async fn delete_webhook(
     Ok(axum::http::StatusCode::NO_CONTENT.into_response())
 }
 
-/// Queue a delivery for every enabled webhook in the workspace that subscribes
-/// to `event_type` (exact match or `"*"`) and is scoped to this board (or all
-/// boards). Best-effort: errors are logged, never propagated to the caller.
+/// Queue a delivery for every enabled webhook in the workspace that subscribes to
+/// `event_type` (exact match or `"*"`) and is scoped to this board (`board_ref`,
+/// the card's logical board id) or all boards. Best-effort: errors are logged.
 pub async fn enqueue_event(
     pool: &Pool<MySql>,
     workspace_id: &str,
-    board_id: &str,
+    board_ref: Option<&str>,
     event_type: &str,
     payload: JsonValue,
 ) {
     let rows = match sqlx::query(
-        "SELECT id, event_types FROM kanban_webhooks WHERE workspace_id = ? AND enabled = 1 AND (board_id IS NULL OR board_id = ?)",
+        "SELECT id, event_types FROM webhooks WHERE workspace_id = ? AND enabled = 1 AND (board_ref IS NULL OR board_ref = ?)",
     )
     .bind(workspace_id)
-    .bind(board_id)
+    .bind(board_ref)
     .fetch_all(pool)
     .await
     {
@@ -281,7 +301,7 @@ pub async fn enqueue_event(
         }
         let delivery_id = Uuid::new_v4().to_string();
         if let Err(e) = sqlx::query(
-            "INSERT INTO kanban_webhook_deliveries (id, webhook_id, workspace_id, event_type, payload) VALUES (?, ?, ?, ?, ?)",
+            "INSERT INTO webhook_deliveries (id, webhook_id, workspace_id, event_type, payload) VALUES (?, ?, ?, ?, ?)",
         )
         .bind(&delivery_id)
         .bind(&webhook_id)

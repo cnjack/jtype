@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useCallback, useMemo, memo, lazy, Suspense } from 'react'
 import { Menu, MenuButton, MenuItems, MenuItem, Dialog, DialogPanel } from '@headlessui/react'
-import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { api, getStoredUsername, setSessionId, type WorkspaceSummary, type DocumentListItem, type FolderListItem, type DomainResponse, type TrashItem, type MemberInfo, type InviteListItem, type InviteResponse, type PublishStatusResponse, type BlobManifestEntry } from '../api'
 import { renderToContainer } from '@shared/lib/markdown'
 import { parseFrontmatter, writeFrontmatter } from '@shared/lib/frontmatter'
@@ -354,6 +354,19 @@ export function Workspace() {
     setPublishState(publish)
     setDirty(false)
   }
+
+  // Deep link: `/workspaces/:id?doc=<documentId>` (from a /browse/OCCSV-3371 ticket
+  // link) opens that card document once the workspace is ready, then clears the param.
+  const [searchParams, setSearchParams] = useSearchParams()
+  useEffect(() => {
+    const doc = searchParams.get('doc')
+    if (!doc || !workspaceId) return
+    void openDocument(doc).catch(() => {})
+    const next = new URLSearchParams(searchParams)
+    next.delete('doc')
+    setSearchParams(next, { replace: true })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, workspaceId])
 
   // Active (non-tombstoned) PDF blobs — the binary documents shown in the tree.
   const pdfBlobs = useMemo(

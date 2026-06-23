@@ -1,9 +1,9 @@
-//! jtype — manage JType notes and kanban projects from the terminal or AI agents.
+//! jtype — manage JType notes from the terminal or AI agents.
 //!
 //! Notes are **local-first**: when run inside a vault (a `.jtype/`-marked folder,
 //! discovered from the cwd) the `note` commands read/write the vault's `.md` files
 //! directly, and create/update additionally write-through to the bound cloud
-//! workspace. Board/card stay cloud (remote). Auth is the OAuth device flow
+//! workspace. Auth is the OAuth device flow
 //! (`jtype login`). The same binary doubles as a local stdio MCP server (`jtype mcp-stdio`).
 
 mod auth;
@@ -17,14 +17,14 @@ mod sync;
 mod tokens;
 mod vault;
 
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use clap::{Parser, Subcommand};
 
 use client::ApiClient;
 use config::Config;
 
 #[derive(Parser)]
-#[command(name = "jtype", version, about = "Manage JType notes & kanban from the terminal or AI agents")]
+#[command(name = "jtype", version, about = "Manage JType notes from the terminal or AI agents")]
 struct Cli {
     /// Override the server URL (default: from config or http://localhost:13345).
     #[arg(long, global = true)]
@@ -57,6 +57,16 @@ enum Command {
         #[command(subcommand)]
         cmd: NoteCmd,
     },
+    /// Kanban board commands — local-first over the vault's .board view files.
+    Board {
+        #[command(subcommand)]
+        cmd: BoardCmd,
+    },
+    /// Kanban card commands — local-first over the vault's .md card-notes.
+    Card {
+        #[command(subcommand)]
+        cmd: CardCmd,
+    },
     /// Bind the current vault to a cloud workspace (writes .jtype/cloud.json).
     Bind {
         /// Cloud workspace id, name, or slug.
@@ -70,24 +80,19 @@ enum Command {
     },
     /// Sync the current vault with its bound cloud workspace (pull + push).
     Sync,
-    /// Kanban board commands.
-    Board {
-        #[command(subcommand)]
-        cmd: BoardCmd,
-    },
-    /// Kanban card commands.
-    Card {
-        #[command(subcommand)]
-        cmd: CardCmd,
-    },
     /// Manage scoped MCP tokens for AI clients.
     Token {
         #[command(subcommand)]
         cmd: TokenCmd,
     },
-    /// Run a local stdio MCP server bridging to the HTTP `/mcp` endpoint.
+    /// Run a local stdio MCP server bridging to the HTTP `/mcp` endpoint
+    /// (or the separate kanban server at `/mcp/kanban` with --kanban).
     #[command(name = "mcp-stdio")]
-    McpStdio,
+    McpStdio {
+        /// Bridge the separate kanban MCP server (/mcp/kanban) instead of notes.
+        #[arg(long)]
+        kanban: bool,
+    },
 }
 
 #[derive(Subcommand)]
@@ -166,71 +171,64 @@ enum NoteCmd {
 
 #[derive(Subcommand)]
 enum BoardCmd {
-    /// List boards.
-    List {
-        #[arg(long)]
-        workspace: Option<String>,
-    },
-    /// Show a board with columns and cards.
-    Get {
-        #[arg(long)]
-        workspace: Option<String>,
+    /// List boards in the vault (scans .board files).
+    List,
+    /// Show a board with its columns and cards.
+    Show {
+        /// Board id (from `jtype board list`).
         board: String,
     },
 }
 
 #[derive(Subcommand)]
 enum CardCmd {
-    /// List cards on a board.
+    /// List a board's cards, optionally filtered to one column/status.
     List {
-        #[arg(long)]
-        workspace: Option<String>,
         #[arg(long)]
         board: String,
         #[arg(long)]
-        column: Option<String>,
+        status: Option<String>,
     },
-    /// Create a card.
+    /// Create a card-note in a column (writes a .md + write-through to cloud).
     Create {
         #[arg(long)]
         workspace: Option<String>,
         #[arg(long)]
         board: String,
         #[arg(long)]
-        column: String,
+        status: String,
         title: String,
         #[arg(long)]
-        description: Option<String>,
-        #[arg(long)]
         priority: Option<String>,
         #[arg(long)]
         assignee: Option<String>,
+        #[arg(long)]
+        due: Option<String>,
     },
-    /// Update a card's fields.
-    Update {
-        #[arg(long)]
-        workspace: Option<String>,
-        card: String,
-        #[arg(long)]
-        title: Option<String>,
-        #[arg(long)]
-        description: Option<String>,
-        #[arg(long)]
-        priority: Option<String>,
-        #[arg(long)]
-        assignee: Option<String>,
-    },
-    /// Move a card to another column (status change).
+    /// Move a card to another column (rewrites its `status` frontmatter).
     Move {
         #[arg(long)]
         workspace: Option<String>,
+        /// Card path relative to the vault.
+        path: String,
+        #[arg(long = "to")]
+        to: String,
         #[arg(long)]
-        board: String,
-        card: String,
-        #[arg(long, name = "to-column")]
-        to_column: String,
-        #[arg(long, default_value_t = 0)]
-        position: i64,
+        position: Option<i64>,
+    },
+    /// Set card fields (empty value clears): any of --status/--priority/--assignee/--due.
+    Set {
+        #[arg(long)]
+        workspace: Option<String>,
+        path: String,
+        #[arg(long)]
+        status: Option<String>,
+        #[arg(long)]
+        priority: Option<String>,
+        #[arg(long)]
+        assignee: Option<String>,
+        #[arg(long)]
+        due: Option<String>,
     },
 }
 
@@ -252,24 +250,6 @@ async fn main() {
         eprintln!("error: {e:#}");
         std::process::exit(1);
     }
-}
-
-/// Resolve a cloud workspace id for a REMOTE command: explicit `--workspace`, else the
-/// bound `workspaceId` of the cwd vault, else a readable error.
-fn resolve_remote_ws(explicit: Option<&str>, vault_opt: Option<&str>) -> Result<String> {
-    if let Some(ws) = explicit {
-        return Ok(ws.to_string());
-    }
-    if let Ok(root) = vault::require_vault(vault_opt) {
-        if let Some(b) = vault::load_binding(&root) {
-            if b.is_bound() {
-                return Ok(b.workspace_id);
-            }
-        }
-    }
-    Err(anyhow!(
-        "--workspace required (or run `jtype bind` in a vault to set a default workspace)"
-    ))
 }
 
 async fn run() -> Result<()> {
@@ -331,6 +311,46 @@ async fn run() -> Result<()> {
                 notes::save_note_local(&root, &cfg, workspace.as_deref(), &path, &body, None, json).await?
             }
         },
+        Command::Board { cmd } => match cmd {
+            BoardCmd::List => {
+                let root = vault::require_vault(cli.vault.as_deref())?;
+                kanban::list_boards_local(&root, json)?
+            }
+            BoardCmd::Show { board } => {
+                let root = vault::require_vault(cli.vault.as_deref())?;
+                kanban::show_board_local(&root, &board, json)?
+            }
+        },
+        Command::Card { cmd } => match cmd {
+            CardCmd::List { board, status } => {
+                let root = vault::require_vault(cli.vault.as_deref())?;
+                kanban::list_cards_local(&root, &board, status.as_deref(), json)?
+            }
+            CardCmd::Create {
+                workspace, board, status, title, priority, assignee, due,
+            } => {
+                let root = vault::vault_or_init(cli.vault.as_deref())?;
+                kanban::create_card_local(
+                    &root, &cfg, workspace.as_deref(), &board, &status, &title,
+                    priority.as_deref(), assignee.as_deref(), due.as_deref(), json,
+                )
+                .await?
+            }
+            CardCmd::Move { workspace, path, to, position } => {
+                let root = vault::vault_or_init(cli.vault.as_deref())?;
+                kanban::move_card_local(&root, &cfg, workspace.as_deref(), &path, &to, position, json).await?
+            }
+            CardCmd::Set {
+                workspace, path, status, priority, assignee, due,
+            } => {
+                let root = vault::vault_or_init(cli.vault.as_deref())?;
+                kanban::set_card_local(
+                    &root, &cfg, workspace.as_deref(), &path,
+                    status.as_deref(), priority.as_deref(), assignee.as_deref(), due.as_deref(), json,
+                )
+                .await?
+            }
+        },
         Command::Bind { workspace } => {
             cfg.require_token()?;
             let root = vault::vault_or_init(cli.vault.as_deref())?;
@@ -383,54 +403,6 @@ async fn run() -> Result<()> {
             let root = vault::require_vault(cli.vault.as_deref())?;
             sync::sync(&cfg, &root, json).await?
         }
-        Command::Board { cmd } => {
-            cfg.require_token()?;
-            let c = client();
-            match cmd {
-                BoardCmd::List { workspace } => {
-                    let ws = resolve_remote_ws(workspace.as_deref(), cli.vault.as_deref())?;
-                    kanban::list_boards(&c, &ws, json).await?
-                }
-                BoardCmd::Get { workspace, board } => {
-                    let ws = resolve_remote_ws(workspace.as_deref(), cli.vault.as_deref())?;
-                    kanban::get_board(&c, &ws, &board, json).await?
-                }
-            }
-        }
-        Command::Card { cmd } => {
-            cfg.require_token()?;
-            let c = client();
-            match cmd {
-                CardCmd::List { workspace, board, column } => {
-                    let ws = resolve_remote_ws(workspace.as_deref(), cli.vault.as_deref())?;
-                    kanban::list_cards(&c, &ws, &board, column.as_deref(), json).await?
-                }
-                CardCmd::Create {
-                    workspace, board, column, title, description, priority, assignee,
-                } => {
-                    let ws = resolve_remote_ws(workspace.as_deref(), cli.vault.as_deref())?;
-                    kanban::create_card(
-                        &c, &ws, &board, &column, &title,
-                        description.as_deref(), priority.as_deref(), assignee.as_deref(), json,
-                    )
-                    .await?
-                }
-                CardCmd::Update {
-                    workspace, card, title, description, priority, assignee,
-                } => {
-                    let ws = resolve_remote_ws(workspace.as_deref(), cli.vault.as_deref())?;
-                    kanban::update_card(
-                        &c, &ws, &card, title.as_deref(),
-                        description.as_deref(), priority.as_deref(), assignee.as_deref(), json,
-                    )
-                    .await?
-                }
-                CardCmd::Move { workspace, board, card, to_column, position } => {
-                    let ws = resolve_remote_ws(workspace.as_deref(), cli.vault.as_deref())?;
-                    kanban::move_card(&c, &ws, &board, &card, &to_column, position, json).await?
-                }
-            }
-        }
         Command::Token { cmd } => {
             cfg.require_token()?;
             let c = client();
@@ -442,9 +414,10 @@ async fn run() -> Result<()> {
                 TokenCmd::Revoke { id } => tokens::revoke(&c, &id).await?,
             }
         }
-        Command::McpStdio => {
+        Command::McpStdio { kanban } => {
             cfg.require_token()?;
-            mcpstdio::run(&client()).await?
+            let endpoint = if kanban { "/mcp/kanban" } else { "/mcp" };
+            mcpstdio::run(&client(), endpoint).await?
         }
     }
     Ok(())

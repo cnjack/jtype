@@ -25,6 +25,10 @@ export type BoardConfig = {
   calendarMode?: "month" | "agenda";
   /** User-defined custom fields shown/edited on this board's cards. */
   fields?: { key: string; label: string; type?: "text" | "number" | "date" }[];
+  /** Board-level label definitions giving tags an explicit color (else auto-colored). */
+  labels?: { label: string; color?: string | null }[];
+  /** Board ticket-id prefix (e.g. OCCSV) for /browse links; ticket numbers are cloud-only. */
+  ticketKey?: string;
   /** Optional second grouping dimension rendered as swimlane rows in the board view. */
   swimlaneBy?: "status" | "priority" | "assignee";
 };

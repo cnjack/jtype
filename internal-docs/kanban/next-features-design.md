@@ -1,5 +1,7 @@
 # JType 看板 — 下一批功能设计（D1 依赖 / C3 日历 / D2 Webhook）
 
+> ℹ️ **部分更新（2026-06-23）**：D1 依赖 / C3 日历已落地。**D2 Webhook 的基建设计（HMAC 签名 / 重试队列 / SSRF 防护 / 投递 worker）仍有效**，但**触发源已改**——不再挂在云端 DB 看板的 `kanban:*` 事件，而是**重接到文档保存路径**（`save_document`），作用域改用 board 文档 id。详见 **[`unification-v2.md`](./unification-v2.md) §2.5**。本文 D2 章节中"仅 DB 看板会发"的限定已不成立。
+
 状态：**设计提案（仅设计，未实现，不含代码）**
 初始日期：2026-06-20
 来源：基于 [`gaps-and-roadmap.md`](./gaps-and-roadmap.md) 的用户决策收敛 —— 绿灯三项 D1 / C3 / D2，外加 A1 现状订正。

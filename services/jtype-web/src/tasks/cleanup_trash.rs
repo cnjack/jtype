@@ -2,7 +2,6 @@
 //!
 //! Runs every hour. Purges:
 //!   - `document_trash` whose `expires_at < NOW()`
-//!   - `kanban_card_trash` whose `expires_at < NOW()`
 //!
 //! Note: this is *physical* cleanup. Restored rows are not touched
 //! (they have `restored_at` set but are kept for audit history).
@@ -29,11 +28,8 @@ pub fn spawn(pool: Pool<MySql>) {
                 continue;
             }
             match run_once(&pool).await {
-                Ok((doc, kanban)) => {
-                    eprintln!(
-                        "[cleanup_trash] purged {} document_trash rows, {} kanban_card_trash rows",
-                        doc, kanban
-                    );
+                Ok(doc) => {
+                    eprintln!("[cleanup_trash] purged {} document_trash rows", doc);
                 }
                 Err(e) => {
                     eprintln!("[cleanup_trash] error: {}", e);
@@ -44,14 +40,10 @@ pub fn spawn(pool: Pool<MySql>) {
     });
 }
 
-pub async fn run_once(pool: &Pool<MySql>) -> Result<(u64, u64), sqlx::Error> {
+pub async fn run_once(pool: &Pool<MySql>) -> Result<u64, sqlx::Error> {
     let docs = sqlx::query("DELETE FROM document_trash WHERE expires_at < CURRENT_TIMESTAMP")
         .execute(pool)
         .await?
         .rows_affected();
-    let kanban = sqlx::query("DELETE FROM kanban_card_trash WHERE expires_at < CURRENT_TIMESTAMP")
-        .execute(pool)
-        .await?
-        .rows_affected();
-    Ok((docs, kanban))
+    Ok(docs)
 }

@@ -1,4 +1,4 @@
-//! Outbound kanban webhook delivery worker.
+//! Outbound webhook delivery worker (document-backed board).
 //!
 //! Every tick it picks due deliveries (`pending`/`failed` with `next_retry_at`
 //! elapsed), signs the JSON body with HMAC-SHA256 (key = the webhook secret),
@@ -35,6 +35,29 @@ pub fn spawn(pool: Pool<MySql>) {
     });
 }
 
+/// Re-resolve the target host at delivery time and refuse internal addresses.
+/// Conservative: an unparseable URL or a failed DNS lookup is treated as blocked.
+async fn ssrf_blocked(target_url: &str) -> bool {
+    let Ok(url) = url::Url::parse(target_url) else {
+        return true;
+    };
+    match url.host() {
+        Some(url::Host::Ipv4(ip)) => crate::handlers::webhooks::is_blocked_ip(std::net::IpAddr::V4(ip)),
+        Some(url::Host::Ipv6(ip)) => crate::handlers::webhooks::is_blocked_ip(std::net::IpAddr::V6(ip)),
+        Some(url::Host::Domain(domain)) => {
+            let port = url.port_or_known_default().unwrap_or(443);
+            match tokio::net::lookup_host((domain, port)).await {
+                Ok(addrs) => {
+                    let addrs: Vec<_> = addrs.collect();
+                    addrs.is_empty() || addrs.iter().any(|a| crate::handlers::webhooks::is_blocked_ip(a.ip()))
+                }
+                Err(_) => true,
+            }
+        }
+        None => true,
+    }
+}
+
 fn hex_encode(bytes: &[u8]) -> String {
     let mut s = String::with_capacity(bytes.len() * 2);
     for b in bytes {
@@ -57,8 +80,8 @@ pub async fn run_once(pool: &Pool<MySql>) -> Result<u64, sqlx::Error> {
     let rows = sqlx::query(
         r#"SELECT d.id, d.webhook_id, d.event_type, d.payload, d.attempt_count, d.max_attempts,
                   w.target_url, w.secret
-           FROM kanban_webhook_deliveries d
-           JOIN kanban_webhooks w ON w.id = d.webhook_id
+           FROM webhook_deliveries d
+           JOIN webhooks w ON w.id = d.webhook_id
            WHERE d.status IN ('pending', 'failed')
              AND (d.next_retry_at IS NULL OR d.next_retry_at <= NOW())
            ORDER BY d.created_at ASC
@@ -78,6 +101,29 @@ pub async fn run_once(pool: &Pool<MySql>) -> Result<u64, sqlx::Error> {
         let max_attempts: i32 = r.try_get("max_attempts")?;
         let target_url: String = r.try_get("target_url")?;
         let secret: String = r.try_get("secret")?;
+
+        // Delivery-time SSRF re-check: the create-time validator only saw the host
+        // once. Re-resolve now and refuse internal targets (DNS-rebinding/TOCTOU
+        // defense). A residual race vs reqwest's own resolve remains, but this
+        // closes the create→deliver rebinding window the redirect block can't.
+        if ssrf_blocked(&target_url).await {
+            let attempt = prev_attempts + 1;
+            let dead = attempt >= max_attempts;
+            let status = if dead { "dead" } else { "failed" };
+            let backoff = 2_i64.saturating_pow(attempt.max(0) as u32).saturating_mul(30).min(3600);
+            sqlx::query(
+                "UPDATE webhook_deliveries SET status=?, attempt_count=?, last_error=?, next_retry_at=DATE_ADD(NOW(), INTERVAL ? SECOND) WHERE id=?",
+            )
+            .bind(status)
+            .bind(attempt)
+            .bind("target resolves to a blocked (internal) address")
+            .bind(backoff)
+            .bind(&id)
+            .execute(pool)
+            .await?;
+            attempted += 1;
+            continue;
+        }
 
         let body = serde_json::to_vec(&payload).unwrap_or_default();
         let mut mac = match HmacSha256::new_from_slice(secret.as_bytes()) {
@@ -102,14 +148,14 @@ pub async fn run_once(pool: &Pool<MySql>) -> Result<u64, sqlx::Error> {
         if success {
             let code = resp.map(|r| r.status().as_u16() as i32).unwrap_or(0);
             sqlx::query(
-                "UPDATE kanban_webhook_deliveries SET status='succeeded', attempt_count=?, last_status_code=?, next_retry_at=NULL WHERE id=?",
+                "UPDATE webhook_deliveries SET status='succeeded', attempt_count=?, last_status_code=?, next_retry_at=NULL WHERE id=?",
             )
             .bind(attempt)
             .bind(code)
             .bind(&id)
             .execute(pool)
             .await?;
-            sqlx::query("UPDATE kanban_webhooks SET last_delivery_at=NOW(), last_status='ok' WHERE id=?")
+            sqlx::query("UPDATE webhooks SET last_delivery_at=NOW(), last_status='ok' WHERE id=?")
                 .bind(&webhook_id)
                 .execute(pool)
                 .await?;
@@ -123,7 +169,7 @@ pub async fn run_once(pool: &Pool<MySql>) -> Result<u64, sqlx::Error> {
             let backoff = 2_i64.saturating_pow(attempt.max(0) as u32).saturating_mul(30).min(3600);
             let err: String = err.chars().take(512).collect();
             sqlx::query(
-                "UPDATE kanban_webhook_deliveries SET status=?, attempt_count=?, last_status_code=?, last_error=?, next_retry_at=DATE_ADD(NOW(), INTERVAL ? SECOND) WHERE id=?",
+                "UPDATE webhook_deliveries SET status=?, attempt_count=?, last_status_code=?, last_error=?, next_retry_at=DATE_ADD(NOW(), INTERVAL ? SECOND) WHERE id=?",
             )
             .bind(status)
             .bind(attempt)
@@ -133,7 +179,7 @@ pub async fn run_once(pool: &Pool<MySql>) -> Result<u64, sqlx::Error> {
             .bind(&id)
             .execute(pool)
             .await?;
-            sqlx::query("UPDATE kanban_webhooks SET last_delivery_at=NOW(), last_status='failed' WHERE id=?")
+            sqlx::query("UPDATE webhooks SET last_delivery_at=NOW(), last_status='failed' WHERE id=?")
                 .bind(&webhook_id)
                 .execute(pool)
                 .await?;
