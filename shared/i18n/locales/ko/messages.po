@@ -18,446 +18,460 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: ../../../shared/components/ConflictResolver.tsx
+#: shared/components/ConflictResolver.tsx
 msgid "← Back to list"
 msgstr "← 목록으로"
 
 #. placeholder {0}: conflicts.length
 #. placeholder {1}: conflicts.length > 1 ? "s" : ""
-#: ../../../shared/components/ConflictResolver.tsx
+#: shared/components/ConflictResolver.tsx
 msgid "⚠ {0} Conflict{1} to Resolve"
 msgstr "⚠ 해결할 충돌 {0}건{1}"
 
-#: ../../../shared/components/ConflictResolver.tsx
+#: shared/components/ConflictResolver.tsx
 msgid "Accept cloud"
 msgstr "클라우드 수낙"
 
-#: ../../../shared/components/ConflictResolver.tsx
+#: shared/components/ConflictResolver.tsx
 msgid "Accept local"
 msgstr "로컈 수낙"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Activity"
 msgstr ""
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Add a comment…"
 msgstr ""
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Add column"
 msgstr "열 추가"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Add details..."
 msgstr "세부정보 추가..."
 
-#: ../../../shared/components/board/controls.tsx
+#: shared/components/board/controls.tsx
 msgid "Add labels"
 msgstr "라벨 추가"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Archived"
 msgstr ""
 
-#: ../../../shared/components/board/BoardPeek.tsx
-#: ../../../shared/components/board/BoardSurface.tsx
-#: ../../../shared/components/board/BoardTable.tsx
+#: shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardTable.tsx
 msgid "Assignee"
 msgstr "담당자"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Blank card"
 msgstr "빈 카드"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardPeek.tsx
+msgid "Blocked by"
+msgstr ""
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Blocked by {blockedCount} unfinished card(s)"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Blocks"
+msgstr ""
+
+#: shared/components/board/BoardSurface.tsx
 msgid "Board"
 msgstr "보드"
 
-#: ../../../shared/components/EditorToolbar.tsx
+#: shared/components/EditorToolbar.tsx
 msgid "Bold"
 msgstr "굵게"
 
-#: ../../../shared/components/EditorToolbar.tsx
+#: shared/components/EditorToolbar.tsx
 msgid "Bold (Ctrl+B)"
 msgstr "굵게 (Ctrl+B)"
 
-#: ../../../shared/components/ConfirmDialog.tsx
-#: ../../../shared/components/PromptDialog.tsx
+#: shared/components/ConfirmDialog.tsx
+#: shared/components/PromptDialog.tsx
 msgid "Cancel"
 msgstr "취소"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Card"
 msgstr "카드"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Card title (Enter to add, Esc to cancel)"
 msgstr "카드 제목 (Enter로 추가, Esc로 취소)"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "cards"
 msgstr "개 카드"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Clear filter"
 msgstr "필터 지우기"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Close"
 msgstr "닫기"
 
-#: ../../../shared/components/ConflictResolver.tsx
+#: shared/components/ConflictResolver.tsx
 msgid "Cloud (remote)"
 msgstr "클라우드 (원격)"
 
-#: ../../../shared/components/EditorToolbar.tsx
+#: shared/components/EditorToolbar.tsx
 msgid "Code"
 msgstr "코드"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Collapse column"
 msgstr "열 접기"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Color"
 msgstr "색상"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Color columns"
 msgstr "색상 열"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Column name"
 msgstr "열 이름"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "comma, separated"
 msgstr "쉼표로 구분"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Comment"
 msgstr ""
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Comments"
 msgstr ""
 
-#: ../../../shared/components/ConfirmDialog.tsx
+#: shared/components/ConfirmDialog.tsx
 msgid "Confirm"
 msgstr "확인"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Copy link"
 msgstr "링크 복사"
 
-#: ../../../shared/components/viewers/SwaggerView.tsx
+#: shared/components/viewers/SwaggerView.tsx
 msgid "Could not render this API specification."
 msgstr "이 API 명세를 렌더링할 수 없습니다."
 
-#: ../../../shared/components/viewers/DrawioView.tsx
+#: shared/components/viewers/DrawioView.tsx
 msgid "Could not render this Draw.io diagram."
 msgstr "이 Draw.io 다이어그램을 렌더링할 수 없습니다."
 
-#: ../../../shared/components/viewers/PdfView.tsx
+#: shared/components/viewers/PdfView.tsx
 msgid "Could not render this PDF."
 msgstr "이 PDF를 렌더링할 수 없습니다."
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Created"
 msgstr ""
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Delete"
 msgstr "삭제"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Delete card"
 msgstr "카드 삭제"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Delete comment"
 msgstr ""
 
-#: ../../../shared/components/viewers/MermaidView.tsx
+#: shared/components/viewers/MermaidView.tsx
 msgid "Diagram error"
 msgstr "다이어그램 오류"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Done column"
 msgstr "완료 열"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Drag to resize"
 msgstr "드래그하여 크기 조정"
 
-#: ../../../shared/components/viewers/DrawioView.tsx
+#: shared/components/viewers/DrawioView.tsx
 msgid "Draw.io diagram"
 msgstr "Draw.io 다이어그램"
 
-#: ../../../shared/components/board/BoardPeek.tsx
-#: ../../../shared/components/board/BoardTable.tsx
+#: shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardTable.tsx
 msgid "Due"
 msgstr "마감"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Duplicate"
 msgstr "복제"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Exit fullscreen"
 msgstr "전체 화면 종료"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Expand column"
 msgstr "열 펼치기"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Filter"
 msgstr "필터"
 
-#: ../../../shared/components/viewers/MermaidView.tsx
-msgid ""
-"flowchart TD\n"
+#: shared/components/viewers/MermaidView.tsx
+msgid "flowchart TD\n"
 "  A[Start] --> B[End]"
-msgstr ""
-"flowchart TD\n"
+msgstr "flowchart TD\n"
 "  A[시작] --> B[끝]"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Fullscreen"
 msgstr "전체 화면"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Group: Assignee"
 msgstr "그룹: 담당자"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Group: Priority"
 msgstr "그룹: 우선순위"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Group: Status"
 msgstr "그룹: 상태"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Icon"
 msgstr "아이콘"
 
-#: ../../../shared/components/EditorToolbar.tsx
+#: shared/components/EditorToolbar.tsx
 msgid "Inline Code"
 msgstr "인라인 코드"
 
-#: ../../../shared/components/EditorToolbar.tsx
+#: shared/components/EditorToolbar.tsx
 msgid "Italic"
 msgstr "기울임꼴"
 
-#: ../../../shared/components/EditorToolbar.tsx
+#: shared/components/EditorToolbar.tsx
 msgid "Italic (Ctrl+I)"
 msgstr "기울임꼴 (Ctrl+I)"
 
-#: ../../../shared/components/EditorToolbar.tsx
+#: shared/components/EditorToolbar.tsx
 msgid "Link"
 msgstr "링크"
 
-#: ../../../shared/components/EditorToolbar.tsx
+#: shared/components/EditorToolbar.tsx
 msgid "Link (Ctrl+K)"
 msgstr "링크 (Ctrl+K)"
 
-#: ../../../shared/components/ConflictResolver.tsx
+#: shared/components/ConflictResolver.tsx
 msgid "Local (yours)"
 msgstr "로컈 (내 것)"
 
-#: ../../../shared/components/viewers/MermaidView.tsx
+#: shared/components/viewers/MermaidView.tsx
 msgid "Mermaid diagram"
 msgstr "Mermaid 다이어그램"
 
-#: ../../../shared/components/viewers/MermaidView.tsx
+#: shared/components/viewers/MermaidView.tsx
 msgid "Mermaid source"
 msgstr "Mermaid 소스"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "New card"
 msgstr "새 카드"
 
-#: ../../../shared/components/board/BoardTable.tsx
+#: shared/components/board/BoardTable.tsx
 msgid "No cards"
 msgstr "카드 없음"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "No color"
 msgstr "색상 없음"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "No comments yet"
 msgstr ""
 
-#: ../../../shared/components/board/controls.tsx
+#: shared/components/board/controls.tsx
 msgid "No icon"
 msgstr "아이콘 없음"
 
-#: ../../../shared/components/board/controls.tsx
+#: shared/components/board/controls.tsx
 msgid "No labels"
 msgstr "라벨 없음"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Notes"
 msgstr "노트"
 
-#: ../../../shared/components/ConfirmDialog.tsx
-#: ../../../shared/components/PromptDialog.tsx
+#: shared/components/ConfirmDialog.tsx
+#: shared/components/PromptDialog.tsx
 msgid "OK"
 msgstr "확인"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Open in editor"
 msgstr "에디터에서 열기"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Open in full editor"
 msgstr "전체 에디터에서 열기"
 
-#: ../../../shared/components/viewers/PdfView.tsx
+#: shared/components/viewers/PdfView.tsx
 msgid "PDF document"
 msgstr "PDF 문서"
 
-#: ../../../shared/components/PromptDialog.tsx
+#: shared/components/PromptDialog.tsx
 msgid "Please enter a value."
 msgstr "값을 입력해 주세요."
 
-#: ../../../shared/components/board/BoardPeek.tsx
-#: ../../../shared/components/ViewModeToggle.tsx
+#: shared/components/board/BoardPeek.tsx
+#: shared/components/ViewModeToggle.tsx
 msgid "Preview"
 msgstr "미리보기"
 
-#: ../../../shared/components/board/BoardPeek.tsx
-#: ../../../shared/components/board/BoardSurface.tsx
-#: ../../../shared/components/board/BoardTable.tsx
+#: shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardTable.tsx
 msgid "Priority"
 msgstr "우선순위"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Refresh"
 msgstr "새로고침"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardPeek.tsx
+msgid "Relates"
+msgstr ""
+
+#: shared/components/board/BoardSurface.tsx
 msgid "Rename"
 msgstr "이름 변경"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Restored"
 msgstr ""
 
-#: ../../../shared/components/ConflictResolver.tsx
+#: shared/components/ConflictResolver.tsx
 msgid "Result (editable)"
 msgstr "결과 (편집 가능)"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Save as template"
 msgstr "템플릿으로 저장"
 
-#: ../../../shared/components/ConflictResolver.tsx
+#: shared/components/ConflictResolver.tsx
 msgid "Save merged result"
 msgstr "병합 결과 저장"
 
-#: ../../../shared/components/ConflictResolver.tsx
+#: shared/components/ConflictResolver.tsx
 msgid "Saving…"
 msgstr "저장 중…"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Search cards"
 msgstr "카드 검색"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Set as done column"
 msgstr "완료 열로 설정"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Set WIP limit"
 msgstr "WIP 한도 설정"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Someone"
 msgstr ""
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Sort: Due"
 msgstr "정렬: 마감"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Sort: Manual"
 msgstr "정렬: 수동"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Sort: Priority"
 msgstr "정렬: 우선순위"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Sort: Title"
 msgstr "정렬: 제목"
 
-#: ../../../shared/components/ViewModeToggle.tsx
+#: shared/components/ViewModeToggle.tsx
 msgid "Split"
 msgstr "스플릿"
 
-#: ../../../shared/components/board/BoardPeek.tsx
-#: ../../../shared/components/board/BoardTable.tsx
+#: shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardTable.tsx
 msgid "Status"
 msgstr "상태"
 
-#: ../../../shared/components/board/BoardSurface.tsx
-#: ../../../shared/components/EditorToolbar.tsx
+#: shared/components/board/BoardSurface.tsx
+#: shared/components/EditorToolbar.tsx
 msgid "Table"
 msgstr "테이블"
 
-#: ../../../shared/components/board/BoardPeek.tsx
-#: ../../../shared/components/board/BoardSurface.tsx
-#: ../../../shared/components/board/BoardTable.tsx
+#: shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardTable.tsx
 msgid "Tags"
 msgstr "태그"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Templates"
 msgstr "템플릿"
 
-#: ../../../shared/components/viewers/DiagramView.tsx
+#: shared/components/viewers/DiagramView.tsx
 msgid "This file type can not be previewed yet."
 msgstr "이 파일 형식은 아직 미리볼 수 없습니다."
 
-#: ../../../shared/components/board/BoardTable.tsx
+#: shared/components/board/BoardTable.tsx
 msgid "Title"
 msgstr "제목"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Unassigned"
 msgstr "미할당"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Unset done column"
 msgstr "완료 열 해제"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Untitled card"
 msgstr "제목 없는 카드"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Updated"
 msgstr ""
 
-#: ../../../shared/components/ConflictResolver.tsx
+#: shared/components/ConflictResolver.tsx
 msgid "Use this"
 msgstr "이것 사용"
 
 #. placeholder {0}: col.limit
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "WIP limit {0}"
 msgstr "WIP 한도 {0}"
 
-#: ../../../shared/components/board/BoardPeek.tsx
-#: ../../../shared/components/ViewModeToggle.tsx
+#: shared/components/board/BoardPeek.tsx
+#: shared/components/ViewModeToggle.tsx
 msgid "Write"
 msgstr "작성"
 
-#: ../../../shared/components/viewers/MermaidView.tsx
+#: shared/components/viewers/MermaidView.tsx
 msgid "Write Mermaid syntax to see the diagram."
 msgstr "Mermaid 구문을 작성하면 다이어그램이 표시됩니다."

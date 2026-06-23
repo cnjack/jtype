@@ -18,6 +18,7 @@ export function BoardPeek({
   statusOptions,
   assigneeOptions,
   tagOptions,
+  dependencyCards,
   loadNotes,
   loadComments,
   addComment,
@@ -33,6 +34,8 @@ export function BoardPeek({
   statusOptions: BoardOption[];
   assigneeOptions?: BoardOption[];
   tagOptions?: BoardTag[];
+  /** Sibling cards (excluding this one) offered as dependency targets. */
+  dependencyCards?: { slug: string; title: string }[];
   loadNotes?: (id: string) => Promise<string>;
   loadComments?: (id: string) => Promise<BoardComment[]>;
   addComment?: (id: string, body: string) => Promise<BoardComment>;
@@ -157,6 +160,19 @@ export function BoardPeek({
 
   const tagLabels = draft.tags.map((t2) => t2.label);
 
+  // Dependency editing maps slug<->title so the picker shows titles while the
+  // card stores slugs. Unresolved slugs (renamed/cross-board) are preserved as-is.
+  const slugToTitle = new Map((dependencyCards ?? []).map((c) => [c.slug, c.title]));
+  const titleToSlug = new Map((dependencyCards ?? []).map((c) => [c.title, c.slug]));
+  const depOptions = (dependencyCards ?? []).map((c) => ({ label: c.title }));
+  const depField = (key: "blockedBy" | "blocks" | "relates") => (
+    <TagMultiSelect
+      value={(draft[key] ?? []).map((s) => slugToTitle.get(s) ?? s)}
+      options={depOptions}
+      onChange={(titles) => setField({ [key]: titles.map((tt) => titleToSlug.get(tt) ?? tt) }, true)}
+    />
+  );
+
   return (
     <aside className="flex h-full w-full flex-col border-l border-black/[0.06] bg-white">
       <div className="flex items-center justify-between border-b border-black/[0.05] px-3 py-2">
@@ -274,6 +290,25 @@ export function BoardPeek({
                 })
               }
             />
+          )}
+
+          {dependencyCards && (
+            <>
+              <span className="text-xs text-brand-gray">
+                <Trans>Blocked by</Trans>
+              </span>
+              {depField("blockedBy")}
+
+              <span className="text-xs text-brand-gray">
+                <Trans>Blocks</Trans>
+              </span>
+              {depField("blocks")}
+
+              <span className="text-xs text-brand-gray">
+                <Trans>Relates</Trans>
+              </span>
+              {depField("relates")}
+            </>
           )}
         </div>
 
