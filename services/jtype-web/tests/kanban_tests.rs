@@ -1606,12 +1606,22 @@ async fn webhook_crud_and_enqueue() {
     assert_eq!(wh["secretMasked"], "whsec_••••");
     let wh_id = wh["id"].as_str().unwrap().to_string();
 
-    // reject non-https
-    let (bad, _b) = common::req(
-        app.clone(), "POST", &format!("/api/v1/workspaces/{ws_id}/kanban/webhooks"),
-        Some(&token), Some(json!({ "name": "x", "targetUrl": "http://localhost/hook", "eventTypes": ["*"] })),
-    ).await;
-    assert_eq!(bad, StatusCode::BAD_REQUEST);
+    // reject non-https and SSRF targets (incl. userinfo / private-IP / IPv6 bypasses)
+    for bad_url in [
+        "http://localhost/hook",
+        "https://user@127.0.0.1/hook",
+        "https://10.0.0.5/hook",
+        "https://192.168.1.10/hook",
+        "https://169.254.169.254/latest",
+        "https://[::1]/hook",
+        "https://foo.internal/hook",
+    ] {
+        let (bad, _b) = common::req(
+            app.clone(), "POST", &format!("/api/v1/workspaces/{ws_id}/kanban/webhooks"),
+            Some(&token), Some(json!({ "name": "x", "targetUrl": bad_url, "eventTypes": ["*"] })),
+        ).await;
+        assert_eq!(bad, StatusCode::BAD_REQUEST, "should reject {bad_url}");
+    }
 
     // list → 1
     let (_s, list) = common::req(

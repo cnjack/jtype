@@ -48,6 +48,9 @@ pub async fn run_once(pool: &Pool<MySql>) -> Result<u64, sqlx::Error> {
     let client = reqwest::Client::builder()
         .user_agent("jtype-web")
         .timeout(std::time::Duration::from_secs(10))
+        // Don't follow redirects: a 3xx to an internal host would bypass the
+        // create-time SSRF validation of target_url.
+        .redirect(reqwest::redirect::Policy::none())
         .build()
         .unwrap_or_else(|_| reqwest::Client::new());
 

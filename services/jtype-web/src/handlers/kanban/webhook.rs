@@ -90,27 +90,58 @@ const SELECT_WEBHOOK: &str = r#"SELECT id, board_id, name, target_url, event_typ
        CAST(created_at AS CHAR) AS created_at
 FROM kanban_webhooks"#;
 
-/// Reject obvious SSRF targets (internal/loopback hosts) and non-HTTPS URLs.
-fn validate_target_url(url: &str) -> Result<(), AppError> {
-    let lower = url.to_ascii_lowercase();
-    if !lower.starts_with("https://") {
+fn is_blocked_v4(ip: std::net::Ipv4Addr) -> bool {
+    // loopback 127/8, private 10/8 + 172.16/12 + 192.168/16, link-local 169.254/16,
+    // unspecified 0.0.0.0, broadcast, and the 0/8 reserved block.
+    ip.is_loopback()
+        || ip.is_private()
+        || ip.is_link_local()
+        || ip.is_unspecified()
+        || ip.is_broadcast()
+        || ip.octets()[0] == 0
+}
+
+fn is_blocked_v6(ip: std::net::Ipv6Addr) -> bool {
+    // loopback ::1, unspecified ::, and ULA fc00::/7.
+    ip.is_loopback() || ip.is_unspecified() || (ip.segments()[0] & 0xfe00) == 0xfc00
+}
+
+/// Reject SSRF targets (internal/loopback/private hosts) and non-HTTPS URLs.
+/// Parses the URL structurally so userinfo (`https://user@127.0.0.1/`) and IPv6
+/// literals can't slip past a prefix check, and classifies IP literals properly.
+fn validate_target_url(raw: &str) -> Result<(), AppError> {
+    let parsed = url::Url::parse(raw).map_err(|_| AppError::BadRequest("invalid target_url".into()))?;
+    if parsed.scheme() != "https" {
         return Err(AppError::BadRequest("target_url must be https://".into()));
     }
-    let host = lower["https://".len()..]
-        .split(['/', ':', '?'])
-        .next()
-        .unwrap_or("");
-    let blocked = ["localhost", "127.", "0.0.0.0", "10.", "192.168.", "169.254.", "[::1]", "[fc", "[fd"];
-    if host.is_empty()
-        || blocked.iter().any(|b| host.starts_with(b))
-        || (host.starts_with("172.")
-            && host
-                .split('.')
-                .nth(1)
-                .and_then(|o| o.parse::<u8>().ok())
-                .is_some_and(|n| (16..=31).contains(&n)))
-    {
-        return Err(AppError::BadRequest("target_url host is not allowed".into()));
+    let blocked = || AppError::BadRequest("target_url host is not allowed".into());
+    match parsed.host().ok_or_else(blocked)? {
+        url::Host::Ipv4(ip) => {
+            if is_blocked_v4(ip) {
+                return Err(blocked());
+            }
+        }
+        url::Host::Ipv6(ip) => {
+            if is_blocked_v6(ip) {
+                return Err(blocked());
+            }
+        }
+        url::Host::Domain(d) => {
+            let d = d.to_ascii_lowercase();
+            if d == "localhost"
+                || d.ends_with(".localhost")
+                || d.ends_with(".local")
+                || d.ends_with(".internal")
+            {
+                return Err(blocked());
+            }
+            // A bare IP that url parsed as a domain (defensive).
+            match d.parse::<std::net::IpAddr>() {
+                Ok(std::net::IpAddr::V4(v4)) if is_blocked_v4(v4) => return Err(blocked()),
+                Ok(std::net::IpAddr::V6(v6)) if is_blocked_v6(v6) => return Err(blocked()),
+                _ => {}
+            }
+        }
     }
     Ok(())
 }
