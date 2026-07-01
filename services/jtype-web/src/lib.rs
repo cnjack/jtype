@@ -1,3 +1,4 @@
+pub mod board_events;
 pub mod db;
 pub mod error;
 pub mod handlers;
@@ -245,6 +246,13 @@ pub fn build_app(
             "/api/v1/workspaces/:workspace_id/live",
             get(handlers::live::ws_upgrade),
         )
+        // Board SSE "pull" feed — live card-updated events for one board.
+        .route(
+            "/api/v1/workspaces/:workspace_id/boards/:board_ref/events",
+            get(handlers::live::board_events_stream),
+        )
+        // Mint a personal mcp-scoped token for the board Settings "MCP access" panel.
+        .route("/api/v1/mcp-token", post(handlers::mcp_token::mint))
         .route(
             "/api/v1/workspaces/:workspace_id/invites",
             get(handlers::workspace::list_invites).post(handlers::workspace::create_invite),

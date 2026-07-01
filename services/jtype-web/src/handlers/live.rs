@@ -1,11 +1,14 @@
 use axum::{
     extract::ws::{Message, WebSocket, WebSocketUpgrade},
     extract::{Path, Query, State},
+    response::sse::{Event, KeepAlive, Sse},
     response::IntoResponse,
 };
 use futures::{SinkExt, StreamExt};
 use serde::Deserialize;
 use sqlx::Row;
+use std::convert::Infallible;
+use tokio::sync::broadcast::error::RecvError;
 use uuid::Uuid;
 
 use crate::db::models::{AuthUser, CloudSaveDocumentRequest, TrashOperation};
@@ -22,6 +25,43 @@ pub struct WsAuth {
     token: String,
     client_type: Option<String>,
     device_id: Option<String>,
+}
+
+#[derive(Deserialize)]
+pub struct SseAuth {
+    token: String,
+}
+
+/// `GET /api/v1/workspaces/:workspace_id/boards/:board_ref/events` — the SSE
+/// "pull" feed for one board: streams `kanban:card-updated` events as they fire,
+/// the live counterpart to outbound webhooks. Auth is via `?token=` because an
+/// `EventSource` can't set an `Authorization` header (same pattern as the WS feed).
+pub async fn board_events_stream(
+    State(state): State<AppState>,
+    Path((workspace_id, board_ref)): Path<(String, String)>,
+    Query(auth): Query<SseAuth>,
+) -> Result<Sse<impl futures::Stream<Item = Result<Event, Infallible>>>, AppError> {
+    let user = validate_ws_token(&state.pool, &auth.token).await?;
+    require_workspace_role(
+        &state.pool,
+        &workspace_id,
+        &user.id,
+        &["owner", "admin", "editor", "viewer"],
+    )
+    .await?;
+
+    let rx = crate::board_events::global().subscribe(&workspace_id, &board_ref);
+    let stream = futures::stream::unfold(rx, |mut rx| async move {
+        loop {
+            match rx.recv().await {
+                Ok(payload) => return Some((Ok(Event::default().data(payload)), rx)),
+                // Slow consumer: some events were dropped. Skip and keep streaming.
+                Err(RecvError::Lagged(_)) => continue,
+                Err(RecvError::Closed) => return None,
+            }
+        }
+    });
+    Ok(Sse::new(stream).keep_alive(KeepAlive::default()))
 }
 
 pub async fn ws_upgrade(

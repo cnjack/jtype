@@ -8,6 +8,7 @@ pub mod domain;
 pub mod folder;
 pub mod live;
 pub mod mail;
+pub mod mcp_token;
 pub mod member;
 pub mod oauth;
 pub mod publish;

@@ -365,6 +365,10 @@ pub(crate) async fn fire_card_webhook(
         "editedBy": editor,
         "updatedClock": doc.updated_clock,
     });
+    // Push (outbound webhooks) and pull (board SSE feed) fire from the same
+    // trigger so both stay in lock-step. The SSE side is live-only — publish is a
+    // no-op when no client is currently subscribed to this board.
+    crate::board_events::global().publish(workspace_id, board_ref, payload.to_string());
     crate::handlers::webhooks::enqueue_event(pool, workspace_id, Some(board_ref), "kanban:card-updated", payload).await;
 }
 

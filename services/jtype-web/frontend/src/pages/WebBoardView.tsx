@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Dialog, DialogPanel } from '@headlessui/react'
-import { BoltIcon, TrashIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { BoardSettingsDialog } from '../components/BoardSettingsDialog'
 import { useConfirm, usePrompt } from '@shared/components/PromptDialogContext'
 import { parseFrontmatter, writeFrontmatter } from '@shared/lib/frontmatter'
 import { BoardSurface, type BoardActions } from '@shared/components/board'
@@ -22,7 +21,7 @@ import {
   type BoardViewCard,
   type BoardViewConfig,
 } from '@shared/lib/board'
-import { api, getStoredUsername, setSessionId, type MemberInfo, type Webhook, type WebhookCreated } from '../api'
+import { api, getStoredUsername, setSessionId, type MemberInfo } from '../api'
 
 type CardMeta = { id: string; relativePath: string; content: string; contentHash: string }
 type BoardConfigJSON = {
@@ -72,7 +71,7 @@ export function WebBoardView({
   const [cards, setCards] = useState<BoardViewCard[]>([])
   const [metaByPath, setMetaByPath] = useState<Map<string, CardMeta>>(new Map())
   const [error, setError] = useState('')
-  const [showWebhooks, setShowWebhooks] = useState(false)
+  const [showBoardSettings, setShowBoardSettings] = useState(false)
   const [ticketByDoc, setTicketByDoc] = useState<Map<string, string>>(new Map())
 
   const load = useCallback(async () => {
@@ -497,106 +496,16 @@ export function WebBoardView({
         onUploadAttachment={(file) => api.uploadAsset(workspaceId, file).then((a) => a.url)}
         fullscreen={fullscreen}
         onToggleFullscreen={onToggleFullscreen}
+        onOpenSettings={() => setShowBoardSettings(true)}
       />
-      <button
-        onClick={() => setShowWebhooks(true)}
-        title="Webhooks"
-        className="absolute bottom-4 right-4 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white text-stone-500 shadow ring-1 ring-black/[0.06] hover:text-brand"
-      >
-        <BoltIcon className="h-4 w-4" />
-      </button>
-      {showWebhooks && (
-        <WebhooksDialog workspaceId={workspaceId} board={config?.id ?? null} onClose={() => setShowWebhooks(false)} />
+      {showBoardSettings && (
+        <BoardSettingsDialog
+          workspaceId={workspaceId}
+          board={config?.id ?? null}
+          boardTitle={config?.title}
+          onClose={() => setShowBoardSettings(false)}
+        />
       )}
     </div>
-  )
-}
-
-const WEBHOOK_EVENTS = ['kanban:card-updated', '*']
-
-/** Register/list/delete outbound webhooks for this workspace, optionally scoped
- *  to the current board (by its logical id). Fires on card `.md` saves. */
-function WebhooksDialog({ workspaceId, board, onClose }: { workspaceId: string; board: string | null; onClose: () => void }) {
-  const [hooks, setHooks] = useState<Webhook[]>([])
-  const [name, setName] = useState('')
-  const [url, setUrl] = useState('')
-  const [scope, setScope] = useState<'all' | 'board'>('all')
-  const [events, setEvents] = useState<string[]>(['kanban:card-updated'])
-  const [revealed, setRevealed] = useState<WebhookCreated | null>(null)
-  const [error, setError] = useState('')
-
-  const load = useCallback(() => {
-    api.listWebhooks(workspaceId).then(setHooks).catch((e) => setError(String(e)))
-  }, [workspaceId])
-  useEffect(() => { load() }, [load])
-
-  const toggleEvent = (e: string) => setEvents((prev) => (prev.includes(e) ? prev.filter((x) => x !== e) : [...prev, e]))
-
-  const create = async () => {
-    if (!name.trim() || !url.trim() || events.length === 0) return
-    try {
-      const created = await api.createWebhook(workspaceId, {
-        name: name.trim(),
-        targetUrl: url.trim(),
-        boardRef: scope === 'board' ? board : null,
-        eventTypes: events,
-      })
-      setRevealed(created); setName(''); setUrl(''); setError(''); load()
-    } catch (e) { setError(String(e)) }
-  }
-  const remove = async (id: string) => {
-    try { await api.deleteWebhook(workspaceId, id); load() } catch (e) { setError(String(e)) }
-  }
-
-  return (
-    <Dialog open onClose={onClose} className="relative z-30">
-      <div className="fixed inset-0 bg-black/20" aria-hidden />
-      <div className="fixed inset-0 flex items-center justify-center p-4">
-        <DialogPanel className="w-full max-w-lg rounded-2xl bg-white p-5 shadow-xl">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800"><BoltIcon className="h-4 w-4" /> Webhooks</h2>
-            <button onClick={onClose} className="rounded p-1 text-zinc-400 hover:bg-zinc-100"><XMarkIcon className="h-4 w-4" /></button>
-          </div>
-          {error && <p className="mb-2 text-xs text-red-600">{error}</p>}
-          {revealed && (
-            <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 p-2 text-xs text-amber-800">
-              <div className="font-medium">Signing secret — shown once, copy it now:</div>
-              <code className="break-all">{revealed.secret}</code>
-            </div>
-          )}
-          <ul className="mb-3 max-h-48 space-y-1.5 overflow-auto">
-            {hooks.map((h) => (
-              <li key={h.id} className="flex items-center gap-2 rounded-lg border border-zinc-100 p-2 text-xs">
-                <div className="min-w-0 flex-1">
-                  <div className="font-medium text-zinc-800">{h.name}</div>
-                  <div className="truncate text-zinc-500">{h.targetUrl}</div>
-                  <div className="text-zinc-400">{h.eventTypes.join(', ')}{h.boardRef ? ` · board: ${h.boardRef}` : ' · all boards'}{h.lastStatus ? ` · last: ${h.lastStatus}` : ''}</div>
-                </div>
-                <button onClick={() => remove(h.id)} className="rounded p-1 text-zinc-400 hover:text-red-600" title="Delete"><TrashIcon className="h-4 w-4" /></button>
-              </li>
-            ))}
-            {hooks.length === 0 && <li className="text-xs text-zinc-400">No webhooks yet.</li>}
-          </ul>
-          <form onSubmit={(e) => { e.preventDefault(); void create() }} className="space-y-2 border-t border-zinc-100 pt-3">
-            <input className="w-full rounded-lg border border-zinc-200 px-2 py-1.5 text-sm" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
-            <input className="w-full rounded-lg border border-zinc-200 px-2 py-1.5 text-sm" placeholder="https://example.com/hook" value={url} onChange={(e) => setUrl(e.target.value)} />
-            <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-600">
-              {WEBHOOK_EVENTS.map((ev) => (
-                <label key={ev} className="inline-flex items-center gap-1">
-                  <input type="checkbox" checked={events.includes(ev)} onChange={() => toggleEvent(ev)} /> {ev}
-                </label>
-              ))}
-            </div>
-            <div className="flex items-center gap-3 text-xs text-zinc-600">
-              <label className="inline-flex items-center gap-1"><input type="radio" checked={scope === 'all'} onChange={() => setScope('all')} /> All boards</label>
-              {board && <label className="inline-flex items-center gap-1"><input type="radio" checked={scope === 'board'} onChange={() => setScope('board')} /> This board</label>}
-            </div>
-            <div className="flex justify-end">
-              <button type="submit" className="rounded-lg bg-brand px-3 py-1.5 text-xs font-medium text-white">Add webhook</button>
-            </div>
-          </form>
-        </DialogPanel>
-      </div>
-    </Dialog>
   )
 }

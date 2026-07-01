@@ -275,6 +275,9 @@ export const api = {
     request<WebhookCreated>(`/api/v1/workspaces/${workspaceId}/webhooks`, { method: 'POST', body: JSON.stringify(data) }),
   deleteWebhook: (workspaceId: string, webhookId: string) =>
     request<void>(`/api/v1/workspaces/${workspaceId}/webhooks/${webhookId}`, { method: 'DELETE' }),
+  // Mint a 90-day mcp-scoped token for the board Settings "MCP access" panel.
+  mintMcpToken: () =>
+    request<{ token: string }>(`/api/v1/mcp-token`, { method: 'POST' }),
   // Ticket links (OCCSV-3371): per-card number is cloud-indexed, scoped to a workspace.
   allocateTicket: (workspaceId: string, data: { relativePath: string; ticketKey: string }) =>
     request<Ticket>(`/api/v1/workspaces/${workspaceId}/tickets/allocate`, { method: 'POST', body: JSON.stringify(data) }),
