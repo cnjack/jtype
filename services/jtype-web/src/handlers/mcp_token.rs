@@ -1,6 +1,14 @@
 //! Mint a personal `mcp`-scoped token for the board Settings "MCP access" panel,
 //! so a user can paste a ready-to-use address + token into an AI client
 //! (Claude/Cursor) without running the full OAuth flow.
+//!
+//! The token itself is account-wide — same shape as an OAuth-minted `mcp`
+//! token — and works against any workspace/board the user can reach; there is
+//! no workspace/board constraint recorded on it. The board Settings panel
+//! pins a workspace/board onto the *connection URL* (`/mcp/kanban/{ws}/{board}`)
+//! purely as a convenience default for the agent (see `mcp::mod::Pinned`), not
+//! as a server-enforced boundary. The panel copy says so; don't let this
+//! module's naming ("Board settings > MCP access") imply otherwise.
 
 use axum::{extract::State, http::HeaderMap, Json};
 use serde::Serialize;

@@ -120,13 +120,19 @@ pub async fn ws_upgrade_user(
     }))
 }
 
+/// Authenticates the live WS/SSE feeds (board pull-SSE, workspace WS, the
+/// per-user WS). These are full-session features — presence, live document
+/// pushes, the collaborative WS — never the surface a scoped MCP token should
+/// reach, so unlike [`crate::middleware::auth::extract_user`] (which lets
+/// `mcp`-scoped callers through for the REST/MCP-dispatch paths that expect
+/// them) this rejects anything but `scope == "full"`.
 async fn validate_ws_token(
     pool: &sqlx::Pool<sqlx::MySql>,
     token: &str,
 ) -> Result<AuthUser, AppError> {
     let token_hash = sha256_hex(token);
     let row = sqlx::query(
-        r#"SELECT u.id, u.username, u.role, u.disabled_at
+        r#"SELECT u.id, u.username, u.role, u.disabled_at, s.scope
            FROM sessions s
            JOIN users u ON u.id = s.user_id
            WHERE s.token_hash = ?
@@ -142,11 +148,17 @@ async fn validate_ws_token(
         return Err(AppError::Forbidden);
     }
 
+    // Fail closed: a scope read failure must deny, never escalate to `full`.
+    let scope: String = row.try_get("scope")?;
+    if scope != "full" {
+        return Err(AppError::Forbidden);
+    }
+
     Ok(AuthUser {
         id: row.try_get("id")?,
         username: row.try_get("username")?,
         role: row.try_get("role")?,
-        scope: "full".to_string(),
+        scope,
     })
 }
 

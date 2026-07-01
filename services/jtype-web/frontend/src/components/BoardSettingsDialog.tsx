@@ -17,14 +17,15 @@ type Section = 'webhooks' | 'mcp'
 
 const NAV: { id: Section; label: string; description: string; icon: typeof BoltIcon }[] = [
   { id: 'webhooks', label: 'Webhooks', description: 'Push or live (SSE) pull', icon: BoltIcon },
-  { id: 'mcp', label: 'MCP access', description: 'Agent address · this board', icon: CommandLineIcon },
+  { id: 'mcp', label: 'MCP access', description: 'Agent address · defaults to this board', icon: CommandLineIcon },
 ]
 
 /**
  * Board-level settings, opened from the gear button in the board header. Mirrors
  * the Workspace Settings modal (left nav + scrollable main). Houses the webhook
- * config (push + SSE pull) and a board-scoped MCP address — both keyed to this
- * board's logical id.
+ * config (push + SSE pull) and an MCP address pre-pinned to this board's logical
+ * id — the pin is a URL-level default for the agent, not a token-level access
+ * boundary; the minted token is a full account credential (see McpPanel).
  */
 export function BoardSettingsDialog({
   workspaceId,
@@ -85,7 +86,7 @@ export function BoardSettingsDialog({
                 <p className="mt-0.5 text-xs text-zinc-500">
                   {section === 'webhooks'
                     ? 'Notify external services when cards on this board change.'
-                    : 'Connect an AI agent to just this board.'}
+                    : 'Give an AI agent a board-scoped starting address — the token itself can reach every board you can.'}
                 </p>
               </div>
               <button onClick={onClose} className="rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-100" aria-label="Close">
@@ -353,7 +354,7 @@ function McpPanel({ workspaceId, board }: { workspaceId: string; board: string |
       <div className="mb-4 flex flex-wrap gap-2">
         <span className="rounded-md bg-brand-soft px-2 py-1 text-[11px] text-brand-dark">workspace {workspaceId.slice(0, 8)}…</span>
         <span className="rounded-md bg-brand-soft px-2 py-1 text-[11px] text-brand-dark">board {board ?? '—'}</span>
-        <span className="rounded-md bg-stone-100 px-2 py-1 text-[11px] text-stone-500">scope: mcp · 90d</span>
+        <span className="rounded-md bg-amber-50 px-2 py-1 text-[11px] text-amber-700">scope: mcp · every board you can access · 90d</span>
       </div>
       <div className="mb-1 flex items-center justify-between">
         <span className="text-[11px] text-stone-500">Copy into your MCP client — workspace + board pre-pinned</span>
@@ -370,7 +371,9 @@ function McpPanel({ workspaceId, board }: { workspaceId: string; board: string |
       <p className="mt-3 text-[11px] text-stone-400">
         The workspace + board are pinned via path segments on the URL above, not a client-side default — tools
         (list_cards, create_card, move_card…) fall back to them whenever a call omits workspace_id/board, and the
-        agent is told about the pin on connect.
+        agent is told about the pin on connect. That pin is a convenience default, not an access boundary: the
+        token behind it is your own account credential and works against any workspace/board you can reach,
+        pinned URL or not — treat it like a password, not a scoped API key.
       </p>
     </>
   )
