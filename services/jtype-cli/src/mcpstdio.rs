@@ -12,7 +12,7 @@ use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader, Stdout};
 
 use crate::client::ApiClient;
 
-pub async fn run(client: &ApiClient) -> Result<()> {
+pub async fn run(client: &ApiClient, endpoint: &str) -> Result<()> {
     let stdin = tokio::io::stdin();
     let mut lines = BufReader::new(stdin).lines();
     let mut stdout = tokio::io::stdout();
@@ -28,7 +28,7 @@ pub async fn run(client: &ApiClient) -> Result<()> {
             .ok()
             .and_then(|v| v.get("id").cloned());
 
-        match client.post_mcp_raw(trimmed).await {
+        match client.post_mcp_raw(trimmed, endpoint).await {
             Ok((status, body)) => {
                 if status.is_success() {
                     // Forward the upstream JSON-RPC response. An empty 2xx body is

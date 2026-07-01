@@ -116,10 +116,72 @@ async fn mcp_tools_list_has_all_tools() {
         .collect();
     for expected in [
         "list_workspaces", "list_notes", "get_note", "search_notes", "create_note",
-        "update_note", "append_note", "list_boards", "get_board", "list_cards",
-        "create_card", "update_card", "move_card", "list_members",
+        "update_note", "append_note", "list_members",
     ] {
         assert!(names.contains(&expected), "missing tool {expected}; got {names:?}");
+    }
+}
+
+// ── Kanban catalog (separate `/mcp/kanban` server) ──────────────────────────
+
+/// Send a JSON-RPC message to `/mcp/kanban` with a bearer token; return (status, json).
+async fn mcp_kanban(app: Router, token: Option<&str>, body: Value) -> (StatusCode, Value) {
+    common::req(app, "POST", "/mcp/kanban", token, Some(body)).await
+}
+
+/// The tool names from a `tools/list` response body.
+fn tool_names(body: &Value) -> Vec<&str> {
+    body["result"]["tools"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|t| t["name"].as_str().unwrap())
+        .collect()
+}
+
+/// Board/card tools — exposed by `/mcp/kanban`, must be absent from `/mcp`.
+const KANBAN_TOOLS: [&str; 6] =
+    ["list_boards", "get_board", "list_cards", "create_card", "move_card", "update_card"];
+
+#[tokio::test]
+async fn mcp_notes_catalog_omits_kanban_tools() {
+    let (app, _pool) = common::setup().await;
+    let username = common::uid();
+    let (token, _) = common::register_user(app.clone(), &username).await;
+
+    let (status, body) = mcp(
+        app,
+        Some(&token),
+        json!({"jsonrpc":"2.0","id":1,"method":"tools/list"}),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    let names = tool_names(&body);
+    for kanban in KANBAN_TOOLS {
+        assert!(!names.contains(&kanban), "/mcp must not expose kanban tool {kanban}; got {names:?}");
+    }
+}
+
+#[tokio::test]
+async fn mcp_kanban_catalog_has_board_card_tools() {
+    let (app, _pool) = common::setup().await;
+    let username = common::uid();
+    let (token, _) = common::register_user(app.clone(), &username).await;
+
+    let (status, body) = mcp_kanban(
+        app,
+        Some(&token),
+        json!({"jsonrpc":"2.0","id":1,"method":"tools/list"}),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    let names = tool_names(&body);
+    for expected in KANBAN_TOOLS {
+        assert!(names.contains(&expected), "missing kanban tool {expected}; got {names:?}");
+    }
+    // The kanban server must not leak the note-editing tools.
+    for note in ["create_note", "search_notes", "append_note", "get_note"] {
+        assert!(!names.contains(&note), "/mcp/kanban leaked note tool {note}; got {names:?}");
     }
 }
 
@@ -226,183 +288,6 @@ async fn mcp_notes_roundtrip() {
     )
     .await;
     assert!(tool_text(&r).contains("Rewritten") && !tool_text(&r).contains("pineapple"));
-}
-
-// ── Kanban happy path ───────────────────────────────────────────────────────
-
-#[tokio::test]
-async fn mcp_kanban_roundtrip() {
-    let (app, _pool) = common::setup().await;
-    let username = common::uid();
-    let (token, _) = common::register_user(app.clone(), &username).await;
-    let ws = common::create_workspace(app.clone(), &token, &common::wname()).await;
-
-    // Seed a board via REST (auto-creates To do / Doing / Done columns).
-    let (status, board) = common::req(
-        app.clone(),
-        "POST",
-        &format!("/api/v1/workspaces/{ws}/kanban/boards"),
-        Some(&token),
-        Some(json!({ "name": "Roadmap" })),
-    )
-    .await;
-    assert_eq!(status, StatusCode::OK, "create board: {board}");
-    let board_id = board["id"].as_str().unwrap().to_string();
-    let cols = board["columns"].as_array().unwrap();
-    let todo_col = cols[0]["id"].as_str().unwrap().to_string();
-    let doing_col = cols[1]["id"].as_str().unwrap().to_string();
-
-    // list_boards
-    let r = tool_call(app.clone(), &token, "list_boards", json!({ "workspace_id": ws })).await;
-    assert_ok(&r, "list_boards");
-    assert!(tool_text(&r).contains("Roadmap"));
-
-    // get_board
-    let r = tool_call(
-        app.clone(),
-        &token,
-        "get_board",
-        json!({ "workspace_id": ws, "board_id": board_id }),
-    )
-    .await;
-    assert_ok(&r, "get_board");
-    assert!(tool_text(&r).contains("Doing"));
-
-    // list_members (resolve assignee)
-    let r = tool_call(app.clone(), &token, "list_members", json!({ "workspace_id": ws })).await;
-    assert_ok(&r, "list_members");
-    assert!(tool_text(&r).contains(&username));
-
-    // create_card
-    let r = tool_call(
-        app.clone(),
-        &token,
-        "create_card",
-        json!({ "workspace_id": ws, "board_id": board_id, "column_id": todo_col,
-                "title": "Wire up OAuth", "priority": "high" }),
-    )
-    .await;
-    assert_ok(&r, "create_card");
-    let text = tool_text(&r);
-    // Extract the created card id from the embedded JSON.
-    let card_json: Value = serde_json::from_str(text.splitn(2, '\n').nth(1).unwrap_or("{}"))
-        .unwrap_or(json!({}));
-    let card_id = card_json["id"].as_str().expect("card id").to_string();
-
-    // list_cards (filtered to the To-do column)
-    let r = tool_call(
-        app.clone(),
-        &token,
-        "list_cards",
-        json!({ "workspace_id": ws, "board_id": board_id, "column_id": todo_col }),
-    )
-    .await;
-    assert_ok(&r, "list_cards");
-    assert!(tool_text(&r).contains("Wire up OAuth"));
-
-    // update_card (change priority + assign)
-    let r = tool_call(
-        app.clone(),
-        &token,
-        "update_card",
-        json!({ "workspace_id": ws, "card_id": card_id, "priority": "urgent" }),
-    )
-    .await;
-    assert_ok(&r, "update_card");
-    assert!(tool_text(&r).contains("urgent"));
-
-    // move_card to "Doing" (status change)
-    let r = tool_call(
-        app.clone(),
-        &token,
-        "move_card",
-        json!({ "workspace_id": ws, "board_id": board_id, "card_id": card_id,
-                "target_column_id": doing_col }),
-    )
-    .await;
-    assert_ok(&r, "move_card");
-
-    // Confirm the move via list_cards on the Doing column.
-    let r = tool_call(
-        app,
-        &token,
-        "list_cards",
-        json!({ "workspace_id": ws, "board_id": board_id, "column_id": doing_col }),
-    )
-    .await;
-    assert!(tool_text(&r).contains("Wire up OAuth"), "card not in Doing: {}", tool_text(&r));
-}
-
-// Regression: empty-string args on update_card must CLEAR (JSON null), not 400.
-#[tokio::test]
-async fn mcp_update_card_clears_assignee_and_due() {
-    let (app, _pool) = common::setup().await;
-    let username = common::uid();
-    let (token, _) = common::register_user(app.clone(), &username).await;
-    let ws = common::create_workspace(app.clone(), &token, &common::wname()).await;
-
-    let (_s, members) = common::req(
-        app.clone(),
-        "GET",
-        &format!("/api/v1/workspaces/{ws}/members"),
-        Some(&token),
-        None,
-    )
-    .await;
-    let uid = members[0]["userId"].as_str().unwrap().to_string();
-
-    let (_s, board) = common::req(
-        app.clone(),
-        "POST",
-        &format!("/api/v1/workspaces/{ws}/kanban/boards"),
-        Some(&token),
-        Some(json!({ "name": "B" })),
-    )
-    .await;
-    let board_id = board["id"].as_str().unwrap().to_string();
-    let col = board["columns"][0]["id"].as_str().unwrap().to_string();
-
-    // Create a card WITH an assignee and a due date.
-    let r = tool_call(
-        app.clone(),
-        &token,
-        "create_card",
-        json!({ "workspace_id": ws, "board_id": board_id, "column_id": col,
-                "title": "Assigned", "assignee_user_id": uid, "due_at": "2026-12-31 09:00:00" }),
-    )
-    .await;
-    assert_ok(&r, "create_card w/ assignee");
-    let card: Value = serde_json::from_str(tool_text(&r).splitn(2, '\n').nth(1).unwrap_or("{}"))
-        .unwrap_or(json!({}));
-    let card_id = card["id"].as_str().unwrap().to_string();
-    assert_eq!(card["assigneeUserId"].as_str(), Some(uid.as_str()));
-
-    // Clear both via explicit empty strings (the documented unset path).
-    let r = tool_call(
-        app.clone(),
-        &token,
-        "update_card",
-        json!({ "workspace_id": ws, "card_id": card_id, "assignee_user_id": "", "due_at": "" }),
-    )
-    .await;
-    assert_ok(&r, "update_card clear");
-
-    let r = tool_call(
-        app,
-        &token,
-        "list_cards",
-        json!({ "workspace_id": ws, "board_id": board_id }),
-    )
-    .await;
-    let cards: Value = serde_json::from_str(&tool_text(&r)).unwrap();
-    let c = cards
-        .as_array()
-        .unwrap()
-        .iter()
-        .find(|c| c["id"] == json!(card_id))
-        .unwrap();
-    assert!(c["assigneeUserId"].is_null(), "assignee not cleared: {c}");
-    assert!(c["dueAt"].is_null(), "due not cleared: {c}");
 }
 
 // Regression: JSON-RPC envelope — a batch of only notifications → 202 (no body);

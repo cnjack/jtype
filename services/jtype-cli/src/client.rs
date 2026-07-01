@@ -67,15 +67,12 @@ impl ApiClient {
     pub async fn post(&self, path: &str, body: Value) -> Result<Value> {
         self.send(Method::POST, path, Some(body)).await
     }
-    pub async fn patch(&self, path: &str, body: Value) -> Result<Value> {
-        self.send(Method::PATCH, path, Some(body)).await
-    }
 
     /// Raw POST to the MCP endpoint (used by `mcp-stdio`). Returns (status, body).
-    pub async fn post_mcp_raw(&self, json_line: &str) -> Result<(StatusCode, String)> {
+    pub async fn post_mcp_raw(&self, json_line: &str, path: &str) -> Result<(StatusCode, String)> {
         let mut req = self
             .http
-            .post(self.url("/mcp"))
+            .post(self.url(path))
             .header("content-type", "application/json")
             .body(json_line.to_string());
         if let Some(token) = &self.token {

@@ -261,6 +261,30 @@ export const api = {
     request<void>(`/api/v1/workspaces/${workspaceId}/documents/${docId}/publish`, { method: 'DELETE' }),
   listVersions: (workspaceId: string, docId: string) =>
     request<DocumentVersion[]>(`/api/v1/workspaces/${workspaceId}/documents/${docId}/versions`),
+  // Card comments (document-backed board): keyed by the card's document id.
+  listComments: (workspaceId: string, docId: string) =>
+    request<CardComment[]>(`/api/v1/workspaces/${workspaceId}/documents/${docId}/comments`),
+  createComment: (workspaceId: string, docId: string, body: string) =>
+    request<CardComment>(`/api/v1/workspaces/${workspaceId}/documents/${docId}/comments`, { method: 'POST', body: JSON.stringify({ body }) }),
+  deleteComment: (workspaceId: string, commentId: string) =>
+    request<void>(`/api/v1/workspaces/${workspaceId}/comments/${commentId}`, { method: 'DELETE' }),
+  // Webhooks (document-backed board): board scope is a board's logical id.
+  listWebhooks: (workspaceId: string) =>
+    request<Webhook[]>(`/api/v1/workspaces/${workspaceId}/webhooks`),
+  createWebhook: (workspaceId: string, data: { name: string; targetUrl: string; boardRef?: string | null; eventTypes: string[] }) =>
+    request<WebhookCreated>(`/api/v1/workspaces/${workspaceId}/webhooks`, { method: 'POST', body: JSON.stringify(data) }),
+  deleteWebhook: (workspaceId: string, webhookId: string) =>
+    request<void>(`/api/v1/workspaces/${workspaceId}/webhooks/${webhookId}`, { method: 'DELETE' }),
+  // Mint a 90-day mcp-scoped token for the board Settings "MCP access" panel.
+  mintMcpToken: () =>
+    request<{ token: string }>(`/api/v1/mcp-token`, { method: 'POST' }),
+  // Ticket links (OCCSV-3371): per-card number is cloud-indexed, scoped to a workspace.
+  allocateTicket: (workspaceId: string, data: { relativePath: string; ticketKey: string }) =>
+    request<Ticket>(`/api/v1/workspaces/${workspaceId}/tickets/allocate`, { method: 'POST', body: JSON.stringify(data) }),
+  listTickets: (workspaceId: string) =>
+    request<Ticket[]>(`/api/v1/workspaces/${workspaceId}/tickets`),
+  resolveTicket: (workspaceId: string, ticket: string) =>
+    request<Ticket>(`/api/v1/workspaces/${workspaceId}/tickets/${encodeURIComponent(ticket)}`),
   listTrash: (workspaceId: string) =>
     request<TrashItem[]>(`/api/v1/workspaces/${workspaceId}/trash`),
   restoreTrash: (workspaceId: string, trashId: string) =>
@@ -294,70 +318,6 @@ export const api = {
   uploadCertificate: (id: string, certChainPem: string, privateKeyPem: string) =>
     request<DomainResponse>(`/api/v1/domains/${id}/certificate`, { method: 'POST', body: JSON.stringify({ certChainPem, privateKeyPem }) }),
 
-  // Kanban (cloud). Mirrors services/jtype-web/src/handlers/kanban.
-  kanban: {
-    listBoards: (workspaceId: string) =>
-      request<KanbanBoardSummary[]>(`/api/v1/workspaces/${workspaceId}/kanban/boards`),
-    createBoard: (workspaceId: string, data: { name: string; description?: string }) =>
-      request<KanbanBoardFull>(`/api/v1/workspaces/${workspaceId}/kanban/boards`, { method: 'POST', body: JSON.stringify(data) }),
-    getBoard: (workspaceId: string, boardId: string) =>
-      request<KanbanBoardFull>(`/api/v1/workspaces/${workspaceId}/kanban/boards/${boardId}`),
-    patchBoard: (workspaceId: string, boardId: string, data: { name?: string; description?: string }) =>
-      request<KanbanBoardFull>(`/api/v1/workspaces/${workspaceId}/kanban/boards/${boardId}`, { method: 'PATCH', body: JSON.stringify(data) }),
-    deleteBoard: (workspaceId: string, boardId: string) =>
-      request<void>(`/api/v1/workspaces/${workspaceId}/kanban/boards/${boardId}`, { method: 'DELETE' }),
-    reorderBoards: (workspaceId: string, boardIds: string[]) =>
-      request<{ ok: boolean }>(`/api/v1/workspaces/${workspaceId}/kanban/boards/reorder`, { method: 'POST', body: JSON.stringify({ boardIds }) }),
-
-    createColumn: (workspaceId: string, boardId: string, data: { name: string; wipLimit?: number | null; color?: string | null }) =>
-      request<KanbanColumn>(`/api/v1/workspaces/${workspaceId}/kanban/boards/${boardId}/columns`, { method: 'POST', body: JSON.stringify(data) }),
-    patchColumn: (workspaceId: string, columnId: string, data: { name?: string; wipLimit?: number | null; color?: string | null }) =>
-      request<KanbanColumn>(`/api/v1/workspaces/${workspaceId}/kanban/columns/${columnId}`, { method: 'PATCH', body: JSON.stringify(data) }),
-    reorderColumns: (workspaceId: string, boardId: string, columnIds: string[]) =>
-      request<{ ok: boolean }>(`/api/v1/workspaces/${workspaceId}/kanban/columns/reorder`, { method: 'POST', body: JSON.stringify({ boardId, columnIds }) }),
-    deleteColumn: (workspaceId: string, columnId: string) =>
-      request<void>(`/api/v1/workspaces/${workspaceId}/kanban/columns/${columnId}`, { method: 'DELETE' }),
-
-    listCards: (workspaceId: string, boardId: string, includeArchived = false) =>
-      request<KanbanCard[]>(`/api/v1/workspaces/${workspaceId}/kanban/boards/${boardId}/cards${includeArchived ? '?includeArchived=true' : ''}`),
-    createCard: (workspaceId: string, boardId: string, data: CreateKanbanCardRequest) =>
-      request<KanbanCard>(`/api/v1/workspaces/${workspaceId}/kanban/boards/${boardId}/cards`, { method: 'POST', body: JSON.stringify(data) }),
-    patchCard: (workspaceId: string, cardId: string, data: UpdateKanbanCardRequest) =>
-      request<KanbanCard | KanbanConflict>(`/api/v1/workspaces/${workspaceId}/kanban/cards/${cardId}`, { method: 'PATCH', body: JSON.stringify(data) }),
-    moveCard: (workspaceId: string, boardId: string, data: MoveKanbanCardRequest) =>
-      request<KanbanCard | KanbanConflict>(`/api/v1/workspaces/${workspaceId}/kanban/boards/${boardId}/cards/move`, { method: 'POST', body: JSON.stringify(data) }),
-    archiveCard: (workspaceId: string, cardId: string) =>
-      request<{ id: string; cardId: string }>(`/api/v1/workspaces/${workspaceId}/kanban/cards/${cardId}/archive`, { method: 'POST', body: '{}' }),
-    restoreCard: (workspaceId: string, cardId: string) =>
-      request<KanbanCard>(`/api/v1/workspaces/${workspaceId}/kanban/cards/${cardId}/restore`, { method: 'POST', body: '{}' }),
-    deleteCard: (workspaceId: string, cardId: string) =>
-      request<void>(`/api/v1/workspaces/${workspaceId}/kanban/cards/${cardId}`, { method: 'DELETE' }),
-    listTrash: (workspaceId: string, boardId: string) =>
-      request<KanbanTrashItem[]>(`/api/v1/workspaces/${workspaceId}/kanban/boards/${boardId}/trash`),
-    listComments: (workspaceId: string, cardId: string) =>
-      request<KanbanComment[]>(`/api/v1/workspaces/${workspaceId}/kanban/cards/${cardId}/comments`),
-    createComment: (workspaceId: string, cardId: string, body: string) =>
-      request<KanbanComment>(`/api/v1/workspaces/${workspaceId}/kanban/cards/${cardId}/comments`, { method: 'POST', body: JSON.stringify({ body }) }),
-    deleteComment: (workspaceId: string, commentId: string) =>
-      request<void>(`/api/v1/workspaces/${workspaceId}/kanban/comments/${commentId}`, { method: 'DELETE' }),
-    getCardActivity: (workspaceId: string, cardId: string) =>
-      request<KanbanActivityEvent[]>(`/api/v1/workspaces/${workspaceId}/kanban/cards/${cardId}/activity`),
-    listWebhooks: (workspaceId: string) =>
-      request<KanbanWebhook[]>(`/api/v1/workspaces/${workspaceId}/kanban/webhooks`),
-    createWebhook: (workspaceId: string, data: { name: string; targetUrl: string; boardId?: string | null; eventTypes: string[] }) =>
-      request<KanbanWebhookCreated>(`/api/v1/workspaces/${workspaceId}/kanban/webhooks`, { method: 'POST', body: JSON.stringify(data) }),
-    deleteWebhook: (workspaceId: string, webhookId: string) =>
-      request<void>(`/api/v1/workspaces/${workspaceId}/kanban/webhooks/${webhookId}`, { method: 'DELETE' }),
-
-    listLabels: (workspaceId: string, boardId: string) =>
-      request<KanbanLabel[]>(`/api/v1/workspaces/${workspaceId}/kanban/boards/${boardId}/labels`),
-    createLabel: (workspaceId: string, boardId: string, data: { name: string; color: string; description?: string }) =>
-      request<KanbanLabel>(`/api/v1/workspaces/${workspaceId}/kanban/boards/${boardId}/labels`, { method: 'POST', body: JSON.stringify(data) }),
-    patchLabel: (workspaceId: string, labelId: string, data: { name?: string; color?: string; description?: string | null }) =>
-      request<KanbanLabel>(`/api/v1/workspaces/${workspaceId}/kanban/labels/${labelId}`, { method: 'PATCH', body: JSON.stringify(data) }),
-    deleteLabel: (workspaceId: string, labelId: string) =>
-      request<void>(`/api/v1/workspaces/${workspaceId}/kanban/labels/${labelId}`, { method: 'DELETE' }),
-  },
 }
 
 // Types
@@ -578,6 +538,41 @@ export interface DocumentVersion {
   contentHash: string
   content: string
   createdAt: string
+  authorUsername?: string | null
+}
+
+export interface CardComment {
+  id: string
+  documentId: string
+  authorUserId: string
+  author: string | null
+  body: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface Webhook {
+  id: string
+  boardRef?: string | null
+  name: string
+  targetUrl: string
+  eventTypes: string[]
+  enabled: boolean
+  secretMasked: string
+  lastDeliveryAt?: string | null
+  lastStatus?: string | null
+  createdAt: string
+}
+export interface WebhookCreated extends Webhook {
+  secret: string
+}
+
+export interface Ticket {
+  documentId: string
+  relativePath: string | null
+  ticketKey: string
+  number: number
+  ticket: string
 }
 
 export interface TrashItem {
@@ -775,164 +770,4 @@ export interface InvitePreview {
   invitedByUsername: string
   role: string
   status: 'pending' | 'accepted' | 'revoked'
-}
-
-// Kanban types (camelCase mirror of the cloud JSON contract)
-export type KanbanPriority = 'none' | 'low' | 'medium' | 'high' | 'urgent'
-
-export interface KanbanBoardSummary {
-  id: string
-  workspaceId: string
-  name: string
-  description: string | null
-  position: number
-  createdByUserId: string
-  updatedClock: number
-  createdAt: string
-  updatedAt: string
-  cardCount: number
-  columnCount: number
-}
-
-export interface KanbanColumn {
-  id: string
-  boardId: string
-  name: string
-  position: number
-  wipLimit: number | null
-  color: string | null
-  cardCount: number
-}
-
-export interface KanbanCard {
-  id: string
-  workspaceId: string
-  boardId: string
-  columnId: string
-  title: string
-  description: string | null
-  position: number
-  priority: KanbanPriority
-  dueAt: string | null
-  assigneeUserId: string | null
-  propertiesExtra: unknown | null
-  labelIds: string[]
-  createdByUserId: string
-  updatedClock: number
-  versionId: string
-  archivedAt: string | null
-  createdAt: string
-  updatedAt: string
-}
-
-export interface KanbanLabel {
-  id: string
-  boardId: string
-  name: string
-  color: string
-  description: string | null
-  createdAt: string
-  updatedAt: string
-}
-
-export interface KanbanBoardFull extends KanbanBoardSummary {
-  columns: KanbanColumn[]
-  cards: KanbanCard[]
-  labels: KanbanLabel[]
-}
-
-export interface KanbanWebhook {
-  id: string
-  boardId?: string | null
-  name: string
-  targetUrl: string
-  eventTypes: string[]
-  enabled: boolean
-  secretMasked: string
-  lastDeliveryAt?: string | null
-  lastStatus?: string | null
-  createdAt: string
-}
-export interface KanbanWebhookCreated extends KanbanWebhook {
-  secret: string
-}
-
-export interface KanbanComment {
-  id: string
-  cardId: string
-  authorUserId: string
-  author?: string | null
-  body: string
-  createdAt: string
-  updatedAt: string
-}
-
-export interface KanbanActivityEvent {
-  kind: string
-  at: string
-  by?: string | null
-}
-
-export interface KanbanTrashItem {
-  id: string
-  cardId: string
-  workspaceId: string
-  boardId: string
-  columnId: string
-  title: string
-  description: string | null
-  priority: KanbanPriority
-  position: number
-  dueAt: string | null
-  assigneeUserId: string | null
-  labelIds: string[]
-  archivedByUserId: string
-  archivedByDeviceId: string | null
-  archivedClock: number
-  archivedAt: string
-  expiresAt: string
-  restoredAt: string | null
-}
-
-export interface CreateKanbanCardRequest {
-  columnId: string
-  title: string
-  description?: string
-  priority?: KanbanPriority
-  dueAt?: string
-  assigneeUserId?: string
-  labelIds?: string[]
-  propertiesExtra?: Record<string, unknown> | null
-}
-
-export interface UpdateKanbanCardRequest {
-  title?: string
-  description?: string | null
-  priority?: KanbanPriority
-  dueAt?: string | null
-  assigneeUserId?: string | null
-  labelIds?: string[]
-  propertiesExtra?: Record<string, unknown> | null
-  baseUpdatedClock?: number
-  force?: boolean
-}
-
-export interface MoveKanbanCardRequest {
-  cardId: string
-  targetColumnId: string
-  targetPosition: number
-  baseUpdatedClock?: number
-  force?: boolean
-}
-
-export interface KanbanConflict {
-  error: 'conflict'
-  cardId: string
-  latest: KanbanCard
-  baseUpdatedClock: number | null
-}
-
-/** Narrow a patch/move response that may be a 409 conflict payload. */
-export function isKanbanConflict(r: KanbanCard | KanbanConflict): r is KanbanConflict {
-  return (r as KanbanConflict).error === 'conflict'
 }

@@ -1,0 +1,3 @@
+-- Irreversible in this demo: the cloud Kanban tables are dropped without a
+-- data-preserving rollback. To recreate the old schema for local testing,
+-- replay migrations 0007 / 0016 / 0017 up SQL manually. No-op here.

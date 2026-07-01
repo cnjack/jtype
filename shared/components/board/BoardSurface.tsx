@@ -29,6 +29,7 @@ import {
   XMarkIcon,
   TableCellsIcon,
   BookmarkIcon,
+  Cog6ToothIcon,
 } from "@heroicons/react/24/outline";
 import {
   COLUMN_COLORS,
@@ -82,6 +83,7 @@ export function BoardSurface({
   loadActivity,
   fullscreen,
   onToggleFullscreen,
+  onOpenSettings,
 }: BoardSurfaceProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<DropTarget | null>(null);
@@ -334,6 +336,17 @@ export function BoardSurface({
             >
               <ArrowPathIcon className="h-3.5 w-3.5" />
               <Trans>Refresh</Trans>
+            </button>
+          )}
+          {onOpenSettings && (
+            <button
+              type="button"
+              className="inline-flex items-center justify-center rounded-lg border border-stone-200 p-1.5 text-stone-600 hover:border-brand/40 hover:text-brand-dark"
+              onClick={onOpenSettings}
+              title={t`Board settings`}
+              aria-label={t`Board settings`}
+            >
+              <Cog6ToothIcon className="h-3.5 w-3.5" />
             </button>
           )}
           {onToggleFullscreen && (
@@ -717,6 +730,11 @@ export function BoardSurface({
                               </Menu>
                             </div>
 
+                            {card.ticket && (
+                              <span className="mb-0.5 inline-block rounded bg-stone-100 px-1 py-0.5 font-mono text-[10px] font-medium tracking-tight text-stone-500">
+                                {card.ticket}
+                              </span>
+                            )}
                             <span className="block pr-5 text-sm text-stone-800">
                               {card.icon && <span className="mr-1">{card.icon}</span>}
                               {card.title}

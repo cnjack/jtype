@@ -1,8 +1,11 @@
 # JType 看板 — 缺口盘点与优先级路线图
 
+> 🛑 **部分推翻（2026-06-23）**：本文 §0 的"**DB 看板保留为次要/遗留**"口径已被推翻——决定**退役 DB 看板**，看板彻底收敛到文档型并云端本地互通。当前真相源见 **[`unification-v2.md`](./unification-v2.md)**。
+> 另：本文 2026-06-20 后已有变化——**B1 评论（`0016_kanban_comments`）、D2 Webhook（`0017_kanban_webhooks`）均已落地（落在 DB 看板上）**；§1 表格里它们的"待设计/待做"状态过时。下方路线图作为历史审计留存。
+
 状态：现状审计 + 决策收敛（基于 `main` HEAD 实际代码 + 用户 2026-06-20 逐条决策）
 初始日期：2026-06-20
-更新日期：2026-06-20
+更新日期：2026-06-23（加退役横幅 + 标注 B1/D2 已落地）
 
 > 配套文档：
 > - [`design.md`](./design.md) — v1 三环境设计。**第 6/7 节已过时**（依赖的 `kanban_local.rs` 已在提交 `1576515` 删除）。
@@ -13,7 +16,9 @@
 
 ## 0. 一句话现状
 
-看板有**两套互不相通的系统**：云端 DB 看板（`Kanban.tsx` + `kanban_*` 表,成熟,但桌面不可达）与**文件看板**（`.board` + `.md` 卡片,用户实际在用,桌面↔云端经文档同步双向可见）。两者复用同一个 `BoardSurface`,故视图级功能对两套都生效。模型已定为 **markdown 卡片**;**DB 看板暂保留为次要/遗留**,新 per-card 功能以文件看板为真相源。
+看板有**两套互不相通的系统**：云端 DB 看板（`Kanban.tsx` + `kanban_*` 表,成熟,但桌面不可达）与**文件看板**（`.board` + `.md` 卡片,用户实际在用,桌面↔云端经文档同步双向可见）。两者复用同一个 `BoardSurface`,故视图级功能对两套都生效。模型已定为 **markdown 卡片**;~~DB 看板暂保留为次要/遗留~~ **→ 已改为退役 DB 看板（2026-06-23,见 [`unification-v2.md`](./unification-v2.md)）**,新 per-card 功能以文件看板为真相源。
+
+> 订正（2026-06-23）：更准确说是**三个渲染面/两套数据层**——① 桌面文件看板、② Web 文件看板（`WebBoardView.tsx`,已与桌面双向同步)、③ Web 云端 DB 看板(`Kanban.tsx`,孤岛)。①②已互通,③待退役。
 
 ---
 
@@ -69,10 +74,12 @@
 
 ## 3. 需要回写修订的过时文档（DOC 任务）
 
-- [ ] [`design.md` 第 6 节「LOCAL — kanban_local.rs」](./design.md)：文件已删除,整节失效,标注「已移除」或重写。
-- [ ] [`design.md` 第 7 节「同步数据流(Desktop)」](./design.md)：依赖已删除的 `take_pending_ops`/`merge_remote_board`,标注实现已撤回。
-- [ ] `design.md` 头部状态行:从「尚未接通,为设计意图」升级为「曾实现后移除(提交 1576515)」。
-- [ ] [`shared/components/board/types.ts:23`](shared/components/board/types.ts#L23) 注释「web → localStorage」过时:Web 实际已改 `saveDocument` 写 `.board`(C3 设计时顺手修正)。
+> ✅ 2026-06-23：design.md 头部 + §6/§7 已加撤回/退役横幅;本文已加退役横幅。文档订正大部完成,余项随 v2 落地清理。
+
+- [x] [`design.md` 第 6 节「LOCAL — kanban_local.rs」](./design.md)：已加 ⚠️ 撤回标注 + v2 退役横幅。
+- [x] [`design.md` 第 7 节「同步数据流(Desktop)」](./design.md)：已标注实现撤回。
+- [x] `design.md` 头部状态行:已更新为「曾实现后移除(提交 1576515)」+ v2 退役横幅。
+- [ ] [`shared/components/board/types.ts`](shared/components/board/types.ts) 注释「web → localStorage」：`WebBoardView` 已改 `saveDocument` 写 `.board`(随 v2 §5 核对修正)。
 
 ---
 

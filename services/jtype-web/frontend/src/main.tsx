@@ -1,7 +1,7 @@
 import { StrictMode, Suspense, lazy } from 'react'
 import { useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
-import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useNavigate, useParams } from 'react-router-dom'
 import { I18nProvider } from '@lingui/react'
 import './index.css'
 import { AuthProvider } from './components/AuthContext'
@@ -19,7 +19,6 @@ import { Landing } from './pages/Landing'
 import { Login } from './pages/Login'
 import { Admin } from './pages/Admin'
 import { Workspace } from './pages/Workspace'
-import { Kanban } from './pages/Kanban'
 import { DeviceOAuth } from './pages/DeviceOAuth'
 import { ResetPassword } from './pages/ResetPassword'
 import { VerifyEmail } from './pages/VerifyEmail'
@@ -38,6 +37,21 @@ async function loadPlatformMessages(locale: SupportedLocale): Promise<Record<str
   const platformMessages =
     platformMod.messages ?? platformMod.default?.messages ?? platformMod.default ?? {}
   return platformMessages
+}
+
+/** Resolve a workspace-scoped ticket (`OCCSV-3371`) to its card and open it. */
+function TicketRedirect() {
+  const { workspaceId, ticket } = useParams<{ workspaceId: string; ticket: string }>()
+  const navigate = useNavigate()
+  const [error, setError] = useState('')
+  useEffect(() => {
+    if (!workspaceId || !ticket) return
+    api
+      .resolveTicket(workspaceId, ticket)
+      .then((r) => navigate(`/workspaces/${workspaceId}?doc=${encodeURIComponent(r.documentId)}`, { replace: true }))
+      .catch(() => setError(`Ticket ${ticket} not found.`))
+  }, [workspaceId, ticket, navigate])
+  return <div className="p-10 text-sm text-zinc-500">{error || `Opening ${ticket}…`}</div>
 }
 
 function renderApp() {
@@ -71,7 +85,7 @@ function renderApp() {
                   <Route path="/admin" element={<Admin />} />
                   <Route path="/ai" element={<AiConnections />} />
                   <Route path="/workspaces/:workspaceId" element={<Workspace />} />
-                  <Route path="/workspaces/:workspaceId/kanban" element={<Kanban />} />
+                  <Route path="/workspaces/:workspaceId/tickets/:ticket" element={<TicketRedirect />} />
                 </Route>
               </Routes>
               <DownloadPromo />

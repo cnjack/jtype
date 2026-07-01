@@ -34,6 +34,15 @@ export type BoardViewConfig = {
   /** User-defined custom fields shown/edited on cards (board-level schema). */
   fields?: BoardFieldDef[];
   /**
+   * Board-level label definitions giving tags an explicit color. A card references
+   * a label by its `label` text in frontmatter `tags`; a tag with no matching
+   * definition (or a definition with no color) falls back to a deterministic
+   * auto-color, so tags are colored with zero config.
+   */
+  labels?: BoardLabelDef[];
+  /** Board ticket-id prefix (e.g. `OCCSV`) for per-card `OCCSV-3371` ticket links. */
+  ticketKey?: string;
+  /**
    * Second grouping dimension rendered as horizontal swimlanes (rows) in the
    * board view. Must differ from `groupBy`; unset = no swimlanes.
    */
@@ -42,9 +51,14 @@ export type BoardViewConfig = {
 
 export type BoardTag = { id?: string; label: string; color?: string | null };
 
+/** A board-level label definition: a tag's text + its display color. */
+export type BoardLabelDef = { label: string; color?: string | null };
+
 export type BoardViewCard = {
   /** Stable id — desktop: file path; web: card id. */
   id: string;
+  /** Allocated ticket id (e.g. `OCCSV-3371`), cloud-indexed; shown as a card badge. */
+  ticket?: string | null;
   /** The grouping value under the default (status) grouping. */
   columnKey: string;
   position: number;
@@ -201,6 +215,44 @@ export function parseTagList(raw: string): string[] {
     .split(",")
     .map((t) => t.trim().replace(/^#/, ""))
     .filter(Boolean);
+}
+
+/**
+ * Palette for auto-assigned tag colors (deterministic by label). These are
+ * intentional categorical hues, not theme colors — the shared token system only
+ * defines brand-accent semantics (no 10-way categorical scale), so raw hex is the
+ * right tool here. (Exempt from the shared "no hardcoded hex" rule, which targets
+ * brand/neutral surfaces.)
+ */
+export const TAG_COLORS = ["#ef4444", "#f59e0b", "#eab308", "#22c55e", "#14b8a6", "#0ea5e9", "#6366f1", "#a855f7", "#ec4899", "#78716c"];
+
+/**
+ * A stable color for a tag label: a deterministic palette pick from the label's
+ * hash, so the same tag is always the same color across cards/boards with zero
+ * configuration. An explicit `.board` label color overrides this (see resolveTags).
+ */
+export function autoTagColor(label: string): string {
+  let h = 0;
+  for (let i = 0; i < label.length; i++) h = (Math.imul(h, 31) + label.charCodeAt(i)) >>> 0;
+  return TAG_COLORS[h % TAG_COLORS.length]!;
+}
+
+/** Resolve raw tag labels into colored {@link BoardTag}s: an explicit board label
+ *  definition's color wins, else a deterministic auto-color. */
+export function resolveTags(rawLabels: string[], labels?: BoardLabelDef[]): BoardTag[] {
+  return rawLabels.map((label) => {
+    const def = labels?.find((l) => l.label === label);
+    return { label, color: def?.color ?? autoTagColor(label) };
+  });
+}
+
+/** The tag options for the peek multiselect: every defined label plus every tag
+ *  currently in use on a card, each with its resolved color (deduped by label). */
+export function collectTagOptions(cards: BoardViewCard[], labels?: BoardLabelDef[]): BoardTag[] {
+  const byLabel = new Map<string, string | null | undefined>();
+  for (const l of labels ?? []) byLabel.set(l.label, l.color ?? autoTagColor(l.label));
+  for (const c of cards) for (const t of c.tags) if (!byLabel.has(t.label)) byLabel.set(t.label, t.color ?? autoTagColor(t.label));
+  return [...byLabel].map(([label, color]) => ({ label, color }));
 }
 
 /** Parse a dependency value (`[[a]], [[b]]` or `a, b`) into card slugs. */

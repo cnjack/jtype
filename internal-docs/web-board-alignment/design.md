@@ -169,6 +169,8 @@ type BoardActions = {
 - **生效前提(两步,不只是 docker)**:① `docker compose build jtype-web && docker compose up -d jtype-web`;② **重启桌面 app 并同步一次**(桌面现在才会把 `.board` 推上云;之前从没上传)。之后 web 文件树里出现 `.board`,点开即同一个看板,双向同步。
 
 > 说明:这与 §4.1 的「云端 DB 看板页」(`/workspaces/<id>/kanban`)是两条独立路径 —— DB 看板是 web 自建数据;`.board` 文档视图是桌面同款数据。
+>
+> 🛑 **更新(2026-06-23)**:这"两条独立路径"正是要消除的对象。已决定**退役**云端 DB 看板页,只留 `.board` 文档视图(`WebBoardView`)这一条,并把 DB 看板的独有功能(评论/webhook/成员/彩色标签/活动)搬到文档模型。统一方案见 **[`../kanban/unification-v2.md`](../kanban/unification-v2.md)**。
 
 ## 5. 验收标准
 

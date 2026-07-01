@@ -1,11 +1,14 @@
 use axum::{
     extract::ws::{Message, WebSocket, WebSocketUpgrade},
     extract::{Path, Query, State},
+    response::sse::{Event, KeepAlive, Sse},
     response::IntoResponse,
 };
 use futures::{SinkExt, StreamExt};
 use serde::Deserialize;
 use sqlx::Row;
+use std::convert::Infallible;
+use tokio::sync::broadcast::error::RecvError;
 use uuid::Uuid;
 
 use crate::db::models::{AuthUser, CloudSaveDocumentRequest, TrashOperation};
@@ -22,6 +25,43 @@ pub struct WsAuth {
     token: String,
     client_type: Option<String>,
     device_id: Option<String>,
+}
+
+#[derive(Deserialize)]
+pub struct SseAuth {
+    token: String,
+}
+
+/// `GET /api/v1/workspaces/:workspace_id/boards/:board_ref/events` — the SSE
+/// "pull" feed for one board: streams `kanban:card-updated` events as they fire,
+/// the live counterpart to outbound webhooks. Auth is via `?token=` because an
+/// `EventSource` can't set an `Authorization` header (same pattern as the WS feed).
+pub async fn board_events_stream(
+    State(state): State<AppState>,
+    Path((workspace_id, board_ref)): Path<(String, String)>,
+    Query(auth): Query<SseAuth>,
+) -> Result<Sse<impl futures::Stream<Item = Result<Event, Infallible>>>, AppError> {
+    let user = validate_ws_token(&state.pool, &auth.token).await?;
+    require_workspace_role(
+        &state.pool,
+        &workspace_id,
+        &user.id,
+        &["owner", "admin", "editor", "viewer"],
+    )
+    .await?;
+
+    let rx = crate::board_events::global().subscribe(&workspace_id, &board_ref);
+    let stream = futures::stream::unfold(rx, |mut rx| async move {
+        loop {
+            match rx.recv().await {
+                Ok(payload) => return Some((Ok(Event::default().data(payload)), rx)),
+                // Slow consumer: some events were dropped. Skip and keep streaming.
+                Err(RecvError::Lagged(_)) => continue,
+                Err(RecvError::Closed) => return None,
+            }
+        }
+    });
+    Ok(Sse::new(stream).keep_alive(KeepAlive::default()))
 }
 
 pub async fn ws_upgrade(
@@ -80,13 +120,19 @@ pub async fn ws_upgrade_user(
     }))
 }
 
+/// Authenticates the live WS/SSE feeds (board pull-SSE, workspace WS, the
+/// per-user WS). These are full-session features — presence, live document
+/// pushes, the collaborative WS — never the surface a scoped MCP token should
+/// reach, so unlike [`crate::middleware::auth::extract_user`] (which lets
+/// `mcp`-scoped callers through for the REST/MCP-dispatch paths that expect
+/// them) this rejects anything but `scope == "full"`.
 async fn validate_ws_token(
     pool: &sqlx::Pool<sqlx::MySql>,
     token: &str,
 ) -> Result<AuthUser, AppError> {
     let token_hash = sha256_hex(token);
     let row = sqlx::query(
-        r#"SELECT u.id, u.username, u.role, u.disabled_at
+        r#"SELECT u.id, u.username, u.role, u.disabled_at, s.scope
            FROM sessions s
            JOIN users u ON u.id = s.user_id
            WHERE s.token_hash = ?
@@ -102,11 +148,17 @@ async fn validate_ws_token(
         return Err(AppError::Forbidden);
     }
 
+    // Fail closed: a scope read failure must deny, never escalate to `full`.
+    let scope: String = row.try_get("scope")?;
+    if scope != "full" {
+        return Err(AppError::Forbidden);
+    }
+
     Ok(AuthUser {
         id: row.try_get("id")?,
         username: row.try_get("username")?,
         role: row.try_get("role")?,
-        scope: "full".to_string(),
+        scope,
     })
 }
 
@@ -563,7 +615,7 @@ async fn handle_doc_save(
     };
 
     match save_document_version(&state.pool, workspace_id, &auth_user, payload, client_type).await {
-        Ok(SaveDocumentOutcome::Saved(doc, _)) => {
+        Ok(SaveDocumentOutcome::Saved(doc, _, _)) => {
             state
                 .hub
                 .publish_to_workspace(

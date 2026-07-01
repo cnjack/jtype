@@ -61,4 +61,6 @@ export type BoardSurfaceProps = {
    */
   fullscreen?: boolean;
   onToggleFullscreen?: () => void;
+  /** Open the platform's board settings dialog (web: webhooks + MCP). Omit to hide the gear button. */
+  onOpenSettings?: () => void;
 };

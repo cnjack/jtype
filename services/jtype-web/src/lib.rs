@@ -1,3 +1,4 @@
+pub mod board_events;
 pub mod db;
 pub mod error;
 pub mod handlers;
@@ -15,7 +16,7 @@ use axum::{
     extract::DefaultBodyLimit,
     http::{header, StatusCode, Uri},
     response::{Html, IntoResponse, Response},
-    routing::{delete, get, patch, post, put},
+    routing::{delete, get, post, put},
     Router,
 };
 use rust_embed::Embed;
@@ -93,7 +94,7 @@ pub async fn run_from_env() -> Result<(), AppError> {
         .await
         .map_err(|e| AppError::Server(e.to_string()))?;
     println!("jtype-web listening on http://{}", bind_addr);
-    // Spawn periodic trash cleanup (document_trash + kanban_card_trash)
+    // Spawn periodic trash cleanup (document_trash) + the webhook delivery worker.
     tasks::webhook_delivery::spawn(pool.clone());
     tasks::cleanup_trash::spawn(pool);
     axum::serve(listener, app)
@@ -245,6 +246,13 @@ pub fn build_app(
             "/api/v1/workspaces/:workspace_id/live",
             get(handlers::live::ws_upgrade),
         )
+        // Board SSE "pull" feed — live card-updated events for one board.
+        .route(
+            "/api/v1/workspaces/:workspace_id/boards/:board_ref/events",
+            get(handlers::live::board_events_stream),
+        )
+        // Mint a personal mcp-scoped token for the board Settings "MCP access" panel.
+        .route("/api/v1/mcp-token", post(handlers::mcp_token::mint))
         .route(
             "/api/v1/workspaces/:workspace_id/invites",
             get(handlers::workspace::list_invites).post(handlers::workspace::create_invite),
@@ -286,6 +294,38 @@ pub fn build_app(
             "/api/v1/workspaces/:workspace_id/documents/:document_id/versions",
             get(handlers::document::list_versions),
         )
+        // Card comments (document-backed board)
+        .route(
+            "/api/v1/workspaces/:workspace_id/documents/:document_id/comments",
+            get(handlers::comments::list_comments).post(handlers::comments::create_comment),
+        )
+        .route(
+            "/api/v1/workspaces/:workspace_id/comments/:comment_id",
+            delete(handlers::comments::delete_comment),
+        )
+        // Webhooks (document-backed board)
+        .route(
+            "/api/v1/workspaces/:workspace_id/webhooks",
+            get(handlers::webhooks::list_webhooks).post(handlers::webhooks::create_webhook),
+        )
+        .route(
+            "/api/v1/workspaces/:workspace_id/webhooks/:webhook_id",
+            delete(handlers::webhooks::delete_webhook),
+        )
+        // Ticket links (OCCSV-3371) — always workspace-scoped; resolution is per
+        // workspace because ticket_key is unique within a workspace, not globally.
+        .route(
+            "/api/v1/workspaces/:workspace_id/tickets/allocate",
+            post(handlers::tickets::allocate),
+        )
+        .route(
+            "/api/v1/workspaces/:workspace_id/tickets",
+            get(handlers::tickets::list_tickets),
+        )
+        .route(
+            "/api/v1/workspaces/:workspace_id/tickets/:ticket",
+            get(handlers::tickets::resolve_ticket),
+        )
         // Sync API
         .route(
             "/api/v1/workspaces/:workspace_id/sync/pull",
@@ -315,93 +355,6 @@ pub fn build_app(
         .route(
             "/api/v1/workspaces/:workspace_id/trash/:trash_id",
             delete(handlers::trash::permanent_delete),
-        )
-        // Kanban API
-        // Boards
-        .route(
-            "/api/v1/workspaces/:workspace_id/kanban/boards",
-            get(handlers::kanban::board::list_boards).post(handlers::kanban::board::create_board),
-        )
-        .route(
-            "/api/v1/workspaces/:workspace_id/kanban/boards/reorder",
-            post(handlers::kanban::board::reorder_boards),
-        )
-        .route(
-            "/api/v1/workspaces/:workspace_id/kanban/boards/:board_id",
-            get(handlers::kanban::board::get_board)
-                .patch(handlers::kanban::board::patch_board)
-                .delete(handlers::kanban::board::delete_board),
-        )
-        // Columns
-        .route(
-            "/api/v1/workspaces/:workspace_id/kanban/boards/:board_id/columns",
-            post(handlers::kanban::column::create_column),
-        )
-        .route(
-            "/api/v1/workspaces/:workspace_id/kanban/columns/reorder",
-            post(handlers::kanban::column::reorder_columns),
-        )
-        .route(
-            "/api/v1/workspaces/:workspace_id/kanban/columns/:column_id",
-            patch(handlers::kanban::column::patch_column).delete(handlers::kanban::column::delete_column),
-        )
-        // Cards
-        .route(
-            "/api/v1/workspaces/:workspace_id/kanban/boards/:board_id/cards",
-            get(handlers::kanban::card::list_cards).post(handlers::kanban::card::create_card),
-        )
-        .route(
-            "/api/v1/workspaces/:workspace_id/kanban/boards/:board_id/trash",
-            get(handlers::kanban::card::list_card_trash),
-        )
-        .route(
-            "/api/v1/workspaces/:workspace_id/kanban/boards/:board_id/cards/move",
-            post(handlers::kanban::card::move_card),
-        )
-        .route(
-            "/api/v1/workspaces/:workspace_id/kanban/cards/:card_id",
-            patch(handlers::kanban::card::patch_card)
-                .delete(handlers::kanban::card::delete_card),
-        )
-        .route(
-            "/api/v1/workspaces/:workspace_id/kanban/cards/:card_id/archive",
-            post(handlers::kanban::card::archive_card),
-        )
-        .route(
-            "/api/v1/workspaces/:workspace_id/kanban/cards/:card_id/restore",
-            post(handlers::kanban::card::restore_card),
-        )
-        // Comments
-        .route(
-            "/api/v1/workspaces/:workspace_id/kanban/cards/:card_id/comments",
-            get(handlers::kanban::comment::list_comments).post(handlers::kanban::comment::create_comment),
-        )
-        .route(
-            "/api/v1/workspaces/:workspace_id/kanban/comments/:comment_id",
-            axum::routing::delete(handlers::kanban::comment::delete_comment),
-        )
-        .route(
-            "/api/v1/workspaces/:workspace_id/kanban/cards/:card_id/activity",
-            get(handlers::kanban::card::card_activity),
-        )
-        // Webhooks
-        .route(
-            "/api/v1/workspaces/:workspace_id/kanban/webhooks",
-            get(handlers::kanban::webhook::list_webhooks).post(handlers::kanban::webhook::create_webhook),
-        )
-        .route(
-            "/api/v1/workspaces/:workspace_id/kanban/webhooks/:webhook_id",
-            axum::routing::delete(handlers::kanban::webhook::delete_webhook),
-        )
-        // Labels
-        .route(
-            "/api/v1/workspaces/:workspace_id/kanban/boards/:board_id/labels",
-            get(handlers::kanban::label::list_labels).post(handlers::kanban::label::create_label),
-        )
-        .route(
-            "/api/v1/workspaces/:workspace_id/kanban/labels/:label_id",
-            patch(handlers::kanban::label::patch_label)
-                .delete(handlers::kanban::label::delete_label),
         )
         // Domains API
         .route(

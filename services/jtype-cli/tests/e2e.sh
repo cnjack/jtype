@@ -3,9 +3,9 @@
 #
 # Exercises every subcommand, including the real OAuth device flow (login is
 # approved out-of-band with a freshly-registered user's token). Seeds a
-# workspace + board via REST (the CLI intentionally has no workspace/board
-# create), then drives local-first notes (bind + write-through + sync), kanban,
-# and the stdio MCP bridge.
+# workspace via REST (the CLI intentionally has no workspace create), then
+# drives local-first notes (bind + write-through + sync) and the stdio MCP
+# bridge.
 #
 # Usage: bash e2e.sh [SERVER_URL]   (default http://localhost:13346)
 
@@ -50,15 +50,10 @@ else
 fi
 JT whoami | grep -q "$USER" && ok "whoami" || no "whoami"
 
-# 2. Seed a workspace + board via REST.
+# 2. Seed a workspace via REST.
 WS=$(curl -s -X POST "$SERVER/api/v1/workspaces" -H "authorization: Bearer $TOKEN" \
   -H 'content-type: application/json' -d '{"name":"CLI E2E"}' | jq -r .id)
-BOARD=$(curl -s -X POST "$SERVER/api/v1/workspaces/$WS/kanban/boards" -H "authorization: Bearer $TOKEN" \
-  -H 'content-type: application/json' -d '{"name":"CLI Board"}')
-BID=$(echo "$BOARD" | jq -r .id)
-COL=$(echo "$BOARD" | jq -r '.columns[0].id')
-COL2=$(echo "$BOARD" | jq -r '.columns[1].id')
-[ -n "$WS" ] && [ "$WS" != null ] && ok "seed workspace+board" || no "seed workspace+board"
+[ -n "$WS" ] && [ "$WS" != null ] && ok "seed workspace" || no "seed workspace"
 
 # 3. Local-first notes: bind a vault, read/write disk files, write-through to cloud.
 VAULT="$WORK/vault"; mkdir -p "$VAULT"
@@ -90,17 +85,7 @@ chk "sync (pull + push)" JTV sync
 JTV --json sync | jq -e '.pulled.written == 0' >/dev/null 2>&1 \
   && ok "re-sync idempotent (0 written)" || no "re-sync idempotent"
 
-# 4. Kanban.
-JT board list --workspace "$WS" | grep -q "CLI Board" && ok "board list" || no "board list"
-BG=$(JT board get --workspace "$WS" "$BID"); echo "$BG" | grep -q "To do" && ok "board get" || no "board get"
-CID=$(JT --json card create --workspace "$WS" --board "$BID" --column "$COL" "Ship CLI" --priority high | jq -r .id)
-[ -n "$CID" ] && [ "$CID" != null ] && ok "card create" || no "card create"
-JT card list --workspace "$WS" --board "$BID" --column "$COL" | grep -q "Ship CLI" && ok "card list" || no "card list"
-chk "card update" JT card update --workspace "$WS" "$CID" --priority urgent
-chk "card move" JT card move --workspace "$WS" --board "$BID" "$CID" --to-column "$COL2"
-JT card list --workspace "$WS" --board "$BID" --column "$COL2" | grep -q "Ship CLI" && ok "card moved to Doing" || no "card moved to Doing"
-
-# 5. stdio MCP bridge.
+# 4. stdio MCP bridge.
 TL=$(printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | JT mcp-stdio)
 echo "$TL" | jq -e '.result.tools | length >= 14' >/dev/null 2>&1 && ok "mcp-stdio tools/list (>=14 tools)" || no "mcp-stdio tools/list"
 CALLR=$(printf '%s\n' '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"list_workspaces","arguments":{}}}' | JT mcp-stdio)

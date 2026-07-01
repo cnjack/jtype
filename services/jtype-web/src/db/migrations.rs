@@ -110,6 +110,30 @@ fn all_migrations() -> Vec<Migration> {
             up: include_str!("../../migrations/0017_kanban_webhooks.up.sql"),
             down: include_str!("../../migrations/0017_kanban_webhooks.down.sql"),
         },
+        Migration {
+            version: 18,
+            name: "drop_kanban",
+            up: include_str!("../../migrations/0018_drop_kanban.up.sql"),
+            down: include_str!("../../migrations/0018_drop_kanban.down.sql"),
+        },
+        Migration {
+            version: 19,
+            name: "card_comments",
+            up: include_str!("../../migrations/0019_card_comments.up.sql"),
+            down: include_str!("../../migrations/0019_card_comments.down.sql"),
+        },
+        Migration {
+            version: 20,
+            name: "webhooks",
+            up: include_str!("../../migrations/0020_webhooks.up.sql"),
+            down: include_str!("../../migrations/0020_webhooks.down.sql"),
+        },
+        Migration {
+            version: 21,
+            name: "card_tickets",
+            up: include_str!("../../migrations/0021_card_tickets.up.sql"),
+            down: include_str!("../../migrations/0021_card_tickets.down.sql"),
+        },
     ]
 }
 

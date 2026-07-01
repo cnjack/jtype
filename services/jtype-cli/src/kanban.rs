@@ -1,176 +1,233 @@
-//! Kanban board + card commands.
+//! Local-first kanban: `board`/`card` commands over the vault's `.board` view
+//! files and `.md` card-notes. Reads scan the vault directly (offline-capable);
+//! writes update the `.md` frontmatter and write-through to the bound cloud
+//! workspace — exactly like the `note` commands. The cloud DB kanban is gone; a
+//! board is just files, so this is built entirely on `jtype-core`.
 
-use anyhow::Result;
-use serde_json::{json, Value};
+use std::path::Path;
 
-use crate::client::ApiClient;
+use anyhow::{anyhow, Context, Result};
+use serde_json::json;
+
+use crate::config::Config;
+use crate::notes;
 use crate::print::emit;
 
-pub async fn list_boards(client: &ApiClient, ws: &str, json: bool) -> Result<()> {
-    let boards = client.get(&format!("/api/v1/workspaces/{ws}/kanban/boards")).await?;
+pub fn list_boards_local(vault_root: &Path, json: bool) -> Result<()> {
+    let boards = jtype_core::list_boards(vault_root).map_err(|e| anyhow!(e))?;
     if json {
-        emit(true, &boards);
+        emit(true, &serde_json::to_value(&boards)?);
+    } else if boards.is_empty() {
+        println!("(no boards — create a .board file)");
     } else {
-        println!("{:<38}  {:<24}  {:>5}  {:>5}", "ID", "NAME", "COLS", "CARDS");
-        for b in boards.as_array().cloned().unwrap_or_default() {
-            println!(
-                "{:<38}  {:<24}  {:>5}  {:>5}",
-                b["id"].as_str().unwrap_or("-"),
-                b["name"].as_str().unwrap_or("-"),
-                b["columnCount"].as_i64().unwrap_or(0),
-                b["cardCount"].as_i64().unwrap_or(0),
-            );
+        for b in &boards {
+            println!("{}\t{}\t[{}]", b.id, b.title, b.relative_path);
         }
     }
     Ok(())
 }
 
-pub async fn get_board(client: &ApiClient, ws: &str, board: &str, json: bool) -> Result<()> {
-    let b = client
-        .get(&format!("/api/v1/workspaces/{ws}/kanban/boards/{board}"))
-        .await?;
+pub fn show_board_local(vault_root: &Path, board: &str, json: bool) -> Result<()> {
+    let boards = jtype_core::list_boards(vault_root).map_err(|e| anyhow!(e))?;
+    let cfg = boards
+        .iter()
+        .find(|b| b.id == board)
+        .ok_or_else(|| anyhow!("no board with id '{board}' (try `jtype board list`)"))?;
+    let cards = jtype_core::scan_board_cards(vault_root, board).map_err(|e| anyhow!(e))?;
     if json {
-        emit(true, &b);
+        emit(true, &json!({ "board": cfg, "cards": cards }));
         return Ok(());
     }
-    println!("# {}\n", b["name"].as_str().unwrap_or("Board"));
-    let cards = b["cards"].as_array().cloned().unwrap_or_default();
-    for col in b["columns"].as_array().cloned().unwrap_or_default() {
-        let cid = col["id"].as_str().unwrap_or("");
-        println!("## {} ({})", col["name"].as_str().unwrap_or("-"), cid);
-        for c in cards.iter().filter(|c| c["columnId"].as_str() == Some(cid)) {
-            let pr = c["priority"].as_str().unwrap_or("none");
-            println!("  - [{}] {}  · {}", pr, c["title"].as_str().unwrap_or("-"), c["id"].as_str().unwrap_or(""));
+    println!("{} ({})", cfg.title, cfg.id);
+    for col in &cfg.columns {
+        let in_col: Vec<_> = cards.iter().filter(|c| c.status == col.key).collect();
+        println!("\n  {} ({})", col.name, in_col.len());
+        for c in in_col {
+            println!("    - {}\t[{}]", c.title, c.relative_path);
         }
-        println!();
     }
     Ok(())
 }
 
-pub async fn list_cards(
-    client: &ApiClient,
-    ws: &str,
-    board: &str,
-    column: Option<&str>,
-    json: bool,
-) -> Result<()> {
-    let cards = client
-        .get(&format!("/api/v1/workspaces/{ws}/kanban/boards/{board}/cards"))
-        .await?;
-    let arr: Vec<Value> = cards
-        .as_array()
-        .cloned()
-        .unwrap_or_default()
-        .into_iter()
-        .filter(|c| column.is_none() || c["columnId"].as_str() == column)
-        .collect();
+pub fn list_cards_local(vault_root: &Path, board: &str, status: Option<&str>, json: bool) -> Result<()> {
+    let mut cards = jtype_core::scan_board_cards(vault_root, board).map_err(|e| anyhow!(e))?;
+    if let Some(s) = status {
+        cards.retain(|c| c.status == s);
+    }
     if json {
-        emit(true, &json!(arr));
+        emit(true, &serde_json::to_value(&cards)?);
+    } else if cards.is_empty() {
+        println!("(no cards)");
     } else {
-        for c in &arr {
-            println!(
-                "[{}] {}  · {}",
-                c["priority"].as_str().unwrap_or("none"),
-                c["title"].as_str().unwrap_or("-"),
-                c["id"].as_str().unwrap_or("")
-            );
+        for c in &cards {
+            println!("[{}]\t{}\t{}", c.status, c.title, c.relative_path);
         }
-        println!("\n{} card(s)", arr.len());
     }
     Ok(())
+}
+
+/// Reject a column key that matches no column on the board: board views render
+/// a card only under a matching column key, so a typo would orphan it invisibly.
+fn ensure_column(b: &jtype_core::BoardSummaryInfo, key: &str) -> Result<()> {
+    if !b.columns.iter().any(|c| c.key == key) {
+        let cols = b.columns.iter().map(|c| c.key.as_str()).collect::<Vec<_>>().join(", ");
+        return Err(anyhow!("'{key}' is not a column of board '{}' (columns: {cols})", b.id));
+    }
+    Ok(())
+}
+
+/// Resolve the board a card-note belongs to via its `board:` frontmatter; errors
+/// if the note isn't a card or points at an unknown board.
+fn card_board(vault_root: &Path, content: &str) -> Result<jtype_core::BoardSummaryInfo> {
+    let board_id = jtype_core::parse_frontmatter(content)
+        .get("board")
+        .cloned()
+        .ok_or_else(|| anyhow!("note has no `board:` frontmatter — not a board card"))?;
+    jtype_core::list_boards(vault_root)
+        .map_err(|e| anyhow!(e))?
+        .into_iter()
+        .find(|b| b.id == board_id)
+        .ok_or_else(|| anyhow!("card references unknown board '{board_id}'"))
 }
 
 #[allow(clippy::too_many_arguments)]
-pub async fn create_card(
-    client: &ApiClient,
-    ws: &str,
+pub async fn create_card_local(
+    vault_root: &Path,
+    cfg: &Config,
+    workspace: Option<&str>,
     board: &str,
-    column: &str,
+    status: &str,
     title: &str,
-    description: Option<&str>,
     priority: Option<&str>,
     assignee: Option<&str>,
+    due: Option<&str>,
     json: bool,
 ) -> Result<()> {
-    let mut body = json!({ "columnId": column, "title": title });
-    if let Some(d) = description {
-        body["description"] = json!(d);
+    let boards = jtype_core::list_boards(vault_root).map_err(|e| anyhow!(e))?;
+    let b = boards
+        .iter()
+        .find(|b| b.id == board)
+        .ok_or_else(|| anyhow!("no board with id '{board}' (try `jtype board list`)"))?;
+    ensure_column(b, status)?;
+    // Cards live in the folder sibling to `<name>.board` (strip the extension).
+    let dir = b.relative_path.strip_suffix(".board").unwrap_or(&b.relative_path);
+    // Append to the end of the target column: max position there + 1.
+    let existing = jtype_core::scan_board_cards(vault_root, board).map_err(|e| anyhow!(e))?;
+    let next_pos = existing
+        .iter()
+        .filter(|c| c.status == status)
+        .map(|c| c.position)
+        .max()
+        .map(|m| m + 1)
+        .unwrap_or(0);
+    // Don't clobber an existing card whose title slugifies the same: suffix
+    // -2, -3, … until the path is free (save_note_local truncate-writes).
+    let slug = slugify(title);
+    let mut rel = format!("{dir}/{slug}.md");
+    let mut n = 2;
+    while jtype_core::safe_join(vault_root, &rel).map_err(|e| anyhow!(e))?.exists() {
+        rel = format!("{dir}/{slug}-{n}.md");
+        n += 1;
     }
-    if let Some(p) = priority {
-        body["priority"] = json!(p);
-    }
-    if let Some(a) = assignee {
-        body["assigneeUserId"] = json!(a);
-    }
-    let card = client
-        .post(&format!("/api/v1/workspaces/{ws}/kanban/boards/{board}/cards"), body)
-        .await?;
-    if json {
-        emit(true, &card);
-    } else {
-        println!(
-            "✓ created card {} — {}",
-            card["id"].as_str().unwrap_or("?"),
-            card["title"].as_str().unwrap_or(title)
-        );
-    }
-    Ok(())
+    let content = build_card_content(board, status, next_pos, title, priority, assignee, due);
+    notes::save_note_local(vault_root, cfg, workspace, &rel, &content, Some(title), json).await
 }
 
-pub async fn update_card(
-    client: &ApiClient,
-    ws: &str,
-    card: &str,
-    title: Option<&str>,
-    description: Option<&str>,
+pub async fn move_card_local(
+    vault_root: &Path,
+    cfg: &Config,
+    workspace: Option<&str>,
+    path: &str,
+    to: &str,
+    position: Option<i64>,
+    json: bool,
+) -> Result<()> {
+    let rel = notes::normalize_note_rel(path);
+    let target = jtype_core::safe_join(vault_root, &rel).map_err(|e| anyhow!(e))?;
+    let content = std::fs::read_to_string(&target).with_context(|| format!("reading {}", target.display()))?;
+    ensure_column(&card_board(vault_root, &content)?, to)?;
+    let mut updated = jtype_core::set_frontmatter_field(&content, "status", Some(to));
+    if let Some(p) = position {
+        updated = jtype_core::set_frontmatter_field(&updated, "position", Some(&p.to_string()));
+    }
+    notes::save_note_local(vault_root, cfg, workspace, &rel, &updated, None, json).await
+}
+
+#[allow(clippy::too_many_arguments)]
+pub async fn set_card_local(
+    vault_root: &Path,
+    cfg: &Config,
+    workspace: Option<&str>,
+    path: &str,
+    status: Option<&str>,
     priority: Option<&str>,
     assignee: Option<&str>,
+    due: Option<&str>,
     json: bool,
 ) -> Result<()> {
-    let mut body = serde_json::Map::new();
-    if let Some(t) = title {
-        body.insert("title".into(), json!(t));
+    let rel = notes::normalize_note_rel(path);
+    let target = jtype_core::safe_join(vault_root, &rel).map_err(|e| anyhow!(e))?;
+    let mut content = std::fs::read_to_string(&target).with_context(|| format!("reading {}", target.display()))?;
+    // A non-empty status must name a real column (empty clears it, which is fine).
+    if let Some(s) = status.filter(|s| !s.is_empty()) {
+        ensure_column(&card_board(vault_root, &content)?, s)?;
     }
-    if let Some(d) = description {
-        body.insert("description".into(), json!(d));
+    let mut touched = false;
+    for (key, val) in [
+        ("status", status),
+        ("priority", priority),
+        ("assignee", assignee),
+        ("due", due),
+    ] {
+        if let Some(v) = val {
+            // An explicit empty string clears the field (removes it).
+            let set = if v.is_empty() { None } else { Some(v) };
+            content = jtype_core::set_frontmatter_field(&content, key, set);
+            touched = true;
+        }
     }
-    if let Some(p) = priority {
-        body.insert("priority".into(), json!(p));
+    if !touched {
+        return Err(anyhow!("set: provide at least one field (--status/--priority/--assignee/--due)"));
     }
-    if let Some(a) = assignee {
-        body.insert("assigneeUserId".into(), json!(a));
-    }
-    if body.is_empty() {
-        anyhow::bail!("provide at least one field to update (--title/--description/--priority/--assignee)");
-    }
-    let res = client
-        .patch(&format!("/api/v1/workspaces/{ws}/kanban/cards/{card}"), Value::Object(body))
-        .await?;
-    if json {
-        emit(true, &res);
-    } else {
-        println!("✓ updated card {card}");
-    }
-    Ok(())
+    notes::save_note_local(vault_root, cfg, workspace, &rel, &content, None, json).await
 }
 
-pub async fn move_card(
-    client: &ApiClient,
-    ws: &str,
+fn build_card_content(
     board: &str,
-    card: &str,
-    to_column: &str,
+    status: &str,
     position: i64,
-    json: bool,
-) -> Result<()> {
-    let body = json!({ "cardId": card, "targetColumnId": to_column, "targetPosition": position });
-    let res = client
-        .post(&format!("/api/v1/workspaces/{ws}/kanban/boards/{board}/cards/move"), body)
-        .await?;
-    if json {
-        emit(true, &res);
-    } else {
-        println!("✓ moved card {card} → column {to_column}");
+    title: &str,
+    priority: Option<&str>,
+    assignee: Option<&str>,
+    due: Option<&str>,
+) -> String {
+    let body = format!("# {title}\n");
+    let mut c = jtype_core::set_frontmatter_field(&body, "board", Some(board));
+    c = jtype_core::set_frontmatter_field(&c, "status", Some(status));
+    c = jtype_core::set_frontmatter_field(&c, "position", Some(&position.to_string()));
+    if let Some(p) = priority {
+        c = jtype_core::set_frontmatter_field(&c, "priority", Some(p));
     }
-    Ok(())
+    if let Some(a) = assignee {
+        c = jtype_core::set_frontmatter_field(&c, "assignee", Some(a));
+    }
+    if let Some(d) = due {
+        c = jtype_core::set_frontmatter_field(&c, "due", Some(d));
+    }
+    c
+}
+
+/// Filename slug from a card title: alphanumerics kept (lowercased), everything
+/// else collapsed to single hyphens.
+fn slugify(title: &str) -> String {
+    let mapped: String = title
+        .chars()
+        .map(|ch| if ch.is_alphanumeric() { ch.to_ascii_lowercase() } else { '-' })
+        .collect();
+    let collapsed = mapped.split('-').filter(|p| !p.is_empty()).collect::<Vec<_>>().join("-");
+    if collapsed.is_empty() {
+        "card".to_string()
+    } else {
+        collapsed
+    }
 }

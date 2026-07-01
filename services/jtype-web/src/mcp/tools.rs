@@ -96,72 +96,6 @@ pub fn catalog() -> Value {
             &["workspace_id", "path", "content"]
         ),
         tool(
-            "list_boards",
-            "List kanban boards in a workspace.",
-            json!({ "workspace_id": p_str("Workspace id") }),
-            &["workspace_id"]
-        ),
-        tool(
-            "get_board",
-            "Get a kanban board with its columns, cards and labels.",
-            json!({
-                "workspace_id": p_str("Workspace id"),
-                "board_id": p_str("Board id from list_boards"),
-            }),
-            &["workspace_id", "board_id"]
-        ),
-        tool(
-            "list_cards",
-            "List cards on a board, optionally filtered to one column.",
-            json!({
-                "workspace_id": p_str("Workspace id"),
-                "board_id": p_str("Board id"),
-                "column_id": p_str("Optional column id to filter by"),
-            }),
-            &["workspace_id", "board_id"]
-        ),
-        tool(
-            "create_card",
-            "Create a kanban card in a column.",
-            json!({
-                "workspace_id": p_str("Workspace id"),
-                "board_id": p_str("Board id"),
-                "column_id": p_str("Target column id"),
-                "title": p_str("Card title"),
-                "description": p_str("Optional Markdown description"),
-                "priority": json!({ "type": "string", "enum": ["none","low","medium","high","urgent"], "description": "Optional priority" }),
-                "assignee_user_id": p_str("Optional assignee user id (see list_members)"),
-                "due_at": p_str("Optional due date (YYYY-MM-DD HH:MM:SS)"),
-            }),
-            &["workspace_id", "board_id", "column_id", "title"]
-        ),
-        tool(
-            "update_card",
-            "Update a card's fields (title, description, priority, assignee, due date) in one call.",
-            json!({
-                "workspace_id": p_str("Workspace id"),
-                "card_id": p_str("Card id"),
-                "title": p_str("New title"),
-                "description": p_str("New description"),
-                "priority": json!({ "type": "string", "enum": ["none","low","medium","high","urgent"] }),
-                "assignee_user_id": p_str("New assignee user id (empty string to unassign)"),
-                "due_at": p_str("New due date or empty string to clear"),
-            }),
-            &["workspace_id", "card_id"]
-        ),
-        tool(
-            "move_card",
-            "Move a card to a column (and optional position) — the kanban equivalent of changing status.",
-            json!({
-                "workspace_id": p_str("Workspace id"),
-                "board_id": p_str("Board id"),
-                "card_id": p_str("Card id"),
-                "target_column_id": p_str("Destination column id"),
-                "target_position": json!({ "type": "integer", "description": "0-based position in the column (default 0 = top)" }),
-            }),
-            &["workspace_id", "board_id", "card_id", "target_column_id"]
-        ),
-        tool(
             "list_members",
             "List workspace members (user ids, usernames, roles) — use to resolve assignee_user_id.",
             json!({ "workspace_id": p_str("Workspace id") }),
@@ -269,110 +203,6 @@ async fn run(st: &McpState, token: &str, name: &str, args: &Value) -> Result<Str
             .await?;
             Ok(format!("Appended to note '{}'.\n{}", path, pretty(&res)?))
         }
-        "list_boards" => {
-            let ws = req(args, "workspace_id")?;
-            let boards = api_get(st, token, &format!("/api/v1/workspaces/{ws}/kanban/boards")).await?;
-            pretty(&boards)
-        }
-        "get_board" => {
-            let ws = req(args, "workspace_id")?;
-            let board = req(args, "board_id")?;
-            let b = api_get(
-                st,
-                token,
-                &format!("/api/v1/workspaces/{ws}/kanban/boards/{board}"),
-            )
-            .await?;
-            pretty(&b)
-        }
-        "list_cards" => {
-            let ws = req(args, "workspace_id")?;
-            let board = req(args, "board_id")?;
-            let cards = api_get(
-                st,
-                token,
-                &format!("/api/v1/workspaces/{ws}/kanban/boards/{board}/cards"),
-            )
-            .await?;
-            let cards = match opt(args, "column_id") {
-                Some(col) => filter_cards_by_column(cards, &col),
-                None => cards,
-            };
-            pretty(&cards)
-        }
-        "create_card" => {
-            let ws = req(args, "workspace_id")?;
-            let board = req(args, "board_id")?;
-            let mut body = Map::new();
-            body.insert("columnId".into(), json!(req(args, "column_id")?));
-            body.insert("title".into(), json!(req(args, "title")?));
-            copy_opt(args, "description", "description", &mut body);
-            copy_opt(args, "priority", "priority", &mut body);
-            copy_opt(args, "assignee_user_id", "assigneeUserId", &mut body);
-            copy_opt(args, "due_at", "dueAt", &mut body);
-            let card = api_post(
-                st,
-                token,
-                &format!("/api/v1/workspaces/{ws}/kanban/boards/{board}/cards"),
-                Value::Object(body),
-            )
-            .await?;
-            Ok(format!(
-                "Created card '{}' (id {}).\n{}",
-                card.get("title").and_then(|v| v.as_str()).unwrap_or("?"),
-                card.get("id").and_then(|v| v.as_str()).unwrap_or("?"),
-                pretty(&card)?
-            ))
-        }
-        "update_card" => {
-            let ws = req(args, "workspace_id")?;
-            let card_id = req(args, "card_id")?;
-            let mut body = Map::new();
-            copy_opt(args, "title", "title", &mut body);
-            copy_opt(args, "priority", "priority", &mut body);
-            // Clearable fields: an explicit empty string unsets them (JSON null).
-            copy_clearable(args, "description", "description", &mut body);
-            copy_clearable(args, "assignee_user_id", "assigneeUserId", &mut body);
-            copy_clearable(args, "due_at", "dueAt", &mut body);
-            if body.is_empty() {
-                return Err("update_card: provide at least one field to change".into());
-            }
-            let card = api_patch(
-                st,
-                token,
-                &format!("/api/v1/workspaces/{ws}/kanban/cards/{card_id}"),
-                Value::Object(body),
-            )
-            .await?;
-            Ok(format!("Updated card {}.\n{}", card_id, pretty(&card)?))
-        }
-        "move_card" => {
-            let ws = req(args, "workspace_id")?;
-            let board = req(args, "board_id")?;
-            let card_id = req(args, "card_id")?;
-            let target_col = req(args, "target_column_id")?;
-            let position = args.get("target_position").and_then(|v| v.as_i64()).unwrap_or(0);
-            if position < 0 {
-                return Err("move_card: target_position must be >= 0".into());
-            }
-            let card = api_post(
-                st,
-                token,
-                &format!("/api/v1/workspaces/{ws}/kanban/boards/{board}/cards/move"),
-                json!({
-                    "cardId": card_id,
-                    "targetColumnId": target_col,
-                    "targetPosition": position,
-                }),
-            )
-            .await?;
-            Ok(format!(
-                "Moved card {} to column {}.\n{}",
-                card_id,
-                target_col,
-                pretty(&card)?
-            ))
-        }
         "list_members" => {
             let ws = req(args, "workspace_id")?;
             let members = api_get(st, token, &format!("/api/v1/workspaces/{ws}/members")).await?;
@@ -384,45 +214,22 @@ async fn run(st: &McpState, token: &str, name: &str, args: &Value) -> Result<Str
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
-fn req(args: &Value, key: &str) -> Result<String, String> {
+pub(super) fn req(args: &Value, key: &str) -> Result<String, String> {
     opt(args, key).ok_or_else(|| format!("missing required argument: {key}"))
 }
 
-fn opt(args: &Value, key: &str) -> Option<String> {
+pub(super) fn opt(args: &Value, key: &str) -> Option<String> {
     args.get(key)
         .and_then(|v| v.as_str())
         .map(|s| s.to_string())
         .filter(|s| !s.is_empty())
 }
 
-/// Copy an optional string arg (snake_case) into a request body under a new key,
-/// skipping absent or empty values (so `create_card` never sends an empty
-/// priority/assignee/due that the backend would 400 on).
-fn copy_opt(args: &Value, from: &str, to: &str, body: &mut Map<String, Value>) {
-    if let Some(v) = args
-        .get(from)
-        .and_then(|v| v.as_str())
-        .filter(|s| !s.is_empty())
-    {
-        body.insert(to.into(), json!(v));
-    }
-}
-
-/// Like [`copy_opt`] but an explicit empty string **clears** the field (JSON
-/// `null`). The backend models description/assignee/due as `Option<Option<T>>`,
-/// where the inner `None` (JSON null) is the clear sentinel — an empty string
-/// would be rejected, so this is what makes "unassign / clear due date" work.
-fn copy_clearable(args: &Value, from: &str, to: &str, body: &mut Map<String, Value>) {
-    if let Some(v) = args.get(from).and_then(|v| v.as_str()) {
-        body.insert(to.into(), if v.is_empty() { Value::Null } else { json!(v) });
-    }
-}
-
-fn pretty(v: &Value) -> Result<String, String> {
+pub(super) fn pretty(v: &Value) -> Result<String, String> {
     serde_json::to_string_pretty(v).map_err(|e| e.to_string())
 }
 
-async fn api_get(st: &McpState, token: &str, uri: &str) -> Result<Value, String> {
+pub(super) async fn api_get(st: &McpState, token: &str, uri: &str) -> Result<Value, String> {
     let (status, body) = call_api(&st.api, Method::GET, uri, token, None)
         .await
         .map_err(|e| e.to_string())?;
@@ -433,19 +240,8 @@ async fn api_get(st: &McpState, token: &str, uri: &str) -> Result<Value, String>
     }
 }
 
-async fn api_post(st: &McpState, token: &str, uri: &str, body: Value) -> Result<Value, String> {
+pub(super) async fn api_post(st: &McpState, token: &str, uri: &str, body: Value) -> Result<Value, String> {
     let (status, resp) = call_api(&st.api, Method::POST, uri, token, Some(body))
-        .await
-        .map_err(|e| e.to_string())?;
-    if status.is_success() {
-        Ok(resp)
-    } else {
-        Err(api_err(status.as_u16(), &resp))
-    }
-}
-
-async fn api_patch(st: &McpState, token: &str, uri: &str, body: Value) -> Result<Value, String> {
-    let (status, resp) = call_api(&st.api, Method::PATCH, uri, token, Some(body))
         .await
         .map_err(|e| e.to_string())?;
     if status.is_success() {
@@ -487,7 +283,7 @@ async fn resolve_doc_id(
 }
 
 /// Resolve a note by path and return its full `CloudDocument` (with content).
-async fn get_doc(st: &McpState, token: &str, ws: &str, path: &str) -> Result<Value, String> {
+pub(super) async fn get_doc(st: &McpState, token: &str, ws: &str, path: &str) -> Result<Value, String> {
     let id = resolve_doc_id(st, token, ws, path)
         .await?
         .ok_or_else(|| format!("note not found: {path}"))?;
@@ -510,17 +306,6 @@ fn filter_by_folder(docs: Value, folder: &str) -> Value {
                         .map(|rp| rp == folder || rp.starts_with(&prefix))
                         .unwrap_or(false)
                 })
-                .collect(),
-        ),
-        other => other,
-    }
-}
-
-fn filter_cards_by_column(cards: Value, column_id: &str) -> Value {
-    match cards {
-        Value::Array(arr) => Value::Array(
-            arr.into_iter()
-                .filter(|c| c.get("columnId").and_then(|v| v.as_str()) == Some(column_id))
                 .collect(),
         ),
         other => other,

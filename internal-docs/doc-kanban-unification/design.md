@@ -90,7 +90,7 @@ due: 2026-07-01         # 可选
 ## 5. 退役/暂缓
 
 - **退役**：桌面 `KanbanBoard` 全屏模态、`kanban_local.rs`/`kanban.json`、`kanbanSync.ts`（本地优先看板改由 Markdown 卡片承载）。保留文件以防引用编译错误时再删，但从 App 接线移除。
-- **暂缓（后续 PRD）**：云端 `kanban_*` 表、Web `Kanban.tsx` 页面、看板的云端同步。本轮聚焦桌面本地体验（用户强调「本地」）。文档/卡片本就走现有文档同步链路。
+- ~~**暂缓（后续 PRD）**：云端 `kanban_*` 表、Web `Kanban.tsx` 页面、看板的云端同步。~~ **→ 已立项（2026-06-23）**：该"后续 PRD"即 **[`../kanban/unification-v2.md`](../kanban/unification-v2.md)**——决定**退役**云端 DB 看板,把其功能搬到文档型看板并云端本地互通。本轮聚焦桌面本地体验（用户强调「本地」）。文档/卡片本就走现有文档同步链路。
 
 ## 6. 验收标准（Acceptance Criteria）
 
