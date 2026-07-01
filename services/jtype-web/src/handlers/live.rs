@@ -603,7 +603,7 @@ async fn handle_doc_save(
     };
 
     match save_document_version(&state.pool, workspace_id, &auth_user, payload, client_type).await {
-        Ok(SaveDocumentOutcome::Saved(doc, _)) => {
+        Ok(SaveDocumentOutcome::Saved(doc, _, _)) => {
             state
                 .hub
                 .publish_to_workspace(

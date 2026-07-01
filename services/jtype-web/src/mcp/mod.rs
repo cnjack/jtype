@@ -16,7 +16,7 @@ pub mod tools;
 
 use axum::{
     body::{Body, Bytes},
-    extract::State,
+    extract::{Path, State},
     http::{header, HeaderMap, Method, StatusCode},
     response::{IntoResponse, Response},
     routing::{get, post},
@@ -50,11 +50,26 @@ enum ServerKind {
     Kanban,
 }
 
+/// `workspace_id` / `board` pinned onto the connection via the path (see the
+/// board Settings "MCP access" panel, which mints a
+/// `/mcp/kanban/{workspace_id}/{board}` URL). When present, tool calls that
+/// omit these args are filled in from here, and `initialize` tells the agent
+/// it doesn't need to discover them.
+#[derive(Clone, Default)]
+struct Pinned {
+    workspace_id: Option<String>,
+    board: Option<String>,
+}
+
 /// Build the MCP + OAuth-discovery router. Merge this with the API router.
 pub fn router(state: McpState) -> Router {
     Router::new()
         .route("/mcp", post(handle_notes).get(mcp_get).delete(mcp_delete))
         .route("/mcp/kanban", post(handle_kanban).get(mcp_get).delete(mcp_delete))
+        .route(
+            "/mcp/kanban/:workspace_id/:board",
+            post(handle_kanban_pinned).get(mcp_get).delete(mcp_delete),
+        )
         .route(
             "/.well-known/oauth-protected-resource",
             get(oauth::protected_resource_metadata),
@@ -119,17 +134,39 @@ fn bearer_from(headers: &HeaderMap) -> Option<String> {
 
 /// `POST /mcp` — the notes tool surface.
 async fn handle_notes(state: State<McpState>, headers: HeaderMap, body: Bytes) -> Response {
-    handle_mcp(ServerKind::Notes, state, headers, body).await
+    handle_mcp(ServerKind::Notes, Pinned::default(), state, headers, body).await
 }
 
-/// `POST /mcp/kanban` — the separate kanban tool surface.
+/// `POST /mcp/kanban` — the separate kanban tool surface, unpinned (agent must
+/// discover workspace_id/board via `list_workspaces`/`list_boards`).
 async fn handle_kanban(state: State<McpState>, headers: HeaderMap, body: Bytes) -> Response {
-    handle_mcp(ServerKind::Kanban, state, headers, body).await
+    handle_mcp(ServerKind::Kanban, Pinned::default(), state, headers, body).await
+}
+
+/// `POST /mcp/kanban/{workspace_id}/{board}` — pins the connection to one board
+/// (see board Settings → MCP access, which mints this URL).
+async fn handle_kanban_pinned(
+    state: State<McpState>,
+    Path((workspace_id, board)): Path<(String, String)>,
+    headers: HeaderMap,
+    body: Bytes,
+) -> Response {
+    let pinned = Pinned {
+        workspace_id: Some(workspace_id).filter(|s| !s.is_empty()),
+        board: Some(board).filter(|s| !s.is_empty()),
+    };
+    handle_mcp(ServerKind::Kanban, pinned, state, headers, body).await
 }
 
 /// JSON-RPC 2.0 over Streamable HTTP. Returns a single JSON response (we never
 /// need to open an SSE stream for these tools).
-async fn handle_mcp(kind: ServerKind, State(st): State<McpState>, headers: HeaderMap, body: Bytes) -> Response {
+async fn handle_mcp(
+    kind: ServerKind,
+    pinned: Pinned,
+    State(st): State<McpState>,
+    headers: HeaderMap,
+    body: Bytes,
+) -> Response {
     // Authenticate the whole endpoint (MCP resource server).
     let Some(token) = bearer_from(&headers) else {
         return unauthorized(&st.public_base_url);
@@ -151,7 +188,7 @@ async fn handle_mcp(kind: ServerKind, State(st): State<McpState>, headers: Heade
         }
         let mut out = Vec::new();
         for item in items {
-            if let Some(resp) = dispatch(kind, &st, &token, item).await {
+            if let Some(resp) = dispatch(kind, &pinned, &st, &token, item).await {
                 out.push(resp);
             }
         }
@@ -162,7 +199,7 @@ async fn handle_mcp(kind: ServerKind, State(st): State<McpState>, headers: Heade
         return Json(Value::Array(out)).into_response();
     }
 
-    match dispatch(kind, &st, &token, parsed).await {
+    match dispatch(kind, &pinned, &st, &token, parsed).await {
         Some(resp) => Json(resp).into_response(),
         // Notifications get no body.
         None => StatusCode::ACCEPTED.into_response(),
@@ -170,7 +207,7 @@ async fn handle_mcp(kind: ServerKind, State(st): State<McpState>, headers: Heade
 }
 
 /// Dispatch a single JSON-RPC message. Returns `None` for notifications.
-async fn dispatch(kind: ServerKind, st: &McpState, token: &str, msg: Value) -> Option<Value> {
+async fn dispatch(kind: ServerKind, pinned: &Pinned, st: &McpState, token: &str, msg: Value) -> Option<Value> {
     // A non-object message (bare scalar / nested array) is an Invalid Request.
     if !msg.is_object() {
         return Some(err(Value::Null, -32600, "invalid request"));
@@ -187,14 +224,22 @@ async fn dispatch(kind: ServerKind, st: &McpState, token: &str, msg: Value) -> O
 
     match method {
         "initialize" => {
-            let (name, instructions) = match kind {
+            let (name, instructions): (&str, String) = match kind {
                 ServerKind::Notes => (
                     "jtype",
-                    "JType notes (Markdown documents). Call list_workspaces first to get a workspace_id, then use the note tools.",
+                    "JType notes (Markdown documents). Call list_workspaces first to get a workspace_id, then use the note tools.".to_string(),
                 ),
                 ServerKind::Kanban => (
                     "jtype-kanban",
-                    "JType kanban boards — document-backed (.board views over .md card-notes). Call list_workspaces for a workspace_id, then list_boards, then the card tools.",
+                    match (&pinned.workspace_id, &pinned.board) {
+                        (Some(ws), Some(board)) => format!(
+                            "JType kanban boards — document-backed (.board views over .md card-notes). \
+                             This connection is pinned to workspace_id \"{ws}\" and board \"{board}\" — \
+                             pass those values to tools directly, no need to call list_workspaces/list_boards first \
+                             (you may still override them per-call)."
+                        ),
+                        _ => "JType kanban boards — document-backed (.board views over .md card-notes). Call list_workspaces for a workspace_id, then list_boards, then the card tools.".to_string(),
+                    },
                 ),
             };
             Some(ok(
@@ -221,7 +266,15 @@ async fn dispatch(kind: ServerKind, st: &McpState, token: &str, msg: Value) -> O
                 .and_then(|n| n.as_str())
                 .unwrap_or("")
                 .to_string();
-            let args = params.get("arguments").cloned().unwrap_or(json!({}));
+            let mut args = params.get("arguments").cloned().unwrap_or(json!({}));
+            if let (ServerKind::Kanban, Value::Object(map)) = (kind, &mut args) {
+                if let Some(ws) = &pinned.workspace_id {
+                    map.entry("workspace_id").or_insert_with(|| json!(ws));
+                }
+                if let Some(board) = &pinned.board {
+                    map.entry("board").or_insert_with(|| json!(board));
+                }
+            }
             let result = match kind {
                 ServerKind::Notes => tools::call(st, token, &name, args).await,
                 ServerKind::Kanban => kanban_tools::call(st, token, &name, args).await,

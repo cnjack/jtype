@@ -123,7 +123,15 @@ function CopyButton({ value, label }: { value: string; label?: string }) {
   )
 }
 
-const WEBHOOK_EVENTS = ['kanban:card-updated', '*']
+// `kanban:card-created` fires once, on a card's first save; `kanban:card-updated`
+// fires on every later edit (status/priority/assignee/due/content change) — the
+// two never fire for the same save (see fire_card_webhook in document.rs). `*`
+// subscribes to both plus anything the backend adds later.
+const WEBHOOK_EVENTS: { value: string; label: string }[] = [
+  { value: 'kanban:card-created', label: 'Card created' },
+  { value: 'kanban:card-updated', label: 'Card updated' },
+  { value: '*', label: 'All events (*)' },
+]
 
 function WebhooksPanel({ workspaceId, board }: { workspaceId: string; board: string | null }) {
   const [mode, setMode] = useState<'push' | 'pull'>('push')
@@ -157,8 +165,7 @@ function PushWebhooks({ workspaceId, board }: { workspaceId: string; board: stri
   const [hooks, setHooks] = useState<Webhook[]>([])
   const [name, setName] = useState('')
   const [url, setUrl] = useState('')
-  const [scope, setScope] = useState<'all' | 'board'>(board ? 'board' : 'all')
-  const [events, setEvents] = useState<string[]>(['kanban:card-updated'])
+  const [events, setEvents] = useState<string[]>(['kanban:card-created', 'kanban:card-updated'])
   const [revealed, setRevealed] = useState<WebhookCreated | null>(null)
   const [error, setError] = useState('')
 
@@ -170,12 +177,12 @@ function PushWebhooks({ workspaceId, board }: { workspaceId: string; board: stri
   const toggleEvent = (e: string) => setEvents((prev) => (prev.includes(e) ? prev.filter((x) => x !== e) : [...prev, e]))
 
   const create = async () => {
-    if (!name.trim() || !url.trim() || events.length === 0) return
+    if (!board || !name.trim() || !url.trim() || events.length === 0) return
     try {
       const created = await api.createWebhook(workspaceId, {
         name: name.trim(),
         targetUrl: url.trim(),
-        boardRef: scope === 'board' ? board : null,
+        boardRef: board,
         eventTypes: events,
       })
       setRevealed(created); setName(''); setUrl(''); setError(''); load()
@@ -184,6 +191,11 @@ function PushWebhooks({ workspaceId, board }: { workspaceId: string; board: stri
   const remove = async (id: string) => {
     try { await api.deleteWebhook(workspaceId, id); load() } catch (e) { setError(String(e)) }
   }
+
+  // Webhooks for this board only — this dialog is always opened from a specific
+  // board, so scoping to "all boards" here would create workspace-wide hooks
+  // from a per-board entry point. Every board gets its own Settings → Webhooks.
+  const boardHooks = hooks.filter((h) => h.boardRef === board)
 
   return (
     <>
@@ -196,38 +208,38 @@ function PushWebhooks({ workspaceId, board }: { workspaceId: string; board: stri
         </div>
       )}
       <ul className="mb-4 space-y-1.5">
-        {hooks.map((h) => (
+        {boardHooks.map((h) => (
           <li key={h.id} className="flex items-center gap-2 rounded-lg border border-stone-100 bg-white p-2.5 text-xs">
             <span className={`h-1.5 w-1.5 flex-none rounded-full ${h.lastStatus === 'ok' ? 'bg-emerald-500' : h.lastStatus ? 'bg-red-400' : 'bg-stone-300'}`} aria-hidden="true" />
             <div className="min-w-0 flex-1">
               <div className="font-medium text-zinc-800">{h.name}</div>
               <div className="truncate text-zinc-500">{h.targetUrl}</div>
-              <div className="text-zinc-400">{h.eventTypes.join(', ')}{h.boardRef ? ` · board: ${h.boardRef}` : ' · all boards'}{h.lastStatus ? ` · last: ${h.lastStatus}` : ''}</div>
+              <div className="text-zinc-400">{h.eventTypes.join(', ')}{h.lastStatus ? ` · last: ${h.lastStatus}` : ''}</div>
             </div>
             <button onClick={() => remove(h.id)} className="rounded p-1 text-zinc-400 hover:text-red-600" title="Delete"><TrashIcon className="h-4 w-4" /></button>
           </li>
         ))}
-        {hooks.length === 0 && <li className="rounded-lg border border-dashed border-stone-200 p-3 text-center text-xs text-zinc-400">No webhooks yet.</li>}
+        {boardHooks.length === 0 && <li className="rounded-lg border border-dashed border-stone-200 p-3 text-center text-xs text-zinc-400">No webhooks yet.</li>}
       </ul>
-      <form onSubmit={(e) => { e.preventDefault(); void create() }} className="space-y-2 rounded-xl border border-dashed border-stone-200 bg-stone-50/60 p-3">
-        <div className="text-xs font-medium text-stone-600">Add webhook</div>
-        <input className="w-full rounded-lg border border-stone-200 bg-white px-2.5 py-1.5 text-sm" placeholder="Name (e.g. CI notifier)" value={name} onChange={(e) => setName(e.target.value)} />
-        <input className="w-full rounded-lg border border-stone-200 bg-white px-2.5 py-1.5 text-sm" placeholder="https://…  (HTTPS only)" value={url} onChange={(e) => setUrl(e.target.value)} />
-        <div className="flex flex-wrap items-center gap-3 text-xs text-stone-600">
-          {WEBHOOK_EVENTS.map((ev) => (
-            <label key={ev} className="inline-flex items-center gap-1.5">
-              <input type="checkbox" checked={events.includes(ev)} onChange={() => toggleEvent(ev)} className="accent-brand" /> {ev}
-            </label>
-          ))}
-        </div>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3 text-xs text-stone-600">
-            <label className="inline-flex items-center gap-1.5"><input type="radio" checked={scope === 'all'} onChange={() => setScope('all')} className="accent-brand" /> All boards</label>
-            {board && <label className="inline-flex items-center gap-1.5"><input type="radio" checked={scope === 'board'} onChange={() => setScope('board')} className="accent-brand" /> This board</label>}
+      {board ? (
+        <form onSubmit={(e) => { e.preventDefault(); void create() }} className="space-y-2 rounded-xl border border-dashed border-stone-200 bg-stone-50/60 p-3">
+          <div className="text-xs font-medium text-stone-600">Add webhook</div>
+          <input className="w-full rounded-lg border border-stone-200 bg-white px-2.5 py-1.5 text-sm" placeholder="Name (e.g. CI notifier)" value={name} onChange={(e) => setName(e.target.value)} />
+          <input className="w-full rounded-lg border border-stone-200 bg-white px-2.5 py-1.5 text-sm" placeholder="https://…  (HTTPS only)" value={url} onChange={(e) => setUrl(e.target.value)} />
+          <div className="flex flex-wrap items-center gap-3 text-xs text-stone-600">
+            {WEBHOOK_EVENTS.map((ev) => (
+              <label key={ev.value} className="inline-flex items-center gap-1.5">
+                <input type="checkbox" checked={events.includes(ev.value)} onChange={() => toggleEvent(ev.value)} className="accent-brand" /> {ev.label}
+              </label>
+            ))}
           </div>
-          <button type="submit" className="rounded-lg bg-brand px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-dark">Create</button>
-        </div>
-      </form>
+          <div className="flex items-center justify-end">
+            <button type="submit" className="rounded-lg bg-brand px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-dark">Create</button>
+          </div>
+        </form>
+      ) : (
+        <p className="text-xs text-stone-500">This board has no id yet — open it once so a board config is saved, then webhooks become available.</p>
+      )}
       <p className="mt-3 text-[11px] text-stone-400">Payloads are HMAC-SHA256 signed; the secret is shown once on create.</p>
     </>
   )
@@ -286,7 +298,7 @@ function PullStream({ workspaceId, board }: { workspaceId: string; board: string
             <BoltIcon className="h-3.5 w-3.5" /> Connect &amp; test
           </button>
         )}
-        <span className="text-[11px] text-stone-400">Streams kanban:card-updated for this board.</span>
+        <span className="text-[11px] text-stone-400">Streams kanban:card-created / kanban:card-updated for this board.</span>
       </div>
       {error && <p className="mb-2 text-[11px] text-amber-600">{error}</p>}
       <div className="max-h-44 overflow-auto rounded-lg border border-stone-100 bg-[#0f1715] p-2.5 font-mono text-[11px] leading-relaxed text-emerald-100">
@@ -304,7 +316,14 @@ function McpPanel({ workspaceId, board }: { workspaceId: string; board: string |
   const [token, setToken] = useState('')
   const [minting, setMinting] = useState(false)
   const [error, setError] = useState('')
-  const endpoint = `${window.location.origin}/mcp/kanban`
+  // workspace_id/board are path segments on the connection URL itself — the
+  // server reads them and fills them into tool calls that omit them, and
+  // tells the agent about the pin in its `initialize` response. There's no
+  // "defaults" field in the MCP client config schema, so pinning has to live
+  // in the URL, not in extra JSON keys a client would silently ignore.
+  const endpoint = board
+    ? `${window.location.origin}/mcp/kanban/${encodeURIComponent(workspaceId)}/${encodeURIComponent(board)}`
+    : `${window.location.origin}/mcp/kanban`
 
   const generate = async () => {
     setMinting(true); setError('')
@@ -317,7 +336,6 @@ function McpPanel({ workspaceId, board }: { workspaceId: string; board: string |
         [`jtype-${board ?? 'board'}`]: {
           url: endpoint,
           headers: { Authorization: `Bearer ${token || '<run “Generate token” first>'}` },
-          defaults: { workspace_id: workspaceId, board: board ?? '<board id>' },
         },
       },
     },
@@ -349,7 +367,11 @@ function McpPanel({ workspaceId, board }: { workspaceId: string; board: string |
         </button>
         {token && <span className="text-[11px] text-emerald-600">Token minted — copy the config above (shown once).</span>}
       </div>
-      <p className="mt-3 text-[11px] text-stone-400">Tools (list_cards, create_card, move_card…) act on this board when the pinned board id is sent.</p>
+      <p className="mt-3 text-[11px] text-stone-400">
+        The workspace + board are pinned via path segments on the URL above, not a client-side default — tools
+        (list_cards, create_card, move_card…) fall back to them whenever a call omits workspace_id/board, and the
+        agent is told about the pin on connect.
+      </p>
     </>
   )
 }

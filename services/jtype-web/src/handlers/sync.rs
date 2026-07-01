@@ -140,7 +140,7 @@ pub async fn push(
         )
         .await?
         {
-            crate::handlers::document::SaveDocumentOutcome::Saved(doc, status) => {
+            crate::handlers::document::SaveDocumentOutcome::Saved(doc, status, _created) => {
                 accepted += 1;
                 if status != crate::handlers::document::MergeStatus::Unchanged {
                     state
@@ -354,7 +354,7 @@ pub async fn resolve_conflict(
                 .execute(&state.pool)
                 .await?;
             return match outcome {
-                crate::handlers::document::SaveDocumentOutcome::Saved(doc, _) => {
+                crate::handlers::document::SaveDocumentOutcome::Saved(doc, _, _) => {
                     state
                         .hub
                         .publish_to_workspace(
@@ -410,7 +410,7 @@ pub async fn resolve_conflict(
     // A resolved conflict is a real card change. `save_merged_document` does not
     // fire the kanban webhook itself (unlike the `save_document_version` wrapper),
     // so notify explicitly here. Best-effort; a non-card document is a no-op.
-    crate::handlers::document::fire_card_webhook(&state.pool, &workspace_id, &saved, &user.username).await;
+    crate::handlers::document::fire_card_webhook(&state.pool, &workspace_id, &saved, &user.username, false).await;
 
     // Broadcast the resolved document so other connected clients refresh.
     state

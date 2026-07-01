@@ -207,7 +207,7 @@ pub async fn save_document(
     let session_id = super::extract_session_id(&headers);
 
     match save_document_version(&state.pool, &workspace_id, &user, payload, client_type).await? {
-        SaveDocumentOutcome::Saved(doc, merge_status) => {
+        SaveDocumentOutcome::Saved(doc, merge_status, _created) => {
             state
                 .hub
                 .publish_to_workspace(
@@ -307,7 +307,10 @@ pub enum MergeStatus {
 }
 
 pub enum SaveDocumentOutcome {
-    Saved(CloudDocument, MergeStatus),
+    /// `created` is true only for a brand-new document (no prior row at this
+    /// `relativePath` in the workspace) — distinguishes `kanban:card-created`
+    /// from `kanban:card-updated` webhooks/SSE events.
+    Saved(CloudDocument, MergeStatus, bool),
     Conflict(SyncConflict),
 }
 
@@ -325,23 +328,24 @@ pub async fn save_document_version(
     source: &str,
 ) -> Result<SaveDocumentOutcome, AppError> {
     let outcome = save_document_version_inner(pool, workspace_id, user, payload, source).await?;
-    if let SaveDocumentOutcome::Saved(doc, status) = &outcome {
+    if let SaveDocumentOutcome::Saved(doc, status, created) = &outcome {
         // Unchanged = a no-op re-save; don't fire on those.
         if !matches!(status, MergeStatus::Unchanged) {
-            fire_card_webhook(pool, workspace_id, doc, &user.username).await;
+            fire_card_webhook(pool, workspace_id, doc, &user.username, *created).await;
         }
     }
     Ok(outcome)
 }
 
-/// Fire a `kanban:card-updated` webhook for a saved card (`.md` carrying `board:`
-/// frontmatter), scoped to the board's logical id. Best-effort — never affects
-/// the save; a non-card document is a no-op.
+/// Fire a `kanban:card-created`/`kanban:card-updated` webhook for a saved card
+/// (`.md` carrying `board:` frontmatter), scoped to the board's logical id.
+/// Best-effort — never affects the save; a non-card document is a no-op.
 pub(crate) async fn fire_card_webhook(
     pool: &sqlx::Pool<sqlx::MySql>,
     workspace_id: &str,
     doc: &CloudDocument,
     editor: &str,
+    created: bool,
 ) {
     if !doc.relative_path.to_ascii_lowercase().ends_with(".md") {
         return;
@@ -350,8 +354,9 @@ pub(crate) async fn fire_card_webhook(
     let Some(board_ref) = fm.get("board").map(String::as_str).filter(|b| !b.is_empty()) else {
         return;
     };
+    let event = if created { "kanban:card-created" } else { "kanban:card-updated" };
     let payload = serde_json::json!({
-        "event": "kanban:card-updated",
+        "event": event,
         "workspaceId": workspace_id,
         "board": board_ref,
         "card": {
@@ -369,7 +374,7 @@ pub(crate) async fn fire_card_webhook(
     // trigger so both stay in lock-step. The SSE side is live-only — publish is a
     // no-op when no client is currently subscribed to this board.
     crate::board_events::global().publish(workspace_id, board_ref, payload.to_string());
-    crate::handlers::webhooks::enqueue_event(pool, workspace_id, Some(board_ref), "kanban:card-updated", payload).await;
+    crate::handlers::webhooks::enqueue_event(pool, workspace_id, Some(board_ref), event, payload).await;
 }
 
 async fn save_document_version_inner(
@@ -426,7 +431,7 @@ async fn save_document_version_inner(
                             source,
                         )
                         .await?;
-                        return Ok(SaveDocumentOutcome::Saved(doc, MergeStatus::Merged));
+                        return Ok(SaveDocumentOutcome::Saved(doc, MergeStatus::Merged, false));
                     }
                     MergeResult::Conflict { conflict_ranges } => {
                         let conflict = create_sync_conflict_with_ranges(
@@ -468,6 +473,7 @@ async fn save_document_version_inner(
                     updated_clock: current_clock,
                 },
                 MergeStatus::Unchanged,
+                false,
             ));
         }
         let saved = save_merged_document(
@@ -483,7 +489,7 @@ async fn save_document_version_inner(
             source,
         )
         .await?;
-        return Ok(SaveDocumentOutcome::Saved(saved, MergeStatus::Accepted));
+        return Ok(SaveDocumentOutcome::Saved(saved, MergeStatus::Accepted, false));
     }
 
     ensure_workspace_budget(pool, workspace_id, &relative_path, &payload.content).await?;
@@ -537,6 +543,7 @@ async fn save_document_version_inner(
             updated_clock: next_clock,
         },
         MergeStatus::Accepted,
+        true,
     ))
 }
 
