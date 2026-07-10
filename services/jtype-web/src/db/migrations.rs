@@ -287,18 +287,33 @@ fn is_denied_drop(stmt: &str, err: &sqlx::Error) -> bool {
     let Some(db_err) = err.as_database_error() else {
         return false;
     };
-    is_denied_drop_core(stmt, db_err.message())
+    // Prefer the locale-independent MySQL/TiDB error number over the message text:
+    // the message is server-localizable, but 1142 (ER_TABLEACCESS_DENIED_ERROR) is
+    // not. Downcast to the driver error to read it; fall back to the message when
+    // the concrete type isn't MySQL (keeps the classifier engine-agnostic).
+    let number = db_err
+        .try_downcast_ref::<sqlx::mysql::MySqlDatabaseError>()
+        .map(|e| e.number());
+    is_denied_drop_core(stmt, number, db_err.message())
 }
 
 /// Pure core of [`is_denied_drop`], factored out for unit testing without a
 /// live `sqlx::Error`.
-fn is_denied_drop_core(stmt: &str, msg: &str) -> bool {
+///
+/// `number` is the native MySQL error code when available. 1142 is
+/// `ER_TABLEACCESS_DENIED_ERROR` ("<cmd> command denied to user ..."), which
+/// fires for any denied table command — the `DROP` prefix gate, not the code, is
+/// what restricts tolerance to DROP.
+fn is_denied_drop_core(stmt: &str, number: Option<u16>, msg: &str) -> bool {
     if !stmt.trim_start().to_ascii_uppercase().starts_with("DROP") {
         return false;
     }
+    if number == Some(1142) {
+        return true;
+    }
+    // Fallback for non-MySQL drivers / wrapped errors that don't expose 1142:
+    // "command denied" is the 1142 wording, "access denied" the broader phrasing.
     let msg = msg.to_ascii_lowercase();
-    // "command denied" is the 1142 wording; "access denied" covers the broader
-    // access-violation phrasings. Both are only ever consulted for DROP here.
     msg.contains("command denied") || msg.contains("access denied")
 }
 
@@ -334,41 +349,49 @@ mod tests {
     }
 
     #[test]
-    fn denied_drop_is_tolerated() {
-        // The exact prod/TiDB 1142 message that crash-looped 0018_drop_kanban.
+    fn denied_drop_tolerated_by_error_number_even_when_message_is_localized() {
+        // The 1142 code is locale-independent: a non-English server message must
+        // still be recognized so a localized deployment doesn't crash-loop.
         assert!(is_denied_drop_core(
             "DROP TABLE IF EXISTS kanban_webhook_deliveries",
-            "DROP command denied to user 'jtype'@'%' for table 'kanban_webhook_deliveries'"
+            Some(1142),
+            "用户 'jtype'@'%' 的 DROP 命令被拒绝" // localized, no English keyword
         ));
     }
 
     #[test]
-    fn denied_drop_tolerated_regardless_of_case_and_leading_whitespace() {
+    fn denied_drop_tolerated_by_message_when_number_absent() {
+        // Fallback path: non-MySQL / wrapped error exposes no 1142 code.
         assert!(is_denied_drop_core(
             "\n  drop table foo",
+            None,
             "Access denied; you need the DROP privilege"
         ));
     }
 
     #[test]
     fn denied_non_drop_is_not_tolerated() {
-        // A denied INSERT/CREATE is a real, fatal problem — never swallow it.
+        // 1142 also fires for a denied INSERT/CREATE, but those aren't DROP and
+        // are real, fatal problems — the prefix gate must reject them.
         assert!(!is_denied_drop_core(
             "INSERT INTO _schema_migrations VALUES (1, 'x')",
+            Some(1142),
             "INSERT command denied to user 'jtype'@'%'"
         ));
         assert!(!is_denied_drop_core(
             "CREATE TABLE foo (id INT)",
+            Some(1142),
             "CREATE command denied to user 'jtype'@'%'"
         ));
     }
 
     #[test]
     fn drop_failing_for_other_reasons_is_not_tolerated() {
-        // A DROP blocked by a FK constraint (not a privilege problem) must still
-        // surface — swallowing it would silently leave a broken schema.
+        // A DROP blocked by a FK constraint (not a privilege problem, not 1142)
+        // must still surface — swallowing it would silently leave a broken schema.
         assert!(!is_denied_drop_core(
             "DROP TABLE parent",
+            Some(1451),
             "Cannot delete or update a parent row: a foreign key constraint fails"
         ));
     }
