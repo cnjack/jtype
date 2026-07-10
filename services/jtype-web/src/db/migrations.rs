@@ -214,6 +214,20 @@ async fn exec_sql(pool: &Pool<MySql>, sql: &str) -> Result<(), AppError> {
                 eprintln!("[migrations] ignoring duplicate-object error (already applied): {e}");
                 continue;
             }
+            if is_denied_drop(stmt, &e) {
+                // A DROP that the DB user has no privilege to run. Cleanup-only
+                // migrations (e.g. 0018_drop_kanban) retire now-unused objects; if
+                // the app's DB user is intentionally locked down without DROP, the
+                // object simply stays — inert, unreferenced by any code — which is
+                // strictly better than crash-looping the whole service on startup.
+                // Symmetric to the duplicate-object tolerance above: both accept an
+                // unreachable-but-harmless end state instead of aborting.
+                eprintln!(
+                    "[migrations] skipping DROP denied by insufficient privilege \
+                     (object left in place, inert): {e}"
+                );
+                continue;
+            }
             return Err(AppError::Server(format!(
                 "migration SQL error: {e}\n  statement: {stmt}"
             )));
@@ -253,6 +267,41 @@ fn is_duplicate_state_or_message(code: Option<&str>, msg: &str) -> bool {
         || msg.contains("duplicate column")
 }
 
+/// True when a statement is a `DROP` that failed purely because the DB user
+/// lacks the DROP privilege (MySQL/TiDB error 1142, e.g.
+/// "DROP command denied to user 'jtype'@'%' for table 'kanban_...'").
+///
+/// Used to keep a cleanup-only migration from bricking startup on a database
+/// whose app user is deliberately not granted DROP. Scoped tightly on purpose:
+/// only statements that begin with `DROP`, and only privilege-denied errors — a
+/// DROP that fails for any other reason (FK constraint, unknown object without
+/// IF EXISTS, syntax) is NOT swallowed.
+///
+/// Consequence to be aware of: when the DROP is skipped, the migration is still
+/// recorded as applied, so the retired object persists indefinitely. The runner
+/// keys on `MAX(version)`, so once any later migration records, this one is never
+/// retried even if DROP is granted afterwards — finishing the cleanup then means
+/// dropping the object out-of-band (or re-running the SQL manually). That is the
+/// accepted trade for not crash-looping a locked-down deployment.
+fn is_denied_drop(stmt: &str, err: &sqlx::Error) -> bool {
+    let Some(db_err) = err.as_database_error() else {
+        return false;
+    };
+    is_denied_drop_core(stmt, db_err.message())
+}
+
+/// Pure core of [`is_denied_drop`], factored out for unit testing without a
+/// live `sqlx::Error`.
+fn is_denied_drop_core(stmt: &str, msg: &str) -> bool {
+    if !stmt.trim_start().to_ascii_uppercase().starts_with("DROP") {
+        return false;
+    }
+    let msg = msg.to_ascii_lowercase();
+    // "command denied" is the 1142 wording; "access denied" covers the broader
+    // access-violation phrasings. Both are only ever consulted for DROP here.
+    msg.contains("command denied") || msg.contains("access denied")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -282,6 +331,46 @@ mod tests {
         // A syntax error or connection failure must NOT be swallowed.
         assert!(!is_duplicate_state_or_message(Some("42000"), "You have an error in your SQL syntax"));
         assert!(!is_duplicate_state_or_message(None, "connection refused"));
+    }
+
+    #[test]
+    fn denied_drop_is_tolerated() {
+        // The exact prod/TiDB 1142 message that crash-looped 0018_drop_kanban.
+        assert!(is_denied_drop_core(
+            "DROP TABLE IF EXISTS kanban_webhook_deliveries",
+            "DROP command denied to user 'jtype'@'%' for table 'kanban_webhook_deliveries'"
+        ));
+    }
+
+    #[test]
+    fn denied_drop_tolerated_regardless_of_case_and_leading_whitespace() {
+        assert!(is_denied_drop_core(
+            "\n  drop table foo",
+            "Access denied; you need the DROP privilege"
+        ));
+    }
+
+    #[test]
+    fn denied_non_drop_is_not_tolerated() {
+        // A denied INSERT/CREATE is a real, fatal problem — never swallow it.
+        assert!(!is_denied_drop_core(
+            "INSERT INTO _schema_migrations VALUES (1, 'x')",
+            "INSERT command denied to user 'jtype'@'%'"
+        ));
+        assert!(!is_denied_drop_core(
+            "CREATE TABLE foo (id INT)",
+            "CREATE command denied to user 'jtype'@'%'"
+        ));
+    }
+
+    #[test]
+    fn drop_failing_for_other_reasons_is_not_tolerated() {
+        // A DROP blocked by a FK constraint (not a privilege problem) must still
+        // surface — swallowing it would silently leave a broken schema.
+        assert!(!is_denied_drop_core(
+            "DROP TABLE parent",
+            "Cannot delete or update a parent row: a foreign key constraint fails"
+        ));
     }
 }
 
