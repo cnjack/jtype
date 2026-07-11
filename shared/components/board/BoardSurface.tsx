@@ -51,7 +51,6 @@ import {
   type BoardViewColumn,
   type CardFilter,
 } from "../../lib/board";
-import { BoardPeek } from "./BoardPeek";
 import { BoardTable } from "./BoardTable";
 import { BoardCalendar } from "./BoardCalendar";
 import { BoardSwimlanes } from "./BoardSwimlanes";
@@ -84,6 +83,9 @@ export function BoardSurface({
   fullscreen,
   onToggleFullscreen,
   onOpenSettings,
+  readOnly,
+  onCardOpen,
+  peekComponent: PeekComponent,
 }: BoardSurfaceProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<DropTarget | null>(null);
@@ -146,6 +148,21 @@ export function BoardSurface({
   const ctrlCls =
     "h-7 rounded-md border border-stone-200 bg-white px-2 text-xs text-stone-600 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand";
 
+  // Opening a card goes through the host when it intercepts (embeds render
+  // their own detail); otherwise the built-in side peek.
+  const openCard = (card: BoardViewCard) => {
+    if (onCardOpen) onCardOpen(card);
+    else setSelectedId(card.id);
+  };
+  // Column ops menu only makes sense when at least one op is wired (embeds wire none).
+  const hasColumnOps = !!(
+    actions.renameColumn ||
+    actions.toggleDoneColumn ||
+    actions.setColumnLimit ||
+    actions.setColumnColor ||
+    actions.deleteColumn
+  );
+
   // --- pointer drag (cards + columns) -------------------------------------
   const hitTestCard = (x: number, y: number): DropTarget | null => {
     const el = document.elementFromPoint(x, y);
@@ -175,6 +192,7 @@ export function BoardSurface({
     }
   };
   const onCardPointerMove = (e: ReactPointerEvent, card: BoardViewCard) => {
+    if (readOnly) return; // tap-to-open only; drag never starts
     const d = cardDrag.current;
     if (!d || d.id !== card.id) return;
     if (!d.moved) {
@@ -200,7 +218,7 @@ export function BoardSurface({
       const target = hitTestCard(e.clientX, e.clientY);
       if (target) void actions.moveCard(card.id, target.col, target.index);
     } else if (d) {
-      setSelectedId(card.id);
+      openCard(card);
     }
   };
 
@@ -252,7 +270,9 @@ export function BoardSurface({
     const trimmed = title.trim();
     if (!trimmed) return;
     const newId = await actions.createCard(colKey, trimmed);
-    if (typeof newId === "string") setSelectedId(newId);
+    // Only auto-open the built-in peek; a host intercepting opens (onCardOpen)
+    // gets a card object per open, which doesn't exist in `cards` yet here.
+    if (typeof newId === "string" && !onCardOpen) setSelectedId(newId);
   };
 
   if (error && config.columns.length === 0) {
@@ -314,7 +334,7 @@ export function BoardSurface({
               <Trans>Calendar</Trans>
             </button>
           </div>
-          {editableColumns && viewType === "board" && (
+          {editableColumns && viewType === "board" && !readOnly && (
             <button
               type="button"
               className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium ${
@@ -496,7 +516,7 @@ export function BoardSurface({
             today={today}
             doneKey={doneKey}
             selectedId={selected?.id}
-            onSelect={(c) => setSelectedId(c.id)}
+            onSelect={openCard}
           />
         ) : viewType === "calendar" ? (
           <BoardCalendar
@@ -506,7 +526,7 @@ export function BoardSurface({
             mode={config.calendarMode ?? "month"}
             onModeChange={(m) => void actions.setConfig({ calendarMode: m })}
             selectedId={selected?.id}
-            onSelect={(c) => setSelectedId(c.id)}
+            onSelect={openCard}
           />
         ) : swimlaneActive && swimlaneKey ? (
           <BoardSwimlanes
@@ -518,7 +538,7 @@ export function BoardSurface({
             today={today}
             doneKey={doneKey}
             selectedId={selected?.id}
-            onSelect={(c) => setSelectedId(c.id)}
+            onSelect={openCard}
           />
         ) : (
           <div className="flex min-h-0 flex-1 items-stretch gap-3 overflow-x-auto p-4">
@@ -583,7 +603,7 @@ export function BoardSurface({
                         {col.limit != null ? `/${col.limit}` : ""}
                       </span>
                     </div>
-                    {editableColumns && (
+                    {editableColumns && !readOnly && hasColumnOps && (
                       <Menu as="div" className="relative shrink-0">
                         <MenuButton className="rounded p-0.5 text-stone-400 hover:bg-white hover:text-stone-600">
                           <EllipsisHorizontalIcon className="h-4 w-4" />
@@ -670,12 +690,13 @@ export function BoardSurface({
                             onPointerMove={(e) => onCardPointerMove(e, card)}
                             onPointerUp={(e) => onCardPointerUp(e, card)}
                             onKeyDown={(e) => {
-                              if (e.key === "Enter") setSelectedId(card.id);
+                              if (e.key === "Enter") openCard(card);
                             }}
                             className={`group relative block w-full cursor-pointer touch-none select-none rounded-lg bg-white p-2.5 text-left shadow-sm ring-1 transition hover:ring-brand/30 ${
                               draggingId === card.id ? "opacity-40" : ""
                             } ${selected?.id === card.id ? "ring-brand/60" : "ring-black/[0.04]"}`}
                           >
+                            {!readOnly && (
                             <div
                               className="absolute right-1 top-1 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100"
                               onClick={(e) => e.stopPropagation()}
@@ -729,6 +750,7 @@ export function BoardSurface({
                                 </MenuItems>
                               </Menu>
                             </div>
+                            )}
 
                             {card.ticket && (
                               <span className="mb-0.5 inline-block rounded bg-stone-100 px-1 py-0.5 font-mono text-[10px] font-medium tracking-tight text-stone-500">
@@ -792,7 +814,7 @@ export function BoardSurface({
                         )
                       : showLine(colCards.length) && <div className="mx-1 h-0.5 rounded bg-brand" />}
 
-                    {addingIn === col.key ? (
+                    {readOnly ? null : addingIn === col.key ? (
                       <textarea
                         autoFocus
                         rows={2}
@@ -858,6 +880,7 @@ export function BoardSurface({
             })}
 
             {editableColumns &&
+              !readOnly &&
               actions.addColumn &&
               (addingColumn ? (
                 <input
@@ -902,7 +925,7 @@ export function BoardSurface({
         )}
       </div>
 
-      {selected && (
+      {selected && PeekComponent && (
         <div className="absolute right-0 top-0 z-30 h-full shadow-[-10px_0_30px_rgba(0,0,0,0.07)]" style={{ width: peekWidth }}>
           <div
             onMouseDown={(e) => {
@@ -920,7 +943,7 @@ export function BoardSurface({
             title={t`Drag to resize`}
             className="absolute left-0 top-0 z-10 h-full w-1.5 -translate-x-1/2 cursor-col-resize transition-colors hover:bg-brand/40"
           />
-          <BoardPeek
+          <PeekComponent
             card={selected}
             statusOptions={config.columns.map((c) => ({ value: c.key, label: c.name }))}
             assigneeOptions={assigneeOptions}
