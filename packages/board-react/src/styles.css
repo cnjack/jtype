@@ -1,0 +1,149 @@
+/*
+ * Style entry for the embeddable board.
+ *
+ * Isolation strategy (spec: zero global leakage, never repaint the host):
+ *  - Tailwind PREFLIGHT is deliberately NOT imported — a global element reset
+ *    would restyle the host page. A minimal hand-rolled reset lives below;
+ *    scripts/scope-css.mjs runs after `vite build` and prefixes EVERY selector
+ *    in dist/style.css (reset, theme variables, utilities) with
+ *    `:where(.jtb-scope, [data-headlessui-portal])` — the board wrapper class
+ *    plus the Headless UI portal roots the dropdown menus render into.
+ *  - `source(none)` disables Tailwind's auto content detection (which would
+ *    scan this whole package incl. example/); only the shared board components
+ *    and the package src are scanned.
+ */
+@layer theme, base, components, utilities;
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities) source(none);
+@import '../../../shared/styles/tokens.css';
+
+@source '../../../shared/components/board';
+@source '../../../shared/lib/board.ts';
+@source '../src';
+
+@layer base {
+  /* Wrapper baseline — everything the board assumes from a normal Tailwind
+     page, scoped. rem-based utility sizes still follow the host's root font
+     size (documented in the README). Layout styles live HERE, not as utility
+     classes on the wrapper: the scoping script rewrites utilities to
+     descendant selectors of .jtb-scope, so they can never match the scope
+     root itself. */
+  .jtb-scope {
+    position: relative;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    isolation: isolate;
+    font-family:
+      ui-sans-serif,
+      system-ui,
+      -apple-system,
+      'Segoe UI',
+      Roboto,
+      'Helvetica Neue',
+      Arial,
+      'Noto Sans',
+      sans-serif;
+    line-height: 1.5;
+    color: #1c1917;
+    -webkit-font-smoothing: antialiased;
+    text-align: left;
+  }
+
+  /* Minimal preflight equivalents the board markup relies on. Bare selectors
+     on purpose: the scoping script confines them to the board + its portals. */
+  *,
+  ::before,
+  ::after {
+    box-sizing: border-box;
+    border-width: 0;
+    border-style: solid;
+    border-color: currentColor;
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  p,
+  blockquote,
+  pre,
+  dl,
+  dd,
+  figure {
+    margin: 0;
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-size: inherit;
+    font-weight: inherit;
+  }
+  ul,
+  ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  button,
+  input,
+  optgroup,
+  select,
+  textarea {
+    font: inherit;
+    font-feature-settings: inherit;
+    letter-spacing: inherit;
+    color: inherit;
+    margin: 0;
+    padding: 0;
+    background-color: transparent;
+  }
+  button,
+  [role='button'] {
+    cursor: pointer;
+  }
+  button {
+    text-transform: none;
+    -webkit-appearance: button;
+    background-image: none;
+  }
+  :disabled {
+    cursor: default;
+  }
+  input::placeholder,
+  textarea::placeholder {
+    opacity: 1;
+    color: #a8a29e;
+  }
+  textarea {
+    resize: vertical;
+  }
+  a {
+    color: inherit;
+    text-decoration: inherit;
+  }
+  img,
+  svg,
+  video,
+  canvas {
+    display: block;
+    vertical-align: middle;
+  }
+  img,
+  video {
+    max-width: 100%;
+    height: auto;
+  }
+  table {
+    text-indent: 0;
+    border-color: inherit;
+    border-collapse: collapse;
+  }
+  [hidden] {
+    display: none !important;
+  }
+}
