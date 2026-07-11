@@ -8,11 +8,13 @@ import { createJTypeClient, JTypeApiError, type JTypeBoardDataClient } from './c
 import { JTypeBoardError } from './resolveBoard'
 import {
   applyCardPatch,
+  applyLocalViewPatch,
   loadBoardSnapshot,
   toViewConfig,
   type BoardConfigJSON,
   type BoardSnapshot,
   type DocCache,
+  type LocalViewPatch,
 } from './boardData'
 import { CardDetail } from './CardDetail'
 import { activateBoardLocale, i18n, type BoardLocale } from './i18n'
@@ -113,6 +115,9 @@ export function JTypeBoard({
   const [banner, setBanner] = useState('')
   const [conn, setConn] = useState<JTypeBoardConnection>('polling')
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null)
+  // readOnly view preference (Board/Table/Calendar, grouping…), kept locally
+  // and merged over every fresh server snapshot so it survives the poll cycle.
+  const [localView, setLocalView] = useState<LocalViewPatch>({})
 
   const snapRef = useRef<BoardSnapshot | null>(null)
   const cacheRef = useRef<DocCache>(new Map())
@@ -158,6 +163,7 @@ export function JTypeBoard({
     setFatal('')
     setBanner('')
     setSelectedCardId(null)
+    setLocalView({})
 
     const announce = (c: JTypeBoardConnection) => {
       if (cancelled) return
@@ -270,15 +276,14 @@ export function JTypeBoard({
         withErr(async () => {
           const snap = snapRef.current
           if (!snap || !client) return
-          const next = { ...snap.config, ...patch } as BoardConfigJSON
           if (readOnly) {
-            // View preference (Board/Table/Calendar, grouping…): keep local —
-            // a read-only embed never writes the shared .board doc.
-            const updated = { ...snap, config: next }
-            snapRef.current = updated
-            setSnapshot(updated)
+            // View preference (Board/Table/Calendar, grouping…): keep it in
+            // the poll-surviving local override — a read-only embed never
+            // writes the shared .board doc.
+            setLocalView((cur) => applyLocalViewPatch(cur, patch as Record<string, unknown>))
             return
           }
+          const next = { ...snap.config, ...patch } as BoardConfigJSON
           await client.saveDocument(workspaceId, {
             relativePath: snap.boardRelativePath,
             content: JSON.stringify(next, null, 2),
@@ -380,9 +385,16 @@ export function JTypeBoard({
   }, [client, workspaceId, readOnly])
 
   // --- render ------------------------------------------------------------------
+  // In readOnly the locally-kept view preference wins over the server config
+  // (a fresh poll snapshot must not snap the view back).
+  const effectiveConfig = useMemo(
+    () =>
+      snapshot ? (readOnly ? ({ ...snapshot.config, ...localView } as BoardConfigJSON) : snapshot.config) : null,
+    [snapshot, readOnly, localView],
+  )
   const viewConfig = useMemo(
-    () => (snapshot ? toViewConfig(snapshot.config, snapshot.boardDir) : null),
-    [snapshot],
+    () => (snapshot && effectiveConfig ? toViewConfig(effectiveConfig, snapshot.boardDir) : null),
+    [snapshot, effectiveConfig],
   )
   const selectedCard = selectedCardId
     ? snapshot?.cards.find((c) => c.id === selectedCardId) ?? null
@@ -411,12 +423,16 @@ export function JTypeBoard({
             error={banner || undefined}
             readOnly={readOnly}
             onCardOpen={handleCardOpen}
+            // Dropdown panels mount in body-level portals; carry the scope
+            // class so ONLY our portals pick up the package styles (never the
+            // host's own Headless UI portals).
+            portalClassName="jtb-scope"
           />
         </I18nProvider>
-        {selectedCard && !onCardOpen && (
+        {selectedCard && !onCardOpen && effectiveConfig && (
           <CardDetail
             card={selectedCard}
-            config={snapshot.config}
+            config={effectiveConfig}
             strings={S}
             onClose={() => setSelectedCardId(null)}
           />
@@ -426,10 +442,10 @@ export function JTypeBoard({
     )
   }
 
-  // No utility classes on the wrapper: scoped utilities are descendant
-  // selectors of .jtb-scope and can't style the scope root (see styles.css).
+  // jtb-scope = style-scope marker (also on portal panels); jtb-root = the
+  // wrapper's layout (position/height/overflow), defined in styles.css.
   return (
-    <div className={`jtb-scope ${className ?? ''}`} style={style} data-jtype-board={boardRef}>
+    <div className={`jtb-scope jtb-root ${className ?? ''}`} style={style} data-jtype-board={boardRef}>
       {content}
     </div>
   )

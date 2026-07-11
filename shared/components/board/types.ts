@@ -124,4 +124,12 @@ export type BoardSurfaceProps = {
    * the peek's markdown-renderer dependency chain. Omit = no built-in peek.
    */
   peekComponent?: ComponentType<BoardPeekProps>;
+  /**
+   * Extra class for every panel the surface renders into a Headless UI portal
+   * (the anchored dropdown menus). Portals mount at body level — outside any
+   * wrapper element — so a style-scoped embed needs its scope class ON the
+   * panel itself; scoping by Headless UI's own portal attribute would restyle
+   * the HOST app's portals too. Desktop + web omit it (no-op).
+   */
+  portalClassName?: string;
 };

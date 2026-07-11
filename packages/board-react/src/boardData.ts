@@ -117,6 +117,26 @@ export function applyCardPatch(content: string, patch: Partial<BoardViewCard>): 
   return writeFrontmatter(newBody, next)
 }
 
+/** View-preference keys a read-only embed may adjust locally (never persisted). */
+export const LOCAL_VIEW_KEYS = ['viewType', 'groupBy', 'swimlaneBy', 'calendarMode'] as const
+export type LocalViewPatch = Partial<Pick<BoardConfigJSON, (typeof LOCAL_VIEW_KEYS)[number]>>
+
+/**
+ * Accumulate a surface `setConfig` patch into the local view override a
+ * read-only board keeps across polls (merged over each fresh server snapshot,
+ * so switching to Table doesn't snap back on the next 30s poll). Only
+ * view-preference keys are retained — a viewer must not locally rewrite
+ * columns/labels — and an explicitly-undefined key still lands (that's how
+ * the surface clears `swimlaneBy`).
+ */
+export function applyLocalViewPatch(current: LocalViewPatch, patch: Record<string, unknown>): LocalViewPatch {
+  const next: Record<string, unknown> = { ...current }
+  for (const k of LOCAL_VIEW_KEYS) {
+    if (k in patch) next[k] = patch[k]
+  }
+  return next as LocalViewPatch
+}
+
 /** Per-instance fetch cache: docId → last seen contentHash + document. */
 export type DocCache = Map<string, { contentHash: string; doc: JTypeCloudDocument }>
 

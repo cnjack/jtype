@@ -86,6 +86,7 @@ export function BoardSurface({
   readOnly,
   onCardOpen,
   peekComponent: PeekComponent,
+  portalClassName,
 }: BoardSurfaceProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<DropTarget | null>(null);
@@ -147,6 +148,9 @@ export function BoardSurface({
 
   const ctrlCls =
     "h-7 rounded-md border border-stone-200 bg-white px-2 text-xs text-stone-600 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand";
+  // Anchored menu panels mount in body-level portals, outside any wrapper —
+  // append the platform's portal scope class there (empty for desktop/web).
+  const portalCls = portalClassName ? ` ${portalClassName}` : "";
 
   // Opening a card goes through the host when it intercepts (embeds render
   // their own detail); otherwise the built-in side peek.
@@ -442,7 +446,7 @@ export function BoardSurface({
               <FunnelIcon className="h-3.5 w-3.5" />
               {filter ? `${filter.prop}: ${filter.value || t`Unassigned`}` : <Trans>Filter</Trans>}
             </MenuButton>
-            <MenuItems anchor="bottom start" className="z-30 w-52 rounded-lg border border-black/[0.06] bg-white py-1 text-sm shadow-lg [--anchor-gap:4px] focus:outline-none">
+            <MenuItems anchor="bottom start" className={`z-30 w-52 rounded-lg border border-black/[0.06] bg-white py-1 text-sm shadow-lg [--anchor-gap:4px] focus:outline-none${portalCls}`}>
               {filter && (
                 <>
                   <MenuItem>
@@ -608,7 +612,7 @@ export function BoardSurface({
                         <MenuButton className="rounded p-0.5 text-stone-400 hover:bg-white hover:text-stone-600">
                           <EllipsisHorizontalIcon className="h-4 w-4" />
                         </MenuButton>
-                        <MenuItems anchor="bottom end" className="z-30 w-48 rounded-lg border border-black/[0.06] bg-white py-1 text-sm shadow-lg [--anchor-gap:4px] focus:outline-none">
+                        <MenuItems anchor="bottom end" className={`z-30 w-48 rounded-lg border border-black/[0.06] bg-white py-1 text-sm shadow-lg [--anchor-gap:4px] focus:outline-none${portalCls}`}>
                           {actions.renameColumn && (
                             <MenuItem>
                               <button type="button" className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-stone-700 data-[focus]:bg-stone-100" onClick={() => void actions.renameColumn?.(col.key)}>
@@ -707,7 +711,7 @@ export function BoardSurface({
                                 <MenuButton className="rounded p-0.5 text-stone-400 hover:bg-stone-100 hover:text-stone-600">
                                   <EllipsisHorizontalIcon className="h-4 w-4" />
                                 </MenuButton>
-                                <MenuItems anchor="bottom end" className="z-30 w-44 rounded-lg border border-black/[0.06] bg-white py-1 text-sm shadow-lg [--anchor-gap:4px] focus:outline-none">
+                                <MenuItems anchor="bottom end" className={`z-30 w-44 rounded-lg border border-black/[0.06] bg-white py-1 text-sm shadow-lg [--anchor-gap:4px] focus:outline-none${portalCls}`}>
                                   {actions.openCardFull && (
                                     <MenuItem>
                                       <button type="button" className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-stone-700 data-[focus]:bg-stone-100" onClick={() => actions.openCardFull?.(card)}>
@@ -847,7 +851,7 @@ export function BoardSurface({
                           <PlusIcon className="h-4 w-4" />
                           <Trans>New card</Trans>
                         </MenuButton>
-                        <MenuItems anchor="bottom start" className="z-30 w-52 rounded-lg border border-black/[0.06] bg-white py-1 text-sm shadow-lg [--anchor-gap:4px] focus:outline-none">
+                        <MenuItems anchor="bottom start" className={`z-30 w-52 rounded-lg border border-black/[0.06] bg-white py-1 text-sm shadow-lg [--anchor-gap:4px] focus:outline-none${portalCls}`}>
                           <MenuItem>
                             <button type="button" className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-stone-700 data-[focus]:bg-stone-100" onClick={() => { setDraftTitle(""); setAddingIn(col.key); }}>
                               <PencilIcon className="h-3.5 w-3.5" />

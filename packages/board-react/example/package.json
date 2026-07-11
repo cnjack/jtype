@@ -8,6 +8,7 @@
     "build": "vite build"
   },
   "dependencies": {
+    "@headlessui/react": "^2.2.10",
     "jtype-board-react": "file:..",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"

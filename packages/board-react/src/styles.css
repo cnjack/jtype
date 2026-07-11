@@ -4,10 +4,13 @@
  * Isolation strategy (spec: zero global leakage, never repaint the host):
  *  - Tailwind PREFLIGHT is deliberately NOT imported — a global element reset
  *    would restyle the host page. A minimal hand-rolled reset lives below;
- *    scripts/scope-css.mjs runs after `vite build` and prefixes EVERY selector
- *    in dist/style.css (reset, theme variables, utilities) with
- *    `:where(.jtb-scope, [data-headlessui-portal])` — the board wrapper class
- *    plus the Headless UI portal roots the dropdown menus render into.
+ *    scripts/scope-css.mjs runs after `vite build` and rewrites every selector
+ *    S in dist/style.css (reset, theme variables, utilities) to
+ *    `:where(.jtb-scope) S` plus a self-match arm for elements that carry
+ *    .jtb-scope themselves. The class marks the board wrapper AND every panel
+ *    we render into a Headless UI portal (threaded via BoardSurface's
+ *    portalClassName) — never Headless UI's own [data-headlessui-portal]
+ *    attribute, which would restyle the HOST app's portals too.
  *  - `source(none)` disables Tailwind's auto content detection (which would
  *    scan this whole package incl. example/); only the shared board components
  *    and the package src are scanned.
@@ -22,18 +25,10 @@
 @source '../src';
 
 @layer base {
-  /* Wrapper baseline — everything the board assumes from a normal Tailwind
-     page, scoped. rem-based utility sizes still follow the host's root font
-     size (documented in the README). Layout styles live HERE, not as utility
-     classes on the wrapper: the scoping script rewrites utilities to
-     descendant selectors of .jtb-scope, so they can never match the scope
-     root itself. */
+  /* Scope baseline — typography every scope root (the board wrapper AND each
+     portal panel) establishes. rem-based utility sizes still follow the
+     host's root font size (documented in the README). */
   .jtb-scope {
-    position: relative;
-    height: 100%;
-    min-height: 0;
-    overflow: hidden;
-    isolation: isolate;
     font-family:
       ui-sans-serif,
       system-ui,
@@ -48,6 +43,18 @@
     color: #1c1917;
     -webkit-font-smoothing: antialiased;
     text-align: left;
+  }
+
+  /* The component wrapper only (NOT portal panels — a dropdown panel with
+     height:100% + overflow:hidden would collapse). Layout lives here rather
+     than as utility classes on the wrapper because scoped utilities are
+     descendant selectors and the self-match arm must stay layout-neutral. */
+  .jtb-root {
+    position: relative;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    isolation: isolate;
   }
 
   /* Minimal preflight equivalents the board markup relies on. Bare selectors

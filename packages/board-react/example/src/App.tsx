@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
 import { JTypeBoard, type JTypeBoardConnection, type BoardLocale } from 'jtype-board-react'
 
 // Manual-verification host. Connection settings come from Vite env
@@ -66,6 +67,27 @@ export function App() {
 
   return (
     <div style={{ padding: 16 }}>
+      {/* Leakage probe: a HOST-owned Headless UI dropdown, deliberately
+          unstyled (browser defaults). Its portal carries the same
+          [data-headlessui-portal] attribute as the board's menus — with the
+          package css loaded, the <p> must keep its default margin, the
+          <button> its native background/border, and no --color-* variables
+          may appear on the portal root. */}
+      <Menu>
+        <MenuButton id="host-menu-button" style={{ marginBottom: 12 }}>
+          Host dropdown (leakage probe)
+        </MenuButton>
+        <MenuItems anchor="bottom start" id="host-menu-panel">
+          <MenuItem>
+            <p id="host-menu-paragraph">Host paragraph — default margins must survive.</p>
+          </MenuItem>
+          <MenuItem>
+            <button id="host-menu-native-button" type="button">
+              Host native button — default background must survive.
+            </button>
+          </MenuItem>
+        </MenuItems>
+      </Menu>
       <details open={!applied} style={{ marginBottom: 12, background: '#fff', padding: 12, borderRadius: 8 }}>
         <summary style={{ cursor: 'pointer' }}>
           Connection {conn ? `— board reports: ${conn}` : ''}

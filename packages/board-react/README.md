@@ -113,12 +113,14 @@ successful poll.
 ## Styling and theming
 
 - `style.css` is mandatory and fully scoped: every rule is prefixed with
-  `:where(.jtb-scope, [data-headlessui-portal])`, and the board ships its own
-  minimal reset instead of a global preflight — host pages are never
-  repainted. (Headless UI anchors its dropdowns in body-level portals, hence
-  the second scope root. If your app also uses Headless UI v2 with custom
-  Tailwind theme variables, our variable values can win inside *your* portals;
-  isolate with an iframe if that matters to you.)
+  `:where(.jtb-scope)` (or self-matches an element that carries the class), and
+  the board ships its own minimal reset instead of a global preflight — host
+  pages are never repainted. The board's dropdown menus anchor in body-level
+  Headless UI portals *outside* the wrapper, so the scope class is threaded
+  onto each portal panel itself — never onto Headless UI's global
+  `[data-headlessui-portal]` attribute. This means a host that also uses
+  Headless UI v2 keeps its own portalled menus/dialogs completely untouched:
+  our reset and theme variables apply only to elements under `.jtb-scope`.
 - Theme via CSS variables on the scope: `--color-brand`, `--color-brand-dark`,
   `--color-brand-soft`, `--color-brand-gray`, `--color-brand-light`,
   `--color-line` (plus the standard Tailwind palette variables). Override
@@ -132,9 +134,11 @@ Included: column + card rendering, drag to move/reorder cards (frontmatter
 `status`/`position` writeback), card create/delete, board/table/calendar and
 swimlane views, search/filter/sort, read-only card detail, localized chrome.
 Not yet (flag-gated later): members/assignee options, versions/activity,
-tickets, comments, attachments upload, markdown-rendered notes (notes show as
-plain text — the markdown renderer chain is deliberately excluded to keep the
-bundle small).
+ticket badges (the `OCCSV-####` chip — the embed client has no ticket-index
+endpoint, so cards never show it even when the board configures `ticketKey`),
+comments, attachments upload, markdown-rendered notes (notes show as plain
+text — the markdown renderer chain is deliberately excluded to keep the bundle
+small).
 
 ## Installing from git
 
