@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>jtype-board-react example</title>
+    <style>
+      /* Host-page styles on purpose: if the embed leaked globals, this page
+         would visibly break (acceptance: zero global style leakage). */
+      body { margin: 0; font-family: Georgia, serif; background: #f0ede6; }
+      .host-header { padding: 12px 20px; background: #2f2a24; color: #f0ede6; }
+      .host-header .flex { color: #ffd479; } /* would change if .flex leaked */
+    </style>
+  </head>
+  <body>
+    <div class="host-header">
+      <strong>Host page (non-jtype origin)</strong>
+      <span class="flex">— this span has class="flex"; it must stay inline text.</span>
+    </div>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

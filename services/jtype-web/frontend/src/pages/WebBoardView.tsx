@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BoardSettingsDialog } from '../components/BoardSettingsDialog'
 import { useConfirm, usePrompt } from '@shared/components/PromptDialogContext'
 import { parseFrontmatter, writeFrontmatter } from '@shared/lib/frontmatter'
-import { BoardSurface, type BoardActions } from '@shared/components/board'
+import { BoardSurface, BoardPeek, type BoardActions } from '@shared/components/board'
 import { useWorkspaceSocket } from '../hooks/useWorkspaceSocket'
 import {
   DEFAULT_DONE_COLUMN,
@@ -497,6 +497,7 @@ export function WebBoardView({
         fullscreen={fullscreen}
         onToggleFullscreen={onToggleFullscreen}
         onOpenSettings={() => setShowBoardSettings(true)}
+        peekComponent={BoardPeek}
       />
       {showBoardSettings && (
         <BoardSettingsDialog

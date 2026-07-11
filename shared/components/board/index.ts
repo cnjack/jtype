@@ -4,4 +4,4 @@ export { BoardTable } from "./BoardTable";
 export { BoardCalendar } from "./BoardCalendar";
 export { BoardSwimlanes } from "./BoardSwimlanes";
 export { EmojiField, ListboxSelect, TagMultiSelect, fieldCls } from "./controls";
-export type { BoardActions, BoardSurfaceProps, BoardOption } from "./types";
+export type { BoardActions, BoardSurfaceProps, BoardOption, BoardPeekProps } from "./types";

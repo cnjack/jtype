@@ -1,0 +1,156 @@
+/*
+ * Style entry for the embeddable board.
+ *
+ * Isolation strategy (spec: zero global leakage, never repaint the host):
+ *  - Tailwind PREFLIGHT is deliberately NOT imported — a global element reset
+ *    would restyle the host page. A minimal hand-rolled reset lives below;
+ *    scripts/scope-css.mjs runs after `vite build` and rewrites every selector
+ *    S in dist/style.css (reset, theme variables, utilities) to
+ *    `:where(.jtb-scope) S` plus a self-match arm for elements that carry
+ *    .jtb-scope themselves. The class marks the board wrapper AND every panel
+ *    we render into a Headless UI portal (threaded via BoardSurface's
+ *    portalClassName) — never Headless UI's own [data-headlessui-portal]
+ *    attribute, which would restyle the HOST app's portals too.
+ *  - `source(none)` disables Tailwind's auto content detection (which would
+ *    scan this whole package incl. example/); only the shared board components
+ *    and the package src are scanned.
+ */
+@layer theme, base, components, utilities;
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities) source(none);
+@import '../../../shared/styles/tokens.css';
+
+@source '../../../shared/components/board';
+@source '../../../shared/lib/board.ts';
+@source '../src';
+
+@layer base {
+  /* Scope baseline — typography every scope root (the board wrapper AND each
+     portal panel) establishes. rem-based utility sizes still follow the
+     host's root font size (documented in the README). */
+  .jtb-scope {
+    font-family:
+      ui-sans-serif,
+      system-ui,
+      -apple-system,
+      'Segoe UI',
+      Roboto,
+      'Helvetica Neue',
+      Arial,
+      'Noto Sans',
+      sans-serif;
+    line-height: 1.5;
+    color: #1c1917;
+    -webkit-font-smoothing: antialiased;
+    text-align: left;
+  }
+
+  /* The component wrapper only (NOT portal panels — a dropdown panel with
+     height:100% + overflow:hidden would collapse). Layout lives here rather
+     than as utility classes on the wrapper because scoped utilities are
+     descendant selectors and the self-match arm must stay layout-neutral. */
+  .jtb-root {
+    position: relative;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  /* Minimal preflight equivalents the board markup relies on. Bare selectors
+     on purpose: the scoping script confines them to the board + its portals. */
+  *,
+  ::before,
+  ::after {
+    box-sizing: border-box;
+    border-width: 0;
+    border-style: solid;
+    border-color: currentColor;
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  p,
+  blockquote,
+  pre,
+  dl,
+  dd,
+  figure {
+    margin: 0;
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-size: inherit;
+    font-weight: inherit;
+  }
+  ul,
+  ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  button,
+  input,
+  optgroup,
+  select,
+  textarea {
+    font: inherit;
+    font-feature-settings: inherit;
+    letter-spacing: inherit;
+    color: inherit;
+    margin: 0;
+    padding: 0;
+    background-color: transparent;
+  }
+  button,
+  [role='button'] {
+    cursor: pointer;
+  }
+  button {
+    text-transform: none;
+    -webkit-appearance: button;
+    background-image: none;
+  }
+  :disabled {
+    cursor: default;
+  }
+  input::placeholder,
+  textarea::placeholder {
+    opacity: 1;
+    color: #a8a29e;
+  }
+  textarea {
+    resize: vertical;
+  }
+  a {
+    color: inherit;
+    text-decoration: inherit;
+  }
+  img,
+  svg,
+  video,
+  canvas {
+    display: block;
+    vertical-align: middle;
+  }
+  img,
+  video {
+    max-width: 100%;
+    height: auto;
+  }
+  table {
+    text-indent: 0;
+    border-color: inherit;
+    border-collapse: collapse;
+  }
+  [hidden] {
+    display: none !important;
+  }
+}

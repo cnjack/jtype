@@ -1,4 +1,12 @@
-import type { BoardViewCard, BoardViewConfig, BoardTag, BoardComment, BoardActivityEvent } from "../../lib/board";
+import type { ComponentType } from "react";
+import type {
+  BoardViewCard,
+  BoardViewConfig,
+  BoardTag,
+  BoardComment,
+  BoardActivityEvent,
+  BoardFieldDef,
+} from "../../lib/board";
 
 /** Mutations the board surface performs; each platform wires these to its data layer. */
 export type BoardActions = {
@@ -29,6 +37,36 @@ export type BoardActions = {
 };
 
 export type BoardOption = { value: string; label: string };
+
+/**
+ * Props of the card side peek. Lives here (not in BoardPeek.tsx) so the surface
+ * can type its `peekComponent` slot without importing the peek implementation —
+ * the peek pulls the markdown renderer (katex/marked/dompurify), which embeds
+ * that never render it must be able to leave out of their bundle.
+ */
+export type BoardPeekProps = {
+  card: BoardViewCard;
+  statusOptions: BoardOption[];
+  assigneeOptions?: BoardOption[];
+  tagOptions?: BoardTag[];
+  /** Board-level custom field definitions to render as editable inputs. */
+  fields?: BoardFieldDef[];
+  /** Add a new custom field to the board (collected inline). */
+  onAddField?: (label: string) => void;
+  /** Sibling cards (excluding this one) offered as dependency targets. */
+  dependencyCards?: { slug: string; title: string }[];
+  loadNotes?: (id: string) => Promise<string>;
+  onUploadAttachment?: (file: File) => Promise<string>;
+  loadComments?: (id: string) => Promise<BoardComment[]>;
+  addComment?: (id: string, body: string) => Promise<BoardComment>;
+  deleteComment?: (commentId: string) => Promise<void>;
+  currentUser?: string;
+  loadActivity?: (id: string) => Promise<BoardActivityEvent[]>;
+  onChange: (patch: Partial<BoardViewCard>) => void;
+  onClose: () => void;
+  onDelete: () => void;
+  onOpenFull?: () => void;
+};
 
 export type BoardSurfaceProps = {
   config: BoardViewConfig;
@@ -63,4 +101,35 @@ export type BoardSurfaceProps = {
   onToggleFullscreen?: () => void;
   /** Open the platform's board settings dialog (web: webhooks + MCP). Omit to hide the gear button. */
   onOpenSettings?: () => void;
+  /**
+   * Read-only surface: hides every mutation affordance (card + column drag, the
+   * inline card/column composers, and the per-card/column action menus) while
+   * keeping tap-to-open, search, filter, sort, and view switching. Omit/false
+   * for the full interactive board (desktop + web). Used by embeds that only
+   * have viewer access.
+   */
+  readOnly?: boolean;
+  /**
+   * Intercept a card open. When provided, tapping a card (or pressing Enter, or
+   * selecting one in the table/calendar) calls this instead of opening the
+   * built-in side peek — so a platform can render its own card detail (e.g. an
+   * embed with a read-only detail, or a host-supplied handler). Omit to keep the
+   * built-in editable peek (desktop + web).
+   */
+  onCardOpen?: (card: BoardViewCard) => void;
+  /**
+   * The card side-peek implementation, injected by the platform (desktop + web
+   * pass the shared {@link BoardPeekProps}-shaped BoardPeek). A slot rather than
+   * a direct import so embeds that intercept opens via `onCardOpen` don't carry
+   * the peek's markdown-renderer dependency chain. Omit = no built-in peek.
+   */
+  peekComponent?: ComponentType<BoardPeekProps>;
+  /**
+   * Extra class for every panel the surface renders into a Headless UI portal
+   * (the anchored dropdown menus). Portals mount at body level — outside any
+   * wrapper element — so a style-scoped embed needs its scope class ON the
+   * panel itself; scoping by Headless UI's own portal attribute would restyle
+   * the HOST app's portals too. Desktop + web omit it (no-op).
+   */
+  portalClassName?: string;
 };

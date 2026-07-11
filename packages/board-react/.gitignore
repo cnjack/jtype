@@ -1,0 +1,8 @@
+# dist IS committed on purpose (overrides the repo-root `dist` ignore): the
+# package is consumed as a git dependency (pnpm add <repo>#<ref>&path:...) and
+# a prebuilt dist means consumers need no lingui/tailwind toolchain at install
+# time. Rebuild (npm run build) before committing changes.
+!dist
+node_modules
+example/dist
+*.tsbuildinfo

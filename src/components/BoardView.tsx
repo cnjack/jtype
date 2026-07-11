@@ -4,7 +4,7 @@ import { useAppDispatch, useAppState } from "../app/AppState";
 import { useFileSystem } from "../hooks";
 import { usePrompt, useConfirm } from "@shared/components/PromptDialogContext";
 import { parseFrontmatter, writeFrontmatter } from "@shared/lib/frontmatter";
-import { BoardSurface } from "@shared/components/board";
+import { BoardSurface, BoardPeek } from "@shared/components/board";
 import type { BoardActions } from "@shared/components/board";
 import {
   DEFAULT_DONE_COLUMN,
@@ -398,6 +398,7 @@ export function BoardView({ boardPath, boardRelativePath }: { boardPath: string;
       loadNotes={loadNotes}
       fullscreen={state.focusMode}
       onToggleFullscreen={() => dispatch({ type: "TOGGLE_FOCUS_MODE" })}
+      peekComponent={BoardPeek}
     />
   );
 }

@@ -5,8 +5,8 @@ import { XMarkIcon, TrashIcon, ArrowsPointingOutIcon, EyeIcon, PencilSquareIcon,
 import { renderToContainer } from "../../lib/markdown";
 import { PRIORITIES, attachmentName, isSafeAttachmentUrl, type BoardViewCard } from "../../lib/board";
 import { fieldCls, EmojiField, ListboxSelect, TagMultiSelect } from "./controls";
-import type { BoardOption } from "./types";
-import type { BoardTag, BoardFieldDef, BoardComment, BoardActivityEvent } from "../../lib/board";
+import type { BoardPeekProps } from "./types";
+import type { BoardComment, BoardActivityEvent } from "../../lib/board";
 
 /**
  * Side peek for editing a card without leaving the board. Platform-agnostic: it
@@ -32,29 +32,7 @@ export function BoardPeek({
   onClose,
   onDelete,
   onOpenFull,
-}: {
-  card: BoardViewCard;
-  statusOptions: BoardOption[];
-  assigneeOptions?: BoardOption[];
-  tagOptions?: BoardTag[];
-  /** Board-level custom field definitions to render as editable inputs. */
-  fields?: BoardFieldDef[];
-  /** Add a new custom field to the board (collected inline). */
-  onAddField?: (label: string) => void;
-  /** Sibling cards (excluding this one) offered as dependency targets. */
-  dependencyCards?: { slug: string; title: string }[];
-  loadNotes?: (id: string) => Promise<string>;
-  onUploadAttachment?: (file: File) => Promise<string>;
-  loadComments?: (id: string) => Promise<BoardComment[]>;
-  addComment?: (id: string, body: string) => Promise<BoardComment>;
-  deleteComment?: (commentId: string) => Promise<void>;
-  currentUser?: string;
-  loadActivity?: (id: string) => Promise<BoardActivityEvent[]>;
-  onChange: (patch: Partial<BoardViewCard>) => void;
-  onClose: () => void;
-  onDelete: () => void;
-  onOpenFull?: () => void;
-}) {
+}: BoardPeekProps) {
   const [newField, setNewField] = useState("");
   const [draft, setDraft] = useState<BoardViewCard>(card);
   const [notes, setNotes] = useState(card.notes ?? "");
