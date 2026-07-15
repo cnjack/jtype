@@ -48,8 +48,8 @@ export const categories: CategoryMeta[] = [
     videoId: 'kanban',
     title: { en: 'Kanban', zh: '看板' },
     summary: {
-      en: 'Turn a workspace into boards: columns, cards, priorities, and the web board view.',
-      zh: '把工作区变成看板：列、卡片、优先级，以及网页看板视图。',
+      en: 'Turn a workspace into boards: columns, cards, priorities, the web view, and event-driven automation.',
+      zh: '把工作区变成看板：列、卡片、优先级、网页视图，以及事件驱动的自动化。',
     },
   },
   {
