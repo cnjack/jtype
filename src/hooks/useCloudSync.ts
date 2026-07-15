@@ -21,6 +21,13 @@ type PullOnlyOptions = {
   sinceTrashEventClock?: number;
 };
 
+type SyncWorkspaceOptions = {
+  silent?: boolean;
+  skipRelativePath?: string;
+  bindingOverride?: VaultBinding;
+  propagateError?: boolean;
+};
+
 const cloudEnabledSettings: VaultSettings = {
   cloudSyncEnabled: true,
   syncPromptDismissedAt: null,
@@ -290,7 +297,7 @@ export function useCloudSync() {
     } catch { /* asset sync is best-effort; never break document sync */ }
   }, [dispatch, state.workspace, state.syncToken, getServiceUrl]);
 
-  const runSyncWorkspaceToWeb = useCallback(async (options: { silent?: boolean; skipRelativePath?: string; bindingOverride?: VaultBinding } = {}): Promise<SyncPushDocument | undefined> => {
+  const runSyncWorkspaceToWeb = useCallback(async (options: SyncWorkspaceOptions = {}): Promise<SyncPushDocument | undefined> => {
     if (!state.workspace) {
       dispatch({ type: "SET_STATUS", message: "Open a vault before syncing." });
       return;
@@ -420,6 +427,9 @@ export function useCloudSync() {
         if (push.status === 403 || push.status === 404) {
           await handleWorkspaceAccessLoss(binding, push.status);
           dispatch({ type: "SET_SYNC_STATUS", status: "idle" });
+          if (options.propagateError) {
+            throw new Error(`Cloud workspace sync failed (${push.status}).`);
+          }
           return;
         }
         if (!push.ok) throw new Error(await push.text());
@@ -498,6 +508,7 @@ export function useCloudSync() {
     } catch (error) {
       dispatch({ type: "SET_SYNC_STATUS", status: "offline" });
       dispatch({ type: "SET_STATUS", message: String(error) });
+      if (options.propagateError) throw error;
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
@@ -509,7 +520,7 @@ export function useCloudSync() {
   // sync-base/conflict writes. Each caller still gets its own return value;
   // bursty callers are additionally debounced upstream (App.tsx).
   const syncChainRef = useRef<Promise<unknown>>(Promise.resolve());
-  const syncWorkspaceToWeb = useCallback((options: { silent?: boolean; skipRelativePath?: string; bindingOverride?: VaultBinding } = {}): Promise<SyncPushDocument | undefined> => {
+  const syncWorkspaceToWeb = useCallback((options: SyncWorkspaceOptions = {}): Promise<SyncPushDocument | undefined> => {
     const run = syncChainRef.current.catch(() => {}).then(() => runSyncWorkspaceToWeb(options));
     syncChainRef.current = run;
     return run;
@@ -1041,11 +1052,10 @@ export function useCloudSync() {
       dispatch({ type: "SET_VAULT_BINDINGS", bindings: nextBindings });
       await saveCurrentVaultSettings(cloudEnabledSettings);
       await refreshCloudWorkspaces();
-      await syncWorkspaceToWeb({ silent: true, bindingOverride: binding });
+      await syncWorkspaceToWeb({ silent: true, bindingOverride: binding, propagateError: true });
       dispatch({ type: "SET_STATUS", message: `Synced "${state.workspace.name}" to cloud workspace ${workspace.name}.` });
     } catch (error) {
       dispatch({ type: "SET_STATUS", message: String(error) });
-      throw error;
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }

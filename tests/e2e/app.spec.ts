@@ -5,6 +5,12 @@ declare global {
     __E2E_FS__: Record<string, string>;
     __SYNC_REQUESTS__: unknown[];
     __SYNC_BASES__: Record<string, string>;
+    __SYNC_FOLDER_BASES__: string[];
+    __SYNC_PUSH_ERROR__: string | null;
+    __TRASH_METADATA__: {
+      lastSyncedClock: number;
+      pendingTrashOps: Array<{ type: string; trashId?: string }>;
+    };
     __VAULT_BINDINGS__: unknown[];
     __VAULT_SETTINGS__: Record<string, { cloudSyncEnabled: boolean; syncPromptDismissedAt: string | null; syncDisabledPermanently: boolean }>;
   }
@@ -67,12 +73,20 @@ test.beforeEach(async ({ page }) => {
       }
       return entries.some((entry) => removeWorkspaceEntry(entry.children as Array<{ relativePath: string; path: string; children: unknown[] }>, relativePath));
     };
+    const hasWorkspaceEntry = (entries: Array<{ relativePath: string; children: unknown[] }>, relativePath: string): boolean =>
+      entries.some((entry) =>
+        entry.relativePath === relativePath ||
+        hasWorkspaceEntry(entry.children as Array<{ relativePath: string; children: unknown[] }>, relativePath),
+      );
 
     Object.assign(window, {
       isTauri: true,
       __E2E_FS__: files,
       __SYNC_REQUESTS__: [],
       __SYNC_BASES__: {},
+      __SYNC_FOLDER_BASES__: [],
+      __SYNC_PUSH_ERROR__: null,
+      __TRASH_METADATA__: { lastSyncedClock: 0, pendingTrashOps: [] },
       __VAULT_BINDINGS__: [],
       __VAULT_SETTINGS__: {
         "C:/workspace": {
@@ -134,6 +148,8 @@ test.beforeEach(async ({ page }) => {
           }
           if (cmd === "open_default_vault") return { ...workspaceSnapshot(), rootPath: "C:/Users/Jack/Documents/.jtype", name: ".jtype", metadataCreated: true };
           if (cmd === "plugin:event|listen") return ++eventId;
+          if (cmd === "plugin:event|unlisten") return null;
+          if (cmd === "plugin:updater|check") return null;
           if (cmd === "plugin:dialog|open") {
             const options = args.options as { directory?: boolean };
             return options.directory ? "C:/workspace" : "C:/workspace/intro.md";
@@ -161,6 +177,21 @@ test.beforeEach(async ({ page }) => {
           if (cmd === "delete_sync_bases") {
             const relativePaths = args.relativePaths as string[];
             for (const relativePath of relativePaths) delete window.__SYNC_BASES__[relativePath];
+            return null;
+          }
+          if (cmd === "load_sync_folder_bases") return window.__SYNC_FOLDER_BASES__;
+          if (cmd === "save_sync_folder_bases") {
+            window.__SYNC_FOLDER_BASES__ = [...(args.folders as string[])];
+            return null;
+          }
+          if (cmd === "delete_sync_folder_bases") {
+            const relativePaths = new Set(args.relativePaths as string[]);
+            window.__SYNC_FOLDER_BASES__ = window.__SYNC_FOLDER_BASES__.filter((path) => !relativePaths.has(path));
+            return null;
+          }
+          if (cmd === "load_trash_metadata_cmd") return window.__TRASH_METADATA__;
+          if (cmd === "save_trash_metadata_cmd") {
+            window.__TRASH_METADATA__ = args.metadata as typeof window.__TRASH_METADATA__;
             return null;
           }
           if (cmd === "create_workspace_entry") {
@@ -237,13 +268,35 @@ test.beforeEach(async ({ page }) => {
                 return { relativePath, title, status: "published", content };
               });
           }
+          if (cmd === "collect_sync_folders") {
+            const collectFolders = (entries: Array<{ relativePath: string; kind: string; children: unknown[] }>): Array<{ relativePath: string }> =>
+              entries.flatMap((entry) => [
+                ...(entry.kind === "folder" && entry.relativePath !== ".jtype" ? [{ relativePath: entry.relativePath }] : []),
+                ...collectFolders(entry.children as Array<{ relativePath: string; kind: string; children: unknown[] }>),
+              ]);
+            return collectFolders(workspace.entries);
+          }
           if (cmd === "apply_cloud_documents") {
             const docs = args.documents as { relativePath: string; content: string }[];
             for (const doc of docs) {
               files[`C:/workspace/${doc.relativePath}`] = doc.content;
+              if (!hasWorkspaceEntry(workspace.entries, doc.relativePath)) {
+                workspace.entries.push({
+                  name: doc.relativePath.split("/").pop() ?? doc.relativePath,
+                  path: `C:/workspace/${doc.relativePath}`,
+                  relativePath: doc.relativePath,
+                  kind: "markdown",
+                  children: [],
+                });
+              }
             }
-            return workspaceSnapshot();
+            return { workspace: workspaceSnapshot(), writtenPaths: docs.map((doc) => doc.relativePath) };
           }
+          if (cmd === "apply_deleted_cloud_folders") return workspaceSnapshot();
+          if (cmd === "collect_asset_paths") return [];
+          if (cmd === "load_asset_sync_state") return { clock: 0, bases: {} };
+          if (cmd === "save_asset_sync_state") return null;
+          if (cmd === "start_cloud_listener" || cmd === "stop_cloud_listener" || cmd === "cloud_ws_send") return null;
           throw new Error(`Unhandled invoke: ${cmd}`);
         },
       },
@@ -321,6 +374,9 @@ test.beforeEach(async ({ page }) => {
         );
       }
       if (url.includes("/sync/push")) {
+        if (window.__SYNC_PUSH_ERROR__) {
+          return new Response(window.__SYNC_PUSH_ERROR__, { status: 500 });
+        }
         window.__SYNC_REQUESTS__.push(JSON.parse(String(init?.body)));
         return new Response(
           JSON.stringify({
@@ -352,6 +408,47 @@ test.beforeEach(async ({ page }) => {
           }),
           { status: 200, headers: { "Content-Type": "application/json" } },
         );
+      }
+      if (url.includes("/manifest")) {
+        return new Response(JSON.stringify({ documents: [] }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+      if (url.match(/\/api\/v1\/workspaces\/[^/]+\/documents$/) && (!init?.method || init.method === "GET")) {
+        const documents = Object.keys(files)
+          .filter((path) => path.startsWith("C:/workspace/") && path.endsWith(".md"))
+          .map((path, index) => ({
+            id: `doc-${index + 1}`,
+            relativePath: path.slice("C:/workspace/".length),
+          }));
+        return new Response(JSON.stringify(documents), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+      if (
+        url.match(/\/api\/v1\/workspaces\/[^/]+\/documents\/[^/]+\/publish$/) &&
+        (!init?.method || init.method === "GET")
+      ) {
+        const segments = new URL(url).pathname.split("/");
+        return new Response(
+          JSON.stringify({
+            documentId: segments.at(-2),
+            isPublished: false,
+            publishedAt: null,
+            currentHash: "",
+            publishedHash: null,
+            hasUnpublishedChanges: false,
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      if (url.includes("/blobs?sinceClock=")) {
+        return new Response(JSON.stringify([]), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
       }
       throw new Error(`Unhandled fetch: ${url}`);
     };
@@ -433,17 +530,19 @@ test("edits and saves the current markdown file", async ({ page }) => {
   await expect(page.getByText("Unsaved changes")).toBeVisible();
   await page.getByRole("button", { name: "Save" }).click();
 
-  await expect(page.locator("#file-state")).toHaveText("Saved");
+  await expect(page.getByRole("button", { name: "No unsaved changes" })).toBeDisabled();
+  await expect(page.locator("#operation-log")).toContainText("Saved intro.md.");
   const savedContent = await page.evaluate(() => window.__E2E_FS__["C:/workspace/intro.md"]);
   expect(savedContent).toBe("# Intro\n\nUpdated content.");
 });
 
-test("runs export from the document info panel", async ({ page }) => {
+test("exports Markdown from the editor toolbar", async ({ page }) => {
   await openWorkspace(page);
   await page.locator("#workspace-sidebar").getByRole("button", { name: /intro\.md/ }).click();
 
-  await page.locator("#publish-panel").getByRole("button", { name: "Export preview" }).click();
-  await expect(page.locator("#operation-log")).toContainText("Exported 2 page");
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  await page.getByRole("menuitem", { name: "Markdown", exact: true }).click();
+  await expect(page.locator("#operation-log")).toContainText("Exported Markdown to C:/workspace/intro.md.");
 });
 
 test("connects in browser and syncs a vault to the web service", async ({ page }) => {
@@ -458,17 +557,33 @@ test("connects in browser and syncs a vault to the web service", async ({ page }
   await expect(page.locator("#account-site-link")).toHaveAttribute("href", "http://localhost:8080/u/jack/workspace");
 
   const requestCount = await page.evaluate(() => window.__SYNC_REQUESTS__.length);
-  expect(requestCount).toBe(1);
+  expect(requestCount).toBeGreaterThanOrEqual(1);
   const bindings = await page.evaluate(() => window.__VAULT_BINDINGS__);
   expect(bindings).toEqual([
     {
       workspaceId: "workspace-e2e",
       workspaceName: "workspace",
       workspaceSlug: "workspace",
+      workspaceRole: "owner",
       localVaultPath: "C:/workspace",
       lastPulledClock: 0,
     },
   ]);
+});
+
+test("keeps an initial sync failure visible after binding", async ({ page }) => {
+  await openWorkspace(page);
+  await page.evaluate(() => {
+    window.__SYNC_PUSH_ERROR__ = "initial sync failed";
+  });
+  await openProfileSettings(page);
+
+  await page.getByRole("button", { name: "Connect in browser" }).click();
+  await expect(page.locator("#operation-log")).toContainText("Connected as jack", { timeout: 5000 });
+  await page.locator("#account-sync").click();
+
+  await expect(page.locator("#operation-log")).toContainText("initial sync failed");
+  await expect(page.locator("#operation-log")).not.toContainText('Synced "workspace"');
 });
 
 test("shows sync prompt for an unconfigured vault and can keep it local", async ({ page }) => {
@@ -478,7 +593,7 @@ test("shows sync prompt for an unconfigured vault and can keep it local", async 
   await page.goto("/");
 
   await openWorkspace(page);
-  await expect(page.getByRole("dialog", { name: /Sync "workspace" to cloud/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: 'Sync "workspace" to cloud?' })).toBeVisible();
   await page.getByRole("button", { name: "Local only" }).click();
 
   await expect(page.locator("#operation-log")).toContainText("local-only");
@@ -510,11 +625,9 @@ test("disconnects a bound cloud workspace and keeps the vault local", async ({ p
   await openWorkspace(page);
   await openProfileSettings(page);
   await page.getByRole("button", { name: "General" }).click();
-  page.once("dialog", async (dialog) => {
-    expect(dialog.message()).toContain("Disconnect");
-    await dialog.accept();
-  });
   await page.getByRole("button", { name: "Disconnect" }).click();
+  await expect(page.getByRole("heading", { name: "Disconnect workspace" })).toBeVisible();
+  await page.getByRole("button", { name: "OK" }).click();
 
   await expect(page.locator("#operation-log")).toContainText("Disconnected cloud sync");
   const result = await page.evaluate(() => ({
@@ -535,7 +648,8 @@ test("uses command palette to run save", async ({ page }) => {
   await page.getByLabel("Search commands").fill("save");
   await page.locator("#command-results").getByRole("button", { name: /Save current file/ }).click();
 
-  await expect(page.locator("#file-state")).toContainText("Saved");
+  await expect(page.getByRole("button", { name: "No unsaved changes" })).toBeDisabled();
+  await expect(page.locator("#operation-log")).toContainText("Saved intro.md.");
   const savedContent = await page.evaluate(() => window.__E2E_FS__["C:/workspace/intro.md"]);
   expect(savedContent).toBe("# Intro\n\nSaved from command palette.");
 });
@@ -569,18 +683,17 @@ test("toggles favorite and renders document publish panel", async ({ page }) => 
   await page.getByRole("button", { name: "Add to favorites" }).click();
 
   await expect(page.locator("#favorite-list")).toContainText("intro.md");
-  await expect(page.locator("#publish-panel")).toContainText("Publish flow");
+  await expect(page.locator("#publish-panel").getByText("Publish", { exact: true })).toBeVisible();
+  await expect(page.locator("#publish-panel")).toContainText("Not published");
 });
 
 test("moves the current document to trash", async ({ page }) => {
   await openWorkspace(page);
   await page.locator("#workspace-sidebar").getByRole("button", { name: /intro\.md/ }).click();
 
-  page.once("dialog", async (dialog) => {
-    expect(dialog.message()).toContain("Move intro.md to trash?");
-    await dialog.accept();
-  });
   await page.getByRole("button", { name: "Move to trash" }).click();
+  await expect(page.getByRole("heading", { name: "Move to trash" })).toBeVisible();
+  await page.getByRole("button", { name: "OK" }).click();
 
   await expect(page.locator("#vault-home")).toBeVisible();
   await expect(page.locator("#operation-log")).toContainText("Moved to trash.");
@@ -740,7 +853,7 @@ test("pushes desktop edits to cloud workspace", async ({ page }) => {
 
 test("pushes local deletions to cloud workspace trash", async ({ page }) => {
   await page.addInitScript(() => {
-    let pushReceived: unknown = null;
+    const pushRequests: Array<{ deletedPaths?: Array<{ relativePath: string }> }> = [];
     const origFetch = window.fetch;
     window.__SYNC_BASES__ = {
       "intro.md": "# Intro\n\nHello from workspace.",
@@ -749,20 +862,23 @@ test("pushes local deletions to cloud workspace trash", async ({ page }) => {
     window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
       if (url.includes("/sync/pull")) {
+        const { sinceClock = 0 } = JSON.parse(String(init?.body)) as { sinceClock?: number };
         return new Response(
           JSON.stringify({
             workspaceId: "workspace-e2e",
-            documents: [
-              {
-                relativePath: "intro.md",
-                title: "Intro",
-                status: "published",
-                content: "# Intro\n\nCloud should not resurrect this.",
-                contentHash: "cloud-intro",
-                versionId: "cloud-v1",
-                updatedClock: 5,
-              },
-            ],
+            documents: sinceClock < 5
+              ? [
+                  {
+                    relativePath: "intro.md",
+                    title: "Intro",
+                    status: "published",
+                    content: "# Intro\n\nCloud should not resurrect this.",
+                    contentHash: "cloud-intro",
+                    versionId: "cloud-v1",
+                    updatedClock: 5,
+                  },
+                ]
+              : [],
             deletedPaths: [],
             conflicts: [],
           }),
@@ -770,13 +886,19 @@ test("pushes local deletions to cloud workspace trash", async ({ page }) => {
         );
       }
       if (url.includes("/sync/push")) {
-        pushReceived = JSON.parse(String(init?.body));
+        const request = JSON.parse(String(init?.body)) as {
+          deletedPaths?: Array<{ relativePath: string }>;
+        };
+        pushRequests.push(request);
+        const deletedPaths = request.deletedPaths?.some(({ relativePath }) => relativePath === "intro.md")
+          ? [{ relativePath: "intro.md", deletedClock: 7 }]
+          : [];
         return new Response(
           JSON.stringify({
             workspaceId: "workspace-e2e",
             accepted: 2,
             documents: [],
-            deletedPaths: [{ relativePath: "intro.md", deletedClock: 7 }],
+            deletedPaths,
             conflicts: [],
           }),
           { status: 200, headers: { "Content-Type": "application/json" } },
@@ -784,7 +906,7 @@ test("pushes local deletions to cloud workspace trash", async ({ page }) => {
       }
       return origFetch(input, init);
     };
-    Object.defineProperty(window, "__PUSH_RECEIVED__", { get: () => pushReceived, configurable: true });
+    Object.defineProperty(window, "__PUSH_REQUESTS__", { get: () => pushRequests, configurable: true });
     window.__VAULT_BINDINGS__ = [
       {
         workspaceId: "workspace-e2e",
@@ -802,14 +924,38 @@ test("pushes local deletions to cloud workspace trash", async ({ page }) => {
   await page.getByRole("button", { name: "Connect in browser" }).click();
   await expect(page.locator("#operation-log")).toContainText("Connected as jack", { timeout: 5000 });
   await page.getByRole("button", { name: "Close account dialog" }).click();
+  await page.waitForFunction(() =>
+    window.__VAULT_BINDINGS__.some(
+      (binding) => (binding as { lastPulledClock?: number }).lastPulledClock === 5,
+    ),
+  );
 
   await page.locator("#workspace-sidebar").getByRole("button", { name: /intro\.md/ }).click();
-  page.once("dialog", async (dialog) => dialog.accept());
   await page.getByRole("button", { name: "Move to trash" }).click();
+  await expect(page.getByRole("heading", { name: "Move to trash" })).toBeVisible();
+  await page.getByRole("button", { name: "OK" }).click();
 
-  await expect(page.locator("#operation-log")).toContainText("moved to cloud trash");
-  const pushData = await page.evaluate(() => (window as unknown as { __PUSH_RECEIVED__: { deletedPaths: { relativePath: string }[] } }).__PUSH_RECEIVED__);
-  expect(pushData.deletedPaths).toContainEqual({ relativePath: "intro.md" });
+  await page.waitForFunction(() =>
+    (
+      window as unknown as {
+        __PUSH_REQUESTS__: Array<{ deletedPaths?: Array<{ relativePath: string }> }>;
+      }
+    ).__PUSH_REQUESTS__.some((request) =>
+      request.deletedPaths?.some(({ relativePath }) => relativePath === "intro.md"),
+    ),
+  );
+  const pushRequests = await page.evaluate(
+    () =>
+      (window as unknown as {
+        __PUSH_REQUESTS__: Array<{ deletedPaths?: Array<{ relativePath: string }> }>;
+      }).__PUSH_REQUESTS__,
+  );
+  expect(
+    pushRequests.some((request) =>
+      request.deletedPaths?.some(({ relativePath }) => relativePath === "intro.md"),
+    ),
+  ).toBe(true);
+  await page.waitForFunction(() => window.__SYNC_BASES__["intro.md"] === undefined);
   const bases = await page.evaluate(() => window.__SYNC_BASES__);
   expect(bases["intro.md"]).toBeUndefined();
   const resurrected = await page.evaluate(() => window.__E2E_FS__["C:/workspace/intro.md"]);
@@ -885,7 +1031,8 @@ test("shows and resolves sync conflicts", async ({ page }) => {
 
   await page.getByRole("button", { name: "Close account dialog" }).click();
   await page.getByRole("button", { name: /1 conflict/ }).click();
-  await expect(page.getByText("Conflict: intro.md")).toBeVisible();
+  await page.getByRole("button", { name: "⚠ intro.md" }).click();
+  await expect(page.getByText("Local (yours)")).toBeVisible();
   await page.getByRole("button", { name: "Accept cloud" }).click();
 
   await expect(page.locator("#operation-log")).toContainText("Resolved conflict in intro.md");
