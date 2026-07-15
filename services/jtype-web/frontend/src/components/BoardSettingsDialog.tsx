@@ -16,16 +16,16 @@ import { api, getStoredToken, type Webhook, type WebhookCreated } from '../api'
 type Section = 'webhooks' | 'mcp'
 
 const NAV: { id: Section; label: string; description: string; icon: typeof BoltIcon }[] = [
-  { id: 'webhooks', label: 'Webhooks', description: 'Push or live (SSE) pull', icon: BoltIcon },
+  { id: 'webhooks', label: 'Webhooks', description: 'Push or resumable pull', icon: BoltIcon },
   { id: 'mcp', label: 'MCP access', description: 'Agent address · defaults to this board', icon: CommandLineIcon },
 ]
 
 /**
  * Board-level settings, opened from the gear button in the board header. Mirrors
  * the Workspace Settings modal (left nav + scrollable main). Houses the webhook
- * config (push + SSE pull) and an MCP address pre-pinned to this board's logical
- * id — the pin is a URL-level default for the agent, not a token-level access
- * boundary; the minted token is a full account credential (see McpPanel).
+ * config (push + durable sequence pull + live SSE) and an MCP address pre-pinned
+ * to this board's logical id — the pin is a URL-level default for the agent, not
+ * a token-level access boundary; the minted token is a full account credential.
  */
 export function BoardSettingsDialog({
   workspaceId,
@@ -140,7 +140,7 @@ function WebhooksPanel({ workspaceId, board }: { workspaceId: string; board: str
     <>
       <div className="mb-5 inline-flex gap-1 rounded-xl bg-stone-100 p-1">
         <ModeTab active={mode === 'push'} onClick={() => setMode('push')} icon={PaperAirplaneIcon} label="Push (HTTP)" />
-        <ModeTab active={mode === 'pull'} onClick={() => setMode('pull')} icon={BoltIcon} label="Pull (SSE)" />
+        <ModeTab active={mode === 'pull'} onClick={() => setMode('pull')} icon={BoltIcon} label="Pull" />
       </div>
       {mode === 'push' ? <PushWebhooks workspaceId={workspaceId} board={board} /> : <PullStream workspaceId={workspaceId} board={board} />}
     </>
@@ -250,10 +250,15 @@ function PullStream({ workspaceId, board }: { workspaceId: string; board: string
   const [connected, setConnected] = useState(false)
   const [log, setLog] = useState<string[]>([])
   const [error, setError] = useState('')
+  const [cursor, setCursor] = useState(0)
+  const [hasMore, setHasMore] = useState(false)
+  const [pulling, setPulling] = useState(false)
   const esRef = useRef<EventSource | null>(null)
 
   const path = board ? `/api/v1/workspaces/${workspaceId}/boards/${encodeURIComponent(board)}/events` : ''
   const fullUrl = board ? `${window.location.origin}${path}` : ''
+  const pullPath = board ? `${path}/pull?afterSequence=${cursor}&limit=100` : ''
+  const pullUrl = board ? `${window.location.origin}${pullPath}` : ''
 
   const disconnect = useCallback(() => {
     esRef.current?.close()
@@ -273,13 +278,52 @@ function PullStream({ workspaceId, board }: { workspaceId: string; board: string
     esRef.current = es
   }
 
+  const pullOnce = async () => {
+    if (!board) return
+    setPulling(true)
+    setError('')
+    try {
+      const result = await api.pullKanbanEvents(workspaceId, board, cursor, 100)
+      setCursor(result.nextSequence)
+      setHasMore(result.hasMore)
+      if (result.events.length > 0) {
+        const lines = [...result.events].reverse().map((event) => JSON.stringify(event))
+        setLog((prev) => [...lines, ...prev].slice(0, 30))
+      }
+    } catch (e) {
+      setError(String(e))
+    } finally {
+      setPulling(false)
+    }
+  }
+
   if (!board) {
     return <p className="text-xs text-stone-500">This board has no id yet — open it once so a board config is saved, then the live stream becomes available.</p>
   }
 
   return (
     <>
-      <p className="mb-3 text-xs text-stone-500">No public URL needed — your client holds a connection open and receives card changes live over Server-Sent Events.</p>
+      <p className="mb-3 text-xs text-stone-500">For automations, poll by sequence and persist <code>nextSequence</code>. A failed run can retry from the same cursor without losing a card event.</p>
+      <div className="mb-1 text-[11px] text-stone-500">Sequence pull endpoint</div>
+      <div className="mb-3 flex gap-2">
+        <input readOnly value={pullUrl} className="min-w-0 flex-1 rounded-lg border border-stone-200 bg-white px-2.5 py-1.5 font-mono text-xs text-stone-700" />
+        <CopyButton value={pullUrl} />
+      </div>
+      <div className="mb-3 flex items-center gap-2">
+        <span className="text-[11px] text-stone-500">Auth</span>
+        <code className="flex-1 truncate rounded-lg bg-stone-100 px-2.5 py-1.5 text-[11px] text-stone-600">Authorization: Bearer &lt;session or MCP token&gt;</code>
+      </div>
+      <div className="mb-4 flex items-center gap-2">
+        <button onClick={() => void pullOnce()} disabled={pulling} className="inline-flex items-center gap-1.5 rounded-lg bg-brand px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-dark disabled:opacity-60">
+          <BoltIcon className="h-3.5 w-3.5" /> {pulling ? 'Pulling…' : hasMore ? 'Pull next page' : 'Pull once'}
+        </button>
+        <span className="text-[11px] text-stone-400">cursor: {cursor}{hasMore ? ' · more events available' : ''}</span>
+      </div>
+
+      <div className="mb-3 border-t border-stone-100 pt-4">
+        <div className="mb-1 text-xs font-medium text-stone-600">Live SSE</div>
+        <p className="text-xs text-stone-500">Hold a connection open for low-latency updates. Each message includes the same sequence as its SSE event id.</p>
+      </div>
       <div className="mb-1 text-[11px] text-stone-500">Stream endpoint</div>
       <div className="mb-3 flex gap-2">
         <input readOnly value={fullUrl} className="min-w-0 flex-1 rounded-lg border border-stone-200 bg-white px-2.5 py-1.5 font-mono text-xs text-stone-700" />

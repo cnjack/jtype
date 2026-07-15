@@ -314,8 +314,9 @@ pub enum SaveDocumentOutcome {
     Conflict(SyncConflict),
 }
 
-/// Persist a document version, then fire the re-homed kanban webhook for card
-/// saves. The trigger lives HERE (not only in the REST `save_document`) so the
+/// Persist a document version plus its durable card event, then publish the
+/// re-homed kanban webhook/SSE notification. The trigger lives HERE (not only
+/// in the REST `save_document`) so the
 /// content write paths that flow through this wrapper — REST, desktop sync push,
 /// live collaborative edits — notify on a real card change. Paths that persist
 /// via [`save_merged_document`] directly (notably conflict resolution) do NOT
@@ -337,25 +338,24 @@ pub async fn save_document_version(
     Ok(outcome)
 }
 
-/// Fire a `kanban:card-created`/`kanban:card-updated` webhook for a saved card
-/// (`.md` carrying `board:` frontmatter), scoped to the board's logical id.
-/// Best-effort — never affects the save; a non-card document is a no-op.
-pub(crate) async fn fire_card_webhook(
-    pool: &sqlx::Pool<sqlx::MySql>,
+/// Build the canonical payload shared by the durable log, SSE, and webhooks.
+/// A non-card document is a no-op.
+fn build_card_event(
     workspace_id: &str,
     doc: &CloudDocument,
     editor: &str,
     created: bool,
-) {
+) -> Option<(String, &'static str, serde_json::Value)> {
     if !doc.relative_path.to_ascii_lowercase().ends_with(".md") {
-        return;
+        return None;
     }
     let fm = jtype_core::parse_frontmatter(&doc.content);
     let Some(board_ref) = fm.get("board").map(String::as_str).filter(|b| !b.is_empty()) else {
-        return;
+        return None;
     };
     let event = if created { "kanban:card-created" } else { "kanban:card-updated" };
     let payload = serde_json::json!({
+        "sequence": doc.updated_clock,
         "event": event,
         "workspaceId": workspace_id,
         "board": board_ref,
@@ -370,11 +370,58 @@ pub(crate) async fn fire_card_webhook(
         "editedBy": editor,
         "updatedClock": doc.updated_clock,
     });
-    // Push (outbound webhooks) and pull (board SSE feed) fire from the same
-    // trigger so both stay in lock-step. The SSE side is live-only — publish is a
-    // no-op when no client is currently subscribed to this board.
-    crate::board_events::global().publish(workspace_id, board_ref, payload.to_string());
-    crate::handlers::webhooks::enqueue_event(pool, workspace_id, Some(board_ref), event, payload).await;
+    Some((board_ref.to_string(), event, payload))
+}
+
+/// Persist the card event inside the same transaction as its document version.
+/// `next_workspace_clock` serializes those transactions, so a higher sequence
+/// cannot become visible before a lower one.
+async fn persist_card_event(
+    tx: &mut sqlx::Transaction<'_, sqlx::MySql>,
+    workspace_id: &str,
+    doc: &CloudDocument,
+    editor: &str,
+    created: bool,
+) -> Result<(), AppError> {
+    if let Some((board_ref, event, payload)) =
+        build_card_event(workspace_id, doc, editor, created)
+    {
+        crate::handlers::kanban_events::persist(
+            tx,
+            workspace_id,
+            &board_ref,
+            doc.updated_clock,
+            event,
+            &payload,
+        )
+        .await?;
+    }
+    Ok(())
+}
+
+/// Publish/enqueue a card event after its document and durable log row commit.
+/// These delivery paths remain best-effort; sequence pull is the recovery path.
+pub(crate) async fn fire_card_webhook(
+    pool: &sqlx::Pool<sqlx::MySql>,
+    workspace_id: &str,
+    doc: &CloudDocument,
+    editor: &str,
+    created: bool,
+) {
+    let Some((board_ref, event, payload)) =
+        build_card_event(workspace_id, doc, editor, created)
+    else {
+        return;
+    };
+    crate::board_events::global().publish(workspace_id, &board_ref, payload.to_string());
+    crate::handlers::webhooks::enqueue_event(
+        pool,
+        workspace_id,
+        Some(&board_ref),
+        event,
+        payload,
+    )
+    .await;
 }
 
 async fn save_document_version_inner(
@@ -530,18 +577,27 @@ async fn save_document_version_inner(
         &payload.content,
     )
     .await?;
+    let doc = CloudDocument {
+        relative_path,
+        title,
+        is_published: false,
+        content: payload.content,
+        content_hash,
+        version_id,
+        updated_clock: next_clock,
+    };
+    persist_card_event(
+        &mut tx,
+        workspace_id,
+        &doc,
+        &user.username,
+        true,
+    )
+    .await?;
     tx.commit().await?;
 
     Ok(SaveDocumentOutcome::Saved(
-        CloudDocument {
-            relative_path,
-            title,
-            is_published: false,
-            content: payload.content,
-            content_hash,
-            version_id,
-            updated_clock: next_clock,
-        },
+        doc,
         MergeStatus::Accepted,
         true,
     ))
@@ -590,9 +646,7 @@ pub async fn save_merged_document(
         content,
     )
     .await?;
-    tx.commit().await?;
-
-    Ok(CloudDocument {
+    let doc = CloudDocument {
         relative_path: relative_path.to_string(),
         title: title.to_string(),
         is_published: false,
@@ -600,7 +654,18 @@ pub async fn save_merged_document(
         content_hash,
         version_id,
         updated_clock: next_clock,
-    })
+    };
+    persist_card_event(
+        &mut tx,
+        workspace_id,
+        &doc,
+        &user.username,
+        false,
+    )
+    .await?;
+    tx.commit().await?;
+
+    Ok(doc)
 }
 
 async fn insert_document_version(

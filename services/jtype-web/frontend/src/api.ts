@@ -275,6 +275,11 @@ export const api = {
     request<WebhookCreated>(`/api/v1/workspaces/${workspaceId}/webhooks`, { method: 'POST', body: JSON.stringify(data) }),
   deleteWebhook: (workspaceId: string, webhookId: string) =>
     request<void>(`/api/v1/workspaces/${workspaceId}/webhooks/${webhookId}`, { method: 'DELETE' }),
+  // Durable board events: persist nextSequence and pass it back on the next poll.
+  pullKanbanEvents: (workspaceId: string, board: string, afterSequence = 0, limit = 100) =>
+    request<KanbanEventPullResponse>(
+      `/api/v1/workspaces/${workspaceId}/boards/${encodeURIComponent(board)}/events/pull?afterSequence=${afterSequence}&limit=${limit}`,
+    ),
   // Mint a 90-day mcp-scoped token for the board Settings "MCP access" panel.
   mintMcpToken: () =>
     request<{ token: string }>(`/api/v1/mcp-token`, { method: 'POST' }),
@@ -565,6 +570,29 @@ export interface Webhook {
 }
 export interface WebhookCreated extends Webhook {
   secret: string
+}
+
+export interface KanbanEvent {
+  sequence: number
+  event: 'kanban:card-created' | 'kanban:card-updated'
+  workspaceId: string
+  board: string
+  card: {
+    path: string
+    title: string
+    status: string
+    priority?: string | null
+    assignee?: string | null
+    due?: string | null
+  }
+  editedBy: string
+  updatedClock: number
+}
+
+export interface KanbanEventPullResponse {
+  events: KanbanEvent[]
+  nextSequence: number
+  hasMore: boolean
 }
 
 export interface Ticket {

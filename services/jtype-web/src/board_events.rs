@@ -1,11 +1,11 @@
-//! In-process, board-scoped live event bus for the SSE "pull" notification mode.
+//! In-process, board-scoped live event bus for the SSE notification mode.
 //!
 //! A board's SSE subscribers ([`crate::handlers::live::board_events_stream`]) and
 //! the card-change trigger ([`crate::handlers::document::fire_card_webhook`]) meet
-//! here. It is deliberately **live-only**: events are not persisted, so a client
-//! that isn't connected at fire time misses them (catch-up/replay would need a
-//! table). Keyed by `(workspace_id, board_ref)` — the same logical board id the
-//! webhooks use — so the push and pull paths stay in lock-step.
+//! here. The bus itself is live-only, but each payload is persisted first in the
+//! `kanban_events` log; disconnected clients recover through the sequence pull
+//! endpoint. Keyed by `(workspace_id, board_ref)` — the same logical board id the
+//! webhooks and durable log use — so all notification paths stay aligned.
 
 use std::collections::HashMap;
 use std::sync::{Mutex, OnceLock};
