@@ -19,6 +19,7 @@
 | [folder.md](folder.md) | 文件夹 CRUD, `sync:required` |
 | [sync.md](sync.md) | Sync pull/push、三方合并、冲突解决, `sync:required` |
 | [trash.md](trash.md) | 回收站 REST CRUD, 复用 document events |
+| [kanban-events.md](kanban-events.md) | Kanban webhook、实时 SSE、可恢复的 sequence pull |
 
 ⚠️ = 当前缺失, 需要新增实现的 WS event
 

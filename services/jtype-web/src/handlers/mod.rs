@@ -6,6 +6,7 @@ pub mod comments;
 pub mod document;
 pub mod domain;
 pub mod folder;
+pub mod kanban_events;
 pub mod live;
 pub mod mail;
 pub mod mcp_token;

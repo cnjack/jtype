@@ -407,9 +407,10 @@ pub async fn resolve_conflict(
         .execute(&state.pool)
         .await?;
 
-    // A resolved conflict is a real card change. `save_merged_document` does not
-    // fire the kanban webhook itself (unlike the `save_document_version` wrapper),
-    // so notify explicitly here. Best-effort; a non-card document is a no-op.
+    // A resolved conflict is a real card change. `save_merged_document` already
+    // committed its durable event row with the document, but (unlike the
+    // `save_document_version` wrapper) does not publish SSE/webhooks itself, so
+    // notify those best-effort paths explicitly here.
     crate::handlers::document::fire_card_webhook(&state.pool, &workspace_id, &saved, &user.username, false).await;
 
     // Broadcast the resolved document so other connected clients refresh.

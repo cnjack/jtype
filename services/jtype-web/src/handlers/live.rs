@@ -32,9 +32,9 @@ pub struct SseAuth {
     token: String,
 }
 
-/// `GET /api/v1/workspaces/:workspace_id/boards/:board_ref/events` — the SSE
-/// "pull" feed for one board: streams `kanban:card-updated` events as they fire,
-/// the live counterpart to outbound webhooks. Auth is via `?token=` because an
+/// `GET /api/v1/workspaces/:workspace_id/boards/:board_ref/events` — the live
+/// SSE feed for one board: streams card-created/card-updated events as they fire.
+/// Auth is via `?token=` because an
 /// `EventSource` can't set an `Authorization` header (same pattern as the WS feed).
 pub async fn board_events_stream(
     State(state): State<AppState>,
@@ -54,7 +54,20 @@ pub async fn board_events_stream(
     let stream = futures::stream::unfold(rx, |mut rx| async move {
         loop {
             match rx.recv().await {
-                Ok(payload) => return Some((Ok(Event::default().data(payload)), rx)),
+                Ok(payload) => {
+                    // Expose the durable log sequence as the SSE id so live
+                    // clients can persist the same cursor used by `/events/pull`.
+                    let parsed = serde_json::from_str::<serde_json::Value>(&payload).ok();
+                    let mut event = Event::default().data(payload);
+                    if let Some(sequence) = parsed
+                        .as_ref()
+                        .and_then(|value| value.get("sequence"))
+                        .and_then(serde_json::Value::as_i64)
+                    {
+                        event = event.id(sequence.to_string());
+                    }
+                    return Some((Ok(event), rx));
+                }
                 // Slow consumer: some events were dropped. Skip and keep streaming.
                 Err(RecvError::Lagged(_)) => continue,
                 Err(RecvError::Closed) => return None,
@@ -120,7 +133,7 @@ pub async fn ws_upgrade_user(
     }))
 }
 
-/// Authenticates the live WS/SSE feeds (board pull-SSE, workspace WS, the
+/// Authenticates the live WS/SSE feeds (board SSE, workspace WS, the
 /// per-user WS). These are full-session features — presence, live document
 /// pushes, the collaborative WS — never the surface a scoped MCP token should
 /// reach, so unlike [`crate::middleware::auth::extract_user`] (which lets

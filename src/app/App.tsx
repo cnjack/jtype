@@ -97,6 +97,8 @@ function AppContent() {
   const { commands, findCommand } = useCommands(fs, sync);
 
   const isSyncEnabledRef = useRef(false);
+  const syncWorkspaceToWebRef = useRef(sync.syncWorkspaceToWeb);
+  syncWorkspaceToWebRef.current = sync.syncWorkspaceToWeb;
   const onExternalFileChange = useCallback(async (_changedPaths: string[]) => {
     if (!isSyncEnabledRef.current) return;
     sync.syncWorkspaceToWeb({ silent: true }).catch(() => {});
@@ -232,11 +234,11 @@ function AppContent() {
     // folder ops) into a single trailing sync instead of one per operation.
     let debounceTimer: number | undefined;
     const syncAfterTrashChange = () => {
-      if (!(state.workspace && state.syncToken && currentBinding && currentVaultSettings?.cloudSyncEnabled !== false)) return;
+      if (!isSyncEnabledRef.current) return;
       if (debounceTimer !== undefined) window.clearTimeout(debounceTimer);
       debounceTimer = window.setTimeout(() => {
         debounceTimer = undefined;
-        void sync.syncWorkspaceToWeb({ silent: true });
+        void syncWorkspaceToWebRef.current({ silent: true });
       }, 600);
     };
     window.addEventListener("jtype:vault-deleted", syncAfterTrashChange);
@@ -248,7 +250,7 @@ function AppContent() {
       window.removeEventListener("jtype:vault-restored", syncAfterTrashChange);
       window.removeEventListener("jtype:vault-folder-changed", syncAfterTrashChange);
     };
-  }, [state.workspace, state.syncToken, currentBinding, currentVaultSettings?.cloudSyncEnabled, sync]);
+  }, []);
 
   useEffect(() => {
     if (!isTauriRuntime()) return;

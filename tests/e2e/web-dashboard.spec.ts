@@ -5,10 +5,12 @@ import { expect, test, type Page } from "@playwright/test";
  * These mock all /api/* calls so no real backend is required.
  */
 
-function mockApi(page: Page) {
+function mockApi(page: Page, options: { emptyWorkspaces?: boolean } = {}) {
   const documents = [
     { id: "doc-1", relativePath: "intro.md", title: "Intro", status: "published", contentHash: "abc", updatedClock: 5, versionId: "v1" },
     { id: "doc-2", relativePath: "guides/setup.md", title: "Setup Guide", status: "draft", contentHash: "def", updatedClock: 3, versionId: "v2" },
+    { id: "doc-board", relativePath: "infra-web.board", title: "infra-web", status: "draft", contentHash: "board-hash", updatedClock: 8, versionId: "v-board" },
+    { id: "doc-card", relativePath: "infra-web/todo-card.md", title: "Todo card", status: "draft", contentHash: "card-hash", updatedClock: 9, versionId: "v-card" },
   ];
   const folders = [
     { id: "folder-1", relativePath: "guides", updatedClock: 2 },
@@ -224,10 +226,12 @@ function mockApi(page: Page) {
         status: 200,
         contentType: "application/json",
         body: JSON.stringify({
-          workspaces: [
-            { id: "ws-1", name: "notes", slug: "notes", publishTitle: "Notes", role: "owner", documentCount: 5, storageBudgetBytes: 536870912, storageUsedBytes: 52428800 },
-            { id: "ws-2", name: "blog", slug: "blog", publishTitle: "Blog", role: "editor", documentCount: 3, storageBudgetBytes: 536870912, storageUsedBytes: 10485760 },
-          ],
+          workspaces: options.emptyWorkspaces
+            ? []
+            : [
+                { id: "ws-1", name: "notes", slug: "notes", publishTitle: "Notes", role: "owner", documentCount: 5, storageBudgetBytes: 536870912, storageUsedBytes: 52428800 },
+                { id: "ws-2", name: "blog", slug: "blog", publishTitle: "Blog", role: "editor", documentCount: 3, storageBudgetBytes: 536870912, storageUsedBytes: 10485760 },
+              ],
         }),
       });
     }
@@ -333,6 +337,15 @@ function mockApi(page: Page) {
         body: JSON.stringify(folders),
       });
     }
+    if (url.match(/\/api\/v1\/workspaces\/[^/]+\/members$/) && method === "GET") {
+      return route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify([
+          { userId: "user-1", username: "testuser", role: "owner", joinedAt: "2025-01-01T00:00:00Z" },
+        ]),
+      });
+    }
     if (url.match(/\/api\/v1\/workspaces\/[^/]+\/folders$/) && method === "POST") {
       const folder = {
         id: `folder-${folders.length + 1}`,
@@ -375,6 +388,45 @@ function mockApi(page: Page) {
       });
     }
     if (url.match(/\/api\/v1\/workspaces\/[^/]+\/documents\/[^/]+$/) && method === "GET") {
+      const docId = url.split("/").pop();
+      if (docId === "doc-board") {
+        return route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            relativePath: "infra-web.board",
+            title: "infra-web",
+            status: "draft",
+            content: JSON.stringify({
+              id: "infra-web",
+              title: "Infra Web",
+              columns: [
+                { key: "todo", name: "Todo" },
+                { key: "done", name: "Done" },
+              ],
+              doneColumn: "done",
+            }),
+            contentHash: "board-hash",
+            versionId: "v-board",
+            updatedClock: 8,
+          }),
+        });
+      }
+      if (docId === "doc-card") {
+        return route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            relativePath: "infra-web/todo-card.md",
+            title: "Todo card",
+            status: "draft",
+            content: "---\nboard: infra-web\nstatus: todo\nposition: 0\ntitle: Todo card\n---\n\nVerify the pull cursor.",
+            contentHash: "card-hash",
+            versionId: "v-card",
+            updatedClock: 9,
+          }),
+        });
+      }
       return route.fulfill({
         status: 200,
         contentType: "application/json",
@@ -387,6 +439,46 @@ function mockApi(page: Page) {
           versionId: "v1",
           updatedClock: 5,
         }),
+      });
+    }
+    if (url.match(/\/api\/v1\/workspaces\/[^/]+\/documents\/save$/) && method === "POST") {
+      const relativePath = body?.relativePath || "new.md";
+      const existing = documents.find((doc) => doc.relativePath === relativePath);
+      const saved = {
+        id: existing?.id || `doc-${documents.length + 1}`,
+        relativePath,
+        title: body?.title || relativePath.replace(/\.[^.]+$/, ""),
+        status: "draft",
+        contentHash: "new123",
+        updatedClock: 10,
+        versionId: "v-new",
+      };
+      if (!existing) documents.push(saved);
+      return route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ ...saved, content: body?.content || "" }),
+      });
+    }
+    if (url.match(/\/api\/v1\/workspaces\/[^/]+\/webhooks$/) && method === "GET") {
+      return route.fulfill({ status: 200, contentType: "application/json", body: "[]" });
+    }
+    if (url.match(/\/api\/v1\/workspaces\/[^/]+\/boards\/[^/]+\/events\/pull\?/) && method === "GET") {
+      const afterSequence = Number(new URL(url).searchParams.get("afterSequence") || "0");
+      const events = afterSequence === 0
+        ? [
+            { sequence: 1, event: "kanban:card-created", workspaceId: "ws-1", board: "infra-web", card: { path: "infra-web/todo-card.md", title: "Todo card", status: "todo" }, editedBy: "testuser", updatedClock: 9 },
+            { sequence: 2, event: "kanban:card-updated", workspaceId: "ws-1", board: "infra-web", card: { path: "infra-web/todo-card.md", title: "Todo card", status: "done" }, editedBy: "testuser", updatedClock: 10 },
+          ]
+        : afterSequence === 2
+          ? [
+              { sequence: 3, event: "kanban:card-updated", workspaceId: "ws-1", board: "infra-web", card: { path: "infra-web/todo-card.md", title: "Todo card", status: "todo" }, editedBy: "testuser", updatedClock: 11 },
+            ]
+          : [];
+      return route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ events, nextSequence: afterSequence === 0 ? 2 : afterSequence === 2 ? 3 : afterSequence, hasMore: afterSequence === 0 }),
       });
     }
     if (url.match(/\/api\/v1\/workspaces\/[^/]+\/documents\/[^/]+$/) && method === "DELETE") {
@@ -472,7 +564,7 @@ async function loginAs(page: Page, username = "testuser", password = "password12
   await page.goto("/login");
   await page.getByLabel("Username").fill(username);
   await page.getByLabel("Password").fill(password);
-  await page.getByRole("button", { name: "Sign in" }).click();
+  await page.locator("form").getByRole("button", { name: "Sign in" }).click();
   await page.waitForURL(/\/workspaces(\/ws-1)?$/);
 }
 
@@ -510,14 +602,14 @@ test.describe("Authentication", () => {
     await page.goto("/login");
     await page.getByLabel("Username").fill("testuser");
     await page.getByLabel("Password").fill("password123");
-    await page.getByRole("button", { name: "Sign in" }).click();
+    await page.locator("form").getByRole("button", { name: "Sign in" }).click();
     await expect(page).toHaveURL(/\/workspaces(\/ws-1)?$/);
   });
 
   test("register flow", async ({ page }) => {
     await mockApi(page);
     await page.goto("/login");
-    await page.getByRole("button", { name: "Register" }).click();
+    await page.getByRole("button", { name: "Register" }).first().click();
     await page.getByLabel("Username").fill("newuser");
     await page.getByLabel("Password").fill("strongpassword");
     await page.getByRole("button", { name: "Create account" }).click();
@@ -535,7 +627,7 @@ test.describe("Authentication", () => {
     await page.goto("/login");
     await page.getByLabel("Username").fill("bad");
     await page.getByLabel("Password").fill("bad");
-    await page.getByRole("button", { name: "Sign in" }).click();
+    await page.locator("form").getByRole("button", { name: "Sign in" }).click();
     await expect(page.getByText("Invalid credentials")).toBeVisible();
   });
 });
@@ -546,22 +638,22 @@ test.describe("Dashboard", () => {
     await loginAs(page);
   });
 
-  test("shows workspaces list", async ({ page }) => {
-    await expect(page.getByText("notes")).toBeVisible();
-    await expect(page.getByText("blog")).toBeVisible();
-    await expect(page.getByText("5 docs")).toBeVisible();
+  test("opens the first workspace", async ({ page }) => {
+    await expect(page).toHaveURL(/\/workspaces\/ws-1/);
+    await expect(page.getByRole("heading", { name: "notes" })).toBeVisible();
   });
 
   test("creates a new workspace", async ({ page }) => {
-    await page.getByPlaceholder("New workspace name").fill("my-project");
-    await page.getByRole("button", { name: "Create" }).click();
-    // After creation, the workspace list is refetched (mock returns same list)
-    await expect(page.getByText("notes")).toBeVisible();
+    await page.getByRole("button", { name: /notes 2 documents/ }).click();
+    await page.getByPlaceholder("New cloud workspace").fill("my-project");
+    await page.getByRole("button", { name: "New", exact: true }).click();
+    await expect(page).toHaveURL(/\/workspaces\/ws-new/);
   });
 
-  test("navigates to workspace detail", async ({ page }) => {
-    await page.getByText("notes").click();
-    await expect(page).toHaveURL(/\/workspaces\/ws-1/);
+  test("switches workspace from the workspace menu", async ({ page }) => {
+    await page.getByRole("button", { name: /notes 2 documents/ }).click();
+    await page.getByRole("menuitem", { name: /B blog 3 documents/i }).click();
+    await expect(page).toHaveURL(/\/workspaces\/ws-2/);
   });
 });
 
@@ -576,20 +668,21 @@ test.describe("Workspace Documents", () => {
   });
 
   test("lists documents", async ({ page }) => {
-    await expect(page.getByText("intro.md")).toBeVisible();
-    await expect(page.getByText("guides/setup.md")).toBeVisible();
+    await expect(page.getByRole("button", { name: "intro.md", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: /guides\/setup guides\/setup\.md Markdown/ })).toBeVisible();
   });
 
   test("opens a document for editing", async ({ page }) => {
-    await page.getByText("intro.md").click();
+    await page.getByRole("button", { name: "intro.md", exact: true }).click();
     await expect(page.locator("textarea")).toHaveValue("# Intro\n\nHello from cloud.");
   });
 
   test("creates a new document", async ({ page }) => {
-    await page.getByPlaceholder("path/to/doc.md").fill("new-note.md");
-    await page.getByRole("button", { name: "+" }).click();
-    // After creation, docs are refreshed
-    await expect(page.getByText("intro.md")).toBeVisible();
+    await page.getByRole("button", { name: "New Document" }).first().click();
+    await page.getByRole("button", { name: /Markdown document/ }).click();
+    await page.getByPlaceholder("Document name").fill("new-note");
+    await page.getByRole("button", { name: "Create", exact: true }).click();
+    await expect(page.getByRole("button", { name: "new-note.md", exact: true })).toBeVisible();
   });
 
   test("creates an empty folder without gitkeep placeholder", async ({ page }) => {
@@ -602,20 +695,59 @@ test.describe("Workspace Documents", () => {
   });
 
   test("deletes a document", async ({ page }) => {
-    await page.getByRole("button", { name: "Move intro.md to trash" }).click();
-    await expect(page.getByText("intro.md")).toHaveCount(0);
+    await page.getByRole("button", { name: "intro.md", exact: true }).click();
+    await page.getByRole("button", { name: "Move to trash" }).click();
+    await expect(page.getByRole("button", { name: "intro.md", exact: true })).toHaveCount(0);
   });
 
   test("restores a document from trash", async ({ page }) => {
-    await page.getByRole("button", { name: "Move intro.md to trash" }).click();
-    await page.getByRole("button", { name: "Trash", exact: true }).click();
-    await expect(page.getByText("intro.md")).toBeVisible();
-
+    await page.getByRole("button", { name: "intro.md", exact: true }).click();
+    await page.getByRole("button", { name: "Move to trash" }).click();
+    await expect(page.getByRole("button", { name: "Restore" })).toBeVisible();
     await page.getByRole("button", { name: "Restore" }).click();
-    await expect(page.getByText("Trash is empty.")).toBeVisible();
+    await expect(page.getByText("No deleted documents.")).toBeVisible();
+    await expect(page.getByRole("button", { name: "intro.md", exact: true })).toBeVisible();
+  });
+});
 
-    await page.getByRole("button", { name: "Documents", exact: true }).click();
-    await expect(page.getByText("intro.md")).toBeVisible();
+test.describe("Kanban sequence pull", () => {
+  test("continues from the last successful sequence", async ({ page }) => {
+    await mockApi(page);
+    await page.addInitScript(() => {
+      localStorage.setItem("jtype.token", "tok_test");
+      localStorage.setItem("jtype.username", "testuser");
+    });
+    await page.goto("/workspaces/ws-1");
+
+    await page.getByRole("button", { name: /infra-web\.board/ }).click();
+    await expect(page.getByText("Todo card")).toBeVisible();
+    await page.getByRole("button", { name: "Board settings" }).click();
+    await page.getByRole("button", { name: "Pull", exact: true }).click();
+    await expect(page.locator('input[readonly]').first()).toHaveValue(/\/boards\/infra-web\/events\/pull\?afterSequence=0&limit=100$/);
+
+    const firstRequest = page.waitForRequest((request) => request.url().includes("/events/pull?afterSequence=0&limit=100"));
+    await page.getByRole("button", { name: "Pull once" }).click();
+    await firstRequest;
+    await expect(page.getByText("cursor: 2 · more events available")).toBeVisible();
+    await expect(page.getByText(/\"sequence\":2/)).toBeVisible();
+
+    const secondRequest = page.waitForRequest((request) => request.url().includes("/events/pull?afterSequence=2&limit=100"));
+    await page.getByRole("button", { name: "Pull next page" }).click();
+    await secondRequest;
+    await expect(page.getByText("cursor: 3", { exact: true })).toBeVisible();
+    await expect(page.getByText(/\"sequence\":3/)).toBeVisible();
+    await expect(page.getByText("more events available")).toHaveCount(0);
+  });
+});
+
+test.describe("Help center", () => {
+  test("publishes the Kanban automation guide in app", async ({ page }) => {
+    await page.goto("/help/c/kanban");
+
+    await page.getByRole("link", { name: /Automate a board/ }).click();
+    await expect(page).toHaveURL("/help/c/kanban/automate-a-board");
+    await expect(page.getByRole("heading", { name: "Choose a delivery mode" })).toBeVisible();
+    await expect(page.getByText("nextSequence", { exact: true })).toBeVisible();
   });
 });
 
@@ -626,29 +758,34 @@ test.describe("Settings", () => {
   });
 
   test("shows profile information", async ({ page }) => {
-    await page.getByRole("link", { name: "Settings" }).click();
+    await page.getByRole("button", { name: "User menu" }).click();
+    await page.getByRole("menuitem", { name: "Settings", exact: true }).click();
     await expect(page.getByLabel("Username")).toHaveValue("testuser");
-    await expect(page.getByLabel("Display Name")).toHaveValue("Test User");
-    await expect(page.getByLabel("Email")).toHaveValue("test@example.com");
+    await expect(page.getByLabel("Display name")).toHaveValue("Test User");
+    await page.getByRole("button", { name: "Email", exact: true }).click();
+    await expect(page.getByLabel("Email address")).toHaveValue("test@example.com");
   });
 
   test("updates profile", async ({ page }) => {
-    await page.getByRole("link", { name: "Settings" }).click();
-    await page.getByLabel("Display Name").fill("New Name");
+    await page.getByRole("button", { name: "User menu" }).click();
+    await page.getByRole("menuitem", { name: "Settings", exact: true }).click();
+    await page.getByLabel("Display name").fill("New Name");
     await page.getByRole("button", { name: "Save profile" }).click();
     await expect(page.getByText("Profile updated")).toBeVisible();
   });
 
   test("shows storage usage", async ({ page }) => {
-    await page.getByRole("link", { name: "Settings" }).click();
+    await page.getByRole("button", { name: "User menu" }).click();
+    await page.getByRole("menuitem", { name: "Settings", exact: true }).click();
     await expect(page.getByText("50.0 MB")).toBeVisible();
     await expect(page.getByText("1.0 GB")).toBeVisible();
   });
 
   test("shows connected devices", async ({ page }) => {
-    await page.getByRole("link", { name: "Settings" }).click();
+    await page.getByRole("button", { name: "User menu" }).click();
+    await page.getByRole("menuitem", { name: "Settings", exact: true }).click();
     await expect(page.getByText("dev-abc1")).toBeVisible();
-    await expect(page.getByText("notes")).toBeVisible();
+    await expect(page.getByLabel("Settings").getByText("notes")).toBeVisible();
   });
 });
 
@@ -656,7 +793,8 @@ test.describe("Admin Panel", () => {
   test.beforeEach(async ({ page }) => {
     await mockApi(page);
     await loginAs(page);
-    await page.getByRole("link", { name: "Admin" }).click();
+    await page.getByRole("button", { name: "User menu" }).click();
+    await page.getByRole("menuitem", { name: "Admin", exact: true }).click();
   });
 
   test("shows stats overview", async ({ page }) => {
@@ -678,9 +816,9 @@ test.describe("Admin Panel", () => {
   });
 
   test("switches to workspaces tab", async ({ page }) => {
-    await page.getByRole("button", { name: "workspaces" }).click();
-    await expect(page.getByText("notes")).toBeVisible();
-    await expect(page.getByText("blog")).toBeVisible();
+    await page.getByRole("button", { name: "Cloud workspaces" }).click();
+    await expect(page.getByRole("cell", { name: "notes" })).toBeVisible();
+    await expect(page.getByRole("cell", { name: "blog" })).toBeVisible();
   });
 
   test("switches to domains tab", async ({ page }) => {
@@ -696,26 +834,25 @@ test.describe("Sidebar navigation", () => {
     await mockApi(page);
     await loginAs(page);
 
-    // Dashboard is visible
-    await expect(page.getByText("Workspaces")).toBeVisible();
+    await expect(page).toHaveURL(/\/workspaces\/ws-1/);
 
-    // Go to Settings
-    await page.getByRole("link", { name: "Settings" }).click();
-    await expect(page).toHaveURL("/settings");
+    await page.getByRole("button", { name: "User menu" }).click();
+    await page.getByRole("menuitem", { name: "Settings", exact: true }).click();
+    await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible();
+    await page.getByRole("button", { name: "Close" }).last().click();
 
-    // Go to Admin
-    await page.getByRole("link", { name: "Admin" }).click();
-    await expect(page).toHaveURL("/admin");
-
-    // Back to Dashboard
-    await page.getByRole("link", { name: "Dashboard" }).click();
-    await expect(page).toHaveURL("/dashboard");
+    await page.getByRole("button", { name: "User menu" }).click();
+    await page.getByRole("menuitem", { name: "Admin", exact: true }).click();
+    await expect(page.getByRole("heading", { name: "Admin" })).toBeVisible();
+    await page.getByRole("button", { name: "Close" }).last().click();
+    await expect(page).toHaveURL(/\/workspaces\/ws-1/);
   });
 
   test("sign out clears session", async ({ page }) => {
     await mockApi(page);
     await loginAs(page);
-    await page.getByRole("button", { name: "Sign out" }).click();
+    await page.getByRole("button", { name: "User menu" }).click();
+    await page.getByRole("menuitem", { name: "Sign out" }).click();
     await expect(page).toHaveURL("/login");
   });
 });
