@@ -177,8 +177,10 @@ msgid "Add domain"
 msgstr "Add domain"
 
 #: src/pages/Workspace.tsx
-msgid "Add domains, verify DNS ownership, bind them to this workspace, and manage SSL certificates from one place."
-msgstr "Add domains, verify DNS ownership, bind them to this workspace, and manage SSL certificates from one place."
+msgid "Add domains, verify DNS ownership, bind them to this workspace, and "
+"manage SSL certificates from one place."
+msgstr "Add domains, verify DNS ownership, bind them to this workspace, and "
+"manage SSL certificates from one place."
 
 #: src/pages/Workspace.tsx
 msgid "Add table row below"
@@ -362,8 +364,12 @@ msgid "Bucket"
 msgstr "Bucket"
 
 #: src/pages/Landing.tsx
-msgid "Calm desktop writing, workspace-scoped sync, and public Markdown publishing in one product flow. Your notes stay local until a cloud workspace has a job to do."
-msgstr "Calm desktop writing, workspace-scoped sync, and public Markdown publishing in one product flow. Your notes stay local until a cloud workspace has a job to do."
+msgid "Calm desktop writing, workspace-scoped sync, and public Markdown "
+"publishing in one product flow. Your notes stay local until a cloud "
+"workspace has a job to do."
+msgstr "Calm desktop writing, workspace-scoped sync, and public Markdown "
+"publishing in one product flow. Your notes stay local until a cloud "
+"workspace has a job to do."
 
 #: src/components/NewResourceDialog.tsx
 #: src/pages/Workspace.tsx
@@ -484,16 +490,22 @@ msgid "Compact"
 msgstr "Compact"
 
 #: src/pages/Admin.tsx
-msgid "Configure outbound email (SMTP). Used for password reset and email verification. Saved values override the JTYPED_SMTP_* environment variables."
-msgstr "Configure outbound email (SMTP). Used for password reset and email verification. Saved values override the JTYPED_SMTP_* environment variables."
+msgid "Configure outbound email (SMTP). Used for password reset and email "
+"verification. Saved values override the JTYPED_SMTP_* environment "
+"variables."
+msgstr "Configure outbound email (SMTP). Used for password reset and email "
+"verification. Saved values override the JTYPED_SMTP_* environment "
+"variables."
 
 #: src/pages/Admin.tsx
 msgid "Configure server object storage."
 msgstr "Configure server object storage."
 
 #: src/pages/Admin.tsx
-msgid "Configure server object storage. Saved values override the JTYPED_STORAGE_* environment variables and apply immediately."
-msgstr "Configure server object storage. Saved values override the JTYPED_STORAGE_* environment variables and apply immediately."
+msgid "Configure server object storage. Saved values override the "
+"JTYPED_STORAGE_* environment variables and apply immediately."
+msgstr "Configure server object storage. Saved values override the "
+"JTYPED_STORAGE_* environment variables and apply immediately."
 
 #: src/pages/ResetPassword.tsx
 msgid "Confirm password"
@@ -504,8 +516,10 @@ msgid "Confirming your email address."
 msgstr "Confirming your email address."
 
 #: src/pages/AiConnections.tsx
-msgid "Connect Claude, Cursor, Cline, or jcode to your notes & kanban through the built-in MCP server."
-msgstr "Connect Claude, Cursor, Cline, or jcode to your notes & kanban through the built-in MCP server."
+msgid "Connect Claude, Cursor, Cline, or jcode to your notes & kanban through "
+"the built-in MCP server."
+msgstr "Connect Claude, Cursor, Cline, or jcode to your notes & kanban through "
+"the built-in MCP server."
 
 #: src/pages/Landing.tsx
 msgid "Connect your AI"
@@ -567,8 +581,10 @@ msgstr "Could not load this PDF."
 
 #. placeholder {0}: info.error
 #: src/pages/Admin.tsx
-msgid "Could not reach GitHub for the latest release ({0}). Showing the last known value."
-msgstr "Could not reach GitHub for the latest release ({0}). Showing the last known value."
+msgid "Could not reach GitHub for the latest release ({0}). Showing the last "
+"known value."
+msgstr "Could not reach GitHub for the latest release ({0}). Showing the last "
+"known value."
 
 #: src/components/SiteThemePanel.tsx
 msgid "Cozy"
@@ -579,8 +595,12 @@ msgid "Create"
 msgstr "Create"
 
 #: src/pages/Landing.tsx
-msgid "Create a workspace for sync, publishing, and account settings. Local vault copy stays precise: folders are vaults, server-side collaboration is a cloud workspace."
-msgstr "Create a workspace for sync, publishing, and account settings. Local vault copy stays precise: folders are vaults, server-side collaboration is a cloud workspace."
+msgid "Create a workspace for sync, publishing, and account settings. Local "
+"vault copy stays precise: folders are vaults, server-side collaboration "
+"is a cloud workspace."
+msgstr "Create a workspace for sync, publishing, and account settings. Local "
+"vault copy stays precise: folders are vaults, server-side collaboration "
+"is a cloud workspace."
 
 #: src/pages/Login.tsx
 msgid "Create account"
@@ -878,8 +898,10 @@ msgid "Enter your username"
 msgstr "Enter your username"
 
 #: src/help/pages/HelpHome.tsx
-msgid "Everything you need to write in a local-first vault, sync to the cloud, run a kanban board, publish a site, and connect AI."
-msgstr "Everything you need to write in a local-first vault, sync to the cloud, run a kanban board, publish a site, and connect AI."
+msgid "Everything you need to write in a local-first vault, sync to the cloud, "
+"run a kanban board, publish a site, and connect AI."
+msgstr "Everything you need to write in a local-first vault, sync to the cloud, "
+"run a kanban board, publish a site, and connect AI."
 
 #: src/components/NewResourceDialog.tsx
 msgid "Excalidraw drawing"
@@ -946,8 +968,12 @@ msgid "Footer HTML"
 msgstr "Footer HTML"
 
 #: src/pages/AiConnections.tsx
-msgid "For clients that only accept a static header (e.g. jcode). Tokens are <0>mcp</0>-scoped (notes & kanban only, never admin) and expire in 90 days."
-msgstr "For clients that only accept a static header (e.g. jcode). Tokens are <0>mcp</0>-scoped (notes & kanban only, never admin) and expire in 90 days."
+msgid "For clients that only accept a static header (e.g. jcode). Tokens are "
+"<0>mcp</0>-scoped (notes & kanban only, never admin) and expire in 90 "
+"days."
+msgstr "For clients that only accept a static header (e.g. jcode). Tokens are "
+"<0>mcp</0>-scoped (notes & kanban only, never admin) and expire in 90 "
+"days."
 
 #: src/pages/Login.tsx
 msgid "Forgot password?"
@@ -1120,8 +1146,14 @@ msgid "JType <noreply@example.com>"
 msgstr "JType <noreply@example.com>"
 
 #: src/pages/Landing.tsx
-msgid "JType ships a built-in MCP server. Connect Claude, Cursor, or any MCP client over a secure OAuth flow, then ask it to search your notes, draft a doc, or triage your board. Tokens are scoped, expiring, and revocable — and admin always stays off-limits."
-msgstr "JType ships a built-in MCP server. Connect Claude, Cursor, or any MCP client over a secure OAuth flow, then ask it to search your notes, draft a doc, or triage your board. Tokens are scoped, expiring, and revocable — and admin always stays off-limits."
+msgid "JType ships a built-in MCP server. Connect Claude, Cursor, or any MCP "
+"client over a secure OAuth flow, then ask it to search your notes, draft "
+"a doc, or triage your board. Tokens are scoped, expiring, and revocable "
+"— and admin always stays off-limits."
+msgstr "JType ships a built-in MCP server. Connect Claude, Cursor, or any MCP "
+"client over a secure OAuth flow, then ask it to search your notes, "
+"draft a doc, or triage your board. Tokens are scoped, expiring, and "
+"revocable — and admin always stays off-limits."
 
 #: src/components/NewResourceDialog.tsx
 msgid "Kanban board"
@@ -1132,8 +1164,10 @@ msgid "Kanban tools"
 msgstr "Kanban tools"
 
 #: src/pages/Workspace.tsx
-msgid "Keep the publish name and workspace name here. The workspace slug and storage limit are assigned by the service."
-msgstr "Keep the publish name and workspace name here. The workspace slug and storage limit are assigned by the service."
+msgid "Keep the publish name and workspace name here. The workspace slug and "
+"storage limit are assigned by the service."
+msgstr "Keep the publish name and workspace name here. The workspace slug and "
+"storage limit are assigned by the service."
 
 #: src/pages/Login.tsx
 msgid "Keep your vaults in sync across all devices."
@@ -1262,8 +1296,10 @@ msgid "Local-first Markdown vault"
 msgstr "Local-first Markdown vault"
 
 #: src/help/HelpLayout.tsx
-msgid "Local-first Markdown vault editing with cloud sync, kanban, publishing, and AI."
-msgstr "Local-first Markdown vault editing with cloud sync, kanban, publishing, and AI."
+msgid "Local-first Markdown vault editing with cloud sync, kanban, publishing, "
+"and AI."
+msgstr "Local-first Markdown vault editing with cloud sync, kanban, publishing, "
+"and AI."
 
 #: src/pages/Login.tsx
 msgid "Local-first notes with cloud sync, publishing, and AI-ready indexing."
@@ -1509,8 +1545,12 @@ msgid "On this page"
 msgstr "On this page"
 
 #: src/pages/Landing.tsx
-msgid "One Markdown source shows up everywhere it matters: local files on your machine, sync state in the cloud, and published output for readers — all visible at once."
-msgstr "One Markdown source shows up everywhere it matters: local files on your machine, sync state in the cloud, and published output for readers — all visible at once."
+msgid "One Markdown source shows up everywhere it matters: local files on your "
+"machine, sync state in the cloud, and published output for readers — all "
+"visible at once."
+msgstr "One Markdown source shows up everywhere it matters: local files on your "
+"machine, sync state in the cloud, and published output for readers — "
+"all visible at once."
 
 #: src/pages/Landing.tsx
 msgid "One Markdown source, three calm surfaces."
@@ -1529,8 +1569,10 @@ msgid "Open"
 msgstr "Open"
 
 #: src/pages/Landing.tsx
-msgid "Open a local Markdown vault, keep normal folders, and edit without turning notes into remote-only data."
-msgstr "Open a local Markdown vault, keep normal folders, and edit without turning notes into remote-only data."
+msgid "Open a local Markdown vault, keep normal folders, and edit without "
+"turning notes into remote-only data."
+msgstr "Open a local Markdown vault, keep normal folders, and edit without "
+"turning notes into remote-only data."
 
 #: src/help/HelpLayout.tsx
 msgid "Open app"
@@ -1565,8 +1607,10 @@ msgid "Open sidebar"
 msgstr "Open sidebar"
 
 #: src/help/pages/CaseStudy.tsx
-msgid "Open the example vault in JType and follow along. It lives in the repo at:"
-msgstr "Open the example vault in JType and follow along. It lives in the repo at:"
+msgid "Open the example vault in JType and follow along. It lives in the repo "
+"at:"
+msgstr "Open the example vault in JType and follow along. It lives in the repo "
+"at:"
 
 #: src/pages/Login.tsx
 msgid "optional"
@@ -1719,16 +1763,20 @@ msgid "Publishing details saved"
 msgstr "Publishing details saved"
 
 #: src/pages/Workspace.tsx
-msgid "Publishing uses a server snapshot; frontmatter status is treated as user metadata."
-msgstr "Publishing uses a server snapshot; frontmatter status is treated as user metadata."
+msgid "Publishing uses a server snapshot; frontmatter status is treated as user "
+"metadata."
+msgstr "Publishing uses a server snapshot; frontmatter status is treated as "
+"user metadata."
 
 #: src/pages/Admin.tsx
 msgid "Pull the new image and restart your deployment (docker compose / helm)."
 msgstr "Pull the new image and restart your deployment (docker compose / helm)."
 
 #: src/pages/Landing.tsx
-msgid "Push and pull versions, resolve conflicts, and keep collaboration scoped to the workspace you choose."
-msgstr "Push and pull versions, resolve conflicts, and keep collaboration scoped to the workspace you choose."
+msgid "Push and pull versions, resolve conflicts, and keep collaboration scoped "
+"to the workspace you choose."
+msgstr "Push and pull versions, resolve conflicts, and keep collaboration "
+"scoped to the workspace you choose."
 
 #: src/pages/Workspace.tsx
 msgid "Quick open"
@@ -1751,12 +1799,16 @@ msgid "Ready for the cloud layer"
 msgstr "Ready for the cloud layer"
 
 #: src/help/pages/CasesIndex.tsx
-msgid "Real, end-to-end scenarios you can reproduce. Each one ships with an example vault you can open in JType."
-msgstr "Real, end-to-end scenarios you can reproduce. Each one ships with an example vault you can open in JType."
+msgid "Real, end-to-end scenarios you can reproduce. Each one ships with an "
+"example vault you can open in JType."
+msgstr "Real, end-to-end scenarios you can reproduce. Each one ships with an "
+"example vault you can open in JType."
 
 #: src/pages/AiConnections.tsx
-msgid "Recommended: paste this URL into an OAuth-capable client (Claude, Cursor) — you'll approve in the browser, no token to copy."
-msgstr "Recommended: paste this URL into an OAuth-capable client (Claude, Cursor) — you'll approve in the browser, no token to copy."
+msgid "Recommended: paste this URL into an OAuth-capable client (Claude, "
+"Cursor) — you'll approve in the browser, no token to copy."
+msgstr "Recommended: paste this URL into an OAuth-capable client (Claude, "
+"Cursor) — you'll approve in the browser, no token to copy."
 
 #: src/pages/Admin.tsx
 msgid "Region"
@@ -1852,7 +1904,8 @@ msgstr "Restore"
 
 #: src/pages/Workspace.tsx
 msgid "Restore cloud workspace documents or permanently remove them from trash."
-msgstr "Restore cloud workspace documents or permanently remove them from trash."
+msgstr "Restore cloud workspace documents or permanently remove them from "
+"trash."
 
 #: src/pages/Workspace.tsx
 msgid "Restore deleted documents or remove them permanently."
@@ -1989,8 +2042,10 @@ msgid "Select a Markdown file"
 msgstr "Select a Markdown file"
 
 #: src/pages/Login.tsx
-#~ msgid "Self-service reset isn't available yet. Ask an admin to reset your password."
-#~ msgstr "Self-service reset isn't available yet. Ask an admin to reset your password."
+#~ msgid "Self-service reset isn't available yet. Ask an admin to reset your "
+#~ "password."
+#~ msgstr "Self-service reset isn't available yet. Ask an admin to reset your "
+#~ "password."
 
 #: src/pages/Login.tsx
 msgid "Send"
@@ -2283,8 +2338,10 @@ msgstr "This verification link is missing its token."
 
 #. placeholder {0}: workspace.name
 #: src/pages/Workspace.tsx
-msgid "This will permanently delete <0>{0}</0> and all its documents. This cannot be undone."
-msgstr "This will permanently delete <0>{0}</0> and all its documents. This cannot be undone."
+msgid "This will permanently delete <0>{0}</0> and all its documents. This "
+"cannot be undone."
+msgstr "This will permanently delete <0>{0}</0> and all its documents. This "
+"cannot be undone."
 
 #: src/pages/Admin.tsx
 msgid "TLS / SSL (port 465)"
@@ -2336,8 +2393,10 @@ msgid "Try it yourself"
 msgstr "Try it yourself"
 
 #: src/pages/Landing.tsx
-msgid "Turn selected documents into a public `/u/:username` site while your source stays Markdown."
-msgstr "Turn selected documents into a public `/u/:username` site while your source stays Markdown."
+msgid "Turn selected documents into a public `/u/:username` site while your "
+"source stays Markdown."
+msgstr "Turn selected documents into a public `/u/:username` site while your "
+"source stays Markdown."
 
 #: src/pages/Workspace.tsx
 msgid "Type the workspace name to confirm:"
@@ -2392,8 +2451,10 @@ msgid "Update email"
 msgstr "Update email"
 
 #: src/pages/Workspace.tsx
-msgid "Upload a PEM certificate for a verified domain. The private key is stored as a hash in the current backend model."
-msgstr "Upload a PEM certificate for a verified domain. The private key is stored as a hash in the current backend model."
+msgid "Upload a PEM certificate for a verified domain. The private key is "
+"stored as a hash in the current backend model."
+msgstr "Upload a PEM certificate for a verified domain. The private key is "
+"stored as a hash in the current backend model."
 
 #: src/components/DownloadPromo.tsx
 msgid "Use JType beyond the browser"
@@ -2554,8 +2615,10 @@ msgid "You will lose access to all cloud documents."
 msgstr "You will lose access to all cloud documents."
 
 #: src/pages/Workspace.tsx
-msgid "You will lose access to all cloud documents. Your local files are unaffected."
-msgstr "You will lose access to all cloud documents. Your local files are unaffected."
+msgid "You will lose access to all cloud documents. Your local files are "
+"unaffected."
+msgstr "You will lose access to all cloud documents. Your local files are "
+"unaffected."
 
 #: src/pages/InviteAccept.tsx
 msgid "You're invited"

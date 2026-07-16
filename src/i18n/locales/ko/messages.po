@@ -144,6 +144,10 @@ msgstr "즐겨찾기에 추가되었습니다."
 msgid "Advanced"
 msgstr "고급"
 
+#: src/components/editor/FindBar.tsx
+msgid "All"
+msgstr ""
+
 #~ msgid "Assignee"
 #~ msgstr ""
 
@@ -173,6 +177,10 @@ msgstr "현재 로컬 볼트를 하나의 클라우드 워크스페이스에 바
 
 #~ msgid "Board"
 #~ msgstr ""
+
+#: src/components/editor/SlashMenu.tsx
+msgid "Board embed"
+msgstr ""
 
 #: src/components/modals/NewResourceDialog.tsx
 msgid "Board name"
@@ -211,6 +219,10 @@ msgstr "브라우저 인증이 열려 있습니다. 로그인 완료 후 이 동
 
 #: src/components/modals/DeviceAuthWaiting.tsx
 msgid "Browser opened"
+msgstr ""
+
+#: src/components/editor/SlashMenu.tsx
+msgid "Bullet list"
 msgstr ""
 
 #: src/components/modals/CreateFolderDialog.tsx
@@ -308,6 +320,10 @@ msgstr "클라우드 워크스페이스: {0}"
 #: src/components/modals/AccountDialog.tsx
 msgid "Cloud workspaces"
 msgstr "클라우드 워크스페이스"
+
+#: src/components/editor/SlashMenu.tsx
+msgid "Code block"
+msgstr ""
 
 #: src/components/modals/DeviceAuthWaiting.tsx
 msgid "Codes expire after 10 minutes. Generate a new one to continue."
@@ -432,6 +448,11 @@ msgstr "기본 볼트 경로: <0>{defaultVaultPath}</0>"
 msgid "Delete"
 msgstr "삭제"
 
+#. placeholder {0}: cardsToDelete.length
+#: src/components/BoardView.tsx
+msgid "Delete {0} cards? They move to the trash."
+msgstr ""
+
 #~ msgid "Delete card"
 #~ msgstr ""
 
@@ -525,6 +546,10 @@ msgstr "워크스페이스 연결 끊기"
 
 #: src/components/layout/UpdateBanner.tsx
 msgid "Dismiss"
+msgstr ""
+
+#: src/components/editor/SlashMenu.tsx
+msgid "Divider"
 msgstr ""
 
 #: src/components/editor/EditorShell.tsx
@@ -682,12 +707,32 @@ msgstr "일반"
 #~ msgid "Group: Status"
 #~ msgstr ""
 
+#: src/components/editor/SlashMenu.tsx
+msgid "Heading 1"
+msgstr ""
+
+#: src/components/editor/SlashMenu.tsx
+msgid "Heading 2"
+msgstr ""
+
+#: src/components/editor/SlashMenu.tsx
+msgid "Heading 3"
+msgstr ""
+
 #: src/components/editor/EditorShell.tsx
 msgid "Hide"
 msgstr "숨기기"
 
+#: src/components/editor/FindBar.tsx
+msgid "Hide replace"
+msgstr ""
+
 #~ msgid "Icon"
 #~ msgstr ""
+
+#: src/components/editor/EditorShell.tsx
+msgid "Image saved to {relAssetPath}."
+msgstr ""
 
 #: src/components/modals/NewResourceDialog.tsx
 msgid "Import file"
@@ -700,6 +745,10 @@ msgstr "{parentPath}/ 안"
 #: src/components/editor/EditorShell.tsx
 msgid "Inline code"
 msgstr "인라인 코드"
+
+#: src/components/editor/SlashMenu.tsx
+msgid "Insert block"
+msgstr ""
 
 #: src/components/editor/EditorShell.tsx
 msgid "Insert formula"
@@ -814,6 +863,15 @@ msgstr "Markdown 편집기"
 msgid "Markdown file"
 msgstr "Markdown 파일"
 
+#: src/components/editor/FindBar.tsx
+msgid "Match case"
+msgstr ""
+
+#: src/components/editor/SlashMenu.tsx
+msgid "Math block"
+msgstr ""
+
+#: src/components/editor/SlashMenu.tsx
 #: src/components/modals/NewResourceDialog.tsx
 msgid "Mermaid diagram"
 msgstr "Mermaid 다이어그램"
@@ -966,6 +1024,10 @@ msgstr "설치되지 않음"
 
 #~ msgid "Notes"
 #~ msgstr ""
+
+#: src/components/editor/SlashMenu.tsx
+msgid "Numbered list"
+msgstr ""
 
 #: src/components/editor/EditorShell.tsx
 msgid "Only web, email, and phone links can be opened from preview."
@@ -1120,6 +1182,10 @@ msgstr "빠른 열기"
 msgid "Quick switcher"
 msgstr "빠른 전환"
 
+#: src/components/editor/SlashMenu.tsx
+msgid "Quote"
+msgstr ""
+
 #: src/components/editor/EditorShell.tsx
 msgid "Read-only"
 msgstr "읽기 전용"
@@ -1196,6 +1262,14 @@ msgstr "이름 변경:"
 
 #: src/components/modals/DeviceAuthWaiting.tsx
 msgid "Reopen browser"
+msgstr ""
+
+#: src/components/editor/FindBar.tsx
+msgid "Replace"
+msgstr ""
+
+#: src/components/editor/FindBar.tsx
+msgid "Replace with"
 msgstr ""
 
 #: src/components/editor/EditorShell.tsx
@@ -1296,6 +1370,10 @@ msgstr "설정"
 msgid "Show in Explorer"
 msgstr "탐색기에서 표시"
 
+#: src/components/editor/FindBar.tsx
+msgid "Show replace"
+msgstr ""
+
 #: src/components/layout/Header.tsx
 msgid "Sign in"
 msgstr "로그인"
@@ -1354,13 +1432,15 @@ msgstr "게시하기 전에 이 문서를 동기화하세요."
 msgid "Syncing with {0}."
 msgstr "{0}과(와) 동기화 중."
 
-#~ msgid "Table"
-#~ msgstr ""
+#: src/components/editor/SlashMenu.tsx
+msgid "Table"
+msgstr ""
 
 #~ msgid "Tags"
 #~ msgstr ""
 
 #: src/components/editor/EditorShell.tsx
+#: src/components/editor/SlashMenu.tsx
 msgid "Task list"
 msgstr "작업 목록"
 

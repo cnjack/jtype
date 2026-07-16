@@ -144,6 +144,10 @@ msgstr "お気に入りに追加しました。"
 msgid "Advanced"
 msgstr "詳細"
 
+#: src/components/editor/FindBar.tsx
+msgid "All"
+msgstr ""
+
 #~ msgid "Assignee"
 #~ msgstr ""
 
@@ -173,6 +177,10 @@ msgstr "現在のローカルボルトを 1 つのクラウドワークスペー
 
 #~ msgid "Board"
 #~ msgstr ""
+
+#: src/components/editor/SlashMenu.tsx
+msgid "Board embed"
+msgstr ""
 
 #: src/components/modals/NewResourceDialog.tsx
 msgid "Board name"
@@ -211,6 +219,10 @@ msgstr "ブラウザ認証が開かれています。サインイン完了後に
 
 #: src/components/modals/DeviceAuthWaiting.tsx
 msgid "Browser opened"
+msgstr ""
+
+#: src/components/editor/SlashMenu.tsx
+msgid "Bullet list"
 msgstr ""
 
 #: src/components/modals/CreateFolderDialog.tsx
@@ -308,6 +320,10 @@ msgstr "クラウドワークスペース：{0}"
 #: src/components/modals/AccountDialog.tsx
 msgid "Cloud workspaces"
 msgstr "クラウドワークスペース"
+
+#: src/components/editor/SlashMenu.tsx
+msgid "Code block"
+msgstr ""
 
 #: src/components/modals/DeviceAuthWaiting.tsx
 msgid "Codes expire after 10 minutes. Generate a new one to continue."
@@ -432,6 +448,11 @@ msgstr "デフォルトボルトパス：<0>{defaultVaultPath}</0>"
 msgid "Delete"
 msgstr "削除"
 
+#. placeholder {0}: cardsToDelete.length
+#: src/components/BoardView.tsx
+msgid "Delete {0} cards? They move to the trash."
+msgstr ""
+
 #~ msgid "Delete card"
 #~ msgstr ""
 
@@ -525,6 +546,10 @@ msgstr "ワークスペースを切断"
 
 #: src/components/layout/UpdateBanner.tsx
 msgid "Dismiss"
+msgstr ""
+
+#: src/components/editor/SlashMenu.tsx
+msgid "Divider"
 msgstr ""
 
 #: src/components/editor/EditorShell.tsx
@@ -682,12 +707,32 @@ msgstr "一般"
 #~ msgid "Group: Status"
 #~ msgstr ""
 
+#: src/components/editor/SlashMenu.tsx
+msgid "Heading 1"
+msgstr ""
+
+#: src/components/editor/SlashMenu.tsx
+msgid "Heading 2"
+msgstr ""
+
+#: src/components/editor/SlashMenu.tsx
+msgid "Heading 3"
+msgstr ""
+
 #: src/components/editor/EditorShell.tsx
 msgid "Hide"
 msgstr "非表示"
 
+#: src/components/editor/FindBar.tsx
+msgid "Hide replace"
+msgstr ""
+
 #~ msgid "Icon"
 #~ msgstr ""
+
+#: src/components/editor/EditorShell.tsx
+msgid "Image saved to {relAssetPath}."
+msgstr ""
 
 #: src/components/modals/NewResourceDialog.tsx
 msgid "Import file"
@@ -700,6 +745,10 @@ msgstr "{parentPath}/ 内"
 #: src/components/editor/EditorShell.tsx
 msgid "Inline code"
 msgstr "インラインコード"
+
+#: src/components/editor/SlashMenu.tsx
+msgid "Insert block"
+msgstr ""
 
 #: src/components/editor/EditorShell.tsx
 msgid "Insert formula"
@@ -814,6 +863,15 @@ msgstr "Markdown エディター"
 msgid "Markdown file"
 msgstr "Markdown ファイル"
 
+#: src/components/editor/FindBar.tsx
+msgid "Match case"
+msgstr ""
+
+#: src/components/editor/SlashMenu.tsx
+msgid "Math block"
+msgstr ""
+
+#: src/components/editor/SlashMenu.tsx
 #: src/components/modals/NewResourceDialog.tsx
 msgid "Mermaid diagram"
 msgstr "Mermaid 図"
@@ -966,6 +1024,10 @@ msgstr "未インストール"
 
 #~ msgid "Notes"
 #~ msgstr ""
+
+#: src/components/editor/SlashMenu.tsx
+msgid "Numbered list"
+msgstr ""
 
 #: src/components/editor/EditorShell.tsx
 msgid "Only web, email, and phone links can be opened from preview."
@@ -1120,6 +1182,10 @@ msgstr "クイックオープン"
 msgid "Quick switcher"
 msgstr "クイックスイッチャー"
 
+#: src/components/editor/SlashMenu.tsx
+msgid "Quote"
+msgstr ""
+
 #: src/components/editor/EditorShell.tsx
 msgid "Read-only"
 msgstr "読み取り専用"
@@ -1196,6 +1262,14 @@ msgstr "次の名前に変更："
 
 #: src/components/modals/DeviceAuthWaiting.tsx
 msgid "Reopen browser"
+msgstr ""
+
+#: src/components/editor/FindBar.tsx
+msgid "Replace"
+msgstr ""
+
+#: src/components/editor/FindBar.tsx
+msgid "Replace with"
 msgstr ""
 
 #: src/components/editor/EditorShell.tsx
@@ -1296,6 +1370,10 @@ msgstr "設定"
 msgid "Show in Explorer"
 msgstr "エクスプローラーで表示"
 
+#: src/components/editor/FindBar.tsx
+msgid "Show replace"
+msgstr ""
+
 #: src/components/layout/Header.tsx
 msgid "Sign in"
 msgstr "サインイン"
@@ -1354,13 +1432,15 @@ msgstr "公開する前にこのドキュメントを同期してください。
 msgid "Syncing with {0}."
 msgstr "{0} と同期中。"
 
-#~ msgid "Table"
-#~ msgstr ""
+#: src/components/editor/SlashMenu.tsx
+msgid "Table"
+msgstr ""
 
 #~ msgid "Tags"
 #~ msgstr ""
 
 #: src/components/editor/EditorShell.tsx
+#: src/components/editor/SlashMenu.tsx
 msgid "Task list"
 msgstr "タスクリスト"
 
