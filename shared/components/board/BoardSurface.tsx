@@ -91,6 +91,7 @@ export function BoardSurface({
   portalClassName,
 }: BoardSurfaceProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [multiSel, setMultiSel] = useState<Set<string>>(new Set());
   const [dropTarget, setDropTarget] = useState<DropTarget | null>(null);
   const [colDropTarget, setColDropTarget] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
@@ -116,16 +117,26 @@ export function BoardSurface({
   const manualSort = sortBy === "manual" && editableColumns && viewType === "board";
   const today = todayStr();
 
-  // Escape exits fullscreen — but only when no card peek is open, so Escape
-  // closes the peek first (handled in BoardPeek).
+  // Escape exits fullscreen — but only when no card peek is open (BoardPeek
+  // handles its own Escape) and no multi-selection is active (cleared below).
   useEffect(() => {
     if (!fullscreen || !onToggleFullscreen) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !selectedId) onToggleFullscreen();
+      if (e.key === "Escape" && !selectedId && multiSel.size === 0) onToggleFullscreen();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [fullscreen, selectedId, onToggleFullscreen]);
+  }, [fullscreen, selectedId, multiSel.size, onToggleFullscreen]);
+
+  // Escape clears the multi-selection before anything else uses it.
+  useEffect(() => {
+    if (multiSel.size === 0) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMultiSel(new Set());
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [multiSel.size]);
 
   const columns = useMemo(
     () => effectiveColumns(config, cards, groupKey, t`Unassigned`),
@@ -226,7 +237,24 @@ export function BoardSurface({
       const target = hitTestCard(e.clientX, e.clientY);
       if (target) void actions.moveCard(card.id, target.col, target.index);
     } else if (d) {
+      // Cmd/Ctrl-click toggles multi-selection instead of opening the peek.
+      if ((e.metaKey || e.ctrlKey) && !readOnly) {
+        setMultiSel((s) => {
+          const next = new Set(s);
+          if (next.has(card.id)) next.delete(card.id);
+          else next.add(card.id);
+          return next;
+        });
+        return;
+      }
       openCard(card);
+    }
+  };
+
+  /** Apply a patch to every multi-selected card that still exists. */
+  const applyBulk = (patch: Partial<BoardViewCard>) => {
+    for (const id of multiSel) {
+      if (cards.some((c) => c.id === id)) void actions.updateCard(id, patch);
     }
   };
 
@@ -702,9 +730,15 @@ export function BoardSurface({
                             onKeyDown={(e) => {
                               if (e.key === "Enter") openCard(card);
                             }}
-                            className={`group relative block w-full cursor-pointer touch-none select-none rounded-lg bg-white p-2.5 text-left shadow-sm ring-1 transition hover:ring-brand/30 ${
+                            className={`group relative block w-full cursor-pointer touch-none select-none rounded-lg bg-white p-2.5 text-left shadow-sm transition hover:ring-brand/30 ${
                               draggingId === card.id ? "opacity-40" : ""
-                            } ${selected?.id === card.id ? "ring-brand/60" : "ring-black/[0.04]"}`}
+                            } ${
+                              multiSel.has(card.id)
+                                ? "ring-2 ring-brand/70"
+                                : selected?.id === card.id
+                                  ? "ring-1 ring-brand/60"
+                                  : "ring-1 ring-black/[0.04]"
+                            }`}
                           >
                             {!readOnly && (
                             <div
@@ -961,6 +995,73 @@ export function BoardSurface({
           </div>
         )}
       </div>
+
+      {multiSel.size > 0 && !readOnly && (
+        <div className="absolute bottom-4 left-1/2 z-40 flex -translate-x-1/2 items-center gap-2 rounded-xl border border-black/[0.08] bg-white/95 px-3 py-2 shadow-xl backdrop-blur">
+          <span className="text-xs font-medium text-stone-600">
+            <Trans>{multiSel.size} selected</Trans>
+          </span>
+          <select
+            className={ctrlCls}
+            value=""
+            aria-label={t`Set status`}
+            onChange={(e) => {
+              if (e.target.value) applyBulk({ columnKey: e.target.value });
+              e.target.value = "";
+            }}
+          >
+            <option value="" disabled>
+              {t`Status…`}
+            </option>
+            {config.columns.map((c) => (
+              <option key={c.key} value={c.key}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+          <select
+            className={ctrlCls}
+            value=""
+            aria-label={t`Set priority`}
+            onChange={(e) => {
+              if (e.target.value) applyBulk({ priority: e.target.value });
+              e.target.value = "";
+            }}
+          >
+            <option value="" disabled>
+              {t`Priority…`}
+            </option>
+            {PRIORITY_ORDER.map((p) => (
+              <option key={p} value={p}>
+                {p}
+              </option>
+            ))}
+          </select>
+          {actions.deleteCards && (
+            <button
+              type="button"
+              className="inline-flex items-center gap-1 rounded-md border border-red-200 bg-white px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
+              onClick={() => {
+                const targets = cards.filter((c) => multiSel.has(c.id));
+                setMultiSel(new Set());
+                void actions.deleteCards?.(targets);
+              }}
+            >
+              <TrashIcon className="h-3.5 w-3.5" />
+              <Trans>Delete</Trans>
+            </button>
+          )}
+          <button
+            type="button"
+            className="rounded p-1 text-stone-400 hover:bg-stone-100"
+            title={t`Clear selection`}
+            aria-label={t`Clear selection`}
+            onClick={() => setMultiSel(new Set())}
+          >
+            <XMarkIcon className="h-4 w-4" />
+          </button>
+        </div>
+      )}
 
       {selected && PeekComponent && (
         <div className="absolute right-0 top-0 z-30 h-full shadow-[-10px_0_30px_rgba(0,0,0,0.07)]" style={{ width: peekWidth }}>

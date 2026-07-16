@@ -402,6 +402,19 @@ export function WebBoardView({
           setError(String(e))
         }
       },
+      deleteCards: async (cardsToDelete) => {
+        if (cardsToDelete.length === 0) return
+        if (!(await confirm(`Delete ${cardsToDelete.length} cards? They move to the trash.`, { title: 'Delete cards', destructive: true }))) return
+        try {
+          for (const card of cardsToDelete) {
+            const meta = metaByPath.get(card.id)
+            if (meta) await api.deleteDocument(workspaceId, meta.id)
+          }
+          await load()
+        } catch (e) {
+          setError(String(e))
+        }
+      },
       duplicateCard: async (card) => {
         const meta = metaByPath.get(card.id)
         if (!meta || !config) return

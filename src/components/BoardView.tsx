@@ -237,6 +237,22 @@ export function BoardView({ boardPath, boardRelativePath }: { boardPath: string;
           setError(String(e));
         }
       },
+      deleteCards: async (cardsToDelete) => {
+        if (cardsToDelete.length === 0) return;
+        if (!(await confirm(t`Delete ${cardsToDelete.length} cards? They move to the trash.`))) return;
+        try {
+          let ws = null;
+          for (const card of cardsToDelete) {
+            const raw = rawById.get(card.id);
+            if (!raw) continue;
+            ws = await tauri.trashEntry(rootPath, raw.relativePath);
+          }
+          if (ws) dispatch({ type: "UPDATE_WORKSPACE", workspace: ws });
+          await load();
+        } catch (e) {
+          setError(String(e));
+        }
+      },
       duplicateCard: async (card) => {
         if (!config) return;
         const raw = rawById.get(card.id);

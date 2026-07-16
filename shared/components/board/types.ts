@@ -16,6 +16,9 @@ export type BoardActions = {
   /** Apply a partial edit to a card (status/priority/assignee/due/tags/icon/title/notes). */
   updateCard: (cardId: string, patch: Partial<BoardViewCard>) => Promise<void> | void;
   deleteCard: (card: BoardViewCard) => Promise<void> | void;
+  /** Bulk delete with a single confirmation (multi-select toolbar). Omit to
+   *  hide the bulk Delete action. */
+  deleteCards?: (cards: BoardViewCard[]) => Promise<void> | void;
   duplicateCard?: (card: BoardViewCard) => Promise<void> | void;
   copyCardLink?: (card: BoardViewCard) => Promise<void> | void;
   saveAsTemplate?: (card: BoardViewCard) => Promise<void> | void;
