@@ -48,12 +48,16 @@ export type BoardCard = {
   taskTotal?: number;
   icon?: string | null;
   excerpt?: string | null;
+  /** Markdown body (frontmatter stripped) — powers full-text card search. */
+  body?: string;
   attachments?: string[];
   /** Full frontmatter map (for custom fields declared in the board config). */
   properties?: Record<string, string>;
   blockedBy?: string[];
   blocks?: string[];
   relates?: string[];
+  /** Parent card slug (frontmatter `parent`) — makes this card a sub-card. */
+  parent?: string | null;
 };
 
 /** A reusable card template (`.md` in `<boardDir>/.templates/`). */

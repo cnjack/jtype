@@ -71,6 +71,7 @@ pub fn catalog() -> Value {
                 "priority": json!({ "type": "string", "enum": ["none","low","medium","high","urgent"], "description": "Optional priority" }),
                 "assignee": p_str("Optional assignee (free text or member handle)"),
                 "due": p_str("Optional due date (YYYY-MM-DD)"),
+                "parent": p_str("Optional parent card slug (filename without .md) — makes this a sub-card"),
             }),
             &["workspace_id", "board", "status", "title"]
         ),
@@ -87,7 +88,7 @@ pub fn catalog() -> Value {
         ),
         tool(
             "update_card",
-            "Update a card's fields (status/priority/assignee/due). An empty string clears a field.",
+            "Update a card's fields (status/priority/assignee/due/parent). An empty string clears a field.",
             json!({
                 "workspace_id": p_str("Workspace id"),
                 "path": p_str("Card note path"),
@@ -95,8 +96,39 @@ pub fn catalog() -> Value {
                 "priority": json!({ "type": "string", "enum": ["none","low","medium","high","urgent"] }),
                 "assignee": p_str("New assignee, or empty string to clear"),
                 "due": p_str("New due date, or empty string to clear"),
+                "parent": p_str("Parent card slug (sub-card), or empty string to detach"),
             }),
             &["workspace_id", "path"]
+        ),
+        tool(
+            "list_card_comments",
+            "List the comment threads on a card (cloud comments; includes replies, reactions, resolve state).",
+            json!({
+                "workspace_id": p_str("Workspace id"),
+                "path": p_str("Card note path (from list_cards)"),
+            }),
+            &["workspace_id", "path"]
+        ),
+        tool(
+            "comment_card",
+            "Add a comment to a card. Pass parent_id (a root comment id) to reply in that thread.",
+            json!({
+                "workspace_id": p_str("Workspace id"),
+                "path": p_str("Card note path"),
+                "body": p_str("Comment body (Markdown)"),
+                "parent_id": p_str("Optional root comment id to reply to"),
+            }),
+            &["workspace_id", "path", "body"]
+        ),
+        tool(
+            "resolve_card_comment",
+            "Resolve or unresolve a comment thread on a card.",
+            json!({
+                "workspace_id": p_str("Workspace id"),
+                "comment_id": p_str("Comment id (root or reply — resolves the thread root)"),
+                "resolved": json!({ "type": "boolean", "description": "true to resolve, false to reopen" }),
+            }),
+            &["workspace_id", "comment_id"]
         ),
     ])
 }
@@ -176,6 +208,9 @@ async fn run(st: &McpState, token: &str, name: &str, args: &Value) -> Result<Str
             if let Some(v) = opt(args, "due") {
                 content = jtype_core::set_frontmatter_field(&content, "due", Some(&v));
             }
+            if let Some(v) = opt(args, "parent") {
+                content = jtype_core::set_frontmatter_field(&content, "parent", Some(&format!("[[{v}]]")));
+            }
 
             // Don't clobber an existing card whose title slugifies the same: the
             // save path overwrites by relative_path, so probe and suffix -2, -3, …
@@ -243,8 +278,15 @@ async fn run(st: &McpState, token: &str, name: &str, args: &Value) -> Result<Str
                     touched = true;
                 }
             }
+            // Parent slugs serialize as wikilinks, matching the board UI.
+            if let Some(v) = args.get("parent").and_then(|v| v.as_str()) {
+                let link = format!("[[{v}]]");
+                let set = if v.is_empty() { None } else { Some(link.as_str()) };
+                content = jtype_core::set_frontmatter_field(&content, "parent", set);
+                touched = true;
+            }
             if !touched {
-                return Err("update_card: provide at least one of status/priority/assignee/due".into());
+                return Err("update_card: provide at least one of status/priority/assignee/due/parent".into());
             }
             let res = api_post(
                 st,
@@ -254,6 +296,46 @@ async fn run(st: &McpState, token: &str, name: &str, args: &Value) -> Result<Str
             )
             .await?;
             Ok(format!("Updated card {rel}.\n{}", pretty(&res)?))
+        }
+        "list_card_comments" => {
+            let ws = req(args, "workspace_id")?;
+            let path = req(args, "path")?;
+            let doc = get_doc(st, token, &ws, &path).await?;
+            let doc_id = doc.get("id").and_then(|v| v.as_str()).ok_or("card has no document id")?;
+            let comments = api_get(st, token, &format!("/api/v1/workspaces/{ws}/documents/{doc_id}/comments")).await?;
+            pretty(&comments)
+        }
+        "comment_card" => {
+            let ws = req(args, "workspace_id")?;
+            let path = req(args, "path")?;
+            let body = req(args, "body")?;
+            let doc = get_doc(st, token, &ws, &path).await?;
+            let doc_id = doc.get("id").and_then(|v| v.as_str()).ok_or("card has no document id")?;
+            let payload = match opt(args, "parent_id") {
+                Some(pid) => json!({ "body": body, "parentId": pid }),
+                None => json!({ "body": body }),
+            };
+            let res = api_post(
+                st,
+                token,
+                &format!("/api/v1/workspaces/{ws}/documents/{doc_id}/comments"),
+                payload,
+            )
+            .await?;
+            Ok(format!("Commented on {path}.\n{}", pretty(&res)?))
+        }
+        "resolve_card_comment" => {
+            let ws = req(args, "workspace_id")?;
+            let comment_id = req(args, "comment_id")?;
+            let resolved = args.get("resolved").and_then(|v| v.as_bool()).unwrap_or(true);
+            let res = api_post(
+                st,
+                token,
+                &format!("/api/v1/workspaces/{ws}/comments/{comment_id}/resolve"),
+                json!({ "resolved": resolved }),
+            )
+            .await?;
+            Ok(pretty(&res)?)
         }
         other => Err(format!("unknown tool: {other}")),
     }
@@ -319,6 +401,10 @@ async fn collect_cards(st: &McpState, token: &str, ws: &str, board_id: &str) -> 
                 .filter(|s| !s.is_empty())
                 .unwrap_or_else(|| card_title(content, path));
             let position = fm.get("position").and_then(|v| v.parse::<i64>().ok()).unwrap_or(0);
+            let parent = fm
+                .get("parent")
+                .map(|v| jtype_core::parse_card_links(v))
+                .and_then(|links| links.into_iter().next());
             cards.push(json!({
                 "path": path,
                 "title": title,
@@ -327,6 +413,7 @@ async fn collect_cards(st: &McpState, token: &str, ws: &str, board_id: &str) -> 
                 "priority": fm.get("priority").cloned(),
                 "assignee": fm.get("assignee").cloned(),
                 "due": fm.get("due").cloned(),
+                "parent": parent,
             }));
         }
     }

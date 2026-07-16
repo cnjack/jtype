@@ -16,6 +16,9 @@ export type BoardActions = {
   /** Apply a partial edit to a card (status/priority/assignee/due/tags/icon/title/notes). */
   updateCard: (cardId: string, patch: Partial<BoardViewCard>) => Promise<void> | void;
   deleteCard: (card: BoardViewCard) => Promise<void> | void;
+  /** Bulk delete with a single confirmation (multi-select toolbar). Omit to
+   *  hide the bulk Delete action. */
+  deleteCards?: (cards: BoardViewCard[]) => Promise<void> | void;
   duplicateCard?: (card: BoardViewCard) => Promise<void> | void;
   copyCardLink?: (card: BoardViewCard) => Promise<void> | void;
   saveAsTemplate?: (card: BoardViewCard) => Promise<void> | void;
@@ -55,11 +58,20 @@ export type BoardPeekProps = {
   onAddField?: (label: string) => void;
   /** Sibling cards (excluding this one) offered as dependency targets. */
   dependencyCards?: { slug: string; title: string }[];
+  /** Sub-cards of this card (children resolved via the `parent` slug). */
+  childCards?: { id: string; title: string; icon?: string | null; statusName: string; done: boolean }[];
+  /** Open another card's peek (sub-card list navigation). */
+  onOpenCard?: (cardId: string) => void;
+  /** Create a sub-card of this card (title collected inline). */
+  onAddChild?: (title: string) => Promise<void> | void;
   loadNotes?: (id: string) => Promise<string>;
   onUploadAttachment?: (file: File) => Promise<string>;
   loadComments?: (id: string) => Promise<BoardComment[]>;
-  addComment?: (id: string, body: string) => Promise<BoardComment>;
+  addComment?: (id: string, body: string, parentId?: string) => Promise<BoardComment>;
+  updateComment?: (commentId: string, body: string) => Promise<BoardComment>;
   deleteComment?: (commentId: string) => Promise<void>;
+  toggleReaction?: (commentId: string, emoji: string) => Promise<BoardComment>;
+  resolveComment?: (commentId: string, resolved: boolean) => Promise<BoardComment>;
   currentUser?: string;
   loadActivity?: (id: string) => Promise<BoardActivityEvent[]>;
   onChange: (patch: Partial<BoardViewCard>) => void;
@@ -83,10 +95,13 @@ export type BoardSurfaceProps = {
   loadNotes?: (cardId: string) => Promise<string>;
   /** Upload a file as a card attachment, returning its URL/path. Omit to allow only URL/path entry. */
   onUploadAttachment?: (file: File) => Promise<string>;
-  /** Card comments (DB board). Supply all three + currentUser to enable the section. */
+  /** Card comments (cloud). Supply load/add/delete + currentUser to enable the section. */
   loadComments?: (cardId: string) => Promise<BoardComment[]>;
-  addComment?: (cardId: string, body: string) => Promise<BoardComment>;
+  addComment?: (cardId: string, body: string, parentId?: string) => Promise<BoardComment>;
+  updateComment?: (commentId: string, body: string) => Promise<BoardComment>;
   deleteComment?: (commentId: string) => Promise<void>;
+  toggleReaction?: (commentId: string, emoji: string) => Promise<BoardComment>;
+  resolveComment?: (commentId: string, resolved: boolean) => Promise<BoardComment>;
   /** Current user's display name, to show delete only on their own comments. */
   currentUser?: string;
   /** Load a card's activity timeline (DB board); omit to hide the Activity section. */

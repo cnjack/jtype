@@ -147,6 +147,10 @@ msgstr "Added to favorites."
 msgid "Advanced"
 msgstr "Advanced"
 
+#: src/components/editor/FindBar.tsx
+msgid "All"
+msgstr "All"
+
 #: src/components/BoardTable.tsx
 #: src/components/BoardView.tsx
 #: src/components/CardPeek.tsx
@@ -182,6 +186,10 @@ msgstr "Bind the current local vault to one cloud workspace."
 #: src/components/BoardView.tsx
 #~ msgid "Board"
 #~ msgstr "Board"
+
+#: src/components/editor/SlashMenu.tsx
+msgid "Board embed"
+msgstr "Board embed"
 
 #: src/components/modals/NewResourceDialog.tsx
 msgid "Board name"
@@ -223,6 +231,10 @@ msgstr "Browser authorization is open. This sync will continue after sign-in "
 #: src/components/modals/DeviceAuthWaiting.tsx
 msgid "Browser opened"
 msgstr "Browser opened"
+
+#: src/components/editor/SlashMenu.tsx
+msgid "Bullet list"
+msgstr "Bullet list"
 
 #: src/components/modals/CreateFolderDialog.tsx
 #: src/components/modals/DeleteFolderDialog.tsx
@@ -323,6 +335,10 @@ msgstr "Cloud workspace: {0}"
 #: src/components/modals/AccountDialog.tsx
 msgid "Cloud workspaces"
 msgstr "Cloud workspaces"
+
+#: src/components/editor/SlashMenu.tsx
+msgid "Code block"
+msgstr "Code block"
 
 #: src/components/modals/DeviceAuthWaiting.tsx
 msgid "Codes expire after 10 minutes. Generate a new one to continue."
@@ -453,6 +469,11 @@ msgstr "Default vault path: <0>{defaultVaultPath}</0>"
 msgid "Delete"
 msgstr "Delete"
 
+#. placeholder {0}: cardsToDelete.length
+#: src/components/BoardView.tsx
+msgid "Delete {0} cards? They move to the trash."
+msgstr "Delete {0} cards? They move to the trash."
+
 #: src/components/CardPeek.tsx
 #~ msgid "Delete card"
 #~ msgstr "Delete card"
@@ -551,6 +572,10 @@ msgstr "Disconnect workspace"
 #: src/components/layout/UpdateBanner.tsx
 msgid "Dismiss"
 msgstr "Dismiss"
+
+#: src/components/editor/SlashMenu.tsx
+msgid "Divider"
+msgstr "Divider"
 
 #: src/components/editor/EditorShell.tsx
 msgid "Document info"
@@ -717,13 +742,33 @@ msgstr "General"
 #~ msgid "Group: Status"
 #~ msgstr "Group: Status"
 
+#: src/components/editor/SlashMenu.tsx
+msgid "Heading 1"
+msgstr "Heading 1"
+
+#: src/components/editor/SlashMenu.tsx
+msgid "Heading 2"
+msgstr "Heading 2"
+
+#: src/components/editor/SlashMenu.tsx
+msgid "Heading 3"
+msgstr "Heading 3"
+
 #: src/components/editor/EditorShell.tsx
 msgid "Hide"
 msgstr "Hide"
 
+#: src/components/editor/FindBar.tsx
+msgid "Hide replace"
+msgstr "Hide replace"
+
 #: src/components/CardPeek.tsx
 #~ msgid "Icon"
 #~ msgstr "Icon"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Image saved to {relAssetPath}."
+msgstr "Image saved to {relAssetPath}."
 
 #: src/components/modals/NewResourceDialog.tsx
 msgid "Import file"
@@ -736,6 +781,10 @@ msgstr "in {parentPath}/"
 #: src/components/editor/EditorShell.tsx
 msgid "Inline code"
 msgstr "Inline code"
+
+#: src/components/editor/SlashMenu.tsx
+msgid "Insert block"
+msgstr "Insert block"
 
 #: src/components/editor/EditorShell.tsx
 msgid "Insert formula"
@@ -852,6 +901,15 @@ msgstr "Markdown editor"
 msgid "Markdown file"
 msgstr "Markdown file"
 
+#: src/components/editor/FindBar.tsx
+msgid "Match case"
+msgstr "Match case"
+
+#: src/components/editor/SlashMenu.tsx
+msgid "Math block"
+msgstr "Math block"
+
+#: src/components/editor/SlashMenu.tsx
 #: src/components/modals/NewResourceDialog.tsx
 msgid "Mermaid diagram"
 msgstr "Mermaid diagram"
@@ -1013,6 +1071,10 @@ msgstr "Not installed"
 #~ msgid "Notes"
 #~ msgstr "Notes"
 
+#: src/components/editor/SlashMenu.tsx
+msgid "Numbered list"
+msgstr "Numbered list"
+
 #: src/components/editor/EditorShell.tsx
 msgid "Only web, email, and phone links can be opened from preview."
 msgstr "Only web, email, and phone links can be opened from preview."
@@ -1173,6 +1235,10 @@ msgstr "Quick open"
 msgid "Quick switcher"
 msgstr "Quick switcher"
 
+#: src/components/editor/SlashMenu.tsx
+msgid "Quote"
+msgstr "Quote"
+
 #: src/components/editor/EditorShell.tsx
 msgid "Read-only"
 msgstr "Read-only"
@@ -1252,6 +1318,14 @@ msgstr "Rename to:"
 #: src/components/modals/DeviceAuthWaiting.tsx
 msgid "Reopen browser"
 msgstr "Reopen browser"
+
+#: src/components/editor/FindBar.tsx
+msgid "Replace"
+msgstr "Replace"
+
+#: src/components/editor/FindBar.tsx
+msgid "Replace with"
+msgstr "Replace with"
 
 #: src/components/editor/EditorShell.tsx
 msgid "Republish"
@@ -1355,6 +1429,10 @@ msgstr "Settings"
 msgid "Show in Explorer"
 msgstr "Show in Explorer"
 
+#: src/components/editor/FindBar.tsx
+msgid "Show replace"
+msgstr "Show replace"
+
 #: src/components/layout/Header.tsx
 msgid "Sign in"
 msgstr "Sign in"
@@ -1419,9 +1497,9 @@ msgstr "Sync this document before publishing."
 msgid "Syncing with {0}."
 msgstr "Syncing with {0}."
 
-#: src/components/BoardView.tsx
-#~ msgid "Table"
-#~ msgstr "Table"
+#: src/components/editor/SlashMenu.tsx
+msgid "Table"
+msgstr "Table"
 
 #: src/components/BoardTable.tsx
 #: src/components/BoardView.tsx
@@ -1430,6 +1508,7 @@ msgstr "Syncing with {0}."
 #~ msgstr "Tags"
 
 #: src/components/editor/EditorShell.tsx
+#: src/components/editor/SlashMenu.tsx
 msgid "Task list"
 msgstr "Task list"
 

@@ -38,6 +38,8 @@ import {
   PRIORITY_STYLE,
   blockedCounts,
   cardSlug,
+  childCardsByParent,
+  childProgress,
   effectiveColumns,
   groupValueOf,
   RESERVED_CARD_KEYS,
@@ -77,7 +79,10 @@ export function BoardSurface({
   onUploadAttachment,
   loadComments,
   addComment,
+  updateComment,
   deleteComment,
+  toggleReaction,
+  resolveComment,
   currentUser,
   loadActivity,
   fullscreen,
@@ -89,6 +94,7 @@ export function BoardSurface({
   portalClassName,
 }: BoardSurfaceProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [multiSel, setMultiSel] = useState<Set<string>>(new Set());
   const [dropTarget, setDropTarget] = useState<DropTarget | null>(null);
   const [colDropTarget, setColDropTarget] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
@@ -114,16 +120,26 @@ export function BoardSurface({
   const manualSort = sortBy === "manual" && editableColumns && viewType === "board";
   const today = todayStr();
 
-  // Escape exits fullscreen — but only when no card peek is open, so Escape
-  // closes the peek first (handled in BoardPeek).
+  // Escape exits fullscreen — but only when no card peek is open (BoardPeek
+  // handles its own Escape) and no multi-selection is active (cleared below).
   useEffect(() => {
     if (!fullscreen || !onToggleFullscreen) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !selectedId) onToggleFullscreen();
+      if (e.key === "Escape" && !selectedId && multiSel.size === 0) onToggleFullscreen();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [fullscreen, selectedId, onToggleFullscreen]);
+  }, [fullscreen, selectedId, multiSel.size, onToggleFullscreen]);
+
+  // Escape clears the multi-selection before anything else uses it.
+  useEffect(() => {
+    if (multiSel.size === 0) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMultiSel(new Set());
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [multiSel.size]);
 
   const columns = useMemo(
     () => effectiveColumns(config, cards, groupKey, t`Unassigned`),
@@ -141,6 +157,8 @@ export function BoardSurface({
   const vis = useMemo(() => visibleCardsFn(cards, search, filter), [cards, search, filter]);
   // Blocker counts resolve against ALL cards (a blocker may be filtered out of view).
   const blockers = useMemo(() => blockedCounts(cards, config.doneColumn), [cards, config.doneColumn]);
+  // Sub-cards resolve against ALL cards too (children may be filtered from view).
+  const childrenMap = useMemo(() => childCardsByParent(cards), [cards]);
   const assignees = useMemo(() => [...new Set(cards.map((c) => c.assignee).filter(Boolean) as string[])], [cards]);
   const allTags = useMemo(() => [...new Set(cards.flatMap((c) => c.tags.map((tg) => tg.label)))], [cards]);
   const statusName = (key: string) => config.columns.find((c) => c.key === key)?.name || key || t`Unassigned`;
@@ -222,7 +240,24 @@ export function BoardSurface({
       const target = hitTestCard(e.clientX, e.clientY);
       if (target) void actions.moveCard(card.id, target.col, target.index);
     } else if (d) {
+      // Cmd/Ctrl-click toggles multi-selection instead of opening the peek.
+      if ((e.metaKey || e.ctrlKey) && !readOnly) {
+        setMultiSel((s) => {
+          const next = new Set(s);
+          if (next.has(card.id)) next.delete(card.id);
+          else next.add(card.id);
+          return next;
+        });
+        return;
+      }
       openCard(card);
+    }
+  };
+
+  /** Apply a patch to every multi-selected card that still exists. */
+  const applyBulk = (patch: Partial<BoardViewCard>) => {
+    for (const id of multiSel) {
+      if (cards.some((c) => c.id === id)) void actions.updateCard(id, patch);
     }
   };
 
@@ -675,13 +710,15 @@ export function BoardSurface({
                     {colCards.map((card, idx) => {
                       const overdue = card.due && card.due < today && card.columnKey !== doneKey;
                       const blockedCount = blockers.get(card.id) ?? 0;
+                      const children = childrenMap.get(card.id);
                       const hasMeta =
                         (card.priority && card.priority !== "none") ||
                         card.assignee ||
                         card.due ||
                         (card.taskTotal ?? 0) > 0 ||
                         card.tags.length > 0 ||
-                        blockedCount > 0;
+                        blockedCount > 0 ||
+                        (children?.length ?? 0) > 0;
                       return (
                         <Fragment key={card.id}>
                           {showLine(idx) && <div className="mx-1 h-0.5 rounded bg-brand" />}
@@ -696,9 +733,15 @@ export function BoardSurface({
                             onKeyDown={(e) => {
                               if (e.key === "Enter") openCard(card);
                             }}
-                            className={`group relative block w-full cursor-pointer touch-none select-none rounded-lg bg-white p-2.5 text-left shadow-sm ring-1 transition hover:ring-brand/30 ${
+                            className={`group relative block w-full cursor-pointer touch-none select-none rounded-lg bg-white p-2.5 text-left shadow-sm transition hover:ring-brand/30 ${
                               draggingId === card.id ? "opacity-40" : ""
-                            } ${selected?.id === card.id ? "ring-brand/60" : "ring-black/[0.04]"}`}
+                            } ${
+                              multiSel.has(card.id)
+                                ? "ring-2 ring-brand/70"
+                                : selected?.id === card.id
+                                  ? "ring-1 ring-brand/60"
+                                  : "ring-1 ring-black/[0.04]"
+                            }`}
                           >
                             {!readOnly && (
                             <div
@@ -788,6 +831,33 @@ export function BoardSurface({
                                     {card.taskDone}/{card.taskTotal}
                                   </span>
                                 )}
+                                {children &&
+                                  children.length > 0 &&
+                                  (() => {
+                                    const prog = childProgress(children, config.doneColumn);
+                                    const circumference = 2 * Math.PI * 6;
+                                    return (
+                                      <span
+                                        className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-medium ${prog.done === prog.total ? "bg-emerald-50 text-emerald-600" : "bg-stone-100 text-stone-500"}`}
+                                        title={t`${prog.done} of ${prog.total} sub-cards done`}
+                                      >
+                                        <svg viewBox="0 0 16 16" className="h-3 w-3 -rotate-90">
+                                          <circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" strokeOpacity="0.25" strokeWidth="3" />
+                                          <circle
+                                            cx="8"
+                                            cy="8"
+                                            r="6"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="3"
+                                            strokeLinecap="round"
+                                            strokeDasharray={`${(prog.done / prog.total) * circumference} ${circumference}`}
+                                          />
+                                        </svg>
+                                        {prog.done}/{prog.total}
+                                      </span>
+                                    );
+                                  })()}
                                 {card.tags.map((tag) => (
                                   <span key={tag.label} className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[11px] text-brand-dark" style={{ backgroundColor: tag.color ? `${tag.color}22` : "rgba(0,136,132,0.10)" }}>
                                     <TagIcon className="h-3 w-3" />
@@ -929,6 +999,73 @@ export function BoardSurface({
         )}
       </div>
 
+      {multiSel.size > 0 && !readOnly && (
+        <div className="absolute bottom-4 left-1/2 z-40 flex -translate-x-1/2 items-center gap-2 rounded-xl border border-black/[0.08] bg-white/95 px-3 py-2 shadow-xl backdrop-blur">
+          <span className="text-xs font-medium text-stone-600">
+            <Trans>{multiSel.size} selected</Trans>
+          </span>
+          <select
+            className={ctrlCls}
+            value=""
+            aria-label={t`Set status`}
+            onChange={(e) => {
+              if (e.target.value) applyBulk({ columnKey: e.target.value });
+              e.target.value = "";
+            }}
+          >
+            <option value="" disabled>
+              {t`Status…`}
+            </option>
+            {config.columns.map((c) => (
+              <option key={c.key} value={c.key}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+          <select
+            className={ctrlCls}
+            value=""
+            aria-label={t`Set priority`}
+            onChange={(e) => {
+              if (e.target.value) applyBulk({ priority: e.target.value });
+              e.target.value = "";
+            }}
+          >
+            <option value="" disabled>
+              {t`Priority…`}
+            </option>
+            {PRIORITY_ORDER.map((p) => (
+              <option key={p} value={p}>
+                {p}
+              </option>
+            ))}
+          </select>
+          {actions.deleteCards && (
+            <button
+              type="button"
+              className="inline-flex items-center gap-1 rounded-md border border-red-200 bg-white px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
+              onClick={() => {
+                const targets = cards.filter((c) => multiSel.has(c.id));
+                setMultiSel(new Set());
+                void actions.deleteCards?.(targets);
+              }}
+            >
+              <TrashIcon className="h-3.5 w-3.5" />
+              <Trans>Delete</Trans>
+            </button>
+          )}
+          <button
+            type="button"
+            className="rounded p-1 text-stone-400 hover:bg-stone-100"
+            title={t`Clear selection`}
+            aria-label={t`Clear selection`}
+            onClick={() => setMultiSel(new Set())}
+          >
+            <XMarkIcon className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
       {selected && PeekComponent && (
         <div className="absolute right-0 top-0 z-30 h-full shadow-[-10px_0_30px_rgba(0,0,0,0.07)]" style={{ width: peekWidth }}>
           <div
@@ -966,11 +1103,34 @@ export function BoardSurface({
               void actions.setConfig({ fields: [...(config.fields ?? []), { key, label }] });
             }}
             dependencyCards={cards.filter((c) => c.id !== selected.id).map((c) => ({ slug: cardSlug(c), title: c.title }))}
+            childCards={(childrenMap.get(selected.id) ?? []).map((c) => ({
+              id: c.id,
+              title: c.title,
+              icon: c.icon,
+              statusName: statusName(c.columnKey),
+              done: c.columnKey === doneKey,
+            }))}
+            onOpenCard={(cardId) => setSelectedId(cardId)}
+            onAddChild={
+              readOnly
+                ? undefined
+                : async (title) => {
+                    // Sub-cards start in the first status column, not the parent's.
+                    const startCol = editableColumns ? config.columns[0]?.key ?? selected.columnKey : selected.columnKey;
+                    const newId = await actions.createCard(startCol, title);
+                    if (typeof newId === "string") {
+                      await actions.updateCard(newId, { parent: cardSlug(selected) });
+                    }
+                  }
+            }
             loadNotes={loadNotes}
             onUploadAttachment={onUploadAttachment}
             loadComments={loadComments}
             addComment={addComment}
+            updateComment={updateComment}
             deleteComment={deleteComment}
+            toggleReaction={toggleReaction}
+            resolveComment={resolveComment}
             currentUser={currentUser}
             loadActivity={loadActivity}
             onChange={(patch) => void actions.updateCard(selected.id, patch)}

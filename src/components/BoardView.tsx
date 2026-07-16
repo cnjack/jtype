@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { t } from "@lingui/core/macro";
 import { useAppDispatch, useAppState } from "../app/AppState";
 import { useFileSystem } from "../hooks";
@@ -13,11 +13,13 @@ import {
   serializeAttachments,
   serializeLinks,
   slugify,
+  type BoardComment,
   type BoardViewCard,
   type BoardViewConfig,
 } from "@shared/lib/board";
+import { httpRequest } from "@shared/lib/http";
 import { tauri } from "../lib/tauri";
-import { basename } from "../lib/utils";
+import { basename, normalizePath } from "../lib/utils";
 import type { BoardConfig, BoardCard, CardTemplate } from "../lib/types";
 
 function rand(): string {
@@ -75,6 +77,87 @@ export function BoardView({ boardPath, boardRelativePath }: { boardPath: string;
 
   const rawById = useMemo(() => new Map(rawCards.map((c) => [c.path, c])), [rawCards]);
 
+  // --- cloud comments (bound + synced vaults only) --------------------------
+  // Comments live in the cloud, keyed by the card's cloud DOCUMENT id. The
+  // desktop resolves a card's relativePath to that id via the documents list
+  // (cached), then talks to the same REST API the web board uses.
+  const cloudCtx = useMemo(() => {
+    if (!state.workspace || !state.syncToken || !state.cloudProfile?.token) return null;
+    if (state.vaultSettings[state.workspace.rootPath]?.cloudSyncEnabled === false) return null;
+    const binding = state.vaultBindings.find((b) => b.localVaultPath === state.workspace?.rootPath);
+    if (!binding) return null;
+    const serviceUrl = (state.serviceUrl || state.cloudProfile?.serverUrl || "http://localhost:13345").trim().replace(/\/$/, "");
+    return { serviceUrl, token: state.syncToken, workspaceId: binding.workspaceId };
+  }, [state.workspace, state.syncToken, state.cloudProfile, state.vaultSettings, state.vaultBindings, state.serviceUrl]);
+
+  const docIdCache = useRef<Map<string, string>>(new Map());
+
+  const cloudJson = useCallback(
+    async <T,>(path: string, method = "GET", body?: unknown): Promise<T> => {
+      if (!cloudCtx) throw new Error("cloud not connected");
+      const res = await httpRequest(`${cloudCtx.serviceUrl}/api/v1/workspaces/${cloudCtx.workspaceId}${path}`, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${cloudCtx.token}`,
+          "x-client-type": "desktop",
+        },
+        ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (res.status === 204) return undefined as T;
+      return (await res.json()) as T;
+    },
+    [cloudCtx],
+  );
+
+  /** Resolve a card's cloud document id from its vault relativePath (cached). */
+  const resolveDocId = useCallback(
+    async (cardPath: string): Promise<string> => {
+      const raw = rawById.get(cardPath);
+      if (!raw) throw new Error("card not found");
+      const rel = normalizePath(raw.relativePath);
+      const cached = docIdCache.current.get(rel);
+      if (cached) return cached;
+      const docs = await cloudJson<{ id: string; relativePath: string }[]>("/documents");
+      for (const doc of docs) docIdCache.current.set(normalizePath(doc.relativePath), doc.id);
+      const id = docIdCache.current.get(rel);
+      if (!id) throw new Error("card not synced to cloud yet");
+      return id;
+    },
+    [rawById, cloudJson],
+  );
+
+  // Comment callbacks are only offered when the vault is cloud-bound; without
+  // them the peek hides its Comments section (comments stay a cloud feature).
+  const commentProps = useMemo(() => {
+    if (!cloudCtx) return {};
+    return {
+      loadComments: async (cardId: string): Promise<BoardComment[]> => {
+        try {
+          const docId = await resolveDocId(cardId);
+          return await cloudJson<BoardComment[]>(`/documents/${docId}/comments`);
+        } catch {
+          return [];
+        }
+      },
+      addComment: async (cardId: string, body: string, parentId?: string): Promise<BoardComment> => {
+        const docId = await resolveDocId(cardId);
+        return cloudJson<BoardComment>(`/documents/${docId}/comments`, "POST", { body, parentId });
+      },
+      updateComment: (commentId: string, body: string): Promise<BoardComment> =>
+        cloudJson<BoardComment>(`/comments/${commentId}`, "PATCH", { body }),
+      deleteComment: async (commentId: string): Promise<void> => {
+        await cloudJson<void>(`/comments/${commentId}`, "DELETE");
+      },
+      toggleReaction: (commentId: string, emoji: string): Promise<BoardComment> =>
+        cloudJson<BoardComment>(`/comments/${commentId}/reactions`, "POST", { emoji }),
+      resolveComment: (commentId: string, resolved: boolean): Promise<BoardComment> =>
+        cloudJson<BoardComment>(`/comments/${commentId}/resolve`, "POST", { resolved }),
+      currentUser: state.syncUsername || undefined,
+    };
+  }, [cloudCtx, cloudJson, resolveDocId, state.syncUsername]);
+
   const cards: BoardViewCard[] = useMemo(
     () =>
       rawCards.map((c) => ({
@@ -90,11 +173,13 @@ export function BoardView({ boardPath, boardRelativePath }: { boardPath: string;
         taskDone: c.taskDone,
         taskTotal: c.taskTotal,
         excerpt: c.excerpt ?? null,
+        notes: c.body,
         attachments: c.attachments ?? [],
         custom: pickCustomFields(c.properties, config?.fields),
         blockedBy: c.blockedBy ?? [],
         blocks: c.blocks ?? [],
         relates: c.relates ?? [],
+        parent: c.parent ?? null,
       })),
     [rawCards, config?.fields, config?.labels],
   );
@@ -187,6 +272,7 @@ export function BoardView({ boardPath, boardRelativePath }: { boardPath: string;
           if (patch.blockedBy !== undefined) next.blocked_by = serializeLinks(patch.blockedBy);
           if (patch.blocks !== undefined) next.blocks = serializeLinks(patch.blocks);
           if (patch.relates !== undefined) next.relates = serializeLinks(patch.relates);
+          if (patch.parent !== undefined) next.parent = patch.parent ? serializeLinks([patch.parent]) : "";
           const newBody = patch.notes !== undefined ? patch.notes : body;
           await tauri.writeFile(id, writeFrontmatter(newBody, next));
           await load();
@@ -229,6 +315,22 @@ export function BoardView({ boardPath, boardRelativePath }: { boardPath: string;
         try {
           const ws = await tauri.trashEntry(rootPath, raw.relativePath);
           dispatch({ type: "UPDATE_WORKSPACE", workspace: ws });
+          await load();
+        } catch (e) {
+          setError(String(e));
+        }
+      },
+      deleteCards: async (cardsToDelete) => {
+        if (cardsToDelete.length === 0) return;
+        if (!(await confirm(t`Delete ${cardsToDelete.length} cards? They move to the trash.`))) return;
+        try {
+          let ws = null;
+          for (const card of cardsToDelete) {
+            const raw = rawById.get(card.id);
+            if (!raw) continue;
+            ws = await tauri.trashEntry(rootPath, raw.relativePath);
+          }
+          if (ws) dispatch({ type: "UPDATE_WORKSPACE", workspace: ws });
           await load();
         } catch (e) {
           setError(String(e));
@@ -396,6 +498,7 @@ export function BoardView({ boardPath, boardRelativePath }: { boardPath: string;
       templates={templates.map((tp) => ({ id: tp.path, name: tp.name }))}
       createFromTemplate={createFromTemplate}
       loadNotes={loadNotes}
+      {...commentProps}
       fullscreen={state.focusMode}
       onToggleFullscreen={() => dispatch({ type: "TOGGLE_FOCUS_MODE" })}
       peekComponent={BoardPeek}
