@@ -16,7 +16,7 @@ use axum::{
     extract::DefaultBodyLimit,
     http::{header, StatusCode, Uri},
     response::{Html, IntoResponse, Response},
-    routing::{delete, get, post, put},
+    routing::{delete, get, patch, post, put},
     Router,
 };
 use rust_embed::Embed;
@@ -306,7 +306,15 @@ pub fn build_app(
         )
         .route(
             "/api/v1/workspaces/:workspace_id/comments/:comment_id",
-            delete(handlers::comments::delete_comment),
+            patch(handlers::comments::update_comment).delete(handlers::comments::delete_comment),
+        )
+        .route(
+            "/api/v1/workspaces/:workspace_id/comments/:comment_id/reactions",
+            post(handlers::comments::toggle_reaction),
+        )
+        .route(
+            "/api/v1/workspaces/:workspace_id/comments/:comment_id/resolve",
+            post(handlers::comments::resolve_comment),
         )
         // Webhooks (document-backed board)
         .route(

@@ -79,7 +79,10 @@ export function BoardSurface({
   onUploadAttachment,
   loadComments,
   addComment,
+  updateComment,
   deleteComment,
+  toggleReaction,
+  resolveComment,
   currentUser,
   loadActivity,
   fullscreen,
@@ -1124,7 +1127,10 @@ export function BoardSurface({
             onUploadAttachment={onUploadAttachment}
             loadComments={loadComments}
             addComment={addComment}
+            updateComment={updateComment}
             deleteComment={deleteComment}
+            toggleReaction={toggleReaction}
+            resolveComment={resolveComment}
             currentUser={currentUser}
             loadActivity={loadActivity}
             onChange={(patch) => void actions.updateCard(selected.id, patch)}

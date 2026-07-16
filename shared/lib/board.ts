@@ -142,8 +142,23 @@ export function pickCustomFields(
 
 export type CardFilter = { prop: "priority" | "assignee" | "tag"; value: string };
 
-/** A card comment (DB board). */
-export type BoardComment = { id: string; author?: string | null; body: string; createdAt: string };
+/** One emoji reaction summary on a comment. */
+export type CommentReaction = { emoji: string; count: number; mine: boolean };
+
+/** A card comment (cloud feature; threading is one level deep via parentId). */
+export type BoardComment = {
+  id: string;
+  author?: string | null;
+  authorUserId?: string;
+  body: string;
+  /** Root comment id when this is a reply. */
+  parentId?: string | null;
+  /** Set when the thread (root only) is resolved. */
+  resolvedAt?: string | null;
+  reactions?: CommentReaction[];
+  createdAt: string;
+  updatedAt?: string;
+};
 
 /** One entry in a card's activity timeline (newest first). */
 export type BoardActivityEvent = { kind: string; at: string; by?: string | null };

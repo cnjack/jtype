@@ -96,6 +96,55 @@
   display: none;
 }
 
+/* Markdown-rendered comment bodies (BoardPeek): keep block elements compact
+ * so a heading or list in a comment doesn't blow up the thread layout. */
+.comment-markdown p {
+  margin: 0 0 4px;
+}
+
+.comment-markdown p:last-child {
+  margin-bottom: 0;
+}
+
+.comment-markdown h1,
+.comment-markdown h2,
+.comment-markdown h3,
+.comment-markdown h4 {
+  margin: 4px 0 2px;
+  font-size: 1em;
+  font-weight: 600;
+}
+
+.comment-markdown ul,
+.comment-markdown ol {
+  margin: 2px 0 4px;
+  padding-left: 16px;
+}
+
+.comment-markdown pre {
+  margin: 4px 0;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: #f5f5f4;
+  overflow-x: auto;
+}
+
+.comment-markdown code {
+  font-size: 0.95em;
+}
+
+.comment-markdown blockquote {
+  margin: 4px 0;
+  padding-left: 8px;
+  border-left: 2px solid #d6d3d1;
+  color: #78716c;
+}
+
+.comment-markdown img {
+  max-width: 100%;
+  border-radius: 6px;
+}
+
 .preview-lightbox {
   position: fixed;
   inset: 0;

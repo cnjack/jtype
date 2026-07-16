@@ -264,15 +264,27 @@ export function WebBoardView({
     [workspaceId, metaByPath],
   )
   const addComment = useCallback(
-    (cardId: string, body: string): Promise<BoardComment> => {
+    (cardId: string, body: string, parentId?: string): Promise<BoardComment> => {
       const meta = metaByPath.get(cardId)
       if (!meta) return Promise.reject(new Error('card not found'))
-      return api.createComment(workspaceId, meta.id, body)
+      return api.createComment(workspaceId, meta.id, body, parentId)
     },
     [workspaceId, metaByPath],
   )
+  const updateComment = useCallback(
+    (commentId: string, body: string): Promise<BoardComment> => api.updateComment(workspaceId, commentId, body),
+    [workspaceId],
+  )
   const deleteComment = useCallback(
     (commentId: string) => api.deleteComment(workspaceId, commentId),
+    [workspaceId],
+  )
+  const toggleReaction = useCallback(
+    (commentId: string, emoji: string): Promise<BoardComment> => api.toggleCommentReaction(workspaceId, commentId, emoji),
+    [workspaceId],
+  )
+  const resolveComment = useCallback(
+    (commentId: string, resolved: boolean): Promise<BoardComment> => api.resolveComment(workspaceId, commentId, resolved),
     [workspaceId],
   )
 
@@ -506,7 +518,10 @@ export function WebBoardView({
         loadActivity={loadActivity}
         loadComments={loadComments}
         addComment={addComment}
+        updateComment={updateComment}
         deleteComment={deleteComment}
+        toggleReaction={toggleReaction}
+        resolveComment={resolveComment}
         currentUser={getStoredUsername() ?? undefined}
         onUploadAttachment={(file) => api.uploadAsset(workspaceId, file).then((a) => a.url)}
         fullscreen={fullscreen}
