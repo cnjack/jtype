@@ -17,6 +17,7 @@ import { tauri } from "../../lib/tauri";
 import type { EditorMode } from "@shared/lib/types";
 import type { BoardConfig, BoardCard } from "../../lib/types";
 import { FindBar } from "./FindBar";
+import { SlashMenu } from "./SlashMenu";
 import { ZoomIndicator } from "./ZoomIndicator";
 
 /** Build read-only HTML for an inline ```jtype-board``` embed in a document preview. */
@@ -729,6 +730,7 @@ export function EditorShell() {
       style={{ "--jtype-zoom": state.zoomLevel } as React.CSSProperties}
     >
       <FindBar />
+      <SlashMenu enabled={canEditMarkdown && (state.editorMode === "write" || state.editorMode === "split")} />
       <ZoomIndicator />
       <div className="relative z-30 flex min-h-[56px] min-w-0 items-center justify-between gap-3 bg-white/60 px-5 backdrop-blur-xl">
         <div className="min-w-0 flex-1">
