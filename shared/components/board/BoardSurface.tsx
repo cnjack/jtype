@@ -38,6 +38,8 @@ import {
   PRIORITY_STYLE,
   blockedCounts,
   cardSlug,
+  childCardsByParent,
+  childProgress,
   effectiveColumns,
   groupValueOf,
   RESERVED_CARD_KEYS,
@@ -141,6 +143,8 @@ export function BoardSurface({
   const vis = useMemo(() => visibleCardsFn(cards, search, filter), [cards, search, filter]);
   // Blocker counts resolve against ALL cards (a blocker may be filtered out of view).
   const blockers = useMemo(() => blockedCounts(cards, config.doneColumn), [cards, config.doneColumn]);
+  // Sub-cards resolve against ALL cards too (children may be filtered from view).
+  const childrenMap = useMemo(() => childCardsByParent(cards), [cards]);
   const assignees = useMemo(() => [...new Set(cards.map((c) => c.assignee).filter(Boolean) as string[])], [cards]);
   const allTags = useMemo(() => [...new Set(cards.flatMap((c) => c.tags.map((tg) => tg.label)))], [cards]);
   const statusName = (key: string) => config.columns.find((c) => c.key === key)?.name || key || t`Unassigned`;
@@ -675,13 +679,15 @@ export function BoardSurface({
                     {colCards.map((card, idx) => {
                       const overdue = card.due && card.due < today && card.columnKey !== doneKey;
                       const blockedCount = blockers.get(card.id) ?? 0;
+                      const children = childrenMap.get(card.id);
                       const hasMeta =
                         (card.priority && card.priority !== "none") ||
                         card.assignee ||
                         card.due ||
                         (card.taskTotal ?? 0) > 0 ||
                         card.tags.length > 0 ||
-                        blockedCount > 0;
+                        blockedCount > 0 ||
+                        (children?.length ?? 0) > 0;
                       return (
                         <Fragment key={card.id}>
                           {showLine(idx) && <div className="mx-1 h-0.5 rounded bg-brand" />}
@@ -788,6 +794,33 @@ export function BoardSurface({
                                     {card.taskDone}/{card.taskTotal}
                                   </span>
                                 )}
+                                {children &&
+                                  children.length > 0 &&
+                                  (() => {
+                                    const prog = childProgress(children, config.doneColumn);
+                                    const circumference = 2 * Math.PI * 6;
+                                    return (
+                                      <span
+                                        className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-medium ${prog.done === prog.total ? "bg-emerald-50 text-emerald-600" : "bg-stone-100 text-stone-500"}`}
+                                        title={t`${prog.done} of ${prog.total} sub-cards done`}
+                                      >
+                                        <svg viewBox="0 0 16 16" className="h-3 w-3 -rotate-90">
+                                          <circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" strokeOpacity="0.25" strokeWidth="3" />
+                                          <circle
+                                            cx="8"
+                                            cy="8"
+                                            r="6"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="3"
+                                            strokeLinecap="round"
+                                            strokeDasharray={`${(prog.done / prog.total) * circumference} ${circumference}`}
+                                          />
+                                        </svg>
+                                        {prog.done}/{prog.total}
+                                      </span>
+                                    );
+                                  })()}
                                 {card.tags.map((tag) => (
                                   <span key={tag.label} className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[11px] text-brand-dark" style={{ backgroundColor: tag.color ? `${tag.color}22` : "rgba(0,136,132,0.10)" }}>
                                     <TagIcon className="h-3 w-3" />
@@ -966,6 +999,26 @@ export function BoardSurface({
               void actions.setConfig({ fields: [...(config.fields ?? []), { key, label }] });
             }}
             dependencyCards={cards.filter((c) => c.id !== selected.id).map((c) => ({ slug: cardSlug(c), title: c.title }))}
+            childCards={(childrenMap.get(selected.id) ?? []).map((c) => ({
+              id: c.id,
+              title: c.title,
+              icon: c.icon,
+              statusName: statusName(c.columnKey),
+              done: c.columnKey === doneKey,
+            }))}
+            onOpenCard={(cardId) => setSelectedId(cardId)}
+            onAddChild={
+              readOnly
+                ? undefined
+                : async (title) => {
+                    // Sub-cards start in the first status column, not the parent's.
+                    const startCol = editableColumns ? config.columns[0]?.key ?? selected.columnKey : selected.columnKey;
+                    const newId = await actions.createCard(startCol, title);
+                    if (typeof newId === "string") {
+                      await actions.updateCard(newId, { parent: cardSlug(selected) });
+                    }
+                  }
+            }
             loadNotes={loadNotes}
             onUploadAttachment={onUploadAttachment}
             loadComments={loadComments}

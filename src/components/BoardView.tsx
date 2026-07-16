@@ -90,11 +90,13 @@ export function BoardView({ boardPath, boardRelativePath }: { boardPath: string;
         taskDone: c.taskDone,
         taskTotal: c.taskTotal,
         excerpt: c.excerpt ?? null,
+        notes: c.body,
         attachments: c.attachments ?? [],
         custom: pickCustomFields(c.properties, config?.fields),
         blockedBy: c.blockedBy ?? [],
         blocks: c.blocks ?? [],
         relates: c.relates ?? [],
+        parent: c.parent ?? null,
       })),
     [rawCards, config?.fields, config?.labels],
   );
@@ -187,6 +189,7 @@ export function BoardView({ boardPath, boardRelativePath }: { boardPath: string;
           if (patch.blockedBy !== undefined) next.blocked_by = serializeLinks(patch.blockedBy);
           if (patch.blocks !== undefined) next.blocks = serializeLinks(patch.blocks);
           if (patch.relates !== undefined) next.relates = serializeLinks(patch.relates);
+          if (patch.parent !== undefined) next.parent = patch.parent ? serializeLinks([patch.parent]) : "";
           const newBody = patch.notes !== undefined ? patch.notes : body;
           await tauri.writeFile(id, writeFrontmatter(newBody, next));
           await load();

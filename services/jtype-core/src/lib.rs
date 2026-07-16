@@ -1349,6 +1349,9 @@ pub struct BoardCardInfo {
     pub task_total: i64,
     pub icon: Option<String>,
     pub excerpt: Option<String>,
+    /// Markdown body (frontmatter stripped). Powers full-text card search and
+    /// board embeds without a second file read.
+    pub body: String,
     /// Attachment URLs/paths (frontmatter `attachments`, comma-separated).
     pub attachments: Vec<String>,
     /// Full frontmatter key/values, so the board can surface user-defined custom
@@ -1360,6 +1363,8 @@ pub struct BoardCardInfo {
     pub blocks: Vec<String>,
     /// Card slugs this card relates to without direction (frontmatter `relates`).
     pub relates: Vec<String>,
+    /// Parent card slug (frontmatter `parent`) — makes this card a sub-card.
+    pub parent: Option<String>,
 }
 
 /// Parse a frontmatter `attachments` value (comma-separated URLs/paths) into a
@@ -1520,11 +1525,16 @@ fn scan_board_cards_inner(
                 task_total,
                 icon: fm.get("icon").cloned().filter(|v| !v.is_empty()),
                 excerpt: body_excerpt(&content),
+                body: body_after_frontmatter(&content).to_string(),
                 attachments: fm.get("attachments").map(|v| parse_attachments(v)).unwrap_or_default(),
                 properties: fm.clone(),
                 blocked_by: fm.get("blocked_by").map(|v| parse_card_links(v)).unwrap_or_default(),
                 blocks: fm.get("blocks").map(|v| parse_card_links(v)).unwrap_or_default(),
                 relates: fm.get("relates").map(|v| parse_card_links(v)).unwrap_or_default(),
+                parent: fm
+                    .get("parent")
+                    .map(|v| parse_card_links(v))
+                    .and_then(|links| links.into_iter().next()),
             });
         }
     }

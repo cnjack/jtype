@@ -55,6 +55,12 @@ export type BoardPeekProps = {
   onAddField?: (label: string) => void;
   /** Sibling cards (excluding this one) offered as dependency targets. */
   dependencyCards?: { slug: string; title: string }[];
+  /** Sub-cards of this card (children resolved via the `parent` slug). */
+  childCards?: { id: string; title: string; icon?: string | null; statusName: string; done: boolean }[];
+  /** Open another card's peek (sub-card list navigation). */
+  onOpenCard?: (cardId: string) => void;
+  /** Create a sub-card of this card (title collected inline). */
+  onAddChild?: (title: string) => Promise<void> | void;
   loadNotes?: (id: string) => Promise<string>;
   onUploadAttachment?: (file: File) => Promise<string>;
   loadComments?: (id: string) => Promise<BoardComment[]>;

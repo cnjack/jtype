@@ -84,6 +84,8 @@ export type BoardViewCard = {
   blocks?: string[];
   /** Card slugs this card relates to, no direction (frontmatter `relates`). */
   relates?: string[];
+  /** Parent card slug (frontmatter `parent`) — makes this card a sub-card. */
+  parent?: string | null;
 };
 
 /** Parse a frontmatter `attachments` value (comma-separated URLs/paths) into a list. */
@@ -178,6 +180,7 @@ export const RESERVED_CARD_KEYS = [
   "blocks",
   "relates",
   "attachments",
+  "parent",
 ];
 
 /** Count Markdown task checkboxes (`- [ ]` / `- [x]`) in a body → (done, total). */
@@ -310,6 +313,32 @@ export function blockedCounts(cards: BoardViewCard[], doneColumn?: string): Map<
   return counts;
 }
 
+/**
+ * Sub-cards of each card, resolved via the child's `parent` slug. Keyed by the
+ * PARENT card id. Self-parenting and dangling slugs are ignored; deeper
+ * nesting is allowed in data but progress is computed per level (no recursion).
+ */
+export function childCardsByParent(cards: BoardViewCard[]): Map<string, BoardViewCard[]> {
+  const bySlug = new Map<string, BoardViewCard>();
+  for (const c of cards) bySlug.set(cardSlug(c), c);
+  const map = new Map<string, BoardViewCard[]>();
+  for (const c of cards) {
+    if (!c.parent) continue;
+    const parent = bySlug.get(c.parent);
+    if (!parent || parent.id === c.id) continue;
+    const list = map.get(parent.id);
+    if (list) list.push(c);
+    else map.set(parent.id, [c]);
+  }
+  return map;
+}
+
+/** Sub-card progress for a parent: a child is done when it sits in the done column. */
+export function childProgress(children: BoardViewCard[], doneColumn?: string): { done: number; total: number } {
+  const doneKey = doneColumn || DEFAULT_DONE_COLUMN;
+  return { done: children.filter((c) => c.columnKey === doneKey).length, total: children.length };
+}
+
 export function todayStr(): string {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -379,10 +408,22 @@ export function cardMatchesFilter(card: BoardViewCard, filter: CardFilter | null
   return true;
 }
 
+/** Whether a card matches a search query: title, ticket, assignee, tags, and
+ *  the markdown body are all searched (case-insensitive substring). */
+export function cardMatchesSearch(card: BoardViewCard, q: string): boolean {
+  if (card.title.toLowerCase().includes(q)) return true;
+  if (card.ticket && card.ticket.toLowerCase().includes(q)) return true;
+  if (card.assignee && card.assignee.toLowerCase().includes(q)) return true;
+  if (card.tags.some((t) => t.label.toLowerCase().includes(q))) return true;
+  if (card.notes && card.notes.toLowerCase().includes(q)) return true;
+  if (!card.notes && card.excerpt && card.excerpt.toLowerCase().includes(q)) return true;
+  return false;
+}
+
 export function visibleCards(cards: BoardViewCard[], search: string, filter: CardFilter | null): BoardViewCard[] {
   const q = search.trim().toLowerCase();
   return cards.filter((c) => {
-    if (q && !c.title.toLowerCase().includes(q)) return false;
+    if (q && !cardMatchesSearch(c, q)) return false;
     return cardMatchesFilter(c, filter);
   });
 }

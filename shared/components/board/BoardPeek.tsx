@@ -21,6 +21,9 @@ export function BoardPeek({
   fields,
   onAddField,
   dependencyCards,
+  childCards,
+  onOpenCard,
+  onAddChild,
   loadNotes,
   onUploadAttachment,
   loadComments,
@@ -34,6 +37,7 @@ export function BoardPeek({
   onOpenFull,
 }: BoardPeekProps) {
   const [newField, setNewField] = useState("");
+  const [newChild, setNewChild] = useState("");
   const [draft, setDraft] = useState<BoardViewCard>(card);
   const [notes, setNotes] = useState(card.notes ?? "");
   const [mode, setMode] = useState<"write" | "preview">("write");
@@ -348,9 +352,69 @@ export function BoardPeek({
                 <Trans>Relates</Trans>
               </span>
               {depField("relates")}
+
+              <span className="text-xs text-brand-gray">
+                <Trans>Parent</Trans>
+              </span>
+              <ListboxSelect
+                value={draft.parent ?? ""}
+                options={[{ value: "", label: "—" }, ...dependencyCards.map((c) => ({ value: c.slug, label: c.title }))]}
+                onChange={(v) => setField({ parent: v || null }, true)}
+              />
             </>
           )}
         </div>
+
+        {(onAddChild || (childCards?.length ?? 0) > 0) && (
+          <div className="mt-4">
+            <span className="text-xs font-medium text-brand-gray">
+              <Trans>Sub-cards</Trans>
+              {(childCards?.length ?? 0) > 0 && (
+                <span className="ml-1 text-stone-400">
+                  {childCards!.filter((c) => c.done).length}/{childCards!.length}
+                </span>
+              )}
+            </span>
+            <ul className="mt-1.5 space-y-1">
+              {(childCards ?? []).map((child) => (
+                <li key={child.id}>
+                  <button
+                    type="button"
+                    className="flex w-full items-center gap-2 rounded-lg border border-stone-100 bg-stone-50/60 px-2 py-1.5 text-left text-xs hover:border-brand/30"
+                    onClick={() => onOpenCard?.(child.id)}
+                    title={t`Open sub-card`}
+                  >
+                    <span className={`h-2 w-2 shrink-0 rounded-full ${child.done ? "bg-emerald-500" : "bg-stone-300"}`} />
+                    <span className={`min-w-0 flex-1 truncate ${child.done ? "text-stone-400 line-through" : "text-stone-700"}`}>
+                      {child.icon && <span className="mr-1">{child.icon}</span>}
+                      {child.title}
+                    </span>
+                    <span className="shrink-0 text-[10px] text-stone-400">{child.statusName}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+            {onAddChild && (
+              <form
+                className="mt-1.5"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const title = newChild.trim();
+                  if (!title) return;
+                  setNewChild("");
+                  void onAddChild(title);
+                }}
+              >
+                <input
+                  className={fieldCls}
+                  placeholder={t`+ Add sub-card`}
+                  value={newChild}
+                  onChange={(e) => setNewChild(e.target.value)}
+                />
+              </form>
+            )}
+          </div>
+        )}
 
         <div className="mt-4">
           <span className="text-xs font-medium text-brand-gray">

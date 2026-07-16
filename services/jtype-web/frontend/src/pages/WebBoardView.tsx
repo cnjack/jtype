@@ -113,6 +113,7 @@ export function WebBoardView({
           blockedBy: fm.data.blocked_by ? parseLinks(fm.data.blocked_by) : [],
           blocks: fm.data.blocks ? parseLinks(fm.data.blocks) : [],
           relates: fm.data.relates ? parseLinks(fm.data.relates) : [],
+          parent: fm.data.parent ? (parseLinks(fm.data.parent)[0] ?? null) : null,
         })
       }
       setMetaByPath(nextMeta)
@@ -349,6 +350,7 @@ export function WebBoardView({
         if (patch.blockedBy !== undefined) next.blocked_by = serializeLinks(patch.blockedBy)
         if (patch.blocks !== undefined) next.blocks = serializeLinks(patch.blocks)
         if (patch.relates !== undefined) next.relates = serializeLinks(patch.relates)
+        if (patch.parent !== undefined) next.parent = patch.parent ? serializeLinks([patch.parent]) : ''
         const newBody = patch.notes !== undefined ? patch.notes : body
         try {
           await saveCard(id, next, newBody)
