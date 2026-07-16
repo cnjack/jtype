@@ -175,7 +175,12 @@ fn write_markdown_file(path: String, content: String) -> Result<(), String> {
 
 #[tauri::command]
 fn write_binary_file(path: String, content: Vec<u8>) -> Result<(), String> {
-    fs::write(PathBuf::from(path), content).map_err(|error| error.to_string())
+    let path = PathBuf::from(path);
+    // Pasted images land in an `assets/` dir that may not exist yet.
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent).map_err(|error| error.to_string())?;
+    }
+    fs::write(path, content).map_err(|error| error.to_string())
 }
 
 #[tauri::command]

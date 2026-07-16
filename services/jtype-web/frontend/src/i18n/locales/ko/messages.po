@@ -178,7 +178,8 @@ msgid "Add domain"
 msgstr "도메인 추가"
 
 #: src/pages/Workspace.tsx
-msgid "Add domains, verify DNS ownership, bind them to this workspace, and manage SSL certificates from one place."
+msgid "Add domains, verify DNS ownership, bind them to this workspace, and "
+"manage SSL certificates from one place."
 msgstr "한 곳에서 도메인 추가, DNS 소유권 확인, 워크스페이스 바인딩 및 SSL 인증서 관리."
 
 #: src/pages/Workspace.tsx
@@ -363,8 +364,11 @@ msgid "Bucket"
 msgstr "버킷"
 
 #: src/pages/Landing.tsx
-msgid "Calm desktop writing, workspace-scoped sync, and public Markdown publishing in one product flow. Your notes stay local until a cloud workspace has a job to do."
-msgstr "차분한 데스크탑 글쓰기, 워크스페이스 범위 동기화, 공개 Markdown 게시가 하나의 제품 흐름으로. 노트는 클라우드 워크스페이스가 필요할 때까지 로컬에 보관됩니다."
+msgid "Calm desktop writing, workspace-scoped sync, and public Markdown "
+"publishing in one product flow. Your notes stay local until a cloud "
+"workspace has a job to do."
+msgstr "차분한 데스크탑 글쓰기, 워크스페이스 범위 동기화, 공개 Markdown 게시가 하나의 제품 흐름으로. 노트는 클라우드 "
+"워크스페이스가 필요할 때까지 로컬에 보관됩니다."
 
 #: src/components/NewResourceDialog.tsx
 #: src/pages/Workspace.tsx
@@ -485,7 +489,9 @@ msgid "Compact"
 msgstr "컴팩트"
 
 #: src/pages/Admin.tsx
-msgid "Configure outbound email (SMTP). Used for password reset and email verification. Saved values override the JTYPED_SMTP_* environment variables."
+msgid "Configure outbound email (SMTP). Used for password reset and email "
+"verification. Saved values override the JTYPED_SMTP_* environment "
+"variables."
 msgstr ""
 
 #: src/pages/Admin.tsx
@@ -493,7 +499,8 @@ msgid "Configure server object storage."
 msgstr "서버 객체 스토리지를 구성합니다."
 
 #: src/pages/Admin.tsx
-msgid "Configure server object storage. Saved values override the JTYPED_STORAGE_* environment variables and apply immediately."
+msgid "Configure server object storage. Saved values override the "
+"JTYPED_STORAGE_* environment variables and apply immediately."
 msgstr "서버 객체 스토리지를 구성합니다. 저장된 값은 JTYPED_STORAGE_* 환경 변수보다 우선하며 즉시 적용됩니다."
 
 #: src/pages/ResetPassword.tsx
@@ -505,7 +512,8 @@ msgid "Confirming your email address."
 msgstr ""
 
 #: src/pages/AiConnections.tsx
-msgid "Connect Claude, Cursor, Cline, or jcode to your notes & kanban through the built-in MCP server."
+msgid "Connect Claude, Cursor, Cline, or jcode to your notes & kanban through "
+"the built-in MCP server."
 msgstr "내장 MCP 서버를 통해 Claude, Cursor, Cline, 또는 jcode를 내 노트와 칸반에 연결하세요."
 
 #: src/pages/Landing.tsx
@@ -568,7 +576,8 @@ msgstr "이 PDF를 불러올 수 없습니다."
 
 #. placeholder {0}: info.error
 #: src/pages/Admin.tsx
-msgid "Could not reach GitHub for the latest release ({0}). Showing the last known value."
+msgid "Could not reach GitHub for the latest release ({0}). Showing the last "
+"known value."
 msgstr ""
 
 #: src/components/SiteThemePanel.tsx
@@ -580,8 +589,11 @@ msgid "Create"
 msgstr "만들기"
 
 #: src/pages/Landing.tsx
-msgid "Create a workspace for sync, publishing, and account settings. Local vault copy stays precise: folders are vaults, server-side collaboration is a cloud workspace."
-msgstr "동기화, 게시, 계정 설정을 위한 워크스페이스를 만듭니다. 로컬 볼트 복사본은 정확하게 유지됩니다: 폴더는 볼트, 서버 측 협업은 클라우드 워크스페이스."
+msgid "Create a workspace for sync, publishing, and account settings. Local "
+"vault copy stays precise: folders are vaults, server-side collaboration "
+"is a cloud workspace."
+msgstr "동기화, 게시, 계정 설정을 위한 워크스페이스를 만듭니다. 로컬 볼트 복사본은 정확하게 유지됩니다: 폴더는 볼트, 서버 측 "
+"협업은 클라우드 워크스페이스."
 
 #: src/pages/Login.tsx
 msgid "Create account"
@@ -879,8 +891,10 @@ msgid "Enter your username"
 msgstr "사용자 이름을 입력하세요"
 
 #: src/help/pages/HelpHome.tsx
-msgid "Everything you need to write in a local-first vault, sync to the cloud, run a kanban board, publish a site, and connect AI."
-msgstr "로컬 우선 볼트에서 작성하고, 클라우드에 동기화하고, 칸반 보드를 운영하고, 사이트를 게시하고, AI를 연결하는 데 필요한 모든 것."
+msgid "Everything you need to write in a local-first vault, sync to the cloud, "
+"run a kanban board, publish a site, and connect AI."
+msgstr "로컬 우선 볼트에서 작성하고, 클라우드에 동기화하고, 칸반 보드를 운영하고, 사이트를 게시하고, AI를 연결하는 데 필요한 모든 "
+"것."
 
 #: src/components/NewResourceDialog.tsx
 msgid "Excalidraw drawing"
@@ -947,8 +961,11 @@ msgid "Footer HTML"
 msgstr "푸터 HTML"
 
 #: src/pages/AiConnections.tsx
-msgid "For clients that only accept a static header (e.g. jcode). Tokens are <0>mcp</0>-scoped (notes & kanban only, never admin) and expire in 90 days."
-msgstr "정적 헤더만 허용하는 클라이언트(예: jcode)용입니다. 토큰은 <0>mcp</0> 범위(노트와 칸반만, 관리자 권한 없음)이며 90일 후 만료됩니다."
+msgid "For clients that only accept a static header (e.g. jcode). Tokens are "
+"<0>mcp</0>-scoped (notes & kanban only, never admin) and expire in 90 "
+"days."
+msgstr "정적 헤더만 허용하는 클라이언트(예: jcode)용입니다. 토큰은 <0>mcp</0> 범위(노트와 칸반만, 관리자 권한 "
+"없음)이며 90일 후 만료됩니다."
 
 #: src/pages/Login.tsx
 msgid "Forgot password?"
@@ -1121,8 +1138,13 @@ msgid "JType <noreply@example.com>"
 msgstr ""
 
 #: src/pages/Landing.tsx
-msgid "JType ships a built-in MCP server. Connect Claude, Cursor, or any MCP client over a secure OAuth flow, then ask it to search your notes, draft a doc, or triage your board. Tokens are scoped, expiring, and revocable — and admin always stays off-limits."
-msgstr "JType에는 MCP 서버가 내장되어 있습니다. 안전한 OAuth 흐름으로 Claude, Cursor 등 모든 MCP 클라이언트를 연결하면 노트 검색, 문서 초안 작성, 보드 정리를 맡길 수 있습니다. 토큰은 범위가 제한되고 만료되며 취소할 수 있으며, 관리자 권한에는 절대 접근하지 않습니다."
+msgid "JType ships a built-in MCP server. Connect Claude, Cursor, or any MCP "
+"client over a secure OAuth flow, then ask it to search your notes, draft "
+"a doc, or triage your board. Tokens are scoped, expiring, and revocable "
+"— and admin always stays off-limits."
+msgstr "JType에는 MCP 서버가 내장되어 있습니다. 안전한 OAuth 흐름으로 Claude, Cursor 등 모든 MCP "
+"클라이언트를 연결하면 노트 검색, 문서 초안 작성, 보드 정리를 맡길 수 있습니다. 토큰은 범위가 제한되고 만료되며 취소할 수 "
+"있으며, 관리자 권한에는 절대 접근하지 않습니다."
 
 #: src/components/NewResourceDialog.tsx
 msgid "Kanban board"
@@ -1133,7 +1155,8 @@ msgid "Kanban tools"
 msgstr "칸반 도구"
 
 #: src/pages/Workspace.tsx
-msgid "Keep the publish name and workspace name here. The workspace slug and storage limit are assigned by the service."
+msgid "Keep the publish name and workspace name here. The workspace slug and "
+"storage limit are assigned by the service."
 msgstr "여기서 게시 이름과 워크스페이스 이름을 관리합니다. 워크스페이스 슬러그와 저장소 한도는 서비스에서 할당됩니다."
 
 #: src/pages/Login.tsx
@@ -1263,7 +1286,8 @@ msgid "Local-first Markdown vault"
 msgstr "로컬 우선 Markdown 볼트"
 
 #: src/help/HelpLayout.tsx
-msgid "Local-first Markdown vault editing with cloud sync, kanban, publishing, and AI."
+msgid "Local-first Markdown vault editing with cloud sync, kanban, publishing, "
+"and AI."
 msgstr "클라우드 동기화, 칸반, 게시, AI를 갖춘 로컬 우선 Markdown 볼트 편집."
 
 #: src/pages/Login.tsx
@@ -1510,8 +1534,11 @@ msgid "On this page"
 msgstr "이 페이지에서"
 
 #: src/pages/Landing.tsx
-msgid "One Markdown source shows up everywhere it matters: local files on your machine, sync state in the cloud, and published output for readers — all visible at once."
-msgstr "하나의 Markdown 소스가 필요한 모든 곳에 나타납니다: 내 컴퓨터의 로컬 파일, 클라우드의 동기화 상태, 독자를 위한 게시 출력 — 한 번에 모두."
+msgid "One Markdown source shows up everywhere it matters: local files on your "
+"machine, sync state in the cloud, and published output for readers — all "
+"visible at once."
+msgstr "하나의 Markdown 소스가 필요한 모든 곳에 나타납니다: 내 컴퓨터의 로컬 파일, 클라우드의 동기화 상태, 독자를 위한 게시 "
+"출력 — 한 번에 모두."
 
 #: src/pages/Landing.tsx
 msgid "One Markdown source, three calm surfaces."
@@ -1530,7 +1557,8 @@ msgid "Open"
 msgstr "열기"
 
 #: src/pages/Landing.tsx
-msgid "Open a local Markdown vault, keep normal folders, and edit without turning notes into remote-only data."
+msgid "Open a local Markdown vault, keep normal folders, and edit without "
+"turning notes into remote-only data."
 msgstr "로컬 Markdown 볼트를 열고, 일반 폴더 구조를 유지하며, 노트를 원격 전용 데이터로 만들지 않고 편집합니다."
 
 #: src/help/HelpLayout.tsx
@@ -1566,7 +1594,8 @@ msgid "Open sidebar"
 msgstr "사이드바 열기"
 
 #: src/help/pages/CaseStudy.tsx
-msgid "Open the example vault in JType and follow along. It lives in the repo at:"
+msgid "Open the example vault in JType and follow along. It lives in the repo "
+"at:"
 msgstr "JType에서 예제 볼트를 열고 따라 해보세요. 저장소 위치:"
 
 #: src/pages/Login.tsx
@@ -1720,7 +1749,8 @@ msgid "Publishing details saved"
 msgstr "게시 세부 정보가 저장되었습니다"
 
 #: src/pages/Workspace.tsx
-msgid "Publishing uses a server snapshot; frontmatter status is treated as user metadata."
+msgid "Publishing uses a server snapshot; frontmatter status is treated as user "
+"metadata."
 msgstr "게시는 서버 스냅샷을 사용합니다. 프론트매터 상태는 사용자 메타데이터로 처리됩니다."
 
 #: src/pages/Admin.tsx
@@ -1728,7 +1758,8 @@ msgid "Pull the new image and restart your deployment (docker compose / helm)."
 msgstr ""
 
 #: src/pages/Landing.tsx
-msgid "Push and pull versions, resolve conflicts, and keep collaboration scoped to the workspace you choose."
+msgid "Push and pull versions, resolve conflicts, and keep collaboration scoped "
+"to the workspace you choose."
 msgstr "버전 푸시/풀, 충돌 해결, 선택한 워크스페이스 내에서 협업 유지."
 
 #: src/pages/Workspace.tsx
@@ -1752,12 +1783,15 @@ msgid "Ready for the cloud layer"
 msgstr "클라우드 레이어 준비 완료"
 
 #: src/help/pages/CasesIndex.tsx
-msgid "Real, end-to-end scenarios you can reproduce. Each one ships with an example vault you can open in JType."
+msgid "Real, end-to-end scenarios you can reproduce. Each one ships with an "
+"example vault you can open in JType."
 msgstr "재현 가능한 실제 엔드투엔드 시나리오입니다. 각각 JType에서 열 수 있는 예제 볼트를 제공합니다."
 
 #: src/pages/AiConnections.tsx
-msgid "Recommended: paste this URL into an OAuth-capable client (Claude, Cursor) — you'll approve in the browser, no token to copy."
-msgstr "권장: 이 URL을 OAuth 지원 클라이언트(Claude, Cursor)에 붙여넣으세요. 브라우저에서 승인만 하면 되며 토큰을 복사할 필요가 없습니다."
+msgid "Recommended: paste this URL into an OAuth-capable client (Claude, "
+"Cursor) — you'll approve in the browser, no token to copy."
+msgstr "권장: 이 URL을 OAuth 지원 클라이언트(Claude, Cursor)에 붙여넣으세요. 브라우저에서 승인만 하면 되며 토큰을 "
+"복사할 필요가 없습니다."
 
 #: src/pages/Admin.tsx
 msgid "Region"
@@ -1990,7 +2024,8 @@ msgid "Select a Markdown file"
 msgstr "Markdown 파일 선택"
 
 #: src/pages/Login.tsx
-#~ msgid "Self-service reset isn't available yet. Ask an admin to reset your password."
+#~ msgid "Self-service reset isn't available yet. Ask an admin to reset your "
+#~ "password."
 #~ msgstr ""
 
 #: src/pages/Login.tsx
@@ -2284,7 +2319,8 @@ msgstr ""
 
 #. placeholder {0}: workspace.name
 #: src/pages/Workspace.tsx
-msgid "This will permanently delete <0>{0}</0> and all its documents. This cannot be undone."
+msgid "This will permanently delete <0>{0}</0> and all its documents. This "
+"cannot be undone."
 msgstr "<0>{0}</0>과(와) 모든 문서가 영구 삭제됩니다. 이 작업은 취소할 수 없습니다."
 
 #: src/pages/Admin.tsx
@@ -2337,7 +2373,8 @@ msgid "Try it yourself"
 msgstr "직접 시도"
 
 #: src/pages/Landing.tsx
-msgid "Turn selected documents into a public `/u/:username` site while your source stays Markdown."
+msgid "Turn selected documents into a public `/u/:username` site while your "
+"source stays Markdown."
 msgstr "소스는 Markdown으로 유지하면서 선택한 문서를 공개 `/u/:username` 사이트로 만듭니다."
 
 #: src/pages/Workspace.tsx
@@ -2393,7 +2430,8 @@ msgid "Update email"
 msgstr ""
 
 #: src/pages/Workspace.tsx
-msgid "Upload a PEM certificate for a verified domain. The private key is stored as a hash in the current backend model."
+msgid "Upload a PEM certificate for a verified domain. The private key is "
+"stored as a hash in the current backend model."
 msgstr "확인된 도메인에 대한 PEM 인증서를 업로드합니다. 개인 키는 현재 백엔드 모델에서 해시로 저장됩니다."
 
 #: src/components/DownloadPromo.tsx
@@ -2555,7 +2593,8 @@ msgid "You will lose access to all cloud documents."
 msgstr "모든 클라우드 문서에 대한 접근 권한을 잃게 됩니다."
 
 #: src/pages/Workspace.tsx
-msgid "You will lose access to all cloud documents. Your local files are unaffected."
+msgid "You will lose access to all cloud documents. Your local files are "
+"unaffected."
 msgstr "모든 클라우드 문서에 대한 접근 권한을 잃게 됩니다. 로컬 파일은 영향을 받지 않습니다."
 
 #: src/pages/InviteAccept.tsx

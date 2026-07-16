@@ -113,6 +113,7 @@ export function WebBoardView({
           blockedBy: fm.data.blocked_by ? parseLinks(fm.data.blocked_by) : [],
           blocks: fm.data.blocks ? parseLinks(fm.data.blocks) : [],
           relates: fm.data.relates ? parseLinks(fm.data.relates) : [],
+          parent: fm.data.parent ? (parseLinks(fm.data.parent)[0] ?? null) : null,
         })
       }
       setMetaByPath(nextMeta)
@@ -263,15 +264,27 @@ export function WebBoardView({
     [workspaceId, metaByPath],
   )
   const addComment = useCallback(
-    (cardId: string, body: string): Promise<BoardComment> => {
+    (cardId: string, body: string, parentId?: string): Promise<BoardComment> => {
       const meta = metaByPath.get(cardId)
       if (!meta) return Promise.reject(new Error('card not found'))
-      return api.createComment(workspaceId, meta.id, body)
+      return api.createComment(workspaceId, meta.id, body, parentId)
     },
     [workspaceId, metaByPath],
   )
+  const updateComment = useCallback(
+    (commentId: string, body: string): Promise<BoardComment> => api.updateComment(workspaceId, commentId, body),
+    [workspaceId],
+  )
   const deleteComment = useCallback(
     (commentId: string) => api.deleteComment(workspaceId, commentId),
+    [workspaceId],
+  )
+  const toggleReaction = useCallback(
+    (commentId: string, emoji: string): Promise<BoardComment> => api.toggleCommentReaction(workspaceId, commentId, emoji),
+    [workspaceId],
+  )
+  const resolveComment = useCallback(
+    (commentId: string, resolved: boolean): Promise<BoardComment> => api.resolveComment(workspaceId, commentId, resolved),
     [workspaceId],
   )
 
@@ -349,6 +362,7 @@ export function WebBoardView({
         if (patch.blockedBy !== undefined) next.blocked_by = serializeLinks(patch.blockedBy)
         if (patch.blocks !== undefined) next.blocks = serializeLinks(patch.blocks)
         if (patch.relates !== undefined) next.relates = serializeLinks(patch.relates)
+        if (patch.parent !== undefined) next.parent = patch.parent ? serializeLinks([patch.parent]) : ''
         const newBody = patch.notes !== undefined ? patch.notes : body
         try {
           await saveCard(id, next, newBody)
@@ -395,6 +409,19 @@ export function WebBoardView({
         if (!(await confirm(`Delete card "${card.title}"? It moves to the trash.`, { title: 'Delete card', destructive: true }))) return
         try {
           await api.deleteDocument(workspaceId, meta.id)
+          await load()
+        } catch (e) {
+          setError(String(e))
+        }
+      },
+      deleteCards: async (cardsToDelete) => {
+        if (cardsToDelete.length === 0) return
+        if (!(await confirm(`Delete ${cardsToDelete.length} cards? They move to the trash.`, { title: 'Delete cards', destructive: true }))) return
+        try {
+          for (const card of cardsToDelete) {
+            const meta = metaByPath.get(card.id)
+            if (meta) await api.deleteDocument(workspaceId, meta.id)
+          }
           await load()
         } catch (e) {
           setError(String(e))
@@ -491,7 +518,10 @@ export function WebBoardView({
         loadActivity={loadActivity}
         loadComments={loadComments}
         addComment={addComment}
+        updateComment={updateComment}
         deleteComment={deleteComment}
+        toggleReaction={toggleReaction}
+        resolveComment={resolveComment}
         currentUser={getStoredUsername() ?? undefined}
         onUploadAttachment={(file) => api.uploadAsset(workspaceId, file).then((a) => a.url)}
         fullscreen={fullscreen}

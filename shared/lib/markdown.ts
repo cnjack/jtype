@@ -4,6 +4,7 @@ import "katex/dist/katex.min.css";
 import { marked } from "marked";
 import morphdom from "morphdom";
 import { parseFrontmatter } from "./frontmatter";
+import { enhancePreview } from "./previewEnhancements";
 
 marked.use({ gfm: true, breaks: false });
 
@@ -222,5 +223,6 @@ export async function renderToContainer(content: string, container: HTMLElement)
   await renderPlantumlPreview(container, thisVersion);
   prepareMermaidPreview(container);
   await renderMermaidPreview(container, thisVersion);
+  await enhancePreview(container);
   return true;
 }

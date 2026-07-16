@@ -144,6 +144,10 @@ msgstr "已添加到收藏。"
 msgid "Advanced"
 msgstr "高级"
 
+#: src/components/editor/FindBar.tsx
+msgid "All"
+msgstr "全部"
+
 #~ msgid "Assignee"
 #~ msgstr "负责人"
 
@@ -173,6 +177,10 @@ msgstr "将当前本地库绑定到一个云工作区。"
 
 #~ msgid "Board"
 #~ msgstr "看板"
+
+#: src/components/editor/SlashMenu.tsx
+msgid "Board embed"
+msgstr "看板嵌入"
 
 #: src/components/modals/NewResourceDialog.tsx
 msgid "Board name"
@@ -212,6 +220,10 @@ msgstr "浏览器授权页面已打开。登录完成后同步将继续。"
 #: src/components/modals/DeviceAuthWaiting.tsx
 msgid "Browser opened"
 msgstr "浏览器已打开"
+
+#: src/components/editor/SlashMenu.tsx
+msgid "Bullet list"
+msgstr "无序列表"
 
 #: src/components/modals/CreateFolderDialog.tsx
 #: src/components/modals/DeleteFolderDialog.tsx
@@ -308,6 +320,10 @@ msgstr "云工作区：{0}"
 #: src/components/modals/AccountDialog.tsx
 msgid "Cloud workspaces"
 msgstr "云工作区"
+
+#: src/components/editor/SlashMenu.tsx
+msgid "Code block"
+msgstr "代码块"
 
 #: src/components/modals/DeviceAuthWaiting.tsx
 msgid "Codes expire after 10 minutes. Generate a new one to continue."
@@ -432,6 +448,11 @@ msgstr "默认库路径：<0>{defaultVaultPath}</0>"
 msgid "Delete"
 msgstr "删除"
 
+#. placeholder {0}: cardsToDelete.length
+#: src/components/BoardView.tsx
+msgid "Delete {0} cards? They move to the trash."
+msgstr "删除 {0} 张卡片？它们会移入回收站。"
+
 #~ msgid "Delete card"
 #~ msgstr "删除卡片"
 
@@ -526,6 +547,10 @@ msgstr "断开工作区"
 #: src/components/layout/UpdateBanner.tsx
 msgid "Dismiss"
 msgstr "关闭"
+
+#: src/components/editor/SlashMenu.tsx
+msgid "Divider"
+msgstr "分隔线"
 
 #: src/components/editor/EditorShell.tsx
 msgid "Document info"
@@ -682,12 +707,32 @@ msgstr "通用"
 #~ msgid "Group: Status"
 #~ msgstr "分组：状态"
 
+#: src/components/editor/SlashMenu.tsx
+msgid "Heading 1"
+msgstr "一级标题"
+
+#: src/components/editor/SlashMenu.tsx
+msgid "Heading 2"
+msgstr "二级标题"
+
+#: src/components/editor/SlashMenu.tsx
+msgid "Heading 3"
+msgstr "三级标题"
+
 #: src/components/editor/EditorShell.tsx
 msgid "Hide"
 msgstr "隐藏"
 
+#: src/components/editor/FindBar.tsx
+msgid "Hide replace"
+msgstr "隐藏替换"
+
 #~ msgid "Icon"
 #~ msgstr "图标"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Image saved to {relAssetPath}."
+msgstr "图片已保存到 {relAssetPath}。"
 
 #: src/components/modals/NewResourceDialog.tsx
 msgid "Import file"
@@ -700,6 +745,10 @@ msgstr "位于 {parentPath}/"
 #: src/components/editor/EditorShell.tsx
 msgid "Inline code"
 msgstr "行内代码"
+
+#: src/components/editor/SlashMenu.tsx
+msgid "Insert block"
+msgstr "插入块"
 
 #: src/components/editor/EditorShell.tsx
 msgid "Insert formula"
@@ -814,6 +863,15 @@ msgstr "Markdown 编辑器"
 msgid "Markdown file"
 msgstr "Markdown 文件"
 
+#: src/components/editor/FindBar.tsx
+msgid "Match case"
+msgstr "区分大小写"
+
+#: src/components/editor/SlashMenu.tsx
+msgid "Math block"
+msgstr "数学公式块"
+
+#: src/components/editor/SlashMenu.tsx
 #: src/components/modals/NewResourceDialog.tsx
 msgid "Mermaid diagram"
 msgstr "Mermaid 图表"
@@ -966,6 +1024,10 @@ msgstr "未安装"
 
 #~ msgid "Notes"
 #~ msgstr "备注"
+
+#: src/components/editor/SlashMenu.tsx
+msgid "Numbered list"
+msgstr "有序列表"
 
 #: src/components/editor/EditorShell.tsx
 msgid "Only web, email, and phone links can be opened from preview."
@@ -1120,6 +1182,10 @@ msgstr "快速打开"
 msgid "Quick switcher"
 msgstr "快速切换"
 
+#: src/components/editor/SlashMenu.tsx
+msgid "Quote"
+msgstr "引用"
+
 #: src/components/editor/EditorShell.tsx
 msgid "Read-only"
 msgstr "只读"
@@ -1197,6 +1263,14 @@ msgstr "重命名为："
 #: src/components/modals/DeviceAuthWaiting.tsx
 msgid "Reopen browser"
 msgstr "重新打开浏览器"
+
+#: src/components/editor/FindBar.tsx
+msgid "Replace"
+msgstr "替换"
+
+#: src/components/editor/FindBar.tsx
+msgid "Replace with"
+msgstr "替换为"
 
 #: src/components/editor/EditorShell.tsx
 msgid "Republish"
@@ -1296,6 +1370,10 @@ msgstr "设置"
 msgid "Show in Explorer"
 msgstr "在资源管理器中显示"
 
+#: src/components/editor/FindBar.tsx
+msgid "Show replace"
+msgstr "显示替换"
+
 #: src/components/layout/Header.tsx
 msgid "Sign in"
 msgstr "登录"
@@ -1354,13 +1432,15 @@ msgstr "发布前请先同步此文档。"
 msgid "Syncing with {0}."
 msgstr "正在与 {0} 同步。"
 
-#~ msgid "Table"
-#~ msgstr "表格"
+#: src/components/editor/SlashMenu.tsx
+msgid "Table"
+msgstr "表格"
 
 #~ msgid "Tags"
 #~ msgstr "标签"
 
 #: src/components/editor/EditorShell.tsx
+#: src/components/editor/SlashMenu.tsx
 msgid "Task list"
 msgstr "任务列表"
 

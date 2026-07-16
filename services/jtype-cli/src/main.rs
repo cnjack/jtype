@@ -204,6 +204,9 @@ enum CardCmd {
         assignee: Option<String>,
         #[arg(long)]
         due: Option<String>,
+        /// Parent card slug (filename without .md) — makes this a sub-card.
+        #[arg(long)]
+        parent: Option<String>,
     },
     /// Move a card to another column (rewrites its `status` frontmatter).
     Move {
@@ -229,6 +232,9 @@ enum CardCmd {
         assignee: Option<String>,
         #[arg(long)]
         due: Option<String>,
+        /// Parent card slug (sub-card); empty string detaches.
+        #[arg(long)]
+        parent: Option<String>,
     },
 }
 
@@ -327,12 +333,12 @@ async fn run() -> Result<()> {
                 kanban::list_cards_local(&root, &board, status.as_deref(), json)?
             }
             CardCmd::Create {
-                workspace, board, status, title, priority, assignee, due,
+                workspace, board, status, title, priority, assignee, due, parent,
             } => {
                 let root = vault::vault_or_init(cli.vault.as_deref())?;
                 kanban::create_card_local(
                     &root, &cfg, workspace.as_deref(), &board, &status, &title,
-                    priority.as_deref(), assignee.as_deref(), due.as_deref(), json,
+                    priority.as_deref(), assignee.as_deref(), due.as_deref(), parent.as_deref(), json,
                 )
                 .await?
             }
@@ -341,12 +347,12 @@ async fn run() -> Result<()> {
                 kanban::move_card_local(&root, &cfg, workspace.as_deref(), &path, &to, position, json).await?
             }
             CardCmd::Set {
-                workspace, path, status, priority, assignee, due,
+                workspace, path, status, priority, assignee, due, parent,
             } => {
                 let root = vault::require_vault(cli.vault.as_deref())?;
                 kanban::set_card_local(
                     &root, &cfg, workspace.as_deref(), &path,
-                    status.as_deref(), priority.as_deref(), assignee.as_deref(), due.as_deref(), json,
+                    status.as_deref(), priority.as_deref(), assignee.as_deref(), due.as_deref(), parent.as_deref(), json,
                 )
                 .await?
             }

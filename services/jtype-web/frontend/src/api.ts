@@ -264,10 +264,16 @@ export const api = {
   // Card comments (document-backed board): keyed by the card's document id.
   listComments: (workspaceId: string, docId: string) =>
     request<CardComment[]>(`/api/v1/workspaces/${workspaceId}/documents/${docId}/comments`),
-  createComment: (workspaceId: string, docId: string, body: string) =>
-    request<CardComment>(`/api/v1/workspaces/${workspaceId}/documents/${docId}/comments`, { method: 'POST', body: JSON.stringify({ body }) }),
+  createComment: (workspaceId: string, docId: string, body: string, parentId?: string) =>
+    request<CardComment>(`/api/v1/workspaces/${workspaceId}/documents/${docId}/comments`, { method: 'POST', body: JSON.stringify({ body, parentId }) }),
+  updateComment: (workspaceId: string, commentId: string, body: string) =>
+    request<CardComment>(`/api/v1/workspaces/${workspaceId}/comments/${commentId}`, { method: 'PATCH', body: JSON.stringify({ body }) }),
   deleteComment: (workspaceId: string, commentId: string) =>
     request<void>(`/api/v1/workspaces/${workspaceId}/comments/${commentId}`, { method: 'DELETE' }),
+  toggleCommentReaction: (workspaceId: string, commentId: string, emoji: string) =>
+    request<CardComment>(`/api/v1/workspaces/${workspaceId}/comments/${commentId}/reactions`, { method: 'POST', body: JSON.stringify({ emoji }) }),
+  resolveComment: (workspaceId: string, commentId: string, resolved: boolean) =>
+    request<CardComment>(`/api/v1/workspaces/${workspaceId}/comments/${commentId}/resolve`, { method: 'POST', body: JSON.stringify({ resolved }) }),
   // Webhooks (document-backed board): board scope is a board's logical id.
   listWebhooks: (workspaceId: string) =>
     request<Webhook[]>(`/api/v1/workspaces/${workspaceId}/webhooks`),
@@ -552,6 +558,10 @@ export interface CardComment {
   authorUserId: string
   author: string | null
   body: string
+  parentId?: string | null
+  resolvedAt?: string | null
+  resolvedBy?: string | null
+  reactions?: { emoji: string; count: number; mine: boolean }[]
   createdAt: string
   updatedAt: string
 }

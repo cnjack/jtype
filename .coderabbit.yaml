@@ -1,0 +1,6 @@
+# CodeRabbit configuration. Compiled i18n catalogs (.mjs) and extracted .po
+# files are generated/mechanical content — excluding them keeps reviews focused
+# on real source and keeps PRs under the reviewer's file-count limit.
+reviews:
+  path_filters:
+    - "!**/i18n/locales/**"
