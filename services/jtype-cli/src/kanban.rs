@@ -101,6 +101,7 @@ pub async fn create_card_local(
     priority: Option<&str>,
     assignee: Option<&str>,
     due: Option<&str>,
+    parent: Option<&str>,
     json: bool,
 ) -> Result<()> {
     let boards = jtype_core::list_boards(vault_root).map_err(|e| anyhow!(e))?;
@@ -129,7 +130,7 @@ pub async fn create_card_local(
         rel = format!("{dir}/{slug}-{n}.md");
         n += 1;
     }
-    let content = build_card_content(board, status, next_pos, title, priority, assignee, due);
+    let content = build_card_content(board, status, next_pos, title, priority, assignee, due, parent);
     notes::save_note_local(vault_root, cfg, workspace, &rel, &content, Some(title), json).await
 }
 
@@ -163,6 +164,7 @@ pub async fn set_card_local(
     priority: Option<&str>,
     assignee: Option<&str>,
     due: Option<&str>,
+    parent: Option<&str>,
     json: bool,
 ) -> Result<()> {
     let rel = notes::normalize_note_rel(path);
@@ -186,12 +188,20 @@ pub async fn set_card_local(
             touched = true;
         }
     }
+    // Parent slugs serialize as wikilinks, matching the board UI's frontmatter.
+    if let Some(v) = parent {
+        let link = format!("[[{v}]]");
+        let set = if v.is_empty() { None } else { Some(link.as_str()) };
+        content = jtype_core::set_frontmatter_field(&content, "parent", set);
+        touched = true;
+    }
     if !touched {
-        return Err(anyhow!("set: provide at least one field (--status/--priority/--assignee/--due)"));
+        return Err(anyhow!("set: provide at least one field (--status/--priority/--assignee/--due/--parent)"));
     }
     notes::save_note_local(vault_root, cfg, workspace, &rel, &content, None, json).await
 }
 
+#[allow(clippy::too_many_arguments)]
 fn build_card_content(
     board: &str,
     status: &str,
@@ -200,6 +210,7 @@ fn build_card_content(
     priority: Option<&str>,
     assignee: Option<&str>,
     due: Option<&str>,
+    parent: Option<&str>,
 ) -> String {
     let body = format!("# {title}\n");
     let mut c = jtype_core::set_frontmatter_field(&body, "board", Some(board));
@@ -213,6 +224,9 @@ fn build_card_content(
     }
     if let Some(d) = due {
         c = jtype_core::set_frontmatter_field(&c, "due", Some(d));
+    }
+    if let Some(p) = parent.filter(|p| !p.is_empty()) {
+        c = jtype_core::set_frontmatter_field(&c, "parent", Some(&format!("[[{p}]]")));
     }
     c
 }

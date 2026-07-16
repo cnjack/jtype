@@ -1429,7 +1429,7 @@ fn parse_card_tags(raw: &str) -> Vec<String> {
 /// card slugs, stripping the `[[ ]]` wikilink wrapper. Mirrors `parse_card_tags`
 /// (flat, comma-separated, lenient) but additionally unwraps the brackets so the
 /// stored references match the `[[name]]` link tokens used elsewhere.
-fn parse_card_links(raw: &str) -> Vec<String> {
+pub fn parse_card_links(raw: &str) -> Vec<String> {
     raw.split(',')
         .map(|tok| {
             tok.trim()
