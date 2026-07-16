@@ -9,7 +9,7 @@ import { renderMarkdownToHtml, renderToContainer } from "@shared/lib/markdown";
 import { parseFrontmatter, writeFrontmatter } from "@shared/lib/frontmatter";
 import { basename, escapeHtml, isTauriRuntime, markdownNodes, normalizePath } from "../../lib/utils";
 import { useCommandsList } from "../../app/App";
-import { addMarkdownTableColumn, addMarkdownTableRow, formatMarkdownTable, insertBlockAtSafeCursor, insertOrEditTable } from "../../hooks/useCommands";
+import { addMarkdownTableColumn, addMarkdownTableRow, formatMarkdownTable, insertAtCursor, insertBlockAtSafeCursor, insertOrEditTable } from "../../hooks/useCommands";
 import { useEagerSync } from "../../hooks/useEagerSync";
 import { useConfirm } from "@shared/components/PromptDialogContext";
 import { httpRequest } from "@shared/lib/http";
@@ -61,6 +61,24 @@ import {
   LinkSlashIcon,
   PrinterIcon,
 } from "@heroicons/react/24/outline";
+
+const IMAGE_MIME: Record<string, string> = {
+  png: "image/png",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  gif: "image/gif",
+  webp: "image/webp",
+  svg: "image/svg+xml",
+  avif: "image/avif",
+  bmp: "image/bmp",
+  ico: "image/x-icon",
+};
+
+/** Blob URLs need an explicit mime type (SVG won't render without one). */
+function mimeForImagePath(path: string): string {
+  const ext = path.split(".").pop()?.toLowerCase() ?? "";
+  return IMAGE_MIME[ext] ?? "application/octet-stream";
+}
 
 type PublishStatusResponse = {
   documentId: string;
@@ -227,10 +245,14 @@ export function EditorShell() {
       const mod = e.ctrlKey || e.metaKey;
       if (!mod) return;
       const key = e.key;
-      // Find open / next / previous
-      if (key === "f") {
+      // Find open / next / previous. Match on e.code as well: with Alt held,
+      // macOS reports e.key as "ƒ" instead of "f" (Cmd+Alt+F opens replace).
+      if (key === "f" || e.code === "KeyF") {
         e.preventDefault();
         dispatch({ type: "SET_FINDBAR", open: true });
+        if (e.altKey) {
+          window.dispatchEvent(new CustomEvent("jtype:find-open-replace"));
+        }
         return;
       }
       if (key === "g") {
@@ -288,22 +310,6 @@ export function EditorShell() {
     [state.workspace?.rootPath],
   );
 
-  useEffect(() => {
-    if (!previewRef.current || state.currentKind !== "markdown") return;
-    // Skip rendering when preview is not visible (write mode)
-    if (state.editorMode === "write") return;
-    // Debounce preview rendering to avoid rapid DOM thrashing
-    if (previewTimerRef.current) clearTimeout(previewTimerRef.current);
-    const container = previewRef.current;
-    const content = state.editorContent;
-    previewTimerRef.current = setTimeout(() => {
-      void renderToContainer(content, container).then(() => populateBoardEmbeds(container));
-    }, 120);
-    return () => {
-      if (previewTimerRef.current) clearTimeout(previewTimerRef.current);
-    };
-  }, [state.editorContent, state.currentKind, state.editorMode, populateBoardEmbeds]);
-
   const fileName = state.isDraft ? t`Untitled` : state.currentPath ? basename(state.currentPath) : t`No file selected`;
   const isMarkdown = state.currentKind === "markdown";
   const isAssetView = state.currentKind === "asset" && !!state.currentPath;
@@ -348,6 +354,104 @@ export function EditorShell() {
     const content = editorRef.current?.value ?? "";
     dispatch({ type: "SET_EDITOR_CONTENT", content });
   }, [dispatch, isCloudViewer]);
+
+  // Blob URLs for vault-relative images shown in the preview, keyed by full
+  // path. Revoked when the workspace changes or the shell unmounts.
+  const imageUrlCacheRef = useRef<Map<string, string>>(new Map());
+  useEffect(() => {
+    const cache = imageUrlCacheRef.current;
+    return () => {
+      cache.forEach((url) => URL.revokeObjectURL(url));
+      cache.clear();
+    };
+  }, [state.workspace?.rootPath]);
+
+  /**
+   * Resolve vault-relative `<img>` sources to blob URLs so local images render
+   * in the preview. Runs after every render pass: morphdom resets `src` to the
+   * raw markdown value, and cached entries re-apply without re-reading disk.
+   */
+  const resolveLocalImages = useCallback(async (container: HTMLElement) => {
+    const root = state.workspace?.rootPath;
+    if (!root || !tauri.isAvailable) return;
+    for (const img of Array.from(container.querySelectorAll<HTMLImageElement>("img"))) {
+      const src = img.getAttribute("src") ?? "";
+      if (!src || /^(https?:|data:|blob:|asset:|file:|\/\/)/i.test(src)) continue;
+      let rel: string;
+      try {
+        rel = normalizePath(decodeURIComponent(src)).replace(/^\.\//, "");
+      } catch {
+        continue;
+      }
+      // Try document-relative first, then vault-root-relative.
+      const candidates = documentLocation ? [`${documentLocation}/${rel}`, rel] : [rel];
+      for (const candidate of candidates) {
+        const fullPath = `${root}/${candidate}`;
+        let url = imageUrlCacheRef.current.get(fullPath);
+        if (!url) {
+          try {
+            const bytes = await tauri.readBinaryFile(fullPath);
+            url = URL.createObjectURL(new Blob([new Uint8Array(bytes)], { type: mimeForImagePath(candidate) }));
+            imageUrlCacheRef.current.set(fullPath, url);
+          } catch {
+            continue;
+          }
+        }
+        img.src = url;
+        break;
+      }
+    }
+  }, [state.workspace?.rootPath, documentLocation]);
+
+  /** Save pasted image data into `<doc dir>/assets/` and insert its markdown link. */
+  const handleEditorPaste = useCallback((e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    if (!canEditMarkdown) return;
+    const root = state.workspace?.rootPath;
+    if (!root || !tauri.isAvailable) return;
+    const images = Array.from(e.clipboardData?.items ?? []).filter(
+      (item) => item.kind === "file" && item.type.startsWith("image/"),
+    );
+    if (images.length === 0) return;
+    e.preventDefault();
+    for (const item of images) {
+      const file = item.getAsFile();
+      if (!file) continue;
+      void (async () => {
+        try {
+          const ext = (file.type.split("/")[1] ?? "png").replace("jpeg", "jpg").replace(/[^a-z0-9]/gi, "") || "png";
+          const stamp = new Date().toISOString().replace(/\D/g, "").slice(0, 14);
+          const nonce = Math.random().toString(36).slice(2, 6);
+          const name = `pasted-${stamp}-${nonce}.${ext}`;
+          const relAssetPath = documentLocation ? `${documentLocation}/assets/${name}` : `assets/${name}`;
+          const bytes = Array.from(new Uint8Array(await file.arrayBuffer()));
+          await tauri.writeBinaryFile(`${root}/${relAssetPath}`, bytes);
+          // The markdown link is document-relative; the file sits next to the doc.
+          insertAtCursor(`![${name}](assets/${name})`);
+          dispatch({ type: "SET_STATUS", message: t`Image saved to ${relAssetPath}.` });
+        } catch (error) {
+          dispatch({ type: "SET_STATUS", message: String(error) });
+        }
+      })();
+    }
+  }, [canEditMarkdown, state.workspace?.rootPath, documentLocation, dispatch]);
+
+  useEffect(() => {
+    if (!previewRef.current || state.currentKind !== "markdown") return;
+    // Skip rendering when preview is not visible (write mode)
+    if (state.editorMode === "write") return;
+    // Debounce preview rendering to avoid rapid DOM thrashing
+    if (previewTimerRef.current) clearTimeout(previewTimerRef.current);
+    const container = previewRef.current;
+    const content = state.editorContent;
+    previewTimerRef.current = setTimeout(() => {
+      void renderToContainer(content, container).then(() =>
+        Promise.all([populateBoardEmbeds(container), resolveLocalImages(container)]),
+      );
+    }, 120);
+    return () => {
+      if (previewTimerRef.current) clearTimeout(previewTimerRef.current);
+    };
+  }, [state.editorContent, state.currentKind, state.editorMode, populateBoardEmbeds, resolveLocalImages]);
 
   const isFavorite = (() => {
     if (!state.currentPath) return false;
@@ -860,6 +964,7 @@ export function EditorShell() {
             disabled={!isMarkdown}
             readOnly={isCloudViewer}
             onInput={handleInput}
+            onPaste={handleEditorPaste}
             onContextMenu={handleContextMenu}
           />
           <article
@@ -1008,6 +1113,39 @@ function PropertyField({ field, value, disabled, onUpdate }: { field: string; va
   );
 }
 
+/**
+ * Scroll the visible editing surface to a heading. `line` is the 0-based line
+ * in the full document content (frontmatter included). In write/split mode the
+ * textarea is the scroll authority (split-view sync moves the preview along);
+ * in preview mode we resolve the nearest `data-source-line`, which is relative
+ * to the body, so the frontmatter offset is subtracted first.
+ */
+function jumpToHeading(content: string, mode: EditorMode, line: number) {
+  if (mode === "write" || mode === "split") {
+    const editor = document.getElementById("editor") as HTMLTextAreaElement | null;
+    if (!editor) return;
+    const lines = editor.value.split("\n");
+    let offset = 0;
+    for (let i = 0; i < line && i < lines.length; i += 1) offset += lines[i].length + 1;
+    editor.focus();
+    editor.setSelectionRange(offset, offset + (lines[line]?.length ?? 0));
+    const lineHeight = parseFloat(getComputedStyle(editor).lineHeight) || 28;
+    editor.scrollTop = Math.max(0, line * lineHeight - editor.clientHeight * 0.3);
+    return;
+  }
+  const preview = document.getElementById("preview");
+  if (!preview) return;
+  const { body } = parseFrontmatter(content);
+  const bodyLine = line - (content.split("\n").length - body.split("\n").length);
+  let target: HTMLElement | null = null;
+  for (const el of Array.from(preview.querySelectorAll<HTMLElement>("[data-source-line]"))) {
+    const sourceLine = Number(el.dataset.sourceLine);
+    if (Number.isNaN(sourceLine) || sourceLine > bodyLine) break;
+    target = el;
+  }
+  target?.scrollIntoView({ block: "start", behavior: "smooth" });
+}
+
 function OutlineSection() {
   const state = useAppState();
   if (state.currentKind !== "markdown") {
@@ -1032,7 +1170,14 @@ function OutlineSection() {
     <section id="outline-panel" className="document-info-section">
       <div className="space-y-1">
         {headings.map((h, i) => (
-          <button key={i} type="button" className="tree-button" style={{ paddingLeft: `${h.level * 0.5}rem` }}>
+          <button
+            key={i}
+            type="button"
+            className="tree-button"
+            style={{ paddingLeft: `${h.level * 0.5}rem` }}
+            title={h.title}
+            onClick={() => jumpToHeading(state.editorContent, state.editorMode, h.line)}
+          >
             {h.title}
           </button>
         ))}
