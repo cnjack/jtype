@@ -146,11 +146,11 @@
 - [x] token 已从 mobile localStorage / profile JSON 移除；Android Keystore 跨进程恢复和 iOS signed simulator Keychain 迁移/冷启动恢复均已验证（证据：`docs/mobile/reports/phase-1-secure-storage.md`、`docs/mobile/reports/phase-1-sync-recovery.md`）
 - [x] canonical capability 输出 `clientType=mobile`；REST、sync push/pull 与 WebSocket 共用现有链路；0024 migration 扩展 `document_versions.source`
 - [x] 保存、恢复前台和网络恢复时触发受控同步；WebView suspend 后能正确重连并去重（证据：`docs/mobile/reports/phase-1-sync-recovery.md`）
-- [ ] mobile browser OAuth/deep-link 回跳完成，desktop OAuth 路径不变
+- [x] mobile browser OAuth 使用固定无凭据 callback、Android 真实服务回跳与 iOS 系统路由已验证，desktop OAuth request/body 保持不变（证据：`docs/mobile/reports/phase-1-oauth-deep-link.md`）
 
 ### 1.7 Phase 1 验收
 
-- [~] 本段 desktop app E2E 40/40 通过；Phase 1 完整功能与关键视觉终验待完成
+- [~] 本段 desktop app E2E 41/41 通过；Phase 1 完整功能与关键视觉终验待完成
 - [ ] Android/iOS：首次启动 → 创建/打开 vault → 新建文档 → 编辑 → Preview → 保存 → 重启后恢复
 - [ ] Android/iOS：打开 Document Info 并编辑 properties；查看 Outline / Publish / Links
 - [ ] Android/iOS：打开 Board、查看列、打开/移动 card
@@ -180,10 +180,11 @@
 - [ ] undo/redo、keyboard accessory、硬件键盘 shortcuts 与 desktop command system 对齐
 - [ ] accessibility labels、VoiceOver/TalkBack、动态字体与对比度检查
 - [ ] 低内存、进后台、被系统终止后的草稿恢复
+- [ ] device OAuth pending state 的安全持久化与进程终止/冷回跳恢复
 
 ### 2.3 系统入口与后台能力
 
-- [ ] universal/app links 与自有 deep links
+- [~] 固定自有 OAuth deep link 已接入；universal/app links、冷启动恢复和文档定位待完成
 - [ ] Android share target / iOS share extension 将 Markdown、文本或文件导入 vault
 - [ ] APNs/FCM 通知用于协作变化提示；后台只做系统允许的有限刷新
 - [ ] 通知/深链进入后定位到正确 cloud workspace、vault 和文档
@@ -249,6 +250,8 @@
 | 2026-07-18 | 1.5 | `4321824` | 共用 EditorShell export action，Android/iOS 原生 Markdown system share adapter | `docs/mobile/reports/phase-1-share-export.md` |
 | 2026-07-18 | 1.5 | `0556be3` | 复用 desktop PDF renderer/action，以 app cache 路径打开 Android/iOS system share | `docs/mobile/reports/phase-1-pdf-export.md` |
 | 2026-07-18 | 1.6 | `27326e4` | mobile suspend/online 恢复协调、WebSocket restart、共享 push/pull 与 desktop 行为隔离 | `docs/mobile/reports/phase-1-sync-recovery.md` |
+| 2026-07-18 | 1.6 | `844e9ea` | 复用 desktop device OAuth，以固定无凭据 callback 接入 Android/iOS deep-link 回跳 | `docs/mobile/reports/phase-1-oauth-deep-link.md` |
+| 2026-07-18 | 1.6 | `99f474a` | 升级 Tao 锁定版本，避免 Android custom-scheme Intent 的 null MIME 崩溃 | `docs/mobile/reports/phase-1-oauth-deep-link.md` |
 
 ## 当前环境审计（2026-07-18）
 
