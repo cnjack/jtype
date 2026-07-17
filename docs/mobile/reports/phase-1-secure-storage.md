@@ -64,7 +64,7 @@ Android：安全存储运行时验证完成后的 app-private vault。
 
 ![Android secure storage smoke](assets/phase-1/secure-storage-android.png)
 
-iOS：最终无签名构建正常启动。截图同时记录一个尚未归入本提交修复范围的已知问题：首次启动欢迎内容在窄屏存在横向溢出，后续作为 adaptive shell UI 工作单独修复。
+iOS：最终无签名构建正常启动。该截图当时记录的首次启动中文欢迎内容横向溢出，已在 Phase 2 通过共享 App shell Grid 约束修复，并由完整中文 locale E2E 与 iPhone archive 复验；见 `docs/mobile/reports/phase-2.md`（`232222c`、`309aebb`）。
 
 ![iOS secure storage launch](assets/phase-1/secure-storage-ios.png)
 

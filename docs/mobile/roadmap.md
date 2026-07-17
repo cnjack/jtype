@@ -177,10 +177,10 @@
 
 ### 2.1 External vault provider
 
-- [ ] 定义 `VaultBackend` / `VaultProvider` 边界，保持 UI、AppState、commands、相对路径和 sync document model 不变
+- [x] 定义 `VaultBackend` / `VaultProvider` descriptor、identity、access state、capability 与 versioned native record 边界；现有 app-private/local vault 已通过 provider resolver 打开，UI、AppState、commands、相对路径和 sync document model 不变（证据：`docs/mobile/reports/phase-2.md`，实现：`002fd18`）
 - [ ] Android Storage Access Framework：选择目录、持久化 URI permission、枚举/读写/重命名/删除文档
 - [ ] iOS folder picker：security-scoped bookmark、权限恢复、失效后的重新授权
-- [ ] 首选实现为 external directory ↔ app-private mirror，并明确 reconcile、冲突和删除规则
+- [~] external directory ↔ app-private mirror 的 record、storage mode 与 capability contract 已建立；持久化、首次导入、reconcile、冲突和删除规则待 2B/2C 实现
 - [ ] 当 mirror 被证明不足时，再将 provider 扩展为零拷贝访问；不在 UI 层分叉
 - [ ] 外部权限丢失、目录被移动或文件被其他 app 修改时有可恢复提示
 
@@ -214,8 +214,8 @@
 - [ ] 大 vault 基准达到报告中预先记录的阈值
 - [ ] desktop build、Rust tests、app E2E 全部通过
 - [ ] 双平台模拟器与至少一台真实设备截图/录像证据已保存
-- [ ] `docs/mobile/reports/phase-2.md` 已提交
-- [ ] tracking 已记录 Phase 2 commit hashes
+- [~] `docs/mobile/reports/phase-2.md` 已创建并记录 2A provider contract 增量；后续持续更新到 Phase 2 终验
+- [~] tracking 已记录当前 Phase 2 commit hashes；后续增量继续追加
 
 ## Phase 3 — Store readiness
 
@@ -265,6 +265,9 @@
 | 2026-07-18 | 1.7 | `b39e920` | capability 驱动的 phone 冲突 tabs、touch action footer 与 desktop 三栏隔离 | `docs/mobile/reports/phase-1-conflict.md` |
 | 2026-07-18 | 1.7 | `1111156` | 真实服务冲突解决截图、双平台构建证据与临时数据清理记录 | `docs/mobile/reports/phase-1-conflict.md` |
 | 2026-07-18 | 1.6–1.7 | `ad5a9ef` | iOS 容器路径迁移、eager conflict 可见性、同路径冲突去重与 legacy duplicate 清理 | `docs/mobile/reports/phase-1.md`、`docs/mobile/reports/phase-1-conflict.md` |
+| 2026-07-18 | 2.1 / 2A | `002fd18` | 建立 provider identity、descriptor、capability、native-only external record 与 app-private provider resolver | `docs/mobile/reports/phase-2.md` |
+| 2026-07-18 | 2.2 / shell | `232222c` | 约束共享 Welcome 内容在窄屏和本地化文案下的宽度 | `docs/mobile/reports/phase-2.md` |
+| 2026-07-18 | 2.2 / shell | `309aebb` | 将共享 App shell Grid 列固定为 `minmax(0, 1fr)`，增加完整中文 locale overflow 回归 | `docs/mobile/reports/phase-2.md` |
 
 ## 当前环境审计（2026-07-18）
 
