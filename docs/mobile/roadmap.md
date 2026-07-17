@@ -142,7 +142,7 @@
 ### 1.6 Account 与 cloud sync
 
 - [x] `useCloudSync`、vault binding 和现有 API contract 已复用；Android/iOS 双模拟器真实服务 push/pull 与连接 smoke test 已通过（证据：`docs/mobile/reports/phase-1-sync-recovery.md`）
-- [~] 冲突模型与现有解决 UI 已复用；双设备同时编辑的真实服务冲突终验待完成
+- [x] 冲突模型与现有解决回调已复用；phone 使用 capability 驱动的单面板比较器，Android UI 已完成真实服务 conflict → manual merge → resolved 闭环（证据：`docs/mobile/reports/phase-1-conflict.md`）
 - [x] token 已从 mobile localStorage / profile JSON 移除；Android Keystore 跨进程恢复和 iOS signed simulator Keychain 迁移/冷启动恢复均已验证（证据：`docs/mobile/reports/phase-1-secure-storage.md`、`docs/mobile/reports/phase-1-sync-recovery.md`）
 - [x] canonical capability 输出 `clientType=mobile`；REST、sync push/pull 与 WebSocket 共用现有链路；0024 migration 扩展 `document_versions.source`
 - [x] 保存、恢复前台和网络恢复时触发受控同步；WebView suspend 后能正确重连并去重（证据：`docs/mobile/reports/phase-1-sync-recovery.md`）
@@ -150,11 +150,11 @@
 
 ### 1.7 Phase 1 验收
 
-- [~] 本段 desktop app E2E 41/41 通过；Phase 1 完整功能与关键视觉终验待完成
+- [~] 本段 desktop app E2E 42/42 通过；Phase 1 完整功能与关键视觉终验待完成
 - [ ] Android/iOS：首次启动 → 创建/打开 vault → 新建文档 → 编辑 → Preview → 保存 → 重启后恢复
 - [ ] Android/iOS：打开 Document Info 并编辑 properties；查看 Outline / Publish / Links
 - [ ] Android/iOS：打开 Board、查看列、打开/移动 card
-- [~] Android 离线编辑/网络恢复与 iOS suspend/resume cloud sync 已通过；双设备冲突可见且可解决待终验（证据：`docs/mobile/reports/phase-1-sync-recovery.md`）
+- [~] Android 离线编辑/网络恢复与 iOS suspend/resume cloud sync 已通过；Android 已在真实服务完成第二 mobile client 重叠编辑后的冲突可见与手动解决，iOS 冲突页点按待主机解锁后补齐（证据：`docs/mobile/reports/phase-1-sync-recovery.md`、`docs/mobile/reports/phase-1-conflict.md`）
 - [~] phone / tablet 尺寸及横竖屏 E2E 已通过；双模拟器软键盘 smoke test 待阶段验收
 - [ ] 双平台截图与 `docs/mobile/reports/phase-1.md` 已提交
 - [ ] tracking 已记录 Phase 1 commit hashes
@@ -252,6 +252,7 @@
 | 2026-07-18 | 1.6 | `27326e4` | mobile suspend/online 恢复协调、WebSocket restart、共享 push/pull 与 desktop 行为隔离 | `docs/mobile/reports/phase-1-sync-recovery.md` |
 | 2026-07-18 | 1.6 | `844e9ea` | 复用 desktop device OAuth，以固定无凭据 callback 接入 Android/iOS deep-link 回跳 | `docs/mobile/reports/phase-1-oauth-deep-link.md` |
 | 2026-07-18 | 1.6 | `99f474a` | 升级 Tao 锁定版本，避免 Android custom-scheme Intent 的 null MIME 崩溃 | `docs/mobile/reports/phase-1-oauth-deep-link.md` |
+| 2026-07-18 | 1.7 | `b39e920` | capability 驱动的 phone 冲突 tabs、touch action footer 与 desktop 三栏隔离 | `docs/mobile/reports/phase-1-conflict.md` |
 
 ## 当前环境审计（2026-07-18）
 
