@@ -71,6 +71,9 @@ export const tauri = {
   openDefaultVault() {
     return invoke<WorkspaceSnapshot>("open_default_vault");
   },
+  defaultVaultPath() {
+    return invoke<string>("default_vault_path");
+  },
   createEntry(rootPath: string, relativePath: string, kind: string) {
     return invoke<WorkspaceSnapshot>("create_workspace_entry", { rootPath, relativePath, kind });
   },

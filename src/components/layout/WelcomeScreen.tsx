@@ -22,7 +22,11 @@ export function WelcomeScreen() {
     const refresh = () => setRecentItems(readRecentItems());
     refresh();
     window.addEventListener("focus", refresh);
-    return () => window.removeEventListener("focus", refresh);
+    window.addEventListener("jtype:recent-changed", refresh);
+    return () => {
+      window.removeEventListener("focus", refresh);
+      window.removeEventListener("jtype:recent-changed", refresh);
+    };
   }, []);
 
   const handleRemove = async (item: RecentItem) => {

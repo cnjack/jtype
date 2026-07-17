@@ -1,11 +1,13 @@
 import { useCallback } from "react";
-import { useAppState } from "../app/AppState";
+import { useAppDispatch, useAppState } from "../app/AppState";
 import { tauri } from "../lib/tauri";
 import { httpRequest } from "@shared/lib/http";
 import { sha256Hex } from "../lib/utils";
+import { parseSyncConflicts } from "../lib/types";
 import { useRuntimeCapabilities } from "../app/RuntimeCapabilities";
 
 export function useEagerSync() {
+  const dispatch = useAppDispatch();
   const state = useAppState();
   const capabilities = useRuntimeCapabilities();
 
@@ -74,7 +76,15 @@ export function useEagerSync() {
             content: string;
             mergeStatus: string;
           }>;
+          conflicts?: Array<Record<string, unknown>>;
         };
+
+        if (pushData.conflicts?.length) {
+          dispatch({
+            type: "SET_CONFLICTS",
+            conflicts: parseSyncConflicts(pushData.conflicts),
+          });
+        }
 
         if (
           tauri.isAvailable &&
@@ -106,6 +116,7 @@ export function useEagerSync() {
       state.cloudProfile,
       state.serviceUrl,
       capabilities.clientType,
+      dispatch,
     ],
   );
 

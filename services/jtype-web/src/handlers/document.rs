@@ -779,7 +779,6 @@ async fn create_sync_conflict_with_ranges(
     cloud_content: String,
     conflict_ranges: Option<&Vec<crate::util::ConflictRange>>,
 ) -> Result<SyncConflict, AppError> {
-    let conflict_id = Uuid::new_v4().to_string();
     let ranges_json: Option<serde_json::Value> = conflict_ranges.and_then(|ranges| {
         if ranges.is_empty() {
             None
@@ -787,20 +786,53 @@ async fn create_sync_conflict_with_ranges(
             serde_json::to_value(ranges).ok()
         }
     });
-    sqlx::query(
-        r#"INSERT INTO sync_conflicts (id, workspace_id, document_id, relative_path, base_content, local_content, cloud_content, conflict_ranges)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?)"#,
+    let existing_conflict_id: Option<String> = sqlx::query_scalar(
+        r#"SELECT id FROM sync_conflicts
+           WHERE workspace_id = ? AND relative_path = ? AND status = 'open'
+           ORDER BY created_at DESC LIMIT 1"#,
     )
-    .bind(&conflict_id)
     .bind(workspace_id)
-    .bind(document_id)
     .bind(relative_path)
-    .bind(&payload.base_content)
-    .bind(&payload.content)
-    .bind(&cloud_content)
-    .bind(&ranges_json)
-    .execute(pool)
+    .fetch_optional(pool)
     .await?;
+    let (conflict_id, conflict_exists) = match existing_conflict_id {
+        Some(id) => (id, true),
+        None => (Uuid::new_v4().to_string(), false),
+    };
+
+    if conflict_exists {
+        // An eager save and a following full sync can submit the same stale
+        // document twice. Keep a single actionable conflict per path instead
+        // of leaving older open rows hidden by the list endpoint's dedupe.
+        sqlx::query(
+            r#"UPDATE sync_conflicts
+               SET document_id = ?, base_content = ?, local_content = ?, cloud_content = ?, conflict_ranges = ?
+               WHERE id = ?"#,
+        )
+        .bind(document_id)
+        .bind(&payload.base_content)
+        .bind(&payload.content)
+        .bind(&cloud_content)
+        .bind(&ranges_json)
+        .bind(&conflict_id)
+        .execute(pool)
+        .await?;
+    } else {
+        sqlx::query(
+            r#"INSERT INTO sync_conflicts (id, workspace_id, document_id, relative_path, base_content, local_content, cloud_content, conflict_ranges)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)"#,
+        )
+        .bind(&conflict_id)
+        .bind(workspace_id)
+        .bind(document_id)
+        .bind(relative_path)
+        .bind(&payload.base_content)
+        .bind(&payload.content)
+        .bind(&cloud_content)
+        .bind(&ranges_json)
+        .execute(pool)
+        .await?;
+    }
     Ok(SyncConflict {
         conflict_id,
         relative_path: relative_path.to_string(),

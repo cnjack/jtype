@@ -336,3 +336,124 @@ async fn push_empty_trash_operation() {
     );
     assert_eq!(body["workspaceId"].as_str().unwrap(), ws_id);
 }
+
+#[tokio::test]
+async fn repeated_stale_push_reuses_open_conflict_and_resolution_clears_legacy_duplicates() {
+    let (app, pool) = common::setup().await;
+    let (token, _) = common::register_user(app.clone(), &common::uid()).await;
+    let ws_id = common::create_workspace(app.clone(), &token, &common::wname()).await;
+    let relative_path = format!(
+        "conflict-{}.md",
+        &uuid::Uuid::new_v4().simple().to_string()[..8]
+    );
+    let base_content = "# Conflict\n\nShared base.";
+    let saved = common::save_doc(
+        app.clone(),
+        &token,
+        &ws_id,
+        &relative_path,
+        base_content,
+    )
+    .await;
+    let base_hash = saved["contentHash"]
+        .as_str()
+        .expect("saved document should have a content hash");
+
+    common::save_doc(
+        app.clone(),
+        &token,
+        &ws_id,
+        &relative_path,
+        "# Conflict\n\nCloud edit.",
+    )
+    .await;
+
+    let stale_push = json!({
+        "deviceId": "stale-mobile",
+        "documents": [{
+            "relativePath": relative_path,
+            "title": "Conflict",
+            "content": "# Conflict\n\nLocal edit.",
+            "baseContentHash": base_hash,
+            "baseContent": base_content
+        }]
+    });
+    let (first_status, first_body) = common::req(
+        app.clone(),
+        "POST",
+        &format!("/api/v1/workspaces/{ws_id}/sync/push"),
+        Some(&token),
+        Some(stale_push.clone()),
+    )
+    .await;
+    let (second_status, second_body) = common::req(
+        app.clone(),
+        "POST",
+        &format!("/api/v1/workspaces/{ws_id}/sync/push"),
+        Some(&token),
+        Some(stale_push),
+    )
+    .await;
+
+    assert_eq!(first_status, StatusCode::OK, "first stale push: {first_body}");
+    assert_eq!(second_status, StatusCode::OK, "second stale push: {second_body}");
+    let first_id = first_body["conflicts"][0]["conflictId"]
+        .as_str()
+        .expect("first push should return a conflict");
+    let second_id = second_body["conflicts"][0]["conflictId"]
+        .as_str()
+        .expect("second push should return a conflict");
+    assert_eq!(first_id, second_id, "the open conflict should be reused");
+
+    let open_count: i64 = sqlx::query_scalar(
+        "SELECT COUNT(*) FROM sync_conflicts WHERE workspace_id = ? AND relative_path = ? AND status = 'open'",
+    )
+    .bind(&ws_id)
+    .bind(&relative_path)
+    .fetch_one(&pool)
+    .await
+    .expect("open conflict count");
+    assert_eq!(open_count, 1);
+
+    // Simulate one duplicate left by an older server build, then verify that
+    // resolving the visible conflict also clears the hidden legacy row.
+    let legacy_id = uuid::Uuid::new_v4().to_string();
+    sqlx::query(
+        r#"INSERT INTO sync_conflicts
+           (id, workspace_id, document_id, relative_path, base_content, local_content, cloud_content, conflict_ranges)
+           SELECT ?, workspace_id, document_id, relative_path, base_content, local_content, cloud_content, conflict_ranges
+           FROM sync_conflicts WHERE id = ?"#,
+    )
+    .bind(&legacy_id)
+    .bind(first_id)
+    .execute(&pool)
+    .await
+    .expect("insert legacy duplicate");
+
+    let (resolve_status, resolve_body) = common::req(
+        app,
+        "POST",
+        &format!("/api/v1/workspaces/{ws_id}/conflicts/{first_id}/resolve"),
+        Some(&token),
+        Some(json!({
+            "resolution": "manual_merge",
+            "content": "# Conflict\n\nMerged result."
+        })),
+    )
+    .await;
+    assert_eq!(
+        resolve_status,
+        StatusCode::OK,
+        "conflict resolution should succeed: {resolve_body}"
+    );
+
+    let remaining_open: i64 = sqlx::query_scalar(
+        "SELECT COUNT(*) FROM sync_conflicts WHERE workspace_id = ? AND relative_path = ? AND status = 'open'",
+    )
+    .bind(&ws_id)
+    .bind(&relative_path)
+    .fetch_one(&pool)
+    .await
+    .expect("remaining open conflict count");
+    assert_eq!(remaining_open, 0);
+}

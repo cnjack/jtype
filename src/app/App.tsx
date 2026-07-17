@@ -463,6 +463,31 @@ function AppContent() {
         sync.loadVaultBindings();
         if (capabilities.supportsFileDrop) fs.registerDragDrop();
 
+        let lastWorkspacePath = state.lastWorkspacePath;
+        let lastFilePath = state.lastFilePath;
+        if (capabilities.usesAppPrivateVault) {
+          try {
+            const { migrateAppPrivateVaultStorage } = await import("../lib/mobilePrivateVault");
+            const currentDefaultVault = await tauri.defaultVaultPath();
+            const migrated = migrateAppPrivateVaultStorage(currentDefaultVault);
+            lastWorkspacePath = migrated.workspacePath;
+            lastFilePath = migrated.filePath;
+            if (
+              lastWorkspacePath !== state.lastWorkspacePath
+              || lastFilePath !== state.lastFilePath
+            ) {
+              dispatch({
+                type: "SET_LAST_PATHS",
+                workspacePath: lastWorkspacePath,
+                filePath: lastFilePath,
+              });
+            }
+          } catch {
+            // Older mobile backends keep the existing paths. The normal open
+            // error remains visible instead of blocking startup entirely.
+          }
+        }
+
         let targetFile: string | null = null;
         let externalSources: string[] = [];
         try {
@@ -477,17 +502,17 @@ function AppContent() {
           await fs.importExternalSources(externalSources);
         } else if (targetFile) {
           fs.openMarkdownFile(targetFile);
-        } else if (state.lastWorkspacePath) {
-          await fs.openWorkspace(state.lastWorkspacePath);
-          if (state.lastFilePath) {
-            const relPath = relativePathFromWorkspace(state.lastFilePath, state.lastWorkspacePath);
-            if (isDiagramTextPath(state.lastFilePath)) fs.openDiagramFile(state.lastFilePath, relPath);
-            else fs.openMarkdownFile(state.lastFilePath, relPath);
+        } else if (lastWorkspacePath) {
+          await fs.openWorkspace(lastWorkspacePath);
+          if (lastFilePath) {
+            const relPath = relativePathFromWorkspace(lastFilePath, lastWorkspacePath);
+            if (isDiagramTextPath(lastFilePath)) fs.openDiagramFile(lastFilePath, relPath);
+            else fs.openMarkdownFile(lastFilePath, relPath);
           }
-        } else if (state.lastFilePath) {
+        } else if (lastFilePath) {
           // Restore previous single-file session
-          if (isDiagramTextPath(state.lastFilePath)) fs.openDiagramFile(state.lastFilePath);
-          else fs.openMarkdownFile(state.lastFilePath);
+          if (isDiagramTextPath(lastFilePath)) fs.openDiagramFile(lastFilePath);
+          else fs.openMarkdownFile(lastFilePath);
         }
       })();
     } else {

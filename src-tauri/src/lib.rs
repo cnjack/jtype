@@ -953,8 +953,43 @@ fn read_binding_store(app: &AppHandle) -> Result<VaultBindingStore, String> {
     if !file.exists() {
         return Ok(VaultBindingStore::default());
     }
-    let content = fs::read_to_string(file).map_err(|error| error.to_string())?;
-    serde_json::from_str(&content).map_err(|error| error.to_string())
+    let content = fs::read_to_string(&file).map_err(|error| error.to_string())?;
+    let store: VaultBindingStore =
+        serde_json::from_str(&content).map_err(|error| error.to_string())?;
+
+    #[cfg(mobile)]
+    let store = {
+        let mut store = store;
+        let current_default = default_vault_dir(app)?;
+        let mut changed = false;
+        for binding in &mut store.bindings {
+            if let Some(rebased) = rebase_mobile_default_vault_path(
+                &binding.local_vault_path,
+                &current_default,
+            ) {
+                binding.local_vault_path = rebased;
+                changed = true;
+            }
+        }
+        if changed {
+            write_json(&file, &store)?;
+        }
+        store
+    };
+
+    Ok(store)
+}
+
+#[cfg(any(mobile, test))]
+fn rebase_mobile_default_vault_path(stored: &str, current_default: &Path) -> Option<String> {
+    let stored_path = Path::new(stored);
+    if stored_path == current_default {
+        return None;
+    }
+    let mut components = stored_path.components().rev();
+    let is_private_default = components.next().is_some_and(|part| part.as_os_str() == "default")
+        && components.next().is_some_and(|part| part.as_os_str() == "vaults");
+    is_private_default.then(|| path_to_string(current_default))
 }
 
 fn write_json<T: Serialize>(path: &Path, value: &T) -> Result<(), String> {
@@ -1109,6 +1144,17 @@ fn save_vault_settings(
     } else {
         std::collections::HashMap::new()
     };
+
+    #[cfg(mobile)]
+    {
+        let current_default = default_vault_dir(&app)?;
+        if Path::new(&vault_path) == current_default {
+            entries.retain(|path, _| {
+                path == &vault_path
+                    || rebase_mobile_default_vault_path(path, &current_default).is_none()
+            });
+        }
+    }
     entries.insert(vault_path, settings);
     write_json(&file, &entries)?;
     Ok(())
@@ -1126,6 +1172,28 @@ fn load_vault_settings(
     let content = fs::read_to_string(&file).map_err(|e| e.to_string())?;
     let entries: std::collections::HashMap<String, VaultSettings> =
         serde_json::from_str(&content).unwrap_or_default();
+
+    #[cfg(mobile)]
+    let entries = {
+        let mut entries = entries;
+        let current_default = default_vault_dir(&app)?;
+        let current_path = path_to_string(&current_default);
+        if !entries.contains_key(&current_path) {
+            let stale_path = entries
+                .keys()
+                .find(|path| {
+                    rebase_mobile_default_vault_path(path, &current_default).is_some()
+                })
+                .cloned();
+            if let Some(stale_path) = stale_path {
+                if let Some(settings) = entries.remove(&stale_path) {
+                    entries.insert(current_path, settings);
+                    write_json(&file, &entries)?;
+                }
+            }
+        }
+        entries
+    };
     Ok(entries.get(&vault_path).cloned())
 }
 
@@ -1393,6 +1461,27 @@ mod tests {
         assert_eq!(redacted.site_url, profile.site_url);
         assert_eq!(redacted.device_id, profile.device_id);
         assert_eq!(profile.token, "secret-token");
+    }
+
+    #[test]
+    fn stale_mobile_default_vault_path_rebases_to_current_container() {
+        let stale = "/old/container/Library/Application Support/net.jcode.jtype/vaults/default";
+        let current = Path::new(
+            "/new/container/Library/Application Support/net.jcode.jtype/vaults/default",
+        );
+
+        assert_eq!(
+            rebase_mobile_default_vault_path(stale, current),
+            Some(path_to_string(current))
+        );
+        assert_eq!(
+            rebase_mobile_default_vault_path(&path_to_string(current), current),
+            None
+        );
+        assert_eq!(
+            rebase_mobile_default_vault_path("/external/notes", current),
+            None
+        );
     }
 
     #[test]

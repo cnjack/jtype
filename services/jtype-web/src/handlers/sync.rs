@@ -350,8 +350,9 @@ pub async fn resolve_conflict(
                 "system",
             )
             .await?;
-            sqlx::query("UPDATE sync_conflicts SET status = 'resolved', resolution = 'keep_both', resolved_at = CURRENT_TIMESTAMP WHERE id = ?")
-                .bind(&conflict_id)
+            sqlx::query("UPDATE sync_conflicts SET status = 'resolved', resolution = 'keep_both', resolved_at = CURRENT_TIMESTAMP WHERE workspace_id = ? AND relative_path = ? AND status = 'open'")
+                .bind(&workspace_id)
+                .bind(&relative_path)
                 .execute(&state.pool)
                 .await?;
             return match outcome {
@@ -402,9 +403,13 @@ pub async fn resolve_conflict(
         "system",
     )
     .await?;
-    sqlx::query("UPDATE sync_conflicts SET status = 'resolved', resolution = ?, resolved_at = CURRENT_TIMESTAMP WHERE id = ?")
+    // Resolve every legacy open row for this path. Older builds could create a
+    // duplicate when an eager push was followed by a full sync, while the UI
+    // intentionally displayed only the newest row.
+    sqlx::query("UPDATE sync_conflicts SET status = 'resolved', resolution = ?, resolved_at = CURRENT_TIMESTAMP WHERE workspace_id = ? AND relative_path = ? AND status = 'open'")
         .bind(&resolution)
-        .bind(&conflict_id)
+        .bind(&workspace_id)
+        .bind(&relative_path)
         .execute(&state.pool)
         .await?;
 
