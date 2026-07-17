@@ -111,7 +111,7 @@
 ### 1.2 Markdown 文档工作台
 
 - [x] 复用 `EditorShell`、Markdown pipeline、toolbar 与 command system
-- [~] phone 已使用 Write / Preview tabs、desktop 保持 Write / Split / Preview；tablet Split breakpoint 待完成
+- [x] phone 使用 Write / Preview tabs，tablet 与 desktop 保持 Write / Split / Preview；断点由 capability provider 统一输出
 - [~] selection、滚动同步、编辑器聚焦和 unsaved state 复用现有实现；软键盘真机 smoke test 待完成
 - [x] desktop 右键动作在 touch 上通过 Headless UI action sheet 显式提供，动作 callback 与 desktop context menu 复用一份
 - [x] 文件列表、创建、重命名、移动、删除与保存均有触控入口；创建 → 编辑 → 保存已有 390×844 E2E 覆盖
@@ -120,7 +120,7 @@
 
 - [x] Document Info sections 只有一份渲染与业务实现，由 desktop inspector 和 mobile sheet 共用
 - [x] desktop 继续作为右侧 inspector
-- [~] phone 已使用 Headless UI `Dialog` / `DialogPanel` 底部 sheet；tablet 右侧 inspector breakpoint 待完成
+- [x] phone 使用 Headless UI `Dialog` / `DialogPanel` 底部 sheet，tablet 与 desktop 使用同一个右侧 inspector
 - [x] Properties、Outline、Publish、Links 的字段、校验和动作与 desktop 一致
 
 ### 1.4 Board
@@ -152,7 +152,7 @@
 - [ ] Android/iOS：打开 Document Info 并编辑 properties；查看 Outline / Publish / Links
 - [ ] Android/iOS：打开 Board、查看列、打开/移动 card
 - [ ] Android/iOS：离线编辑后恢复网络并完成 cloud sync；冲突可见且可解决
-- [ ] phone 与 tablet 尺寸、横竖屏、软键盘 smoke tests 通过
+- [~] phone / tablet 尺寸及横竖屏 E2E 已通过；双模拟器软键盘 smoke test 待阶段验收
 - [ ] 双平台截图与 `docs/mobile/reports/phase-1.md` 已提交
 - [ ] tracking 已记录 Phase 1 commit hashes
 
@@ -238,7 +238,8 @@
 | 2026-07-18 | 1.1 | `9828de6` | phone 单栏 app shell、复用 Sidebar drawer、safe-area header/footer 与 compact VaultHome | Phase 1 report 待完成 |
 | 2026-07-18 | 1.2–1.3 | `afc5707` | phone Write/Preview、触控 toolbar 与复用 Document Info bottom sheet | Phase 1 report 待完成 |
 | 2026-07-18 | 1.4 | `e35db30` | shared Board compact/touch 模式、显式移动动作与全宽 card detail | Phase 1 report 待完成 |
-| 2026-07-18 | 1.2/1.5 | 待提交 | touch 文件 action sheet、mobile New Resource sheet、创建编辑保存流程 | Phase 1 report 待完成 |
+| 2026-07-18 | 1.2/1.5 | `faa71d7` | touch 文件 action sheet、mobile New Resource sheet、创建编辑保存流程 | Phase 1 report 待完成 |
+| 2026-07-18 | 1.2–1.3 | 待提交 | capability 驱动的 phone/tablet breakpoint、平板 Split 与右侧 Document Info | Phase 1 report 待完成 |
 
 ## 当前环境审计（2026-07-18）
 

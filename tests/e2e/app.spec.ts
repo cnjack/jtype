@@ -715,6 +715,44 @@ test("adapts the shared welcome screen to app-private mobile storage", async ({ 
   await page.getByLabel("Markdown editor").fill("# Mobile Note\n\nSaved on device.");
   await page.getByRole("button", { name: "Save" }).click();
   await expect.poll(() => page.evaluate(() => window.__E2E_FS__["C:/workspace/Mobile Note.md"])).toBe("# Mobile Note\n\nSaved on device.");
+  await page.setViewportSize({ width: 844, height: 390 });
+  await expect(page.locator("html")).toHaveAttribute("data-jtype-layout", "compact");
+  await expect(page.getByTitle("Split")).toBeHidden();
+});
+
+test("reuses the regular desktop workbench on a mobile tablet viewport", async ({ page }) => {
+  await page.setViewportSize({ width: 1024, height: 768 });
+  await page.addInitScript(() => {
+    window.__RUNTIME_CAPABILITIES__ = {
+      platform: "ios",
+      isMobile: true,
+      isTouchPrimary: true,
+      prefersCompactLayout: true,
+      supportsWindowDrag: false,
+      supportsUpdater: false,
+      supportsProcessRestart: false,
+      supportsCliInstall: false,
+      supportsFileDrop: false,
+      supportsExternalVault: false,
+      usesAppPrivateVault: true,
+    };
+  });
+  await page.reload();
+
+  await expect(page.locator("html")).toHaveAttribute("data-jtype-layout", "regular");
+  await page.locator("#welcome-default-vault").click();
+  await page.getByRole("button", { name: "Local only" }).click();
+  await page.locator("#mobile-navigation-button").click();
+  await page.locator("#mobile-vault-navigation").getByRole("button", { name: "intro.md", exact: true }).click();
+
+  await expect(page.getByTitle("Split")).toBeVisible();
+  await expect(page.getByLabel("Markdown editor")).toBeVisible();
+  await expect(page.locator("#preview")).toBeVisible();
+  await expect(page.locator("#document-panel")).toBeVisible();
+  await expect(page.locator("#document-panel")).toHaveJSProperty("tagName", "ASIDE");
+  await page.setViewportSize({ width: 768, height: 1024 });
+  await expect(page.locator("html")).toHaveAttribute("data-jtype-layout", "regular");
+  await expect(page.getByTitle("Split")).toBeVisible();
 });
 
 test("edits and saves the current markdown file", async ({ page }) => {
