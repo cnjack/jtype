@@ -162,7 +162,7 @@ const initialState: AppState = {
   isDraft: false,
   isLoading: false,
   workspace: null,
-  syncToken: appStorage.get("sync.token", ""),
+  syncToken: appStorage.getSensitive("sync.token", ""),
   syncUsername: appStorage.get("sync.username", ""),
   syncSiteUrl: appStorage.get("sync.siteUrl", ""),
   lastSyncSnapshot: appStorage.get("sync.snapshot", ""),
@@ -367,7 +367,7 @@ export function appReducer(state: AppState, action: AppAction): AppState {
     case "UPDATE_WORKSPACE":
       return { ...state, workspace: action.workspace };
     case "SET_SYNC_SESSION": {
-      appStorage.set("sync.token", action.token);
+      appStorage.setSensitive("sync.token", action.token);
       appStorage.set("sync.username", action.username);
       appStorage.set("sync.siteUrl", action.siteUrl);
       return {
@@ -474,7 +474,7 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         pendingAiProposal: null,
       };
     case "DISCONNECT_ACCOUNT": {
-      appStorage.remove("sync.token");
+      appStorage.removeSensitive("sync.token");
       appStorage.remove("sync.username");
       appStorage.remove("sync.siteUrl");
       appStorage.remove("sync.snapshot");

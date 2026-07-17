@@ -1,4 +1,12 @@
 const PREFIX = "jtype.";
+declare const __JTYPE_MOBILE_BUILD__: boolean | undefined;
+
+const isMobileBuild =
+  typeof __JTYPE_MOBILE_BUILD__ !== "undefined" && __JTYPE_MOBILE_BUILD__;
+
+function remove(key: string): void {
+  window.localStorage.removeItem(`${PREFIX}${key}`);
+}
 
 export const appStorage = {
   get<T>(key: string, fallback: T): T {
@@ -17,7 +25,30 @@ export const appStorage = {
   },
 
   remove(key: string): void {
-    window.localStorage.removeItem(`${PREFIX}${key}`);
+    remove(key);
+  },
+
+  getSensitive<T>(key: string, fallback: T): T {
+    if (isMobileBuild) {
+      // Purge credentials left by a mobile build that predates native secure
+      // storage. The authoritative value is restored through the Tauri
+      // cloud-profile command after React starts.
+      remove(key);
+      return fallback;
+    }
+    return this.get(key, fallback);
+  },
+
+  setSensitive(key: string, value: unknown): void {
+    if (isMobileBuild) {
+      remove(key);
+      return;
+    }
+    this.set(key, value);
+  },
+
+  removeSensitive(key: string): void {
+    remove(key);
   },
 
   clear(): void {

@@ -19,6 +19,9 @@ use std::{
 use tauri::Manager;
 use tauri::{AppHandle, Emitter};
 
+#[cfg(mobile)]
+use tauri_plugin_secure_storage::SecureStorageExt;
+
 use workspace::{
     AiIndexResult, AssetSyncState, EntryKind, FolderContentsSummary, PublishResult, SyncBaseEntry,
     SyncDocument, SyncFolder, TrashItemInfo, TrashMetadata, ValidationResult, WorkspaceSnapshot,
@@ -91,6 +94,26 @@ struct CloudProfile {
     site_url: String,
     token: String,
     device_id: String,
+}
+
+#[cfg(mobile)]
+const MOBILE_CLOUD_TOKEN_KEY: &str = "cloud-profile-token";
+
+fn normalize_cloud_profile(mut profile: CloudProfile) -> CloudProfile {
+    if profile.server_url.trim().is_empty() {
+        profile.server_url = "http://localhost:13345".to_string();
+    }
+    if profile.device_id.trim().is_empty() {
+        profile.device_id = device_id();
+    }
+    profile
+}
+
+#[cfg(any(mobile, test))]
+fn cloud_profile_without_token(profile: &CloudProfile) -> CloudProfile {
+    let mut redacted = profile.clone();
+    redacted.token.clear();
+    redacted
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
@@ -434,35 +457,75 @@ fn load_sync_folder_bases(root_path: String) -> Result<Vec<String>, String> {
 #[tauri::command]
 fn load_cloud_profile(app: AppHandle) -> Result<CloudProfile, String> {
     let file = cloud_profile_file(&app)?;
-    if !file.exists() {
-        return Ok(CloudProfile {
+    let file_exists = file.exists();
+    let mut profile = if file_exists {
+        let content = fs::read_to_string(&file).map_err(|error| error.to_string())?;
+        serde_json::from_str(&content).map_err(|error| error.to_string())?
+    } else {
+        CloudProfile {
             server_url: "http://localhost:13345".to_string(),
             device_id: device_id(),
             ..CloudProfile::default()
-        });
+        }
+    };
+    profile = normalize_cloud_profile(profile);
+
+    #[cfg(mobile)]
+    {
+        let disk_token = std::mem::take(&mut profile.token);
+        let has_legacy_disk_token = !disk_token.is_empty();
+        let secure_token = app
+            .secure_storage()
+            .get_secret(MOBILE_CLOUD_TOKEN_KEY)
+            .map_err(|error| error.to_string())?
+            .value;
+
+        profile.token = if let Some(token) = secure_token {
+            token
+        } else if !disk_token.is_empty() {
+            app.secure_storage()
+                .set_secret(MOBILE_CLOUD_TOKEN_KEY, disk_token.clone())
+                .map_err(|error| error.to_string())?;
+            disk_token
+        } else {
+            String::new()
+        };
+
+        // A pre-secure-storage mobile build may have persisted the token in
+        // cloud-profile.json. Only rewrite after the Keychain/Keystore write
+        // succeeds so migration cannot discard the sole credential copy.
+        if file_exists && has_legacy_disk_token {
+            write_json(&file, &cloud_profile_without_token(&profile))?;
+        }
     }
-    let content = fs::read_to_string(file).map_err(|error| error.to_string())?;
-    let mut profile: CloudProfile =
-        serde_json::from_str(&content).map_err(|error| error.to_string())?;
-    if profile.server_url.trim().is_empty() {
-        profile.server_url = "http://localhost:13345".to_string();
-    }
-    if profile.device_id.trim().is_empty() {
-        profile.device_id = device_id();
-    }
+
     Ok(profile)
 }
 
 #[tauri::command]
 fn save_cloud_profile(app: AppHandle, profile: CloudProfile) -> Result<CloudProfile, String> {
-    let mut next = profile;
-    if next.server_url.trim().is_empty() {
-        next.server_url = "http://localhost:13345".to_string();
+    let next = normalize_cloud_profile(profile);
+
+    #[cfg(mobile)]
+    {
+        if next.token.is_empty() {
+            app.secure_storage()
+                .delete_secret(MOBILE_CLOUD_TOKEN_KEY)
+                .map_err(|error| error.to_string())?;
+        } else {
+            app.secure_storage()
+                .set_secret(MOBILE_CLOUD_TOKEN_KEY, next.token.clone())
+                .map_err(|error| error.to_string())?;
+        }
+        write_json(
+            &cloud_profile_file(&app)?,
+            &cloud_profile_without_token(&next),
+        )?;
     }
-    if next.device_id.trim().is_empty() {
-        next.device_id = device_id();
-    }
+
+    #[cfg(desktop)]
     write_json(&cloud_profile_file(&app)?, &next)?;
+
     Ok(next)
 }
 
@@ -985,6 +1048,11 @@ pub fn run() {
             .plugin(tauri_plugin_updater::Builder::new().build());
     }
 
+    #[cfg(mobile)]
+    {
+        builder = builder.plugin(tauri_plugin_secure_storage::init());
+    }
+
     builder
         .setup(|app| {
             let app_handle = app.handle().clone();
@@ -1118,6 +1186,26 @@ mod tests {
             relative_path: path.to_string(),
             content: content.to_string(),
         }
+    }
+
+    #[test]
+    fn cloud_profile_redaction_preserves_non_secret_fields() {
+        let profile = CloudProfile {
+            server_url: "https://sync.example.test".to_string(),
+            username: "writer".to_string(),
+            site_url: "https://site.example.test".to_string(),
+            token: "secret-token".to_string(),
+            device_id: "device-1".to_string(),
+        };
+
+        let redacted = cloud_profile_without_token(&profile);
+
+        assert!(redacted.token.is_empty());
+        assert_eq!(redacted.server_url, profile.server_url);
+        assert_eq!(redacted.username, profile.username);
+        assert_eq!(redacted.site_url, profile.site_url);
+        assert_eq!(redacted.device_id, profile.device_id);
+        assert_eq!(profile.token, "secret-token");
     }
 
     #[test]

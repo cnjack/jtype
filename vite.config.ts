@@ -13,6 +13,8 @@ const devPort = Number(process.env.VITE_DEV_PORT ?? 1420);
 const appVersion = process.env.VITE_JTYPE_VERSION ?? process.env.JTYPE_VERSION ?? process.env.npm_package_version ?? "0.1.0";
 // @ts-expect-error process is a nodejs global
 const packageVersion = process.env.npm_package_version ?? "0.1.0";
+// @ts-expect-error process is a nodejs global
+const isMobileBuild = process.env.TAURI_ENV_PLATFORM === "android" || process.env.TAURI_ENV_PLATFORM === "ios";
 
 // https://vite.dev/config/
 export default defineConfig(async () => ({
@@ -34,6 +36,7 @@ export default defineConfig(async () => ({
   define: {
     __JTYPE_VERSION__: JSON.stringify(appVersion),
     __JTYPE_PACKAGE_VERSION__: JSON.stringify(packageVersion),
+    __JTYPE_MOBILE_BUILD__: JSON.stringify(isMobileBuild),
     // @excalidraw/excalidraw reads process.env.IS_PREACT at runtime; without
     // this define it throws "process is not defined" in the browser.
     "process.env.IS_PREACT": JSON.stringify("false"),
