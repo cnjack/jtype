@@ -768,6 +768,14 @@ test("adapts the shared welcome screen to app-private mobile storage", async ({ 
   await expect(page.locator("#welcome-open-folder")).toBeHidden();
   await expect(page.locator("#welcome-open-markdown")).toBeHidden();
   await expect(page.getByText("~/Documents/Jtype Vaullt")).toBeHidden();
+  await page.locator("#welcome-screen h2").evaluate((heading) => {
+    heading.textContent = "创建一个库或编辑一个 Markdown 文件。";
+  });
+  const welcomeViewport = await page.locator("#welcome-screen").evaluate((screen) => ({
+    clientWidth: screen.clientWidth,
+    scrollWidth: screen.scrollWidth,
+  }));
+  expect(welcomeViewport.scrollWidth).toBeLessThanOrEqual(welcomeViewport.clientWidth);
 
   await page.locator("#welcome-default-vault").click();
   await page.getByRole("button", { name: "Local only" }).click();

@@ -41,8 +41,8 @@ export function WelcomeScreen() {
 
   return (
     <section id="welcome-screen" className="welcome-screen min-h-0 overflow-y-auto bg-[#fbfaf7]">
-      <div className="mx-auto flex min-h-full max-w-4xl flex-col px-8 py-16">
-        <div className="max-w-2xl">
+      <div className="mx-auto flex min-h-full w-full min-w-0 max-w-4xl flex-col px-4 py-16 sm:px-8">
+        <div className="w-full min-w-0 max-w-2xl">
           <div
             className="select-none mb-4"
             style={{ fontFamily: "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, monospace", fontSize: 28, fontWeight: 700, letterSpacing: -0.5 }}
@@ -52,8 +52,8 @@ export function WelcomeScreen() {
             <span className="text-stone-900">TYPE</span>
             <span className="text-stone-400">]</span>
           </div>
-          <h2 className="mt-3 text-3xl font-semibold tracking-normal text-stone-950"><Trans>Create a vault or edit one Markdown file.</Trans></h2>
-          <p className="mt-3 max-w-xl text-sm leading-6 text-stone-600">
+          <h2 className="mt-3 break-words text-3xl font-semibold tracking-normal text-stone-950 [overflow-wrap:anywhere]"><Trans>Create a vault or edit one Markdown file.</Trans></h2>
+          <p className="mt-3 max-w-xl break-words text-sm leading-6 text-stone-600 [overflow-wrap:anywhere]">
             <Trans>A vault is a local folder for notes, sync, and publishing. A single file opens JType as a focused Markdown editor.</Trans>
           </p>
           <div className="mt-6 flex flex-wrap gap-2">
@@ -79,7 +79,7 @@ export function WelcomeScreen() {
             <p className="mt-3 text-xs text-stone-500"><Trans>Default vault path: <span className="font-mono text-stone-700">{defaultVaultPath}</span></Trans></p>
           )}
         </div>
-        <section className="mt-10 max-w-2xl rounded-lg border border-stone-200 bg-white p-4">
+        <section className="mt-10 w-full min-w-0 max-w-2xl rounded-lg border border-stone-200 bg-white p-4">
           <div className="mb-3 flex items-center justify-between">
             <p className="text-sm font-semibold text-stone-950"><Trans>Recent</Trans></p>
           </div>
