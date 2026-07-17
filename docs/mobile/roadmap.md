@@ -55,8 +55,8 @@
 
 - [x] 创建统一 feature branch：`codex/mobile-app`
 - [x] 落地本 roadmap/tracking 文档
-- [~] 记录 desktop 基线：frontend build、Tauri Rust tests、app E2E
-- [ ] 保存 desktop 基线报告
+- [x] 记录 desktop 基线：frontend build、Tauri Rust tests、app E2E
+- [x] 保存 desktop 基线报告：`docs/mobile/reports/desktop-baseline.md`
 
 ### 0.2 工具链与工程生成
 
@@ -229,7 +229,8 @@
 
 | 日期 | 阶段 | Commit | 内容 | 验证报告 |
 | --- | --- | --- | --- | --- |
-| 2026-07-18 | 0.1 | 待提交 | 建立 mobile roadmap、阶段门禁与证据规范 | 本文 |
+| 2026-07-18 | 0.1 | `8fb34eb` | 建立 mobile roadmap、阶段门禁与证据规范 | 本文 |
+| 2026-07-18 | 0.1 | 待提交 | 冻结 mobile 开发前的 desktop 测试基线 | `docs/mobile/reports/desktop-baseline.md` |
 
 ## 当前环境审计（2026-07-18）
 
