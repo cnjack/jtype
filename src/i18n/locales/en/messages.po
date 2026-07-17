@@ -1471,6 +1471,10 @@ msgstr "Start sync"
 #~ msgid "Status"
 #~ msgstr "Status"
 
+#: src/components/layout/WelcomeScreen.tsx
+msgid "Stored privately by JType on this device."
+msgstr "Stored privately by JType on this device."
+
 #: src/components/modals/SyncPromptDialog.tsx
 msgid "Sync \"{vaultName}\" to cloud?"
 msgstr "Sync \"{vaultName}\" to cloud?"

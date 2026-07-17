@@ -13,6 +13,7 @@ declare global {
     };
     __VAULT_BINDINGS__: unknown[];
     __VAULT_SETTINGS__: Record<string, { cloudSyncEnabled: boolean; syncPromptDismissedAt: string | null; syncDisabledPermanently: boolean }>;
+    __RUNTIME_CAPABILITIES__?: Record<string, unknown>;
   }
 }
 
@@ -108,7 +109,7 @@ test.beforeEach(async ({ page }) => {
         convertFileSrc: (path: string) => path,
         invoke: async (cmd: string, args: Record<string, unknown>) => {
           if (cmd === "runtime_capabilities") {
-            return {
+            return window.__RUNTIME_CAPABILITIES__ ?? {
               platform: "desktop",
               isMobile: false,
               isTouchPrimary: false,
@@ -540,6 +541,31 @@ test("opens the default vault from welcome", async ({ page }) => {
   await expect(page.locator("#workspace-name")).toHaveText(".jtype");
   await expect(page.locator("#vault-home")).toContainText("C:/Users/Jack/Documents/.jtype");
   await expect(page.locator("#operation-log")).toContainText("Default vault created");
+});
+
+test("adapts the shared welcome screen to app-private mobile storage", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__RUNTIME_CAPABILITIES__ = {
+      platform: "ios",
+      isMobile: true,
+      isTouchPrimary: true,
+      prefersCompactLayout: true,
+      supportsWindowDrag: false,
+      supportsUpdater: false,
+      supportsProcessRestart: false,
+      supportsCliInstall: false,
+      supportsFileDrop: false,
+      supportsExternalVault: false,
+      usesAppPrivateVault: true,
+    };
+  });
+  await page.reload();
+
+  await expect(page.locator("html")).toHaveAttribute("data-jtype-platform", "ios");
+  await expect(page.locator("#welcome-private-vault-note")).toBeVisible();
+  await expect(page.locator("#welcome-open-folder")).toBeHidden();
+  await expect(page.locator("#welcome-open-markdown")).toBeHidden();
+  await expect(page.getByText("~/Documents/Jtype Vaullt")).toBeHidden();
 });
 
 test("edits and saves the current markdown file", async ({ page }) => {

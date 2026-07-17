@@ -1406,6 +1406,10 @@ msgstr "동기화 시작"
 #~ msgid "Status"
 #~ msgstr ""
 
+#: src/components/layout/WelcomeScreen.tsx
+msgid "Stored privately by JType on this device."
+msgstr "이 기기의 JType 전용 저장소에 안전하게 보관됩니다."
+
 #: src/components/modals/SyncPromptDialog.tsx
 msgid "Sync \"{vaultName}\" to cloud?"
 msgstr "\"{vaultName}\"을(를) 클라우드에 동기화하시겠습니까?"

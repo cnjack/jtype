@@ -1406,6 +1406,10 @@ msgstr "开始同步"
 #~ msgid "Status"
 #~ msgstr "状态"
 
+#: src/components/layout/WelcomeScreen.tsx
+msgid "Stored privately by JType on this device."
+msgstr "由 JType 私密存储在此设备上。"
+
 #: src/components/modals/SyncPromptDialog.tsx
 msgid "Sync \"{vaultName}\" to cloud?"
 msgstr "将\"{vaultName}\"同步到云端？"

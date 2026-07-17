@@ -6,10 +6,12 @@ import { useFileSystem } from "../../hooks";
 import { useConfirm } from "@shared/components/PromptDialogContext";
 import { readRecentItems } from "../../hooks/useFileSystem";
 import type { RecentItem } from "../../lib/types";
+import { useRuntimeCapabilities } from "../../app/RuntimeCapabilities";
 
 export function WelcomeScreen() {
   const fs = useFileSystem();
   const confirm = useConfirm();
+  const capabilities = useRuntimeCapabilities();
   const [recentItems, setRecentItems] = useState<RecentItem[]>(() => readRecentItems());
   const defaultVaultPath = "~/Documents/Jtype Vaullt";
 
@@ -54,14 +56,24 @@ export function WelcomeScreen() {
             <button id="welcome-default-vault" className="toolbar-button toolbar-button-primary" type="button" onClick={() => fs.openDefaultVault()}>
               <Trans>Use default vault</Trans>
             </button>
-            <button id="welcome-open-folder" className="toolbar-button" type="button" onClick={() => fs.chooseWorkspaceFolder()}>
-              <Trans>Open vault</Trans>
-            </button>
-            <button className="toolbar-button" type="button" onClick={() => fs.chooseMarkdownFile()}>
-              <Trans>Open Markdown file</Trans>
-            </button>
+            {capabilities.supportsExternalVault && (
+              <>
+                <button id="welcome-open-folder" className="toolbar-button" type="button" onClick={() => fs.chooseWorkspaceFolder()}>
+                  <Trans>Open vault</Trans>
+                </button>
+                <button id="welcome-open-markdown" className="toolbar-button" type="button" onClick={() => fs.chooseMarkdownFile()}>
+                  <Trans>Open Markdown file</Trans>
+                </button>
+              </>
+            )}
           </div>
-          <p className="mt-3 text-xs text-stone-500"><Trans>Default vault path: <span className="font-mono text-stone-700">{defaultVaultPath}</span></Trans></p>
+          {capabilities.usesAppPrivateVault ? (
+            <p id="welcome-private-vault-note" className="mt-3 text-xs text-stone-500">
+              <Trans>Stored privately by JType on this device.</Trans>
+            </p>
+          ) : (
+            <p className="mt-3 text-xs text-stone-500"><Trans>Default vault path: <span className="font-mono text-stone-700">{defaultVaultPath}</span></Trans></p>
+          )}
         </div>
         <section className="mt-10 max-w-2xl rounded-lg border border-stone-200 bg-white p-4">
           <div className="mb-3 flex items-center justify-between">
