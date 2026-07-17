@@ -141,19 +141,20 @@
 
 ### 1.6 Account 与 cloud sync
 
-- [~] `useCloudSync`、冲突处理、vault binding 和现有 API contract 已复用；双模拟器真实服务 smoke test 待阶段验收
-- [~] token 已从 mobile localStorage / profile JSON 移除；Android Keystore 跨进程恢复已验证，iOS Keychain adapter 与 entitlement 已接入但 signed build 持久化验证待完成（证据：`docs/mobile/reports/phase-1-secure-storage.md`）
+- [x] `useCloudSync`、vault binding 和现有 API contract 已复用；Android/iOS 双模拟器真实服务 push/pull 与连接 smoke test 已通过（证据：`docs/mobile/reports/phase-1-sync-recovery.md`）
+- [~] 冲突模型与现有解决 UI 已复用；双设备同时编辑的真实服务冲突终验待完成
+- [x] token 已从 mobile localStorage / profile JSON 移除；Android Keystore 跨进程恢复和 iOS signed simulator Keychain 迁移/冷启动恢复均已验证（证据：`docs/mobile/reports/phase-1-secure-storage.md`、`docs/mobile/reports/phase-1-sync-recovery.md`）
 - [x] canonical capability 输出 `clientType=mobile`；REST、sync push/pull 与 WebSocket 共用现有链路；0024 migration 扩展 `document_versions.source`
-- [ ] 保存、恢复前台和网络恢复时触发受控同步；WebView suspend 后能正确重连
+- [x] 保存、恢复前台和网络恢复时触发受控同步；WebView suspend 后能正确重连并去重（证据：`docs/mobile/reports/phase-1-sync-recovery.md`）
 - [ ] mobile browser OAuth/deep-link 回跳完成，desktop OAuth 路径不变
 
 ### 1.7 Phase 1 验收
 
-- [~] 本段 desktop app E2E 38/38 通过；Phase 1 完整功能与关键视觉终验待完成
+- [~] 本段 desktop app E2E 40/40 通过；Phase 1 完整功能与关键视觉终验待完成
 - [ ] Android/iOS：首次启动 → 创建/打开 vault → 新建文档 → 编辑 → Preview → 保存 → 重启后恢复
 - [ ] Android/iOS：打开 Document Info 并编辑 properties；查看 Outline / Publish / Links
 - [ ] Android/iOS：打开 Board、查看列、打开/移动 card
-- [ ] Android/iOS：离线编辑后恢复网络并完成 cloud sync；冲突可见且可解决
+- [~] Android 离线编辑/网络恢复与 iOS suspend/resume cloud sync 已通过；双设备冲突可见且可解决待终验（证据：`docs/mobile/reports/phase-1-sync-recovery.md`）
 - [~] phone / tablet 尺寸及横竖屏 E2E 已通过；双模拟器软键盘 smoke test 待阶段验收
 - [ ] 双平台截图与 `docs/mobile/reports/phase-1.md` 已提交
 - [ ] tracking 已记录 Phase 1 commit hashes
@@ -247,6 +248,7 @@
 | 2026-07-18 | 1.5 | `de16c21` | Android/iOS 外部文件 materialization、共享 vault import 与 open-with 队列 | `docs/mobile/reports/phase-1-external-import.md` |
 | 2026-07-18 | 1.5 | `4321824` | 共用 EditorShell export action，Android/iOS 原生 Markdown system share adapter | `docs/mobile/reports/phase-1-share-export.md` |
 | 2026-07-18 | 1.5 | `0556be3` | 复用 desktop PDF renderer/action，以 app cache 路径打开 Android/iOS system share | `docs/mobile/reports/phase-1-pdf-export.md` |
+| 2026-07-18 | 1.6 | `27326e4` | mobile suspend/online 恢复协调、WebSocket restart、共享 push/pull 与 desktop 行为隔离 | `docs/mobile/reports/phase-1-sync-recovery.md` |
 
 ## 当前环境审计（2026-07-18）
 
