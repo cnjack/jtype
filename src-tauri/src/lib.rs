@@ -39,6 +39,48 @@ struct AppState {
     pending_open_paths: Mutex<Vec<String>>,
 }
 
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct RuntimeCapabilities {
+    platform: &'static str,
+    is_mobile: bool,
+    is_touch_primary: bool,
+    prefers_compact_layout: bool,
+    supports_window_drag: bool,
+    supports_updater: bool,
+    supports_process_restart: bool,
+    supports_cli_install: bool,
+    supports_file_drop: bool,
+    supports_external_vault: bool,
+    uses_app_private_vault: bool,
+}
+
+#[tauri::command]
+fn runtime_capabilities() -> RuntimeCapabilities {
+    let platform = if cfg!(target_os = "android") {
+        "android"
+    } else if cfg!(target_os = "ios") {
+        "ios"
+    } else {
+        "desktop"
+    };
+    let is_mobile = cfg!(mobile);
+
+    RuntimeCapabilities {
+        platform,
+        is_mobile,
+        is_touch_primary: is_mobile,
+        prefers_compact_layout: is_mobile,
+        supports_window_drag: !is_mobile,
+        supports_updater: !is_mobile,
+        supports_process_restart: !is_mobile,
+        supports_cli_install: !is_mobile,
+        supports_file_drop: !is_mobile,
+        supports_external_vault: !is_mobile,
+        uses_app_private_vault: is_mobile,
+    }
+}
+
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 #[serde(rename_all = "camelCase")]
 struct CloudProfile {
@@ -893,13 +935,16 @@ pub fn run() {
     let mut builder = tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
-        .plugin(tauri_plugin_opener::init())
-        .plugin(tauri_plugin_process::init());
+        .plugin(tauri_plugin_opener::init());
 
-    // The auto-updater (download + install signed releases) is desktop-only.
+    // Process restart and the updater are desktop-only. Keeping both plugins
+    // out of mobile builds prevents accidental calls from becoming a second
+    // update path outside the app stores.
     #[cfg(desktop)]
     {
-        builder = builder.plugin(tauri_plugin_updater::Builder::new().build());
+        builder = builder
+            .plugin(tauri_plugin_process::init())
+            .plugin(tauri_plugin_updater::Builder::new().build());
     }
 
     builder
@@ -912,6 +957,7 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            runtime_capabilities,
             initial_open_paths,
             default_vault_path,
             open_default_vault,

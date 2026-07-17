@@ -375,3 +375,22 @@ export type AppCommand = {
   run: () => Promise<void> | void;
 };
 
+export type RuntimePlatform = "desktop" | "android" | "ios";
+
+/**
+ * The single platform contract consumed by the shared desktop/mobile app.
+ * Components branch on capabilities, never on user-agent or Tauri globals.
+ */
+export type RuntimeCapabilities = {
+  platform: RuntimePlatform;
+  isMobile: boolean;
+  isTouchPrimary: boolean;
+  prefersCompactLayout: boolean;
+  supportsWindowDrag: boolean;
+  supportsUpdater: boolean;
+  supportsProcessRestart: boolean;
+  supportsCliInstall: boolean;
+  supportsFileDrop: boolean;
+  supportsExternalVault: boolean;
+  usesAppPrivateVault: boolean;
+};

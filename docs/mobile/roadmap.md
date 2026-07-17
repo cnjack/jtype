@@ -60,25 +60,25 @@
 
 ### 0.2 工具链与工程生成
 
-- [ ] 安装 Rust Android targets：`aarch64-linux-android`、`armv7-linux-androideabi`、`i686-linux-android`、`x86_64-linux-android`
-- [ ] 安装 Rust iOS targets：`aarch64-apple-ios`、`aarch64-apple-ios-sim`、`x86_64-apple-ios`
-- [ ] 配置 Android SDK / NDK / emulator，并创建可启动的 Android Virtual Device
-- [ ] 安装 iOS Simulator runtime，并创建可启动的 iPhone Simulator
-- [ ] 运行 `tauri android init` 与 `tauri ios init`，将生成工程纳入版本控制
-- [ ] 增加便于重复执行的 mobile dev/build scripts
+- [x] 安装 Rust Android targets：`aarch64-linux-android`、`armv7-linux-androideabi`、`i686-linux-android`、`x86_64-linux-android`
+- [x] 安装 Rust iOS targets：`aarch64-apple-ios`、`aarch64-apple-ios-sim`、`x86_64-apple-ios`
+- [~] 配置 Android SDK / NDK / emulator，并创建可启动的 Android Virtual Device（`JType_API_36_1` 已创建，待启动验收）
+- [~] 安装 iOS Simulator runtime，并创建可启动的 iPhone Simulator（iOS 26.5 / iPhone 17 Pro 已存在，待启动验收）
+- [x] 运行 `tauri android init` 与 `tauri ios init`，将生成工程纳入版本控制
+- [x] 增加便于重复执行的 mobile dev/build scripts
 
 ### 0.3 平台配置与 capability
 
-- [ ] 增加 `tauri.android.conf.json` 和 `tauri.ios.conf.json`
-- [ ] 移动端只创建 `main` window，不创建 desktop splash window
-- [ ] desktop updater、process restart、window drag 和 desktop opener 权限不进入 mobile capability
-- [ ] 保持现有 desktop capability 与 updater 配置行为不变
-- [ ] 确认 Android/iOS bundle identifier、display name、icons 和最低系统版本
+- [x] 增加 `tauri.android.conf.json` 和 `tauri.ios.conf.json`
+- [x] 移动端只创建 `main` window，不创建 desktop splash window
+- [x] desktop updater、process restart、window drag 和 desktop path opener 权限不进入 mobile capability
+- [x] 保持现有 desktop capability、native-tls 与 updater 配置行为不变
+- [x] 确认 Android/iOS identifier 为 `net.jcode.jtype`，display name 为 JType，最低 Android 24 / iOS 14
 
 ### 0.4 运行时兼容层
 
-- [ ] 在 `src/lib/types.ts` 定义 canonical `RuntimeCapabilities`
-- [ ] 增加唯一的 capability provider/hook，区分 touch、compact layout、window drag、updater、file drop、external vault 等能力
+- [x] 在 `src/lib/types.ts` 定义 canonical `RuntimeCapabilities`
+- [x] 增加唯一的 capability provider/hook，区分 touch、compact layout、window drag、updater、file drop、external vault 等能力
 - [ ] Tauri mobile lifecycle 能被应用层订阅，desktop 继续使用当前行为
 - [ ] 将 `HOME/Documents` / `~/.config` 依赖改造为 Tauri app data/config path；desktop 路径迁移保持向后兼容
 - [ ] 为文件 URI 与真实 filesystem path 建立 adapter 边界，不让 `content://` / security-scoped URL 直接进入现有 `std::fs` 命令
@@ -230,25 +230,25 @@
 | 日期 | 阶段 | Commit | 内容 | 验证报告 |
 | --- | --- | --- | --- | --- |
 | 2026-07-18 | 0.1 | `8fb34eb` | 建立 mobile roadmap、阶段门禁与证据规范 | 本文 |
-| 2026-07-18 | 0.1 | 待提交 | 冻结 mobile 开发前的 desktop 测试基线 | `docs/mobile/reports/desktop-baseline.md` |
+| 2026-07-18 | 0.1 | `7425311` | 冻结 mobile 开发前的 desktop 测试基线 | `docs/mobile/reports/desktop-baseline.md` |
+| 2026-07-18 | 0.2–0.3 | 待提交 | 生成 Android/iOS 工程、拆分平台 capability、增加 runtime capability contract | Phase 0 report 待完成 |
 
 ## 当前环境审计（2026-07-18）
 
 - macOS：Apple Silicon
 - Node.js：v26.3.0
 - pnpm：11.6.0
-- Rust：1.96.1；目前仅 `aarch64-apple-darwin`
+- Rust：1.96.1；desktop、Android 四个 ABI 与 iOS device/simulator targets 已安装
 - Tauri CLI：2.11.2
-- Xcode：26.6；当前未列出可用 Simulator device
+- Xcode：26.6；iOS 26.5 runtime 与 iPhone/iPad Simulator devices 已安装
 - Java：OpenJDK 21.0.11
-- Android：`sdkmanager`、`adb`、`emulator` 当前不在 PATH
-- CocoaPods：当前不在 PATH；执行 iOS init/build 时确认是否仍为必需依赖
+- Android：SDK 36/36.1、Build Tools 35/36、NDK 27.2、emulator、platform-tools 与 `JType_API_36_1` AVD 已安装
+- Apple mobile dependencies：XcodeGen 2.46.0、CocoaPods 1.17.0
 
 ## 未决策项
 
 以下项目需要在相应阶段开始前依据 Apple/Google 当前规则和现有 desktop 兼容性做出记录，不以临时默认值悄悄固定：
 
-- 最终 Android application ID / iOS bundle ID；不得直接修改 desktop identifier 导致现有安装升级链断裂
-- 移动端最低 OS/API level
+- Store 上线前复核 `net.jcode.jtype` 的可用性；desktop identifier 保持 `com.markdownviewer.viewer`，不打断现有升级链
 - external vault 的 mirror 冲突策略与删除保留期
 - Phase 2 真实设备型号与 store team/signing 账号

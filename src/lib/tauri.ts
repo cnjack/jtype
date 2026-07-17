@@ -16,9 +16,13 @@ import type {
   BoardCard,
   CardTemplate,
   AssetSyncState,
+  RuntimeCapabilities,
 } from "./types";
 
 export const tauri = {
+  runtimeCapabilities() {
+    return invoke<RuntimeCapabilities>("runtime_capabilities");
+  },
   appReady() {
     return invoke<void>("app_ready");
   },

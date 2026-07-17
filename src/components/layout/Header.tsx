@@ -18,6 +18,7 @@ import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
 import { useConfirm } from "@shared/components/PromptDialogContext";
 import { LanguageSwitcherMenuPanel } from "@shared/components/LanguageSwitcher";
+import { useRuntimeCapabilities } from "../../app/RuntimeCapabilities";
 
 export function Header() {
   const state = useAppState();
@@ -26,6 +27,7 @@ export function Header() {
   const sync = useCloudSync();
   const { i18n } = useLingui();
   const confirm = useConfirm();
+  const capabilities = useRuntimeCapabilities();
   const [showLangPanel, setShowLangPanel] = useState(false);
 
   const breadcrumbs = state.mode === "single-file" ? t`Markdown file` : state.mode === "draft" ? t`Untitled` : "";
@@ -69,7 +71,7 @@ export function Header() {
 
   return (
     <header
-      data-tauri-drag-region
+      data-tauri-drag-region={capabilities.supportsWindowDrag ? "" : undefined}
       className="relative z-10 flex min-h-12 items-center justify-between gap-4 bg-transparent px-5 pt-5"
     >
       <div className="flex min-w-0 items-center gap-4">

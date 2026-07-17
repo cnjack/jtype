@@ -9,12 +9,14 @@ import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
 import { CloudArrowUpIcon, CommandLineIcon, LinkSlashIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
+import { useRuntimeCapabilities } from "../../app/RuntimeCapabilities";
 
 export function AccountDialog() {
   const state = useAppState();
   const dispatch = useAppDispatch();
   const sync = useCloudSync();
   const confirm = useConfirm();
+  const capabilities = useRuntimeCapabilities();
   const [activeSection, setActiveSection] = useState<"account" | "workspace" | "cli">(state.accountDialogSection);
   const [pendingWorkspaceSync, setPendingWorkspaceSync] = useState(false);
   const [cli, setCli] = useState<CliStatus | null>(null);
@@ -26,10 +28,14 @@ export function AccountDialog() {
   }, [state.accountDialogOpen, state.accountDialogSection]);
 
   useEffect(() => {
-    if (state.accountDialogOpen && activeSection === "cli" && tauri.isAvailable && !cli) {
+    if (!capabilities.supportsCliInstall && activeSection === "cli") setActiveSection("account");
+  }, [activeSection, capabilities.supportsCliInstall]);
+
+  useEffect(() => {
+    if (state.accountDialogOpen && activeSection === "cli" && capabilities.supportsCliInstall && tauri.isAvailable && !cli) {
       tauri.cliStatus().then(setCli).catch((e) => setCliError(String(e)));
     }
-  }, [state.accountDialogOpen, activeSection, cli]);
+  }, [state.accountDialogOpen, activeSection, capabilities.supportsCliInstall, cli]);
 
   const toggleCli = async () => {
     setCliBusy(true);
@@ -118,8 +124,12 @@ export function AccountDialog() {
             <SettingsNavButton active={activeSection === "account"} onClick={() => setActiveSection("account")} label={t`Profile`} />
             <p className="mb-2 mt-5 text-xs font-semibold uppercase text-stone-500"><Trans>Cloud workspace</Trans></p>
             <SettingsNavButton active={activeSection === "workspace"} onClick={() => setActiveSection("workspace")} label={t`General`} />
-            <p className="mb-2 mt-5 text-xs font-semibold uppercase text-stone-500"><Trans>Tools</Trans></p>
-            <SettingsNavButton active={activeSection === "cli"} onClick={() => setActiveSection("cli")} label={t`Command line`} />
+            {capabilities.supportsCliInstall && (
+              <>
+                <p className="mb-2 mt-5 text-xs font-semibold uppercase text-stone-500"><Trans>Tools</Trans></p>
+                <SettingsNavButton active={activeSection === "cli"} onClick={() => setActiveSection("cli")} label={t`Command line`} />
+              </>
+            )}
           </aside>
 
           <main className="min-h-0 overflow-y-auto p-6">
@@ -250,7 +260,7 @@ export function AccountDialog() {
               </section>
             )}
 
-            {activeSection === "cli" && (
+            {activeSection === "cli" && capabilities.supportsCliInstall && (
               <section className="max-w-2xl">
                 <h2 className="text-2xl font-semibold text-stone-950"><Trans>Command line (jtype)</Trans></h2>
                 <p className="mt-1 text-sm text-[#6b7773]">

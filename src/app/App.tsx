@@ -23,6 +23,7 @@ import { isTauriRuntime, relativePathFromWorkspace } from "../lib/utils";
 import { isDiagramTextPath } from "@shared/lib/fileTypes";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
+import { RuntimeCapabilitiesProvider, useRuntimeCapabilities } from "./RuntimeCapabilities";
 
 const CommandsContext = createContext<CommandDef[]>([]);
 
@@ -34,13 +35,15 @@ export function App() {
   const [state, dispatch] = useReducer(appReducer, initialState);
 
   return (
-    <AppStateContext.Provider value={state}>
-      <AppDispatchContext.Provider value={dispatch}>
-        <PromptDialogProvider>
-          <AppContent />
-        </PromptDialogProvider>
-      </AppDispatchContext.Provider>
-    </AppStateContext.Provider>
+    <RuntimeCapabilitiesProvider>
+      <AppStateContext.Provider value={state}>
+        <AppDispatchContext.Provider value={dispatch}>
+          <PromptDialogProvider>
+            <AppContent />
+          </PromptDialogProvider>
+        </AppDispatchContext.Provider>
+      </AppStateContext.Provider>
+    </RuntimeCapabilitiesProvider>
   );
 }
 
@@ -77,6 +80,7 @@ function SidebarResizeHandle({ width, onResize }: { width: number; onResize: (w:
 
 function AppContent() {
   const { state, dispatch } = useApp();
+  const capabilities = useRuntimeCapabilities();
   const sync = useCloudSync();
   const autoSync = useCallback(async () => {
     const vaultSettings = state.workspace ? state.vaultSettings[state.workspace.rootPath] : undefined;
@@ -393,7 +397,7 @@ function AppContent() {
         const { tauri } = await import("../lib/tauri");
         sync.loadCloudProfile();
         sync.loadVaultBindings();
-        fs.registerDragDrop();
+        if (capabilities.supportsFileDrop) fs.registerDragDrop();
 
         let targetFile: string | null = null;
         try {
@@ -441,7 +445,7 @@ function AppContent() {
 
   return (
     <CommandsContext.Provider value={commands}>
-      <div className={`${state.mode === "empty" && !state.workspace ? "app-empty" : state.workspace ? "workspace-mode" : "single-file-mode"} ${state.focusMode ? "focus-mode" : ""} h-screen overflow-hidden bg-[#f5f8f6] text-stone-950 antialiased`}>
+      <div className={`${state.mode === "empty" && !state.workspace ? "app-empty" : state.workspace ? "workspace-mode" : "single-file-mode"} ${state.focusMode ? "focus-mode" : ""} ${capabilities.isMobile ? "runtime-mobile" : "runtime-desktop"} h-screen overflow-hidden bg-[#f5f8f6] text-stone-950 antialiased`}>
         <main className="grid h-screen grid-rows-[auto_1fr_auto]">
           <Header />
           <section
@@ -449,7 +453,7 @@ function AppContent() {
             style={{ gridTemplateColumns: sidebarVisible ? `${sidebarWidth}px minmax(0,1fr)` : "minmax(0,1fr)" }}
           >
             {sidebarVisible && <Sidebar />}
-            {sidebarVisible && <SidebarResizeHandle width={sidebarWidth} onResize={setSidebarWidth} />}
+            {sidebarVisible && !capabilities.isMobile && <SidebarResizeHandle width={sidebarWidth} onResize={setSidebarWidth} />}
             {/* The content floats as a single rounded panel that the shell (header,
                 sidebar, status bar) wraps around — no divider lines, just a soft
                 tinted lift. */}
@@ -492,7 +496,7 @@ function AppContent() {
         <NewResourceDialog />
         <AccountDialog />
         <ConflictDialog />
-        <UpdateBanner />
+        {capabilities.supportsUpdater && <UpdateBanner />}
       </div>
     </CommandsContext.Provider>
   );

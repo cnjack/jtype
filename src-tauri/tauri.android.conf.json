@@ -1,0 +1,22 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "identifier": "net.jcode.jtype",
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "JType",
+        "visible": true
+      }
+    ],
+    "security": {
+      "capabilities": ["mobile"]
+    }
+  },
+  "bundle": {
+    "createUpdaterArtifacts": false,
+    "android": {
+      "minSdkVersion": 24
+    }
+  }
+}

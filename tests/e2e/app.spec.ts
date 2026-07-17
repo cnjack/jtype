@@ -107,6 +107,21 @@ test.beforeEach(async ({ page }) => {
         unregisterCallback: () => undefined,
         convertFileSrc: (path: string) => path,
         invoke: async (cmd: string, args: Record<string, unknown>) => {
+          if (cmd === "runtime_capabilities") {
+            return {
+              platform: "desktop",
+              isMobile: false,
+              isTouchPrimary: false,
+              prefersCompactLayout: false,
+              supportsWindowDrag: true,
+              supportsUpdater: true,
+              supportsProcessRestart: true,
+              supportsCliInstall: true,
+              supportsFileDrop: true,
+              supportsExternalVault: true,
+              usesAppPrivateVault: false,
+            };
+          }
           if (cmd === "initial_open_paths") {
             return JSON.parse((window as unknown as { __INITIAL_OPEN_PATHS_JSON__?: string }).__INITIAL_OPEN_PATHS_JSON__ ?? "[]");
           }
@@ -487,6 +502,13 @@ async function createDraft(page: import("@playwright/test").Page) {
   await search.fill("untitled");
   await page.locator("#command-results").getByRole("button", { name: /untitled/i }).click();
 }
+
+test("keeps desktop runtime capabilities on the shared app shell", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("html")).toHaveAttribute("data-jtype-platform", "desktop");
+  await expect(page.locator("html")).toHaveAttribute("data-jtype-mobile", "false");
+  await expect(page.locator("header")).toHaveAttribute("data-tauri-drag-region", "");
+});
 
 test("opens a workspace and renders a markdown file", async ({ page }) => {
   await expect(page.locator("#welcome-screen")).toContainText("Create a vault or edit one Markdown file");
