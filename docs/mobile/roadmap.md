@@ -240,7 +240,7 @@
 | 2026-07-18 | 1.4 | `e35db30` | shared Board compact/touch 模式、显式移动动作与全宽 card detail | Phase 1 report 待完成 |
 | 2026-07-18 | 1.2/1.5 | `faa71d7` | touch 文件 action sheet、mobile New Resource sheet、创建编辑保存流程 | Phase 1 report 待完成 |
 | 2026-07-18 | 1.2–1.3 | `bb026d3` | capability 驱动的 phone/tablet breakpoint、平板 Split 与右侧 Document Info | Phase 1 report 待完成 |
-| 2026-07-18 | 1.6 | 待提交 | mobile client/source 贯穿共享 REST、sync 与 WebSocket，新增 0024 migration 及集成测试 | Phase 1 report 待完成 |
+| 2026-07-18 | 1.6 | `3ae797f` | mobile client/source 贯穿共享 REST、sync 与 WebSocket，新增 0024 migration 及集成测试 | Phase 1 report 待完成 |
 
 ## 当前环境审计（2026-07-18）
 
