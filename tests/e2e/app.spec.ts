@@ -18,6 +18,9 @@ declare global {
     __START_LISTENER_ARGS__?: Record<string, unknown>;
     __SYNC_CLIENT_TYPES__: Array<string | null>;
     __E2E_INSTALL_BOARD__?: () => void;
+    __DIALOG_OPEN_RESULT__?: string | string[] | null;
+    __LAST_IMPORT_ARGS__?: Record<string, unknown>;
+    __INITIAL_EXTERNAL_SOURCES_JSON__?: string;
   }
 }
 
@@ -204,6 +207,9 @@ test.beforeEach(async ({ page }) => {
           if (cmd === "initial_open_paths") {
             return JSON.parse((window as unknown as { __INITIAL_OPEN_PATHS_JSON__?: string }).__INITIAL_OPEN_PATHS_JSON__ ?? "[]");
           }
+          if (cmd === "initial_external_file_sources") {
+            return JSON.parse(window.__INITIAL_EXTERNAL_SOURCES_JSON__ ?? "[]");
+          }
           if (cmd === "load_cloud_profile") {
             return window.__CLOUD_PROFILE__ ?? { serverUrl: "http://localhost:13345", username: "", siteUrl: "", token: "", deviceId: "dev_e2e" };
           }
@@ -246,6 +252,7 @@ test.beforeEach(async ({ page }) => {
           if (cmd === "plugin:updater|check") return null;
           if (cmd === "plugin:dialog|open") {
             const options = args.options as { directory?: boolean };
+            if (window.__DIALOG_OPEN_RESULT__ !== undefined) return window.__DIALOG_OPEN_RESULT__;
             return options.directory ? "C:/workspace" : "C:/workspace/intro.md";
           }
           if (cmd === "plugin:dialog|save") {
@@ -307,6 +314,31 @@ test.beforeEach(async ({ page }) => {
               children: [],
             });
             return workspaceSnapshot();
+          }
+          if (cmd === "import_external_paths") {
+            window.__LAST_IMPORT_ARGS__ = args;
+            const rootPath = String(args.rootPath);
+            const sourcePaths = args.sourcePaths as string[];
+            const targetFolder = String(args.targetFolder ?? "").replace(/^\/+|\/+$/g, "");
+            const source = sourcePaths[0] ?? "imported-file";
+            const sourceLeaf = decodeURIComponent(source.split("/").pop() || "Imported Note.md");
+            const fileName = /\.(md|markdown|mdown|mkd)$/i.test(sourceLeaf) ? sourceLeaf : "Imported Note.md";
+            const relativePath = targetFolder ? `${targetFolder}/${fileName}` : fileName;
+            const path = `${rootPath}/${relativePath}`;
+            files[path] = "# Imported Note\n\nCopied into the private vault.";
+            if (!hasWorkspaceEntry(workspace.entries, relativePath)) {
+              workspace.entries.push({
+                name: fileName,
+                path,
+                relativePath,
+                kind: "markdown",
+                children: [],
+              });
+            }
+            return [
+              { ...workspaceSnapshot(), rootPath, name: rootPath.split("/").pop() || "vault" },
+              [relativePath],
+            ];
           }
           if (cmd === "rename_workspace_entry") return workspaceSnapshot();
           if (cmd === "delete_workspace_entry") return workspaceSnapshot();
@@ -636,6 +668,10 @@ test("opens the default vault from welcome", async ({ page }) => {
 test("adapts the shared welcome screen to app-private mobile storage", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.addInitScript(() => {
+    Object.defineProperty(navigator, "userAgent", {
+      value: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)",
+      configurable: true,
+    });
     window.__RUNTIME_CAPABILITIES__ = {
       platform: "ios",
       clientType: "mobile",
@@ -729,6 +765,73 @@ test("adapts the shared welcome screen to app-private mobile storage", async ({ 
   await page.setViewportSize({ width: 844, height: 390 });
   await expect(page.locator("html")).toHaveAttribute("data-jtype-layout", "compact");
   await expect(page.getByTitle("Split")).toBeHidden();
+});
+
+test("imports an Android content URI through the shared resource flow", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(() => {
+    window.__RUNTIME_CAPABILITIES__ = {
+      platform: "android",
+      clientType: "mobile",
+      isMobile: true,
+      isTouchPrimary: true,
+      prefersCompactLayout: true,
+      supportsWindowDrag: false,
+      supportsUpdater: false,
+      supportsProcessRestart: false,
+      supportsCliInstall: false,
+      supportsFileDrop: false,
+      supportsExternalVault: false,
+      usesAppPrivateVault: true,
+    };
+    window.__DIALOG_OPEN_RESULT__ = "content://net.jcode.fixture/Imported%20Note.md";
+  });
+  await page.reload();
+
+  await page.locator("#welcome-default-vault").click();
+  await page.getByRole("button", { name: "Local only" }).click();
+  await page.locator("#vault-home").getByRole("button", { name: "New Document" }).click();
+  await page.locator("#new-resource-dialog").getByRole("button", { name: /Import file/ }).click();
+
+  await expect(page.getByLabel("Markdown editor")).toHaveValue("# Imported Note\n\nCopied into the private vault.");
+  await expect(page.locator("#operation-log")).toContainText("Imported Imported Note.md");
+  await expect.poll(() => page.evaluate(() => window.__LAST_IMPORT_ARGS__?.sourcePaths)).toEqual([
+    "content://net.jcode.fixture/Imported%20Note.md",
+  ]);
+});
+
+test("imports an initial mobile open-with URL into the private vault", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "userAgent", {
+      value: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)",
+      configurable: true,
+    });
+    window.__RUNTIME_CAPABILITIES__ = {
+      platform: "ios",
+      clientType: "mobile",
+      isMobile: true,
+      isTouchPrimary: true,
+      prefersCompactLayout: true,
+      supportsWindowDrag: false,
+      supportsUpdater: false,
+      supportsProcessRestart: false,
+      supportsCliInstall: false,
+      supportsFileDrop: false,
+      supportsExternalVault: false,
+      usesAppPrivateVault: true,
+    };
+    window.__INITIAL_EXTERNAL_SOURCES_JSON__ = JSON.stringify([
+      "file:///private/tmp/Shared%20Draft.md",
+    ]);
+  });
+  await page.reload();
+
+  await expect(page.getByLabel("Markdown editor")).toHaveValue("# Imported Note\n\nCopied into the private vault.");
+  await expect.poll(() => page.evaluate(() => window.__LAST_IMPORT_ARGS__?.sourcePaths)).toEqual([
+    "file:///private/tmp/Shared%20Draft.md",
+  ]);
+  await expect(page.locator("#operation-log")).toContainText("Imported Shared Draft.md");
 });
 
 test("reuses the regular desktop workbench on a mobile tablet viewport", async ({ page }) => {

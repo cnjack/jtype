@@ -20,6 +20,8 @@ use tauri::Manager;
 use tauri::{AppHandle, Emitter};
 
 #[cfg(mobile)]
+use tauri_plugin_mobile_import::MobileImportExt;
+#[cfg(mobile)]
 use tauri_plugin_secure_storage::SecureStorageExt;
 
 use workspace::{
@@ -40,6 +42,7 @@ struct WsOutbox(tokio::sync::broadcast::Sender<String>);
 struct AppState {
     watcher_state: Mutex<WatcherState>,
     pending_open_paths: Mutex<Vec<String>>,
+    pending_external_file_sources: Mutex<Vec<String>>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -173,6 +176,16 @@ fn initial_open_paths(state: tauri::State<'_, AppState>) -> Vec<String> {
     paths
 }
 
+#[tauri::command]
+fn initial_external_file_sources(state: tauri::State<'_, AppState>) -> Vec<String> {
+    state
+        .pending_external_file_sources
+        .lock()
+        .unwrap()
+        .drain(..)
+        .collect()
+}
+
 fn normalize_open_path_arg(arg: &str) -> Option<String> {
     if let Some(path) = arg.strip_prefix("file://") {
         let decoded = percent_decode_path(path);
@@ -279,8 +292,42 @@ fn create_workspace_entry(
 /// Copy externally-dropped files/folders into the vault under `target_folder`
 /// (collision-safe), then return the refreshed workspace plus the imported
 /// vault-relative paths so the UI can reveal/open them.
+struct PreparedExternalSource {
+    path: PathBuf,
+    cleanup_dir: Option<PathBuf>,
+}
+
+#[cfg(desktop)]
+fn prepare_external_source(
+    _app: &AppHandle,
+    source: &str,
+) -> Result<PreparedExternalSource, String> {
+    Ok(PreparedExternalSource {
+        path: PathBuf::from(source),
+        cleanup_dir: None,
+    })
+}
+
+#[cfg(mobile)]
+fn prepare_external_source(
+    app: &AppHandle,
+    source: &str,
+) -> Result<PreparedExternalSource, String> {
+    let materialized = app
+        .mobile_import()
+        .materialize(source)
+        .map_err(|error| error.to_string())?;
+    let path = PathBuf::from(materialized.path);
+    let cleanup_dir = path.parent().and_then(|parent| {
+        let import_root = parent.parent()?;
+        (import_root.file_name()?.to_str()? == "jtype-imports").then(|| parent.to_path_buf())
+    });
+    Ok(PreparedExternalSource { path, cleanup_dir })
+}
+
 #[tauri::command]
 fn import_external_paths(
+    app: AppHandle,
     root_path: String,
     source_paths: Vec<String>,
     target_folder: String,
@@ -288,8 +335,12 @@ fn import_external_paths(
     let root = PathBuf::from(root_path);
     let mut imported = Vec::new();
     for source in &source_paths {
-        let relative =
-            workspace::import_external_path(&root, &PathBuf::from(source), &target_folder)?;
+        let prepared = prepare_external_source(&app, source)?;
+        let result = workspace::import_external_path(&root, &prepared.path, &target_folder);
+        if let Some(cleanup_dir) = prepared.cleanup_dir {
+            let _ = fs::remove_dir_all(cleanup_dir);
+        }
+        let relative = result?;
         imported.push(relative);
     }
     let snapshot = workspace::open_workspace(&root)?;
@@ -1050,7 +1101,9 @@ pub fn run() {
 
     #[cfg(mobile)]
     {
-        builder = builder.plugin(tauri_plugin_secure_storage::init());
+        builder = builder
+            .plugin(tauri_plugin_mobile_import::init())
+            .plugin(tauri_plugin_secure_storage::init());
     }
 
     builder
@@ -1065,6 +1118,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             runtime_capabilities,
             initial_open_paths,
+            initial_external_file_sources,
             default_vault_path,
             open_default_vault,
             read_markdown_file,
@@ -1133,6 +1187,7 @@ pub fn run() {
         .manage(AppState {
             watcher_state: Mutex::new(WatcherState { watcher: None }),
             pending_open_paths: Mutex::new(Vec::new()),
+            pending_external_file_sources: Mutex::new(Vec::new()),
         })
         .manage(WsListenerHandle(Mutex::new(None)))
         .manage(WsOutbox(tokio::sync::broadcast::channel::<String>(64).0))
@@ -1146,9 +1201,19 @@ pub fn run() {
 
             #[cfg(any(target_os = "macos", target_os = "ios", target_os = "android"))]
             if let tauri::RunEvent::Opened { urls } = _event {
+                #[cfg(desktop)]
                 let mut paths = Vec::new();
                 let mut external_uris = Vec::new();
                 for url in urls {
+                    #[cfg(mobile)]
+                    {
+                        if matches!(url.scheme(), "content" | "file") {
+                            external_uris.push(url.to_string());
+                        }
+                        continue;
+                    }
+
+                    #[cfg(desktop)]
                     match url.to_file_path() {
                         Ok(path) if workspace::is_markdown_path(&path) => {
                             paths.push(path_to_string(&path));
@@ -1158,6 +1223,7 @@ pub fn run() {
                     }
                 }
 
+                #[cfg(desktop)]
                 if !paths.is_empty() {
                     let state = _app.state::<AppState>();
                     state
@@ -1170,6 +1236,12 @@ pub fn run() {
                 if !external_uris.is_empty() {
                     // Mobile content:// and security-scoped URLs must go
                     // through the import adapter. Never pass them to std::fs.
+                    let state = _app.state::<AppState>();
+                    state
+                        .pending_external_file_sources
+                        .lock()
+                        .unwrap()
+                        .extend(external_uris.clone());
                     let _ = _app.emit("open-external-file-uris", external_uris);
                 }
             }

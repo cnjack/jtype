@@ -99,6 +99,8 @@ function AppContent() {
   const fs = useFileSystem(autoSync);
   const openMarkdownFileRef = useRef(fs.openMarkdownFile);
   openMarkdownFileRef.current = fs.openMarkdownFile;
+  const importExternalSourcesRef = useRef(fs.importExternalSources);
+  importExternalSourcesRef.current = fs.importExternalSources;
   const { commands, findCommand } = useCommands(fs, sync);
 
   const isSyncEnabledRef = useRef(false);
@@ -379,13 +381,15 @@ function AppContent() {
       const targetFile = event.payload.find((path) => /\.(md|markdown|mdown|mkd)$/i.test(path));
       if (targetFile) void openMarkdownFileRef.current(targetFile);
     });
-    const unlistenExternalUris = listen<string[]>("open-external-file-uris", (event) => {
-      if (event.payload.length > 0) {
-        dispatch({
-          type: "SET_STATUS",
-          message: "External file received. Mobile import will copy it into the current vault.",
-        });
-      }
+    const unlistenExternalUris = listen<string[]>("open-external-file-uris", () => {
+      // The backend queues before emitting. Draining that queue here prevents a
+      // warm open-with event from being imported again on the next cold start.
+      void import("../lib/tauri")
+        .then(({ tauri }) => tauri.initialExternalFileSources())
+        .then((sources) => {
+          if (sources.length > 0) void importExternalSourcesRef.current(sources);
+        })
+        .catch(() => undefined);
     });
     return () => {
       unlistenOpenMarkdown.then((fn) => fn());
@@ -420,12 +424,18 @@ function AppContent() {
         if (capabilities.supportsFileDrop) fs.registerDragDrop();
 
         let targetFile: string | null = null;
+        let externalSources: string[] = [];
         try {
           const paths = await tauri.initialOpenPaths();
           targetFile = paths.find((p: string) => /\.(md|markdown|mdown|mkd)$/i.test(p)) ?? null;
         } catch { /* no initial paths */ }
+        try {
+          externalSources = await tauri.initialExternalFileSources();
+        } catch { /* older backend or no external sources */ }
 
-        if (targetFile) {
+        if (externalSources.length > 0) {
+          await fs.importExternalSources(externalSources);
+        } else if (targetFile) {
           fs.openMarkdownFile(targetFile);
         } else if (state.lastWorkspacePath) {
           await fs.openWorkspace(state.lastWorkspacePath);

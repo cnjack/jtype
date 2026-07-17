@@ -210,6 +210,10 @@ msgid "Bound to {0}. Sync will push and pull this vault."
 msgstr "已绑定到 {0}。同步将推送和拉取此库。"
 
 #: src/components/modals/NewResourceDialog.tsx
+msgid "Bring in a Markdown file, image, or PDF"
+msgstr "导入 Markdown 文件、图片或 PDF"
+
+#: src/components/modals/NewResourceDialog.tsx
 msgid "Bring in an image or PDF from your computer"
 msgstr "从电脑导入图片或 PDF"
 

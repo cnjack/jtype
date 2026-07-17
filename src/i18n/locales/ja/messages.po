@@ -210,6 +210,10 @@ msgid "Bound to {0}. Sync will push and pull this vault."
 msgstr "{0} にバインドされています。同期でこのボルトのプッシュ/プルが行われます。"
 
 #: src/components/modals/NewResourceDialog.tsx
+msgid "Bring in a Markdown file, image, or PDF"
+msgstr "Markdownファイル、画像、またはPDFを取り込む"
+
+#: src/components/modals/NewResourceDialog.tsx
 msgid "Bring in an image or PDF from your computer"
 msgstr "コンピューターから画像や PDF を取り込む"
 

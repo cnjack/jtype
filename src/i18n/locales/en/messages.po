@@ -219,6 +219,10 @@ msgid "Bound to {0}. Sync will push and pull this vault."
 msgstr "Bound to {0}. Sync will push and pull this vault."
 
 #: src/components/modals/NewResourceDialog.tsx
+msgid "Bring in a Markdown file, image, or PDF"
+msgstr "Bring in a Markdown file, image, or PDF"
+
+#: src/components/modals/NewResourceDialog.tsx
 msgid "Bring in an image or PDF from your computer"
 msgstr "Bring in an image or PDF from your computer"
 

@@ -98,6 +98,9 @@ export const tauri = {
   initialOpenPaths() {
     return invoke<string[]>("initial_open_paths");
   },
+  initialExternalFileSources() {
+    return invoke<string[]>("initial_external_file_sources");
+  },
   loadCloudProfile() {
     return invoke<CloudProfile>("load_cloud_profile");
   },

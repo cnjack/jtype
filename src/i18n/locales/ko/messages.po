@@ -210,6 +210,10 @@ msgid "Bound to {0}. Sync will push and pull this vault."
 msgstr "{0}에 바인딩됨. 동기화로 이 볼트를 푸시/풀합니다."
 
 #: src/components/modals/NewResourceDialog.tsx
+msgid "Bring in a Markdown file, image, or PDF"
+msgstr "Markdown 파일, 이미지 또는 PDF 가져오기"
+
+#: src/components/modals/NewResourceDialog.tsx
 msgid "Bring in an image or PDF from your computer"
 msgstr "컴퓨터에서 이미지나 PDF 가져오기"
 

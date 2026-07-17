@@ -43,6 +43,7 @@ tokio-tungstenite = { version = "0.24", features = ["native-tls"] }
 # self-contained; desktop deliberately keeps its existing native-tls path.
 [target.'cfg(any(target_os = "android", target_os = "ios"))'.dependencies]
 tokio-tungstenite = { version = "0.24", features = ["rustls-tls-webpki-roots"] }
+tauri-plugin-mobile-import = { path = "../plugins/mobile-import" }
 tauri-plugin-secure-storage = { path = "../plugins/secure-storage" }
 
 [target.'cfg(windows)'.dependencies]

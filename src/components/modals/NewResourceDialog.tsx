@@ -85,7 +85,9 @@ export function NewResourceDialog() {
     {
       id: "import",
       label: t`Import file`,
-      description: t`Bring in an image or PDF from your computer`,
+      description: capabilities.isMobile
+        ? t`Bring in a Markdown file, image, or PDF`
+        : t`Bring in an image or PDF from your computer`,
       Icon: ArrowUpTrayIcon,
     },
     {
@@ -108,16 +110,6 @@ export function NewResourceDialog() {
     },
   ];
 
-  const pick = (id: ResourceChoice["id"]) => {
-    if (id === "import") {
-      close();
-      void fs.importAsset();
-      return;
-    }
-    setNameFor(id === "kanban" ? "board" : id);
-    setStep("name");
-  };
-
   // Create new resources in the folder the dialog was launched from (when opened
   // from a folder's right-click menu), otherwise the folder of the currently-open
   // file (where the user is), falling back to the vault root.
@@ -128,6 +120,16 @@ export function NewResourceDialog() {
     const slash = rel.lastIndexOf("/");
     return slash > 0 ? rel.slice(0, slash) : "";
   })();
+
+  const pick = (id: ResourceChoice["id"]) => {
+    if (id === "import") {
+      close();
+      void fs.importAsset(activeDir);
+      return;
+    }
+    setNameFor(id === "kanban" ? "board" : id);
+    setStep("name");
+  };
 
   const commitName = () => {
     const trimmed = name.trim();

@@ -115,21 +115,123 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     }
   }, [dispatch, state.workspace]);
 
+  /**
+   * Copy external file references into the active app-private vault, then reveal
+   * the first imported resource. Desktop drops pass regular paths; mobile
+   * pickers/open-with pass content or file URLs that the Rust/native adapter
+   * materializes before the existing vault import runs.
+   */
+  const importExternalSources = useCallback(async (
+    sourcePaths: string[],
+    targetFolderOverride?: string,
+  ): Promise<string[]> => {
+    if (!tauri.isAvailable || sourcePaths.length === 0) return [];
+    if (isCloudViewer) {
+      dispatch({ type: "SET_STATUS", message: "Viewer access is read-only." });
+      return [];
+    }
+
+    try {
+      dispatch({ type: "SET_LOADING", isLoading: true });
+      let workspace = state.workspace;
+      if (!workspace && capabilities.usesAppPrivateVault) {
+        if (state.lastWorkspacePath) {
+          try {
+            workspace = await tauri.openWorkspace(state.lastWorkspacePath);
+          } catch {
+            // A stale app-private path should not make an OS open-with request
+            // fail. Fall back to the canonical default vault.
+          }
+        }
+        if (!workspace) workspace = await tauri.openDefaultVault();
+        dispatch({ type: "OPEN_WORKSPACE", workspace });
+        addRecent({ kind: "workspace", name: workspace.name, path: workspace.rootPath });
+      }
+      if (!workspace) {
+        dispatch({ type: "SET_STATUS", message: "Open a vault before importing files." });
+        return [];
+      }
+
+      const targetFolder = targetFolderOverride ?? (
+        state.currentKind === "folder"
+          ? state.currentRelativePath
+          : state.currentRelativePath.split("/").slice(0, -1).join("/")
+      );
+      const [nextWorkspace, imported] = await tauri.importExternalPaths(
+        workspace.rootPath,
+        sourcePaths,
+        targetFolder,
+      );
+      dispatch({ type: "UPDATE_WORKSPACE", workspace: nextWorkspace });
+
+      const firstFile = imported.find(
+        (rel) => isMarkdownPath(rel) || isDiagramTextPath(rel) || isViewableAssetPath(rel),
+      );
+      if (firstFile) {
+        const fullPath = `${nextWorkspace.rootPath}/${firstFile}`;
+        if (isMarkdownPath(firstFile)) {
+          await openMarkdownFile(fullPath, firstFile);
+        } else if (isDiagramTextPath(firstFile)) {
+          await openDiagramFile(fullPath, firstFile);
+        } else {
+          const node: FileTreeNode = {
+            name: basename(firstFile),
+            path: fullPath,
+            relativePath: firstFile,
+            kind: "asset",
+            children: [],
+          };
+          dispatch({ type: "SELECT_TREE_NODE", node });
+        }
+      }
+      dispatch({
+        type: "SET_STATUS",
+        message: imported.length === 1 ? `Imported ${imported[0]}.` : `Imported ${imported.length} items.`,
+      });
+      window.dispatchEvent(new CustomEvent("jtype:vault-folder-changed"));
+      return imported;
+    } catch (error) {
+      dispatch({ type: "SET_STATUS", message: String(error) });
+      return [];
+    } finally {
+      dispatch({ type: "SET_LOADING", isLoading: false });
+    }
+  }, [
+    capabilities.usesAppPrivateVault,
+    dispatch,
+    isCloudViewer,
+    openDiagramFile,
+    openMarkdownFile,
+    state.currentKind,
+    state.currentRelativePath,
+    state.lastWorkspacePath,
+    state.workspace,
+  ]);
+
   const chooseMarkdownFile = useCallback(async () => {
     if (!tauri.isAvailable) return;
     try {
       const selected = await open({
         multiple: false,
         directory: false,
-        filters: [{ name: "Markdown", extensions: ["md", "markdown", "mdown", "mkd"] }],
+        filters: [{
+          name: "Markdown",
+          extensions: capabilities.isMobile
+            ? ["md", "markdown", "mdown", "mkd", "text/markdown", "text/plain"]
+            : ["md", "markdown", "mdown", "mkd"],
+        }],
+        ...(capabilities.isMobile ? { pickerMode: "document" as const, fileAccessMode: "copy" as const } : {}),
       });
       if (!selected) return;
       const selectedPath = Array.isArray(selected) ? selected[0] : selected;
-      if (selectedPath) await openMarkdownFile(selectedPath);
+      if (selectedPath) {
+        if (capabilities.isMobile) await importExternalSources([selectedPath]);
+        else await openMarkdownFile(selectedPath);
+      }
     } catch (error) {
       dispatch({ type: "SET_STATUS", message: String(error) });
     }
-  }, [dispatch, openMarkdownFile]);
+  }, [capabilities.isMobile, dispatch, importExternalSources, openMarkdownFile]);
 
   const chooseWorkspaceFolder = useCallback(async () => {
     if (!tauri.isAvailable) return;
@@ -450,47 +552,39 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
         filters: [
           {
             name: "Files",
-            extensions: [
-              "png", "jpg", "jpeg", "gif", "webp", "svg", "pdf",
-              "drawio", "excalidraw", "mmd", "mermaid", "json", "yaml", "yml",
-            ],
+            extensions: capabilities.isMobile
+              ? [
+                  "md", "markdown", "mdown", "mkd",
+                  "png", "jpg", "jpeg", "gif", "webp", "svg", "pdf",
+                  "drawio", "excalidraw", "mmd", "mermaid", "json", "yaml", "yml",
+                  "image/png", "image/jpeg", "image/gif", "image/webp", "image/svg+xml",
+                  "application/pdf", "application/json", "application/yaml", "text/markdown", "text/yaml", "text/plain",
+                ]
+              : [
+                  "png", "jpg", "jpeg", "gif", "webp", "svg", "pdf",
+                  "drawio", "excalidraw", "mmd", "mermaid", "json", "yaml", "yml",
+                ],
           },
         ],
+        ...(capabilities.isMobile ? { pickerMode: "document" as const, fileAccessMode: "copy" as const } : {}),
       });
       if (!selected) return;
       const sourcePath = Array.isArray(selected) ? selected[0] : selected;
       if (!sourcePath) return;
-      const fileName = basename(sourcePath);
-      const relativePath = targetFolder ? `${targetFolder.replace(/\/+$/, "")}/${fileName}` : fileName;
-      // Diagram resources (Mermaid/Draw.io/Excalidraw/Swagger) are text files with
-      // their own viewer; recognized images/PDFs are binary assets. Anything else
-      // (e.g. a non-Swagger .json/.yaml) wouldn't appear in the tree, so reject it
-      // rather than copy an invisible orphan into the vault.
-      const isDiagram = isDiagramTextPath(relativePath);
-      if (!isDiagram && !isViewableAssetPath(relativePath)) {
-        dispatch({ type: "SET_STATUS", message: `Can not import ${fileName}: unsupported file type.` });
-        return;
+      if (!capabilities.isMobile) {
+        const fileName = basename(sourcePath);
+        if (!isDiagramTextPath(fileName) && !isViewableAssetPath(fileName)) {
+          dispatch({ type: "SET_STATUS", message: `Can not import ${fileName}: unsupported file type.` });
+          return;
+        }
       }
-      dispatch({ type: "SET_LOADING", isLoading: true });
-      const bytes = await tauri.readBinaryFile(sourcePath);
-      await tauri.createEntry(state.workspace.rootPath, relativePath, isDiagram ? "diagram" : "asset");
-      const destPath = `${state.workspace.rootPath}/${relativePath}`;
-      await tauri.writeBinaryFile(destPath, Array.from(bytes));
-      const workspace = await tauri.openWorkspace(state.workspace.rootPath);
-      dispatch({ type: "UPDATE_WORKSPACE", workspace });
-      if (isDiagram) {
-        await openDiagramFile(destPath, relativePath);
-      } else {
-        const node: FileTreeNode = { name: fileName, path: destPath, relativePath, kind: "asset", children: [] };
-        dispatch({ type: "SELECT_TREE_NODE", node });
-      }
-      dispatch({ type: "SET_STATUS", message: `Imported ${relativePath}.` });
+      await importExternalSources([sourcePath], targetFolder);
     } catch (error) {
       dispatch({ type: "SET_STATUS", message: String(error) });
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, isCloudViewer, state.workspace, openDiagramFile]);
+  }, [capabilities.isMobile, dispatch, importExternalSources, isCloudViewer, state.workspace]);
 
   const renameEntry = useCallback(async (fromRelativePath: string, toRelativePath: string, updateLinks: boolean) => {
     if (!state.workspace) return;
@@ -839,55 +933,6 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     }
   }, []);
 
-  /**
-   * Copy externally-dropped files/folders into the current vault and reveal the
-   * first one that has a viewer. The drop target is the selected folder, else
-   * the folder holding the open file, else the vault root.
-   */
-  const importDroppedPaths = useCallback(async (sourcePaths: string[]) => {
-    if (!state.workspace || sourcePaths.length === 0) return;
-    if (isCloudViewer) {
-      dispatch({ type: "SET_STATUS", message: "Viewer access is read-only." });
-      return;
-    }
-    const targetFolder = state.currentKind === "folder"
-      ? state.currentRelativePath
-      : state.currentRelativePath.split("/").slice(0, -1).join("/");
-    try {
-      dispatch({ type: "SET_LOADING", isLoading: true });
-      const [workspace, imported] = await tauri.importExternalPaths(
-        state.workspace.rootPath,
-        sourcePaths,
-        targetFolder,
-      );
-      dispatch({ type: "UPDATE_WORKSPACE", workspace });
-      const firstFile = imported.find(
-        (rel) => isMarkdownPath(rel) || isDiagramTextPath(rel) || isViewableAssetPath(rel),
-      );
-      if (firstFile) {
-        const fullPath = `${workspace.rootPath}/${firstFile}`;
-        if (isMarkdownPath(firstFile)) {
-          await openMarkdownFile(fullPath, firstFile);
-        } else if (isDiagramTextPath(firstFile)) {
-          await openDiagramFile(fullPath, firstFile);
-        } else {
-          const node: FileTreeNode = { name: basename(firstFile), path: fullPath, relativePath: firstFile, kind: "asset", children: [] };
-          dispatch({ type: "SELECT_TREE_NODE", node });
-        }
-      }
-      dispatch({
-        type: "SET_STATUS",
-        message: imported.length === 1 ? `Imported ${imported[0]}.` : `Imported ${imported.length} items.`,
-      });
-      // Push the new files to the cloud if this vault is synced.
-      window.dispatchEvent(new CustomEvent("jtype:vault-folder-changed"));
-    } catch (error) {
-      dispatch({ type: "SET_STATUS", message: String(error) });
-    } finally {
-      dispatch({ type: "SET_LOADING", isLoading: false });
-    }
-  }, [dispatch, isCloudViewer, state.workspace, state.currentKind, state.currentRelativePath, openMarkdownFile, openDiagramFile]);
-
   // Latest-value ref so the once-registered OS drop listener (below) always uses
   // current state instead of the values captured at mount time.
   const dropHandlerRef = useRef<(paths: string[]) => void>(() => {});
@@ -895,7 +940,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     if (paths.length === 0) return;
     if (state.workspace) {
       // A vault is open: copy the dropped files/folders into it.
-      void importDroppedPaths(paths);
+      void importExternalSources(paths);
     } else {
       // No vault yet (onboarding): open a dropped markdown file, or treat a
       // dropped folder as a vault to open.
@@ -1066,6 +1111,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     createDiagram,
     createBoard,
     importAsset,
+    importExternalSources,
     renameCurrentEntry,
     deleteEntry,
     deleteCurrentEntry,
