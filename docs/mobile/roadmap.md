@@ -134,7 +134,8 @@
 
 - [x] 默认 vault 位于 app-private storage，可离线创建、编辑和保存 Markdown
 - [x] Android `content://` 与 iOS picked URL 通过 native materialization adapter 接入现有 app-private vault import 流程
-- [~] 导入与系统 file association / open-with 基础流程已接入，导出流程待完成
+- [x] 共用 desktop EditorShell 的 Export → Markdown action；mobile 通过内部 adapter 分享当前编辑缓冲区，Android/iOS 系统分享面板均已实机模拟器验证（证据：`docs/mobile/reports/phase-1-share-export.md`）
+- [~] 导入与系统 file association / open-with 基础流程已接入；签名真机第三方 provider、真实 Open with 生命周期及 mobile PDF 分享待完成
 - [x] app-private vault 继续使用 `jtype-core` 与现有相对路径模型
 
 ### 1.6 Account 与 cloud sync
@@ -147,7 +148,7 @@
 
 ### 1.7 Phase 1 验收
 
-- [~] 本段 desktop app E2E 33/33 通过；Phase 1 完整功能与关键视觉终验待完成
+- [~] 本段 desktop app E2E 36/36 通过；Phase 1 完整功能与关键视觉终验待完成
 - [ ] Android/iOS：首次启动 → 创建/打开 vault → 新建文档 → 编辑 → Preview → 保存 → 重启后恢复
 - [ ] Android/iOS：打开 Document Info 并编辑 properties；查看 Outline / Publish / Links
 - [ ] Android/iOS：打开 Board、查看列、打开/移动 card
@@ -242,6 +243,8 @@
 | 2026-07-18 | 1.2–1.3 | `bb026d3` | capability 驱动的 phone/tablet breakpoint、平板 Split 与右侧 Document Info | Phase 1 report 待完成 |
 | 2026-07-18 | 1.6 | `3ae797f` | mobile client/source 贯穿共享 REST、sync 与 WebSocket，新增 0024 migration 及集成测试 | Phase 1 report 待完成 |
 | 2026-07-18 | 1.6 | `5110c83` | Android Keystore / iOS Keychain adapter、mobile token redaction 与 legacy credential migration | `docs/mobile/reports/phase-1-secure-storage.md` |
+| 2026-07-18 | 1.5 | `de16c21` | Android/iOS 外部文件 materialization、共享 vault import 与 open-with 队列 | `docs/mobile/reports/phase-1-external-import.md` |
+| 2026-07-18 | 1.5 | `4321824` | 共用 EditorShell export action，Android/iOS 原生 Markdown system share adapter | `docs/mobile/reports/phase-1-share-export.md` |
 
 ## 当前环境审计（2026-07-18）
 
