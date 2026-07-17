@@ -2,7 +2,7 @@
 
 > 最后更新：2026-07-18  
 > Feature branch：`codex/mobile-app`  
-> 当前阶段：Phase 0 — Mobile foundation  
+> 当前阶段：Phase 1 — Desktop feature parity on mobile
 > 状态说明：`[ ]` 未开始、`[~]` 进行中、`[x]` 已完成；只有附上真实测试证据后才能标记完成。
 
 ## 目标
@@ -92,7 +92,7 @@
 - [x] Android Emulator 启动 JType，共享 React app 显示成功，无启动崩溃，并创建 app-private 默认库
 - [x] iOS Simulator 启动 JType，共享 React app 显示成功，无启动崩溃
 - [x] Android 与 iOS 截图已保存，报告：`docs/mobile/reports/phase-0.md`
-- [ ] tracking 已记录 Phase 0 commit hash
+- [x] tracking 已记录 Phase 0 commit hash
 
 ## Phase 1 — Desktop feature parity on mobile
 
@@ -231,10 +231,10 @@
 | --- | --- | --- | --- | --- |
 | 2026-07-18 | 0.1 | `8fb34eb` | 建立 mobile roadmap、阶段门禁与证据规范 | 本文 |
 | 2026-07-18 | 0.1 | `7425311` | 冻结 mobile 开发前的 desktop 测试基线 | `docs/mobile/reports/desktop-baseline.md` |
-| 2026-07-18 | 0.2–0.3 | `c4386df` | 生成 Android/iOS 工程、拆分平台 capability、增加 runtime capability contract | Phase 0 report 待完成 |
+| 2026-07-18 | 0.2–0.3 | `c4386df` | 生成 Android/iOS 工程、拆分平台 capability、增加 runtime capability contract | `docs/mobile/reports/phase-0.md` |
 | 2026-07-18 | 0.4 | `7952226` | 使用 app-private 路径，增加 mobile lifecycle 与外部文件 URI 边界 | `docs/mobile/reports/phase-0.md` |
 | 2026-07-18 | 0.4 | `a60ed04` | 修正 mobile 欢迎页私有库提示，隐藏未支持的 external vault 操作 | `docs/mobile/reports/phase-0.md` |
-| 2026-07-18 | 0.5 | 待提交 | 双模拟器启动、Android 私有库、desktop 回归与截图报告 | `docs/mobile/reports/phase-0.md` |
+| 2026-07-18 | 0.5 | `d57e016` | 双模拟器启动、Android 私有库、desktop 回归与截图报告 | `docs/mobile/reports/phase-0.md` |
 
 ## 当前环境审计（2026-07-18）
 
