@@ -140,14 +140,14 @@
 ### 1.6 Account 与 cloud sync
 
 - [~] `useCloudSync`、冲突处理、vault binding 和现有 API contract 已复用；双模拟器真实服务 smoke test 待阶段验收
-- [ ] token 改存 Stronghold 或系统安全存储，避免 mobile localStorage 明文持久化
+- [~] token 已从 mobile localStorage / profile JSON 移除；Android Keystore 跨进程恢复已验证，iOS Keychain adapter 与 entitlement 已接入但 signed build 持久化验证待完成（证据：`docs/mobile/reports/phase-1-secure-storage.md`）
 - [x] canonical capability 输出 `clientType=mobile`；REST、sync push/pull 与 WebSocket 共用现有链路；0024 migration 扩展 `document_versions.source`
 - [ ] 保存、恢复前台和网络恢复时触发受控同步；WebView suspend 后能正确重连
 - [ ] mobile browser OAuth/deep-link 回跳完成，desktop OAuth 路径不变
 
 ### 1.7 Phase 1 验收
 
-- [ ] desktop 全量 app E2E 通过，关键视觉布局未变化
+- [~] 本段 desktop app E2E 33/33 通过；Phase 1 完整功能与关键视觉终验待完成
 - [ ] Android/iOS：首次启动 → 创建/打开 vault → 新建文档 → 编辑 → Preview → 保存 → 重启后恢复
 - [ ] Android/iOS：打开 Document Info 并编辑 properties；查看 Outline / Publish / Links
 - [ ] Android/iOS：打开 Board、查看列、打开/移动 card
@@ -241,6 +241,7 @@
 | 2026-07-18 | 1.2/1.5 | `faa71d7` | touch 文件 action sheet、mobile New Resource sheet、创建编辑保存流程 | Phase 1 report 待完成 |
 | 2026-07-18 | 1.2–1.3 | `bb026d3` | capability 驱动的 phone/tablet breakpoint、平板 Split 与右侧 Document Info | Phase 1 report 待完成 |
 | 2026-07-18 | 1.6 | `3ae797f` | mobile client/source 贯穿共享 REST、sync 与 WebSocket，新增 0024 migration 及集成测试 | Phase 1 report 待完成 |
+| 2026-07-18 | 1.6 | `5110c83` | Android Keystore / iOS Keychain adapter、mobile token redaction 与 legacy credential migration | `docs/mobile/reports/phase-1-secure-storage.md` |
 
 ## 当前环境审计（2026-07-18）
 
