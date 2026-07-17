@@ -39,9 +39,11 @@ pub async fn start_ws_listener(
     token: String,
     workspace_id: String,
     device_id: String,
+    client_type: String,
     outbox: tokio::sync::broadcast::Sender<String>,
 ) {
-    let ws_url = build_ws_url(&server_url, &token, &workspace_id, &device_id);
+    let client_type = normalize_client_type(&client_type);
+    let ws_url = build_ws_url(&server_url, &token, &workspace_id, &device_id, client_type);
     let mut backoff_secs = 1u64;
     const MAX_BACKOFF: u64 = 60;
 
@@ -113,7 +115,7 @@ pub async fn start_ws_listener(
                                                 // wasteful self-pulls and potential race conditions.
                                                 let is_self = parsed.device_id_field.as_deref()
                                                     == Some(&device_id)
-                                                    && parsed.source.as_deref() == Some("desktop");
+                                                    && parsed.source.as_deref() == Some(client_type);
                                                 if is_self {
                                                     eprintln!(
                                                         "[ws_client] skipping self-change: {} {:?}",
@@ -191,7 +193,20 @@ pub async fn start_ws_listener(
     }
 }
 
-fn build_ws_url(server_url: &str, token: &str, workspace_id: &str, device_id: &str) -> String {
+fn normalize_client_type(client_type: &str) -> &'static str {
+    match client_type {
+        "mobile" => "mobile",
+        _ => "desktop",
+    }
+}
+
+fn build_ws_url(
+    server_url: &str,
+    token: &str,
+    workspace_id: &str,
+    device_id: &str,
+    client_type: &str,
+) -> String {
     let ws_base = if server_url.starts_with("https://") {
         server_url.replacen("https://", "wss://", 1)
     } else if server_url.starts_with("http://") {
@@ -200,8 +215,8 @@ fn build_ws_url(server_url: &str, token: &str, workspace_id: &str, device_id: &s
         format!("wss://{}", server_url)
     };
     format!(
-        "{}/api/v1/workspaces/{}/live?token={}&clientType=desktop&deviceId={}",
-        ws_base, workspace_id, token, device_id
+        "{}/api/v1/workspaces/{}/live?token={}&clientType={}&deviceId={}",
+        ws_base, workspace_id, token, client_type, device_id
     )
 }
 
@@ -213,4 +228,25 @@ fn is_workspace_gone(err: &tungstenite::Error) -> bool {
         return code == 404 || code == 410;
     }
     false
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{build_ws_url, normalize_client_type};
+
+    #[test]
+    fn mobile_listener_identifies_itself_and_filters_as_mobile() {
+        assert_eq!(normalize_client_type("mobile"), "mobile");
+        assert_eq!(normalize_client_type("unexpected"), "desktop");
+        assert_eq!(
+            build_ws_url(
+                "https://cloud.example",
+                "token",
+                "workspace",
+                "device",
+                "mobile",
+            ),
+            "wss://cloud.example/api/v1/workspaces/workspace/live?token=token&clientType=mobile&deviceId=device",
+        );
+    }
 }

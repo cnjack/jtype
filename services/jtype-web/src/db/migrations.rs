@@ -146,6 +146,12 @@ fn all_migrations() -> Vec<Migration> {
             up: include_str!("../../migrations/0023_comment_threads.up.sql"),
             down: include_str!("../../migrations/0023_comment_threads.down.sql"),
         },
+        Migration {
+            version: 24,
+            name: "mobile_document_source",
+            up: include_str!("../../migrations/0024_mobile_document_source.up.sql"),
+            down: include_str!("../../migrations/0024_mobile_document_source.down.sql"),
+        },
     ]
 }
 

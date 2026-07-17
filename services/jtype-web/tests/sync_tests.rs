@@ -162,6 +162,47 @@ async fn push_new_document() {
     assert!(found, "pushed document should appear in response");
 }
 
+#[tokio::test]
+async fn mobile_push_records_mobile_version_source() {
+    let (app, pool) = common::setup().await;
+    let (token, _) = common::register_user(app.clone(), &common::uid()).await;
+    let ws_id = common::create_workspace(app.clone(), &token, &common::wname()).await;
+    let relative_path = format!("mobile-{}.md", &uuid::Uuid::new_v4().simple().to_string()[..8]);
+
+    let (status, body) = common::req_with_client_type(
+        app,
+        "POST",
+        &format!("/api/v1/workspaces/{ws_id}/sync/push"),
+        Some(&token),
+        Some(json!({
+            "deviceId": "mobile-test-device",
+            "documents": [{
+                "relativePath": relative_path,
+                "content": "# Written on mobile",
+                "title": "Written on mobile"
+            }]
+        })),
+        "mobile",
+    )
+    .await;
+
+    assert_eq!(status, StatusCode::OK, "mobile push should return 200: {body}");
+    let source: String = sqlx::query_scalar(
+        r#"SELECT v.source
+           FROM document_versions v
+           JOIN documents d ON d.id = v.document_id
+           WHERE v.workspace_id = ? AND d.relative_path = ?
+           ORDER BY v.created_at DESC
+           LIMIT 1"#,
+    )
+    .bind(&ws_id)
+    .bind(&relative_path)
+    .fetch_one(&pool)
+    .await
+    .expect("mobile version should exist");
+    assert_eq!(source, "mobile");
+}
+
 // 6. push_updates_existing — save doc via PUT, push same path with new content, assert accepted=1
 #[tokio::test]
 async fn push_updates_existing() {

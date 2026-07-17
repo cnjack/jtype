@@ -111,7 +111,9 @@ export function AccountDialog() {
                 ? t`Connected as ${state.syncUsername || t`your account`}. Sync vaults with cloud workspaces.`
                 : state.oauthUserCode
                   ? t`Waiting for browser authorization (code ${state.oauthUserCode})...`
-                  : t`Connect in the browser. Desktop never asks for your password.`}
+                  : capabilities.isMobile
+                    ? t`Connect in browser`
+                    : t`Connect in the browser. Desktop never asks for your password.`}
             </p>
           </div>
           <button className="subtle-button aspect-square px-0" type="button" aria-label={t`Close account dialog`} title={t`Close`} onClick={() => dispatch({ type: "SET_ACCOUNT_DIALOG", open: false })}>
@@ -151,7 +153,11 @@ export function AccountDialog() {
               ) : (
                 <section className="max-w-2xl">
                   <h2 className="text-2xl font-semibold text-stone-950"><Trans>Profile</Trans></h2>
-                  <p className="mt-1 text-sm text-[#6b7773]"><Trans>Connect desktop sync through the browser and choose the service endpoint.</Trans></p>
+                  <p className="mt-1 text-sm text-[#6b7773]">
+                    {capabilities.isMobile
+                      ? t`Connect to load workspaces.`
+                      : t`Connect desktop sync through the browser and choose the service endpoint.`}
+                  </p>
                   <div className="mt-6 space-y-3">
                     <input
                       className="sync-input"

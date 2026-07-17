@@ -102,7 +102,7 @@ export function BoardView({ boardPath, boardRelativePath }: { boardPath: string;
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${cloudCtx.token}`,
-          "x-client-type": "desktop",
+          "x-client-type": capabilities.clientType,
         },
         ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
       });
@@ -110,7 +110,7 @@ export function BoardView({ boardPath, boardRelativePath }: { boardPath: string;
       if (res.status === 204) return undefined as T;
       return (await res.json()) as T;
     },
-    [cloudCtx],
+    [capabilities.clientType, cloudCtx],
   );
 
   /** Resolve a card's cloud document id from its vault relativePath (cached). */

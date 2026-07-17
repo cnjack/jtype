@@ -103,7 +103,7 @@
 ### 1.1 App shell 与导航
 
 - [x] 共用现有 AppState、commands、hooks 和 mode routing
-- [~] `AdaptiveAppShell`：desktop 固定 sidebar；phone 已使用 Headless UI drawer；tablet 固定 sidebar 待实现
+- [x] `AdaptiveAppShell`：desktop/tablet 使用固定 sidebar；phone 使用复用 Sidebar 内容的 Headless UI drawer
 - [x] 复用 Sidebar 内容组件，保证 vault 文件树、搜索、收藏、Library、Publish、Account 只有一份业务实现
 - [~] 已处理 app shell 顶/底 safe area；dynamic viewport、软键盘、横竖屏和完整 44×44pt 触控审计待完成
 - [x] desktop header drag region 与 mobile safe-area header 由 capability 决定
@@ -139,9 +139,9 @@
 
 ### 1.6 Account 与 cloud sync
 
-- [ ] 复用 `useCloudSync`、冲突处理、vault binding 和现有 API contract
+- [~] `useCloudSync`、冲突处理、vault binding 和现有 API contract 已复用；双模拟器真实服务 smoke test 待阶段验收
 - [ ] token 改存 Stronghold 或系统安全存储，避免 mobile localStorage 明文持久化
-- [ ] client/source 增加 `mobile`，通过新 migration 扩展服务端枚举或约束
+- [x] canonical capability 输出 `clientType=mobile`；REST、sync push/pull 与 WebSocket 共用现有链路；0024 migration 扩展 `document_versions.source`
 - [ ] 保存、恢复前台和网络恢复时触发受控同步；WebView suspend 后能正确重连
 - [ ] mobile browser OAuth/deep-link 回跳完成，desktop OAuth 路径不变
 
@@ -239,7 +239,8 @@
 | 2026-07-18 | 1.2–1.3 | `afc5707` | phone Write/Preview、触控 toolbar 与复用 Document Info bottom sheet | Phase 1 report 待完成 |
 | 2026-07-18 | 1.4 | `e35db30` | shared Board compact/touch 模式、显式移动动作与全宽 card detail | Phase 1 report 待完成 |
 | 2026-07-18 | 1.2/1.5 | `faa71d7` | touch 文件 action sheet、mobile New Resource sheet、创建编辑保存流程 | Phase 1 report 待完成 |
-| 2026-07-18 | 1.2–1.3 | 待提交 | capability 驱动的 phone/tablet breakpoint、平板 Split 与右侧 Document Info | Phase 1 report 待完成 |
+| 2026-07-18 | 1.2–1.3 | `bb026d3` | capability 驱动的 phone/tablet breakpoint、平板 Split 与右侧 Document Info | Phase 1 report 待完成 |
+| 2026-07-18 | 1.6 | 待提交 | mobile client/source 贯穿共享 REST、sync 与 WebSocket，新增 0024 migration 及集成测试 | Phase 1 report 待完成 |
 
 ## 当前环境审计（2026-07-18）
 

@@ -104,6 +104,45 @@ pub async fn req(
     (status, json)
 }
 
+/// Same as `req` but identifies the caller's platform in the shared REST
+/// contract. Mobile source tests use this to exercise the real router.
+pub async fn req_with_client_type(
+    app: Router,
+    method: &str,
+    uri: &str,
+    token: Option<&str>,
+    body: Option<Value>,
+    client_type: &str,
+) -> (StatusCode, Value) {
+    let body_bytes = match &body {
+        Some(value) => serde_json::to_vec(value).unwrap(),
+        None => vec![],
+    };
+    let mut builder = Request::builder()
+        .method(method)
+        .uri(uri)
+        .header("content-type", "application/json")
+        .header("x-client-type", client_type);
+    if let Some(value) = token {
+        builder = builder.header("authorization", format!("Bearer {value}"));
+    }
+    let response = app
+        .oneshot(builder.body(Body::from(body_bytes)).unwrap())
+        .await
+        .unwrap();
+    let status = response.status();
+    let bytes = axum::body::to_bytes(response.into_body(), 10 * 1024 * 1024)
+        .await
+        .unwrap();
+    let json = if bytes.is_empty() {
+        Value::Null
+    } else {
+        serde_json::from_slice(&bytes)
+            .unwrap_or_else(|_| Value::String(String::from_utf8_lossy(&bytes).into()))
+    };
+    (status, json)
+}
+
 /// Same as `req` but attaches `X-Session-Id` header (used to test sender exclusion).
 pub async fn req_with_session(
     app: Router,

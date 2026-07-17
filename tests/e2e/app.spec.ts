@@ -14,6 +14,9 @@ declare global {
     __VAULT_BINDINGS__: unknown[];
     __VAULT_SETTINGS__: Record<string, { cloudSyncEnabled: boolean; syncPromptDismissedAt: string | null; syncDisabledPermanently: boolean }>;
     __RUNTIME_CAPABILITIES__?: Record<string, unknown>;
+    __CLOUD_PROFILE__?: Record<string, unknown>;
+    __START_LISTENER_ARGS__?: Record<string, unknown>;
+    __SYNC_CLIENT_TYPES__: Array<string | null>;
     __E2E_INSTALL_BOARD__?: () => void;
   }
 }
@@ -161,6 +164,7 @@ test.beforeEach(async ({ page }) => {
       __SYNC_PUSH_ERROR__: null,
       __TRASH_METADATA__: { lastSyncedClock: 0, pendingTrashOps: [] },
       __VAULT_BINDINGS__: [],
+      __SYNC_CLIENT_TYPES__: [],
       __VAULT_SETTINGS__: {
         "C:/workspace": {
           cloudSyncEnabled: true,
@@ -184,6 +188,7 @@ test.beforeEach(async ({ page }) => {
           if (cmd === "runtime_capabilities") {
             return window.__RUNTIME_CAPABILITIES__ ?? {
               platform: "desktop",
+              clientType: "desktop",
               isMobile: false,
               isTouchPrimary: false,
               prefersCompactLayout: false,
@@ -200,7 +205,7 @@ test.beforeEach(async ({ page }) => {
             return JSON.parse((window as unknown as { __INITIAL_OPEN_PATHS_JSON__?: string }).__INITIAL_OPEN_PATHS_JSON__ ?? "[]");
           }
           if (cmd === "load_cloud_profile") {
-            return { serverUrl: "http://localhost:13345", username: "", siteUrl: "", token: "", deviceId: "dev_e2e" };
+            return window.__CLOUD_PROFILE__ ?? { serverUrl: "http://localhost:13345", username: "", siteUrl: "", token: "", deviceId: "dev_e2e" };
           }
           if (cmd === "save_cloud_profile") return args.profile;
           if (cmd === "list_vault_bindings") return window.__VAULT_BINDINGS__;
@@ -392,7 +397,11 @@ test.beforeEach(async ({ page }) => {
           if (cmd === "collect_asset_paths") return [];
           if (cmd === "load_asset_sync_state") return { clock: 0, bases: {} };
           if (cmd === "save_asset_sync_state") return null;
-          if (cmd === "start_cloud_listener" || cmd === "stop_cloud_listener" || cmd === "cloud_ws_send") return null;
+          if (cmd === "start_cloud_listener") {
+            window.__START_LISTENER_ARGS__ = args;
+            return null;
+          }
+          if (cmd === "stop_cloud_listener" || cmd === "cloud_ws_send") return null;
           throw new Error(`Unhandled invoke: ${cmd}`);
         },
       },
@@ -474,6 +483,7 @@ test.beforeEach(async ({ page }) => {
           return new Response(window.__SYNC_PUSH_ERROR__, { status: 500 });
         }
         window.__SYNC_REQUESTS__.push(JSON.parse(String(init?.body)));
+        window.__SYNC_CLIENT_TYPES__.push(new Headers(init?.headers).get("x-client-type"));
         return new Response(
           JSON.stringify({
             workspaceId: "workspace-e2e",
@@ -628,6 +638,7 @@ test("adapts the shared welcome screen to app-private mobile storage", async ({ 
   await page.addInitScript(() => {
     window.__RUNTIME_CAPABILITIES__ = {
       platform: "ios",
+      clientType: "mobile",
       isMobile: true,
       isTouchPrimary: true,
       prefersCompactLayout: true,
@@ -725,6 +736,7 @@ test("reuses the regular desktop workbench on a mobile tablet viewport", async (
   await page.addInitScript(() => {
     window.__RUNTIME_CAPABILITIES__ = {
       platform: "ios",
+      clientType: "mobile",
       isMobile: true,
       isTouchPrimary: true,
       prefersCompactLayout: true,
@@ -793,6 +805,7 @@ test("connects in browser and syncs a vault to the web service", async ({ page }
 
   const requestCount = await page.evaluate(() => window.__SYNC_REQUESTS__.length);
   expect(requestCount).toBeGreaterThanOrEqual(1);
+  await expect.poll(() => page.evaluate(() => window.__SYNC_CLIENT_TYPES__.at(-1))).toBe("desktop");
   const bindings = await page.evaluate(() => window.__VAULT_BINDINGS__);
   expect(bindings).toEqual([
     {
@@ -804,6 +817,55 @@ test("connects in browser and syncs a vault to the web service", async ({ page }
       lastPulledClock: 0,
     },
   ]);
+});
+
+test("identifies shared cloud sync and websocket traffic as mobile", async ({ page }) => {
+  const defaultVaultPath = "C:/Users/Jack/Documents/.jtype";
+  await page.addInitScript((vaultPath) => {
+    window.__RUNTIME_CAPABILITIES__ = {
+      platform: "ios",
+      clientType: "mobile",
+      isMobile: true,
+      isTouchPrimary: true,
+      prefersCompactLayout: true,
+      supportsWindowDrag: false,
+      supportsUpdater: false,
+      supportsProcessRestart: false,
+      supportsCliInstall: false,
+      supportsFileDrop: false,
+      supportsExternalVault: false,
+      usesAppPrivateVault: true,
+    };
+    window.__CLOUD_PROFILE__ = {
+      serverUrl: "http://localhost:13345",
+      username: "jack",
+      siteUrl: "http://localhost:8080/u/jack/workspace",
+      token: "test-token",
+      deviceId: "mobile-e2e-device",
+    };
+    window.__VAULT_BINDINGS__ = [{
+      workspaceId: "workspace-e2e",
+      workspaceName: "workspace",
+      workspaceSlug: "workspace",
+      workspaceRole: "owner",
+      localVaultPath: vaultPath,
+      lastPulledClock: 0,
+    }];
+    window.__VAULT_SETTINGS__[vaultPath] = {
+      cloudSyncEnabled: true,
+      syncPromptDismissedAt: new Date().toISOString(),
+      syncDisabledPermanently: false,
+    };
+  }, defaultVaultPath);
+  await page.reload();
+
+  await page.locator("#welcome-default-vault").click();
+  await expect.poll(() => page.evaluate(() => window.__START_LISTENER_ARGS__?.clientType)).toBe("mobile");
+
+  await openProfileSettings(page);
+  await page.locator("#account-sync").click();
+  await expect(page.locator("#operation-log")).toContainText("Synced");
+  await expect.poll(() => page.evaluate(() => window.__SYNC_CLIENT_TYPES__.at(-1))).toBe("mobile");
 });
 
 test("keeps an initial sync failure visible after binding", async ({ page }) => {

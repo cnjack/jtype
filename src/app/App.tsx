@@ -275,11 +275,12 @@ function AppContent() {
       token: state.cloudProfile.token,
       workspaceId: currentBinding.workspaceId,
       deviceId: state.cloudProfile.deviceId,
+      clientType: capabilities.clientType,
     }).catch(() => {});
     return () => {
       invoke("stop_cloud_listener").catch(() => {});
     };
-  }, [state.cloudProfile?.token, currentBinding?.workspaceId, state.cloudProfile?.deviceId, state.cloudProfile?.serverUrl, currentVaultSettings?.cloudSyncEnabled]);
+  }, [capabilities.clientType, state.cloudProfile?.token, currentBinding?.workspaceId, state.cloudProfile?.deviceId, state.cloudProfile?.serverUrl, currentVaultSettings?.cloudSyncEnabled]);
 
   const workspaceRef = useRef(state.workspace);
   workspaceRef.current = state.workspace;

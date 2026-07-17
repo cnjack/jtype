@@ -2,12 +2,14 @@ import { useEffect, useRef } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { useAppDispatch, useAppState } from "../app/AppState";
 import { tauri } from "../lib/tauri";
+import { useRuntimeCapabilities } from "../app/RuntimeCapabilities";
 
 type PullOnly = (options?: { full?: boolean; reason?: string; sinceClock?: number; sinceTrashEventClock?: number }) => Promise<void>;
 
 export function useCloudEvents(pullOnly: PullOnly) {
   const dispatch = useAppDispatch();
   const state = useAppState();
+  const capabilities = useRuntimeCapabilities();
 
   const pullOnlyRef = useRef(pullOnly);
   const stateRef = useRef(state);
@@ -65,7 +67,7 @@ export function useCloudEvents(pullOnly: PullOnly) {
           if (
             s.cloudProfile?.deviceId &&
             parsed.deviceId === s.cloudProfile.deviceId &&
-            parsed.source === "desktop"
+            parsed.source === capabilities.clientType
           ) {
             console.log("[useCloudEvents] self-change detected, skipping");
             return;
@@ -78,7 +80,7 @@ export function useCloudEvents(pullOnly: PullOnly) {
               localDeviceId: s.cloudProfile?.deviceId,
               parsedSource: parsed.source,
               deviceMatch: parsed.deviceId === s.cloudProfile?.deviceId,
-              sourceMatch: parsed.source === "desktop",
+              sourceMatch: parsed.source === capabilities.clientType,
             });
           } else {
             console.warn("[useCloudEvents] ⚠️ event has NO deviceId/source — cannot filter self-change!", {
@@ -215,5 +217,5 @@ export function useCloudEvents(pullOnly: PullOnly) {
       unlistenRemoteChange.then((fn) => fn());
       unlistenSyncRequired.then((fn) => fn());
     };
-  }, []);
+  }, [capabilities.clientType]);
 }

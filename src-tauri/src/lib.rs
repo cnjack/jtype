@@ -43,6 +43,7 @@ struct AppState {
 #[serde(rename_all = "camelCase")]
 struct RuntimeCapabilities {
     platform: &'static str,
+    client_type: &'static str,
     is_mobile: bool,
     is_touch_primary: bool,
     prefers_compact_layout: bool,
@@ -68,6 +69,7 @@ fn runtime_capabilities() -> RuntimeCapabilities {
 
     RuntimeCapabilities {
         platform,
+        client_type: if is_mobile { "mobile" } else { "desktop" },
         is_mobile,
         is_touch_primary: is_mobile,
         prefers_compact_layout: is_mobile,
@@ -922,6 +924,7 @@ async fn start_cloud_listener(
     token: String,
     workspace_id: String,
     device_id: String,
+    client_type: String,
 ) -> Result<(), String> {
     if let Some(handle) = listener_state.0.lock().unwrap().take() {
         handle.abort();
@@ -933,6 +936,7 @@ async fn start_cloud_listener(
         token,
         workspace_id,
         device_id,
+        client_type,
         outbox_tx,
     ));
     *listener_state.0.lock().unwrap() = Some(handle);

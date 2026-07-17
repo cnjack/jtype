@@ -568,8 +568,8 @@ export function EditorShell() {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${state.syncToken}`,
-        "x-device-id": state.cloudProfile?.deviceId ?? "desktop",
-        "x-client-type": "desktop",
+        "x-device-id": state.cloudProfile?.deviceId ?? capabilities.clientType,
+        "x-client-type": capabilities.clientType,
         ...(state.wsSessionId ? { "x-session-id": state.wsSessionId } : {}),
         ...(init.headers || {}),
       },
@@ -577,7 +577,7 @@ export function EditorShell() {
     if (!response.ok) throw new Error(await response.text());
     if (response.status === 204) return null;
     return (await response.json()) as T;
-  }, [currentVaultBinding, state.cloudProfile, state.serviceUrl, state.syncToken, state.wsSessionId]);
+  }, [capabilities.clientType, currentVaultBinding, state.cloudProfile, state.serviceUrl, state.syncToken, state.wsSessionId]);
 
   const findCloudDocumentId = useCallback(async () => {
     if (!state.currentRelativePath) return "";

@@ -8,6 +8,7 @@ import { sha256Hex, sha256HexBytes } from "../lib/utils";
 import { markCloudWrite, markCloudWriteBatch } from "../lib/cloudWriteHashes";
 import type { AuthResponse, CloudProfile, VaultBinding, CloudDocument, CloudFolder, CloudWorkspace, DeletedFolder, DeletedPath, DeletedPathInput, EntryKind, SyncPushDocument, SyncPushResponse, TrashSyncPayload, VaultSettings, BlobManifestEntry } from "../lib/types";
 import { parseSyncConflicts } from "../lib/types";
+import { useRuntimeCapabilities } from "../app/RuntimeCapabilities";
 
 type TrashOperationPayload =
   | { type: "restore"; trashId: string }
@@ -37,6 +38,7 @@ const cloudEnabledSettings: VaultSettings = {
 export function useCloudSync() {
   const dispatch = useAppDispatch();
   const state = useAppState();
+  const capabilities = useRuntimeCapabilities();
   const pollTimerRef = useRef<number | null>(null);
 
   const getServiceUrl = useCallback(() => {
@@ -56,7 +58,7 @@ export function useCloudSync() {
       const response = await httpRequest(`${getServiceUrl()}/api/oauth/device/start`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ deviceId: state.cloudProfile?.deviceId ?? "desktop" }),
+        body: JSON.stringify({ deviceId: state.cloudProfile?.deviceId ?? capabilities.clientType }),
       });
       if (!response.ok) throw new Error(await response.text());
       const start = (await response.json()) as { deviceCode: string; userCode: string; verificationUrl: string };
@@ -113,7 +115,7 @@ export function useCloudSync() {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, getServiceUrl, state.cloudProfile, stopDevicePolling]);
+  }, [capabilities.clientType, dispatch, getServiceUrl, state.cloudProfile, stopDevicePolling]);
 
   // Cancel an in-progress browser authorization: stop polling and clear OAuth state.
   const cancelBrowserOAuth = useCallback(async () => {
@@ -191,13 +193,16 @@ export function useCloudSync() {
   // pulls the server manifest, downloads new/changed blobs, uploads locally
   // new/changed ones, and propagates deletions both ways. Best-effort — a
   // failure here never breaks document sync. Keyed by vault relative_path so it
-  // round-trips across desktop devices regardless of the web's UUID asset store.
+  // round-trips across native devices regardless of the web's UUID asset store.
   const syncAssets = useCallback(async (binding: VaultBinding, readOnly = false) => {
     if (!state.workspace || !state.syncToken || !tauri.isAvailable) return;
     const rootPath = state.workspace.rootPath;
     const serviceUrl = getServiceUrl();
     const wsId = binding.workspaceId;
-    const authHeaders: Record<string, string> = { Authorization: `Bearer ${state.syncToken}` };
+    const authHeaders: Record<string, string> = {
+      Authorization: `Bearer ${state.syncToken}`,
+      "x-client-type": capabilities.clientType,
+    };
     const encodePath = (rel: string) => rel.split("/").map(encodeURIComponent).join("/");
     let changedLocally = false;
     try {
@@ -295,7 +300,7 @@ export function useCloudSync() {
         } catch { /* non-critical */ }
       }
     } catch { /* asset sync is best-effort; never break document sync */ }
-  }, [dispatch, state.workspace, state.syncToken, getServiceUrl]);
+  }, [capabilities.clientType, dispatch, state.workspace, state.syncToken, getServiceUrl]);
 
   const runSyncWorkspaceToWeb = useCallback(async (options: SyncWorkspaceOptions = {}): Promise<SyncPushDocument | undefined> => {
     if (!state.workspace) {
@@ -412,11 +417,12 @@ export function useCloudSync() {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${state.syncToken}`,
+            "x-client-type": capabilities.clientType,
             ...(state.wsSessionId ? { "x-session-id": state.wsSessionId } : {}),
             ...(state.cloudProfile?.deviceId ? { "x-device-id": state.cloudProfile.deviceId } : {}),
           },
           body: JSON.stringify({
-            deviceId: state.cloudProfile?.deviceId ?? "desktop",
+            deviceId: state.cloudProfile?.deviceId ?? capabilities.clientType,
             folders: foldersForPush,
             documents: pushDocs,
             deletedPaths,
@@ -512,7 +518,7 @@ export function useCloudSync() {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, state.workspace, state.syncToken, state.syncUsername, state.cloudProfile, state.vaultBindings, state.vaultSettings, getServiceUrl, refreshCloudWorkspaces, handleWorkspaceAccessLoss, syncAssets]);
+  }, [capabilities.clientType, dispatch, state.workspace, state.syncToken, state.syncUsername, state.cloudProfile, state.vaultBindings, state.vaultSettings, getServiceUrl, refreshCloudWorkspaces, handleWorkspaceAccessLoss, syncAssets]);
 
   // Serialize every sync run through one promise chain. Without this, the
   // periodic timer, file-watcher events, websocket pulls, and manual syncs can
@@ -571,10 +577,14 @@ export function useCloudSync() {
     });
     const response = await httpRequest(`${getServiceUrl()}/api/v1/workspaces/${binding.workspaceId}/sync/pull`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${state.syncToken}` },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${state.syncToken}`,
+        "x-client-type": capabilities.clientType,
+      },
       body: JSON.stringify({
         sinceClock,
-        deviceId: state.cloudProfile?.deviceId ?? "desktop",
+        deviceId: state.cloudProfile?.deviceId ?? capabilities.clientType,
         sinceTrashEventClock: trashClock,
       }),
     });
@@ -802,7 +812,7 @@ export function useCloudSync() {
       // Used to prevent push from re-deleting files that the server actively has.
       receivedDocumentPaths: pullData.documents.map((d) => d.relativePath),
     };
-  }, [dispatch, state.workspace, state.syncToken, state.cloudProfile, getServiceUrl, handleWorkspaceAccessLoss]);
+  }, [capabilities.clientType, dispatch, state.workspace, state.syncToken, state.cloudProfile, getServiceUrl, handleWorkspaceAccessLoss]);
 
   const applyCloudDocuments = useCallback(async (documents: CloudDocument[], folders: CloudFolder[] = [], skipRelativePath?: string): Promise<CloudDocument[]> => {
     if (!state.workspace || (documents.length === 0 && folders.length === 0)) {
@@ -887,6 +897,7 @@ export function useCloudSync() {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${state.syncToken}`,
+          "x-client-type": capabilities.clientType,
           ...(state.wsSessionId ? { "x-session-id": state.wsSessionId } : {}),
           ...(state.cloudProfile?.deviceId ? { "x-device-id": state.cloudProfile.deviceId } : {}),
         },
@@ -909,7 +920,7 @@ export function useCloudSync() {
       dispatch({ type: "SET_STATUS", message: String(error) });
       throw error;
     }
-  }, [dispatch, state.vaultBindings, state.workspace, state.syncToken, getServiceUrl]);
+  }, [capabilities.clientType, dispatch, state.vaultBindings, state.workspace, state.syncToken, getServiceUrl]);
 
   const loadCloudProfile = useCallback(async () => {
     if (!tauri.isAvailable) return;
@@ -1100,7 +1111,10 @@ export function useCloudSync() {
     if (!state.workspace || !state.syncToken || !tauri.isAvailable) return;
     const rootPath = state.workspace.rootPath;
     const wsId = binding.workspaceId;
-    const authHeaders: Record<string, string> = { Authorization: `Bearer ${state.syncToken}` };
+    const authHeaders: Record<string, string> = {
+      Authorization: `Bearer ${state.syncToken}`,
+      "x-client-type": capabilities.clientType,
+    };
     try {
       // 1. Server manifest (metadata only — no content transfer).
       const res = await httpRequest(`${getServiceUrl()}/api/v1/workspaces/${wsId}/manifest`, { headers: authHeaders });
@@ -1109,7 +1123,7 @@ export function useCloudSync() {
         documents: Array<{ relativePath: string; contentHash: string; updatedClock: number }>;
       };
 
-      // Only documents the desktop can actually materialize (md/board/diagram).
+      // Only documents the native app can actually materialize (md/board/diagram).
       // Non-syncable rows — e.g. a stray binary `.pdf` that an old bug stored as a
       // document instead of a blob — are server-side garbage: the apply gate
       // correctly refuses to write them, so "repairing" them would loop forever.
@@ -1162,7 +1176,7 @@ export function useCloudSync() {
       console.error("[reconcile] failed (non-critical):", error);
       return undefined;
     }
-  }, [state.workspace, state.syncToken, getServiceUrl, pullCloudWorkspace]);
+  }, [capabilities.clientType, state.workspace, state.syncToken, getServiceUrl, pullCloudWorkspace]);
 
   const pullOnly = useCallback(async (options: PullOnlyOptions = {}) => {
     console.log("[pullOnly] called with options:", options);

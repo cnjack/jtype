@@ -102,6 +102,7 @@ pub async fn delete_document(
         &["owner", "admin", "editor"],
     )
     .await?;
+    let client_type = super::extract_client_type(&headers, "web");
     let device_id = headers
         .get("x-device-id")
         .and_then(|v| v.to_str().ok())
@@ -167,7 +168,7 @@ pub async fn delete_document(
                 relative_path,
                 action: "trashed".to_string(),
                 event_clock: next_clock,
-                source: "desktop".to_string(),
+                source: client_type.to_string(),
                 device_id: device_id.clone(),
             },
             session_id.as_deref(),
@@ -196,10 +197,7 @@ pub async fn save_document(
     )
     .await?;
 
-    let client_type = headers
-        .get("x-client-type")
-        .and_then(|v| v.to_str().ok())
-        .unwrap_or("web");
+    let client_type = super::extract_client_type(&headers, "web");
     let device_id = headers
         .get("x-device-id")
         .and_then(|v| v.to_str().ok())

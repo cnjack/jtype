@@ -14,10 +14,12 @@ import type { RecentItem, FileTreeNode, BoardConfig } from "../lib/types";
 import { markdownNodes, extractMarkdownLinks } from "../lib/utils";
 import { appStorage } from "../lib/storage";
 import type { AICommandProposal } from "../lib/aiCommands";
+import { useRuntimeCapabilities } from "../app/RuntimeCapabilities";
 
 export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
   const dispatch = useAppDispatch();
   const state = useAppState();
+  const capabilities = useRuntimeCapabilities();
   const prompt = usePrompt();
   const confirm = useConfirm();
   const onAfterSaveRef = useRef(onAfterSave);
@@ -40,9 +42,9 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
       serviceUrl,
       token: state.syncToken,
       workspaceId: binding.workspaceId,
-      deviceId: state.cloudProfile?.deviceId ?? "desktop",
+      deviceId: state.cloudProfile?.deviceId ?? capabilities.clientType,
     };
-  }, [state.workspace, state.syncToken, state.vaultBindings, state.vaultSettings, state.cloudProfile, state.serviceUrl]);
+  }, [capabilities.clientType, state.workspace, state.syncToken, state.vaultBindings, state.vaultSettings, state.cloudProfile, state.serviceUrl]);
 
   /** Fire-and-forget REST call to the cloud service. Non-critical — errors are silently ignored. */
   const cloudRest = useCallback(async (path: string, method: string, body?: Record<string, unknown>) => {
@@ -55,13 +57,13 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
           "Content-Type": "application/json",
           Authorization: `Bearer ${ctx.token}`,
           "x-device-id": ctx.deviceId,
-          "x-client-type": "desktop",
+          "x-client-type": capabilities.clientType,
           ...(state.wsSessionId ? { "x-session-id": state.wsSessionId } : {}),
         },
         ...(body ? { body: JSON.stringify(body) } : {}),
       });
     } catch { /* non-critical */ }
-  }, [getCloudContext, state.wsSessionId]);
+  }, [capabilities.clientType, getCloudContext, state.wsSessionId]);
 
   const openMarkdownFile = useCallback(async (path: string, relativePath = "") => {
     if (!isMarkdownPath(path)) return;

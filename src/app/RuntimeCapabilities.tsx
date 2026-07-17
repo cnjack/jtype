@@ -15,6 +15,7 @@ function fallbackCapabilities(): RuntimeCapabilities {
   const isMobile = platform !== "desktop";
   return {
     platform,
+    clientType: isMobile ? "mobile" : "desktop",
     isMobile,
     isTouchPrimary: isMobile,
     prefersCompactLayout: isMobile,

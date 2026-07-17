@@ -89,6 +89,7 @@ pub async fn push(
     let mut accepted = 0;
     let mut conflicts = Vec::new();
     let device_id = payload.device_id.clone();
+    let client_type = super::extract_client_type(&headers, "desktop");
     let mut push_docs: Vec<SyncPushDocument> = Vec::new();
     let mut deleted_paths: Vec<DeletedPath> = Vec::new();
     let session_id = super::extract_session_id(&headers);
@@ -136,7 +137,7 @@ pub async fn push(
             &workspace_id,
             &user,
             doc,
-            "desktop",
+            client_type,
         )
         .await?
         {
@@ -154,7 +155,7 @@ pub async fn push(
                                 content_hash: doc.content_hash.clone(),
                                 updated_clock: doc.updated_clock,
                                 edited_by: user.username.clone(),
-                                source: "desktop".to_string(),
+                                source: client_type.to_string(),
                                 device_id: device_id.clone(),
                             },
                             session_id.as_deref(),
@@ -197,7 +198,7 @@ pub async fn push(
                         relative_path: deleted_path.relative_path.clone(),
                         action: "trashed".to_string(),
                         event_clock: deleted_path.deleted_clock,
-                        source: "desktop".to_string(),
+                        source: client_type.to_string(),
                         device_id: device_id.clone(),
                     },
                     session_id.as_deref(),

@@ -92,7 +92,7 @@ pub async fn ws_upgrade(
     )
     .await?;
     let session_id = Uuid::new_v4().to_string();
-    let client_type = auth.client_type.unwrap_or_else(|| "desktop".to_string());
+    let client_type = super::normalize_client_type(auth.client_type.as_deref(), "desktop").to_string();
 
     Ok(ws.on_upgrade(move |socket| {
         handle_ws(
@@ -118,7 +118,7 @@ pub async fn ws_upgrade_user(
 ) -> Result<impl IntoResponse, AppError> {
     let user = validate_ws_token(&state.pool, &auth.token).await?;
     let session_id = Uuid::new_v4().to_string();
-    let client_type = auth.client_type.unwrap_or_else(|| "desktop".to_string());
+    let client_type = super::normalize_client_type(auth.client_type.as_deref(), "desktop").to_string();
 
     Ok(ws.on_upgrade(move |socket| {
         handle_user_ws(

@@ -3,9 +3,11 @@ import { useAppState } from "../app/AppState";
 import { tauri } from "../lib/tauri";
 import { httpRequest } from "@shared/lib/http";
 import { sha256Hex } from "../lib/utils";
+import { useRuntimeCapabilities } from "../app/RuntimeCapabilities";
 
 export function useEagerSync() {
   const state = useAppState();
+  const capabilities = useRuntimeCapabilities();
 
   const pushSingleDocument = useCallback(
     async (relativePath: string, content: string) => {
@@ -45,11 +47,12 @@ export function useEagerSync() {
             headers: {
               "Content-Type": "application/json",
               Authorization: `Bearer ${state.syncToken}`,
+              "x-client-type": capabilities.clientType,
               ...(state.wsSessionId ? { "x-session-id": state.wsSessionId } : {}),
               ...(state.cloudProfile?.deviceId ? { "x-device-id": state.cloudProfile.deviceId } : {}),
             },
             body: JSON.stringify({
-              deviceId: state.cloudProfile?.deviceId ?? "desktop",
+              deviceId: state.cloudProfile?.deviceId ?? capabilities.clientType,
               documents: [
                 {
                   relativePath,
@@ -102,6 +105,7 @@ export function useEagerSync() {
       state.vaultSettings,
       state.cloudProfile,
       state.serviceUrl,
+      capabilities.clientType,
     ],
   );
 

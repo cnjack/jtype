@@ -376,6 +376,7 @@ export type AppCommand = {
 };
 
 export type RuntimePlatform = "desktop" | "android" | "ios";
+export type RuntimeClientType = "desktop" | "mobile";
 
 export type AppLifecycleState = "active" | "background";
 
@@ -385,6 +386,7 @@ export type AppLifecycleState = "active" | "background";
  */
 export type RuntimeCapabilities = {
   platform: RuntimePlatform;
+  clientType: RuntimeClientType;
   isMobile: boolean;
   isTouchPrimary: boolean;
   prefersCompactLayout: boolean;

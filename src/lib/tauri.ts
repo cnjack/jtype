@@ -200,8 +200,8 @@ export const tauri = {
   saveTrashMetadata(rootPath: string, metadata: TrashMetadata) {
     return invoke<void>("save_trash_metadata_cmd", { rootPath, metadata });
   },
-  startCloudListener(serverUrl: string, token: string, workspaceId: string, deviceId: string) {
-    return invoke<void>("start_cloud_listener", { serverUrl, token, workspaceId, deviceId });
+  startCloudListener(serverUrl: string, token: string, workspaceId: string, deviceId: string, clientType: "desktop" | "mobile") {
+    return invoke<void>("start_cloud_listener", { serverUrl, token, workspaceId, deviceId, clientType });
   },
   stopCloudListener() {
     return invoke<void>("stop_cloud_listener");
