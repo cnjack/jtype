@@ -133,8 +133,8 @@
 ### 1.5 本地 vault、导入与文件打开
 
 - [x] 默认 vault 位于 app-private storage，可离线创建、编辑和保存 Markdown
-- [ ] Android `content://` 与 iOS picked URL 通过 adapter copy/import 到 app-private vault
-- [ ] 支持导入、导出、系统 file association / open-with 的基础流程
+- [x] Android `content://` 与 iOS picked URL 通过 native materialization adapter 接入现有 app-private vault import 流程
+- [~] 导入与系统 file association / open-with 基础流程已接入，导出流程待完成
 - [x] app-private vault 继续使用 `jtype-core` 与现有相对路径模型
 
 ### 1.6 Account 与 cloud sync
