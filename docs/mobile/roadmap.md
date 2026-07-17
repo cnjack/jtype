@@ -105,14 +105,14 @@
 - [x] 共用现有 AppState、commands、hooks 和 mode routing
 - [x] `AdaptiveAppShell`：desktop/tablet 使用固定 sidebar；phone 使用复用 Sidebar 内容的 Headless UI drawer
 - [x] 复用 Sidebar 内容组件，保证 vault 文件树、搜索、收藏、Library、Publish、Account 只有一份业务实现
-- [~] 已处理 app shell 顶/底 safe area；dynamic viewport、软键盘、横竖屏和完整 44×44pt 触控审计待完成
+- [x] app shell 顶/底 safe area、dynamic viewport、Android/iOS 软件键盘、phone 横竖屏与核心 44×44pt actions 已完成真实模拟器审计（证据：`docs/mobile/reports/phase-1.md`）
 - [x] desktop header drag region 与 mobile safe-area header 由 capability 决定
 
 ### 1.2 Markdown 文档工作台
 
 - [x] 复用 `EditorShell`、Markdown pipeline、toolbar 与 command system
 - [x] phone 使用 Write / Preview tabs，tablet 与 desktop 保持 Write / Split / Preview；断点由 capability provider 统一输出
-- [~] selection、滚动同步、编辑器聚焦和 unsaved state 复用现有实现；软键盘真机 smoke test 待完成
+- [x] selection、滚动同步、编辑器聚焦和 unsaved state 复用现有实现；Android/iOS 软件键盘真实触控与编辑区适配已通过（证据：`docs/mobile/reports/phase-1.md`）
 - [x] desktop 右键动作在 touch 上通过 Headless UI action sheet 显式提供，动作 callback 与 desktop context menu 复用一份
 - [x] 文件列表、创建、重命名、移动、删除与保存均有触控入口；创建 → 编辑 → 保存已有 390×844 E2E 覆盖
 
@@ -128,7 +128,7 @@
 - [x] 复用 shared `BoardSurface`、`BoardPeek` 和现有数据 / action adapter，不建立 mobile 平行实现
 - [x] compact / touch props 默认关闭，desktop 继续保持多列、hover action 与 pointer drag 行为
 - [x] phone 使用横向 snap 列滚动、常驻显式 card action、move menu 和全宽 card detail
-- [~] touch 已禁用易与滚动冲突的 pointer drag，并可通过 move menu 完成同一动作；双模拟器手势 smoke test 待阶段验收
+- [x] touch 已禁用易与滚动冲突的 pointer drag；Android/iOS 均已通过显式 status/move action 将真实 card 从 To do 移到 Doing（证据：`docs/mobile/reports/phase-1.md`）
 
 ### 1.5 本地 vault、导入与文件打开
 
@@ -150,14 +150,14 @@
 
 ### 1.7 Phase 1 验收
 
-- [~] 本段 desktop app E2E 42/42 通过；Phase 1 完整功能与关键视觉终验待完成
-- [ ] Android/iOS：首次启动 → 创建/打开 vault → 新建文档 → 编辑 → Preview → 保存 → 重启后恢复
-- [ ] Android/iOS：打开 Document Info 并编辑 properties；查看 Outline / Publish / Links
-- [ ] Android/iOS：打开 Board、查看列、打开/移动 card
+- [x] desktop app E2E 42/42 通过，mobile capability 与 desktop 默认行为同轮回归
+- [x] Android/iOS：首次启动 → 创建/打开 vault → 新建文档 → 编辑 → Preview → 保存 → 重启后恢复（证据：`docs/mobile/reports/phase-1.md`）
+- [x] Android/iOS：打开 Document Info 并编辑 properties；查看 Outline / Publish / Links（证据：`docs/mobile/reports/phase-1.md`）
+- [x] Android/iOS：打开 Board、查看列、打开/移动 card（证据：`docs/mobile/reports/phase-1.md`）
 - [~] Android 离线编辑/网络恢复与 iOS suspend/resume cloud sync 已通过；Android 已在真实服务完成第二 mobile client 重叠编辑后的冲突可见与手动解决，iOS 冲突页点按待主机解锁后补齐（证据：`docs/mobile/reports/phase-1-sync-recovery.md`、`docs/mobile/reports/phase-1-conflict.md`）
-- [~] phone / tablet 尺寸及横竖屏 E2E 已通过；双模拟器软键盘 smoke test 待阶段验收
-- [ ] 双平台截图与 `docs/mobile/reports/phase-1.md` 已提交
-- [ ] tracking 已记录 Phase 1 commit hashes
+- [x] phone / tablet、横竖屏及 Android/iOS 软件键盘 smoke test 已通过，iPad actual Split / right inspector 已验证（证据：`docs/mobile/reports/phase-1.md`）
+- [x] 双平台 phone、iPad tablet 截图与 `docs/mobile/reports/phase-1.md` 已提交
+- [x] tracking 已记录当前 Phase 1 commit hashes
 
 ## Phase 2 — External vaults and mobile integration
 
@@ -253,6 +253,7 @@
 | 2026-07-18 | 1.6 | `844e9ea` | 复用 desktop device OAuth，以固定无凭据 callback 接入 Android/iOS deep-link 回跳 | `docs/mobile/reports/phase-1-oauth-deep-link.md` |
 | 2026-07-18 | 1.6 | `99f474a` | 升级 Tao 锁定版本，避免 Android custom-scheme Intent 的 null MIME 崩溃 | `docs/mobile/reports/phase-1-oauth-deep-link.md` |
 | 2026-07-18 | 1.7 | `b39e920` | capability 驱动的 phone 冲突 tabs、touch action footer 与 desktop 三栏隔离 | `docs/mobile/reports/phase-1-conflict.md` |
+| 2026-07-18 | 1.7 | `1111156` | 真实服务冲突解决截图、双平台构建证据与临时数据清理记录 | `docs/mobile/reports/phase-1-conflict.md` |
 
 ## 当前环境审计（2026-07-18）
 
