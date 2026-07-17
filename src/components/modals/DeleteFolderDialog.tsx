@@ -45,7 +45,7 @@ export function DeleteFolderDialog({
   const isEmpty = summary && summary.totalDocuments === 0 && summary.totalSubfolders === 0;
 
   return (
-    <Dialog open={open} onClose={onClose} className="relative z-50">
+    <Dialog open={open} onClose={onClose} className="relative z-[100]">
       <div className="fixed inset-0 bg-stone-950/25 backdrop-blur-sm" aria-hidden="true" />
       <div className="fixed inset-0 flex items-center justify-center p-4">
         <DialogPanel className="w-full max-w-sm rounded-xl border border-white/70 bg-[#fbfdfb] p-6 shadow-[0_25px_50px_-12px_rgb(28_25_23/0.2)]">

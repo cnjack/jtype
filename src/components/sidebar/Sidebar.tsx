@@ -6,8 +6,8 @@ import { markdownNodes } from "../../lib/utils";
 import { tauri } from "../../lib/tauri";
 import { appStorage } from "../../lib/storage";
 import type { EntryKind, FileTreeNode, LocalTrashItem, RecentItem, TrashMetadataItem } from "../../lib/types";
-import { useCallback, useEffect, useState, useMemo } from "react";
-import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/react";
+import { useCallback, useEffect, useState, useMemo, type ReactNode } from "react";
+import { Dialog, DialogBackdrop, DialogPanel, DialogTitle, Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/react";
 import { DeleteFolderDialog } from "../modals/DeleteFolderDialog";
 import { MoveFolderDialog } from "../modals/MoveFolderDialog";
 import { usePrompt, useConfirm } from "@shared/components/PromptDialogContext";
@@ -37,6 +37,7 @@ import {
   ArrowRightIcon,
   ArrowsPointingInIcon,
   ArrowsPointingOutIcon,
+  EllipsisHorizontalIcon,
 } from "@heroicons/react/24/outline";
 import { resourceTypeForPath } from "@shared/lib/fileTypes";
 import { useRuntimeCapabilities } from "../../app/RuntimeCapabilities";
@@ -218,6 +219,7 @@ function ExplorerPanel() {
   const dispatch = useAppDispatch();
   const fs = useFileSystem();
   const prompt = usePrompt();
+  const capabilities = useRuntimeCapabilities();
   const [query, setQuery] = useState("");
   const [contextMenu, setContextMenu] = useState<{ node: FileTreeNode; x: number; y: number } | null>(null);
   const [trashItems, setTrashItems] = useState<LocalTrashItem[]>([]);
@@ -350,11 +352,11 @@ function ExplorerPanel() {
   }, [loadTrash, state.workspace?.rootPath, state.workspace?.entries, state.statusMessage]);
 
   useEffect(() => {
-    if (!contextMenu) return;
+    if (!contextMenu || capabilities.isTouchPrimary) return;
     const close = () => setContextMenu(null);
     document.addEventListener("click", close);
     return () => document.removeEventListener("click", close);
-  }, [contextMenu]);
+  }, [capabilities.isTouchPrimary, contextMenu]);
 
   return (
     <div className="px-3 pb-4">
@@ -454,6 +456,7 @@ function ExplorerPanel() {
                         node={node}
                         depth={0}
                         onContextMenu={(selectedNode, x, y) => setContextMenu({ node: selectedNode, x, y })}
+                        onActionMenu={(selectedNode, x, y) => setContextMenu({ node: selectedNode, x, y })}
                         onDrop={(target, source) => handleDrop(target, source)}
                       />
                     ))}
@@ -544,11 +547,11 @@ function ExplorerPanel() {
         </>
       )}
       {contextMenu && (
-        <div
-          role="menu"
-          className="context-menu"
-          style={{ left: contextMenu.x, top: contextMenu.y }}
-          onClick={(e) => e.stopPropagation()}
+        <NodeActionMenu
+          mobile={capabilities.isTouchPrimary}
+          label={t`Actions for ${contextMenu.node.name}`}
+          position={{ x: contextMenu.x, y: contextMenu.y }}
+          onClose={() => setContextMenu(null)}
         >
           {contextMenu.node.kind === "folder" && (
             <>
@@ -570,6 +573,7 @@ function ExplorerPanel() {
                     type="button"
                     className="context-menu-button"
                     onClick={async () => {
+                      setContextMenu(null);
                       const name = await prompt(t`New folder name:`);
                       if (name && state.workspace) {
                         try {
@@ -579,7 +583,6 @@ function ExplorerPanel() {
                           dispatch({ type: "SET_STATUS", message: String(error) });
                         }
                       }
-                      setContextMenu(null);
                     }}
                   >
                     <FolderPlusIcon className="mr-2 h-3.5 w-3.5" /><Trans>New folder</Trans>
@@ -588,6 +591,7 @@ function ExplorerPanel() {
                     type="button"
                     className="context-menu-button"
                     onClick={async () => {
+                      setContextMenu(null);
                       const newName = await prompt(t`Rename folder to:`, contextMenu.node.name);
                       if (newName && newName !== contextMenu.node.name && state.workspace) {
                         const parentPath = contextMenu.node.relativePath.split("/").slice(0, -1).join("/");
@@ -598,7 +602,6 @@ function ExplorerPanel() {
                           dispatch({ type: "SET_STATUS", message: String(error) });
                         }
                       }
-                      setContextMenu(null);
                     }}
                   >
                     <PencilIcon className="mr-2 h-3.5 w-3.5" /><Trans>Rename</Trans>
@@ -624,6 +627,7 @@ function ExplorerPanel() {
                   type="button"
                   className="context-menu-button"
                   onClick={async () => {
+                    setContextMenu(null);
                     const newName = await prompt(t`Rename to:`, contextMenu.node.name);
                     if (newName && newName !== contextMenu.node.name && state.workspace) {
                       const parentPath = contextMenu.node.relativePath.split("/").slice(0, -1).join("/");
@@ -634,7 +638,6 @@ function ExplorerPanel() {
                         dispatch({ type: "SET_STATUS", message: String(error) });
                       }
                     }
-                    setContextMenu(null);
                   }}
                 >
                   <PencilIcon className="mr-2 h-3.5 w-3.5" /><Trans>Rename</Trans>
@@ -663,14 +666,16 @@ function ExplorerPanel() {
             type="button"
             className="context-menu-button"
             onClick={() => {
-              void navigator.clipboard.writeText(contextMenu.node.relativePath);
-              dispatch({ type: "SET_STATUS", message: t`Path copied to clipboard.` });
+              void navigator.clipboard
+                .writeText(contextMenu.node.relativePath)
+                .then(() => dispatch({ type: "SET_STATUS", message: t`Path copied to clipboard.` }))
+                .catch((error) => dispatch({ type: "SET_STATUS", message: String(error) }));
               setContextMenu(null);
             }}
           >
             <ClipboardIcon className="mr-2 h-3.5 w-3.5" /><Trans>Copy path</Trans>
           </button>
-          {tauri.isAvailable && (
+          {tauri.isAvailable && capabilities.supportsExternalVault && (
             <button
               type="button"
               className="context-menu-button"
@@ -717,7 +722,7 @@ function ExplorerPanel() {
               )}
             </>
           )}
-        </div>
+        </NodeActionMenu>
       )}
       {deleteFolderTarget && (
         <DeleteFolderDialog
@@ -767,16 +772,19 @@ function TreeNode({
   node,
   depth,
   onContextMenu,
+  onActionMenu,
   onDrop,
 }: {
   node: FileTreeNode;
   depth: number;
   onContextMenu: (node: FileTreeNode, x: number, y: number) => void;
+  onActionMenu: (node: FileTreeNode, x: number, y: number) => void;
   onDrop: (targetFolder: string, sourceRelativePath: string) => void;
 }) {
   const state = useAppState();
   const fs = useFileSystem();
   const dispatch = useAppDispatch();
+  const capabilities = useRuntimeCapabilities();
   const [dragOver, setDragOver] = useState(false);
 
   if (node.relativePath === ".jtype") return null;
@@ -799,10 +807,10 @@ function TreeNode({
             : DocumentIcon;
 
   return (
-    <li>
+    <li className="relative">
       <button
         type="button"
-        className={`tree-button ${isActive ? "tree-button-active" : ""} ${dragOver ? "ring-2 ring-[#008884]/40 bg-[#e8f6f2]" : ""}`}
+        className={`tree-button ${capabilities.isTouchPrimary ? "min-h-11 pr-12" : ""} ${isActive ? "tree-button-active" : ""} ${dragOver ? "ring-2 ring-[#008884]/40 bg-[#e8f6f2]" : ""}`}
         style={{ paddingLeft: `${0.5 + depth * 0.75}rem` }}
         draggable
         onDragStart={(e) => {
@@ -858,14 +866,75 @@ function TreeNode({
         </span>
         <span className={`truncate ${isFolder ? "font-semibold text-[#4b5753]" : ""}`}>{node.name}</span>
       </button>
+      {capabilities.isTouchPrimary && (node.kind === "folder" || node.kind === "markdown" || node.kind === "board") && (
+        <button
+          type="button"
+          aria-label={t`Actions for ${node.name}`}
+          className="absolute right-0 top-0 flex h-11 w-11 items-center justify-center rounded-lg text-stone-400 hover:bg-white hover:text-stone-700"
+          onClick={(event) => {
+            event.stopPropagation();
+            const rect = event.currentTarget.getBoundingClientRect();
+            onActionMenu(node, rect.left, rect.bottom);
+          }}
+        >
+          <EllipsisHorizontalIcon className="h-5 w-5" />
+        </button>
+      )}
       {isExpandable && isExpanded && node.children.length > 0 && (
         <ul className="mt-0.5 space-y-0.5">
           {groupBoardsWithFolders(node.children).map((child) => (
-            <TreeNode key={child.path} node={child} depth={depth + 1} onContextMenu={onContextMenu} onDrop={onDrop} />
+            <TreeNode key={child.path} node={child} depth={depth + 1} onContextMenu={onContextMenu} onActionMenu={onActionMenu} onDrop={onDrop} />
           ))}
         </ul>
       )}
     </li>
+  );
+}
+
+function NodeActionMenu({
+  mobile,
+  label,
+  position,
+  onClose,
+  children,
+}: {
+  mobile: boolean;
+  label: string;
+  position: { x: number; y: number };
+  onClose: () => void;
+  children: ReactNode;
+}) {
+  if (!mobile) {
+    return (
+      <div
+        role="menu"
+        aria-label={label}
+        className="context-menu"
+        style={{ left: position.x, top: position.y }}
+        onClick={(event) => event.stopPropagation()}
+      >
+        {children}
+      </div>
+    );
+  }
+
+  return (
+    <Dialog open onClose={onClose} className="relative z-[100]">
+      <DialogBackdrop className="fixed inset-0 bg-stone-950/30 backdrop-blur-sm" />
+      <div className="fixed inset-0 flex items-end">
+        <DialogPanel
+          id="mobile-file-actions"
+          className="w-full max-h-[75dvh] overflow-y-auto rounded-t-3xl bg-white px-3 pt-3 shadow-2xl [&_.context-menu-button]:min-h-12 [&_.context-menu-button]:rounded-xl [&_.context-menu-button]:px-4"
+          style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
+        >
+          <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-stone-300" aria-hidden />
+          <DialogTitle className="truncate px-2 pb-2 text-sm font-semibold text-stone-900">{label}</DialogTitle>
+          <div role="menu" aria-label={label} onClick={(event) => event.stopPropagation()}>
+            {children}
+          </div>
+        </DialogPanel>
+      </div>
+    </Dialog>
   );
 }
 

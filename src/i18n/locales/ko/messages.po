@@ -118,6 +118,12 @@ msgstr "계정"
 msgid "Account service URL"
 msgstr "계정 서비스 URL"
 
+#. placeholder {0}: contextMenu.node.name
+#. placeholder {0}: node.name
+#: src/components/sidebar/Sidebar.tsx
+msgid "Actions for {0}"
+msgstr ""
+
 #~ msgid "Add column"
 #~ msgstr ""
 

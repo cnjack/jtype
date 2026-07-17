@@ -662,11 +662,13 @@ test("adapts the shared welcome screen to app-private mobile storage", async ({ 
   await page.locator("#mobile-navigation-button").click();
   await expect(page.locator("#mobile-vault-navigation")).toBeVisible();
   await expect(page.locator("#mobile-vault-navigation #workspace-sidebar")).toBeVisible();
-  await page.locator("#mobile-vault-navigation").getByRole("button", { name: "Close" }).click();
-  await expect(page.locator("#mobile-vault-navigation")).toBeHidden();
-
-  await page.locator("#mobile-navigation-button").click();
-  await page.locator("#mobile-vault-navigation #workspace-sidebar").getByRole("button", { name: /intro\.md/ }).click();
+  await page.locator("#mobile-vault-navigation").getByLabel("Actions for intro.md").click();
+  await expect(page.locator("#mobile-file-actions")).toBeVisible();
+  await expect(page.locator("#mobile-file-actions")).toContainText("Rename");
+  await expect(page.locator("#mobile-file-actions")).toContainText("Move to...");
+  await expect(page.locator("#mobile-file-actions")).toContainText("Move to trash");
+  await page.locator("#mobile-file-actions").getByRole("button", { name: "Open" }).click();
+  await expect(page.locator("#mobile-file-actions")).toBeHidden();
   await expect(page.locator("#mobile-vault-navigation")).toBeHidden();
 
   await expect(page.getByLabel("Markdown editor")).toBeVisible();
@@ -685,7 +687,7 @@ test("adapts the shared welcome screen to app-private mobile storage", async ({ 
   await expect(page.locator("#document-panel")).toBeHidden();
 
   await page.locator("#mobile-navigation-button").click();
-  await page.locator("#mobile-vault-navigation").getByRole("button", { name: /team\.board/i }).click();
+  await page.locator("#mobile-vault-navigation").getByRole("button", { name: "team.board", exact: true }).click();
   await expect(page.locator("#mobile-vault-navigation")).toBeHidden();
   await expect(page.locator("#board-surface")).toHaveAttribute("data-compact", "true");
   await expect(page.locator("#board-surface")).toContainText("Plan release");
@@ -701,6 +703,18 @@ test("adapts the shared welcome screen to app-private mobile storage", async ({ 
   expect(peekBox?.width).toBeCloseTo(boardBox?.width ?? 0, 0);
   await page.locator("#board-card-peek").getByTitle("Close").click();
   await expect(page.locator("#board-card-peek")).toBeHidden();
+
+  await page.locator("#mobile-navigation-button").click();
+  await page.locator("#mobile-vault-navigation").getByRole("button", { name: "New Document", exact: true }).click();
+  await expect(page.locator("#new-resource-dialog")).toHaveAttribute("data-compact", "true");
+  await page.locator("#new-resource-dialog").getByRole("button", { name: /Markdown document/ }).click();
+  await page.getByPlaceholder("Document name").fill("Mobile Note");
+  await page.locator("#new-resource-dialog").getByRole("button", { name: "Create" }).click();
+  await expect(page.locator("#mobile-vault-navigation")).toBeHidden();
+  await expect(page.getByLabel("Markdown editor")).toBeVisible();
+  await page.getByLabel("Markdown editor").fill("# Mobile Note\n\nSaved on device.");
+  await page.getByRole("button", { name: "Save" }).click();
+  await expect.poll(() => page.evaluate(() => window.__E2E_FS__["C:/workspace/Mobile Note.md"])).toBe("# Mobile Note\n\nSaved on device.");
 });
 
 test("edits and saves the current markdown file", async ({ page }) => {

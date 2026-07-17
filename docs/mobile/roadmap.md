@@ -113,8 +113,8 @@
 - [x] 复用 `EditorShell`、Markdown pipeline、toolbar 与 command system
 - [~] phone 已使用 Write / Preview tabs、desktop 保持 Write / Split / Preview；tablet Split breakpoint 待完成
 - [~] selection、滚动同步、编辑器聚焦和 unsaved state 复用现有实现；软键盘真机 smoke test 待完成
-- [ ] desktop 右键动作在 touch 上提供 long-press 或显式 action menu，命令实现仍复用一份
-- [ ] 文件列表、创建、重命名、移动、删除与保存均可在触摸设备完成
+- [x] desktop 右键动作在 touch 上通过 Headless UI action sheet 显式提供，动作 callback 与 desktop context menu 复用一份
+- [x] 文件列表、创建、重命名、移动、删除与保存均有触控入口；创建 → 编辑 → 保存已有 390×844 E2E 覆盖
 
 ### 1.3 Document Info
 
@@ -132,10 +132,10 @@
 
 ### 1.5 本地 vault、导入与文件打开
 
-- [ ] 默认 vault 位于 app-private storage，可离线创建和编辑 Markdown
+- [x] 默认 vault 位于 app-private storage，可离线创建、编辑和保存 Markdown
 - [ ] Android `content://` 与 iOS picked URL 通过 adapter copy/import 到 app-private vault
 - [ ] 支持导入、导出、系统 file association / open-with 的基础流程
-- [ ] app-private vault 继续使用 `jtype-core` 与现有相对路径模型
+- [x] app-private vault 继续使用 `jtype-core` 与现有相对路径模型
 
 ### 1.6 Account 与 cloud sync
 
@@ -237,7 +237,8 @@
 | 2026-07-18 | 0.5 | `d57e016` | 双模拟器启动、Android 私有库、desktop 回归与截图报告 | `docs/mobile/reports/phase-0.md` |
 | 2026-07-18 | 1.1 | `9828de6` | phone 单栏 app shell、复用 Sidebar drawer、safe-area header/footer 与 compact VaultHome | Phase 1 report 待完成 |
 | 2026-07-18 | 1.2–1.3 | `afc5707` | phone Write/Preview、触控 toolbar 与复用 Document Info bottom sheet | Phase 1 report 待完成 |
-| 2026-07-18 | 1.4 | 待提交 | shared Board compact/touch 模式、显式移动动作与全宽 card detail | Phase 1 report 待完成 |
+| 2026-07-18 | 1.4 | `e35db30` | shared Board compact/touch 模式、显式移动动作与全宽 card detail | Phase 1 report 待完成 |
+| 2026-07-18 | 1.2/1.5 | 待提交 | touch 文件 action sheet、mobile New Resource sheet、创建编辑保存流程 | Phase 1 report 待完成 |
 
 ## 当前环境审计（2026-07-18）
 

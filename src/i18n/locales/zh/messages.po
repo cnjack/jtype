@@ -118,6 +118,12 @@ msgstr "账户"
 msgid "Account service URL"
 msgstr "账户服务 URL"
 
+#. placeholder {0}: contextMenu.node.name
+#. placeholder {0}: node.name
+#: src/components/sidebar/Sidebar.tsx
+msgid "Actions for {0}"
+msgstr "{0} 的操作"
+
 #~ msgid "Add column"
 #~ msgstr "添加列"
 

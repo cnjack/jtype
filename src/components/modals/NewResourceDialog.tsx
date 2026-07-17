@@ -14,6 +14,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { useAppDispatch, useAppState } from "../../app/AppState";
 import { useFileSystem } from "../../hooks";
+import { useRuntimeCapabilities } from "../../app/RuntimeCapabilities";
 
 type Step = "choose" | "name";
 type NamedKind = "markdown" | "board" | "mermaid" | "excalidraw";
@@ -50,6 +51,7 @@ export function NewResourceDialog() {
   const state = useAppState();
   const dispatch = useAppDispatch();
   const fs = useFileSystem();
+  const capabilities = useRuntimeCapabilities();
   const [step, setStep] = useState<Step>("choose");
   const [name, setName] = useState("");
   const [nameFor, setNameFor] = useState<NamedKind>("markdown");
@@ -133,6 +135,9 @@ export function NewResourceDialog() {
     close();
     const ext = KIND_EXTENSION[nameFor];
     const withExt = trimmed.endsWith(ext) ? trimmed : `${trimmed}${ext}`;
+    if (capabilities.prefersCompactLayout && nameFor === "markdown") {
+      dispatch({ type: "SET_EDITOR_MODE", mode: "write" });
+    }
     if (nameFor === "board") {
       void fs.createBoard(trimmed, activeDir);
     } else if (nameFor === "mermaid") {
@@ -169,10 +174,16 @@ export function NewResourceDialog() {
     : t`Document name`;
 
   return (
-    <Dialog open={open} onClose={close} className="relative z-50">
+    <Dialog open={open} onClose={close} className={`relative ${capabilities.isMobile ? "z-[100]" : "z-50"}`}>
       <div className="fixed inset-0 bg-black/20" aria-hidden="true" />
-      <div className="fixed inset-0 flex items-center justify-center p-4">
-        <DialogPanel className="w-full max-w-md rounded-xl bg-white p-6 shadow-2xl">
+      <div className={`fixed inset-0 flex ${capabilities.isMobile ? "items-end" : "items-center justify-center p-4"}`}>
+        <DialogPanel
+          id="new-resource-dialog"
+          data-compact={capabilities.isMobile ? "true" : "false"}
+          className={`w-full bg-white shadow-2xl ${capabilities.isMobile ? "max-h-[85dvh] overflow-y-auto rounded-t-3xl px-5 pt-4" : "max-w-md rounded-xl p-6"}`}
+          style={capabilities.isMobile ? { paddingBottom: "max(1.25rem, env(safe-area-inset-bottom))" } : undefined}
+        >
+          {capabilities.isMobile && <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-stone-300" aria-hidden />}
           {step === "choose" ? (
             <>
               <DialogTitle className="text-base font-semibold text-stone-900">

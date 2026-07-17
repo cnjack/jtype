@@ -44,7 +44,7 @@ export function PromptDialog({
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} className="relative z-50">
+    <Dialog open={open} onClose={handleClose} className="relative z-[120]">
       <div className="fixed inset-0 bg-black/20" aria-hidden="true" />
       <div className="fixed inset-0 flex items-center justify-center p-4">
         <DialogPanel className="w-full max-w-sm rounded-xl bg-white p-6 shadow-2xl">
