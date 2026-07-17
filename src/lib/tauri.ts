@@ -17,6 +17,7 @@ import type {
   CardTemplate,
   AssetSyncState,
   RuntimeCapabilities,
+  VaultProviderDescriptor,
 } from "./types";
 
 export const tauri = {
@@ -73,6 +74,9 @@ export const tauri = {
   },
   defaultVaultPath() {
     return invoke<string>("default_vault_path");
+  },
+  describeVaultProvider(rootPath: string) {
+    return invoke<VaultProviderDescriptor>("describe_vault_provider", { rootPath });
   },
   createEntry(rootPath: string, relativePath: string, kind: string) {
     return invoke<WorkspaceSnapshot>("create_workspace_entry", { rootPath, relativePath, kind });

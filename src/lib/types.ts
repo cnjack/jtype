@@ -86,6 +86,39 @@ export type WorkspaceSnapshot = {
   metadataCreated: boolean;
 };
 
+export type VaultProviderKind = "appPrivate" | "localDirectory" | "externalMirror";
+export type VaultProviderAccessState =
+  | "ready"
+  | "authorizationRequired"
+  | "sourceUnavailable"
+  | "error";
+export type VaultProviderStorageMode = "direct" | "mirror";
+
+export type VaultProviderCapabilities = {
+  canRead: boolean;
+  canWrite: boolean;
+  canCreate: boolean;
+  canRename: boolean;
+  canDelete: boolean;
+  canWatch: boolean;
+  canReconcile: boolean;
+  canReauthorize: boolean;
+};
+
+/**
+ * Safe provider state exposed to the shared frontend. Native source references
+ * (SAF tree URI / security-scoped bookmark) intentionally never cross IPC.
+ */
+export type VaultProviderDescriptor = {
+  providerId: string;
+  kind: VaultProviderKind;
+  displayName: string;
+  localRootPath: string;
+  accessState: VaultProviderAccessState;
+  storageMode: VaultProviderStorageMode;
+  capabilities: VaultProviderCapabilities;
+};
+
 export type PublishResult = {
   outputDir: string;
   pages: string[];

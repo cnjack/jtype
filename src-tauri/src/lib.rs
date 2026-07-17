@@ -1,4 +1,5 @@
 mod cli_install;
+pub mod vault_provider;
 mod ws_client;
 
 // `workspace` now lives in the shared `jtype-core` crate (extracted so the `jtype`
@@ -240,11 +241,32 @@ fn default_vault_path(app: AppHandle) -> Result<String, String> {
     Ok(path_to_string(&default_vault_dir(&app)?))
 }
 
+fn resolve_local_vault_provider(
+    app: &AppHandle,
+    root: PathBuf,
+) -> Result<vault_provider::LocalVaultProvider, String> {
+    let default_root = default_vault_dir(app)?;
+    Ok(vault_provider::LocalVaultProvider::resolve(
+        root,
+        &default_root,
+        cfg!(mobile),
+    ))
+}
+
+#[tauri::command]
+fn describe_vault_provider(
+    app: AppHandle,
+    root_path: String,
+) -> Result<vault_provider::VaultProviderDescriptor, String> {
+    let provider = resolve_local_vault_provider(&app, PathBuf::from(root_path))?;
+    Ok(provider.descriptor().clone())
+}
+
 #[tauri::command]
 fn open_default_vault(app: AppHandle) -> Result<WorkspaceSnapshot, String> {
     let path = default_vault_dir(&app)?;
-    fs::create_dir_all(&path).map_err(|error| error.to_string())?;
-    workspace::open_workspace(&path)
+    let provider = resolve_local_vault_provider(&app, path)?;
+    workspace::open_workspace(provider.prepare_root(true)?)
 }
 
 #[tauri::command]
@@ -380,8 +402,9 @@ fn read_binary_file(path: String) -> Result<Vec<u8>, String> {
 }
 
 #[tauri::command]
-fn open_workspace(path: String) -> Result<WorkspaceSnapshot, String> {
-    workspace::open_workspace(&PathBuf::from(path))
+fn open_workspace(app: AppHandle, path: String) -> Result<WorkspaceSnapshot, String> {
+    let provider = resolve_local_vault_provider(&app, PathBuf::from(path))?;
+    workspace::open_workspace(provider.local_root())
 }
 
 #[tauri::command]
@@ -1301,6 +1324,7 @@ pub fn run() {
             initial_open_paths,
             initial_external_file_sources,
             default_vault_path,
+            describe_vault_provider,
             open_default_vault,
             read_markdown_file,
             write_markdown_file,

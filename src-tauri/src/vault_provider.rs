@@ -1,0 +1,288 @@
+use serde::{Deserialize, Serialize};
+use std::hash::Hasher;
+use std::path::{Path, PathBuf};
+
+pub const PROVIDER_STORE_VERSION: u32 = 1;
+
+#[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum VaultProviderKind {
+    AppPrivate,
+    LocalDirectory,
+    ExternalMirror,
+}
+
+#[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum VaultProviderAccessState {
+    Ready,
+    AuthorizationRequired,
+    SourceUnavailable,
+    Error,
+}
+
+#[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum VaultProviderStorageMode {
+    Direct,
+    Mirror,
+}
+
+#[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum VaultProviderSourceKind {
+    AndroidSafTree,
+    IosSecurityScopedBookmark,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct VaultProviderCapabilities {
+    pub can_read: bool,
+    pub can_write: bool,
+    pub can_create: bool,
+    pub can_rename: bool,
+    pub can_delete: bool,
+    pub can_watch: bool,
+    pub can_reconcile: bool,
+    pub can_reauthorize: bool,
+}
+
+impl VaultProviderCapabilities {
+    fn direct_filesystem() -> Self {
+        Self {
+            can_read: true,
+            can_write: true,
+            can_create: true,
+            can_rename: true,
+            can_delete: true,
+            can_watch: true,
+            can_reconcile: false,
+            can_reauthorize: false,
+        }
+    }
+
+    pub fn external_mirror(read_only: bool) -> Self {
+        Self {
+            can_read: true,
+            can_write: !read_only,
+            can_create: !read_only,
+            can_rename: !read_only,
+            can_delete: !read_only,
+            can_watch: true,
+            can_reconcile: true,
+            can_reauthorize: true,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct VaultProviderDescriptor {
+    pub provider_id: String,
+    pub kind: VaultProviderKind,
+    pub display_name: String,
+    pub local_root_path: String,
+    pub access_state: VaultProviderAccessState,
+    pub storage_mode: VaultProviderStorageMode,
+    pub capabilities: VaultProviderCapabilities,
+}
+
+/// Persistent, native-only metadata for an external vault. The opaque source
+/// reference is never returned to the WebView: Android stores a persistable SAF
+/// tree reference, while iOS stores an encoded security-scoped bookmark.
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct ExternalVaultProviderRecord {
+    pub provider_id: String,
+    pub display_name: String,
+    pub source_kind: VaultProviderSourceKind,
+    pub opaque_source_reference: String,
+    pub mirror_root_path: String,
+    pub access_state: VaultProviderAccessState,
+    pub read_only: bool,
+    pub last_reconciled_at: Option<u64>,
+    pub source_revision: Option<String>,
+}
+
+impl ExternalVaultProviderRecord {
+    pub fn descriptor(&self) -> VaultProviderDescriptor {
+        VaultProviderDescriptor {
+            provider_id: self.provider_id.clone(),
+            kind: VaultProviderKind::ExternalMirror,
+            display_name: self.display_name.clone(),
+            local_root_path: self.mirror_root_path.clone(),
+            access_state: self.access_state,
+            storage_mode: VaultProviderStorageMode::Mirror,
+            capabilities: VaultProviderCapabilities::external_mirror(self.read_only),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct VaultProviderStore {
+    #[serde(default = "provider_store_version")]
+    pub version: u32,
+    #[serde(default)]
+    pub providers: Vec<ExternalVaultProviderRecord>,
+}
+
+impl Default for VaultProviderStore {
+    fn default() -> Self {
+        Self {
+            version: PROVIDER_STORE_VERSION,
+            providers: Vec::new(),
+        }
+    }
+}
+
+fn provider_store_version() -> u32 {
+    PROVIDER_STORE_VERSION
+}
+
+/// The filesystem used by the shared workbench. External providers will first
+/// reconcile into their local mirror and then reuse this exact implementation.
+pub struct LocalVaultProvider {
+    descriptor: VaultProviderDescriptor,
+    root: PathBuf,
+}
+
+impl LocalVaultProvider {
+    pub fn resolve(root: PathBuf, default_root: &Path, is_mobile: bool) -> Self {
+        let is_app_private = is_mobile && root == default_root;
+        let (kind, provider_id, display_name) = if is_app_private {
+            (
+                VaultProviderKind::AppPrivate,
+                "app-private:default".to_string(),
+                "On this device".to_string(),
+            )
+        } else {
+            (
+                VaultProviderKind::LocalDirectory,
+                stable_provider_id("local", &root),
+                root.file_name()
+                    .and_then(|name| name.to_str())
+                    .filter(|name| !name.is_empty())
+                    .unwrap_or("Local vault")
+                    .to_string(),
+            )
+        };
+        let descriptor = VaultProviderDescriptor {
+            provider_id,
+            kind,
+            display_name,
+            local_root_path: path_to_string(&root),
+            access_state: VaultProviderAccessState::Ready,
+            storage_mode: VaultProviderStorageMode::Direct,
+            capabilities: VaultProviderCapabilities::direct_filesystem(),
+        };
+        Self { descriptor, root }
+    }
+
+    pub fn descriptor(&self) -> &VaultProviderDescriptor {
+        &self.descriptor
+    }
+
+    pub fn local_root(&self) -> &Path {
+        &self.root
+    }
+
+    pub fn prepare_root(&self, create: bool) -> Result<&Path, String> {
+        if create {
+            std::fs::create_dir_all(&self.root).map_err(|error| error.to_string())?;
+        }
+        if !self.root.is_dir() {
+            return Err(format!(
+                "Vault provider root is unavailable: {}",
+                path_to_string(&self.root)
+            ));
+        }
+        Ok(&self.root)
+    }
+}
+
+fn stable_provider_id(prefix: &str, root: &Path) -> String {
+    // FNV-1a is deliberately fixed rather than using DefaultHasher so provider
+    // ids remain stable across Rust toolchain updates.
+    struct Fnv1a(u64);
+    impl Hasher for Fnv1a {
+        fn finish(&self) -> u64 {
+            self.0
+        }
+
+        fn write(&mut self, bytes: &[u8]) {
+            for byte in bytes {
+                self.0 ^= u64::from(*byte);
+                self.0 = self.0.wrapping_mul(0x100000001b3);
+            }
+        }
+    }
+
+    let mut hasher = Fnv1a(0xcbf29ce484222325);
+    hasher.write(path_to_string(root).as_bytes());
+    format!("{prefix}:{:016x}", hasher.finish())
+}
+
+fn path_to_string(path: &Path) -> String {
+    path.to_string_lossy().replace('\\', "/")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn mobile_default_resolves_to_app_private_provider() {
+        let root = PathBuf::from("/app/data/vaults/default");
+        let provider = LocalVaultProvider::resolve(root.clone(), &root, true);
+        let descriptor = provider.descriptor();
+
+        assert_eq!(descriptor.provider_id, "app-private:default");
+        assert_eq!(descriptor.kind, VaultProviderKind::AppPrivate);
+        assert_eq!(descriptor.storage_mode, VaultProviderStorageMode::Direct);
+        assert!(!descriptor.capabilities.can_reconcile);
+        assert!(!descriptor.capabilities.can_reauthorize);
+    }
+
+    #[test]
+    fn desktop_directory_keeps_a_stable_local_provider_id() {
+        let root = PathBuf::from("/users/jack/notes");
+        let first = LocalVaultProvider::resolve(root.clone(), Path::new("/unused"), false);
+        let second = LocalVaultProvider::resolve(root, Path::new("/unused"), false);
+
+        assert_eq!(first.descriptor(), second.descriptor());
+        assert_eq!(first.descriptor().kind, VaultProviderKind::LocalDirectory);
+        assert!(first.descriptor().provider_id.starts_with("local:"));
+    }
+
+    #[test]
+    fn external_record_exposes_mirror_capabilities_without_source_reference() {
+        let record = ExternalVaultProviderRecord {
+            provider_id: "external:fixture".to_string(),
+            display_name: "Shared notes".to_string(),
+            source_kind: VaultProviderSourceKind::AndroidSafTree,
+            opaque_source_reference: "content://provider/tree/secret".to_string(),
+            mirror_root_path: "/app/data/vaults/external/fixture".to_string(),
+            access_state: VaultProviderAccessState::AuthorizationRequired,
+            read_only: false,
+            last_reconciled_at: None,
+            source_revision: None,
+        };
+        let descriptor = record.descriptor();
+        let json = serde_json::to_value(&descriptor).unwrap();
+
+        assert_eq!(descriptor.kind, VaultProviderKind::ExternalMirror);
+        assert_eq!(descriptor.storage_mode, VaultProviderStorageMode::Mirror);
+        assert!(descriptor.capabilities.can_reconcile);
+        assert!(descriptor.capabilities.can_reauthorize);
+        assert!(!json.to_string().contains("content://"));
+        assert!(!json.to_string().contains("opaqueSourceReference"));
+    }
+
+    #[test]
+    fn provider_store_schema_defaults_to_version_one() {
+        let store: VaultProviderStore = serde_json::from_str(r#"{"providers":[]}"#).unwrap();
+        assert_eq!(store, VaultProviderStore::default());
+    }
+}
