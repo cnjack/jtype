@@ -1,7 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useRef, useEffect, useCallback, useState } from "react";
-import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
+import { Dialog, DialogBackdrop, DialogPanel, DialogTitle, Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { save } from "@tauri-apps/plugin-dialog";
 import { useAppDispatch, useAppState } from "../../app/AppState";
 import { useFileSystem } from "../../hooks";
@@ -19,6 +19,7 @@ import type { BoardConfig, BoardCard } from "../../lib/types";
 import { FindBar } from "./FindBar";
 import { SlashMenu } from "./SlashMenu";
 import { ZoomIndicator } from "./ZoomIndicator";
+import { useRuntimeCapabilities } from "../../app/RuntimeCapabilities";
 
 /** Build read-only HTML for an inline ```jtype-board``` embed in a document preview. */
 function renderBoardEmbedHtml(config: BoardConfig, cards: BoardCard[]): string {
@@ -225,12 +226,14 @@ export function EditorShell() {
   const state = useAppState();
   const dispatch = useAppDispatch();
   const fs = useFileSystem();
+  const capabilities = useRuntimeCapabilities();
   const commands = useCommandsList();
   const confirm = useConfirm();
   const { pushSingleDocument } = useEagerSync();
   const editorRef = useRef<HTMLTextAreaElement>(null);
   const previewRef = useRef<HTMLElement>(null);
   const previewTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const compactPanelInitializedRef = useRef(false);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
   const [publishState, setPublishState] = useState<PublishStatusResponse | null>(null);
   const { tooltip: floatingTooltip, tooltipProps } = useFloatingTooltip();
@@ -342,6 +345,10 @@ export function EditorShell() {
   const canPublishToCloud = Boolean(isMarkdown && state.mode === "workspace" && currentVaultBinding && state.syncToken && state.cloudProfile?.token && currentVaultSettings?.cloudSyncEnabled !== false);
   const showVaultDocumentTools = state.mode === "workspace";
   const showDocumentPanel = showVaultDocumentTools && state.documentPanelOpen;
+  const compactWorkbench = capabilities.prefersCompactLayout;
+  const effectiveEditorMode: EditorMode = compactWorkbench && state.editorMode === "split" ? "write" : state.editorMode;
+  const showDesktopDocumentPanel = showDocumentPanel && !compactWorkbench;
+  const showMobileDocumentPanel = showDocumentPanel && compactWorkbench;
   const isPublished = Boolean(publishState?.isPublished);
   const hasUnpublishedChanges = Boolean(isPublished && (state.isDirty || publishState?.hasUnpublishedChanges));
   const cloudWs = currentVaultBinding ? state.cloudWorkspaces.find((w) => w.id === currentVaultBinding.workspaceId) : undefined;
@@ -349,6 +356,22 @@ export function EditorShell() {
   const publishedUrl = (state.syncSiteUrl || state.cloudProfile?.siteUrl) && wsSlug && state.currentRelativePath
     ? `${(state.syncSiteUrl || state.cloudProfile?.siteUrl || "").replace(/\/$/, "")}/${wsSlug}/${normalizePath(state.currentRelativePath).replace(/\.(md|markdown|mdown|mkd)$/i, "")}`
     : "";
+
+  useEffect(() => {
+    if (compactWorkbench && state.editorMode === "split") {
+      dispatch({ type: "SET_EDITOR_MODE", mode: "write" });
+    }
+  }, [compactWorkbench, dispatch, state.editorMode]);
+
+  useEffect(() => {
+    if (!compactWorkbench) {
+      compactPanelInitializedRef.current = false;
+      return;
+    }
+    if (compactPanelInitializedRef.current) return;
+    compactPanelInitializedRef.current = true;
+    if (state.documentPanelOpen) dispatch({ type: "TOGGLE_DOCUMENT_PANEL" });
+  }, [compactWorkbench, dispatch]);
 
   const handleInput = useCallback(() => {
     if (isCloudViewer) return;
@@ -439,7 +462,7 @@ export function EditorShell() {
   useEffect(() => {
     if (!previewRef.current || state.currentKind !== "markdown") return;
     // Skip rendering when preview is not visible (write mode)
-    if (state.editorMode === "write") return;
+    if (effectiveEditorMode === "write") return;
     // Debounce preview rendering to avoid rapid DOM thrashing
     if (previewTimerRef.current) clearTimeout(previewTimerRef.current);
     const container = previewRef.current;
@@ -452,7 +475,7 @@ export function EditorShell() {
     return () => {
       if (previewTimerRef.current) clearTimeout(previewTimerRef.current);
     };
-  }, [state.editorContent, state.currentKind, state.editorMode, populateBoardEmbeds, resolveLocalImages]);
+  }, [state.editorContent, state.currentKind, effectiveEditorMode, populateBoardEmbeds, resolveLocalImages]);
 
   const isFavorite = (() => {
     if (!state.currentPath) return false;
@@ -721,6 +744,26 @@ export function EditorShell() {
 
   useScrollSync(editorRef, previewRef, !!state.currentPath && state.currentKind === "markdown");
 
+  const documentInfoSections = (
+    <>
+      <PropertiesSection />
+      <OutlineSection />
+      {state.currentKind === "markdown" && (
+        <PublishSection
+          publishState={publishState}
+          isPublished={isPublished}
+          hasUnpublishedChanges={hasUnpublishedChanges}
+          publishedUrl={publishedUrl}
+          canPublish={canPublishToCloud && canEditMarkdown}
+          isLoading={state.isLoading}
+          onPublish={publishCurrentDocument}
+          onUnpublish={unpublishCurrentDocument}
+        />
+      )}
+      <LinksSection />
+    </>
+  );
+
   return (
     <section
       className="relative flex min-h-0 flex-col bg-[#fbfdfb]"
@@ -730,9 +773,9 @@ export function EditorShell() {
       style={{ "--jtype-zoom": state.zoomLevel } as React.CSSProperties}
     >
       <FindBar />
-      <SlashMenu enabled={canEditMarkdown && (state.editorMode === "write" || state.editorMode === "split")} />
+      <SlashMenu enabled={canEditMarkdown && (effectiveEditorMode === "write" || effectiveEditorMode === "split")} />
       <ZoomIndicator />
-      <div className="relative z-30 flex min-h-[56px] min-w-0 items-center justify-between gap-3 bg-white/60 px-5 backdrop-blur-xl">
+      <div className={`relative z-30 flex min-h-[56px] min-w-0 items-center justify-between gap-3 bg-white/60 backdrop-blur-xl ${compactWorkbench ? "px-3" : "px-5"}`}>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <div className="flex min-w-0 items-baseline gap-1">
@@ -893,7 +936,7 @@ export function EditorShell() {
       </div>
 
       {isMarkdown && (
-      <div className="flex min-h-12 min-w-0 items-center gap-1 overflow-x-auto bg-[#fbfdfb] px-5">
+      <div className={`flex min-w-0 items-center gap-1 overflow-x-auto bg-[#fbfdfb] ${capabilities.isTouchPrimary ? "min-h-14 px-3 [&_.editor-tool]:h-11 [&_.editor-tool]:min-w-11" : "min-h-12 px-5"}`}>
         <EditorToolbarButton command="editor.bold" title={t`Bold - Ctrl+B`} disabled={!canEditMarkdown} runCommand={runCommand} tooltipProps={tooltipProps(t`Bold - Ctrl+B`)}>
           <BoldIcon className="h-4 w-4" />
         </EditorToolbarButton>
@@ -920,9 +963,11 @@ export function EditorShell() {
         </EditorToolbarButton>
         <div className="ml-auto shrink-0">
           <ViewModeToggle
-            mode={state.editorMode}
+            mode={effectiveEditorMode}
             onModeChange={(mode) => dispatch({ type: "SET_EDITOR_MODE", mode })}
             tooltipProps={tooltipProps}
+            allowSplit={!compactWorkbench}
+            touchOptimized={capabilities.isTouchPrimary}
           />
         </div>
         {showVaultDocumentTools && (
@@ -940,7 +985,7 @@ export function EditorShell() {
 
       {isMarkdown && <CardPropertyStrip content={state.editorContent} />}
 
-      <div id="workbench-body" className={`workbench-body grid min-h-0 flex-1 bg-[#fbfdfb] ${showDocumentPanel ? "grid-cols-[minmax(0,1fr)_340px]" : "grid-cols-[minmax(0,1fr)]"}`}>
+      <div id="workbench-body" className={`workbench-body grid min-h-0 flex-1 bg-[#fbfdfb] ${showDesktopDocumentPanel ? "grid-cols-[minmax(0,1fr)_340px]" : "grid-cols-[minmax(0,1fr)]"}`}>
         {isBoardView ? (
           <BoardView boardPath={state.currentPath} boardRelativePath={state.currentRelativePath} />
         ) : isAssetView ? (
@@ -954,11 +999,11 @@ export function EditorShell() {
             onSave={(next) => void fs.saveCurrentFile(next)}
           />
         ) : (
-        <div className={getGridClass(state.editorMode)} style={{ position: "relative" }}>
+        <div className={getGridClass(effectiveEditorMode)} style={{ position: "relative" }}>
           <textarea
             id="editor"
             ref={editorRef}
-            className="h-full min-h-0 w-full resize-none bg-white/40 p-8 font-mono leading-7 text-stone-800 outline-none placeholder:text-[#9aa6a1]"
+            className={`h-full min-h-0 w-full resize-none bg-white/40 font-mono leading-7 text-stone-800 outline-none placeholder:text-[#9aa6a1] ${compactWorkbench ? "p-5" : "p-8"}`}
             style={{ position: "relative", zIndex: 2, fontSize: "calc(13px * var(--jtype-zoom, 1))" }}
             spellCheck={false}
             aria-label={t`Markdown editor`}
@@ -972,7 +1017,7 @@ export function EditorShell() {
           <article
             id="preview"
             ref={previewRef}
-            className="preview empty min-h-0 overflow-y-auto overflow-x-hidden border-l border-black/[0.04] bg-[#f8fbf9] p-10"
+            className={`preview empty min-h-0 overflow-y-auto overflow-x-hidden border-l border-black/[0.04] bg-[#f8fbf9] ${compactWorkbench ? "p-5" : "p-10"}`}
             style={{ position: "relative", zIndex: 1, fontSize: "calc(16px * var(--jtype-zoom, 1))" }}
             onClick={handlePreviewClick}
           >
@@ -982,7 +1027,7 @@ export function EditorShell() {
         </div>
         )}
 
-        {showDocumentPanel && (
+        {showDesktopDocumentPanel && (
           <aside id="document-panel" className="min-h-0 overflow-y-auto border-l border-black/[0.04] bg-[#f6faf7] p-5">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
@@ -993,24 +1038,41 @@ export function EditorShell() {
                 <XMarkIcon className="h-4 w-4" />
               </button>
             </div>
-            <PropertiesSection />
-            <OutlineSection />
-            {state.currentKind === "markdown" && (
-              <PublishSection
-                publishState={publishState}
-                isPublished={isPublished}
-                hasUnpublishedChanges={hasUnpublishedChanges}
-                publishedUrl={publishedUrl}
-                canPublish={canPublishToCloud && canEditMarkdown}
-                isLoading={state.isLoading}
-                onPublish={publishCurrentDocument}
-                onUnpublish={unpublishCurrentDocument}
-              />
-            )}
-            <LinksSection />
+            {documentInfoSections}
           </aside>
         )}
       </div>
+
+      <Dialog
+        open={showMobileDocumentPanel}
+        onClose={() => {
+          if (state.documentPanelOpen) dispatch({ type: "TOGGLE_DOCUMENT_PANEL" });
+        }}
+        className="relative z-[75]"
+      >
+        <DialogBackdrop transition className="fixed inset-0 bg-stone-950/30 backdrop-blur-sm transition data-[closed]:opacity-0" />
+        <div className="fixed inset-0 flex items-end overflow-hidden">
+          <DialogPanel
+            id="document-panel"
+            transition
+            className="flex max-h-[92dvh] w-full flex-col rounded-t-3xl bg-[#f6faf7] shadow-2xl shadow-stone-950/25 transition duration-200 data-[closed]:translate-y-full"
+            style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+          >
+            <div className="flex items-center justify-between gap-3 border-b border-black/[0.04] px-5 py-4">
+              <div>
+                <DialogTitle className="text-sm font-semibold text-stone-950"><Trans>Document Info</Trans></DialogTitle>
+                <p className="text-xs text-[#6b7773]"><Trans>Properties, outline, links, and publish.</Trans></p>
+              </div>
+              <button className="toolbar-button aspect-square px-0" type="button" title={t`Hide`} onClick={() => dispatch({ type: "TOGGLE_DOCUMENT_PANEL" })}>
+                <XMarkIcon className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="min-h-0 flex-1 overflow-y-auto p-5">
+              {documentInfoSections}
+            </div>
+          </DialogPanel>
+        </div>
+      </Dialog>
 
       {contextMenu && (
         <div

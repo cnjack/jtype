@@ -583,6 +583,25 @@ test("adapts the shared welcome screen to app-private mobile storage", async ({ 
   await expect(page.locator("#mobile-vault-navigation #workspace-sidebar")).toBeVisible();
   await page.locator("#mobile-vault-navigation").getByRole("button", { name: "Close" }).click();
   await expect(page.locator("#mobile-vault-navigation")).toBeHidden();
+
+  await page.locator("#mobile-navigation-button").click();
+  await page.locator("#mobile-vault-navigation #workspace-sidebar").getByRole("button", { name: /intro\.md/ }).click();
+  await expect(page.locator("#mobile-vault-navigation")).toBeHidden();
+
+  await expect(page.getByLabel("Markdown editor")).toBeVisible();
+  await expect(page.locator("#preview")).toBeHidden();
+  await expect(page.getByTitle("Split")).toBeHidden();
+  await page.getByTitle("Preview").click();
+  await expect(page.locator("#preview")).toBeVisible();
+  await expect(page.locator("#preview")).toContainText("Hello from workspace.");
+
+  await page.getByRole("button", { name: "Document info" }).click();
+  await expect(page.locator("#document-panel")).toBeVisible();
+  await expect(page.locator("#properties-panel")).toBeVisible();
+  await page.getByLabel("title").fill("Mobile title");
+  await expect(page.getByLabel("Markdown editor")).toHaveValue(/title: Mobile title/);
+  await page.locator("#document-panel").getByRole("button", { name: "Hide" }).click();
+  await expect(page.locator("#document-panel")).toBeHidden();
 });
 
 test("edits and saves the current markdown file", async ({ page }) => {

@@ -110,18 +110,18 @@
 
 ### 1.2 Markdown 文档工作台
 
-- [ ] 复用 `EditorShell`、Markdown pipeline、toolbar 与 command system
-- [ ] phone 使用 Write / Preview tabs；tablet 空间允许时使用现有 Split；desktop 保持 Write / Split / Preview
-- [ ] 处理软键盘、selection、滚动同步、编辑器聚焦和 unsaved state
+- [x] 复用 `EditorShell`、Markdown pipeline、toolbar 与 command system
+- [~] phone 已使用 Write / Preview tabs、desktop 保持 Write / Split / Preview；tablet Split breakpoint 待完成
+- [~] selection、滚动同步、编辑器聚焦和 unsaved state 复用现有实现；软键盘真机 smoke test 待完成
 - [ ] desktop 右键动作在 touch 上提供 long-press 或显式 action menu，命令实现仍复用一份
 - [ ] 文件列表、创建、重命名、移动、删除与保存均可在触摸设备完成
 
 ### 1.3 Document Info
 
-- [ ] 抽取并复用 `DocumentInfoContent`
-- [ ] desktop 继续作为右侧 inspector
-- [ ] phone 使用 Headless UI `Dialog` / `DialogPanel` 全屏或底部 sheet；tablet 可使用右侧 inspector
-- [ ] Properties、Outline、Publish、Links 的字段、校验和动作与 desktop 一致
+- [x] Document Info sections 只有一份渲染与业务实现，由 desktop inspector 和 mobile sheet 共用
+- [x] desktop 继续作为右侧 inspector
+- [~] phone 已使用 Headless UI `Dialog` / `DialogPanel` 底部 sheet；tablet 右侧 inspector breakpoint 待完成
+- [x] Properties、Outline、Publish、Links 的字段、校验和动作与 desktop 一致
 
 ### 1.4 Board
 
@@ -235,7 +235,8 @@
 | 2026-07-18 | 0.4 | `7952226` | 使用 app-private 路径，增加 mobile lifecycle 与外部文件 URI 边界 | `docs/mobile/reports/phase-0.md` |
 | 2026-07-18 | 0.4 | `a60ed04` | 修正 mobile 欢迎页私有库提示，隐藏未支持的 external vault 操作 | `docs/mobile/reports/phase-0.md` |
 | 2026-07-18 | 0.5 | `d57e016` | 双模拟器启动、Android 私有库、desktop 回归与截图报告 | `docs/mobile/reports/phase-0.md` |
-| 2026-07-18 | 1.1 | 待提交 | phone 单栏 app shell、复用 Sidebar drawer、safe-area header/footer 与 compact VaultHome | Phase 1 report 待完成 |
+| 2026-07-18 | 1.1 | `9828de6` | phone 单栏 app shell、复用 Sidebar drawer、safe-area header/footer 与 compact VaultHome | Phase 1 report 待完成 |
+| 2026-07-18 | 1.2–1.3 | 待提交 | phone Write/Preview、触控 toolbar 与复用 Document Info bottom sheet | Phase 1 report 待完成 |
 
 ## 当前环境审计（2026-07-18）
 
