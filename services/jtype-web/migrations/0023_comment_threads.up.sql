@@ -1,12 +1,16 @@
 -- Comment threads (one-level replies), resolve state, and emoji reactions.
 -- parent_id: a reply points at its ROOT comment (the API flattens deeper
 -- nesting to one level). resolved_at/resolved_by mark a whole thread resolved.
-ALTER TABLE card_comments
-  ADD COLUMN parent_id CHAR(36) NULL,
-  ADD COLUMN resolved_at TIMESTAMP NULL DEFAULT NULL,
-  ADD COLUMN resolved_by CHAR(36) NULL,
-  ADD KEY idx_card_comments_parent (parent_id),
-  ADD CONSTRAINT card_comments_parent_fk FOREIGN KEY (parent_id) REFERENCES card_comments(id) ON DELETE CASCADE;
+--
+-- One schema change per ALTER statement: some MySQL-compatible engines (TiDB)
+-- resolve KEY/CONSTRAINT clauses against the pre-alter schema, so a single
+-- ALTER that adds a column and an index/foreign key on it fails with error
+-- 1072 ("column does not exist: parent_id").
+ALTER TABLE card_comments ADD COLUMN parent_id CHAR(36) NULL;
+ALTER TABLE card_comments ADD COLUMN resolved_at TIMESTAMP NULL DEFAULT NULL;
+ALTER TABLE card_comments ADD COLUMN resolved_by CHAR(36) NULL;
+ALTER TABLE card_comments ADD KEY idx_card_comments_parent (parent_id);
+ALTER TABLE card_comments ADD CONSTRAINT card_comments_parent_fk FOREIGN KEY (parent_id) REFERENCES card_comments(id) ON DELETE CASCADE;
 
 CREATE TABLE comment_reactions (
   id CHAR(36) NOT NULL,
