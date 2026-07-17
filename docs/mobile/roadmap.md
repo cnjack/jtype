@@ -62,8 +62,8 @@
 
 - [x] 安装 Rust Android targets：`aarch64-linux-android`、`armv7-linux-androideabi`、`i686-linux-android`、`x86_64-linux-android`
 - [x] 安装 Rust iOS targets：`aarch64-apple-ios`、`aarch64-apple-ios-sim`、`x86_64-apple-ios`
-- [~] 配置 Android SDK / NDK / emulator，并创建可启动的 Android Virtual Device（`JType_API_36_1` 已创建，待启动验收）
-- [~] 安装 iOS Simulator runtime，并创建可启动的 iPhone Simulator（iOS 26.5 / iPhone 17 Pro 已存在，待启动验收）
+- [x] 配置 Android SDK / NDK / emulator，并创建、冷启动 Android Virtual Device `JType_API_36_1`
+- [x] 安装 iOS Simulator runtime，并启动 iOS 26.5 / iPhone 17 Pro Simulator
 - [x] 运行 `tauri android init` 与 `tauri ios init`，将生成工程纳入版本控制
 - [x] 增加便于重复执行的 mobile dev/build scripts
 
@@ -85,13 +85,13 @@
 
 ### 0.5 Phase 0 验收
 
-- [ ] `pnpm build`
-- [ ] `cargo test --manifest-path src-tauri/Cargo.toml`
-- [ ] `pnpm exec playwright test tests/e2e/app.spec.ts`
-- [ ] macOS desktop app 启动，empty / vault home / document 三种模式未回归
-- [ ] Android Emulator 启动 JType，共享 React app 显示成功，无启动崩溃
-- [ ] iOS Simulator 启动 JType，共享 React app 显示成功，无启动崩溃
-- [ ] Android 与 iOS 截图已保存，报告：`docs/mobile/reports/phase-0.md`
+- [x] `pnpm build`
+- [x] `cargo test --manifest-path src-tauri/Cargo.toml`
+- [x] `pnpm exec playwright test tests/e2e/app.spec.ts`（31 passed）
+- [x] macOS desktop binary 原生启动无崩溃；empty / vault home / document 等模式由同一轮 app E2E 验证
+- [x] Android Emulator 启动 JType，共享 React app 显示成功，无启动崩溃，并创建 app-private 默认库
+- [x] iOS Simulator 启动 JType，共享 React app 显示成功，无启动崩溃
+- [x] Android 与 iOS 截图已保存，报告：`docs/mobile/reports/phase-0.md`
 - [ ] tracking 已记录 Phase 0 commit hash
 
 ## Phase 1 — Desktop feature parity on mobile
@@ -232,7 +232,9 @@
 | 2026-07-18 | 0.1 | `8fb34eb` | 建立 mobile roadmap、阶段门禁与证据规范 | 本文 |
 | 2026-07-18 | 0.1 | `7425311` | 冻结 mobile 开发前的 desktop 测试基线 | `docs/mobile/reports/desktop-baseline.md` |
 | 2026-07-18 | 0.2–0.3 | `c4386df` | 生成 Android/iOS 工程、拆分平台 capability、增加 runtime capability contract | Phase 0 report 待完成 |
-| 2026-07-18 | 0.4 | 待提交 | 使用 app-private 路径，增加 mobile lifecycle 与外部文件 URI 边界 | Phase 0 report 待完成 |
+| 2026-07-18 | 0.4 | `7952226` | 使用 app-private 路径，增加 mobile lifecycle 与外部文件 URI 边界 | `docs/mobile/reports/phase-0.md` |
+| 2026-07-18 | 0.4 | `a60ed04` | 修正 mobile 欢迎页私有库提示，隐藏未支持的 external vault 操作 | `docs/mobile/reports/phase-0.md` |
+| 2026-07-18 | 0.5 | 待提交 | 双模拟器启动、Android 私有库、desktop 回归与截图报告 | `docs/mobile/reports/phase-0.md` |
 
 ## 当前环境审计（2026-07-18）
 
