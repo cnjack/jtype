@@ -6,6 +6,7 @@ export function usePeriodicSync(
   intervalMs: number,
   enabled: boolean,
   wsConnected: boolean = false,
+  recoveryEvents: boolean = true,
 ) {
   const syncingRef = useRef(false);
   const lastSyncRef = useRef(0);
@@ -35,7 +36,7 @@ export function usePeriodicSync(
   }, [enabled, effectiveInterval, syncFn]);
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled || !recoveryEvents) return;
 
     const onFocus = async () => {
       if (document.hidden) return;
@@ -56,10 +57,10 @@ export function usePeriodicSync(
 
     document.addEventListener("visibilitychange", onFocus);
     return () => document.removeEventListener("visibilitychange", onFocus);
-  }, [enabled, pullFn]);
+  }, [enabled, pullFn, recoveryEvents]);
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled || !recoveryEvents) return;
 
     const onOnline = async () => {
       if (syncingRef.current) return;
@@ -79,5 +80,5 @@ export function usePeriodicSync(
 
     window.addEventListener("online", onOnline);
     return () => window.removeEventListener("online", onOnline);
-  }, [enabled, pullFn]);
+  }, [enabled, pullFn, recoveryEvents]);
 }

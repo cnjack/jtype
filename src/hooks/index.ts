@@ -6,4 +6,6 @@ export { useEagerSync } from "./useEagerSync";
 export { useCloudEvents } from "./useCloudEvents";
 export { useDraftCloseGuard } from "./useDraftCloseGuard";
 export { useAppLifecycle } from "./useAppLifecycle";
+export { useMobileSyncRecovery } from "./useMobileSyncRecovery";
+export type { MobileSyncRecoveryReason } from "./useMobileSyncRecovery";
 export type { CommandDef } from "./useCommands";

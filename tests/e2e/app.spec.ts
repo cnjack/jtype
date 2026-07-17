@@ -16,6 +16,8 @@ declare global {
     __RUNTIME_CAPABILITIES__?: Record<string, unknown>;
     __CLOUD_PROFILE__?: Record<string, unknown>;
     __START_LISTENER_ARGS__?: Record<string, unknown>;
+    __START_LISTENER_CALLS__: Record<string, unknown>[];
+    __STOP_LISTENER_CALLS__: number;
     __SYNC_CLIENT_TYPES__: Array<string | null>;
     __E2E_INSTALL_BOARD__?: () => void;
     __DIALOG_OPEN_RESULT__?: string | string[] | null;
@@ -24,6 +26,7 @@ declare global {
     __LAST_SHARE_PDF_ARGS__?: Record<string, unknown>;
     __LAST_BINARY_WRITE_ARGS__?: Record<string, unknown>;
     __INITIAL_EXTERNAL_SOURCES_JSON__?: string;
+    __EMIT_TAURI_EVENT__: (event: string, payload: unknown) => number;
   }
 }
 
@@ -74,6 +77,8 @@ test.beforeEach(async ({ page }) => {
 
     let callbackId = 0;
     let eventId = 0;
+    const tauriCallbacks = new Map<number, (value: unknown) => void>();
+    const eventSubscriptions = new Map<number, { event: string; handler: number }>();
     const trashItems: Array<{ trashId: string; relativePath: string; name: string; trashedAt: number; content: string }> = [];
     const workspaceSnapshot = () => JSON.parse(JSON.stringify(workspace));
     const removeWorkspaceEntry = (entries: Array<{ relativePath: string; path: string; children: unknown[] }>, relativePath: string): boolean => {
@@ -171,6 +176,8 @@ test.beforeEach(async ({ page }) => {
       __TRASH_METADATA__: { lastSyncedClock: 0, pendingTrashOps: [] },
       __VAULT_BINDINGS__: [],
       __SYNC_CLIENT_TYPES__: [],
+      __START_LISTENER_CALLS__: [],
+      __STOP_LISTENER_CALLS__: 0,
       __VAULT_SETTINGS__: {
         "C:/workspace": {
           cloudSyncEnabled: true,
@@ -179,16 +186,29 @@ test.beforeEach(async ({ page }) => {
         },
       },
       __E2E_INSTALL_BOARD__: installBoardFixture,
+      __EMIT_TAURI_EVENT__: (event: string, payload: unknown) => {
+        let invoked = 0;
+        for (const [id, subscription] of eventSubscriptions) {
+          if (subscription.event !== event) continue;
+          tauriCallbacks.get(subscription.handler)?.({ event, id, payload });
+          invoked += 1;
+        }
+        return invoked;
+      },
       __TAURI_EVENT_PLUGIN_INTERNALS__: {
-        unregisterListener: () => undefined,
+        unregisterListener: (_event: string, id: number) => eventSubscriptions.delete(id),
       },
       __TAURI_INTERNALS__: {
         metadata: {
           currentWindow: { label: "main" },
           currentWebview: { label: "main" },
         },
-        transformCallback: () => ++callbackId,
-        unregisterCallback: () => undefined,
+        transformCallback: (callback: (value: unknown) => void) => {
+          const id = ++callbackId;
+          tauriCallbacks.set(id, callback);
+          return id;
+        },
+        unregisterCallback: (id: number) => tauriCallbacks.delete(id),
         convertFileSrc: (path: string) => path,
         invoke: async (cmd: string, args: Record<string, unknown>) => {
           if (cmd === "runtime_capabilities") {
@@ -250,8 +270,15 @@ test.beforeEach(async ({ page }) => {
             return null;
           }
           if (cmd === "open_default_vault") return { ...workspaceSnapshot(), rootPath: "C:/Users/Jack/Documents/.jtype", name: ".jtype", metadataCreated: true };
-          if (cmd === "plugin:event|listen") return ++eventId;
-          if (cmd === "plugin:event|unlisten") return null;
+          if (cmd === "plugin:event|listen") {
+            const id = ++eventId;
+            eventSubscriptions.set(id, { event: String(args.event), handler: Number(args.handler) });
+            return id;
+          }
+          if (cmd === "plugin:event|unlisten") {
+            eventSubscriptions.delete(Number(args.eventId));
+            return null;
+          }
           if (cmd === "plugin:updater|check") return null;
           if (cmd === "plugin:dialog|open") {
             const options = args.options as { directory?: boolean };
@@ -438,7 +465,16 @@ test.beforeEach(async ({ page }) => {
                 });
               }
             }
-            return { workspace: workspaceSnapshot(), writtenPaths: docs.map((doc) => doc.relativePath) };
+            const snapshot = workspaceSnapshot();
+            const rootPath = String(args.rootPath);
+            return {
+              workspace: {
+                ...snapshot,
+                rootPath,
+                name: rootPath.split(/[\\/]/).pop() || snapshot.name,
+              },
+              writtenPaths: docs.map((doc) => doc.relativePath),
+            };
           }
           if (cmd === "apply_deleted_cloud_folders") return workspaceSnapshot();
           if (cmd === "collect_asset_paths") return [];
@@ -446,9 +482,14 @@ test.beforeEach(async ({ page }) => {
           if (cmd === "save_asset_sync_state") return null;
           if (cmd === "start_cloud_listener") {
             window.__START_LISTENER_ARGS__ = args;
+            window.__START_LISTENER_CALLS__.push(args);
             return null;
           }
-          if (cmd === "stop_cloud_listener" || cmd === "cloud_ws_send") return null;
+          if (cmd === "stop_cloud_listener") {
+            window.__STOP_LISTENER_CALLS__ += 1;
+            return null;
+          }
+          if (cmd === "cloud_ws_send") return null;
           throw new Error(`Unhandled invoke: ${cmd}`);
         },
       },
@@ -1086,6 +1127,114 @@ test("identifies shared cloud sync and websocket traffic as mobile", async ({ pa
   await page.locator("#account-sync").click();
   await expect(page.locator("#operation-log")).toContainText("Synced");
   await expect.poll(() => page.evaluate(() => window.__SYNC_CLIENT_TYPES__.at(-1))).toBe("mobile");
+});
+
+test("coalesces mobile network and foreground recovery while restarting its websocket", async ({ page }) => {
+  const defaultVaultPath = "C:/Users/Jack/Documents/.jtype";
+  await page.addInitScript((vaultPath) => {
+    window.__RUNTIME_CAPABILITIES__ = {
+      platform: "android",
+      clientType: "mobile",
+      isMobile: true,
+      isTouchPrimary: true,
+      prefersCompactLayout: true,
+      supportsWindowDrag: false,
+      supportsUpdater: false,
+      supportsProcessRestart: false,
+      supportsCliInstall: false,
+      supportsFileDrop: false,
+      supportsExternalVault: false,
+      usesAppPrivateVault: true,
+    };
+    window.__CLOUD_PROFILE__ = {
+      serverUrl: "http://localhost:13345",
+      username: "jack",
+      siteUrl: "http://localhost:8080/u/jack/workspace",
+      token: "test-token",
+      deviceId: "mobile-recovery-device",
+    };
+    window.__VAULT_BINDINGS__ = [{
+      workspaceId: "workspace-e2e",
+      workspaceName: "workspace",
+      workspaceSlug: "workspace",
+      workspaceRole: "owner",
+      localVaultPath: vaultPath,
+      lastPulledClock: 0,
+    }];
+    window.__VAULT_SETTINGS__[vaultPath] = {
+      cloudSyncEnabled: true,
+      syncPromptDismissedAt: new Date().toISOString(),
+      syncDisabledPermanently: false,
+    };
+  }, defaultVaultPath);
+  await page.reload();
+  await page.locator("#welcome-default-vault").click();
+  await expect.poll(() => page.evaluate(() => window.__START_LISTENER_CALLS__.length)).toBeGreaterThan(0);
+
+  const initialListenerStarts = await page.evaluate(() => window.__START_LISTENER_CALLS__.length);
+  const initialSyncs = await page.evaluate(() => window.__SYNC_REQUESTS__.length);
+  await page.evaluate(() => window.dispatchEvent(new Event("online")));
+  await expect.poll(() => page.evaluate(() => window.__START_LISTENER_CALLS__.length)).toBeGreaterThan(initialListenerStarts);
+  await expect.poll(() => page.evaluate(() => window.__SYNC_REQUESTS__.length)).toBeGreaterThan(initialSyncs);
+  await expect(page.locator("#operation-log")).toContainText("Synced");
+
+  const afterOnlineStarts = await page.evaluate(() => window.__START_LISTENER_CALLS__.length);
+  const afterOnlineSyncs = await page.evaluate(() => window.__SYNC_REQUESTS__.length);
+  const stopsBeforeBackground = await page.evaluate(() => window.__STOP_LISTENER_CALLS__);
+  const backgroundListenerCount = await page.evaluate(() => window.__EMIT_TAURI_EVENT__("app:lifecycle", "background"));
+  expect(backgroundListenerCount).toBeGreaterThan(0);
+  await expect.poll(() => page.evaluate(() => window.__STOP_LISTENER_CALLS__)).toBeGreaterThan(stopsBeforeBackground);
+
+  expect(await page.evaluate(() => window.__EMIT_TAURI_EVENT__("app:lifecycle", "active"))).toBeGreaterThan(0);
+  await page.evaluate(() => window.dispatchEvent(new Event("online")));
+  await expect.poll(() => page.evaluate(() => window.__START_LISTENER_CALLS__.length)).toBeGreaterThan(afterOnlineStarts);
+  await expect.poll(() => page.evaluate(() => window.__SYNC_REQUESTS__.length)).toBeGreaterThan(afterOnlineSyncs);
+
+  const afterResumeStarts = await page.evaluate(() => window.__START_LISTENER_CALLS__.length);
+  const afterResumeSyncs = await page.evaluate(() => window.__SYNC_REQUESTS__.length);
+  await page.waitForTimeout(100);
+  expect(await page.evaluate(() => window.__START_LISTENER_CALLS__.length)).toBe(afterResumeStarts);
+  expect(await page.evaluate(() => window.__SYNC_REQUESTS__.length)).toBe(afterResumeSyncs);
+});
+
+test("keeps desktop websocket lifecycle unchanged by page visibility and online events", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__CLOUD_PROFILE__ = {
+      serverUrl: "http://localhost:13345",
+      username: "jack",
+      siteUrl: "http://localhost:8080/u/jack/workspace",
+      token: "test-token",
+      deviceId: "desktop-recovery-control",
+    };
+    window.__VAULT_BINDINGS__ = [{
+      workspaceId: "workspace-e2e",
+      workspaceName: "workspace",
+      workspaceSlug: "workspace",
+      workspaceRole: "owner",
+      localVaultPath: "C:/workspace",
+      lastPulledClock: 0,
+    }];
+  });
+  await page.reload();
+  await openWorkspace(page);
+  await expect.poll(() => page.evaluate(() => window.__START_LISTENER_CALLS__.length)).toBeGreaterThan(0);
+  await page.waitForTimeout(100);
+
+  const listenerStarts = await page.evaluate(() => window.__START_LISTENER_CALLS__.length);
+  const listenerStops = await page.evaluate(() => window.__STOP_LISTENER_CALLS__);
+  await page.evaluate(() => {
+    Object.defineProperty(document, "visibilityState", { configurable: true, value: "hidden" });
+    Object.defineProperty(document, "hidden", { configurable: true, value: true });
+    document.dispatchEvent(new Event("visibilitychange"));
+    Object.defineProperty(document, "visibilityState", { configurable: true, value: "visible" });
+    Object.defineProperty(document, "hidden", { configurable: true, value: false });
+    document.dispatchEvent(new Event("visibilitychange"));
+    window.dispatchEvent(new Event("online"));
+  });
+  await page.waitForTimeout(100);
+
+  expect(await page.evaluate(() => window.__START_LISTENER_CALLS__.length)).toBe(listenerStarts);
+  expect(await page.evaluate(() => window.__STOP_LISTENER_CALLS__)).toBe(listenerStops);
 });
 
 test("keeps an initial sync failure visible after binding", async ({ page }) => {

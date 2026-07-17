@@ -23,8 +23,15 @@ export function useAppLifecycle({ enabled, onResume, onBackground }: AppLifecycl
   useEffect(() => {
     if (!enabled) return;
 
-    const transition = (next: AppLifecycleState) => {
-      if (stateRef.current === next) return;
+    const transition = (next: AppLifecycleState, forceActive = false) => {
+      if (stateRef.current === next) {
+        // Mobile runtimes do not expose a matching Tauri "suspended" event on
+        // every platform. A native Resumed signal is therefore authoritative
+        // even when WebView visibility never reported the background state.
+        // Consumers coalesce a duplicate WebView + native resume burst.
+        if (forceActive && next === "active") onResumeRef.current();
+        return;
+      }
       stateRef.current = next;
       if (next === "active") onResumeRef.current();
       else onBackgroundRef.current?.();
@@ -36,7 +43,7 @@ export function useAppLifecycle({ enabled, onResume, onBackground }: AppLifecycl
     document.addEventListener("visibilitychange", onVisibilityChange);
 
     const unlisten = isTauriRuntime()
-      ? listen<AppLifecycleState>("app:lifecycle", (event) => transition(event.payload))
+      ? listen<AppLifecycleState>("app:lifecycle", (event) => transition(event.payload, event.payload === "active"))
       : Promise.resolve(() => undefined);
 
     return () => {

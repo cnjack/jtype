@@ -1,6 +1,7 @@
 import React, { useReducer, useCallback, useEffect, useRef, useState, createContext, useContext } from "react";
 import { appReducer, initialState, AppStateContext, AppDispatchContext } from "./AppState";
-import { useFileSystem, useCloudSync, useKeyboardShortcuts, useCommands, useDraftCloseGuard, useAppLifecycle } from "../hooks";
+import { useFileSystem, useCloudSync, useKeyboardShortcuts, useCommands, useDraftCloseGuard, useMobileSyncRecovery } from "../hooks";
+import type { MobileSyncRecoveryReason } from "../hooks";
 import { usePeriodicSync } from "../hooks/usePeriodicSync";
 import { useCloudEvents } from "../hooks/useCloudEvents";
 import { useFileWatcher } from "../hooks/useFileWatcher";
@@ -234,16 +235,8 @@ function AppContent() {
     30_000,
     isSyncEnabled,
     state.wsConnected,
+    !capabilities.isMobile,
   );
-
-  useAppLifecycle({
-    enabled: capabilities.isMobile,
-    onResume: useCallback(() => {
-      if (state.workspace && state.syncToken && currentBinding && currentVaultSettings?.cloudSyncEnabled !== false) {
-        void sync.pullOnly({ reason: "app-resume" }).catch(() => {});
-      }
-    }, [state.workspace, state.syncToken, currentBinding, currentVaultSettings?.cloudSyncEnabled, sync]),
-  });
 
   useEffect(() => {
     // Coalesce bursty vault mutations (e.g. dragging several files, rapid
@@ -268,21 +261,66 @@ function AppContent() {
     };
   }, []);
 
-  useEffect(() => {
-    if (!isTauriRuntime()) return;
-    if (!state.cloudProfile?.token || !currentBinding?.workspaceId || !state.cloudProfile?.deviceId || currentVaultSettings?.cloudSyncEnabled === false) return;
-
-    invoke("start_cloud_listener", {
+  const startCurrentCloudListener = useCallback(async () => {
+    if (!isTauriRuntime()) return false;
+    if (!state.cloudProfile?.token || !currentBinding?.workspaceId || !state.cloudProfile?.deviceId || currentVaultSettings?.cloudSyncEnabled === false) return false;
+    await invoke("start_cloud_listener", {
       serverUrl: state.cloudProfile.serverUrl,
       token: state.cloudProfile.token,
       workspaceId: currentBinding.workspaceId,
       deviceId: state.cloudProfile.deviceId,
       clientType: capabilities.clientType,
-    }).catch(() => {});
-    return () => {
-      invoke("stop_cloud_listener").catch(() => {});
-    };
+    });
+    return true;
   }, [capabilities.clientType, state.cloudProfile?.token, currentBinding?.workspaceId, state.cloudProfile?.deviceId, state.cloudProfile?.serverUrl, currentVaultSettings?.cloudSyncEnabled]);
+
+  const stopCurrentCloudListener = useCallback(async () => {
+    if (!isTauriRuntime()) return;
+    await invoke("stop_cloud_listener");
+  }, []);
+
+  const hasCurrentCloudListener = !!(
+    state.cloudProfile?.token &&
+    currentBinding?.workspaceId &&
+    state.cloudProfile?.deviceId &&
+    currentVaultSettings?.cloudSyncEnabled !== false
+  );
+  useEffect(() => {
+    if (!isTauriRuntime() || !hasCurrentCloudListener) return;
+    void startCurrentCloudListener().catch(() => {});
+    return () => {
+      void stopCurrentCloudListener().catch(() => {});
+    };
+  }, [hasCurrentCloudListener, startCurrentCloudListener, stopCurrentCloudListener]);
+
+  // Mobile suspension can leave the Rust WebSocket loop sleeping in an old
+  // backoff window. Restart it immediately, then run the same serialized sync
+  // used by desktop. The timestamp lets cloud:ws-connected avoid a duplicate
+  // pull when the socket comes back during this recovery run.
+  const lastMobileRecoveryAtRef = useRef(0);
+  const recoverMobileCloud = useCallback(async (_reason: MobileSyncRecoveryReason) => {
+    if (!isSyncEnabled) return;
+    lastMobileRecoveryAtRef.current = Date.now();
+    dispatch({ type: "SET_WS_CONNECTED", connected: false });
+    await startCurrentCloudListener().catch(() => false);
+    await sync.syncWorkspaceToWeb({
+      silent: true,
+      skipRelativePath: state.isDirty ? state.currentRelativePath || undefined : undefined,
+      propagateError: true,
+    });
+    await maybeReconcileRef.current();
+  }, [dispatch, isSyncEnabled, startCurrentCloudListener, state.currentRelativePath, state.isDirty, sync]);
+
+  const backgroundMobileCloud = useCallback(async () => {
+    dispatch({ type: "SET_WS_CONNECTED", connected: false });
+    await stopCurrentCloudListener();
+  }, [dispatch, stopCurrentCloudListener]);
+
+  useMobileSyncRecovery({
+    enabled: capabilities.isMobile && isSyncEnabled,
+    onRecover: recoverMobileCloud,
+    onBackground: backgroundMobileCloud,
+  });
 
   const workspaceRef = useRef(state.workspace);
   workspaceRef.current = state.workspace;
@@ -299,7 +337,8 @@ function AppContent() {
       // The server has no replay queue, so document:changed messages broadcast
       // while we were disconnected are gone. Pull once on reconnect to catch up.
       // (The first connect is skipped — the open-vault full pull covers it.)
-      if (hasConnectedOnceRef.current) {
+      const coveredByMobileRecovery = capabilities.isMobile && Date.now() - lastMobileRecoveryAtRef.current < 30_000;
+      if (hasConnectedOnceRef.current && !coveredByMobileRecovery) {
         syncRef.current.pullOnly({ reason: "ws-reconnect" })
           .then(() => maybeReconcileRef.current())
           .catch(() => {});
@@ -373,7 +412,7 @@ function AppContent() {
       unlistenWorkspaceGone.then((fn) => fn());
       unlistenMemberKicked.then((fn) => fn());
     };
-  }, []);
+  }, [capabilities.isMobile, dispatch]);
 
   useEffect(() => {
     if (!isTauriRuntime()) return;
