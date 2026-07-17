@@ -79,9 +79,9 @@
 
 - [x] 在 `src/lib/types.ts` 定义 canonical `RuntimeCapabilities`
 - [x] 增加唯一的 capability provider/hook，区分 touch、compact layout、window drag、updater、file drop、external vault 等能力
-- [ ] Tauri mobile lifecycle 能被应用层订阅，desktop 继续使用当前行为
-- [ ] 将 `HOME/Documents` / `~/.config` 依赖改造为 Tauri app data/config path；desktop 路径迁移保持向后兼容
-- [ ] 为文件 URI 与真实 filesystem path 建立 adapter 边界，不让 `content://` / security-scoped URL 直接进入现有 `std::fs` 命令
+- [x] Tauri mobile lifecycle 能被应用层订阅，desktop 继续使用当前行为
+- [x] 将 `HOME/Documents` / `~/.config` 依赖改造为 Tauri app data/config path；desktop 路径迁移保持向后兼容
+- [x] 为文件 URI 与真实 filesystem path 建立 adapter 边界，不让 `content://` / security-scoped URL 直接进入现有 `std::fs` 命令
 
 ### 0.5 Phase 0 验收
 
@@ -231,7 +231,8 @@
 | --- | --- | --- | --- | --- |
 | 2026-07-18 | 0.1 | `8fb34eb` | 建立 mobile roadmap、阶段门禁与证据规范 | 本文 |
 | 2026-07-18 | 0.1 | `7425311` | 冻结 mobile 开发前的 desktop 测试基线 | `docs/mobile/reports/desktop-baseline.md` |
-| 2026-07-18 | 0.2–0.3 | 待提交 | 生成 Android/iOS 工程、拆分平台 capability、增加 runtime capability contract | Phase 0 report 待完成 |
+| 2026-07-18 | 0.2–0.3 | `c4386df` | 生成 Android/iOS 工程、拆分平台 capability、增加 runtime capability contract | Phase 0 report 待完成 |
+| 2026-07-18 | 0.4 | 待提交 | 使用 app-private 路径，增加 mobile lifecycle 与外部文件 URI 边界 | Phase 0 report 待完成 |
 
 ## 当前环境审计（2026-07-18）
 

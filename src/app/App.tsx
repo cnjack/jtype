@@ -1,6 +1,6 @@
 import React, { useReducer, useCallback, useEffect, useRef, useState, createContext, useContext } from "react";
 import { appReducer, initialState, AppStateContext, AppDispatchContext } from "./AppState";
-import { useFileSystem, useCloudSync, useKeyboardShortcuts, useCommands, useDraftCloseGuard } from "../hooks";
+import { useFileSystem, useCloudSync, useKeyboardShortcuts, useCommands, useDraftCloseGuard, useAppLifecycle } from "../hooks";
 import { usePeriodicSync } from "../hooks/usePeriodicSync";
 import { useCloudEvents } from "../hooks/useCloudEvents";
 import { useFileWatcher } from "../hooks/useFileWatcher";
@@ -233,6 +233,15 @@ function AppContent() {
     state.wsConnected,
   );
 
+  useAppLifecycle({
+    enabled: capabilities.isMobile,
+    onResume: useCallback(() => {
+      if (state.workspace && state.syncToken && currentBinding && currentVaultSettings?.cloudSyncEnabled !== false) {
+        void sync.pullOnly({ reason: "app-resume" }).catch(() => {});
+      }
+    }, [state.workspace, state.syncToken, currentBinding, currentVaultSettings?.cloudSyncEnabled, sync]),
+  });
+
   useEffect(() => {
     // Coalesce bursty vault mutations (e.g. dragging several files, rapid
     // folder ops) into a single trailing sync instead of one per operation.
@@ -368,10 +377,19 @@ function AppContent() {
       const targetFile = event.payload.find((path) => /\.(md|markdown|mdown|mkd)$/i.test(path));
       if (targetFile) void openMarkdownFileRef.current(targetFile);
     });
+    const unlistenExternalUris = listen<string[]>("open-external-file-uris", (event) => {
+      if (event.payload.length > 0) {
+        dispatch({
+          type: "SET_STATUS",
+          message: "External file received. Mobile import will copy it into the current vault.",
+        });
+      }
+    });
     return () => {
       unlistenOpenMarkdown.then((fn) => fn());
+      unlistenExternalUris.then((fn) => fn());
     };
-  }, []);
+  }, [dispatch]);
 
   useEffect(() => {
     if (!isTauriRuntime() || !state.workspace) return;

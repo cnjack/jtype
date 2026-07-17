@@ -194,13 +194,13 @@ fn hex_value(byte: u8) -> Option<u8> {
 }
 
 #[tauri::command]
-fn default_vault_path() -> Result<String, String> {
-    Ok(path_to_string(&default_vault_dir()?))
+fn default_vault_path(app: AppHandle) -> Result<String, String> {
+    Ok(path_to_string(&default_vault_dir(&app)?))
 }
 
 #[tauri::command]
-fn open_default_vault() -> Result<WorkspaceSnapshot, String> {
-    let path = default_vault_dir()?;
+fn open_default_vault(app: AppHandle) -> Result<WorkspaceSnapshot, String> {
+    let path = default_vault_dir(&app)?;
     fs::create_dir_all(&path).map_err(|error| error.to_string())?;
     workspace::open_workspace(&path)
 }
@@ -430,8 +430,8 @@ fn load_sync_folder_bases(root_path: String) -> Result<Vec<String>, String> {
 }
 
 #[tauri::command]
-fn load_cloud_profile() -> Result<CloudProfile, String> {
-    let file = cloud_profile_file()?;
+fn load_cloud_profile(app: AppHandle) -> Result<CloudProfile, String> {
+    let file = cloud_profile_file(&app)?;
     if !file.exists() {
         return Ok(CloudProfile {
             server_url: "http://localhost:13345".to_string(),
@@ -452,7 +452,7 @@ fn load_cloud_profile() -> Result<CloudProfile, String> {
 }
 
 #[tauri::command]
-fn save_cloud_profile(profile: CloudProfile) -> Result<CloudProfile, String> {
+fn save_cloud_profile(app: AppHandle, profile: CloudProfile) -> Result<CloudProfile, String> {
     let mut next = profile;
     if next.server_url.trim().is_empty() {
         next.server_url = "http://localhost:13345".to_string();
@@ -460,17 +460,20 @@ fn save_cloud_profile(profile: CloudProfile) -> Result<CloudProfile, String> {
     if next.device_id.trim().is_empty() {
         next.device_id = device_id();
     }
-    write_json(&cloud_profile_file()?, &next)?;
+    write_json(&cloud_profile_file(&app)?, &next)?;
     Ok(next)
 }
 
 #[tauri::command]
-fn list_vault_bindings() -> Result<Vec<VaultBinding>, String> {
-    Ok(read_binding_store()?.bindings)
+fn list_vault_bindings(app: AppHandle) -> Result<Vec<VaultBinding>, String> {
+    Ok(read_binding_store(&app)?.bindings)
 }
 
 #[tauri::command]
-fn bind_cloud_workspace(binding: VaultBinding) -> Result<Vec<VaultBinding>, String> {
+fn bind_cloud_workspace(
+    app: AppHandle,
+    binding: VaultBinding,
+) -> Result<Vec<VaultBinding>, String> {
     if binding.workspace_id.trim().is_empty() {
         return Err("Cloud workspace id is required.".to_string());
     }
@@ -481,7 +484,7 @@ fn bind_cloud_workspace(binding: VaultBinding) -> Result<Vec<VaultBinding>, Stri
     if binding.workspace_role.trim().is_empty() {
         binding.workspace_role = default_workspace_role();
     }
-    let mut store = read_binding_store()?;
+    let mut store = read_binding_store(&app)?;
     store.bindings.retain(|item| {
         item.workspace_id != binding.workspace_id
             && item.local_vault_path != binding.local_vault_path
@@ -490,7 +493,7 @@ fn bind_cloud_workspace(binding: VaultBinding) -> Result<Vec<VaultBinding>, Stri
     store
         .bindings
         .sort_by(|left, right| left.workspace_name.cmp(&right.workspace_name));
-    write_json(&vault_bindings_file()?, &store)?;
+    write_json(&vault_bindings_file(&app)?, &store)?;
     Ok(store.bindings)
 }
 
@@ -671,7 +674,8 @@ fn safe_join(root: &Path, relative_path: &str) -> Result<PathBuf, String> {
     Ok(target)
 }
 
-fn default_vault_dir() -> Result<PathBuf, String> {
+#[cfg(desktop)]
+fn default_vault_dir(_app: &AppHandle) -> Result<PathBuf, String> {
     let home = env::var_os("USERPROFILE")
         .or_else(|| env::var_os("HOME"))
         .map(PathBuf::from)
@@ -679,7 +683,16 @@ fn default_vault_dir() -> Result<PathBuf, String> {
     Ok(home.join("Documents").join("Jtype Vaullt"))
 }
 
-fn config_dir() -> Result<PathBuf, String> {
+#[cfg(mobile)]
+fn default_vault_dir(app: &AppHandle) -> Result<PathBuf, String> {
+    app.path()
+        .app_data_dir()
+        .map(|base| base.join("vaults").join("default"))
+        .map_err(|error| error.to_string())
+}
+
+#[cfg(desktop)]
+fn config_dir(_app: &AppHandle) -> Result<PathBuf, String> {
     let base = env::var_os("APPDATA")
         .or_else(|| env::var_os("XDG_CONFIG_HOME"))
         .map(PathBuf::from)
@@ -690,16 +703,26 @@ fn config_dir() -> Result<PathBuf, String> {
     Ok(dir)
 }
 
-fn cloud_profile_file() -> Result<PathBuf, String> {
-    Ok(config_dir()?.join("cloud-profile.json"))
+#[cfg(mobile)]
+fn config_dir(app: &AppHandle) -> Result<PathBuf, String> {
+    let dir = app
+        .path()
+        .app_config_dir()
+        .map_err(|error| error.to_string())?;
+    fs::create_dir_all(&dir).map_err(|error| error.to_string())?;
+    Ok(dir)
 }
 
-fn vault_bindings_file() -> Result<PathBuf, String> {
-    Ok(config_dir()?.join("vault-bindings.json"))
+fn cloud_profile_file(app: &AppHandle) -> Result<PathBuf, String> {
+    Ok(config_dir(app)?.join("cloud-profile.json"))
 }
 
-fn read_binding_store() -> Result<VaultBindingStore, String> {
-    let file = vault_bindings_file()?;
+fn vault_bindings_file(app: &AppHandle) -> Result<PathBuf, String> {
+    Ok(config_dir(app)?.join("vault-bindings.json"))
+}
+
+fn read_binding_store(app: &AppHandle) -> Result<VaultBindingStore, String> {
+    let file = vault_bindings_file(app)?;
     if !file.exists() {
         return Ok(VaultBindingStore::default());
     }
@@ -816,13 +839,17 @@ struct VaultSettings {
 // ── Vault lifecycle commands ──
 
 #[tauri::command]
-fn unbind_cloud_workspace(workspace_id: String, vault_path: String) -> Result<(), String> {
+fn unbind_cloud_workspace(
+    app: AppHandle,
+    workspace_id: String,
+    vault_path: String,
+) -> Result<(), String> {
     // 1. Remove binding from vault-bindings.json
-    let mut store = read_binding_store()?;
+    let mut store = read_binding_store(&app)?;
     store
         .bindings
         .retain(|b| !(b.workspace_id == workspace_id && b.local_vault_path == vault_path));
-    write_json(&vault_bindings_file()?, &store)?;
+    write_json(&vault_bindings_file(&app)?, &store)?;
 
     // 2. Delete .jtype/sync-base/ directory
     let sync_base_dir = PathBuf::from(&vault_path).join(".jtype").join("sync-base");
@@ -843,8 +870,12 @@ fn clear_sync_bases(vault_path: String) -> Result<(), String> {
 }
 
 #[tauri::command]
-fn save_vault_settings(vault_path: String, settings: VaultSettings) -> Result<(), String> {
-    let file = vault_settings_file()?;
+fn save_vault_settings(
+    app: AppHandle,
+    vault_path: String,
+    settings: VaultSettings,
+) -> Result<(), String> {
+    let file = vault_settings_file(&app)?;
     let mut entries: std::collections::HashMap<String, VaultSettings> = if file.exists() {
         let content = fs::read_to_string(&file).map_err(|e| e.to_string())?;
         serde_json::from_str(&content).unwrap_or_default()
@@ -857,8 +888,11 @@ fn save_vault_settings(vault_path: String, settings: VaultSettings) -> Result<()
 }
 
 #[tauri::command]
-fn load_vault_settings(vault_path: String) -> Result<Option<VaultSettings>, String> {
-    let file = vault_settings_file()?;
+fn load_vault_settings(
+    app: AppHandle,
+    vault_path: String,
+) -> Result<Option<VaultSettings>, String> {
+    let file = vault_settings_file(&app)?;
     if !file.exists() {
         return Ok(None);
     }
@@ -868,8 +902,8 @@ fn load_vault_settings(vault_path: String) -> Result<Option<VaultSettings>, Stri
     Ok(entries.get(&vault_path).cloned())
 }
 
-fn vault_settings_file() -> Result<PathBuf, String> {
-    Ok(config_dir()?.join("vault-settings.json"))
+fn vault_settings_file(app: &AppHandle) -> Result<PathBuf, String> {
+    Ok(config_dir(app)?.join("vault-settings.json"))
 }
 
 #[tauri::command]
@@ -1033,14 +1067,24 @@ pub fn run() {
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
         .run(|_app, _event| {
+            #[cfg(mobile)]
+            if matches!(&_event, tauri::RunEvent::Resumed) {
+                let _ = _app.emit("app:lifecycle", "active");
+            }
+
             #[cfg(any(target_os = "macos", target_os = "ios", target_os = "android"))]
             if let tauri::RunEvent::Opened { urls } = _event {
-                let paths: Vec<String> = urls
-                    .into_iter()
-                    .filter_map(|url| url.to_file_path().ok())
-                    .filter(|path| workspace::is_markdown_path(path))
-                    .map(|path| path_to_string(&path))
-                    .collect();
+                let mut paths = Vec::new();
+                let mut external_uris = Vec::new();
+                for url in urls {
+                    match url.to_file_path() {
+                        Ok(path) if workspace::is_markdown_path(&path) => {
+                            paths.push(path_to_string(&path));
+                        }
+                        Ok(_) => {}
+                        Err(_) => external_uris.push(url.to_string()),
+                    }
+                }
 
                 if !paths.is_empty() {
                     let state = _app.state::<AppState>();
@@ -1050,6 +1094,11 @@ pub fn run() {
                         .unwrap()
                         .extend(paths.clone());
                     let _ = _app.emit("open-markdown-files", paths);
+                }
+                if !external_uris.is_empty() {
+                    // Mobile content:// and security-scoped URLs must go
+                    // through the import adapter. Never pass them to std::fs.
+                    let _ = _app.emit("open-external-file-uris", external_uris);
                 }
             }
         });

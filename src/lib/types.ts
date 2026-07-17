@@ -377,6 +377,8 @@ export type AppCommand = {
 
 export type RuntimePlatform = "desktop" | "android" | "ios";
 
+export type AppLifecycleState = "active" | "background";
+
 /**
  * The single platform contract consumed by the shared desktop/mobile app.
  * Components branch on capabilities, never on user-agent or Tauri globals.
