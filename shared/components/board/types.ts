@@ -147,4 +147,15 @@ export type BoardSurfaceProps = {
    * the HOST app's portals too. Desktop + web omit it (no-op).
    */
   portalClassName?: string;
+  /**
+   * Render the same board workbench in a narrow, single-screen container.
+   * Platforms own the breakpoint decision and pass it in; the shared board
+   * keeps one component and one action model for desktop, web, and mobile.
+   */
+  compact?: boolean;
+  /**
+   * Prefer scroll-safe gestures, persistent action affordances, and larger
+   * targets. Pointer drag is replaced by the explicit move actions when true.
+   */
+  touchOptimized?: boolean;
 };

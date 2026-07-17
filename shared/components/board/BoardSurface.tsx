@@ -30,6 +30,7 @@ import {
   TableCellsIcon,
   BookmarkIcon,
   Cog6ToothIcon,
+  ArrowRightIcon,
 } from "@heroicons/react/24/outline";
 import {
   COLUMN_COLORS,
@@ -92,6 +93,8 @@ export function BoardSurface({
   onCardOpen,
   peekComponent: PeekComponent,
   portalClassName,
+  compact = false,
+  touchOptimized = false,
 }: BoardSurfaceProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [multiSel, setMultiSel] = useState<Set<string>>(new Set());
@@ -214,7 +217,7 @@ export function BoardSurface({
     }
   };
   const onCardPointerMove = (e: ReactPointerEvent, card: BoardViewCard) => {
-    if (readOnly) return; // tap-to-open only; drag never starts
+    if (readOnly || touchOptimized) return; // tap-to-open only; drag never starts
     const d = cardDrag.current;
     if (!d || d.id !== card.id) return;
     if (!d.moved) {
@@ -262,7 +265,7 @@ export function BoardSurface({
   };
 
   const onColPointerDown = (e: ReactPointerEvent, col: BoardViewColumn) => {
-    if (!editableColumns || !actions.reorderColumns || e.button !== 0) return;
+    if (touchOptimized || !editableColumns || !actions.reorderColumns || e.button !== 0) return;
     if ((e.target as HTMLElement).closest("button")) return;
     colDrag.current = { key: col.key, startX: e.clientX, startY: e.clientY, moved: false };
     try {
@@ -324,10 +327,14 @@ export function BoardSurface({
   }
 
   return (
-    <div className="relative flex h-full min-h-0 bg-[#fbfdfb]">
+    <div
+      id="board-surface"
+      data-compact={compact ? "true" : "false"}
+      className="relative flex h-full min-h-0 bg-[#fbfdfb]"
+    >
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         {/* Header */}
-        <div className="flex flex-wrap items-center gap-2.5 border-b border-black/[0.05] bg-white/70 px-5 py-2.5">
+        <div className={`flex flex-wrap items-center border-b border-black/[0.05] bg-white/70 ${compact ? "gap-2 px-3 py-2" : "gap-2.5 px-5 py-2.5"}`}>
           <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-brand-soft text-brand-dark">
             <ViewColumnsIcon className="h-4 w-4" />
           </span>
@@ -340,7 +347,7 @@ export function BoardSurface({
               {vis.length !== cards.length ? `/${cards.length}` : ""} <Trans>cards</Trans>
             </p>
           </div>
-          <div className="flex items-center gap-2.5 max-md:w-full">
+          <div className={`flex items-center gap-2.5 max-md:w-full ${compact ? "overflow-x-auto pb-0.5" : ""}`}>
           <div className="inline-flex items-center rounded-lg border border-stone-200 p-0.5">
             <button
               type="button"
@@ -426,7 +433,7 @@ export function BoardSurface({
         </div>
 
         {/* Toolbar */}
-        <div className="flex flex-wrap items-center gap-2 border-b border-black/[0.04] bg-white/40 px-5 py-1.5">
+        <div className={`flex items-center gap-2 border-b border-black/[0.04] bg-white/40 ${compact ? "flex-nowrap overflow-x-auto px-3 py-2" : "flex-wrap px-5 py-1.5"}`}>
           {viewType === "board" && (
             <label className="inline-flex items-center gap-1 text-xs text-brand-gray">
               <RectangleGroupIcon className="h-3.5 w-3.5" />
@@ -535,7 +542,7 @@ export function BoardSurface({
             </MenuItems>
           </Menu>
 
-          <div className="relative ml-auto">
+          <div className="relative ml-auto shrink-0">
             <MagnifyingGlassIcon className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-stone-400" />
             <input className={`${ctrlCls} w-44 pl-7`} placeholder={t`Search cards`} value={search} onChange={(e) => setSearch(e.target.value)} />
           </div>
@@ -580,7 +587,7 @@ export function BoardSurface({
             onSelect={openCard}
           />
         ) : (
-          <div className="flex min-h-0 flex-1 items-stretch gap-3 overflow-x-auto p-4">
+          <div className={`flex min-h-0 flex-1 items-stretch overflow-x-auto ${compact ? "snap-x snap-mandatory gap-2 p-2" : "gap-3 p-4"}`}>
             {columns.map((col, colIndex) => {
               const colCards = sortCardsFn(vis.filter((c) => groupValueOf(c, groupKey) === col.key), sortBy);
               const showLine = (idx: number) => !!draggingId && manualSort && dropTarget?.col === col.key && dropTarget.index === idx;
@@ -613,7 +620,9 @@ export function BoardSurface({
                 <div
                   key={col.key}
                   data-col-key={col.key}
-                  className={`flex max-h-full w-72 shrink-0 flex-col rounded-xl border bg-[#f6faf7] transition-opacity ${
+                  className={`flex max-h-full shrink-0 flex-col rounded-xl border bg-[#f6faf7] transition-opacity ${
+                    compact ? "w-[calc(100vw-4.5rem)] max-w-80 snap-center" : "w-72"
+                  } ${
                     draggingCol === col.key ? "opacity-50" : ""
                   } ${isColDrop ? "border-brand/60" : dropTarget?.col === col.key ? "border-brand/40" : "border-black/[0.05]"}`}
                 >
@@ -626,7 +635,7 @@ export function BoardSurface({
                       onPointerDown={(e) => onColPointerDown(e, col)}
                       onPointerMove={(e) => onColPointerMove(e, col)}
                       onPointerUp={(e) => onColPointerUp(e, col)}
-                      className={`flex min-w-0 flex-1 select-none items-center gap-1.5 text-sm font-medium text-stone-700 ${editableColumns && actions.reorderColumns ? "cursor-grab touch-none active:cursor-grabbing" : ""}`}
+                      className={`flex min-w-0 flex-1 select-none items-center gap-1.5 text-sm font-medium text-stone-700 ${editableColumns && actions.reorderColumns && !touchOptimized ? "cursor-grab touch-none active:cursor-grabbing" : ""}`}
                     >
                       <button type="button" onClick={() => toggleCollapse(col.key)} title={t`Collapse column`} className="-ml-1 rotate-90 rounded p-0.5 text-stone-400 hover:bg-white hover:text-stone-600">
                         <ChevronRightIcon className="h-3.5 w-3.5" />
@@ -644,7 +653,7 @@ export function BoardSurface({
                     </div>
                     {editableColumns && !readOnly && hasColumnOps && (
                       <Menu as="div" className="relative shrink-0">
-                        <MenuButton className="rounded p-0.5 text-stone-400 hover:bg-white hover:text-stone-600">
+                        <MenuButton className={`rounded text-stone-400 hover:bg-white hover:text-stone-600 ${touchOptimized ? "flex min-h-11 min-w-11 items-center justify-center" : "p-0.5"}`}>
                           <EllipsisHorizontalIcon className="h-4 w-4" />
                         </MenuButton>
                         <MenuItems anchor="bottom end" className={`z-30 w-48 rounded-lg border border-black/[0.06] bg-white py-1 text-sm shadow-lg [--anchor-gap:4px] focus:outline-none${portalCls}`}>
@@ -730,10 +739,16 @@ export function BoardSurface({
                             onPointerDown={(e) => onCardPointerDown(e, card)}
                             onPointerMove={(e) => onCardPointerMove(e, card)}
                             onPointerUp={(e) => onCardPointerUp(e, card)}
+                            onPointerCancel={() => {
+                              cardDrag.current = null;
+                              setDraggingId(null);
+                              setDragPos(null);
+                              setDropTarget(null);
+                            }}
                             onKeyDown={(e) => {
                               if (e.key === "Enter") openCard(card);
                             }}
-                            className={`group relative block w-full cursor-pointer touch-none select-none rounded-lg bg-white p-2.5 text-left shadow-sm transition hover:ring-brand/30 ${
+                            className={`group relative block w-full cursor-pointer select-none rounded-lg bg-white p-2.5 text-left shadow-sm transition hover:ring-brand/30 ${touchOptimized ? "touch-manipulation" : "touch-none"} ${
                               draggingId === card.id ? "opacity-40" : ""
                             } ${
                               multiSel.has(card.id)
@@ -745,16 +760,45 @@ export function BoardSurface({
                           >
                             {!readOnly && (
                             <div
-                              className="absolute right-1 top-1 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100"
+                              className={`absolute right-1 top-1 transition-opacity focus-within:opacity-100 group-hover:opacity-100 ${touchOptimized ? "opacity-100" : "opacity-0"}`}
                               onClick={(e) => e.stopPropagation()}
                               onMouseDown={(e) => e.stopPropagation()}
                               onPointerDown={(e) => e.stopPropagation()}
                             >
                               <Menu as="div">
-                                <MenuButton className="rounded p-0.5 text-stone-400 hover:bg-stone-100 hover:text-stone-600">
+                                <MenuButton
+                                  aria-label={t`Actions for ${card.title}`}
+                                  className={`rounded text-stone-400 hover:bg-stone-100 hover:text-stone-600 ${touchOptimized ? "flex min-h-11 min-w-11 items-center justify-center" : "p-0.5"}`}
+                                >
                                   <EllipsisHorizontalIcon className="h-4 w-4" />
                                 </MenuButton>
-                                <MenuItems anchor="bottom end" className={`z-30 w-44 rounded-lg border border-black/[0.06] bg-white py-1 text-sm shadow-lg [--anchor-gap:4px] focus:outline-none${portalCls}`}>
+                                <MenuItems anchor="bottom end" className={`z-30 rounded-lg border border-black/[0.06] bg-white py-1 text-sm shadow-lg [--anchor-gap:4px] focus:outline-none ${touchOptimized ? "w-56" : "w-44"}${portalCls}`}>
+                                  {touchOptimized && columns.some((target) => target.key !== groupValueOf(card, groupKey)) && (
+                                    <>
+                                      <div className="px-3 py-1 text-[11px] font-medium uppercase tracking-wide text-stone-400">
+                                        <Trans>Move to…</Trans>
+                                      </div>
+                                      {columns
+                                        .filter((target) => target.key !== groupValueOf(card, groupKey))
+                                        .map((target) => (
+                                          <MenuItem key={target.key}>
+                                            <button
+                                              type="button"
+                                              aria-label={t`Move ${card.title} to ${target.name}`}
+                                              className="flex min-h-11 w-full items-center gap-2 px-3 text-left text-stone-700 data-[focus]:bg-stone-100"
+                                              onClick={() => {
+                                                const targetCount = cards.filter((candidate) => groupValueOf(candidate, groupKey) === target.key).length;
+                                                void actions.moveCard(card.id, target.key, targetCount);
+                                              }}
+                                            >
+                                              <ArrowRightIcon className="h-4 w-4" />
+                                              <span className="truncate">{target.name}</span>
+                                            </button>
+                                          </MenuItem>
+                                        ))}
+                                      <div className="my-1 border-t border-black/[0.05]" />
+                                    </>
+                                  )}
                                   {actions.openCardFull && (
                                     <MenuItem>
                                       <button type="button" className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-stone-700 data-[focus]:bg-stone-100" onClick={() => actions.openCardFull?.(card)}>
@@ -1067,8 +1111,12 @@ export function BoardSurface({
       )}
 
       {selected && PeekComponent && (
-        <div className="absolute right-0 top-0 z-30 h-full shadow-[-10px_0_30px_rgba(0,0,0,0.07)]" style={{ width: peekWidth }}>
-          <div
+        <div
+          id="board-card-peek"
+          className={`absolute top-0 z-30 h-full shadow-[-10px_0_30px_rgba(0,0,0,0.07)] ${compact ? "inset-x-0 w-full" : "right-0"}`}
+          style={compact ? { paddingBottom: "env(safe-area-inset-bottom)" } : { width: peekWidth }}
+        >
+          {!compact && <div
             onMouseDown={(e) => {
               e.preventDefault();
               const startX = e.clientX;
@@ -1083,7 +1131,7 @@ export function BoardSurface({
             }}
             title={t`Drag to resize`}
             className="absolute left-0 top-0 z-10 h-full w-1.5 -translate-x-1/2 cursor-col-resize transition-colors hover:bg-brand/40"
-          />
+          />}
           <PeekComponent
             card={selected}
             statusOptions={config.columns.map((c) => ({ value: c.key, label: c.name }))}

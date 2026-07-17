@@ -21,6 +21,7 @@ import { httpRequest } from "@shared/lib/http";
 import { tauri } from "../lib/tauri";
 import { basename, normalizePath } from "../lib/utils";
 import type { BoardConfig, BoardCard, CardTemplate } from "../lib/types";
+import { useRuntimeCapabilities } from "../app/RuntimeCapabilities";
 
 function rand(): string {
   return Math.random().toString(36).slice(2, 6);
@@ -34,6 +35,7 @@ function rand(): string {
 export function BoardView({ boardPath, boardRelativePath }: { boardPath: string; boardRelativePath: string }) {
   const state = useAppState();
   const dispatch = useAppDispatch();
+  const capabilities = useRuntimeCapabilities();
   const fs = useFileSystem();
   const prompt = usePrompt();
   const confirm = useConfirm();
@@ -502,6 +504,8 @@ export function BoardView({ boardPath, boardRelativePath }: { boardPath: string;
       fullscreen={state.focusMode}
       onToggleFullscreen={() => dispatch({ type: "TOGGLE_FOCUS_MODE" })}
       peekComponent={BoardPeek}
+      compact={capabilities.prefersCompactLayout}
+      touchOptimized={capabilities.isTouchPrimary}
     />
   );
 }

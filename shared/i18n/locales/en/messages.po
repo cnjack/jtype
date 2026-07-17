@@ -55,6 +55,11 @@ msgstr "Accept cloud"
 msgid "Accept local"
 msgstr "Accept local"
 
+#. placeholder {0}: card.title
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Actions for {0}"
+msgstr "Actions for {0}"
+
 #: ../../../shared/components/board/BoardPeek.tsx
 msgid "Activity"
 msgstr "Activity"
@@ -349,6 +354,16 @@ msgstr "Mermaid source"
 #: ../../../shared/components/board/BoardCalendar.tsx
 msgid "Month"
 msgstr "Month"
+
+#. placeholder {0}: card.title
+#. placeholder {1}: target.name
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Move {0} to {1}"
+msgstr "Move {0} to {1}"
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Move to…"
+msgstr "Move to…"
 
 #: ../../../shared/components/board/BoardSurface.tsx
 msgid "New card"

@@ -14,6 +14,7 @@ declare global {
     __VAULT_BINDINGS__: unknown[];
     __VAULT_SETTINGS__: Record<string, { cloudSyncEnabled: boolean; syncPromptDismissedAt: string | null; syncDisabledPermanently: boolean }>;
     __RUNTIME_CAPABILITIES__?: Record<string, unknown>;
+    __E2E_INSTALL_BOARD__?: () => void;
   }
 }
 
@@ -79,6 +80,77 @@ test.beforeEach(async ({ page }) => {
         entry.relativePath === relativePath ||
         hasWorkspaceEntry(entry.children as Array<{ relativePath: string; children: unknown[] }>, relativePath),
       );
+    const installBoardFixture = () => {
+      if (hasWorkspaceEntry(workspace.entries, "team.board")) return;
+      files["C:/workspace/team.board"] = JSON.stringify({
+        id: "team",
+        title: "Team board",
+        groupBy: "status",
+        columns: [
+          { key: "todo", name: "To do" },
+          { key: "done", name: "Done" },
+        ],
+        doneColumn: "done",
+      });
+      files["C:/workspace/team/plan-release.md"] =
+        "---\ntitle: Plan release\nboard: team\nstatus: todo\nposition: 0\npriority: high\n---\n\nShip the mobile app.";
+      workspace.entries.push(
+        {
+          name: "team.board",
+          path: "C:/workspace/team.board",
+          relativePath: "team.board",
+          kind: "board",
+          children: [],
+        },
+        {
+          name: "team",
+          path: "C:/workspace/team",
+          relativePath: "team",
+          kind: "folder",
+          children: [
+            {
+              name: "plan-release.md",
+              path: "C:/workspace/team/plan-release.md",
+              relativePath: "team/plan-release.md",
+              kind: "markdown",
+              children: [],
+            },
+          ],
+        },
+      );
+    };
+    const scanBoardFixture = (boardId: string) =>
+      Object.entries(files)
+        .filter(([path, content]) => path.endsWith(".md") && content.includes(`board: ${boardId}`))
+        .map(([path, content]) => {
+          const match = content.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
+          const data = Object.fromEntries(
+            (match?.[1] ?? "")
+              .split("\n")
+              .map((line) => line.match(/^([^:]+):\s*(.*)$/))
+              .filter((item): item is RegExpMatchArray => Boolean(item))
+              .map((item) => [item[1].trim(), item[2].trim()]),
+          );
+          return {
+            relativePath: path.slice("C:/workspace/".length),
+            path,
+            title: data.title || path.split("/").pop()?.replace(/\.md$/i, "") || "Untitled",
+            status: data.status || "todo",
+            position: Number(data.position || 0),
+            priority: data.priority || null,
+            assignee: data.assignee || null,
+            due: data.due || null,
+            tags: [],
+            taskDone: 0,
+            taskTotal: 0,
+            body: match?.[2]?.trim() || "",
+            properties: data,
+            blockedBy: [],
+            blocks: [],
+            relates: [],
+            parent: null,
+          };
+        });
 
     Object.assign(window, {
       isTauri: true,
@@ -96,6 +168,7 @@ test.beforeEach(async ({ page }) => {
           syncDisabledPermanently: false,
         },
       },
+      __E2E_INSTALL_BOARD__: installBoardFixture,
       __TAURI_EVENT_PLUGIN_INTERNALS__: {
         unregisterListener: () => undefined,
       },
@@ -184,6 +257,13 @@ test.beforeEach(async ({ page }) => {
             files[String(args.path)] = String(args.content);
             return null;
           }
+          if (cmd === "read_board_file") return files[String(args.path)] ?? "";
+          if (cmd === "write_board_file") {
+            files[String(args.path)] = String(args.content);
+            return null;
+          }
+          if (cmd === "scan_board_cards") return scanBoardFixture(String(args.boardId));
+          if (cmd === "scan_card_templates") return [];
           if (cmd === "load_sync_bases") return window.__SYNC_BASES__;
           if (cmd === "save_sync_bases") {
             const docs = args.documents as Array<{ relativePath: string; content: string }>;
@@ -561,6 +641,7 @@ test("adapts the shared welcome screen to app-private mobile storage", async ({ 
     };
   });
   await page.reload();
+  await page.evaluate(() => window.__E2E_INSTALL_BOARD__?.());
 
   await expect(page.locator("html")).toHaveAttribute("data-jtype-platform", "ios");
   await expect(page.locator("#welcome-private-vault-note")).toBeVisible();
@@ -602,6 +683,24 @@ test("adapts the shared welcome screen to app-private mobile storage", async ({ 
   await expect(page.getByLabel("Markdown editor")).toHaveValue(/title: Mobile title/);
   await page.locator("#document-panel").getByRole("button", { name: "Hide" }).click();
   await expect(page.locator("#document-panel")).toBeHidden();
+
+  await page.locator("#mobile-navigation-button").click();
+  await page.locator("#mobile-vault-navigation").getByRole("button", { name: /team\.board/i }).click();
+  await expect(page.locator("#mobile-vault-navigation")).toBeHidden();
+  await expect(page.locator("#board-surface")).toHaveAttribute("data-compact", "true");
+  await expect(page.locator("#board-surface")).toContainText("Plan release");
+
+  await page.getByLabel("Actions for Plan release").click();
+  await page.getByLabel("Move Plan release to Done").click();
+  await expect.poll(() => page.evaluate(() => window.__E2E_FS__["C:/workspace/team/plan-release.md"])).toContain("status: done");
+
+  await page.getByText("Plan release", { exact: true }).click();
+  await expect(page.locator("#board-card-peek")).toBeVisible();
+  const boardBox = await page.locator("#board-surface").boundingBox();
+  const peekBox = await page.locator("#board-card-peek").boundingBox();
+  expect(peekBox?.width).toBeCloseTo(boardBox?.width ?? 0, 0);
+  await page.locator("#board-card-peek").getByTitle("Close").click();
+  await expect(page.locator("#board-card-peek")).toBeHidden();
 });
 
 test("edits and saves the current markdown file", async ({ page }) => {

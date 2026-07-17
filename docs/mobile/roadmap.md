@@ -125,10 +125,10 @@
 
 ### 1.4 Board
 
-- [ ] 复用 shared `BoardSurface` 和现有数据模型
-- [ ] desktop 保持多列、hover/context-menu 行为
-- [ ] phone 支持横向列滚动或聚焦单列、显式 card action 和 move menu
-- [ ] 拖动与滚动手势不冲突；不可可靠拖动时仍可通过 move menu 完成同一操作
+- [x] 复用 shared `BoardSurface`、`BoardPeek` 和现有数据 / action adapter，不建立 mobile 平行实现
+- [x] compact / touch props 默认关闭，desktop 继续保持多列、hover action 与 pointer drag 行为
+- [x] phone 使用横向 snap 列滚动、常驻显式 card action、move menu 和全宽 card detail
+- [~] touch 已禁用易与滚动冲突的 pointer drag，并可通过 move menu 完成同一动作；双模拟器手势 smoke test 待阶段验收
 
 ### 1.5 本地 vault、导入与文件打开
 
@@ -236,7 +236,8 @@
 | 2026-07-18 | 0.4 | `a60ed04` | 修正 mobile 欢迎页私有库提示，隐藏未支持的 external vault 操作 | `docs/mobile/reports/phase-0.md` |
 | 2026-07-18 | 0.5 | `d57e016` | 双模拟器启动、Android 私有库、desktop 回归与截图报告 | `docs/mobile/reports/phase-0.md` |
 | 2026-07-18 | 1.1 | `9828de6` | phone 单栏 app shell、复用 Sidebar drawer、safe-area header/footer 与 compact VaultHome | Phase 1 report 待完成 |
-| 2026-07-18 | 1.2–1.3 | 待提交 | phone Write/Preview、触控 toolbar 与复用 Document Info bottom sheet | Phase 1 report 待完成 |
+| 2026-07-18 | 1.2–1.3 | `afc5707` | phone Write/Preview、触控 toolbar 与复用 Document Info bottom sheet | Phase 1 report 待完成 |
+| 2026-07-18 | 1.4 | 待提交 | shared Board compact/touch 模式、显式移动动作与全宽 card detail | Phase 1 report 待完成 |
 
 ## 当前环境审计（2026-07-18）
 

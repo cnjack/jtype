@@ -55,6 +55,11 @@ msgstr "클라우드 수낙"
 msgid "Accept local"
 msgstr "로컈 수낙"
 
+#. placeholder {0}: card.title
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Actions for {0}"
+msgstr ""
+
 #: ../../../shared/components/board/BoardPeek.tsx
 msgid "Activity"
 msgstr ""
@@ -348,6 +353,16 @@ msgstr "Mermaid 소스"
 
 #: ../../../shared/components/board/BoardCalendar.tsx
 msgid "Month"
+msgstr ""
+
+#. placeholder {0}: card.title
+#. placeholder {1}: target.name
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Move {0} to {1}"
+msgstr ""
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Move to…"
 msgstr ""
 
 #: ../../../shared/components/board/BoardSurface.tsx
