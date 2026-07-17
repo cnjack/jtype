@@ -254,6 +254,11 @@ msgstr "카드"
 msgid "Choose a local folder"
 msgstr "로컬 폴더 선택"
 
+#: src/components/layout/VaultHome.tsx
+msgid "Choose a note or create a new one. Stored privately by JType on this "
+"device."
+msgstr "노트를 선택하거나 새로 만드세요. 이 기기의 JType 전용 저장소에 안전하게 보관됩니다."
+
 #. placeholder {0}: state.workspace?.rootPath
 #: src/components/layout/VaultHome.tsx
 msgid "Choose a note or create a new one. This vault lives at <0>{0}</0>."
@@ -276,6 +281,7 @@ msgstr ""
 
 #: src/components/modals/AccountDialog.tsx
 #: src/components/modals/ConflictDialog.tsx
+#: src/components/sidebar/MobileSidebarDialog.tsx
 msgid "Close"
 msgstr "닫기"
 
@@ -572,7 +578,9 @@ msgstr "문서가 게시되었습니다."
 msgid "Document unpublished."
 msgstr "문서 게시가 취소되었습니다."
 
+#: src/components/layout/Header.tsx
 #: src/components/layout/VaultHome.tsx
+#: src/components/sidebar/MobileSidebarDialog.tsx
 msgid "Documents"
 msgstr "문서"
 

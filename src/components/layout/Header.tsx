@@ -12,6 +12,7 @@ import {
   GlobeAltIcon,
   HomeIcon,
   XMarkIcon,
+  Bars3Icon,
 } from "@heroicons/react/24/outline";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
@@ -20,7 +21,11 @@ import { useConfirm } from "@shared/components/PromptDialogContext";
 import { LanguageSwitcherMenuPanel } from "@shared/components/LanguageSwitcher";
 import { useRuntimeCapabilities } from "../../app/RuntimeCapabilities";
 
-export function Header() {
+type HeaderProps = {
+  onOpenMobileNavigation?: () => void;
+};
+
+export function Header({ onOpenMobileNavigation }: HeaderProps) {
   const state = useAppState();
   const dispatch = useAppDispatch();
   const fs = useFileSystem();
@@ -73,6 +78,7 @@ export function Header() {
     <header
       data-tauri-drag-region={capabilities.supportsWindowDrag ? "" : undefined}
       className="relative z-10 flex min-h-12 items-center justify-between gap-4 bg-transparent px-5 pt-5"
+      style={capabilities.isMobile ? { paddingTop: "max(2.25rem, calc(env(safe-area-inset-top) + 0.75rem))" } : undefined}
     >
       <div className="flex min-w-0 items-center gap-4">
         {breadcrumbs && (
@@ -84,6 +90,17 @@ export function Header() {
       <div className="flex flex-wrap items-center justify-end gap-2">
         {state.mode === "workspace" && (
           <>
+            {onOpenMobileNavigation && (
+              <button
+                id="mobile-navigation-button"
+                className="toolbar-button aspect-square px-0"
+                type="button"
+                title={t`Documents`}
+                onClick={onOpenMobileNavigation}
+              >
+                <Bars3Icon className="h-4 w-4" />
+              </button>
+            )}
             <button
               className="toolbar-button aspect-square px-0"
               type="button"

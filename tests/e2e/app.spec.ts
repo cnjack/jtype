@@ -544,6 +544,7 @@ test("opens the default vault from welcome", async ({ page }) => {
 });
 
 test("adapts the shared welcome screen to app-private mobile storage", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.addInitScript(() => {
     window.__RUNTIME_CAPABILITIES__ = {
       platform: "ios",
@@ -566,6 +567,22 @@ test("adapts the shared welcome screen to app-private mobile storage", async ({ 
   await expect(page.locator("#welcome-open-folder")).toBeHidden();
   await expect(page.locator("#welcome-open-markdown")).toBeHidden();
   await expect(page.getByText("~/Documents/Jtype Vaullt")).toBeHidden();
+
+  await page.locator("#welcome-default-vault").click();
+  await page.getByRole("button", { name: "Local only" }).click();
+
+  await expect(page.locator("#vault-home")).toBeVisible();
+  await expect(page.locator("#vault-home-private-note")).toBeVisible();
+  await expect(page.locator("#workspace-sidebar")).toBeHidden();
+  await expect(page.getByText("C:/Users/Jack/Documents/.jtype")).toBeHidden();
+  const contentPanel = await page.locator("#app-content-panel").boundingBox();
+  expect(contentPanel?.width).toBeGreaterThan(350);
+
+  await page.locator("#mobile-navigation-button").click();
+  await expect(page.locator("#mobile-vault-navigation")).toBeVisible();
+  await expect(page.locator("#mobile-vault-navigation #workspace-sidebar")).toBeVisible();
+  await page.locator("#mobile-vault-navigation").getByRole("button", { name: "Close" }).click();
+  await expect(page.locator("#mobile-vault-navigation")).toBeHidden();
 });
 
 test("edits and saves the current markdown file", async ({ page }) => {

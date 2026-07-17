@@ -268,6 +268,12 @@ msgstr "Card"
 msgid "Choose a local folder"
 msgstr "Choose a local folder"
 
+#: src/components/layout/VaultHome.tsx
+msgid "Choose a note or create a new one. Stored privately by JType on this "
+"device."
+msgstr "Choose a note or create a new one. Stored privately by JType on this "
+"device."
+
 #. placeholder {0}: state.workspace?.rootPath
 #: src/components/layout/VaultHome.tsx
 msgid "Choose a note or create a new one. This vault lives at <0>{0}</0>."
@@ -291,6 +297,7 @@ msgstr "Click to copy"
 
 #: src/components/modals/AccountDialog.tsx
 #: src/components/modals/ConflictDialog.tsx
+#: src/components/sidebar/MobileSidebarDialog.tsx
 msgid "Close"
 msgstr "Close"
 
@@ -597,7 +604,9 @@ msgstr "Document published."
 msgid "Document unpublished."
 msgstr "Document unpublished."
 
+#: src/components/layout/Header.tsx
 #: src/components/layout/VaultHome.tsx
+#: src/components/sidebar/MobileSidebarDialog.tsx
 msgid "Documents"
 msgstr "Documents"
 

@@ -10,6 +10,7 @@ import { UpdateBanner } from "../components/layout/UpdateBanner";
 import { WelcomeScreen } from "../components/layout/WelcomeScreen";
 import { VaultHome } from "../components/layout/VaultHome";
 import { Sidebar } from "../components/sidebar/Sidebar";
+import { MobileSidebarDialog } from "../components/sidebar/MobileSidebarDialog";
 import { EditorShell } from "../components/editor/EditorShell";
 import { CommandPalette } from "../components/modals/CommandPalette";
 import { QuickSwitcher } from "../components/modals/QuickSwitcher";
@@ -451,6 +452,12 @@ function AppContent() {
   // Draft mode renders the editor for an in-memory untitled document (no
   // currentPath yet). Must be checked before the currentPath fallback.
   const showEditor = state.mode === "draft" || Boolean(state.currentPath);
+  const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false);
+  const desktopSidebarVisible = sidebarVisible && !capabilities.isMobile;
+
+  useEffect(() => {
+    if (!sidebarVisible || !capabilities.isMobile) setMobileNavigationOpen(false);
+  }, [capabilities.isMobile, sidebarVisible]);
 
   // Resizable sidebar width (drag the right edge), persisted across launches.
   const [sidebarWidth, setSidebarWidth] = useState(() => {
@@ -465,22 +472,26 @@ function AppContent() {
     <CommandsContext.Provider value={commands}>
       <div className={`${state.mode === "empty" && !state.workspace ? "app-empty" : state.workspace ? "workspace-mode" : "single-file-mode"} ${state.focusMode ? "focus-mode" : ""} ${capabilities.isMobile ? "runtime-mobile" : "runtime-desktop"} h-screen overflow-hidden bg-[#f5f8f6] text-stone-950 antialiased`}>
         <main className="grid h-screen grid-rows-[auto_1fr_auto]">
-          <Header />
+          <Header onOpenMobileNavigation={sidebarVisible && capabilities.isMobile ? () => setMobileNavigationOpen(true) : undefined} />
           <section
             className="relative grid min-h-0"
-            style={{ gridTemplateColumns: sidebarVisible ? `${sidebarWidth}px minmax(0,1fr)` : "minmax(0,1fr)" }}
+            style={{ gridTemplateColumns: desktopSidebarVisible ? `${sidebarWidth}px minmax(0,1fr)` : "minmax(0,1fr)" }}
           >
-            {sidebarVisible && <Sidebar />}
-            {sidebarVisible && !capabilities.isMobile && <SidebarResizeHandle width={sidebarWidth} onResize={setSidebarWidth} />}
+            {desktopSidebarVisible && <Sidebar />}
+            {desktopSidebarVisible && <SidebarResizeHandle width={sidebarWidth} onResize={setSidebarWidth} />}
             {/* The content floats as a single rounded panel that the shell (header,
                 sidebar, status bar) wraps around — no divider lines, just a soft
                 tinted lift. */}
-            <div className="m-2.5 grid min-h-0 grid-cols-1 overflow-hidden rounded-2xl bg-[#fbfdfb] shadow-[0_1px_2px_rgba(20,45,38,0.04),0_16px_38px_-24px_rgba(20,45,38,0.22)] ring-1 ring-black/[0.035]">
+            <div id="app-content-panel" className={`${capabilities.isMobile ? "mx-3 mb-2 mt-1" : "m-2.5"} grid min-h-0 grid-cols-1 overflow-hidden rounded-2xl bg-[#fbfdfb] shadow-[0_1px_2px_rgba(20,45,38,0.04),0_16px_38px_-24px_rgba(20,45,38,0.22)] ring-1 ring-black/[0.035]`}>
               {showWelcome ? <WelcomeScreen /> : showVaultHome ? <VaultHome /> : showEditor ? <EditorShell /> : <WelcomeScreen />}
             </div>
           </section>
-          <div id="operation-log" className="flex items-center justify-between bg-transparent px-5 pb-1.5 pt-1 text-xs text-[#6b7773]">
-            <span>{state.statusMessage}</span>
+          <div
+            id="operation-log"
+            className={`${capabilities.isMobile ? "min-h-10 px-4 pt-1 text-[11px]" : "px-5 pb-1.5 pt-1 text-xs"} flex items-center justify-between gap-3 bg-transparent text-[#6b7773]`}
+            style={capabilities.isMobile ? { paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" } : undefined}
+          >
+            <span className="min-w-0 truncate">{state.statusMessage}</span>
             <span className="flex shrink-0 items-center gap-3">
               {isSyncEnabled && (
                 state.wsConnected ? (
@@ -514,6 +525,9 @@ function AppContent() {
         <NewResourceDialog />
         <AccountDialog />
         <ConflictDialog />
+        {capabilities.isMobile && (
+          <MobileSidebarDialog open={mobileNavigationOpen} onClose={() => setMobileNavigationOpen(false)} />
+        )}
         {capabilities.supportsUpdater && <UpdateBanner />}
       </div>
     </CommandsContext.Provider>

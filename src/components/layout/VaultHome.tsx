@@ -6,11 +6,13 @@ import { markdownNodes } from "../../lib/utils";
 import { appStorage } from "../../lib/storage";
 import { basename } from "../../lib/utils";
 import { SyncPromptDialog } from "../modals/SyncPromptDialog";
+import { useRuntimeCapabilities } from "../../app/RuntimeCapabilities";
 
 export function VaultHome() {
   const state = useAppState();
   const dispatch = useAppDispatch();
   const fs = useFileSystem();
+  const capabilities = useRuntimeCapabilities();
   const documents = useMemo(() => markdownNodes(state.workspace?.entries ?? []), [state.workspace]);
   const recentItems = useMemo(() => readRecentItems(), [state.currentPath]);
   const recentDocs = recentItems.filter((item) => item.kind === "file").slice(0, 4);
@@ -32,13 +34,19 @@ export function VaultHome() {
     <section id="vault-home" className="flex min-h-0 flex-col bg-[#fbfdfb]">
       <SyncPromptDialog open={shouldShowSyncPrompt} />
       <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto w-full max-w-6xl px-10 py-12">
+        <div className={`mx-auto w-full max-w-6xl ${capabilities.prefersCompactLayout ? "px-5 py-7" : "px-10 py-12"}`}>
           <div className="max-w-3xl">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#008884]"><Trans>Vault ready</Trans></p>
-            <h2 className="mt-4 text-4xl font-semibold tracking-[-0.035em] text-stone-950">{vaultName}</h2>
-            <p className="mt-3 max-w-2xl text-sm leading-7 text-[#5f6d68]">
-              <Trans>Choose a note or create a new one. This vault lives at <span className="font-mono text-stone-800">{state.workspace?.rootPath}</span>.</Trans>
-            </p>
+            <h2 className={`${capabilities.prefersCompactLayout ? "text-3xl" : "text-4xl"} mt-4 break-words font-semibold tracking-[-0.035em] text-stone-950`}>{vaultName}</h2>
+            {capabilities.usesAppPrivateVault ? (
+              <p id="vault-home-private-note" className="mt-3 max-w-2xl text-sm leading-7 text-[#5f6d68]">
+                <Trans>Choose a note or create a new one. Stored privately by JType on this device.</Trans>
+              </p>
+            ) : (
+              <p className="mt-3 max-w-2xl text-sm leading-7 text-[#5f6d68]">
+                <Trans>Choose a note or create a new one. This vault lives at <span className="font-mono text-stone-800">{state.workspace?.rootPath}</span>.</Trans>
+              </p>
+            )}
             <div className="mt-6 flex flex-wrap gap-2">
               <button className="toolbar-button toolbar-button-primary" type="button" onClick={() => dispatch({ type: "SET_CREATE_NOTE_DIALOG", open: true })}>
                 <Trans>New Document</Trans>

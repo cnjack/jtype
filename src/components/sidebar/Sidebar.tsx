@@ -39,6 +39,7 @@ import {
   ArrowsPointingOutIcon,
 } from "@heroicons/react/24/outline";
 import { resourceTypeForPath } from "@shared/lib/fileTypes";
+import { useRuntimeCapabilities } from "../../app/RuntimeCapabilities";
 
 /** Tree icon for a diagram resource, by its concrete type. */
 function diagramIcon(name: string) {
@@ -61,6 +62,7 @@ export function Sidebar() {
   const dispatch = useAppDispatch();
   const fs = useFileSystem();
   const confirm = useConfirm();
+  const capabilities = useRuntimeCapabilities();
   if (state.mode === "empty" && !state.workspace) return null;
   if (state.focusMode) return null;
 
@@ -148,18 +150,20 @@ export function Sidebar() {
               )}
             </div>
             <div className="border-t border-black/[0.06] p-2 space-y-1">
-              <MenuItem
-                as="button"
-                type="button"
-                className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-zinc-700 transition hover:bg-[#e8f6f2]"
-                onClick={() => { void fs.chooseWorkspaceFolder(); }}
-              >
-                <FolderOpenIcon className="h-4 w-4 shrink-0 text-zinc-500" />
-                <span className="min-w-0 text-left">
-                  <span className="block truncate font-semibold"><Trans>Open another vault</Trans></span>
-                  <span className="block truncate text-xs text-zinc-500"><Trans>Choose a local folder</Trans></span>
-                </span>
-              </MenuItem>
+              {capabilities.supportsExternalVault && (
+                <MenuItem
+                  as="button"
+                  type="button"
+                  className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-zinc-700 transition hover:bg-[#e8f6f2]"
+                  onClick={() => { void fs.chooseWorkspaceFolder(); }}
+                >
+                  <FolderOpenIcon className="h-4 w-4 shrink-0 text-zinc-500" />
+                  <span className="min-w-0 text-left">
+                    <span className="block truncate font-semibold"><Trans>Open another vault</Trans></span>
+                    <span className="block truncate text-xs text-zinc-500"><Trans>Choose a local folder</Trans></span>
+                  </span>
+                </MenuItem>
+              )}
               <MenuItem
                 as="button"
                 type="button"

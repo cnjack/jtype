@@ -102,11 +102,11 @@
 
 ### 1.1 App shell 与导航
 
-- [ ] 共用现有 AppState、commands、hooks 和 mode routing
-- [ ] `AdaptiveAppShell`：desktop 固定 sidebar；phone 使用 Headless UI drawer；tablet 允许固定 sidebar
-- [ ] 复用 Sidebar 内容组件，保证 vault 文件树、搜索、收藏、Library、Publish、Account 只有一份业务实现
-- [ ] 处理 safe area、dynamic viewport、软键盘、横竖屏和至少 44×44pt 的触控目标
-- [ ] desktop header drag region 与 mobile safe-area header 由 capability 决定
+- [x] 共用现有 AppState、commands、hooks 和 mode routing
+- [~] `AdaptiveAppShell`：desktop 固定 sidebar；phone 已使用 Headless UI drawer；tablet 固定 sidebar 待实现
+- [x] 复用 Sidebar 内容组件，保证 vault 文件树、搜索、收藏、Library、Publish、Account 只有一份业务实现
+- [~] 已处理 app shell 顶/底 safe area；dynamic viewport、软键盘、横竖屏和完整 44×44pt 触控审计待完成
+- [x] desktop header drag region 与 mobile safe-area header 由 capability 决定
 
 ### 1.2 Markdown 文档工作台
 
@@ -235,6 +235,7 @@
 | 2026-07-18 | 0.4 | `7952226` | 使用 app-private 路径，增加 mobile lifecycle 与外部文件 URI 边界 | `docs/mobile/reports/phase-0.md` |
 | 2026-07-18 | 0.4 | `a60ed04` | 修正 mobile 欢迎页私有库提示，隐藏未支持的 external vault 操作 | `docs/mobile/reports/phase-0.md` |
 | 2026-07-18 | 0.5 | `d57e016` | 双模拟器启动、Android 私有库、desktop 回归与截图报告 | `docs/mobile/reports/phase-0.md` |
+| 2026-07-18 | 1.1 | 待提交 | phone 单栏 app shell、复用 Sidebar drawer、safe-area header/footer 与 compact VaultHome | Phase 1 report 待完成 |
 
 ## 当前环境审计（2026-07-18）
 
