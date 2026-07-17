@@ -1763,7 +1763,7 @@ test("shows and resolves sync conflicts", async ({ page }) => {
 
   await page.getByRole("button", { name: "Close account dialog" }).click();
   await page.getByRole("button", { name: /1 conflict/ }).click();
-  await page.getByRole("button", { name: "⚠ intro.md" }).click();
+  await page.getByRole("button", { name: "intro.md", exact: true }).click();
   await expect(page.getByText("Local (yours)")).toBeVisible();
   await page.getByRole("button", { name: "Accept cloud" }).click();
 
@@ -1772,6 +1772,131 @@ test("shows and resolves sync conflicts", async ({ page }) => {
   expect(resolved).toBe(true);
   const content = await page.evaluate(() => window.__E2E_FS__["C:/workspace/intro.md"]);
   expect(content).toBe("# Intro\n\nCloud version.");
+});
+
+test("compares and resolves sync conflicts in the shared compact mobile UI", async ({ page }) => {
+  const defaultVaultPath = "C:/Users/Jack/Documents/.jtype";
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript((vaultPath) => {
+    window.__RUNTIME_CAPABILITIES__ = {
+      platform: "android",
+      clientType: "mobile",
+      isMobile: true,
+      isTouchPrimary: true,
+      prefersCompactLayout: true,
+      supportsWindowDrag: false,
+      supportsUpdater: false,
+      supportsProcessRestart: false,
+      supportsCliInstall: false,
+      supportsFileDrop: false,
+      supportsExternalVault: false,
+      usesAppPrivateVault: true,
+    };
+    window.__CLOUD_PROFILE__ = {
+      serverUrl: "http://localhost:13345",
+      username: "jack",
+      siteUrl: "http://localhost:8080/u/jack/workspace",
+      token: "test-token",
+      deviceId: "mobile-conflict-device",
+    };
+    window.__VAULT_BINDINGS__ = [{
+      workspaceId: "workspace-e2e",
+      workspaceName: "workspace",
+      workspaceSlug: "workspace",
+      workspaceRole: "owner",
+      localVaultPath: vaultPath,
+      lastPulledClock: 0,
+    }];
+    window.__VAULT_SETTINGS__[vaultPath] = {
+      cloudSyncEnabled: true,
+      syncPromptDismissedAt: new Date().toISOString(),
+      syncDisabledPermanently: false,
+    };
+
+    const origFetch = window.fetch;
+    let resolutionBody: Record<string, unknown> | null = null;
+    window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      if (url.includes("/sync/pull")) {
+        return new Response(
+          JSON.stringify({ workspaceId: "workspace-e2e", documents: [], conflicts: [] }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      if (url.includes("/sync/push")) {
+        return new Response(
+          JSON.stringify({
+            workspaceId: "workspace-e2e",
+            accepted: 1,
+            documents: [],
+            conflicts: [{
+              conflictId: "mobile-conflict-1",
+              relativePath: "intro.md",
+              localContent: "# Intro\n\nLocal mobile version.",
+              cloudContent: "# Intro\n\nCloud mobile version.",
+              baseContent: "# Intro\n\nOriginal.",
+            }],
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      if (url.includes("/conflicts/mobile-conflict-1/resolve")) {
+        resolutionBody = JSON.parse(String(init?.body ?? "{}"));
+        return new Response(
+          JSON.stringify({
+            relativePath: "intro.md",
+            title: "Intro",
+            status: "published",
+            content: "# Intro\n\nMerged on mobile.",
+            contentHash: "mobile-resolved",
+            versionId: "mobile-v3",
+            updatedClock: 10,
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      return origFetch(input, init);
+    };
+    Object.defineProperty(window, "__CONFLICT_RESOLUTION__", {
+      get: () => resolutionBody,
+      configurable: true,
+    });
+  }, defaultVaultPath);
+  await page.reload();
+
+  await page.locator("#welcome-default-vault").click();
+  await openProfileSettings(page);
+  await page.locator("#account-sync").click();
+  await page.getByRole("button", { name: "Close account dialog" }).click();
+  await page.getByRole("button", { name: /1 conflict/ }).click();
+
+  await expect(page.locator("#conflict-dialog")).toHaveAttribute("data-compact", "true");
+  await page.getByRole("button", { name: /intro\.md/ }).click();
+  await expect(page.getByText("Local mobile version.")).toBeVisible();
+  await expect(page.getByText("Cloud mobile version.")).toBeHidden();
+
+  const cloudTab = page.getByRole("tab", { name: "Cloud (remote)" });
+  await cloudTab.click();
+  await expect(page.getByText("Cloud mobile version.")).toBeVisible();
+  await page.getByRole("button", { name: "Use this" }).click();
+
+  const mergedResult = page.getByLabel("Result (editable)");
+  await expect(mergedResult).toHaveValue("# Intro\n\nCloud mobile version.");
+  await mergedResult.fill("# Intro\n\nMerged on mobile.");
+
+  for (const locator of [cloudTab, page.getByRole("button", { name: "Accept local" }), page.getByRole("button", { name: "Accept cloud" }), page.getByRole("button", { name: "Save merged result" })]) {
+    const box = await locator.boundingBox();
+    expect(box?.height).toBeGreaterThanOrEqual(44);
+  }
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+
+  await page.getByRole("button", { name: "Save merged result" }).click();
+  await expect(page.locator("#operation-log")).toContainText("Resolved conflict in intro.md");
+  await expect.poll(() => page.evaluate(() =>
+    (window as unknown as { __CONFLICT_RESOLUTION__: Record<string, unknown> | null }).__CONFLICT_RESOLUTION__,
+  )).toEqual({ resolution: "manual_merge", content: "# Intro\n\nMerged on mobile." });
+  await expect.poll(() => page.evaluate(() => window.__E2E_FS__["C:/workspace/intro.md"]))
+    .toBe("# Intro\n\nMerged on mobile.");
 });
 
 test("accepts workspace invite and creates local vault binding", async ({ page }) => {
