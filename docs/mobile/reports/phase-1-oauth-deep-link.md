@@ -6,6 +6,8 @@
 
 Android 兼容修复 commit：`99f474a`
 
+signed iOS 终验 app code commit：`ad5a9ef`
+
 ## 结果
 
 Android 与 iOS 现在继续复用 desktop 的 `useCloudSync`、device OAuth API、账户 Dialog 和 cloud profile；移动端没有第二套登录 UI 或操作链。平台差异只位于 capability、原生 deep-link 注册和回跳 adapter：mobile 请求附带固定回调 `jtype://oauth/complete`，浏览器授权完成后由 Tauri deep-link listener 唤醒同一个轮询流程；desktop 的 OAuth request body、verification URL 和浏览器流程保持原样。
@@ -42,15 +44,26 @@ Android 与 iOS 现在继续复用 desktop 的 `useCloudSync`、device OAuth API
 
 截图不包含 device code、password 或 token；一次性账号及其级联数据在验证后精确删除。
 
-## iOS 系统路由
+## iOS signed 真实流程
 
-环境：iPhone 17 Pro Simulator `BD64DE20-5397-486C-8899-4B974425A0AD`，iOS 26.5，arm64；app commit `99f474a`。
+环境：iPhone 17 Pro Simulator `BD64DE20-5397-486C-8899-4B974425A0AD`，iOS 26.5，arm64；app code commit `ad5a9ef`；Xcode `Sign to Run Locally`。
 
-当前 no-sign simulator archive 安装后，`Info.plist` 包含 `CFBundleURLTypes` / `jtype`。执行 `xcrun simctl openurl booted 'jtype://oauth/complete'` 时，LaunchServices 明确找到 `net.jcode.jtype` 作为该 scheme 的处理器，并显示系统“在 JType 中打开？”确认框。系统日志记录 `Opening URL (jtype://oauth/complete) with net.jcode.jtype`；确认框前后的 JType launch 查询均返回 PID `55596`，没有崩溃或新进程。
+signed app 的 `Info.plist` 包含 `CFBundleURLTypes` / `jtype`。第一次执行 callback 时，LaunchServices 找到 `net.jcode.jtype` 并显示系统“在 JType 中打开？”确认；Maestro 通过真实 XCTest input 点按“打开”，JType 返回前台且进程保持存活。
 
-![iOS OAuth deep-link system route](assets/phase-1/oauth-deep-link-ios.png)
+![iOS OAuth first deep-link confirmation](assets/phase-1/oauth-deep-link-confirm-ios.png)
 
-本轮主机在需要点按首次系统确认时处于锁屏，自动 UI 控制无法越过锁屏。因此 iOS 证据覆盖构建产物、scheme 注册、LaunchServices 解析、系统确认 UI 和运行中进程稳定性；确认后的 active-handler/poll 行为由 Android 真实服务流程和双平台共享 React E2E 覆盖。iOS 首次确认后的端到端补点将并入 Phase 1.7 总验收，不把该子证据描述为完整 iOS browser OAuth。
+随后从共享 Account Dialog 完整执行真实流程：
+
+1. 断开已有 profile，点击“在浏览器中连接”。
+2. JType 通过现有 API 创建短期 device code，并打开 Safari verification URL。
+3. 使用一次性已认证账户在真实 Axum 服务批准该 device code。
+4. 打开固定 `jtype://oauth/complete` callback，JType 从 Safari 返回前台。
+5. active handler 立即调用原有 poll；Account Dialog 显示 `Connected as ioscloud0718a.`。
+6. `load_cloud_profile` 返回同一用户名与 64 字符 token；磁盘 `cloud-profile.json` 的 token 长度为 0，证明最终凭据写入 iOS Keychain 而非 WebView/JSON。
+
+![iOS OAuth complete](assets/phase-1/oauth-complete-ios.png)
+
+一次性用户、workspace、documents、conflicts 和 device OAuth 数据在验证后按明确 id/username 级联删除；截图和仓库未保存 password、device code 或 token。
 
 ## 自动化与回归
 
@@ -58,7 +71,7 @@ Android 与 iOS 现在继续复用 desktop 的 `useCloudSync`、device OAuth API
 | --- | --- |
 | `npm run build` | PASS |
 | `npx playwright test tests/e2e/app.spec.ts` | PASS，41/41 |
-| `npm run test:unit` | PASS，45/45 |
+| `npm run test:unit` | PASS，47/47 |
 | `cargo test --manifest-path services/jtype-web/Cargo.toml --test oauth_tests` | PASS，9/9 |
 | `cargo test --manifest-path src-tauri/Cargo.toml --locked` | PASS，4/4 |
 | `cargo check --manifest-path services/jtype-web/Cargo.toml` | PASS |
@@ -78,7 +91,6 @@ Android 与 iOS 现在继续复用 desktop 的 `useCloudSync`、device OAuth API
 
 ## 后续
 
-- Phase 1.7：在解锁的 iOS Simulator 点按首次系统确认，补齐 iOS active-handler/poll 截图；随后执行双设备 cloud conflict 与完整 mobile smoke。
 - Phase 2.2：把 device code、poll interval、expiry 和 pending return intent 持久化到安全的原生状态，使 app 被系统终止后仍能冷启动恢复授权；不得持久化最终 token 到 WebView storage。
 - Phase 2.3：在固定自有 deep link 基础上增加可验证的 universal/app links，并支持定位到 cloud workspace、vault 和文档。
 - Phase 2.4：在真实设备弱网、浏览器切换、后台时间限制和进程终止场景重复 OAuth/sync 验收。

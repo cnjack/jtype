@@ -4,7 +4,7 @@
 
 Feature branch：`codex/mobile-app`
 
-当前 app code commit：`b39e920`
+当前 app code commit：`ad5a9ef`
 
 当前 tracking commit：`1111156`
 
@@ -22,6 +22,9 @@ JType 的核心 desktop 产品体验现在由同一套 `src/`、`shared/`、comm
 - force-stop / terminate 后重新启动，自动恢复最后打开的 Markdown 文档、正文和显示模式。
 - Android 与 iOS 软件键盘真实出现后，编辑区和 toolbar 保持可用。
 - Android 与 iOS 横屏后仍使用同一 adaptive shell；iPad 使用 Split 与右侧 Document Info，而不是 phone bottom sheet。
+- signed iOS 完成首次 deep-link 系统确认、真实 browser OAuth、Keychain 写回与冷启动恢复。
+- Android 与 signed iOS 都完成真实 cloud conflict 的 compact compare → manual merge → resolved 闭环。
+- iOS 更新安装导致 app data-container UUID 变化后，app-private vault、binding、settings、最后文档和最近列表自动迁移到当前容器。
 
 cloud sync、secure storage、前后台恢复、browser OAuth、system share、PDF、external import 和真实 conflict 的分段证据继续由本报告末尾链接的专项报告提供。
 
@@ -118,8 +121,10 @@ terminate 后重新 launch 恢复 `mobile-phase1.md` 与 Preview：
 | --- | --- |
 | `npm run build` | PASS |
 | `npm run build --prefix services/jtype-web/frontend` | PASS |
-| `npm run test:unit` | PASS，45/45 |
+| `npm run test:unit` | PASS，47/47 |
 | `npx playwright test tests/e2e/app.spec.ts` | PASS，42/42 |
+| `cargo test --manifest-path src-tauri/Cargo.toml` | PASS，5/5 |
+| `cargo test --manifest-path services/jtype-web/Cargo.toml --test sync_tests` | PASS，12/12 |
 | desktop conflict 三栏 + manual merge | PASS |
 | 390×844 mobile conflict tabs + manual merge | PASS |
 | `pnpm tauri android build --debug --target aarch64 --apk --ci` | PASS |
@@ -134,7 +139,7 @@ Android debug APK：
 - 189,218,612 bytes
 - SHA-256 `d6d3287d3d894fff1363e314bdd1e6fa99febe39e0ef09e7855a1048f1cef854`
 
-iOS simulator archive：`src-tauri/gen/apple/build/jtype_iOS.xcarchive`，约 99 MB。最终 archive 为重新生成的 no-sign 产物，不包含 smoke-test entitlements 或临时签名。
+iOS 核心 UI archive 保持 no-sign 构建路径；OAuth、Keychain、冲突和容器升级终验使用临时 `Sign to Run Locally` Simulator app，未改动发布签名配置。
 
 ## Phase 1 专项报告
 
@@ -146,10 +151,8 @@ iOS simulator archive：`src-tauri/gen/apple/build/jtype_iOS.xcarchive`，约 99
 - [Browser OAuth / deep-link return](phase-1-oauth-deep-link.md)
 - [Conflict comparison / manual merge](phase-1-conflict.md)
 
-## 尚未关闭的 Phase 1 边界
+## Phase 1 关闭与 Phase 2 交接
 
-- iOS browser OAuth 的首次 system confirmation 和真实 cloud conflict 页仍需在可交互的 signed simulator session 补齐；Android 已完成真实服务全链，iOS 共享 React callbacks 有 E2E，不能把它们描述成 iOS cloud UI 终验。
-- external provider 的真实第三方 Open with、签名真机 provider、大文件分享生命周期属于 Phase 1.5 尾项，并与 Phase 2 external vault provider 一起继续。
-- 完整 VoiceOver/TalkBack、动态字体、haptic、低内存、进程终止草稿恢复与真实设备弱网按 roadmap 位于 Phase 2。
+Phase 1 的 desktop core experience、双平台 app-private vault、cloud sync、secure token、OAuth 回跳与 conflict UI 已完成模拟器终验。后续不再建立 mobile 平行 UI，而是继续在现有 capability/provider 边界扩展系统能力。
 
-这些尾项不改变本报告已经验证的本地 desktop core experience；Phase 1 当前保持“核心体验完成、cloud/system integration 尾项进行中”，不会提前宣称整个移动产品已完成。
+Phase 2 接手：Android SAF / iOS security-scoped external vault、真实第三方 provider 与大文件生命周期、share target、pending OAuth 冷恢复、无障碍、低内存和真实设备弱网。

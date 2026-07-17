@@ -52,7 +52,7 @@ Android 与 iOS 现在共用 desktop 的 `useCloudSync`、vault binding、push/p
 
 ![iOS foreground recovery](assets/phase-1/sync-recovery-ios.png)
 
-iOS 本轮验证覆盖真实 suspend/resume、signed Keychain 持久化、WebSocket 连接与 push；网络完全断开/恢复由 Android 真实飞行模式和双平台 E2E 的 online event 覆盖。双设备内容冲突的真实 UI 解决流程仍属于 Phase 1.7 验收项。
+iOS 本轮验证覆盖真实 suspend/resume、signed Keychain 持久化、WebSocket 连接与 push；网络完全断开/恢复由 Android 真实飞行模式和双平台 E2E 的 online event 覆盖。双平台真实 UI 冲突解决随后已在 [Phase 1 conflict report](phase-1-conflict.md) 完成。
 
 ## 自动化与回归
 

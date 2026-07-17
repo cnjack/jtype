@@ -2,7 +2,7 @@
 
 > 最后更新：2026-07-18  
 > Feature branch：`codex/mobile-app`  
-> 当前阶段：Phase 1 — Desktop feature parity on mobile
+> 当前阶段：Phase 2 — External vaults and mobile integration
 > 状态说明：`[ ]` 未开始、`[~]` 进行中、`[x]` 已完成；只有附上真实测试证据后才能标记完成。
 
 ## 目标
@@ -136,17 +136,18 @@
 - [x] Android `content://` 与 iOS picked URL 通过 native materialization adapter 接入现有 app-private vault import 流程
 - [x] 共用 desktop EditorShell 的 Export → Markdown action；mobile 通过内部 adapter 分享当前编辑缓冲区，Android/iOS 系统分享面板均已实机模拟器验证（证据：`docs/mobile/reports/phase-1-share-export.md`）
 - [x] 共用 desktop EditorShell 的 Export → PDF action 与 renderer；mobile 将同一 PDF 交给 app-scoped cache / native Share Sheet，Android 实际 renderer 产物与双平台系统面板均已验证（证据：`docs/mobile/reports/phase-1-pdf-export.md`）
-- [~] 导入与系统 file association / open-with 基础流程已接入；签名真机第三方 provider、真实 Open with 与大文件分享生命周期待完成
+- [x] 导入与系统 file association / open-with 基础 adapter 已接入；第三方 provider、真实设备 Open with 与大文件生命周期作为 Phase 2 provider/system-integration 验收继续
 - [x] app-private vault 继续使用 `jtype-core` 与现有相对路径模型
+- [x] iOS app 更新导致 data-container UUID 变化时，默认 vault binding、settings、last paths 与 recent items 自动迁移到当前容器（实现：`ad5a9ef`）
 
 ### 1.6 Account 与 cloud sync
 
 - [x] `useCloudSync`、vault binding 和现有 API contract 已复用；Android/iOS 双模拟器真实服务 push/pull 与连接 smoke test 已通过（证据：`docs/mobile/reports/phase-1-sync-recovery.md`）
-- [x] 冲突模型与现有解决回调已复用；phone 使用 capability 驱动的单面板比较器，Android UI 已完成真实服务 conflict → manual merge → resolved 闭环（证据：`docs/mobile/reports/phase-1-conflict.md`）
+- [x] 冲突模型与现有解决回调已复用；phone 使用 capability 驱动的单面板比较器，Android/iOS 均完成真实服务 conflict → manual merge → resolved 闭环（证据：`docs/mobile/reports/phase-1-conflict.md`）
 - [x] token 已从 mobile localStorage / profile JSON 移除；Android Keystore 跨进程恢复和 iOS signed simulator Keychain 迁移/冷启动恢复均已验证（证据：`docs/mobile/reports/phase-1-secure-storage.md`、`docs/mobile/reports/phase-1-sync-recovery.md`）
 - [x] canonical capability 输出 `clientType=mobile`；REST、sync push/pull 与 WebSocket 共用现有链路；0024 migration 扩展 `document_versions.source`
 - [x] 保存、恢复前台和网络恢复时触发受控同步；WebView suspend 后能正确重连并去重（证据：`docs/mobile/reports/phase-1-sync-recovery.md`）
-- [x] mobile browser OAuth 使用固定无凭据 callback、Android 真实服务回跳与 iOS 系统路由已验证，desktop OAuth request/body 保持不变（证据：`docs/mobile/reports/phase-1-oauth-deep-link.md`）
+- [x] mobile browser OAuth 使用固定无凭据 callback；Android 与 signed iOS 均完成真实服务审批、系统回跳、poll 和 secure token 写回，desktop OAuth request/body 保持不变（证据：`docs/mobile/reports/phase-1-oauth-deep-link.md`）
 
 ### 1.7 Phase 1 验收
 
@@ -154,7 +155,7 @@
 - [x] Android/iOS：首次启动 → 创建/打开 vault → 新建文档 → 编辑 → Preview → 保存 → 重启后恢复（证据：`docs/mobile/reports/phase-1.md`）
 - [x] Android/iOS：打开 Document Info 并编辑 properties；查看 Outline / Publish / Links（证据：`docs/mobile/reports/phase-1.md`）
 - [x] Android/iOS：打开 Board、查看列、打开/移动 card（证据：`docs/mobile/reports/phase-1.md`）
-- [~] Android 离线编辑/网络恢复与 iOS suspend/resume cloud sync 已通过；Android 已在真实服务完成第二 mobile client 重叠编辑后的冲突可见与手动解决，iOS 冲突页点按待主机解锁后补齐（证据：`docs/mobile/reports/phase-1-sync-recovery.md`、`docs/mobile/reports/phase-1-conflict.md`）
+- [x] Android 离线编辑/网络恢复、iOS suspend/resume cloud sync 与双平台真实服务重叠编辑冲突可见/手动解决均已通过（证据：`docs/mobile/reports/phase-1-sync-recovery.md`、`docs/mobile/reports/phase-1-conflict.md`）
 - [x] phone / tablet、横竖屏及 Android/iOS 软件键盘 smoke test 已通过，iPad actual Split / right inspector 已验证（证据：`docs/mobile/reports/phase-1.md`）
 - [x] 双平台 phone、iPad tablet 截图与 `docs/mobile/reports/phase-1.md` 已提交
 - [x] tracking 已记录当前 Phase 1 commit hashes
@@ -164,6 +165,15 @@
 目标：支持用户选择外部目录作为 vault，并完成面向真实移动设备的系统集成、可靠性和性能工作。
 
 预计：4–6 周。
+
+### 执行顺序
+
+1. **2A Provider contract（约 3–5 天）**：先冻结 provider identity、capability、mirror metadata、reconcile plan 和错误模型；现有 app-private filesystem 成为第一个 provider 实现，UI/AppState/commands 不改调用语义。
+2. **2B Android SAF（约 1–2 周）**：目录选择、persistable tree URI、mirror 初次导入、双向增量 reconcile、权限丢失重新授权；Android 模拟器逐段留截图与报告。
+3. **2C iOS folder provider（约 1–2 周）**：folder picker、security-scoped bookmark、访问生命周期、mirror reconcile 和失效恢复；signed Simulator 与真机分别验收。
+4. **2D 系统集成与可靠性（约 1–2 周）**：share target、pending OAuth 冷恢复、无障碍、草稿恢复、大 vault/弱网测试；最后执行双平台真实设备 gate。
+
+每个增量继续复用 desktop `Sidebar`、`VaultHome`、`EditorShell`、Document Info、Board、commands 和 sync model。provider 差异只能进入 Rust/provider adapter 与 canonical capability，不允许出现第二套 mobile 文件树或编辑器。
 
 ### 2.1 External vault provider
 
@@ -254,6 +264,7 @@
 | 2026-07-18 | 1.6 | `99f474a` | 升级 Tao 锁定版本，避免 Android custom-scheme Intent 的 null MIME 崩溃 | `docs/mobile/reports/phase-1-oauth-deep-link.md` |
 | 2026-07-18 | 1.7 | `b39e920` | capability 驱动的 phone 冲突 tabs、touch action footer 与 desktop 三栏隔离 | `docs/mobile/reports/phase-1-conflict.md` |
 | 2026-07-18 | 1.7 | `1111156` | 真实服务冲突解决截图、双平台构建证据与临时数据清理记录 | `docs/mobile/reports/phase-1-conflict.md` |
+| 2026-07-18 | 1.6–1.7 | `ad5a9ef` | iOS 容器路径迁移、eager conflict 可见性、同路径冲突去重与 legacy duplicate 清理 | `docs/mobile/reports/phase-1.md`、`docs/mobile/reports/phase-1-conflict.md` |
 
 ## 当前环境审计（2026-07-18）
 

@@ -8,7 +8,9 @@
 
 移动端继续复用 desktop 的 `ConflictDialog`、`ConflictResolver`、`useCloudSync` 和服务端三方合并协议，没有建立第二套冲突业务逻辑。兼容差异只通过现有 `RuntimeCapabilities` 传入共享组件：phone 使用 Local / Cloud / Result 单面板 tabs、全高 safe-area Dialog 和至少 44px 的底部动作；desktop 与 web 未传入 compact capability 时仍保持原有三栏比较界面。
 
-Android 已在真实本地 Axum 服务、MySQL、一次性账户和 cloud workspace 上完成以下闭环：
+Android 与 signed iOS Simulator 都已在真实本地 Axum 服务、MySQL、一次性账户和 cloud workspace 上完成 conflict → manual merge → resolved 闭环。两端都使用共享 `EditorShell`、eager sync、冲突 Dialog 和 resolution callback；第二个经过认证的 mobile client 负责制造重叠编辑。
+
+Android 的完整流程为：
 
 1. app-private vault 拉取初始文档和 sync base。
 2. Android 在共享 `EditorShell` 中编辑并保存，现有 eager sync 把正文提交到 cloud，clock 从 1 更新为 2。
@@ -42,15 +44,21 @@ Android 已在真实本地 Axum 服务、MySQL、一次性账户和 cloud worksp
 
 ![Android resolved conflict](assets/phase-1/conflict-resolved-android.png)
 
-### iOS：当前无签名 archive 启动验证
+### iOS：signed app 的真实 conflict → manual merge → resolved
 
-环境：iPhone 17 Pro Simulator，iOS 26.5，arm64；app commit `b39e920`。
+环境：iPhone 17 Pro Simulator，iOS 26.5，arm64；app code commit `ad5a9ef`；Xcode `Sign to Run Locally`。
 
-当前 commit 重新执行 no-sign archive build，卸载旧包后安装并冷启动成功。重启 simulator 清除前一轮 deep-link 系统确认后，JType 进程稳定显示共享 mobile welcome UI：
+1. signed JType 从 app-private vault 打开 `ios-real-conflict.md`，拉取初始正文和 sync base。
+2. 第二个 authenticated mobile client 修改 cloud；iOS 在共享 editor 中编辑本地正文并按 Save。
+3. eager sync 立即显示 `1 个冲突`，无需再手动执行一次全量同步。
+4. 打开 compact conflict Dialog，逐一查看 Local / Cloud / Result，编辑 Result 并保存 manual merge。
+5. UI 回到共享 editor，冲突 badge 消失；服务端 open conflict 数为 0，文档正文与 Result 一致。
 
-![iOS current build launch](assets/phase-1/conflict-build-ios.png)
+![iOS compact conflict resolver](assets/phase-1/conflict-resolver-ios.png)
 
-主机仍处于锁屏，自动 UI 控制无法点按 iOS Simulator，所以本轮没有把第二个重叠编辑伪装成 iOS UI 操作；它由同一真实服务的第二个 authenticated mobile API client 提交。iOS compact conflict 结构和 callback 行为由 390×844 Playwright 用例覆盖，iOS 当前原生 archive 的安装/启动由上图覆盖。解锁后的 iOS 冲突页点按与 OAuth 首次确认仍保留为 Phase 1 最终双平台交互验收项。
+![iOS resolved conflict](assets/phase-1/conflict-resolved-ios.png)
+
+首次真实运行还暴露出 eager save 后紧接全量 sync 会为同一路径生成两个 open conflict。`ad5a9ef` 完成两层修复：前端解析 eager push 返回的 conflict 并立即更新 UI；服务端复用同一路径现有 open conflict，解决时同时清理旧版本遗留的重复 open rows。修复后重新制造重叠编辑，Save 后立即出现一个 conflict；再次手动 Sync 仍保持同一个 conflict id、数据库 open count 为 1，manual merge 后为 0。
 
 ## 自动化与回归
 
@@ -58,8 +66,10 @@ Android 已在真实本地 Axum 服务、MySQL、一次性账户和 cloud worksp
 | --- | --- |
 | `npm run build` | PASS |
 | `npm run build --prefix services/jtype-web/frontend` | PASS |
-| `npm run test:unit` | PASS，45/45 |
+| `npm run test:unit` | PASS，47/47 |
 | `npx playwright test tests/e2e/app.spec.ts` | PASS，42/42 |
+| `cargo test --manifest-path services/jtype-web/Cargo.toml --test sync_tests` | PASS，12/12 |
+| `cargo test --manifest-path src-tauri/Cargo.toml` | PASS，5/5 |
 | 390×844 mobile conflict comparison/manual merge E2E | PASS |
 | desktop conflict comparison/manual merge E2E | PASS |
 | `pnpm tauri android build --debug --target aarch64 --apk --ci` | PASS |
@@ -73,10 +83,9 @@ Android 已在真实本地 Axum 服务、MySQL、一次性账户和 cloud worksp
 - 大小：189,218,612 bytes
 - SHA-256：`d6d3287d3d894fff1363e314bdd1e6fa99febe39e0ef09e7855a1048f1cef854`
 
-最终 iOS simulator archive：`src-tauri/gen/apple/build/jtype_iOS.xcarchive`（约 99 MB）。archive 在临时签名尝试后已重新执行 no-sign build，最终产物未保留测试 entitlements 或临时签名。
+本轮 iOS 运行证据来自 Simulator 专用的本地签名 app；签名仅用于在模拟器启用与正式 app 相同的 Keychain entitlement，不修改仓库中的发布签名配置。
 
 ## 已知问题与后续
 
-- 解锁主机后补做 iOS Simulator 的 OAuth 首次系统确认与 compact conflict 页完整点按；当前报告不将 API client 替代描述为 iOS UI 终验。
-- Phase 1 最终验收还需覆盖双平台软键盘、旋转、Document Info properties、Board 手势和重启恢复的集中 smoke matrix。
 - Phase 2 继续处理进程终止后的安全 OAuth pending-state 恢复、外部 vault provider、系统 share target 与真实设备弱网。
+- 并发请求在数据库事务级别的唯一性强化可继续纳入 Phase 2 sync 幂等工作；当前 sequential eager/full-sync 重复提交已经由服务端测试和真实 iOS 流程覆盖。
