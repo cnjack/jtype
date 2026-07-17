@@ -396,6 +396,11 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     try {
       dispatch({ type: "SET_LOADING", isLoading: true });
       const defaultName = basename(state.currentPath).replace(/\.(md|markdown|mdown|mkd)$/i, ".md");
+      if (capabilities.isMobile) {
+        await tauri.shareMarkdown(defaultName, state.editorContent);
+        dispatch({ type: "SET_STATUS", message: `Opened system sharing for ${defaultName}.` });
+        return;
+      }
       const selected = await save({
         defaultPath: defaultName,
         filters: [{ name: "Markdown", extensions: ["md", "markdown", "mdown", "mkd"] }],
@@ -408,7 +413,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, state.currentPath, state.currentKind, state.editorContent]);
+  }, [capabilities.isMobile, dispatch, state.currentPath, state.currentKind, state.editorContent]);
 
   const createDocument = useCallback(async (relativePath: string, baseDir = "") => {
     if (!state.workspace) return;

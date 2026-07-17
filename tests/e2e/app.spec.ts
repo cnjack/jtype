@@ -20,6 +20,7 @@ declare global {
     __E2E_INSTALL_BOARD__?: () => void;
     __DIALOG_OPEN_RESULT__?: string | string[] | null;
     __LAST_IMPORT_ARGS__?: Record<string, unknown>;
+    __LAST_SHARE_ARGS__?: Record<string, unknown>;
     __INITIAL_EXTERNAL_SOURCES_JSON__?: string;
   }
 }
@@ -267,6 +268,10 @@ test.beforeEach(async ({ page }) => {
           if (cmd === "read_markdown_file") return files[String(args.path)] ?? "";
           if (cmd === "write_markdown_file") {
             files[String(args.path)] = String(args.content);
+            return null;
+          }
+          if (cmd === "share_markdown") {
+            window.__LAST_SHARE_ARGS__ = args;
             return null;
           }
           if (cmd === "read_board_file") return files[String(args.path)] ?? "";
@@ -893,6 +898,42 @@ test("exports Markdown from the editor toolbar", async ({ page }) => {
   await page.getByRole("button", { name: "Export", exact: true }).click();
   await page.getByRole("menuitem", { name: "Markdown", exact: true }).click();
   await expect(page.locator("#operation-log")).toContainText("Exported Markdown to C:/workspace/intro.md.");
+});
+
+test("shares the current Markdown buffer through the mobile system adapter", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(() => {
+    window.__RUNTIME_CAPABILITIES__ = {
+      platform: "android",
+      clientType: "mobile",
+      isMobile: true,
+      isTouchPrimary: true,
+      prefersCompactLayout: true,
+      supportsWindowDrag: false,
+      supportsUpdater: false,
+      supportsProcessRestart: false,
+      supportsCliInstall: false,
+      supportsFileDrop: false,
+      supportsExternalVault: false,
+      usesAppPrivateVault: true,
+    };
+  });
+  await page.reload();
+
+  await page.locator("#welcome-default-vault").click();
+  await page.getByRole("button", { name: "Local only" }).click();
+  await page.locator("#mobile-navigation-button").click();
+  await page.locator("#mobile-vault-navigation").getByRole("button", { name: "intro.md", exact: true }).click();
+  await page.getByLabel("Markdown editor").fill("# Unsaved mobile share\n\nCurrent editor content.");
+
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  await page.getByRole("menuitem", { name: "Markdown", exact: true }).click();
+
+  await expect.poll(() => page.evaluate(() => window.__LAST_SHARE_ARGS__)).toEqual({
+    fileName: "intro.md",
+    content: "# Unsaved mobile share\n\nCurrent editor content.",
+  });
+  await expect(page.locator("#operation-log")).toContainText("Opened system sharing for intro.md.");
 });
 
 test("connects in browser and syncs a vault to the web service", async ({ page }) => {

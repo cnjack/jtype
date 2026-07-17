@@ -22,6 +22,8 @@ use tauri::{AppHandle, Emitter};
 #[cfg(mobile)]
 use tauri_plugin_mobile_import::MobileImportExt;
 #[cfg(mobile)]
+use tauri_plugin_mobile_share::MobileShareExt;
+#[cfg(mobile)]
 use tauri_plugin_secure_storage::SecureStorageExt;
 
 use workspace::{
@@ -251,6 +253,28 @@ fn read_markdown_file(path: String) -> Result<String, String> {
 #[tauri::command]
 fn write_markdown_file(path: String, content: String) -> Result<(), String> {
     workspace::write_markdown(&PathBuf::from(path), &content)
+}
+
+#[tauri::command]
+fn share_markdown(app: AppHandle, file_name: String, content: String) -> Result<(), String> {
+    #[cfg(mobile)]
+    {
+        let launch = app
+            .mobile_share()
+            .share_markdown(file_name, content)
+            .map_err(|error| error.to_string())?;
+        if launch.launched {
+            Ok(())
+        } else {
+            Err("The system share sheet did not open".to_string())
+        }
+    }
+
+    #[cfg(desktop)]
+    {
+        let _ = (app, file_name, content);
+        Err("System sharing is only available on mobile".to_string())
+    }
 }
 
 #[tauri::command]
@@ -1103,6 +1127,7 @@ pub fn run() {
     {
         builder = builder
             .plugin(tauri_plugin_mobile_import::init())
+            .plugin(tauri_plugin_mobile_share::init())
             .plugin(tauri_plugin_secure_storage::init());
     }
 
@@ -1123,6 +1148,7 @@ pub fn run() {
             open_default_vault,
             read_markdown_file,
             write_markdown_file,
+            share_markdown,
             write_binary_file,
             read_binary_file,
             open_workspace,

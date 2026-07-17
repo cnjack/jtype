@@ -1,0 +1,16 @@
+[package]
+name = "tauri-plugin-mobile-share"
+version = "0.1.0"
+authors = ["JType"]
+description = "JType mobile system-share adapter"
+edition = "2021"
+rust-version = "1.77.2"
+links = "tauri-plugin-mobile-share"
+
+[dependencies]
+tauri = { version = "2" }
+serde = { version = "1.0", features = ["derive"] }
+thiserror = "2"
+
+[build-dependencies]
+tauri-plugin = { version = "2", features = ["build"] }

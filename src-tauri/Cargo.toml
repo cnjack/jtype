@@ -44,6 +44,7 @@ tokio-tungstenite = { version = "0.24", features = ["native-tls"] }
 [target.'cfg(any(target_os = "android", target_os = "ios"))'.dependencies]
 tokio-tungstenite = { version = "0.24", features = ["rustls-tls-webpki-roots"] }
 tauri-plugin-mobile-import = { path = "../plugins/mobile-import" }
+tauri-plugin-mobile-share = { path = "../plugins/mobile-share" }
 tauri-plugin-secure-storage = { path = "../plugins/secure-storage" }
 
 [target.'cfg(windows)'.dependencies]
