@@ -698,6 +698,10 @@ msgid "Detected save, queued push."
 msgstr "保存を検出し、プッシュをキューに入れました。"
 
 #: src/pages/DeviceOAuth.tsx
+msgid "Device authorized! Returning to JType..."
+msgstr "デバイスが承認されました。JType に戻ります…"
+
+#: src/pages/DeviceOAuth.tsx
 msgid "Device authorized! You can return to the JType desktop app."
 msgstr "デバイスが承認されました！JType デスクトップアプリに戻れます。"
 
@@ -1896,6 +1900,10 @@ msgstr "削除済みドキュメントを復元するか、完全に削除しま
 #: src/pages/Workspace.tsx
 msgid "Restore or delete cloud documents"
 msgstr "クラウドドキュメントを復元または削除"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Return to JType"
+msgstr "JType に戻る"
 
 #: src/pages/Admin.tsx
 msgid "Review accounts, roles, and enabled status."

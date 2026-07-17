@@ -18,5 +18,15 @@
     "iOS": {
       "minimumSystemVersion": "14.0"
     }
+  },
+  "plugins": {
+    "deep-link": {
+      "mobile": [
+        {
+          "scheme": ["jtype"],
+          "appLink": false
+        }
+      ]
+    }
   }
 }

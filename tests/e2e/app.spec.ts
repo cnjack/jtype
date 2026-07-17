@@ -26,6 +26,10 @@ declare global {
     __LAST_SHARE_PDF_ARGS__?: Record<string, unknown>;
     __LAST_BINARY_WRITE_ARGS__?: Record<string, unknown>;
     __INITIAL_EXTERNAL_SOURCES_JSON__?: string;
+    __INITIAL_DEEP_LINKS__?: string[] | null;
+    __LAST_OPEN_URL__?: string;
+    __OAUTH_START_BODY__?: Record<string, unknown>;
+    __OAUTH_POLL_PENDING__: boolean;
     __EMIT_TAURI_EVENT__: (event: string, payload: unknown) => number;
   }
 }
@@ -178,6 +182,7 @@ test.beforeEach(async ({ page }) => {
       __SYNC_CLIENT_TYPES__: [],
       __START_LISTENER_CALLS__: [],
       __STOP_LISTENER_CALLS__: 0,
+      __OAUTH_POLL_PENDING__: false,
       __VAULT_SETTINGS__: {
         "C:/workspace": {
           cloudSyncEnabled: true,
@@ -279,6 +284,7 @@ test.beforeEach(async ({ page }) => {
             eventSubscriptions.delete(Number(args.eventId));
             return null;
           }
+          if (cmd === "plugin:deep-link|get_current") return window.__INITIAL_DEEP_LINKS__ ?? null;
           if (cmd === "plugin:updater|check") return null;
           if (cmd === "plugin:dialog|open") {
             const options = args.options as { directory?: boolean };
@@ -430,7 +436,10 @@ test.beforeEach(async ({ page }) => {
             return { errors: [], warnings: [] };
           }
           if (cmd === "plugin:opener|open_path") return null;
-          if (cmd === "plugin:opener|open_url") return null;
+          if (cmd === "plugin:opener|open_url") {
+            window.__LAST_OPEN_URL__ = String(args.url);
+            return null;
+          }
           if (cmd === "build_ai_index") {
             return { outputFile: "C:/workspace/.jtype/ai-context.jsonl", documents: 2, chunks: 2, links: 1, assets: 1 };
           }
@@ -508,16 +517,24 @@ test.beforeEach(async ({ page }) => {
         );
       }
       if (url.endsWith("/api/oauth/device/start")) {
+        const body = JSON.parse(String(init?.body ?? "{}")) as Record<string, unknown>;
+        window.__OAUTH_START_BODY__ = body;
+        const verificationUrl = new URL("http://localhost:13345/oauth/device");
+        verificationUrl.searchParams.set("code", "123456");
+        if (typeof body.returnUrl === "string") verificationUrl.searchParams.set("return_to", body.returnUrl);
         return new Response(
           JSON.stringify({
             deviceCode: "device-e2e",
             userCode: "123456",
-            verificationUrl: "http://localhost:13345/oauth/device?code=123456",
+            verificationUrl: verificationUrl.toString(),
           }),
           { status: 200, headers: { "Content-Type": "application/json" } },
         );
       }
       if (url.endsWith("/api/oauth/device/poll")) {
+        if (window.__OAUTH_POLL_PENDING__) {
+          return new Response("authorization pending", { status: 400 });
+        }
         return new Response(
           JSON.stringify({
             token: "test-token",
@@ -1059,6 +1076,7 @@ test("connects in browser and syncs a vault to the web service", async ({ page }
 
   await page.getByRole("button", { name: "Connect in browser" }).click();
   await expect(page.locator("#operation-log")).toContainText("Connected as jack", { timeout: 5000 });
+  expect(await page.evaluate(() => window.__OAUTH_START_BODY__?.returnUrl)).toBeUndefined();
 
   await page.locator("#account-sync").click();
   await expect(page.locator("#operation-log")).toContainText("Synced");
@@ -1078,6 +1096,54 @@ test("connects in browser and syncs a vault to the web service", async ({ page }
       lastPulledClock: 0,
     },
   ]);
+});
+
+test("returns mobile browser authorization through the registered deep link", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__RUNTIME_CAPABILITIES__ = {
+      platform: "android",
+      clientType: "mobile",
+      isMobile: true,
+      isTouchPrimary: true,
+      prefersCompactLayout: true,
+      supportsWindowDrag: false,
+      supportsUpdater: false,
+      supportsProcessRestart: false,
+      supportsCliInstall: false,
+      supportsFileDrop: false,
+      supportsExternalVault: false,
+      usesAppPrivateVault: true,
+    };
+    window.__OAUTH_POLL_PENDING__ = true;
+  });
+  await page.reload();
+  await page.locator("#welcome-default-vault").click();
+  await page.getByRole("button", { name: "Local only" }).click();
+  await page.getByRole("button", { name: "Local vault mode" }).click();
+  await page.getByRole("button", { name: "Profile", exact: true }).click();
+
+  await page.getByRole("button", { name: "Connect in browser" }).click();
+  await expect(page.getByText(/Waiting for browser authorization/)).toBeVisible();
+  expect(await page.evaluate(() => window.__OAUTH_START_BODY__)).toMatchObject({
+    deviceId: "dev_e2e",
+    returnUrl: "jtype://oauth/complete",
+  });
+  const openedUrl = await page.evaluate(() => window.__LAST_OPEN_URL__ ?? "");
+  expect(new URL(openedUrl).searchParams.get("return_to")).toBe("jtype://oauth/complete");
+  expect(openedUrl).not.toContain("device-e2e");
+  expect(openedUrl).not.toContain("test-token");
+
+  await expect.poll(() => page.evaluate(() =>
+    window.__EMIT_TAURI_EVENT__("deep-link://new-url", ["jtype://oauth/not-complete"]),
+  )).toBeGreaterThan(0);
+  await expect(page.getByText(/Waiting for browser authorization/)).toBeVisible();
+
+  const callbackListeners = await page.evaluate(() => {
+    window.__OAUTH_POLL_PENDING__ = false;
+    return window.__EMIT_TAURI_EVENT__("deep-link://new-url", ["jtype://oauth/complete"]);
+  });
+  expect(callbackListeners).toBeGreaterThan(0);
+  await expect(page.locator("#operation-log")).toContainText("Connected as jack", { timeout: 5000 });
 });
 
 test("identifies shared cloud sync and websocket traffic as mobile", async ({ page }) => {

@@ -1,6 +1,6 @@
 import React, { useReducer, useCallback, useEffect, useRef, useState, createContext, useContext } from "react";
 import { appReducer, initialState, AppStateContext, AppDispatchContext } from "./AppState";
-import { useFileSystem, useCloudSync, useKeyboardShortcuts, useCommands, useDraftCloseGuard, useMobileSyncRecovery } from "../hooks";
+import { useFileSystem, useCloudSync, useKeyboardShortcuts, useCommands, useDraftCloseGuard, useMobileOAuthDeepLink, useMobileSyncRecovery } from "../hooks";
 import type { MobileSyncRecoveryReason } from "../hooks";
 import { usePeriodicSync } from "../hooks/usePeriodicSync";
 import { useCloudEvents } from "../hooks/useCloudEvents";
@@ -84,6 +84,7 @@ function AppContent() {
   const { state, dispatch } = useApp();
   const capabilities = useRuntimeCapabilities();
   const sync = useCloudSync();
+  useMobileOAuthDeepLink();
   const autoSync = useCallback(async () => {
     const vaultSettings = state.workspace ? state.vaultSettings[state.workspace.rootPath] : undefined;
     const binding = state.vaultBindings.find((b) => b.localVaultPath === state.workspace?.rootPath);

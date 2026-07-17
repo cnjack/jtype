@@ -18,5 +18,15 @@
     "android": {
       "minSdkVersion": 24
     }
+  },
+  "plugins": {
+    "deep-link": {
+      "mobile": [
+        {
+          "scheme": ["jtype"],
+          "appLink": false
+        }
+      ]
+    }
   }
 }

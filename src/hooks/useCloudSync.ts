@@ -6,9 +6,11 @@ import { httpRequest } from "@shared/lib/http";
 import { syncsAsDocument } from "@shared/lib/fileTypes";
 import { sha256Hex, sha256HexBytes } from "../lib/utils";
 import { markCloudWrite, markCloudWriteBatch } from "../lib/cloudWriteHashes";
-import type { AuthResponse, CloudProfile, VaultBinding, CloudDocument, CloudFolder, CloudWorkspace, DeletedFolder, DeletedPath, DeletedPathInput, EntryKind, SyncPushDocument, SyncPushResponse, TrashSyncPayload, VaultSettings, BlobManifestEntry } from "../lib/types";
+import type { AuthResponse, CloudProfile, VaultBinding, CloudDocument, CloudFolder, CloudWorkspace, DeletedFolder, DeletedPath, DeletedPathInput, EntryKind, OAuthDeviceStartResponse, SyncPushDocument, SyncPushResponse, TrashSyncPayload, VaultSettings, BlobManifestEntry } from "../lib/types";
 import { parseSyncConflicts } from "../lib/types";
 import { useRuntimeCapabilities } from "../app/RuntimeCapabilities";
+import { MOBILE_OAUTH_CALLBACK_URL } from "@shared/lib/mobileOAuth";
+import { registerMobileOAuthReturnHandler } from "../lib/mobileOAuthReturn";
 
 type TrashOperationPayload =
   | { type: "restore"; trashId: string }
@@ -40,6 +42,7 @@ export function useCloudSync() {
   const state = useAppState();
   const capabilities = useRuntimeCapabilities();
   const pollTimerRef = useRef<number | null>(null);
+  const oauthReturnCleanupRef = useRef<(() => void) | null>(null);
 
   const getServiceUrl = useCallback(() => {
     return (state.serviceUrl || state.cloudProfile?.serverUrl || "http://localhost:13345").trim().replace(/\/$/, "");
@@ -50,35 +53,45 @@ export function useCloudSync() {
       clearInterval(pollTimerRef.current);
       pollTimerRef.current = null;
     }
+    oauthReturnCleanupRef.current?.();
+    oauthReturnCleanupRef.current = null;
   }, []);
 
   const startBrowserOAuth = useCallback(async () => {
     try {
       dispatch({ type: "SET_LOADING", isLoading: true });
-      const response = await httpRequest(`${getServiceUrl()}/api/oauth/device/start`, {
+      const serviceUrl = getServiceUrl();
+      const response = await httpRequest(`${serviceUrl}/api/oauth/device/start`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ deviceId: state.cloudProfile?.deviceId ?? capabilities.clientType }),
+        body: JSON.stringify({
+          deviceId: state.cloudProfile?.deviceId ?? capabilities.clientType,
+          ...(capabilities.isMobile ? { returnUrl: MOBILE_OAUTH_CALLBACK_URL } : {}),
+        }),
       });
       if (!response.ok) throw new Error(await response.text());
-      const start = (await response.json()) as { deviceCode: string; userCode: string; verificationUrl: string };
+      const start = (await response.json()) as OAuthDeviceStartResponse;
       dispatch({ type: "SET_OAUTH", deviceCode: start.deviceCode, userCode: start.userCode, startedAt: Date.now() });
       dispatch({ type: "SET_STATUS", message: `Browser authorization opened. Use code ${start.userCode}.` });
-      if (tauri.isAvailable) await openUrl(start.verificationUrl);
 
       stopDevicePolling();
-      pollTimerRef.current = window.setInterval(async () => {
+      let pollInFlight = false;
+      let finished = false;
+      const pollDeviceCode = async () => {
+        if (pollInFlight || finished) return;
+        pollInFlight = true;
         try {
-          const pollResponse = await httpRequest(`${getServiceUrl()}/api/oauth/device/poll`, {
+          const pollResponse = await httpRequest(`${serviceUrl}/api/oauth/device/poll`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ deviceCode: start.deviceCode }),
           });
           if (pollResponse.ok) {
+            finished = true;
             const auth = (await pollResponse.json()) as AuthResponse;
             stopDevicePolling();
             const profile: CloudProfile = {
-              serverUrl: getServiceUrl(),
+              serverUrl: serviceUrl,
               username: auth.username,
               siteUrl: auth.siteUrl,
               token: auth.token,
@@ -89,7 +102,7 @@ export function useCloudSync() {
             dispatch({ type: "SET_STATUS", message: `Connected as ${auth.username}.` });
             stopDevicePolling();
             try {
-              const wsResp = await httpRequest(`${getServiceUrl()}/api/v1/workspaces`, {
+              const wsResp = await httpRequest(`${serviceUrl}/api/v1/workspaces`, {
                 headers: { Authorization: `Bearer ${auth.token}` },
               });
               if (wsResp.ok) {
@@ -101,15 +114,27 @@ export function useCloudSync() {
           }
           const errText = await pollResponse.text();
           if (errText.includes("authorization pending")) return;
+          finished = true;
           stopDevicePolling();
           dispatch({ type: "CLEAR_OAUTH" });
           dispatch({ type: "SET_STATUS", message: `Authorization failed: ${errText}` });
         } catch (error) {
+          finished = true;
           stopDevicePolling();
           dispatch({ type: "CLEAR_OAUTH" });
           dispatch({ type: "SET_STATUS", message: String(error) });
+        } finally {
+          pollInFlight = false;
         }
-      }, 1000);
+      };
+
+      if (capabilities.isMobile) {
+        oauthReturnCleanupRef.current = registerMobileOAuthReturnHandler(() => {
+          void pollDeviceCode();
+        });
+      }
+      pollTimerRef.current = window.setInterval(() => void pollDeviceCode(), 1000);
+      if (tauri.isAvailable) await openUrl(start.verificationUrl);
     } catch (error) {
       dispatch({ type: "SET_STATUS", message: String(error) });
     } finally {
@@ -128,11 +153,13 @@ export function useCloudSync() {
   // The code is unchanged; this just re-opens the same verification URL.
   const reopenBrowser = useCallback(async () => {
     if (!state.oauthUserCode) return;
-    const url = `${getServiceUrl()}/oauth/device?code=${state.oauthUserCode}`;
+    const url = new URL(`${getServiceUrl()}/oauth/device`);
+    url.searchParams.set("code", state.oauthUserCode);
+    if (capabilities.isMobile) url.searchParams.set("return_to", MOBILE_OAUTH_CALLBACK_URL);
     if (tauri.isAvailable) {
-      try { await openUrl(url); } catch { /* ignore opener errors */ }
+      try { await openUrl(url.toString()); } catch { /* ignore opener errors */ }
     }
-  }, [getServiceUrl, state.oauthUserCode]);
+  }, [capabilities.isMobile, getServiceUrl, state.oauthUserCode]);
 
   const disconnectAccount = useCallback(async () => {
     stopDevicePolling();

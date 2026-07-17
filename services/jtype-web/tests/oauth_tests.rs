@@ -22,6 +22,45 @@ async fn device_start_returns_codes() {
         .as_str()
         .unwrap_or("")
         .contains("/oauth/device"));
+    let verification = url::Url::parse(body["verificationUrl"].as_str().unwrap()).unwrap();
+    assert!(verification
+        .query_pairs()
+        .all(|(key, _)| key != "return_to"));
+}
+
+#[tokio::test]
+async fn device_start_accepts_only_the_mobile_app_return_url() {
+    let (app, _pool) = common::setup().await;
+    let (status, body) = common::req(
+        app.clone(),
+        "POST",
+        "/api/oauth/device/start",
+        None,
+        Some(json!({
+            "deviceId": "mobile-device",
+            "returnUrl": "jtype://oauth/complete"
+        })),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    let verification = url::Url::parse(body["verificationUrl"].as_str().unwrap()).unwrap();
+    let return_to = verification
+        .query_pairs()
+        .find_map(|(key, value)| (key == "return_to").then(|| value.into_owned()));
+    assert_eq!(return_to.as_deref(), Some("jtype://oauth/complete"));
+
+    let (invalid_status, _) = common::req(
+        app,
+        "POST",
+        "/api/oauth/device/start",
+        None,
+        Some(json!({
+            "deviceId": "mobile-device",
+            "returnUrl": "https://example.com/capture"
+        })),
+    )
+    .await;
+    assert_eq!(invalid_status, StatusCode::BAD_REQUEST);
 }
 
 // 2. deviceId is optional — empty body `{}` should still succeed

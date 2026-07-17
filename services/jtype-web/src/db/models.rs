@@ -444,6 +444,7 @@ pub struct SyncConflictResponse {
 #[serde(rename_all = "camelCase")]
 pub struct DeviceOAuthStartRequest {
     pub device_id: Option<String>,
+    pub return_url: Option<String>,
 }
 
 #[derive(Debug, Serialize)]

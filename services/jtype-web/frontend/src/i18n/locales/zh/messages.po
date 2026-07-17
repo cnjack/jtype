@@ -696,6 +696,10 @@ msgid "Detected save, queued push."
 msgstr "检测到保存，已排队推送。"
 
 #: src/pages/DeviceOAuth.tsx
+msgid "Device authorized! Returning to JType..."
+msgstr "设备已授权！正在返回 JType……"
+
+#: src/pages/DeviceOAuth.tsx
 msgid "Device authorized! You can return to the JType desktop app."
 msgstr "设备已授权！您可以返回 JType 桌面应用。"
 
@@ -1890,6 +1894,10 @@ msgstr "恢复已删除文档或永久删除。"
 #: src/pages/Workspace.tsx
 msgid "Restore or delete cloud documents"
 msgstr "恢复或删除云文档"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Return to JType"
+msgstr "返回 JType"
 
 #: src/pages/Admin.tsx
 msgid "Review accounts, roles, and enabled status."

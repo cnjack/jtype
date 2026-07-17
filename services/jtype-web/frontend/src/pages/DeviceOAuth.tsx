@@ -4,15 +4,21 @@ import { Trans } from '@lingui/react/macro'
 import { useSearchParams } from 'react-router-dom'
 import { api, setToken, setStoredUsername, getStoredUsername } from '../api'
 import { AuthCard, JTypeWordmark, OTPInput } from '@shared/components'
+import { isMobileOAuthCallbackUrl } from '@shared/lib/mobileOAuth'
 import {
   ComputerDesktopIcon,
   ExclamationCircleIcon,
   CheckCircleIcon,
   ArrowPathIcon,
+  ArrowUturnLeftIcon,
 } from '@heroicons/react/24/outline'
 
 export function DeviceOAuth() {
   const [searchParams] = useSearchParams()
+  const requestedReturnUrl = searchParams.get('return_to')
+  const returnUrl = requestedReturnUrl && isMobileOAuthCallbackUrl(requestedReturnUrl)
+    ? requestedReturnUrl
+    : null
   const [userCode, setUserCode] = useState(searchParams.get('code') || '')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -64,7 +70,12 @@ export function DeviceOAuth() {
     setLoading(true)
     try {
       await api.approveDevice(userCode)
-      setStatus(t`Device authorized! You can return to the JType desktop app.`)
+      setStatus(returnUrl
+        ? t`Device authorized! Returning to JType...`
+        : t`Device authorized! You can return to the JType desktop app.`)
+      if (returnUrl) {
+        window.setTimeout(() => window.location.assign(returnUrl), 250)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : t`Authorization failed`)
     } finally {
@@ -133,10 +144,23 @@ export function DeviceOAuth() {
             </div>
 
             {status && (
-              <p className="flex items-start gap-2 rounded-lg bg-brand-soft px-3 py-2 text-sm text-brand-dark">
-                <CheckCircleIcon className="mt-0.5 h-4 w-4 shrink-0" />
-                <span>{status}</span>
-              </p>
+              <div className="space-y-2">
+                <p className="flex items-start gap-2 rounded-lg bg-brand-soft px-3 py-2 text-sm text-brand-dark">
+                  <CheckCircleIcon className="mt-0.5 h-4 w-4 shrink-0" />
+                  <span>{status}</span>
+                </p>
+                {returnUrl && (
+                  <button
+                    type="button"
+                    onClick={() => window.location.assign(returnUrl)}
+                    className="toolbar-button h-10 w-full justify-center"
+                    title={t`Return to JType`}
+                  >
+                    <ArrowUturnLeftIcon className="h-4 w-4" />
+                    <Trans>Return to JType</Trans>
+                  </button>
+                )}
+              </div>
             )}
             {error && (
               <p className="flex items-start gap-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">

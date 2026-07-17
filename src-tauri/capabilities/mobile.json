@@ -10,6 +10,7 @@
     "dialog:allow-confirm",
     "dialog:allow-open",
     "dialog:allow-save",
+    "deep-link:default",
     "fs:allow-read-text-file",
     "opener:default"
   ]

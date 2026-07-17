@@ -1213,6 +1213,7 @@ pub fn run() {
     #[cfg(mobile)]
     {
         builder = builder
+            .plugin(tauri_plugin_deep_link::init())
             .plugin(tauri_plugin_mobile_import::init())
             .plugin(tauri_plugin_mobile_share::init())
             .plugin(tauri_plugin_secure_storage::init());

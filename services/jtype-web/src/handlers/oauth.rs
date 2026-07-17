@@ -9,11 +9,23 @@ use crate::util::*;
 use crate::AppState;
 use axum::http::StatusCode;
 
+const MOBILE_OAUTH_RETURN_URL: &str = "jtype://oauth/complete";
+
 pub async fn start(
     State(state): State<AppState>,
     Json(payload): Json<DeviceOAuthStartRequest>,
 ) -> Result<Json<DeviceOAuthStartResponse>, AppError> {
     let _device_id = payload.device_id.unwrap_or_else(|| "desktop".to_string());
+    let return_url = payload
+        .return_url
+        .as_deref()
+        .map(str::trim)
+        .filter(|value| !value.is_empty());
+    if return_url.is_some_and(|value| value != MOBILE_OAUTH_RETURN_URL) {
+        return Err(AppError::BadRequest(
+            "unsupported OAuth return URL".to_string(),
+        ));
+    }
     let device_code = random_token();
     let user_code = short_user_code();
     let device_code_hash = sha256_hex(&device_code);
@@ -25,13 +37,20 @@ pub async fn start(
     .bind(&user_code)
     .execute(&state.pool)
     .await?;
+    let mut verification_url = format!(
+        "{}/oauth/device?code={}",
+        state.public_base_url.trim_end_matches('/'),
+        user_code
+    );
+    if let Some(return_url) = return_url {
+        let encoded =
+            url::form_urlencoded::byte_serialize(return_url.as_bytes()).collect::<String>();
+        verification_url.push_str("&return_to=");
+        verification_url.push_str(&encoded);
+    }
     Ok(Json(DeviceOAuthStartResponse {
         device_code,
-        verification_url: format!(
-            "{}/oauth/device?code={}",
-            state.public_base_url.trim_end_matches('/'),
-            user_code
-        ),
+        verification_url,
         user_code,
     }))
 }

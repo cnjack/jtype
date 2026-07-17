@@ -705,6 +705,10 @@ msgid "Detected save, queued push."
 msgstr "Detected save, queued push."
 
 #: src/pages/DeviceOAuth.tsx
+msgid "Device authorized! Returning to JType..."
+msgstr "Device authorized! Returning to JType..."
+
+#: src/pages/DeviceOAuth.tsx
 msgid "Device authorized! You can return to the JType desktop app."
 msgstr "Device authorized! You can return to the JType desktop app."
 
@@ -1914,6 +1918,10 @@ msgstr "Restore deleted documents or remove them permanently."
 #: src/pages/Workspace.tsx
 msgid "Restore or delete cloud documents"
 msgstr "Restore or delete cloud documents"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Return to JType"
+msgstr "Return to JType"
 
 #: src/pages/Admin.tsx
 msgid "Review accounts, roles, and enabled status."
