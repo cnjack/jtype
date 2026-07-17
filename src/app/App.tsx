@@ -546,11 +546,11 @@ function AppContent() {
 
   return (
     <CommandsContext.Provider value={commands}>
-      <div className={`${state.mode === "empty" && !state.workspace ? "app-empty" : state.workspace ? "workspace-mode" : "single-file-mode"} ${state.focusMode ? "focus-mode" : ""} ${capabilities.isMobile ? "runtime-mobile" : "runtime-desktop"} h-screen overflow-hidden bg-[#f5f8f6] text-stone-950 antialiased`}>
-        <main className="grid h-screen grid-rows-[auto_1fr_auto]">
+      <div className={`${state.mode === "empty" && !state.workspace ? "app-empty" : state.workspace ? "workspace-mode" : "single-file-mode"} ${state.focusMode ? "focus-mode" : ""} ${capabilities.isMobile ? "runtime-mobile" : "runtime-desktop"} h-screen min-w-0 overflow-hidden bg-[#f5f8f6] text-stone-950 antialiased`}>
+        <main className="grid h-screen min-w-0 grid-cols-[minmax(0,1fr)] grid-rows-[auto_1fr_auto]">
           <Header onOpenMobileNavigation={sidebarVisible && capabilities.isMobile ? () => setMobileNavigationOpen(true) : undefined} />
           <section
-            className="relative grid min-h-0"
+            className="relative grid min-h-0 min-w-0"
             style={{ gridTemplateColumns: desktopSidebarVisible ? `${sidebarWidth}px minmax(0,1fr)` : "minmax(0,1fr)" }}
           >
             {desktopSidebarVisible && <Sidebar />}
@@ -558,7 +558,7 @@ function AppContent() {
             {/* The content floats as a single rounded panel that the shell (header,
                 sidebar, status bar) wraps around — no divider lines, just a soft
                 tinted lift. */}
-            <div id="app-content-panel" className={`${capabilities.isMobile ? "mx-3 mb-2 mt-1" : "m-2.5"} grid min-h-0 grid-cols-1 overflow-hidden rounded-2xl bg-[#fbfdfb] shadow-[0_1px_2px_rgba(20,45,38,0.04),0_16px_38px_-24px_rgba(20,45,38,0.22)] ring-1 ring-black/[0.035]`}>
+            <div id="app-content-panel" className={`${capabilities.isMobile ? "mx-3 mb-2 mt-1" : "m-2.5"} grid min-h-0 min-w-0 grid-cols-1 overflow-hidden rounded-2xl bg-[#fbfdfb] shadow-[0_1px_2px_rgba(20,45,38,0.04),0_16px_38px_-24px_rgba(20,45,38,0.22)] ring-1 ring-black/[0.035]`}>
               {showWelcome ? <WelcomeScreen /> : showVaultHome ? <VaultHome /> : showEditor ? <EditorShell /> : <WelcomeScreen />}
             </div>
           </section>

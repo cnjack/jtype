@@ -741,6 +741,7 @@ test("opens the default vault from welcome", async ({ page }) => {
 test("adapts the shared welcome screen to app-private mobile storage", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.addInitScript(() => {
+    window.localStorage.setItem("jtype-locale", "zh");
     Object.defineProperty(navigator, "userAgent", {
       value: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)",
       configurable: true,
@@ -761,21 +762,34 @@ test("adapts the shared welcome screen to app-private mobile storage", async ({ 
     };
   });
   await page.reload();
-  await page.evaluate(() => window.__E2E_INSTALL_BOARD__?.());
 
   await expect(page.locator("html")).toHaveAttribute("data-jtype-platform", "ios");
+  await expect(page.locator("html")).toHaveAttribute("lang", "zh-Hans");
   await expect(page.locator("#welcome-private-vault-note")).toBeVisible();
   await expect(page.locator("#welcome-open-folder")).toBeHidden();
   await expect(page.locator("#welcome-open-markdown")).toBeHidden();
   await expect(page.getByText("~/Documents/Jtype Vaullt")).toBeHidden();
-  await page.locator("#welcome-screen h2").evaluate((heading) => {
-    heading.textContent = "创建一个库或编辑一个 Markdown 文件。";
+  const mobileShellViewport = await page.locator("#app-content-panel").evaluate((panel) => {
+    const screen = panel.querySelector<HTMLElement>("#welcome-screen");
+    const panelBounds = panel.getBoundingClientRect();
+    return {
+      panelClientWidth: panel.clientWidth,
+      panelScrollWidth: panel.scrollWidth,
+      panelRight: panelBounds.right,
+      screenClientWidth: screen?.clientWidth ?? 0,
+      screenScrollWidth: screen?.scrollWidth ?? 0,
+      viewportWidth: window.innerWidth,
+    };
   });
-  const welcomeViewport = await page.locator("#welcome-screen").evaluate((screen) => ({
-    clientWidth: screen.clientWidth,
-    scrollWidth: screen.scrollWidth,
-  }));
-  expect(welcomeViewport.scrollWidth).toBeLessThanOrEqual(welcomeViewport.clientWidth);
+  expect(mobileShellViewport.panelScrollWidth).toBeLessThanOrEqual(mobileShellViewport.panelClientWidth);
+  expect(mobileShellViewport.screenScrollWidth).toBeLessThanOrEqual(mobileShellViewport.screenClientWidth);
+  expect(mobileShellViewport.panelRight).toBeLessThanOrEqual(mobileShellViewport.viewportWidth);
+
+  // Continue the broader interaction coverage in English so its established
+  // accessible-name selectors remain stable after the localized shell check.
+  await page.addInitScript(() => window.localStorage.setItem("jtype-locale", "en"));
+  await page.reload();
+  await page.evaluate(() => window.__E2E_INSTALL_BOARD__?.());
 
   await page.locator("#welcome-default-vault").click();
   await page.getByRole("button", { name: "Local only" }).click();
