@@ -8,6 +8,8 @@ use jtype_core as workspace;
 
 use notify::Watcher;
 use serde::{Deserialize, Serialize};
+#[cfg(mobile)]
+use std::time::{SystemTime, UNIX_EPOCH};
 use std::{
     collections::hash_map::DefaultHasher,
     env, fs,
@@ -259,21 +261,106 @@ fn write_markdown_file(path: String, content: String) -> Result<(), String> {
 fn share_markdown(app: AppHandle, file_name: String, content: String) -> Result<(), String> {
     #[cfg(mobile)]
     {
-        let launch = app
-            .mobile_share()
-            .share_markdown(file_name, content)
-            .map_err(|error| error.to_string())?;
-        if launch.launched {
-            Ok(())
-        } else {
-            Err("The system share sheet did not open".to_string())
-        }
+        share_mobile_file(&app, &file_name, "text/markdown", content.as_bytes())
     }
 
     #[cfg(desktop)]
     {
         let _ = (app, file_name, content);
         Err("System sharing is only available on mobile".to_string())
+    }
+}
+
+#[tauri::command]
+fn share_pdf(app: AppHandle, file_name: String, content: Vec<u8>) -> Result<(), String> {
+    #[cfg(mobile)]
+    {
+        share_mobile_file(&app, &file_name, "application/pdf", &content)
+    }
+
+    #[cfg(desktop)]
+    {
+        let _ = (app, file_name, content);
+        Err("System sharing is only available on mobile".to_string())
+    }
+}
+
+#[cfg(mobile)]
+fn share_mobile_file(
+    app: &AppHandle,
+    file_name: &str,
+    mime_type: &str,
+    content: &[u8],
+) -> Result<(), String> {
+    let safe_name = safe_mobile_share_name(file_name, mime_type);
+    let created_at = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_err(|error| error.to_string())?
+        .as_nanos();
+    let share_directory = app
+        .path()
+        .app_cache_dir()
+        .map_err(|error| error.to_string())?
+        .join("jtype-shares")
+        .join(format!("{}-{created_at}", std::process::id()));
+    fs::create_dir_all(&share_directory).map_err(|error| error.to_string())?;
+    let shared_file = share_directory.join(safe_name);
+    if let Err(error) = fs::write(&shared_file, content) {
+        let _ = fs::remove_dir_all(&share_directory);
+        return Err(error.to_string());
+    }
+
+    let launch = app
+        .mobile_share()
+        .share_file(path_to_string(&shared_file), mime_type)
+        .map_err(|error| {
+            let _ = fs::remove_dir_all(&share_directory);
+            error.to_string()
+        })?;
+    if launch.launched {
+        Ok(())
+    } else {
+        let _ = fs::remove_dir_all(&share_directory);
+        Err("The system share sheet did not open".to_string())
+    }
+}
+
+#[cfg(mobile)]
+fn safe_mobile_share_name(candidate: &str, mime_type: &str) -> String {
+    let is_pdf = mime_type == "application/pdf";
+    let default_name = if is_pdf {
+        "JType Export.pdf"
+    } else {
+        "JType Note.md"
+    };
+    let leaf = candidate.rsplit(['/', '\\']).next().unwrap_or_default();
+    let cleaned = leaf
+        .chars()
+        .map(|character| {
+            if character.is_control() {
+                '_'
+            } else {
+                character
+            }
+        })
+        .collect::<String>();
+    let cleaned = cleaned.trim();
+    let base = if cleaned.is_empty() || cleaned == "." || cleaned == ".." {
+        default_name
+    } else {
+        cleaned
+    };
+    let has_expected_extension = if is_pdf {
+        base.to_ascii_lowercase().ends_with(".pdf")
+    } else {
+        [".md", ".markdown", ".mdown", ".mkd"]
+            .iter()
+            .any(|extension| base.to_ascii_lowercase().ends_with(extension))
+    };
+    if has_expected_extension {
+        base.to_string()
+    } else {
+        format!("{base}.{}", if is_pdf { "pdf" } else { "md" })
     }
 }
 
@@ -1149,6 +1236,7 @@ pub fn run() {
             read_markdown_file,
             write_markdown_file,
             share_markdown,
+            share_pdf,
             write_binary_file,
             read_binary_file,
             open_workspace,

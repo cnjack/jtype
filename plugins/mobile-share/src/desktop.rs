@@ -13,10 +13,10 @@ pub fn init<R: Runtime, C: DeserializeOwned>(
 pub struct MobileShare<R: Runtime>(AppHandle<R>);
 
 impl<R: Runtime> MobileShare<R> {
-    pub fn share_markdown(
+    pub fn share_file(
         &self,
-        _file_name: impl Into<String>,
-        _content: impl Into<String>,
+        _file_path: impl Into<String>,
+        _mime_type: impl Into<String>,
     ) -> crate::Result<ShareLaunch> {
         Err(crate::Error::Unsupported)
     }

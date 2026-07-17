@@ -2,9 +2,9 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ShareMarkdownRequest {
-    pub file_name: String,
-    pub content: String,
+pub struct ShareFileRequest {
+    pub file_path: String,
+    pub mime_type: String,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]

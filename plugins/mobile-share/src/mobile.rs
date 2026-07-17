@@ -23,17 +23,17 @@ pub fn init<R: Runtime, C: DeserializeOwned>(
 pub struct MobileShare<R: Runtime>(PluginHandle<R>);
 
 impl<R: Runtime> MobileShare<R> {
-    pub fn share_markdown(
+    pub fn share_file(
         &self,
-        file_name: impl Into<String>,
-        content: impl Into<String>,
+        file_path: impl Into<String>,
+        mime_type: impl Into<String>,
     ) -> crate::Result<ShareLaunch> {
         self.0
             .run_mobile_plugin(
-                "shareMarkdown",
-                ShareMarkdownRequest {
-                    file_name: file_name.into(),
-                    content: content.into(),
+                "shareFile",
+                ShareFileRequest {
+                    file_path: file_path.into(),
+                    mime_type: mime_type.into(),
                 },
             )
             .map_err(Into::into)

@@ -3,34 +3,45 @@ import Tauri
 import UIKit
 import WebKit
 
-private class ShareMarkdownArgs: Decodable {
-  let fileName: String
-  let content: String
+private class ShareFileArgs: Decodable {
+  let filePath: String
+  let mimeType: String
 }
 
 class MobileSharePlugin: Plugin {
-  @objc public func shareMarkdown(_ invoke: Invoke) throws {
-    let args = try invoke.parseArgs(ShareMarkdownArgs.self)
+  @objc public func shareFile(_ invoke: Invoke) throws {
+    let args = try invoke.parseArgs(ShareFileArgs.self)
 
     DispatchQueue.global(qos: .userInitiated).async {
       var shareDirectory: URL?
       do {
+        guard args.mimeType == "text/markdown" || args.mimeType == "application/pdf" else {
+          throw NSError(
+            domain: "MobileSharePlugin",
+            code: 1,
+            userInfo: [NSLocalizedDescriptionKey: "Unsupported shared file type"]
+          )
+        }
         let fileManager = FileManager.default
         let cacheRoot = fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first
           ?? fileManager.temporaryDirectory
-        let shareRoot = cacheRoot.appendingPathComponent("jtype-shares", isDirectory: true)
+        let bundleCacheRoot = Bundle.main.bundleIdentifier.map {
+          cacheRoot.appendingPathComponent($0, isDirectory: true)
+        } ?? cacheRoot
+        let shareRoot = bundleCacheRoot
+          .appendingPathComponent("jtype-shares", isDirectory: true)
+          .standardizedFileURL
         self.clearExpiredShares(in: shareRoot, fileManager: fileManager)
-        shareDirectory = shareRoot.appendingPathComponent(UUID().uuidString, isDirectory: true)
-        try fileManager.createDirectory(
-          at: shareDirectory!,
-          withIntermediateDirectories: true,
-          attributes: nil
-        )
-        let sharedFile = shareDirectory!.appendingPathComponent(
-          self.safeMarkdownName(args.fileName),
-          isDirectory: false
-        )
-        try args.content.write(to: sharedFile, atomically: true, encoding: .utf8)
+        let sharedFile = URL(fileURLWithPath: args.filePath).standardizedFileURL
+        let sharePrefix = shareRoot.path.hasSuffix("/") ? shareRoot.path : "\(shareRoot.path)/"
+        guard sharedFile.path.hasPrefix(sharePrefix), fileManager.fileExists(atPath: sharedFile.path) else {
+          throw NSError(
+            domain: "MobileSharePlugin",
+            code: 2,
+            userInfo: [NSLocalizedDescriptionKey: "Shared files must come from the JType share cache"]
+          )
+        }
+        shareDirectory = sharedFile.deletingLastPathComponent()
 
         DispatchQueue.main.async {
           guard let root = self.manager.viewController else {
@@ -57,7 +68,7 @@ class MobileSharePlugin: Plugin {
         if let directory = shareDirectory {
           try? FileManager.default.removeItem(at: directory)
         }
-        invoke.reject("Unable to share Markdown: \(error.localizedDescription)")
+        invoke.reject("Unable to share file: \(error.localizedDescription)")
       }
     }
   }
@@ -94,20 +105,6 @@ class MobileSharePlugin: Plugin {
     }
   }
 
-  private func safeMarkdownName(_ candidate: String) -> String {
-    let leaf = (candidate as NSString).lastPathComponent
-    let cleaned = leaf
-      .components(separatedBy: CharacterSet.controlCharacters)
-      .joined(separator: "_")
-      .trimmingCharacters(in: .whitespacesAndNewlines)
-    let base = cleaned.isEmpty || cleaned == "." || cleaned == ".."
-      ? "JType Note.md"
-      : cleaned
-    let extensions = ["md", "markdown", "mdown", "mkd"]
-    return extensions.contains((base as NSString).pathExtension.lowercased())
-      ? base
-      : "\(base).md"
-  }
 }
 
 @_cdecl("init_plugin_mobile_share")

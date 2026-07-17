@@ -11,44 +11,48 @@ import app.tauri.plugin.Invoke
 import app.tauri.plugin.JSObject
 import app.tauri.plugin.Plugin
 import java.io.File
-import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 class MobileShareFileProvider : FileProvider()
 
 @InvokeArg
-class ShareMarkdownArgs {
-    lateinit var fileName: String
-    lateinit var content: String
+class ShareFileArgs {
+    lateinit var filePath: String
+    lateinit var mimeType: String
 }
 
 @TauriPlugin
 class MobileSharePlugin(private val activity: Activity) : Plugin(activity) {
     @Command
-    fun shareMarkdown(invoke: Invoke) {
+    fun shareFile(invoke: Invoke) {
         val args = try {
-            invoke.parseArgs(ShareMarkdownArgs::class.java)
+            invoke.parseArgs(ShareFileArgs::class.java)
         } catch (error: Exception) {
-            invoke.reject("Invalid Markdown share request: ${error.message}")
+            invoke.reject("Invalid file share request: ${error.message}")
             return
         }
 
         Thread {
             var shareDirectory: File? = null
             try {
-                val shareRoot = File(activity.cacheDir, "jtype-shares")
+                require(args.mimeType == "text/markdown" || args.mimeType == "application/pdf") {
+                    "Unsupported shared file type"
+                }
+                val shareRoot = File(activity.cacheDir, "jtype-shares").canonicalFile
                 clearExpiredShares(shareRoot)
-                shareDirectory = File(shareRoot, UUID.randomUUID().toString())
-                check(shareDirectory.mkdirs()) { "Could not create the share cache directory" }
-                val sharedFile = File(shareDirectory, safeMarkdownName(args.fileName))
-                sharedFile.writeText(args.content, Charsets.UTF_8)
+                val sharedFile = File(args.filePath).canonicalFile
+                val sharePrefix = "${shareRoot.path}${File.separator}"
+                require(sharedFile.isFile && sharedFile.path.startsWith(sharePrefix)) {
+                    "Shared files must come from the JType share cache"
+                }
+                shareDirectory = sharedFile.parentFile
                 val uri = FileProvider.getUriForFile(
                     activity,
                     "${activity.packageName}.mobile-share.fileprovider",
                     sharedFile,
                 )
                 val sendIntent = Intent(Intent.ACTION_SEND).apply {
-                    type = "text/markdown"
+                    type = args.mimeType
                     putExtra(Intent.EXTRA_STREAM, uri)
                     clipData = ClipData.newRawUri(sharedFile.name, uri)
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
@@ -56,7 +60,8 @@ class MobileSharePlugin(private val activity: Activity) : Plugin(activity) {
 
                 activity.runOnUiThread {
                     try {
-                        val chooser = Intent.createChooser(sendIntent, "Share Markdown").apply {
+                        val chooserTitle = if (args.mimeType == "application/pdf") "Share PDF" else "Share Markdown"
+                        val chooser = Intent.createChooser(sendIntent, chooserTitle).apply {
                             putExtra(
                                 Intent.EXTRA_EXCLUDE_COMPONENTS,
                                 arrayOf(activity.componentName),
@@ -71,7 +76,7 @@ class MobileSharePlugin(private val activity: Activity) : Plugin(activity) {
                 }
             } catch (error: Exception) {
                 shareDirectory?.deleteRecursively()
-                invoke.reject("Unable to share Markdown: ${error.message}")
+                invoke.reject("Unable to share file: ${error.message}")
             }
         }.start()
     }
@@ -79,20 +84,5 @@ class MobileSharePlugin(private val activity: Activity) : Plugin(activity) {
     private fun clearExpiredShares(root: File) {
         val cutoff = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(1)
         root.listFiles()?.filter { it.lastModified() < cutoff }?.forEach(File::deleteRecursively)
-    }
-
-    private fun safeMarkdownName(candidate: String): String {
-        val leaf = candidate
-            .substringAfterLast('/')
-            .substringAfterLast('\\')
-            .replace(Regex("[\\u0000-\\u001f]"), "_")
-            .trim()
-            .ifEmpty { "JType Note.md" }
-        val safeLeaf = if (leaf == "." || leaf == "..") "JType Note.md" else leaf
-        return if (safeLeaf.matches(Regex(".*\\.(md|markdown|mdown|mkd)$", RegexOption.IGNORE_CASE))) {
-            safeLeaf
-        } else {
-            "$safeLeaf.md"
-        }
     }
 }

@@ -663,6 +663,16 @@ export function EditorShell() {
 
     try {
       if (isTauriRuntime()) {
+        if (capabilities.isMobile) {
+          dispatch({ type: "SET_LOADING", isLoading: true });
+          dispatch({ type: "SET_STATUS", message: t`Exporting PDF...` });
+          const pdfBytes = await renderPreviewPdfBytes(state.editorContent);
+          const fileName = `${title}.pdf`;
+          await tauri.sharePdf(fileName, Array.from(pdfBytes));
+          dispatch({ type: "SET_STATUS", message: t`Opened system sharing for ${fileName}.` });
+          return;
+        }
+
         const selected = await save({
           defaultPath: `${title}.pdf`,
           filters: [{ name: "PDF", extensions: ["pdf"] }],
@@ -740,7 +750,7 @@ export function EditorShell() {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, state.currentKind, state.currentPath, state.editorContent]);
+  }, [capabilities.isMobile, dispatch, state.currentKind, state.currentPath, state.editorContent]);
 
   useScrollSync(editorRef, previewRef, !!state.currentPath && state.currentKind === "markdown");
 

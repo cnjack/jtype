@@ -21,6 +21,8 @@ declare global {
     __DIALOG_OPEN_RESULT__?: string | string[] | null;
     __LAST_IMPORT_ARGS__?: Record<string, unknown>;
     __LAST_SHARE_ARGS__?: Record<string, unknown>;
+    __LAST_SHARE_PDF_ARGS__?: Record<string, unknown>;
+    __LAST_BINARY_WRITE_ARGS__?: Record<string, unknown>;
     __INITIAL_EXTERNAL_SOURCES_JSON__?: string;
   }
 }
@@ -272,6 +274,14 @@ test.beforeEach(async ({ page }) => {
           }
           if (cmd === "share_markdown") {
             window.__LAST_SHARE_ARGS__ = args;
+            return null;
+          }
+          if (cmd === "share_pdf") {
+            window.__LAST_SHARE_PDF_ARGS__ = args;
+            return null;
+          }
+          if (cmd === "write_binary_file") {
+            window.__LAST_BINARY_WRITE_ARGS__ = args;
             return null;
           }
           if (cmd === "read_board_file") return files[String(args.path)] ?? "";
@@ -900,6 +910,28 @@ test("exports Markdown from the editor toolbar", async ({ page }) => {
   await expect(page.locator("#operation-log")).toContainText("Exported Markdown to C:/workspace/intro.md.");
 });
 
+test("keeps desktop PDF export on the save-file adapter", async ({ page }) => {
+  await openWorkspace(page);
+  await page.locator("#workspace-sidebar").getByRole("button", { name: /intro\.md/ }).click();
+
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  await page.getByRole("menuitem", { name: "PDF", exact: true }).click();
+
+  await expect.poll(async () => page.evaluate(() => {
+    const args = window.__LAST_BINARY_WRITE_ARGS__ as { path?: string; content?: number[] } | undefined;
+    return args ? {
+      path: args.path,
+      signature: args.content?.slice(0, 4),
+      hasPdfBody: (args.content?.length ?? 0) > 500,
+    } : null;
+  }), { timeout: 10_000 }).toEqual({
+    path: "C:/workspace/intro.pdf",
+    signature: [37, 80, 68, 70],
+    hasPdfBody: true,
+  });
+  await expect(page.locator("#operation-log")).toContainText("Exported PDF to C:/workspace/intro.pdf.");
+});
+
 test("shares the current Markdown buffer through the mobile system adapter", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.addInitScript(() => {
@@ -934,6 +966,50 @@ test("shares the current Markdown buffer through the mobile system adapter", asy
     content: "# Unsaved mobile share\n\nCurrent editor content.",
   });
   await expect(page.locator("#operation-log")).toContainText("Opened system sharing for intro.md.");
+});
+
+test("shares a PDF rendered from the current mobile editor buffer", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(() => {
+    window.__RUNTIME_CAPABILITIES__ = {
+      platform: "ios",
+      clientType: "mobile",
+      isMobile: true,
+      isTouchPrimary: true,
+      prefersCompactLayout: true,
+      supportsWindowDrag: false,
+      supportsUpdater: false,
+      supportsProcessRestart: false,
+      supportsCliInstall: false,
+      supportsFileDrop: false,
+      supportsExternalVault: false,
+      usesAppPrivateVault: true,
+    };
+  });
+  await page.reload();
+
+  await page.locator("#welcome-default-vault").click();
+  await page.getByRole("button", { name: "Local only" }).click();
+  await page.locator("#mobile-navigation-button").click();
+  await page.locator("#mobile-vault-navigation").getByRole("button", { name: "intro.md", exact: true }).click();
+  await page.getByLabel("Markdown editor").fill("# Unsaved mobile PDF\n\nCurrent editor content.");
+
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  await page.getByRole("menuitem", { name: "PDF", exact: true }).click();
+
+  await expect.poll(async () => page.evaluate(() => {
+    const args = window.__LAST_SHARE_PDF_ARGS__ as { fileName?: string; content?: number[] } | undefined;
+    return args ? {
+      fileName: args.fileName,
+      signature: args.content?.slice(0, 4),
+      hasPdfBody: (args.content?.length ?? 0) > 500,
+    } : null;
+  }), { timeout: 10_000 }).toEqual({
+    fileName: "intro.pdf",
+    signature: [37, 80, 68, 70],
+    hasPdfBody: true,
+  });
+  await expect(page.locator("#operation-log")).toContainText("Opened system sharing for intro.pdf.");
 });
 
 test("connects in browser and syncs a vault to the web service", async ({ page }) => {

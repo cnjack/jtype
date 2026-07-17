@@ -35,6 +35,9 @@ export const tauri = {
   shareMarkdown(fileName: string, content: string) {
     return invoke<void>("share_markdown", { fileName, content });
   },
+  sharePdf(fileName: string, content: number[]) {
+    return invoke<void>("share_pdf", { fileName, content });
+  },
   writeBinaryFile(path: string, content: number[]) {
     return invoke("write_binary_file", { path, content });
   },
