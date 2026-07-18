@@ -34,6 +34,7 @@ import {
 } from "@heroicons/react/24/outline";
 import {
   COLUMN_COLORS,
+  BOARD_CARD_RENDER_BATCH_SIZE,
   DEFAULT_DONE_COLUMN,
   PRIORITY_ORDER,
   PRIORITY_STYLE,
@@ -113,6 +114,7 @@ export function BoardSurface({
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [draggingCol, setDraggingCol] = useState<string | null>(null);
   const [dragPos, setDragPos] = useState<{ x: number; y: number } | null>(null);
+  const [cardRenderLimits, setCardRenderLimits] = useState<Record<string, number>>({});
   const cardDrag = useRef<{
     id: string;
     startX: number;
@@ -172,6 +174,13 @@ export function BoardSurface({
     [config, cards, swimlaneKey],
   );
   const vis = useMemo(() => visibleCardsFn(cards, search, filter), [cards, search, filter]);
+  const renderedBoardCardCount = useMemo(
+    () => columns.reduce((count, column) => {
+      const columnCount = vis.filter((card) => groupValueOf(card, groupKey) === column.key).length;
+      return count + Math.min(columnCount, cardRenderLimits[column.key] ?? BOARD_CARD_RENDER_BATCH_SIZE);
+    }, 0),
+    [cardRenderLimits, columns, groupKey, vis],
+  );
   // Blocker counts resolve against ALL cards (a blocker may be filtered out of view).
   const blockers = useMemo(() => blockedCounts(cards, config.doneColumn), [cards, config.doneColumn]);
   // Sub-cards resolve against ALL cards too (children may be filtered from view).
@@ -390,6 +399,9 @@ export function BoardSurface({
     <div
       id="board-surface"
       data-compact={compact ? "true" : "false"}
+      data-total-cards={cards.length}
+      data-visible-cards={vis.length}
+      data-rendered-cards={viewType === "board" && !swimlaneActive ? renderedBoardCardCount : undefined}
       className="relative flex h-full min-h-0 bg-[#fbfdfb]"
     >
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
@@ -602,7 +614,7 @@ export function BoardSurface({
             </MenuItems>
           </Menu>
 
-          <div className="relative ml-auto shrink-0">
+          <div className={`relative shrink-0 ${compact ? "order-first" : "ml-auto"}`}>
             <MagnifyingGlassIcon className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-stone-400" />
             <input className={`${ctrlCls} w-44 pl-7`} placeholder={t`Search cards`} value={search} onChange={(e) => setSearch(e.target.value)} />
           </div>
@@ -650,6 +662,9 @@ export function BoardSurface({
           <div className={`flex min-h-0 flex-1 items-stretch overflow-x-auto ${compact ? "snap-x snap-mandatory gap-2 p-2" : "gap-3 p-4"}`}>
             {columns.map((col, colIndex) => {
               const colCards = sortCardsFn(vis.filter((c) => groupValueOf(c, groupKey) === col.key), sortBy);
+              const cardRenderLimit = cardRenderLimits[col.key] ?? BOARD_CARD_RENDER_BATCH_SIZE;
+              const renderedCards = colCards.slice(0, cardRenderLimit);
+              const remainingCards = colCards.length - renderedCards.length;
               const showLine = (idx: number) => !!draggingId && manualSort && dropTarget?.col === col.key && dropTarget.index === idx;
               const isDoneCol = editableColumns && doneKey === col.key;
               const isColDrop = colDropTarget === col.key;
@@ -680,6 +695,8 @@ export function BoardSurface({
                 <div
                   key={col.key}
                   data-col-key={col.key}
+                  data-total-cards={colCards.length}
+                  data-rendered-cards={renderedCards.length}
                   className={`flex max-h-full shrink-0 flex-col rounded-xl border bg-[#f6faf7] transition-opacity ${
                     compact ? "w-[calc(100vw-4.5rem)] max-w-80 snap-center" : "w-72"
                   } ${
@@ -776,7 +793,7 @@ export function BoardSurface({
                   </div>
 
                   <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-2">
-                    {colCards.map((card, idx) => {
+                    {renderedCards.map((card, idx) => {
                       const overdue = card.due && card.due < today && card.columnKey !== doneKey;
                       const blockedCount = blockers.get(card.id) ?? 0;
                       const children = childrenMap.get(card.id);
@@ -991,11 +1008,26 @@ export function BoardSurface({
                         </Fragment>
                       );
                     })}
-                    {colCards.length === 0
+                    {renderedCards.length === 0
                       ? draggingId && dropTarget?.col === col.key && (
                           <div className="mx-1 h-14 rounded-lg border-2 border-dashed border-brand/50 bg-brand-soft/30" />
                         )
-                      : showLine(colCards.length) && <div className="mx-1 h-0.5 rounded bg-brand" />}
+                      : showLine(renderedCards.length) && <div className="mx-1 h-0.5 rounded bg-brand" />}
+
+                    {remainingCards > 0 && (
+                      <button
+                        type="button"
+                        className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-dashed border-brand/20 bg-white/70 px-2 py-1.5 text-xs font-semibold text-brand-dark hover:border-brand/40 hover:bg-white"
+                        data-board-render-more={col.key}
+                        onClick={() => setCardRenderLimits((limits) => ({
+                          ...limits,
+                          [col.key]: cardRenderLimit + BOARD_CARD_RENDER_BATCH_SIZE,
+                        }))}
+                      >
+                        <span><Trans>Show more</Trans></span>
+                        <span className="rounded-full bg-brand-soft px-2 py-0.5 tabular-nums">{remainingCards}</span>
+                      </button>
+                    )}
 
                     {readOnly ? null : addingIn === col.key ? (
                       <textarea

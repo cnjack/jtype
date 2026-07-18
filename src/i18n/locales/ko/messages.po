@@ -1486,6 +1486,7 @@ msgstr "설정"
 msgid "Show in Explorer"
 msgstr "탐색기에서 표시"
 
+#: src/components/editor/EditorShell.tsx
 #: src/components/sidebar/Sidebar.tsx
 msgid "Show more"
 msgstr "더 보기"

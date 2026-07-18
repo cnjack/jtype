@@ -1,0 +1,19 @@
+appId: net.jcode.jtype
+---
+- launchApp:
+    clearState: false
+- tapOn: "Quick open|快速打开"
+- tapOn: "Open or create Document|打开或新建文档"
+- eraseText: 64
+- inputText: "performance.board"
+- assertVisible: ".*performance.board.*Open.*|.*performance.board.*打开.*"
+- tapOn: ".*performance.board.*Open.*|.*performance.board.*打开.*"
+- assertVisible: "Performance board"
+- assertVisible: "^1200$"
+- assertVisible: "^cards$|^张卡片$"
+- tapOn: "Search cards|搜索卡片"
+- eraseText: 64
+- inputText: "Large card 01197"
+- assertVisible: ".*Large card 01197.*"
+- tapOn: "Performance board"
+- assertVisible: ".*Large card 01197.*"

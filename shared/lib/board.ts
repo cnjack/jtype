@@ -175,6 +175,7 @@ export const PRIORITY_STYLE: Record<string, string> = {
 /** Preset column colors (Notion-style swatches). */
 export const COLUMN_COLORS = ["#ef4444", "#f59e0b", "#eab308", "#22c55e", "#0ea5e9", "#6366f1", "#a855f7", "#ec4899", "#78716c"];
 export const DEFAULT_DONE_COLUMN = "done";
+export const BOARD_CARD_RENDER_BATCH_SIZE = 80;
 
 /**
  * Frontmatter / property keys the board itself owns. A user-defined custom-field

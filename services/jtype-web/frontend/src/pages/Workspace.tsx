@@ -248,10 +248,10 @@ export function Workspace() {
     const container = previewRef.current
     const content = docContent
     const timer = setTimeout(() => {
-      void renderToContainer(content, container)
+      void renderToContainer(content, container, { renderKey: selectedDoc ?? 'draft' })
     }, 120)
     return () => clearTimeout(timer)
-  }, [docContent, editorMode])
+  }, [docContent, editorMode, selectedDoc])
 
   useEffect(() => {
     if (!wsSubscribe || !workspace?.id) return

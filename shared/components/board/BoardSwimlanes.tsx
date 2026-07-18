@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { Trans } from "@lingui/react/macro";
 import { CheckCircleIcon, CalendarDaysIcon } from "@heroicons/react/24/outline";
 import {
   PRIORITY_STYLE,
+  BOARD_CARD_RENDER_BATCH_SIZE,
   groupValueOf,
   partitionSwimlanes,
   sortCards,
@@ -37,7 +39,10 @@ export function BoardSwimlanes({
   selectedId?: string;
   onSelect: (card: BoardViewCard) => void;
 }) {
-  const grid = partitionSwimlanes(cards, groupKey, swimlaneKey);
+  const [renderLimit, setRenderLimit] = useState(BOARD_CARD_RENDER_BATCH_SIZE * 2);
+  const renderedCards = cards.slice(0, renderLimit);
+  const fullGrid = partitionSwimlanes(cards, groupKey, swimlaneKey);
+  const grid = partitionSwimlanes(renderedCards, groupKey, swimlaneKey);
   const gridCols = { gridTemplateColumns: `repeat(${Math.max(columns.length, 1)}, minmax(11rem, 1fr))` };
 
   const chip = (card: BoardViewCard) => {
@@ -80,7 +85,11 @@ export function BoardSwimlanes({
   };
 
   return (
-    <div className="min-h-0 flex-1 overflow-auto p-4">
+    <div
+      className="min-h-0 flex-1 overflow-auto p-4"
+      data-total-cards={cards.length}
+      data-rendered-cards={renderedCards.length}
+    >
       <div className="min-w-max">
         {/* Column header row */}
         <div className="sticky top-0 z-10 grid gap-3 bg-[#fbfdfb] pb-1.5" style={gridCols}>
@@ -93,7 +102,8 @@ export function BoardSwimlanes({
 
         {lanes.map((lane) => {
           const row = grid.get(lane.key);
-          const laneTotal = row ? [...row.values()].reduce((n, cell) => n + cell.length, 0) : 0;
+          const fullRow = fullGrid.get(lane.key);
+          const laneTotal = fullRow ? [...fullRow.values()].reduce((n, cell) => n + cell.length, 0) : 0;
           return (
             <div key={lane.key} className="mb-2">
               <div className="flex items-center gap-2 py-1.5">
@@ -118,6 +128,15 @@ export function BoardSwimlanes({
           <div className="px-3 py-8 text-center text-sm text-stone-400">
             <Trans>No cards</Trans>
           </div>
+        )}
+        {renderedCards.length < cards.length && (
+          <button
+            type="button"
+            className="min-h-11 w-full rounded-lg border border-dashed border-brand/20 px-4 py-2 text-xs font-semibold text-brand-dark hover:border-brand/40"
+            onClick={() => setRenderLimit((limit) => limit + BOARD_CARD_RENDER_BATCH_SIZE * 2)}
+          >
+            <Trans>Show more</Trans> · {cards.length - renderedCards.length}
+          </button>
         )}
       </div>
     </div>

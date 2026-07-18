@@ -44,8 +44,13 @@ export function MobileSidebarDialog({ open, onClose }: MobileSidebarDialogProps)
         <DialogPanel
           id="mobile-vault-navigation"
           transition
-          className="flex h-full w-[min(90vw,22rem)] flex-col bg-[#f5f8f6] shadow-2xl shadow-stone-950/25 transition duration-200 data-[closed]:-translate-x-full"
-          style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))", paddingBottom: "env(safe-area-inset-bottom)" }}
+          className="flex h-full min-w-0 flex-col overflow-hidden bg-[#f5f8f6] shadow-2xl shadow-stone-950/25 transition duration-200 data-[closed]:-translate-x-full"
+          style={{
+            width: "var(--jtype-mobile-panel-width, min(90vw, 22rem))",
+            maxWidth: "var(--jtype-visual-viewport-width, 90vw)",
+            paddingTop: "max(0.75rem, env(safe-area-inset-top))",
+            paddingBottom: "env(safe-area-inset-bottom)",
+          }}
         >
           <div className="flex items-center justify-between px-5 py-2">
             <DialogTitle className="text-sm font-semibold text-stone-950"><Trans>Documents</Trans></DialogTitle>

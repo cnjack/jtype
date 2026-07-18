@@ -10,9 +10,26 @@ marked.use({ gfm: true, breaks: false });
 
 let mermaidRenderer: Awaited<typeof import("mermaid")>["default"] | null = null;
 let mermaidRenderCounter = 0;
-let renderVersion = 0;
+let mermaidRenderQueue: Promise<void> = Promise.resolve();
+const renderVersions = new WeakMap<HTMLElement, number>();
+const mermaidObservers = new WeakMap<HTMLElement, IntersectionObserver>();
+const previewProgress = new WeakMap<HTMLElement, { renderKey: string; blockLimit: number }>();
+export const PREVIEW_BLOCK_RENDER_BATCH_SIZE = 240;
 const PLANTUML_SERVER_BASE = "https://www.plantuml.com/plantuml/svg/";
 const PLANTUML_ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_";
+
+export type RenderToContainerOptions = {
+  /** Stable document identity; changing it resets the progressive block window. */
+  renderKey?: string;
+  /** PDF/export callers opt out so their off-screen document is always complete. */
+  progressive?: boolean;
+  /** Host-localized label for the progressive render control. */
+  renderMoreLabel?: string;
+};
+
+function isCurrentRender(container: HTMLElement, version: number) {
+  return renderVersions.get(container) === version;
+}
 
 function renderMath(content: string) {
   const withBlocks = content.replace(/\$\$([\s\S]+?)\$\$/g, (_match, expression: string) => {
@@ -86,23 +103,56 @@ function prepareMermaidPreview(container: HTMLElement) {
   });
 }
 
+async function renderMermaidNodes(container: HTMLElement, nodes: HTMLElement[], version: number) {
+  if (nodes.length === 0 || !isCurrentRender(container, version)) return;
+  const render = async () => {
+    if (!isCurrentRender(container, version)) return;
+    try {
+      if (!mermaidRenderer) {
+        const module = await import("mermaid");
+        mermaidRenderer = module.default;
+        mermaidRenderer.initialize({ startOnLoad: false, securityLevel: "strict", theme: "neutral" });
+      }
+      if (!isCurrentRender(container, version)) return;
+      await mermaidRenderer.run({ nodes });
+    } catch {
+      // Mermaid rendering errors are non-critical.
+    }
+  };
+  // Mermaid owns global IDs and internal state. Serialize work from multiple
+  // preview containers rather than letting two observers mutate it together.
+  mermaidRenderQueue = mermaidRenderQueue.then(render, render);
+  await mermaidRenderQueue;
+}
+
 async function renderMermaidPreview(container: HTMLElement, version: number) {
   const nodes = container.querySelectorAll<HTMLElement>(".mermaid");
   if (nodes.length === 0) return;
-  // Skip if a newer render has started
-  if (version !== renderVersion) return;
-  try {
-    if (!mermaidRenderer) {
-      const module = await import("mermaid");
-      mermaidRenderer = module.default;
-      mermaidRenderer.initialize({ startOnLoad: false, securityLevel: "strict", theme: "neutral" });
-    }
-    // Check again before async render
-    if (version !== renderVersion) return;
-    await mermaidRenderer.run({ nodes });
-  } catch {
-    // Mermaid rendering errors are non-critical
+  if (!isCurrentRender(container, version)) return;
+
+  mermaidObservers.get(container)?.disconnect();
+  if (typeof IntersectionObserver === "undefined") {
+    await renderMermaidNodes(container, Array.from(nodes), version);
+    return;
   }
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      const ready = entries
+        .filter((entry) => entry.isIntersecting)
+        .map((entry) => entry.target as HTMLElement)
+        .filter((node) => node.dataset.mermaidQueued !== "1");
+      if (ready.length === 0) return;
+      ready.forEach((node) => {
+        node.dataset.mermaidQueued = "1";
+        observer.unobserve(node);
+      });
+      void renderMermaidNodes(container, ready, version);
+    },
+    { root: container, rootMargin: "480px 0px" },
+  );
+  mermaidObservers.set(container, observer);
+  Array.from(nodes).forEach((node) => observer.observe(node));
 }
 
 async function renderPlantumlPreview(container: HTMLElement, version: number) {
@@ -113,7 +163,7 @@ async function renderPlantumlPreview(container: HTMLElement, version: number) {
     codes.map(async (code) => {
       const source = code.textContent ?? "";
       const src = await plantumlImageUrl(source);
-      if (!src || version !== renderVersion) return;
+      if (!src || !isCurrentRender(container, version)) return;
 
       const figure = document.createElement("figure");
       figure.className = "plantuml";
@@ -169,36 +219,76 @@ function injectSourceLine(htmlPiece: string, line: number): string {
  * tokens and accumulate the newline count of each token's raw text. The links
  * table is carried onto each single-token list so reference-style links resolve.
  */
-function renderBodyWithSourceLines(body: string): string {
-  const transformed = renderWikilinks(renderMath(body));
-  const tokens = marked.lexer(transformed);
+type MarkdownRenderResult = {
+  html: string;
+  totalBlocks: number;
+  renderedBlocks: number;
+};
+
+function renderBodyWithSourceLines(body: string, maxBlocks = Number.POSITIVE_INFINITY): MarkdownRenderResult {
+  // Lex the raw document once to learn every top-level block and reference
+  // definition. Math/wikilink expansion happens only for blocks entering the
+  // current window, avoiding transient KaTeX/HTML work for thousands of hidden
+  // blocks.
+  const tokens = marked.lexer(body);
+  const totalBlocks = tokens.filter((token) => token.type !== "space" && token.type !== "def").length;
   let line = 0;
   let html = "";
+  let renderedBlocks = 0;
   for (const token of tokens) {
-    const single = [token] as typeof tokens;
-    single.links = tokens.links;
-    const piece = marked.parser(single);
-    html += token.type === "space" ? piece : injectSourceLine(piece, line);
+    const isVisibleBlock = token.type !== "space" && token.type !== "def";
+    const shouldRender = !isVisibleBlock || renderedBlocks < maxBlocks;
+    if (shouldRender) {
+      let piece: string;
+      if (token.type === "space" || token.type === "code" || token.type === "def") {
+        const single = [token] as typeof tokens;
+        single.links = tokens.links;
+        piece = marked.parser(single);
+      } else {
+        const transformed = renderWikilinks(renderMath(token.raw));
+        const transformedTokens = marked.lexer(transformed);
+        transformedTokens.links = tokens.links;
+        piece = marked.parser(transformedTokens);
+      }
+      html += token.type === "space" ? piece : injectSourceLine(piece, line);
+      if (isVisibleBlock) renderedBlocks += 1;
+    }
     line += (token.raw.match(/\n/g) ?? []).length;
   }
-  return html;
+  return { html, totalBlocks, renderedBlocks };
 }
 
-export async function renderMarkdownToHtml(content: string): Promise<string> {
+function renderMarkdownDocument(content: string, maxBlocks = Number.POSITIVE_INFINITY): MarkdownRenderResult {
   if (!content.trim()) {
-    return '<h2>Empty document</h2><p>Start typing Markdown to preview it here.</p>';
+    return {
+      html: '<h2>Empty document</h2><p>Start typing Markdown to preview it here.</p>',
+      totalBlocks: 0,
+      renderedBlocks: 0,
+    };
   }
   // Frontmatter (title/metadata) is not document content, so it is not rendered
   // into the preview body — the title belongs to the card/property UI, not here.
   const { body } = parseFrontmatter(content);
-  const rendered = renderBodyWithSourceLines(body);
-  return DOMPurify.sanitize(replaceBoardEmbeds(rendered), { ADD_ATTR: ["data-wikilink", "data-board", "data-source-line"] });
+  const rendered = renderBodyWithSourceLines(body, maxBlocks);
+  return {
+    ...rendered,
+    html: DOMPurify.sanitize(replaceBoardEmbeds(rendered.html), { ADD_ATTR: ["data-wikilink", "data-board", "data-source-line"] }),
+  };
 }
 
-export async function renderToContainer(content: string, container: HTMLElement): Promise<boolean> {
-  // Increment version to cancel any in-flight mermaid renders
-  renderVersion += 1;
-  const thisVersion = renderVersion;
+export async function renderMarkdownToHtml(content: string): Promise<string> {
+  return renderMarkdownDocument(content).html;
+}
+
+export async function renderToContainer(
+  content: string,
+  container: HTMLElement,
+  options: RenderToContainerOptions = {},
+): Promise<boolean> {
+  const startedAt = performance.now();
+  const thisVersion = (renderVersions.get(container) ?? 0) + 1;
+  renderVersions.set(container, thisVersion);
+  mermaidObservers.get(container)?.disconnect();
 
   const isEmpty = !content.trim();
 
@@ -209,20 +299,63 @@ export async function renderToContainer(content: string, container: HTMLElement)
   }
 
   container.classList.remove("empty");
-  const html = await renderMarkdownToHtml(content);
+  const progressive = options.progressive !== false;
+  const renderKey = options.renderKey ?? "default";
+  let progress = previewProgress.get(container);
+  if (!progress || progress.renderKey !== renderKey) {
+    progress = { renderKey, blockLimit: PREVIEW_BLOCK_RENDER_BATCH_SIZE };
+    previewProgress.set(container, progress);
+  }
+  const result = renderMarkdownDocument(
+    content,
+    progressive ? progress.blockLimit : Number.POSITIVE_INFINITY,
+  );
 
   // If a newer render started while we were processing, discard this result
-  if (thisVersion !== renderVersion) return false;
+  if (!isCurrentRender(container, thisVersion)) return false;
 
   // Use morphdom for incremental DOM patching: only changed elements are
   // touched, which preserves scroll position and avoids full-page flicker.
   const virtualContainer = document.createElement(container.tagName);
-  virtualContainer.innerHTML = html;
+  virtualContainer.innerHTML = result.html;
   morphdom(container, virtualContainer, { childrenOnly: true });
+
+  container.dataset.totalBlocks = String(result.totalBlocks);
+  container.dataset.renderedBlocks = String(result.renderedBlocks);
+  container.dataset.contentCharacters = String(content.length);
+
+  if (progressive && result.renderedBlocks < result.totalBlocks) {
+    const control = document.createElement("div");
+    control.className = "preview-progress";
+    control.dataset.remainingBlocks = String(result.totalBlocks - result.renderedBlocks);
+    const count = document.createElement("span");
+    count.className = "preview-progress-count";
+    count.textContent = `${result.renderedBlocks} / ${result.totalBlocks}`;
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "preview-render-more";
+    button.textContent = options.renderMoreLabel ?? "Show more";
+    button.setAttribute("aria-label", options.renderMoreLabel ?? "Show more");
+    button.addEventListener("click", () => {
+      const current = previewProgress.get(container);
+      if (!current || current.renderKey !== renderKey) return;
+      current.blockLimit += PREVIEW_BLOCK_RENDER_BATCH_SIZE;
+      void renderToContainer(content, container, options);
+    }, { once: true });
+    control.append(count, button);
+    container.append(control);
+  }
 
   await renderPlantumlPreview(container, thisVersion);
   prepareMermaidPreview(container);
   await renderMermaidPreview(container, thisVersion);
   await enhancePreview(container);
+  const durationMs = Math.round((performance.now() - startedAt) * 100) / 100;
+  container.dataset.renderDurationMs = String(durationMs);
+  if (content.length >= 100_000 || result.totalBlocks >= 500) {
+    console.info(
+      `[JTypePerformance] preview_render characters=${content.length} blocks=${result.totalBlocks} rendered=${result.renderedBlocks} elapsed_ms=${durationMs}`,
+    );
+  }
   return true;
 }

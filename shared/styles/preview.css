@@ -2,6 +2,11 @@
  * Uses CSS variables from tokens.css for brand colors.
  */
 
+.preview {
+  min-width: 0;
+  max-width: 100%;
+}
+
 .preview.empty {
   display: flex;
   flex-direction: column;
@@ -122,10 +127,51 @@
   background: #ffffff;
 }
 
-.preview .plantuml img {
+.preview img,
+.preview .mermaid svg {
   display: block;
   max-width: 100%;
   height: auto;
+}
+
+.preview .plantuml img {
+  margin-inline: auto;
+}
+
+.preview-progress {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin: 1.5rem 0 0.5rem;
+  padding: 1rem;
+  border: 1px dashed rgb(0 136 132 / 0.24);
+  border-radius: 14px;
+  background: rgb(232 246 242 / 0.55);
+}
+
+.preview-progress-count {
+  color: var(--color-brand-gray);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.preview-render-more {
+  min-height: 2.75rem;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid rgb(0 136 132 / 0.2);
+  border-radius: 10px;
+  color: var(--color-brand-dark);
+  background: #ffffff;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.preview-render-more:hover,
+.preview-render-more:focus-visible {
+  border-color: rgb(0 136 132 / 0.45);
+  outline: none;
+  box-shadow: 0 0 0 3px rgb(0 136 132 / 0.12);
 }
 
 /* --------------------------------------------------------------------------
@@ -178,4 +224,3 @@ mark.pdf-find-highlight.pdf-find-active {
 .pdf-page-wrapper {
   position: relative;
 }
-

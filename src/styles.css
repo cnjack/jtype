@@ -70,6 +70,16 @@ html[data-jtype-platform="ios"] :where(#editor, #preview, .preview) {
   text-size-adjust: 100%;
 }
 
+/* WKWebView can keep a layout viewport wider than the physical viewport when
+   Dynamic Type enlarges browser chrome. Keep the shared workbench rooted in
+   the visible area; individual mobile containers still provide their own
+   compact arrangement through RuntimeCapabilities. */
+html[data-jtype-mobile="true"] #root {
+  width: var(--jtype-visual-viewport-width, 100%);
+  max-width: 100%;
+  overflow: hidden;
+}
+
 @media (prefers-contrast: more) {
   :root {
     --color-brand: #006865;

@@ -1,0 +1,26 @@
+appId: net.jcode.jtype
+---
+- launchApp:
+    clearState: false
+- assertVisible: "Documents|文档"
+- tapOn: "Documents|文档"
+- waitForAnimationToEnd
+- tapOn: "Search files.*|搜索文件.*"
+- eraseText: 64
+- inputText: "large-content"
+- assertVisible: ".*large-content.md.*"
+- tapOn: ".*large-content.md.*"
+- runFlow:
+    when:
+      visible: "^Close$|^关闭$"
+    commands:
+      - tapOn:
+          point: "78%,11%"
+- tapOn: "Preview|预览"
+- assertVisible: "(?s).*Large content fixture.*"
+- swipe:
+    from:
+      text: "(?s).*Large content fixture.*"
+    direction: UP
+    duration: 900
+- assertVisible: "(?s).*Section 0000.*"

@@ -1,0 +1,17 @@
+appId: net.jcode.jtype
+---
+- launchApp:
+    clearState: false
+- tapOn: "Quick open"
+- tapOn: "Open or create Document"
+- eraseText: 64
+- inputText: "performance.board"
+- assertVisible: ".*performance.board.*Open.*"
+- tapOn: ".*performance.board.*Open.*"
+- assertVisible: "Performance board"
+- assertVisible: ".*1200.*cards.*"
+- tapOn: "Search cards"
+- eraseText: 64
+- inputText: "Large card 01197"
+- assertVisible: ".*Large card 01197.*"
+- hideKeyboard

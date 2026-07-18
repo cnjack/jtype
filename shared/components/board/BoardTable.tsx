@@ -1,6 +1,7 @@
+import { useState } from "react";
 import { Trans } from "@lingui/react/macro";
 import { UserIcon, CalendarDaysIcon, CheckCircleIcon, TagIcon } from "@heroicons/react/24/outline";
-import { PRIORITY_STYLE, type BoardViewCard } from "../../lib/board";
+import { BOARD_CARD_RENDER_BATCH_SIZE, PRIORITY_STYLE, type BoardViewCard } from "../../lib/board";
 
 /**
  * Table view over the same cards (Notion's "one data, many views"): a flat,
@@ -21,12 +22,18 @@ export function BoardTable({
   selectedId?: string;
   onSelect: (card: BoardViewCard) => void;
 }) {
+  const [renderLimit, setRenderLimit] = useState(BOARD_CARD_RENDER_BATCH_SIZE * 2);
+  const renderedCards = cards.slice(0, renderLimit);
   const th = "px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-brand-gray";
   const td = "px-3 py-2 align-middle";
   const dash = <span className="text-stone-300">—</span>;
 
   return (
-    <div className="min-h-0 flex-1 overflow-auto p-4">
+    <div
+      className="min-h-0 flex-1 overflow-auto p-4"
+      data-total-cards={cards.length}
+      data-rendered-cards={renderedCards.length}
+    >
       <table className="w-full border-collapse text-sm">
         <thead className="sticky top-0 bg-[#fbfdfb]">
           <tr className="border-b border-black/[0.08]">
@@ -51,7 +58,7 @@ export function BoardTable({
           </tr>
         </thead>
         <tbody>
-          {cards.map((card) => {
+          {renderedCards.map((card) => {
             const overdue = card.due && card.due < today && card.columnKey !== doneKey;
             return (
               <tr
@@ -137,6 +144,19 @@ export function BoardTable({
             <tr>
               <td colSpan={6} className="px-3 py-8 text-center text-sm text-stone-400">
                 <Trans>No cards</Trans>
+              </td>
+            </tr>
+          )}
+          {renderedCards.length < cards.length && (
+            <tr>
+              <td colSpan={6} className="px-3 py-3 text-center">
+                <button
+                  type="button"
+                  className="min-h-11 rounded-lg border border-dashed border-brand/20 px-4 py-2 text-xs font-semibold text-brand-dark hover:border-brand/40"
+                  onClick={() => setRenderLimit((limit) => limit + BOARD_CARD_RENDER_BATCH_SIZE * 2)}
+                >
+                  <Trans>Show more</Trans> · {cards.length - renderedCards.length}
+                </button>
               </td>
             </tr>
           )}

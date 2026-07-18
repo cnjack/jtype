@@ -139,9 +139,12 @@ export function RuntimeCapabilitiesProvider({ children }: { children: ReactNode 
       // fixed UI already sits above the IME. WKWebView keeps a larger layout
       // viewport; its visual viewport delta is the obscured keyboard region.
       const visualBottom = viewport ? viewport.offsetTop + viewport.height : window.innerHeight;
+      const visualWidth = Math.round(viewport?.width ?? window.innerWidth);
       const inset = Math.max(0, Math.round(window.innerHeight - visualBottom));
       root.style.setProperty("--jtype-keyboard-inset", `${inset}px`);
+      root.style.setProperty("--jtype-visual-viewport-width", `${visualWidth}px`);
       root.style.setProperty("--jtype-visual-viewport-height", `${Math.round(viewport?.height ?? window.innerHeight)}px`);
+      root.style.setProperty("--jtype-mobile-panel-width", `${Math.round(Math.min(22 * 16, visualWidth * 0.9))}px`);
     };
 
     applyKeyboardInset();
@@ -153,6 +156,9 @@ export function RuntimeCapabilitiesProvider({ children }: { children: ReactNode 
       viewport?.removeEventListener("scroll", applyKeyboardInset);
       window.removeEventListener("resize", applyKeyboardInset);
       root.style.setProperty("--jtype-keyboard-inset", "0px");
+      root.style.removeProperty("--jtype-visual-viewport-width");
+      root.style.removeProperty("--jtype-visual-viewport-height");
+      root.style.removeProperty("--jtype-mobile-panel-width");
     };
   }, [adaptiveCapabilities.isMobile]);
 

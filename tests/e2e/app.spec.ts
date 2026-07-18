@@ -31,6 +31,8 @@ declare global {
     __LAST_BINARY_WRITE_ARGS__?: Record<string, unknown>;
     __HAPTIC_STYLES__: string[];
     __E2E_INSTALL_LARGE_VAULT__?: (count?: number) => void;
+    __E2E_INSTALL_LARGE_CONTENT__?: (sectionCount?: number, cardCount?: number) => void;
+    __BINARY_READS__: string[];
     __INITIAL_EXTERNAL_SOURCES_JSON__?: string;
     __INITIAL_DEEP_LINKS__?: string[] | null;
     __LAST_OPEN_URL__?: string;
@@ -160,6 +162,80 @@ test.beforeEach(async ({ page }) => {
         });
       }
     };
+    const installLargeContentFixture = (sectionCount = 900, cardCount = 1_200) => {
+      if (files["C:/workspace/large-content.md"] !== undefined) return;
+      const content = [
+        "# Large content fixture",
+        "",
+        "$E = mc^2$",
+        "",
+        "```mermaid",
+        "flowchart LR",
+        "  Start --> Indexed --> Visible",
+        "```",
+        "",
+        "![Large attachment 00](large-content-assets/large-00.png)",
+        "",
+      ];
+      for (let index = 0; index < sectionCount; index += 1) {
+        const padded = String(index).padStart(4, "0");
+        content.push(
+          `## Section ${padded}`,
+          "",
+          `Large Markdown fixture ${padded}. ${"Shared desktop and mobile preview content. ".repeat(8)}`,
+          "",
+        );
+        if (index > 0 && index % 40 === 0) {
+          const imageIndex = String(index / 40).padStart(2, "0");
+          content.push(`![Large attachment ${imageIndex}](large-content-assets/large-${imageIndex}.png)`, "");
+        }
+      }
+      files["C:/workspace/large-content.md"] = content.join("\n");
+      files["C:/workspace/performance.board"] = JSON.stringify({
+        id: "performance",
+        title: "Performance board",
+        groupBy: "status",
+        columns: [
+          { key: "todo", name: "To do" },
+          { key: "doing", name: "Doing" },
+          { key: "done", name: "Done" },
+        ],
+        doneColumn: "done",
+      });
+      const boardChildren = [];
+      for (let index = 0; index < cardCount; index += 1) {
+        const padded = String(index).padStart(5, "0");
+        const name = `large-card-${padded}.md`;
+        const relativePath = `performance/${name}`;
+        const path = `C:/workspace/${relativePath}`;
+        const status = ["todo", "doing", "done"][index % 3];
+        files[path] = `---\ntitle: Large card ${padded}\nboard: performance\nstatus: ${status}\nposition: ${Math.floor(index / 3)}\npriority: medium\n---\n\nLarge board card fixture ${padded}.`;
+        boardChildren.push({ name, path, relativePath, kind: "markdown", children: [] });
+      }
+      workspace.entries.push(
+        {
+          name: "large-content.md",
+          path: "C:/workspace/large-content.md",
+          relativePath: "large-content.md",
+          kind: "markdown",
+          children: [],
+        },
+        {
+          name: "performance.board",
+          path: "C:/workspace/performance.board",
+          relativePath: "performance.board",
+          kind: "board",
+          children: [],
+        },
+        {
+          name: "performance",
+          path: "C:/workspace/performance",
+          relativePath: "performance",
+          kind: "folder",
+          children: boardChildren,
+        },
+      );
+    };
     const scanBoardFixture = (boardId: string) =>
       Object.entries(files)
         .filter(([path, content]) => path.endsWith(".md") && content.includes(`board: ${boardId}`))
@@ -206,6 +282,7 @@ test.beforeEach(async ({ page }) => {
       __START_LISTENER_CALLS__: [],
       __STOP_LISTENER_CALLS__: 0,
       __HAPTIC_STYLES__: [],
+      __BINARY_READS__: [],
       __OAUTH_POLL_PENDING__: false,
       __VAULT_SETTINGS__: {
         "C:/workspace": {
@@ -216,6 +293,7 @@ test.beforeEach(async ({ page }) => {
       },
       __E2E_INSTALL_BOARD__: installBoardFixture,
       __E2E_INSTALL_LARGE_VAULT__: installLargeVaultFixture,
+      __E2E_INSTALL_LARGE_CONTENT__: installLargeContentFixture,
       __EMIT_TAURI_EVENT__: (event: string, payload: unknown) => {
         let invoked = 0;
         for (const [id, subscription] of eventSubscriptions) {
@@ -480,6 +558,10 @@ test.beforeEach(async ({ page }) => {
           if (cmd === "write_markdown_file") {
             files[String(args.path)] = String(args.content);
             return null;
+          }
+          if (cmd === "read_binary_file") {
+            window.__BINARY_READS__.push(String(args.path));
+            return [137, 80, 78, 71, 13, 10, 26, 10];
           }
           if (cmd === "share_markdown") {
             window.__LAST_SHARE_ARGS__ = args;
@@ -948,6 +1030,7 @@ test("adapts the shared welcome screen to app-private mobile storage", async ({ 
   await expect(page.getByText("~/Documents/Jtype Vaullt")).toBeHidden();
   const mobileShellViewport = await page.locator("#app-content-panel").evaluate((panel) => {
     const screen = panel.querySelector<HTMLElement>("#welcome-screen");
+    const rootBounds = document.querySelector<HTMLElement>("#root")?.getBoundingClientRect();
     const panelBounds = panel.getBoundingClientRect();
     return {
       panelClientWidth: panel.clientWidth,
@@ -956,11 +1039,18 @@ test("adapts the shared welcome screen to app-private mobile storage", async ({ 
       screenClientWidth: screen?.clientWidth ?? 0,
       screenScrollWidth: screen?.scrollWidth ?? 0,
       viewportWidth: window.innerWidth,
+      visualViewportWidth: window.visualViewport?.width ?? window.innerWidth,
+      mobilePanelWidth: Number.parseFloat(
+        getComputedStyle(document.documentElement).getPropertyValue("--jtype-mobile-panel-width"),
+      ),
+      rootRight: rootBounds?.right ?? Number.POSITIVE_INFINITY,
     };
   });
   expect(mobileShellViewport.panelScrollWidth).toBeLessThanOrEqual(mobileShellViewport.panelClientWidth);
   expect(mobileShellViewport.screenScrollWidth).toBeLessThanOrEqual(mobileShellViewport.screenClientWidth);
   expect(mobileShellViewport.panelRight).toBeLessThanOrEqual(mobileShellViewport.viewportWidth);
+  expect(mobileShellViewport.mobilePanelWidth).toBeLessThanOrEqual(mobileShellViewport.visualViewportWidth);
+  expect(mobileShellViewport.rootRight).toBeLessThanOrEqual(mobileShellViewport.visualViewportWidth);
 
   // Continue the broader interaction coverage in English so its established
   // accessible-name selectors remain stable after the localized shell check.
@@ -2132,6 +2222,50 @@ test("indexes and progressively renders a 2,500-document vault", async ({ page }
     .toHaveAttribute("data-index-size", "2502");
   await quickResults.getByRole("button", { name: /performance-note-02498\.md/ }).click();
   await expect(page.getByLabel("Markdown editor")).toHaveValue(/Large vault fixture 2498/);
+});
+
+test("progressively renders large Markdown, diagrams, attachments, and a 1,200-card board", async ({ page }) => {
+  await page.evaluate(() => window.__E2E_INSTALL_LARGE_CONTENT__?.(900, 1_200));
+  await openWorkspace(page);
+
+  await page.getByPlaceholder("Search files...").fill("large-content");
+  await page.locator("#workspace-search-results").getByRole("button", { name: /large-content\.md/ }).click();
+
+  const preview = page.locator("#preview");
+  await expect(preview).toContainText("Large content fixture");
+  await expect(preview).toHaveAttribute("data-rendered-blocks", "240");
+  await expect.poll(() => preview.getAttribute("data-total-blocks").then(Number)).toBeGreaterThan(1_800);
+  await expect.poll(() => preview.getAttribute("data-render-duration-ms").then(Number)).toBeLessThan(2_000);
+  await expect(preview.locator(".katex")).toBeVisible();
+  await expect(preview.locator(".mermaid svg")).toBeVisible();
+  await expect.poll(() => page.evaluate(() => window.__BINARY_READS__.length)).toBeGreaterThan(0);
+  expect(await page.evaluate(() => window.__BINARY_READS__.length)).toBeLessThan(6);
+
+  await preview.getByRole("button", { name: "Show more" }).click();
+  await expect(preview).toHaveAttribute("data-rendered-blocks", "480");
+
+  await page.locator("header").getByRole("button", { name: "Quick open" }).click();
+  await page.getByLabel("Open or create Document").fill("performance.board");
+  await page.locator("#quick-results").getByRole("button", { name: /performance\.board/ }).click();
+
+  const board = page.locator("#board-surface");
+  await expect(board).toHaveAttribute("data-total-cards", "1200");
+  await expect(board).toHaveAttribute("data-visible-cards", "1200");
+  await expect(board).toHaveAttribute("data-rendered-cards", "240");
+  await expect(board.locator("[data-col-key=todo]")).toHaveAttribute("data-total-cards", "400");
+  await expect(board.locator("[data-col-key=todo]")).toHaveAttribute("data-rendered-cards", "80");
+  await expect(board.locator("[data-card-id]")).toHaveCount(240);
+
+  await board.getByPlaceholder("Search cards").fill("Large card 01199");
+  await expect(board).toHaveAttribute("data-visible-cards", "1");
+  await expect(board).toHaveAttribute("data-rendered-cards", "1");
+  await expect(board.getByText("Large card 01199", { exact: true })).toBeVisible();
+
+  await board.getByPlaceholder("Search cards").fill("");
+  await board.getByRole("button", { name: "Table", exact: true }).click();
+  const table = board.locator("[data-total-cards='1200'][data-rendered-cards='160']");
+  await expect(table).toBeVisible();
+  await expect(table.locator("tbody tr[role=button]")).toHaveCount(160);
 });
 
 test("edits frontmatter properties and shows outline", async ({ page }) => {

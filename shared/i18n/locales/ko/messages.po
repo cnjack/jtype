@@ -549,6 +549,14 @@ msgstr ""
 msgid "Set WIP limit"
 msgstr "WIP 한도 설정"
 
+#: ../../../shared/components/board/BoardCalendar.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSwimlanes.tsx
+#: ../../../shared/components/board/BoardTable.tsx
+msgid "Show more"
+msgstr "더 보기"
+
 #: ../../../shared/components/board/BoardPeek.tsx
 msgid "Show resolved thread"
 msgstr ""

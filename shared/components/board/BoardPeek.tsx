@@ -178,8 +178,11 @@ export function BoardPeek({
 
   useEffect(() => {
     if (mode !== "preview" || !previewRef.current) return;
-    void renderToContainer(notes, previewRef.current);
-  }, [mode, notes]);
+    void renderToContainer(notes, previewRef.current, {
+      renderKey: card.id,
+      renderMoreLabel: t`Show more`,
+    });
+  }, [card.id, mode, notes]);
 
   const tagLabels = draft.tags.map((t2) => t2.label);
 

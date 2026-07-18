@@ -1,0 +1,17 @@
+appId: net.jcode.jtype
+---
+- launchApp:
+    clearState: false
+- assertVisible: "Documents"
+- tapOn: "Documents"
+- tapOn: "Search files..."
+- eraseText: 64
+- inputText: "large-content"
+- assertVisible: ".*large-content.md.*"
+- tapOn: ".*large-content.md.*"
+- tapOn:
+    text: "^Close$"
+    optional: true
+- tapOn: "Preview"
+- assertVisible: "(?s).*Large content fixture.*"
+- assertVisible: "(?s).*Section 0000.*"

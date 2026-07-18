@@ -4,6 +4,7 @@ import { Trans } from "@lingui/react/macro";
 import { ChevronLeftIcon, ChevronRightIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
 import {
   PRIORITY_STYLE,
+  BOARD_CARD_RENDER_BATCH_SIZE,
   currentMonth,
   groupCardsByDay,
   isIsoDate,
@@ -43,6 +44,7 @@ export function BoardCalendar({
   onSelect: (card: BoardViewCard) => void;
 }) {
   const [month, setMonth] = useState(() => currentMonth());
+  const [agendaRenderLimit, setAgendaRenderLimit] = useState(BOARD_CARD_RENDER_BATCH_SIZE * 2);
   const byDay = groupCardsByDay(cards);
   const [ys, ms] = month.split("-");
   const monthLabel = new Date(Number(ys), Number(ms) - 1, 1).toLocaleDateString(undefined, { year: "numeric", month: "long" });
@@ -116,11 +118,16 @@ export function BoardCalendar({
 
   if (mode === "agenda") {
     const sorted = sortCards(cards, "due");
-    const dated = sorted.filter((c) => isIsoDate(c.due));
-    const undated = sorted.filter((c) => !isIsoDate(c.due));
+    const rendered = sorted.slice(0, agendaRenderLimit);
+    const dated = rendered.filter((c) => isIsoDate(c.due));
+    const undated = rendered.filter((c) => !isIsoDate(c.due));
     let lastDay = "";
     return (
-      <div className="flex min-h-0 flex-1 flex-col">
+      <div
+        className="flex min-h-0 flex-1 flex-col"
+        data-total-cards={cards.length}
+        data-rendered-cards={rendered.length}
+      >
         {header}
         <div className="min-h-0 flex-1 overflow-auto p-4">
           {dated.length === 0 && undated.length === 0 && (
@@ -155,14 +162,27 @@ export function BoardCalendar({
               <div className="max-w-xl space-y-0.5">{undated.map((card) => cardChip(card, false))}</div>
             </>
           )}
+          {rendered.length < sorted.length && (
+            <button
+              type="button"
+              className="mt-4 min-h-11 rounded-lg border border-dashed border-brand/20 px-4 py-2 text-xs font-semibold text-brand-dark hover:border-brand/40"
+              onClick={() => setAgendaRenderLimit((limit) => limit + BOARD_CARD_RENDER_BATCH_SIZE * 2)}
+            >
+              <Trans>Show more</Trans> · {sorted.length - rendered.length}
+            </button>
+          )}
         </div>
       </div>
     );
   }
 
   const weeks = monthMatrix(month);
+  const monthRenderedCount = weeks.flat().reduce(
+    (count, day) => count + Math.min((byDay.get(day) ?? []).length, 4),
+    0,
+  );
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="flex min-h-0 flex-1 flex-col" data-total-cards={cards.length} data-rendered-cards={monthRenderedCount}>
       {header}
       <div className="grid grid-cols-7 border-b border-black/[0.04] bg-[#fbfdfb]">
         {WEEKDAYS.map((w) => (

@@ -163,7 +163,7 @@ async function renderPreviewPdfBytes(content: string): Promise<Uint8Array> {
   document.body.appendChild(host);
 
   try {
-    await renderToContainer(content, article);
+    await renderToContainer(content, article, { progressive: false });
     applyPdfColorFallback(article);
     await new Promise((resolve) => requestAnimationFrame(() => resolve(undefined)));
 
@@ -392,9 +392,12 @@ export function EditorShell() {
   // Blob URLs for vault-relative images shown in the preview, keyed by full
   // path. Revoked when the workspace changes or the shell unmounts.
   const imageUrlCacheRef = useRef<Map<string, string>>(new Map());
+  const localImageObserverRef = useRef<IntersectionObserver | null>(null);
   useEffect(() => {
     const cache = imageUrlCacheRef.current;
     return () => {
+      localImageObserverRef.current?.disconnect();
+      localImageObserverRef.current = null;
       cache.forEach((url) => URL.revokeObjectURL(url));
       cache.clear();
     };
@@ -408,14 +411,16 @@ export function EditorShell() {
   const resolveLocalImages = useCallback(async (container: HTMLElement) => {
     const root = state.workspace?.rootPath;
     if (!root || !tauri.isAvailable) return;
-    for (const img of Array.from(container.querySelectorAll<HTMLImageElement>("img"))) {
+    localImageObserverRef.current?.disconnect();
+
+    const resolveImage = async (img: HTMLImageElement) => {
       const src = img.getAttribute("src") ?? "";
-      if (!src || /^(https?:|data:|blob:|asset:|file:|\/\/)/i.test(src)) continue;
+      if (!src || /^(https?:|data:|blob:|asset:|file:|\/\/)/i.test(src)) return;
       let rel: string;
       try {
         rel = normalizePath(decodeURIComponent(src)).replace(/^\.\//, "");
       } catch {
-        continue;
+        return;
       }
       // Try document-relative first, then vault-root-relative.
       const candidates = documentLocation ? [`${documentLocation}/${rel}`, rel] : [rel];
@@ -434,7 +439,29 @@ export function EditorShell() {
         img.src = url;
         break;
       }
+    };
+
+    const images = Array.from(container.querySelectorAll<HTMLImageElement>("img"));
+    images.forEach((img) => {
+      img.loading = "lazy";
+      img.decoding = "async";
+    });
+    if (typeof IntersectionObserver === "undefined") {
+      await Promise.all(images.map(resolveImage));
+      return;
     }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.filter((entry) => entry.isIntersecting).forEach((entry) => {
+          observer.unobserve(entry.target);
+          void resolveImage(entry.target as HTMLImageElement);
+        });
+      },
+      { root: container, rootMargin: "480px 0px" },
+    );
+    localImageObserverRef.current = observer;
+    images.forEach((img) => observer.observe(img));
   }, [state.workspace?.rootPath, documentLocation]);
 
   /** Save pasted image data into `<doc dir>/assets/` and insert its markdown link. */
@@ -478,14 +505,17 @@ export function EditorShell() {
     const container = previewRef.current;
     const content = state.editorContent;
     previewTimerRef.current = setTimeout(() => {
-      void renderToContainer(content, container).then(() =>
+      void renderToContainer(content, container, {
+        renderKey: state.currentPath || (state.isDraft ? "draft" : "markdown"),
+        renderMoreLabel: t`Show more`,
+      }).then(() =>
         Promise.all([populateBoardEmbeds(container), resolveLocalImages(container)]),
       );
     }, 120);
     return () => {
       if (previewTimerRef.current) clearTimeout(previewTimerRef.current);
     };
-  }, [state.editorContent, state.currentKind, effectiveEditorMode, populateBoardEmbeds, resolveLocalImages]);
+  }, [state.editorContent, state.currentKind, state.currentPath, state.isDraft, effectiveEditorMode, populateBoardEmbeds, resolveLocalImages]);
 
   const isFavorite = (() => {
     if (!state.currentPath) return false;
@@ -986,7 +1016,7 @@ export function EditorShell() {
         <EditorToolbarButton command="insert.task" title={t`Task list`} disabled={!canEditMarkdown} runCommand={runCommand} tooltipProps={tooltipProps(t`Task list`)}>
           <ClipboardDocumentListIcon className="h-4 w-4" />
         </EditorToolbarButton>
-        <div className="ml-auto shrink-0">
+        <div className={capabilities.isTouchPrimary ? "order-first mr-1 shrink-0" : "ml-auto shrink-0"}>
           <ViewModeToggle
             mode={effectiveEditorMode}
             onModeChange={(mode) => dispatch({ type: "SET_EDITOR_MODE", mode })}

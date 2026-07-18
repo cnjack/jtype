@@ -1549,6 +1549,7 @@ msgstr "Settings"
 msgid "Show in Explorer"
 msgstr "Show in Explorer"
 
+#: src/components/editor/EditorShell.tsx
 #: src/components/sidebar/Sidebar.tsx
 msgid "Show more"
 msgstr "Show more"

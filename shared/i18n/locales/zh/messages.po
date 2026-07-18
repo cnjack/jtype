@@ -549,6 +549,14 @@ msgstr "设置状态"
 msgid "Set WIP limit"
 msgstr "设置 WIP 限制"
 
+#: ../../../shared/components/board/BoardCalendar.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSwimlanes.tsx
+#: ../../../shared/components/board/BoardTable.tsx
+msgid "Show more"
+msgstr "显示更多"
+
 #: ../../../shared/components/board/BoardPeek.tsx
 msgid "Show resolved thread"
 msgstr "显示已解决话题"
