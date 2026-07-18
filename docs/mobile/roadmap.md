@@ -178,11 +178,11 @@
 ### 2.1 External vault provider
 
 - [x] 定义 `VaultBackend` / `VaultProvider` descriptor、identity、access state、capability 与 versioned native record 边界；现有 app-private/local vault 已通过 provider resolver 打开，UI、AppState、commands、相对路径和 sync document model 不变（证据：`docs/mobile/reports/phase-2.md`，实现：`002fd18`）
-- [~] Android Storage Access Framework：系统目录选择、persistable permission、原子首次 mirror、permission health、重新授权、SHA-256 baseline、三方安全 pull、both-modified guard、中断后 open recovery、versioned mutation journal，以及 shared workbench 的 write/create/rename/delete/Board/binary/folder/cloud/trash mutation routing 已完成；120 文件 native write-back 进程终止、磁盘不足、真实 persisted permission 撤销，以及 local multi-file closure 错误/进程终止后的 rollback 与冷恢复均已通过真实 API 36 模拟器。write capability、正式 Open vault 入口、共享 VaultHome/Editor 和 provider status/reauthorize/pending UI 已开放并通过产品 UI create-save-trash；剩余逐路径冲突选择和大批量进度（证据：`docs/mobile/reports/phase-2.md`，实现：`18fbeb8`、`0b69f16`、`f9537f2`、`231a2dc`、`99a7d39`、`123bea6`、`455eafe`、`c78eaad`、`276ced1`）
+- [~] Android Storage Access Framework：系统目录选择、persistable permission、原子首次 mirror、permission health、重新授权、SHA-256 baseline、三方安全 pull、both-modified guard、中断后 open recovery、versioned mutation journal，以及 shared workbench 的 write/create/rename/delete/Board/binary/folder/cloud/trash mutation routing 已完成；120 文件 native write-back 进程终止、磁盘不足、真实 persisted permission 撤销，以及 local multi-file closure 错误/进程终止后的 rollback 与冷恢复均已通过真实 API 36 模拟器。write capability、正式 Open vault 入口、共享 VaultHome/Editor、provider status/reauthorize/pending UI 与逐路径冲突选择已开放并通过产品 UI；仅剩大批量可见进度（证据：`docs/mobile/reports/phase-2.md`，实现：`18fbeb8`、`0b69f16`、`f9537f2`、`231a2dc`、`99a7d39`、`123bea6`、`455eafe`、`c78eaad`、`276ced1`、`15df904`）
 - [ ] iOS folder picker：security-scoped bookmark、权限恢复、失效后的重新授权
-- [~] external directory ↔ app-private mirror 的 record、storage mode 与 capability contract 已建立；Android native record、首次导入、内容 baseline、安全 pull、受控双向 write-back、delete/rename、local transaction、journal retry、native fault recovery、conflict guard、shared command routing、write capability 与正式共享 UI 已完成，逐路径冲突选择与 iOS 实现待 2B/2C 完成
+- [~] external directory ↔ app-private mirror 的 record、storage mode 与 capability contract 已建立；Android native record、首次导入、内容 baseline、安全 pull、受控双向 write-back、delete/rename、local transaction、journal retry、native fault recovery、conflict guard、shared command routing、write capability、正式共享 UI 与逐路径冲突选择已完成；大批量进度与 iOS 实现待 2B/2C 完成
 - [ ] 当 mirror 被证明不足时，再将 provider 扩展为零拷贝访问；不在 UI 层分叉
-- [~] Android external provider 已能检测权限丢失/目录移动、保持同一 provider identity 重新授权，并在其他 app 修改文件后安全 pull、合并不相交 source/local 变化或阻断同路径双边冲突；共享 desktop mutation 已通过 provider adapter 写回 SAF，native 磁盘不足/权限撤销可保留 journal 后恢复；正式共享 UI 已提供状态、重新授权、pending journal 与冲突数量，剩余逐路径冲突选择、大批量进度和 iOS 实现
+- [~] Android external provider 已能检测权限丢失/目录移动、保持同一 provider identity 重新授权，并在其他 app 修改文件后安全 pull、合并不相交 source/local 变化、阻断同路径双边冲突并逐路径选择保留 source/JType；共享 desktop mutation 已通过 provider adapter 写回 SAF，native 磁盘不足/权限撤销可保留 journal 后恢复；正式共享 UI 已提供状态、重新授权、pending journal、冲突数量与选择 dialog，剩余大批量进度和 iOS 实现
 
 ### 2.2 移动交互完善
 
@@ -209,7 +209,7 @@
 ### 2.5 Phase 2 验收
 
 - [ ] Android/iOS 外部 vault 选择、重启后恢复、增删改查和权限丢失恢复通过
-- [ ] 外部 app 修改文件后 JType 能 reconcile，且不会静默覆盖用户内容
+- [~] Android 外部 app 修改文件后 JType 能 reconcile，并以正式共享 dialog 逐路径选择，不会静默覆盖；iOS provider 待 2C
 - [ ] share/deep-link/notification smoke flow 通过
 - [ ] 大 vault 基准达到报告中预先记录的阈值
 - [ ] desktop build、Rust tests、app E2E 全部通过
@@ -275,6 +275,7 @@
 | 2026-07-18 | 2.1 / 2B | `455eafe` | debug-only native fault injection，验证磁盘不足/权限撤销后的 journal 保留、access health 刷新与安全重试 | `docs/mobile/reports/phase-2.md` |
 | 2026-07-18 | 2.1 / 2B | `c78eaad` | mirror backup/marker transaction，关闭 local closure 部分失败与进程终止的 rollback/cold recovery 边界 | `docs/mobile/reports/phase-2.md` |
 | 2026-07-18 | 2.1 / 2B | `276ced1` | 开放 Android external vault capability，以原 Open vault action 接入 SAF，并在共享 VaultHome/Editor 中提供状态、重新授权和 pending journal 操作 | `docs/mobile/reports/phase-2.md` |
+| 2026-07-18 | 2.1 / 2B | `15df904` | 共享 Headless UI 逐路径冲突选择，真实 API 36 双向收敛、精确验证与 baseline 推进 | `docs/mobile/reports/phase-2.md` |
 | 2026-07-18 | 2.2 / shell | `232222c` | 约束共享 Welcome 内容在窄屏和本地化文案下的宽度 | `docs/mobile/reports/phase-2.md` |
 | 2026-07-18 | 2.2 / shell | `309aebb` | 将共享 App shell Grid 列固定为 `minmax(0, 1fr)`，增加完整中文 locale overflow 回归 | `docs/mobile/reports/phase-2.md` |
 
