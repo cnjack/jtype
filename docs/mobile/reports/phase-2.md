@@ -4,9 +4,9 @@
 
 Feature branch：`codex/mobile-app`
 
-当前 app code commit：`409919c`
+当前 app code commit：`7e65195`
 
-本报告状态：进行中；2A provider contract、2B Android SAF 与 2C iOS security-scoped provider 的工程/Simulator gate 已完成。2D 已完成 app-private 草稿冷恢复、Keystore/Keychain pending OAuth 冷恢复、Android share target / iOS Share Extension，以及模拟器无障碍、动态字体与硬件键盘 gate；移动手势、大 vault/弱网和 physical-device gate 继续进行。iOS external provider 已通过系统目录选择、native-only bookmark、首次镜像、覆盖安装后的容器迁移、冷启动恢复和 shared editor write-back；physical iPhone 的 bookmark 失效/重新授权仍保留在最终真实设备 gate。
+本报告状态：进行中；2A provider contract、2B Android SAF 与 2C iOS security-scoped provider 的工程/Simulator gate 已完成。2D 已完成 app-private 草稿冷恢复、Keystore/Keychain pending OAuth 冷恢复、Android share target / iOS Share Extension、模拟器无障碍、共享触控交互与键盘辅助栏；Android native interaction flow 已通过，iOS physical gesture/haptic、大 vault/弱网和其他 physical-device gate 继续进行。iOS external provider 已通过系统目录选择、native-only bookmark、首次镜像、覆盖安装后的容器迁移、冷启动恢复和 shared editor write-back；physical iPhone 的 bookmark 失效/重新授权仍保留在最终真实设备 gate。
 
 ## 本增量结论
 
@@ -15,6 +15,8 @@ Feature branch：`codex/mobile-app`
 Android SAF 没有新增 mobile-only 产品页：native picker 与 opaque tree URI 被封装在 Android/Rust provider adapter 内，选中的目录先镜像到 app-private root，再返回现有 `WorkspaceSnapshot`。正式入口复用 Welcome / Sidebar 原有的 Open vault action；打开后继续使用同一套 `VaultHome`、文件树、编辑器、预览、Document Info、Board 和 commands。共享壳层只增加 provider status banner 与 Headless UI 冲突 dialog，用于展示目录名、访问状态、pending write-back、冲突数量、重新授权/检查动作和逐路径版本选择。
 
 系统分享也遵守相同边界：Android Intent 与 iOS Share Extension 只负责捕获、暂存和唤醒，Rust 将来源交给现有 `importExternalSources`，最终仍由同一套 vault provider routing 和 `EditorShell` 呈现；移动端没有 landing page、docs website、share inbox 页面或独立编辑器。
+
+触控交互同样没有复制产品 UI：Sidebar 与 Board 的长按、滑动和 selection 复用现有 action callbacks；Editor 键盘辅助栏复用现有格式化/插入命令和 native undo history。平台兼容层只负责手势输入、visual viewport keyboard inset 与 Android/iOS native haptic，desktop 的右键、拖拽和快捷键路径保持不变。
 
 本增量建立的边界包括：
 
@@ -489,6 +491,7 @@ E2E 现在以完整中文 locale 在 390×844 viewport 验证：content panel �
 - `49dea60`：单一 untitled draft 的 app-private 原子 snapshot、双平台 cold recovery，以及 Keystore/Keychain pending OAuth、单一 poll owner、expiry/retry/cancel 清理。
 - `ce9239b`：Android cold/warm `ACTION_SEND`、iOS Share Extension / App Group inbox，以及复用现有 vault import 和 shared editor 的单一 drain 链路。
 - `409919c`：共享 UI accessibility 语义、键盘焦点、contrast/reduced-motion、Android WebView font scale、iOS Dynamic Type 与 native undo/redo history。
+- `7e65195`：共享 Sidebar/Board 长按、滑动与 selection callback，Android/iOS native haptic adapter，以及复用同一编辑命令的键盘辅助栏。
 
 ## 2D 草稿与 pending OAuth 冷恢复
 
@@ -508,6 +511,12 @@ Android API 36 已完成 cold text、warm text 和真实 MediaStore `content://`
 
 Android API 36 实际启用 TalkBack 后完成 accessibility tree 与焦点 flow；iPhone 17 Pro Simulator / iOS 26.5 完成 XCUITest accessibility tree、accessibility-extra-large Dynamic Type、Increase Contrast 与 TAB flow。iOS physical VoiceOver 语音/手势仍保留为真机 gate。完整边界、命令、截图与 SHA-256 见 [`phase-2-accessibility.md`](phase-2-accessibility.md)。
 
+## 2D 触控交互与键盘辅助栏
+
+Sidebar 文件/文件夹的长按与向左滑动现在进入与省略号按钮相同的 action sheet callback；Board 长按进入多选，后续触摸增删选择，滑动进入现有 card action。Editor 底部辅助栏提供 Undo、Redo、Bold、Italic、Link、Task 与收起键盘，继续调用同一 command system 和 WebView native editing history。触控编辑器保留系统文本选择/copy callout，desktop 右键、快捷键和 Board pointer drag 不变。
+
+Android API 36 已完成 Bold → Undo → Dismiss、文件长按、关闭 action sheet、文件向左滑动并再次打开同一 action sheet；native log 证明 selection/impact haptic 已执行且长按/滑动没有重复 impact。iOS Simulator 已验证辅助栏 accessibility surface、Documents drawer 和手势注入 flow，但当前 iOS 26 XCUITest/WKWebView 没有把注入事件转发给 JavaScript，因此不宣称 iOS action callback 或触感 gate 已通过；这些项目保留给 physical iPhone。完整边界、截图、artifact hash 与限制见 [`phase-2-interactions.md`](phase-2-interactions.md)。
+
 ## 自动化与构建结果
 
 | 验证 | 结果 |
@@ -515,10 +524,12 @@ Android API 36 实际启用 TalkBack 后完成 accessibility tree 与焦点 flow
 | `npm run build` | PASS |
 | `npm run build --prefix services/jtype-web/frontend` | PASS |
 | `npm run test:unit` | PASS，47/47 |
-| `npx playwright test tests/e2e/app.spec.ts` | PASS，48/48；包含 mobile accessibility、focus、contrast、reduced-motion、shortcut 与 undo/redo 回归 |
+| `npx playwright test tests/e2e/app.spec.ts` | PASS，49/49；包含 mobile accessibility、focus、contrast、reduced-motion、shortcut、undo/redo、触控 action callback 与 keyboard accessory 回归 |
 | `cargo test --manifest-path src-tauri/Cargo.toml` | PASS，28/28；新增 source conflict subtree 原子替换测试 |
 | `cargo check --manifest-path plugins/mobile-import/Cargo.toml` | PASS |
 | `cargo fmt --manifest-path plugins/mobile-import/Cargo.toml --check` | PASS |
+| `cargo check --manifest-path plugins/mobile-interaction/Cargo.toml` | PASS |
+| `cargo fmt --manifest-path plugins/mobile-interaction/Cargo.toml --check` | PASS |
 | `pnpm tauri android build --debug --target aarch64 --apk --ci` | PASS |
 | Android SAF picker / initial mirror / persisted permission / idempotent reselect / cold restore | PASS |
 | Android persisted permission loss / source move / replacement reauthorization / old grant release | PASS |
@@ -543,17 +554,20 @@ Android API 36 实际启用 TalkBack 后完成 accessibility tree 与焦点 flow
 | Android TalkBack accessibility tree / keyboard focus | PASS；实际 TalkBack service 已启用 |
 | iOS accessibility tree / Dynamic Type / Increase Contrast | PASS；XCUITest tree + TAB flow，physical VoiceOver 手势待终验 |
 | Android hardware keyboard Bold / undo / redo | PASS；`Ctrl+B` / `Ctrl+Z` / `Ctrl+Shift+Z` |
+| Android keyboard accessory Bold / Undo / Dismiss / file long-press / swipe | PASS；两个手势进入同一 action sheet，native haptic log 无重复 impact |
+| iOS keyboard accessory accessibility surface / long-press and swipe injection | PASS；XCUITest 未把注入事件转发给 WKWebView，callback、按钮激活与 haptic 待 physical iPhone |
 
 Android debug APK：
 
 - `src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk`
-- 391,578,867 bytes（aarch64 target gate）
-- SHA-256 `6f862cec2ff2756b782c456fcb4432a5f52454385ec984bc6a4a7ffbd6c58bad`
+- 199,564,812 bytes（aarch64 target gate）
+- SHA-256 `a9645389958a58ea8277425fffe8d8879a266312a70f036791b9cebf4b7ef86d`
 
 iOS archive：
 
 - `src-tauri/gen/apple/build/jtype_iOS.xcarchive`
-- no-sign simulator archive，约 529 MB；包含 `JType.app/PlugIns/JType Share.appex`
+- no-sign simulator archive；包含 `JType.app/PlugIns/JType Share.appex`
+- app binary 106,868,728 bytes；SHA-256 `757fd77592dfcdcf620e0e7f656795a2a2773c276f5d2032bda1d13b718b635c`
 
 截图 SHA-256：
 
@@ -577,14 +591,18 @@ c1f67c690aa47c066d80a10b52eae6d609cf494dabfd2e8987583a93e458633d  ios-share-impo
 57697105bd8a25350f878c456bda8d2fd7ad6f195ea8a0f4d96dcca97d5c2bbc  android-talkback-focus.png
 ef622b3a8b82e9c897934c81238fd6396573f3b1e97f2e18fb9153841dbf7359  android-accessibility-large-text.png
 5a3e39494e6fa771dbe27d2c0dd7bc7f0c4cbe82bdac237226d848fafbb93c34  ios-accessibility-large-text.png
+a859dc7facc0c9ff3c1b5153649cca81bb7c5ed8d31537baed1077661cd7aa3a  android-keyboard-accessory.png
+4ebc895f6e80119ca3db76713250c5d33cf232e1c7d166400cd97d14015e0546  android-touch-action-sheet.png
+aba8143f881434c46e1bd1d05fce99e74ce6627b041cc4969af1afaa6b61763d  ios-keyboard-accessory.png
+d8a7d059400a63ac9620b8beecc7522ebc6640ac2340e5ab975c699bf049e54e  ios-touch-affordance.png
 ```
 
-## 下一增量：2D 移动手势、性能与可靠性
+## 下一增量：2D 性能、可靠性与系统通知
 
-2A、2B、2C 与 2D recovery/share-import/accessibility 的工程/Simulator gate 已收口。下一段继续保持 desktop/shared product surface，处理：
+2A、2B、2C 与 2D recovery/share-import/accessibility/touch interaction 的工程 gate 已收口。下一段继续保持 desktop/shared product surface，处理：
 
-1. long-press、swipe selection、haptic feedback 与 keyboard accessory，继续复用现有 action/command callbacks。
-2. 低内存、大 vault、弱网、系统分享的大文件/进程终止矩阵。
-3. 通知与通知/深链定位，以及 physical VoiceOver/TalkBack 在内的最终真实设备 gate。
+1. 低内存、大 vault、弱网、系统分享的大文件/进程终止矩阵。
+2. APNs/FCM 通知与通知/深链的 cloud workspace、vault、文档定位。
+3. physical iPhone 的 gesture/haptic/VoiceOver 与双端真实设备最终 gate。
 
 physical iPhone 上的 bookmark 失效/重新授权、iCloud/第三方 Files provider 行为与 signed build 继续作为 Phase 2 最终验收项，不用 Simulator 结果替代。
