@@ -6,7 +6,7 @@ Feature branch：`codex/mobile-app`
 
 实现 commit：`3f945c4`
 
-状态：分页读取与 canonical snapshot 合并契约、自动化和双平台构建 gate 已完成；移动运行时尚未启用 partial snapshot，因此本段不宣称启动内存、首屏时间或 provider I/O 已改善。
+状态：`3f945c4` 的分页读取与 canonical snapshot 合并契约、自动化和双平台构建 gate 已完成；后续 `1a92435` 已在移动 runtime 启用 partial snapshot、共享 native fallback 与 folder hydration，见 [`phase-2-partial-workspace-runtime.md`](phase-2-partial-workspace-runtime.md)。本报告仍只记录 contract 增量，不把后续结果倒算为本 commit 的性能证据。
 
 ## 结论
 
@@ -41,11 +41,11 @@ nextCursor     下一页 opaque cursor；末页为 null
 - nested hydration 只复制目标 ancestor chain，未变化 sibling 保持引用；
 - duplicate、non-child、错误 total、未加载 parent 和乱序 page 会立即失败。
 
-## 尚未启用的原因
+## 当时未启用的原因
 
-当前 app 启动仍调用完整 `open_workspace`，所以本段没有减少 `WorkspaceSnapshot` 的枚举量或前端完整索引内存。直接启用 root partial snapshot 会让 Quick Open、Sidebar search、wikilink、filesystem link impact、通知/deep-link 定位看不到尚未加载的文件，这与“尽可能复用 Desktop UI 和操作”冲突。
+`3f945c4` 当时的 app 启动仍调用完整 `open_workspace`，所以该 commit 没有减少 `WorkspaceSnapshot` 的枚举量或前端完整索引内存。直接启用 root partial snapshot 会让 Quick Open、Sidebar search、wikilink、filesystem link impact、通知/deep-link 定位看不到尚未加载的文件，这与“尽可能复用 Desktop UI 和操作”冲突。
 
-运行时切换前还需要一层同源的 native search/path resolver，让共享操作可以解析未加载目标，再由 platform capability 在移动端选择 partial bootstrap。Desktop 继续使用完整 snapshot；共享组件只消费逐步合并后的 canonical tree，不出现 `if (mobile)` 文件树分支。
+后续 `1060d1c` 完成同源 native search/path resolver，`1a92435` 再由 platform capability 只为移动端选择 partial bootstrap。Desktop 继续使用完整 snapshot；共享组件只消费逐步合并后的 canonical tree，没有出现 `if (mobile)` 文件树分支。
 
 本契约还有三个明确限制：
 
@@ -96,11 +96,11 @@ dac94d5830263edb1e210c73e1b7b6ca9813f8eca18e269d3bbb2db1a80ac258  android-worksp
 9d165ba82efe8b6ae73f23f4ca3f3138f86840cd3c0d84a8bc630b55a84837ee  ios-workspace-pagination-smoke.png
 ```
 
-本段没有新增用户可见行为，两张图只证明 `3f945c4` 的最终双平台产物继续运行共用产品层，不作为分页性能证据。分页运行时启用后会重新保存首屏、尾部搜索/定位、展开下一页和内存指标证据。
+本段没有新增用户可见行为，两张图只证明 `3f945c4` 的最终双平台产物继续运行共用产品层，不作为分页性能证据。运行时功能 gate 已在 `1a92435` 重新保存首屏、尾部搜索/定位与展开下一页证据；physical-device 内存指标仍待完成。
 
 ## 下一步
 
-1. 未加载 entry 的 canonical native exact/fuzzy search、relative-path/wikilink resolve 与 link-impact query 已在 `1060d1c` 完成 contract gate；完整边界见 [`phase-2-unloaded-entry-resolution.md`](phase-2-unloaded-entry-resolution.md)。
-2. 仅在 mobile runtime capability 下以根目录首屏创建 partial `WorkspaceSnapshot`；Desktop `open_workspace` 保持不变。
-3. 将共享 Sidebar 的 folder expansion / Show more 接到同一 page loader，mutation 后从受影响目录首屏刷新；文档正文继续通过现有 read command 在打开时读取。
-4. 在 Android/iOS 5,000 文档夹具上记录 cold open、首屏 IPC、峰值 RSS、尾部精确搜索/定位和连续分页，再决定是否需要 provider-native streaming cursor。
+1. [完成于 `1060d1c`] 未加载 entry 的 canonical native exact/fuzzy search、relative-path/wikilink resolve 与 link-impact query；完整边界见 [`phase-2-unloaded-entry-resolution.md`](phase-2-unloaded-entry-resolution.md)。
+2. [完成于 `1a92435`] 仅在 mobile runtime capability 下以根目录首屏创建 partial `WorkspaceSnapshot`；Desktop `open_workspace` 保持不变。
+3. [完成于 `1a92435`] 共享 Sidebar folder expansion / Show more、loaded-first/native-fallback resolver，以及 mutation/sync/watch partial re-bootstrap；见 [`phase-2-partial-workspace-runtime.md`](phase-2-partial-workspace-runtime.md)。
+4. 在 Android/iOS 5,000 文档夹具和 physical device 上记录 cold open、首屏 IPC、峰值 RSS、尾部精确搜索/定位和连续分页，再决定是否需要 provider-native streaming cursor。

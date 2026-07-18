@@ -8,7 +8,7 @@ Feature branch：`codex/mobile-app`
 
 iOS 首屏回归修复 commit：`999dc11`
 
-状态：native search、exact path、wikilink 与 rename link-impact 查询契约、双平台构建和冷启动视觉 gate 已完成；移动运行时尚未启用 partial `WorkspaceSnapshot`，因此本段不宣称 Quick Open、Sidebar search 或启动性能已经切换到新路径。
+状态：native search、exact path、wikilink 与 rename link-impact 查询契约、双平台构建和冷启动视觉 gate 已完成；后续 `1a92435` 已把这些 contract 接入 mobile partial `WorkspaceSnapshot` 的 shared loaded-first/native-fallback 路径，见 [`phase-2-partial-workspace-runtime.md`](phase-2-partial-workspace-runtime.md)。本报告仍不把后续 runtime/性能结果归入 `1060d1c`。
 
 ## 结论
 
@@ -99,17 +99,17 @@ f4311cf3d1e9c312f6802e4e44886d19a8ead1de549e8fe776fd57d51f3eda5a  android-unload
 1. `src-tauri/gen/apple/build/arm64-sim/JType.app` 的旧目录会阻止 Tauri rename，必须先移走再判定新 build；不能把旧可启动 artifact 当成当前源码结果。
 2. Tauri mobile build 在外层命令让出输出后仍可能继续运行，必须等待真实 exit code 与 `Finished ... Bundle/APK`，再安装产物；Android/iOS 继续串行，因为两端 `beforeBuildCommand` 共用根 `dist/`。
 
-## 尚未启用的边界
+## 该 contract commit 尚未启用的边界
 
 1. native query 仍会递归扫描 filesystem；它避免完整 tree allocation/IPC，但不是 provider-native index，也不是 O(1) lookup。
-2. 当前移动启动仍调用完整 `open_workspace`；首屏时间、峰值 RSS 与 snapshot IPC size 没有因本 commit 改善。
-3. QuickSwitcher 与 Sidebar 当前是同步 render/search API。下一段需要一个 shared async resolver/cache，并仅在 partial snapshot capability 下调用 native query。
-4. 通知/deep-link 与 wikilink 必须使用 loaded-first、native-fallback；发生 cloud pull 或 mutation 后要使 resolver cache 失效。
-5. rename link impact 接入时必须保留当前未保存 editor buffer，不能让磁盘扫描覆盖 Desktop 已有语义。
+2. `1060d1c` 时移动启动仍调用完整 `open_workspace`；首屏时间、峰值 RSS 与 snapshot IPC size 没有因该 commit 改善。
+3. `1060d1c` 时 QuickSwitcher 与 Sidebar 仍是同步 render/search API；后续需要 shared async resolver，并仅在 partial snapshot capability 下调用 native query。
+4. runtime 接入必须让通知/deep-link 与 wikilink 使用 loaded-first/native-fallback，并在 cloud pull 或 mutation 后刷新 partial state。
+5. rename link impact 接入必须保留当前未保存 editor buffer，不能让磁盘扫描覆盖 Desktop 已有语义。第 2–5 项已由 `1a92435` 按这些约束实现。
 
 ## 下一步
 
-1. 给 `WorkspaceSnapshot` 增加明确的 completeness/page state，并只让 mobile app-private/external mirror bootstrap 使用根目录首个 `WorkspaceEntryPage`；Desktop `open_workspace` 保持完整。
-2. 建立 shared loaded-first resolver：Quick Open、Sidebar search、wikilink、通知/deep-link 和 link impact 在 complete snapshot 下继续走同步 `WorkspaceIndex`，在 partial snapshot 下才走本报告的 native fallback。
-3. 将 folder expansion / Show more 接到现有 canonical page merger；mutation、pull、provider reconcile 后从受影响 folder 首屏 refresh 并使 query cache 失效。
-4. 在 Android/iOS 5,000 文档 fixture 上记录 cold open、snapshot bytes、峰值 RSS、尾部 exact/fuzzy search、wikilink/deep-link 与连续 folder page，再决定 provider-native persistent index/streaming cursor 是否必要。
+1. [完成于 `1a92435`] 给 `WorkspaceSnapshot` 增加 completeness/page state，只让 mobile bootstrap 使用根目录首个 `WorkspaceEntryPage`；Desktop `open_workspace` 保持完整。
+2. [完成于 `1a92435`] 建立 shared loaded-first resolver：complete snapshot 继续走同步 `WorkspaceIndex`，partial snapshot 才调用 native fallback。
+3. [完成于 `1a92435`] 将 folder expansion / Show more 接到 canonical page merger；mutation、pull、cloud event 与 watcher 重新 bootstrap partial state。
+4. 在 Android/iOS 5,000 文档 fixture 和 physical device 上记录 cold open、snapshot bytes、峰值 RSS、尾部 exact/fuzzy search、wikilink/deep-link 与连续 folder page，再决定 provider-native persistent index/streaming cursor 是否必要。

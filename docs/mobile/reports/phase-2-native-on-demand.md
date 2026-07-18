@@ -27,7 +27,7 @@ Android 真实 SAF 复测确认这一边界实际成立：系统 folder picker �
 
 - 首次选择外部 vault 仍完整 mirror 到 app-private root，保证离线可用和既有 Desktop filesystem contract 不变。
 - native scan 仍会完整枚举目录并读取所有文件内容以计算 SHA-256；它消除了整库临时复制，但尚未消除整库 hash I/O。
-- app-private mirror 的 `WorkspaceSnapshot` 仍完整枚举；原生分页枚举、partial snapshot 与真正的 lazy document open 继续留在后续增量。
+- 在本实现 commit `5970d15` 中，app-private mirror 的 `WorkspaceSnapshot` 仍完整枚举；后续 `1a92435` 已让 mobile runtime 使用 partial snapshot 与打开时读取正文。external 首次 mirror、完整 source hash scan 与 provider-native streaming 仍未改变。
 - source 只在 plan 要求 pull/upsert 或 `UseSource` 冲突选择时 materialize；纯删除、无变化检查和 `UseJtype` verification 不复制 source 文件。
 
 因此不能把这次实现描述成“external vault 已完全 lazy loading”。准确状态是“full native scan + plan-driven source materialization”。
@@ -131,5 +131,5 @@ e646299f60e8b7ad70d3dc16e7ce41a8dc882c99c3d51fc4e8b4c0d9d2ce63a0  ios-shared-wel
 
 1. 在可转发 touch 的 iOS Simulator/physical iPhone 重跑相同 Files provider flow。
 2. 补充双端 reconcile total time、峰值 RSS/存储增长；Android native scan/materialized file/bytes 已有真实数据。
-3. shared shallow page contract 与 canonical `WorkspaceSnapshot` merger 已在 `3f945c4` 建立，未加载 entry native search/path/wikilink/link-impact query 已在 `1060d1c` 建立；下一步接入 shared loaded-first/native-fallback resolver 后再启用 mobile partial snapshot 与按文档读取。首次 mirror 的离线策略单独决策，详见 [`phase-2-workspace-pagination.md`](phase-2-workspace-pagination.md) 与 [`phase-2-unloaded-entry-resolution.md`](phase-2-unloaded-entry-resolution.md)。
+3. shared shallow page contract 与 canonical `WorkspaceSnapshot` merger 已在 `3f945c4` 建立，未加载 entry native query 已在 `1060d1c` 建立，shared loaded-first/native-fallback resolver、mobile partial bootstrap、folder hydration 与按打开读取正文已在 `1a92435` 接通。首次 mirror 的离线策略与 provider-native streaming 仍单独决策，详见 [`phase-2-workspace-pagination.md`](phase-2-workspace-pagination.md)、[`phase-2-unloaded-entry-resolution.md`](phase-2-unloaded-entry-resolution.md) 与 [`phase-2-partial-workspace-runtime.md`](phase-2-partial-workspace-runtime.md)。
 4. 为 Android Studio 提供明确的 arm64 run configuration/variant，避免 IDE 默认 `armDebug` 与 arm64 AVD 不匹配。

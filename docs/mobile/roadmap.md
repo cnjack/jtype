@@ -2,7 +2,7 @@
 
 > 最后更新：2026-07-19
 > Feature branch：`codex/mobile-app`  
-> 当前阶段：Phase 2D — 系统集成与可靠性；系统分享、recovery、无障碍、共享触控交互、键盘辅助栏、5,000 文档大 vault、大 Markdown/附件/1,200-card Board、sync reliability，以及 Android/iOS 系统通知 → 文档定位已完成；external reconcile/write-back 已改为 native full scan + plan-driven source materialization，共享浅层分页与未加载 entry search/path/wikilink/link-impact 查询契约已建立，继续移动运行时 partial snapshot、按文档读取、APNs/FCM、physical low-memory、真实设备弱网与真机终验
+> 当前阶段：Phase 2D — 系统集成与可靠性；系统分享、recovery、无障碍、共享触控交互、键盘辅助栏、5,000 文档大 vault、大内容/Board、sync reliability、系统通知 → 文档定位，以及 mobile partial workspace runtime/loaded-native fallback/folder hydration 已完成；external reconcile/write-back 已改为 native full scan + plan-driven source materialization，继续 provider-native streaming、APNs/FCM、physical low-memory/performance、真实设备弱网与真机终验
 > 状态说明：`[ ]` 未开始、`[~]` 进行中、`[x]` 已完成；只有附上真实测试证据后才能标记完成。
 
 ## 目标
@@ -203,7 +203,7 @@
 
 ### 2.4 大 vault 性能与可靠性
 
-- [~] 共享 workspace index、Sidebar/Quick Open bounded exact-first search、每级 160 行渐进树 window 已在 5,000 文档 Android/iOS 模拟器和 2,500 文档 Desktop E2E 中通过；external reconcile/write-back 已完成 plan-driven source materialization，浅层 `WorkspaceEntryPage`、canonical snapshot merger，以及未加载 entry native search/path/wikilink/link-impact query 已完成 contract/build gate。当前移动运行时仍使用完整 `open_workspace`，partial bootstrap、shared async fallback/cache、provider-native streaming 与按文档读取待完成（证据：`docs/mobile/reports/phase-2-large-vault.md`、`docs/mobile/reports/phase-2-native-on-demand.md`、`docs/mobile/reports/phase-2-workspace-pagination.md`、`docs/mobile/reports/phase-2-unloaded-entry-resolution.md`，实现：`85dee2f`、`5970d15`、`3f945c4`、`1060d1c`）
+- [~] 共享 workspace index、Sidebar/Quick Open bounded exact-first search、每级 160 行渐进树 window 已在 5,000 文档 Android/iOS 模拟器和 2,500 文档 Desktop E2E 中通过；external reconcile/write-back 已完成 plan-driven source materialization。mobile capability 现在使用 partial root bootstrap，Sidebar folder page、loaded-first/native-fallback search/path/wikilink/link-impact、mutation/sync/watch partial re-bootstrap 与按打开读取正文已接入同一 Desktop product layer；provider-native streaming、external full hash 优化与 physical-device RSS/cold-open gate 待完成（证据：`docs/mobile/reports/phase-2-large-vault.md`、`docs/mobile/reports/phase-2-native-on-demand.md`、`docs/mobile/reports/phase-2-workspace-pagination.md`、`docs/mobile/reports/phase-2-unloaded-entry-resolution.md`、`docs/mobile/reports/phase-2-partial-workspace-runtime.md`，实现：`85dee2f`、`5970d15`、`3f945c4`、`1060d1c`、`1a92435`）
 - [~] 大 Markdown、Mermaid、KaTeX、23 张 3072×3072 附件和 1,200-card Board 已完成共享渐进渲染、完整模型尾部搜索、Desktop E2E 与 Android/iOS Simulator gate；physical device 的 memory warning、峰值 RSS 和后台恢复仍待完成（证据：`docs/mobile/reports/phase-2-large-content.md`，实现：`4cdf48d`）
 - [x] desktop/mobile 共用 sync transport 已完成 50-operation / 约 1 MB 确定性 batching、最多 3 次 transient retry、稳定 request-id、服务端顺序/并发 replay 幂等和可观测 batch/attempt 错误；Android/iOS 121-document `50 + 50 + 21` 服务中断/恢复与 reconnect 本地编辑保护通过（证据：`docs/mobile/reports/phase-2-weak-network-sync.md`，实现：`798be1c`）
 - [ ] 真实设备弱网、离线、磁盘不足、权限变化与进程终止测试
@@ -220,9 +220,10 @@
 - [~] 当前 2D provider on-demand 增量的 plugin cargo check、Tauri 29/29、unit 59/59、app E2E 55/55、Android universal APK 与 iOS simulator archive 全部通过；Android 120-file SAF 原生交互/日志 gate 已通过，iOS Files provider 本轮交互仍待可转发 touch 的测试宿主或 physical iPhone（证据：`docs/mobile/reports/phase-2-native-on-demand.md`）
 - [x] 当前 2D workspace pagination contract 增量的 jtype-core 40/40、Tauri 29/29、unit 63/63、app E2E 55/55、Desktop build、Android universal APK 与 iOS simulator archive 全部通过；这是未接入运行时的共享契约 gate，不作为移动端分页性能验收（证据：`docs/mobile/reports/phase-2-workspace-pagination.md`）
 - [x] 当前 2D unloaded-entry query contract 增量的 jtype-core 43/43、Tauri 29/29、unit 66/66、app E2E 55/55、Desktop build、Android universal APK、iOS simulator archive 与双平台 cold-launch screenshot 全部通过；这是 partial runtime 的前置 contract gate，不作为搜索或启动性能验收（证据：`docs/mobile/reports/phase-2-unloaded-entry-resolution.md`）
+- [~] 当前 2D partial workspace runtime 增量的 jtype-core 44/44、Tauri 29/29、unit 70/70、app E2E 56/56、Desktop build、Android universal APK/cold launch 与 iOS compile/archive + HTTPS dev shared/native flow 通过；当前 Xcode 26.6 / iOS 26.5 Simulator 的静态 archive 空白在基线 `434757d` 同样复现，physical/different stable environment 与性能 gate 待完成（证据：`docs/mobile/reports/phase-2-partial-workspace-runtime.md`）
 - [ ] 双平台模拟器与至少一台真实设备截图/录像证据已保存
-- [~] `docs/mobile/reports/phase-2.md` 已记录 2A、2B、2C、2D recovery、系统分享、无障碍、触控交互、大 vault、大内容、sync reliability 与通知文档定位结果；细节见各专项报告，后续持续更新到 Phase 2 终验
-- [~] tracking 已记录当前 Phase 2 commit hashes（最新实现 `999dc11`）；后续增量继续追加
+- [~] `docs/mobile/reports/phase-2.md` 已记录 2A、2B、2C、2D recovery、系统分享、无障碍、触控交互、大 vault、大内容、sync reliability、通知文档定位与 partial workspace runtime；细节见各专项报告，后续持续更新到 Phase 2 终验
+- [~] tracking 已记录当前 Phase 2 commit hashes（最新实现 `1a92435`）；后续增量继续追加
 
 ## Phase 3 — Store readiness
 
@@ -299,6 +300,7 @@
 | 2026-07-19 | 2.4 / 2D | `3f945c4` | shared shallow workspace page contract、provider-aware Tauri command 与 canonical `WorkspaceSnapshot` immutable merger；运行时 partial snapshot 待下一增量 | `docs/mobile/reports/phase-2-workspace-pagination.md` |
 | 2026-07-19 | 2.4 / 2D | `1060d1c` | 未加载 entry 的 native exact/fuzzy search、exact path、wikilink 与 rename link-impact query；保持 canonical `FileTreeNode` 与 Desktop 排序语义 | `docs/mobile/reports/phase-2-unloaded-entry-resolution.md` |
 | 2026-07-19 | 2.3 / 2D | `999dc11` | iOS notification preview 延迟到 WKWebView 首次 paint 后调用，Android 保持 native schedule；补充 delivery-mode 回归测试 | `docs/mobile/reports/phase-2-notification-routing.md`、`docs/mobile/reports/phase-2-unloaded-entry-resolution.md` |
+| 2026-07-19 | 2.4 / 2D | `1a92435` | mobile partial canonical snapshot、共享 loaded-first/native-fallback resolver、folder hydration 与 mutation/sync/watch partial re-bootstrap；Desktop 保持完整 snapshot | `docs/mobile/reports/phase-2-partial-workspace-runtime.md` |
 
 ## 当前环境审计（2026-07-18）
 
