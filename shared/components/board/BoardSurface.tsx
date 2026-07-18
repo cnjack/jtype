@@ -637,7 +637,7 @@ export function BoardSurface({
                       onPointerUp={(e) => onColPointerUp(e, col)}
                       className={`flex min-w-0 flex-1 select-none items-center gap-1.5 text-sm font-medium text-stone-700 ${editableColumns && actions.reorderColumns && !touchOptimized ? "cursor-grab touch-none active:cursor-grabbing" : ""}`}
                     >
-                      <button type="button" onClick={() => toggleCollapse(col.key)} title={t`Collapse column`} className="-ml-1 rotate-90 rounded p-0.5 text-stone-400 hover:bg-white hover:text-stone-600">
+                      <button type="button" onClick={() => toggleCollapse(col.key)} title={t`Collapse column`} aria-label={t`Collapse ${col.name || t`Unassigned`}`} className="-ml-1 rotate-90 rounded p-0.5 text-stone-400 hover:bg-white hover:text-stone-600">
                         <ChevronRightIcon className="h-3.5 w-3.5" />
                       </button>
                       {(colorColumns || col.color) && <span className="h-2 w-2 rounded-full" style={{ backgroundColor: tintColor }} aria-hidden />}
@@ -653,7 +653,7 @@ export function BoardSurface({
                     </div>
                     {editableColumns && !readOnly && hasColumnOps && (
                       <Menu as="div" className="relative shrink-0">
-                        <MenuButton className={`rounded text-stone-400 hover:bg-white hover:text-stone-600 ${touchOptimized ? "flex min-h-11 min-w-11 items-center justify-center" : "p-0.5"}`}>
+                        <MenuButton aria-label={t`Actions for ${col.name || t`Unassigned`}`} className={`rounded text-stone-400 hover:bg-white hover:text-stone-600 ${touchOptimized ? "flex min-h-11 min-w-11 items-center justify-center" : "p-0.5"}`}>
                           <EllipsisHorizontalIcon className="h-4 w-4" />
                         </MenuButton>
                         <MenuItems anchor="bottom end" className={`z-30 w-48 rounded-lg border border-black/[0.06] bg-white py-1 text-sm shadow-lg [--anchor-gap:4px] focus:outline-none${portalCls}`}>

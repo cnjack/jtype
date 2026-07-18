@@ -882,6 +882,7 @@ export function EditorShell() {
                 className={`header-icon-button ${state.isDraft || state.isDirty ? "header-icon-button-primary" : ""}`}
                 type="button"
                 aria-label={state.isDraft ? t`Save as…` : state.isDirty ? t`Save` : t`No unsaved changes`}
+                aria-keyshortcuts="Control+S Meta+S"
                 aria-disabled={state.isDraft ? false : (!canSaveCurrent || !state.isDirty)}
                 {...tooltipProps(state.isDraft ? t`Save as…` : state.isDirty ? t`Save` : t`No unsaved changes`)}
                 onClick={() => {
@@ -1024,7 +1025,7 @@ export function EditorShell() {
               // rendered below 16px. Keep the compact editor at that floor so
               // native keyboard focus does not push header actions off-screen.
               fontSize: compactWorkbench
-                ? "max(16px, calc(16px * var(--jtype-zoom, 1)))"
+                ? "max(16px, calc(16px * var(--jtype-font-scale, 1) * var(--jtype-zoom, 1)))"
                 : "calc(13px * var(--jtype-zoom, 1))",
             }}
             spellCheck={false}
@@ -1040,7 +1041,7 @@ export function EditorShell() {
             id="preview"
             ref={previewRef}
             className={`preview empty min-h-0 overflow-y-auto overflow-x-hidden border-l border-black/[0.04] bg-[#f8fbf9] ${compactWorkbench ? "p-5" : "p-10"}`}
-            style={{ position: "relative", zIndex: 1, fontSize: "calc(16px * var(--jtype-zoom, 1))" }}
+            style={{ position: "relative", zIndex: 1, fontSize: compactWorkbench ? "calc(16px * var(--jtype-font-scale, 1) * var(--jtype-zoom, 1))" : "calc(16px * var(--jtype-zoom, 1))" }}
             onClick={handlePreviewClick}
           >
             <h2><Trans>Select a Markdown file</Trans></h2>
@@ -1121,7 +1122,15 @@ export function EditorShell() {
 
 function EditorToolbarButton({ title, disabled, runCommand, command, tooltipProps, children }: { title: string; disabled: boolean; runCommand: (id: string) => void; command: string; tooltipProps?: React.HTMLAttributes<HTMLButtonElement>; children: React.ReactNode }) {
   return (
-    <button className="editor-tool shrink-0" type="button" aria-label={title} aria-disabled={disabled} {...tooltipProps} onClick={() => { if (!disabled) runCommand(command); }}>
+    <button
+      className="editor-tool shrink-0"
+      type="button"
+      aria-label={title}
+      aria-disabled={disabled}
+      aria-keyshortcuts={command === "editor.bold" ? "Control+B Meta+B" : command === "editor.italic" ? "Control+I Meta+I" : command === "editor.link" ? "Control+K Meta+K" : command === "insert.table" ? "Control+Shift+T Meta+Shift+T" : undefined}
+      {...tooltipProps}
+      onClick={() => { if (!disabled) runCommand(command); }}
+    >
       {children}
     </button>
   );

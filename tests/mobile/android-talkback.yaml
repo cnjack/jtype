@@ -1,0 +1,16 @@
+appId: net.jcode.jtype
+---
+- launchApp:
+    clearState: false
+# Run with TalkBack enabled. Maestro resolves the Android accessibility tree,
+# then TAB advances the real accessibility/keyboard focus across shared header
+# actions without a mobile-only navigation model.
+- assertVisible: "Documents"
+- assertVisible: "Local vault mode"
+- assertVisible: "Quick open"
+- assertVisible: "New document"
+- assertVisible: "Sign in"
+- assertVisible: "Markdown editor"
+- assertVisible: "Bold - Ctrl+B"
+- pressKey: TAB
+- pressKey: TAB

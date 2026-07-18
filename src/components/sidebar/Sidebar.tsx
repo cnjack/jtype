@@ -815,6 +815,8 @@ function TreeNode({
         type="button"
         className={`tree-button ${capabilities.isTouchPrimary ? "min-h-11 pr-12" : ""} ${isActive ? "tree-button-active" : ""} ${dragOver ? "ring-2 ring-[#008884]/40 bg-[#e8f6f2]" : ""}`}
         style={{ paddingLeft: `${0.5 + depth * 0.75}rem` }}
+        aria-expanded={isExpandable ? isExpanded : undefined}
+        aria-current={isActive ? "page" : undefined}
         draggable
         onDragStart={(e) => {
           e.dataTransfer.setData("text/plain", node.relativePath);

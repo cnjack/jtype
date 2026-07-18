@@ -306,6 +306,41 @@ function getEditor(): HTMLTextAreaElement | null {
   return document.querySelector<HTMLTextAreaElement>("#editor");
 }
 
+function replaceEditorRange(
+  editor: HTMLTextAreaElement,
+  text: string,
+  start: number,
+  end: number,
+  selectionMode: "select" | "end",
+) {
+  editor.focus();
+  editor.setSelectionRange(start, end);
+
+  // WebView/browser native typing already owns the undo stack. Route command
+  // edits through the same editing primitive so Ctrl/Cmd+Z can undo toolbar,
+  // hardware-keyboard and mobile accessory actions as well. execCommand is
+  // retained by WKWebView and Android WebView specifically for this editing
+  // compatibility; setRangeText remains the conservative fallback.
+  let insertedWithNativeHistory = false;
+  try {
+    insertedWithNativeHistory = document.execCommand("insertText", false, text);
+  } catch {
+    insertedWithNativeHistory = false;
+  }
+
+  if (!insertedWithNativeHistory) {
+    editor.setRangeText(text, start, end, selectionMode);
+    editor.dispatchEvent(new Event("input", { bubbles: true }));
+    return;
+  }
+
+  if (selectionMode === "select") {
+    editor.setSelectionRange(start, start + text.length);
+  } else {
+    editor.setSelectionRange(start + text.length, start + text.length);
+  }
+}
+
 function wrapSelection(prefix: string, suffix: string, fallback: string) {
   const editor = getEditor();
   if (!editor) return;
@@ -313,17 +348,13 @@ function wrapSelection(prefix: string, suffix: string, fallback: string) {
   const end = editor.selectionEnd;
   const selected = editor.value.slice(start, end) || fallback;
   const next = `${prefix}${selected}${suffix}`;
-  editor.setRangeText(next, start, end, "select");
-  editor.dispatchEvent(new Event("input", { bubbles: true }));
-  editor.focus();
+  replaceEditorRange(editor, next, start, end, "select");
 }
 
 function insertAtCursor(text: string) {
   const editor = getEditor();
   if (!editor) return;
-  editor.setRangeText(text, editor.selectionStart, editor.selectionEnd, "end");
-  editor.dispatchEvent(new Event("input", { bubbles: true }));
-  editor.focus();
+  replaceEditorRange(editor, text, editor.selectionStart, editor.selectionEnd, "end");
 }
 
 function currentLineIndex(): number {
@@ -376,9 +407,7 @@ function insertBlockAtSafeCursor(text: string) {
   const lines = editor.value.split("\n");
   const insertAt = lineStartOffset(lines, Math.min(fence.end + 1, lines.length));
   const normalized = text.startsWith("\n") ? text : `\n${text}`;
-  editor.setRangeText(normalized, insertAt, insertAt, "end");
-  editor.dispatchEvent(new Event("input", { bubbles: true }));
-  editor.focus();
+  replaceEditorRange(editor, normalized, insertAt, insertAt, "end");
 }
 
 function looksLikeTableLine(line = ""): boolean {

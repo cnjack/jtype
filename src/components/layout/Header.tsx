@@ -99,6 +99,7 @@ export function Header({ onOpenMobileNavigation }: HeaderProps) {
                 className="toolbar-button aspect-square px-0"
                 type="button"
                 title={t`Documents`}
+                aria-label={t`Documents`}
                 onClick={onOpenMobileNavigation}
               >
                 <Bars3Icon className="h-4 w-4" />
@@ -108,6 +109,7 @@ export function Header({ onOpenMobileNavigation }: HeaderProps) {
               className="toolbar-button aspect-square px-0"
               type="button"
               title={cloudSyncEnabled ? t`Cloud workspace: ${currentBinding?.workspaceName ?? ""}` : t`Local vault mode`}
+              aria-label={cloudSyncEnabled ? t`Cloud workspace: ${currentBinding?.workspaceName ?? ""}` : t`Local vault mode`}
               onClick={() => dispatch({ type: "SET_ACCOUNT_DIALOG", open: true, section: "workspace" })}
             >
               {cloudSyncEnabled ? <CloudIcon className="h-4 w-4" /> : <FolderOpenIcon className="h-4 w-4" />}
@@ -116,6 +118,8 @@ export function Header({ onOpenMobileNavigation }: HeaderProps) {
               className="toolbar-button aspect-square px-0"
               type="button"
               title={t`Quick open`}
+              aria-label={t`Quick open`}
+              aria-keyshortcuts="Control+P Meta+P"
               onClick={() => dispatch({ type: "SET_QUICK_SWITCHER", open: true })}
             >
               <MagnifyingGlassIcon className="h-4 w-4" />
@@ -126,6 +130,8 @@ export function Header({ onOpenMobileNavigation }: HeaderProps) {
                 className="toolbar-button aspect-square px-0"
                 type="button"
                 title={t`New document`}
+                aria-label={t`New document`}
+                aria-keyshortcuts="Control+N Meta+N"
                 disabled={isVaultReadOnly}
                 onClick={() => dispatch({ type: "NEW_DRAFT" })}
               >
@@ -136,16 +142,16 @@ export function Header({ onOpenMobileNavigation }: HeaderProps) {
         )}
         {isSingleFile && (
           <>
-            <button className="toolbar-button aspect-square px-0" type="button" title={t`Back to home`} onClick={handleBackToHome}>
+            <button className="toolbar-button aspect-square px-0" type="button" title={t`Back to home`} aria-label={t`Back to home`} onClick={handleBackToHome}>
               <HomeIcon className="h-4 w-4" />
             </button>
-            <button className="toolbar-button aspect-square px-0" type="button" title={t`Open file`} onClick={() => fs.chooseMarkdownFile()}>
+            <button className="toolbar-button aspect-square px-0" type="button" title={t`Open file`} aria-label={t`Open file`} onClick={() => fs.chooseMarkdownFile()}>
               <FolderOpenIcon className="h-4 w-4" />
             </button>
           </>
         )}
         {state.mode === "draft" && (
-          <button className="toolbar-button aspect-square px-0" type="button" title={t`Discard draft`} onClick={handleDiscardDraft}>
+          <button className="toolbar-button aspect-square px-0" type="button" title={t`Discard draft`} aria-label={t`Discard draft`} onClick={handleDiscardDraft}>
             <XMarkIcon className="h-4 w-4" />
           </button>
         )}
@@ -158,6 +164,7 @@ export function Header({ onOpenMobileNavigation }: HeaderProps) {
               id="sync-panel-button"
               className="user-avatar"
               title={state.syncToken ? state.syncUsername : t`Sign in`}
+              aria-label={state.syncToken ? t`Account: ${state.syncUsername}` : t`Sign in`}
             >
               {userInitial}
             </MenuButton>

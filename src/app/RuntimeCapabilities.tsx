@@ -31,9 +31,28 @@ function fallbackCapabilities(): RuntimeCapabilities {
 
 const RuntimeCapabilitiesContext = createContext<RuntimeCapabilities>(fallbackCapabilities());
 const COMPACT_VIEWPORT_MEDIA = "(max-width: 767px), (max-height: 500px)";
+const IOS_BODY_TEXT_BASE_PX = 17;
 
 function compactViewportQuery() {
   return typeof window === "undefined" ? true : window.matchMedia(COMPACT_VIEWPORT_MEDIA).matches;
+}
+
+function measureIosDynamicTypeScale() {
+  const probe = document.createElement("span");
+  probe.setAttribute("aria-hidden", "true");
+  probe.style.cssText = [
+    "position:fixed",
+    "visibility:hidden",
+    "pointer-events:none",
+    "font:-apple-system-body",
+    "-webkit-text-size-adjust:100%",
+    "text-size-adjust:100%",
+  ].join(";");
+  document.body.appendChild(probe);
+  const measured = Number.parseFloat(getComputedStyle(probe).fontSize);
+  probe.remove();
+  if (!Number.isFinite(measured) || measured <= 0) return 1;
+  return Math.min(1.6, Math.max(1, measured / IOS_BODY_TEXT_BASE_PX));
 }
 
 export function RuntimeCapabilitiesProvider({ children }: { children: ReactNode }) {
@@ -83,6 +102,29 @@ export function RuntimeCapabilitiesProvider({ children }: { children: ReactNode 
     document.documentElement.dataset.jtypeMobile = String(adaptiveCapabilities.isMobile);
     document.documentElement.dataset.jtypeLayout = adaptiveCapabilities.prefersCompactLayout ? "compact" : "regular";
   }, [adaptiveCapabilities]);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const applyDynamicType = () => {
+      const scale = adaptiveCapabilities.platform === "ios" ? measureIosDynamicTypeScale() : 1;
+      root.style.setProperty("--jtype-font-scale", scale.toFixed(3));
+      // Complex app chrome keeps fixed hit-target geometry and uses a bounded
+      // text-only adjustment. Content surfaces receive the larger scale below.
+      root.style.setProperty("--jtype-chrome-text-scale", `${Math.round(Math.min(scale, 1.35) * 100)}%`);
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") applyDynamicType();
+    };
+    applyDynamicType();
+    window.addEventListener("focus", applyDynamicType);
+    window.addEventListener("pageshow", applyDynamicType);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("focus", applyDynamicType);
+      window.removeEventListener("pageshow", applyDynamicType);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [adaptiveCapabilities.platform]);
 
   return (
     <RuntimeCapabilitiesContext.Provider value={adaptiveCapabilities}>

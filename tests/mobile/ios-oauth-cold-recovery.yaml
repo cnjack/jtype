@@ -5,7 +5,7 @@ appId: net.jcode.jtype
 - tapOn: "使用默认库"
 - tapOn: "仅本地"
 - assertVisible: "库已就绪"
-- tapOn: "A"
+- tapOn: "登录"
 - tapOn: "个人资料"
 - runFlow:
     when:
@@ -23,19 +23,19 @@ appId: net.jcode.jtype
     index: 1
 - assertVisible: "授权设备"
 - launchApp
-- tapOn: "A"
+- tapOn: "登录"
 - tapOn: "个人资料"
 - assertVisible: "等待网页确认"
 - killApp
 - launchApp
-- tapOn: "A"
+- tapOn: "登录"
 - tapOn: "个人资料"
 - assertVisible: "等待网页确认"
 - tapOn: "取消"
 - assertNotVisible: "等待网页确认"
 - killApp
 - launchApp
-- tapOn: "A"
+- tapOn: "登录"
 - tapOn: "个人资料"
 - assertVisible: "在浏览器中连接"
 - assertNotVisible: "等待网页确认"

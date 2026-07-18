@@ -49,7 +49,7 @@ export function MobileSidebarDialog({ open, onClose }: MobileSidebarDialogProps)
         >
           <div className="flex items-center justify-between px-5 py-2">
             <DialogTitle className="text-sm font-semibold text-stone-950"><Trans>Documents</Trans></DialogTitle>
-            <button className="toolbar-button aspect-square px-0" type="button" title={t`Close`} onClick={onClose}>
+            <button className="toolbar-button aspect-square px-0" type="button" title={t`Close`} aria-label={t`Close`} onClick={onClose}>
               <XMarkIcon className="h-4 w-4" />
             </button>
           </div>

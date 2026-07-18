@@ -1,0 +1,16 @@
+appId: net.jcode.jtype
+---
+- launchApp:
+    clearState: false
+# XCUITest resolves the same accessibility tree consumed by VoiceOver. These
+# assertions guard the icon-only header, account entry, editor and formatting
+# actions without maintaining a mobile-only view hierarchy.
+- assertVisible: "文档"
+- assertVisible: "本地库模式"
+- assertVisible: "快速打开"
+- assertVisible: "新建文档"
+- assertVisible: "登录"
+- assertVisible: "Markdown 编辑器"
+- assertVisible: "粗体 - Ctrl+B"
+- pressKey: TAB
+- pressKey: TAB

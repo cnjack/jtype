@@ -1023,6 +1023,87 @@ test("adapts the shared welcome screen to app-private mobile storage", async ({ 
   await expect(page.getByTitle("Split")).toBeHidden();
 });
 
+test("exposes accessible shared controls and hardware keyboard actions on mobile", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(() => {
+    window.__RUNTIME_CAPABILITIES__ = {
+      platform: "ios",
+      clientType: "mobile",
+      isMobile: true,
+      isTouchPrimary: true,
+      prefersCompactLayout: true,
+      supportsWindowDrag: false,
+      supportsUpdater: false,
+      supportsProcessRestart: false,
+      supportsCliInstall: false,
+      supportsFileDrop: false,
+      supportsExternalVault: false,
+      usesAppPrivateVault: true,
+    };
+  });
+  await page.reload();
+
+  await expect(page.locator("#sync-panel-button")).toHaveAccessibleName("Sign in");
+  await page.locator("#welcome-default-vault").click();
+  await page.getByRole("button", { name: "Local only" }).click();
+  await expect(page.locator("#mobile-navigation-button")).toHaveAccessibleName("Documents");
+  await expect(page.locator("header").getByRole("button", { name: "Quick open" })).toHaveAttribute("aria-keyshortcuts", "Control+P Meta+P");
+
+  await page.locator("#mobile-navigation-button").click();
+  await expect(page.locator("#mobile-vault-navigation").getByRole("button", { name: "Close" })).toBeVisible();
+  await page.locator("#mobile-vault-navigation").getByRole("button", { name: "intro.md", exact: true }).click();
+
+  const editorView = page.getByRole("group", { name: "Editor view" });
+  await expect(editorView).toBeVisible();
+  await expect(editorView.getByRole("button", { name: "Write" })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("button", { name: "Bold - Ctrl+B" })).toHaveAttribute("aria-keyshortcuts", "Control+B Meta+B");
+  await expect(page.locator('button[aria-keyshortcuts="Control+S Meta+S"]')).toHaveCount(1);
+
+  const unnamedVisibleButtons = await page.locator("button:visible:not([disabled])").evaluateAll((buttons) =>
+    buttons
+      .filter((button) => !(
+        button.getAttribute("aria-label")?.trim()
+        || button.getAttribute("title")?.trim()
+        || button.textContent?.trim()
+      ))
+      .map((button) => button.outerHTML.slice(0, 160)),
+  );
+  expect(unnamedVisibleButtons).toEqual([]);
+
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+  await page.keyboard.press("Tab");
+  const keyboardFocusedControl = page.locator(":focus");
+  await expect(keyboardFocusedControl).toBeVisible();
+  const focusIndicator = await keyboardFocusedControl.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return { style: style.outlineStyle, width: style.outlineWidth, color: style.outlineColor };
+  });
+  expect(focusIndicator.style).not.toBe("none");
+  expect(Number.parseFloat(focusIndicator.width)).toBeGreaterThanOrEqual(2);
+
+  await page.emulateMedia({ contrast: "more", reducedMotion: "reduce" });
+  const accessibilityPreferences = await page.locator("html").evaluate((root) => {
+    const rootStyle = getComputedStyle(root);
+    const buttonStyle = getComputedStyle(document.querySelector("#mobile-navigation-button")!);
+    return {
+      brand: rootStyle.getPropertyValue("--color-brand").trim(),
+      transitionDuration: buttonStyle.transitionDuration,
+    };
+  });
+  expect(accessibilityPreferences.brand).toBe("#006865");
+  expect(Number.parseFloat(accessibilityPreferences.transitionDuration)).toBeLessThanOrEqual(0.001);
+
+  const editor = page.getByLabel("Markdown editor");
+  await editor.focus();
+  await editor.evaluate((element: HTMLTextAreaElement) => element.setSelectionRange(0, element.value.length));
+  await page.keyboard.press("Control+B");
+  await expect(editor).toHaveValue("**# Intro\n\nHello from workspace.**");
+  await page.keyboard.press("Meta+Z");
+  await expect(editor).toHaveValue("# Intro\n\nHello from workspace.");
+  await page.keyboard.press("Meta+Shift+Z");
+  await expect(editor).toHaveValue("**# Intro\n\nHello from workspace.**");
+});
+
 test("opens an Android SAF vault through the shared desktop vault action", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.addInitScript(() => {

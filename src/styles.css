@@ -32,15 +32,69 @@
     user-select: text;
   }
 
-  /* Remove the native WebKit focus ring (the rounded blue "glow" that appears
-     after clicking the avatar, vault switcher, menus, etc.). macOS WebKit
-     treats pointer clicks as :focus-visible too, so a :not(:focus-visible)
-     carve-out does not catch it — suppress the outline on :focus outright.
-     Interactive surfaces (inputs, board controls, etc.) carry their own
-     border/ring focus styles, so this only drops the redundant UA outline. */
-  :focus,
-  :focus-visible {
+  /* Pointer focus keeps the native-app appearance. Keyboard and switch-control
+     users receive an explicit shared focus treatment below. */
+  :focus {
     outline: none;
+  }
+}
+
+/* Keep this outside a Tailwind layer so utility classes such as outline-none
+   cannot erase the keyboard focus indicator. It affects the existing shared
+   controls instead of introducing mobile-only components. */
+:where(
+  button,
+  a[href],
+  input,
+  select,
+  textarea,
+  [role="button"],
+  [role="menuitem"],
+  [role="tab"],
+  [tabindex]:not([tabindex="-1"])
+):focus-visible {
+  outline: 2px solid var(--color-brand) !important;
+  outline-offset: 2px !important;
+}
+
+/* RuntimeCapabilities measures iOS Dynamic Type from -apple-system-body and
+   exposes bounded text-only scales. Keeping the root rem unchanged preserves
+   touch-target and safe-area geometry at accessibility sizes. */
+html[data-jtype-platform="ios"] body {
+  -webkit-text-size-adjust: var(--jtype-chrome-text-scale, 100%);
+  text-size-adjust: var(--jtype-chrome-text-scale, 100%);
+}
+
+html[data-jtype-platform="ios"] :where(#editor, #preview, .preview) {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --color-brand: #006865;
+    --color-brand-dark: #004f4d;
+    --color-brand-gray: #3f4c48;
+    --color-line: rgb(13 13 12 / 0.24);
+  }
+
+  :where(.toolbar-button, .sidebar-action, .header-action-group, .panel-card, .document-info-section) {
+    border-color: rgb(13 13 12 / 0.28);
+  }
+
+  :where(.tree-button-active, .view-mode-button-active, .status-chip-success) {
+    box-shadow: inset 0 0 0 1px var(--color-brand-dark);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
 
