@@ -242,11 +242,11 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
 
   const chooseWorkspaceFolder = useCallback(async () => {
     if (!tauri.isAvailable) return;
-    if (capabilities.platform === "android") {
+    if (capabilities.isMobile && capabilities.supportsExternalVault) {
       try {
         dispatch({ type: "SET_LOADING", isLoading: true });
         dispatch({ type: "SET_STATUS", message: "Choose a folder for this vault..." });
-        const result = await tauri.initializeAndroidExternalVault();
+        const result = await tauri.initializeExternalVault();
         const workspace = { ...result.workspace, name: result.provider.displayName };
         const providerStatus = { provider: result.provider, pendingWriteBack: false };
         dispatch({ type: "OPEN_WORKSPACE", workspace, providerStatus });
@@ -272,7 +272,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } catch (error) {
       dispatch({ type: "SET_STATUS", message: String(error) });
     }
-  }, [capabilities.platform, dispatch]);
+  }, [capabilities.isMobile, capabilities.supportsExternalVault, dispatch]);
 
   const openWorkspace = useCallback(async (path: string) => {
     try {
@@ -335,7 +335,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
       dispatch({ type: "SET_LOADING", isLoading: true });
       dispatch({ type: "SET_STATUS", message: status.pendingWriteBack ? "Finishing interrupted changes..." : "Checking external changes..." });
       if (status.pendingWriteBack) {
-        const result = await tauri.writeBackAndroidExternalVault(status.provider.providerId);
+        const result = await tauri.writeBackExternalVault(status.provider.providerId);
         const workspace = { ...result.workspace, name: result.provider.displayName };
         dispatch({ type: "UPDATE_WORKSPACE", workspace });
         dispatch({
@@ -353,7 +353,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
             : "Interrupted external changes were completed.",
         });
       } else {
-        const result = await tauri.reconcileAndroidExternalVault(status.provider.providerId);
+        const result = await tauri.reconcileExternalVault(status.provider.providerId);
         const workspace = { ...result.workspace, name: result.provider.displayName };
         dispatch({ type: "UPDATE_WORKSPACE", workspace });
         dispatch({
@@ -393,7 +393,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     try {
       dispatch({ type: "SET_LOADING", isLoading: true });
       dispatch({ type: "SET_STATUS", message: `Resolving external conflict for ${relativePath}...` });
-      const result = await tauri.resolveAndroidExternalVaultConflict(
+      const result = await tauri.resolveExternalVaultConflict(
         status.provider.providerId,
         relativePath,
         resolution,
@@ -430,7 +430,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     try {
       dispatch({ type: "SET_LOADING", isLoading: true });
       dispatch({ type: "SET_STATUS", message: "Choose this external vault again..." });
-      const provider = await tauri.reauthorizeAndroidExternalVault(status.provider.providerId);
+      const provider = await tauri.reauthorizeExternalVault(status.provider.providerId);
       const nextStatus = await tauri.inspectVaultProvider(state.workspace.rootPath);
       dispatch({
         type: "SET_VAULT_PROVIDER_STATUS",

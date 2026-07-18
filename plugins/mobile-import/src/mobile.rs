@@ -35,14 +35,14 @@ impl<R: Runtime> MobileImport<R> {
             .map_err(Into::into)
     }
 
-    #[cfg(target_os = "android")]
+    #[cfg(any(target_os = "android", target_os = "ios"))]
     pub fn select_directory(&self) -> crate::Result<SelectedDirectory> {
         self.0
             .run_mobile_plugin("selectDirectory", ())
             .map_err(Into::into)
     }
 
-    #[cfg(target_os = "android")]
+    #[cfg(any(target_os = "android", target_os = "ios"))]
     pub fn directory_access(
         &self,
         source_reference: impl Into<String>,
@@ -57,7 +57,7 @@ impl<R: Runtime> MobileImport<R> {
             .map_err(Into::into)
     }
 
-    #[cfg(target_os = "android")]
+    #[cfg(any(target_os = "android", target_os = "ios"))]
     pub fn release_directory_access(
         &self,
         source_reference: impl Into<String>,
@@ -72,7 +72,7 @@ impl<R: Runtime> MobileImport<R> {
             .map_err(Into::into)
     }
 
-    #[cfg(target_os = "android")]
+    #[cfg(any(target_os = "android", target_os = "ios"))]
     pub fn mirror_directory(
         &self,
         source_reference: impl Into<String>,
@@ -89,7 +89,7 @@ impl<R: Runtime> MobileImport<R> {
             .map_err(Into::into)
     }
 
-    #[cfg(target_os = "android")]
+    #[cfg(any(target_os = "android", target_os = "ios"))]
     pub fn apply_directory_change(
         &self,
         source_reference: impl Into<String>,

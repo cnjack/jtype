@@ -1,6 +1,6 @@
 mod cli_install;
 pub mod vault_provider;
-#[cfg_attr(not(target_os = "android"), allow(dead_code))]
+#[cfg_attr(not(mobile), allow(dead_code))]
 mod vault_reconcile;
 mod ws_client;
 
@@ -11,7 +11,7 @@ use jtype_core as workspace;
 
 use notify::Watcher;
 use serde::{Deserialize, Serialize};
-#[cfg(target_os = "android")]
+#[cfg(mobile)]
 use std::time::Instant;
 #[cfg(mobile)]
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -52,7 +52,7 @@ struct AppState {
     watcher_state: Mutex<WatcherState>,
     pending_open_paths: Mutex<Vec<String>>,
     pending_external_file_sources: Mutex<Vec<String>>,
-    #[cfg(target_os = "android")]
+    #[cfg(mobile)]
     external_vault_reconcile: Mutex<()>,
 }
 
@@ -95,7 +95,7 @@ fn runtime_capabilities() -> RuntimeCapabilities {
         supports_process_restart: !is_mobile,
         supports_cli_install: !is_mobile,
         supports_file_drop: !is_mobile,
-        supports_external_vault: !is_mobile || cfg!(target_os = "android"),
+        supports_external_vault: true,
         uses_app_private_vault: is_mobile,
     }
 }
@@ -271,10 +271,29 @@ fn read_vault_provider_store(
         return Ok(vault_provider::VaultProviderStore::default());
     }
     let content = fs::read_to_string(file).map_err(|error| error.to_string())?;
-    serde_json::from_str(&content).map_err(|error| error.to_string())
+    let mut store: vault_provider::VaultProviderStore =
+        serde_json::from_str(&content).map_err(|error| error.to_string())?;
+    #[cfg(mobile)]
+    let original = store.clone();
+    store.normalize();
+    #[cfg(mobile)]
+    {
+        // iOS may assign a new absolute App container path after an install or
+        // upgrade while migrating Application Support into that container.
+        // Provider IDs stay stable, so rebase persisted mirror paths onto the
+        // current app-data root before resolving recent vaults or bookmarks.
+        for provider in &mut store.providers {
+            provider.mirror_root_path =
+                path_to_string(&external_vault_mirror_root(app, &provider.provider_id)?);
+        }
+        if store != original {
+            write_vault_provider_store(app, &store)?;
+        }
+    }
+    Ok(store)
 }
 
-#[cfg(target_os = "android")]
+#[cfg(mobile)]
 fn write_vault_provider_store(
     app: &AppHandle,
     store: &vault_provider::VaultProviderStore,
@@ -298,7 +317,7 @@ fn write_vault_provider_store(
     Ok(())
 }
 
-#[cfg(target_os = "android")]
+#[cfg(mobile)]
 fn external_vault_mirror_root(app: &AppHandle, provider_id: &str) -> Result<PathBuf, String> {
     app.path()
         .app_data_dir()
@@ -310,8 +329,8 @@ fn external_vault_mirror_root(app: &AppHandle, provider_id: &str) -> Result<Path
         .map_err(|error| error.to_string())
 }
 
-#[cfg(target_os = "android")]
-fn refresh_android_provider_access(
+#[cfg(mobile)]
+fn refresh_external_provider_access(
     app: &AppHandle,
     mut store: vault_provider::VaultProviderStore,
     provider_id: &str,
@@ -320,12 +339,12 @@ fn refresh_android_provider_access(
         .provider(provider_id)
         .cloned()
         .ok_or_else(|| format!("Unknown vault provider: {provider_id}"))?;
-    let (next_access_state, next_source_read_only) = match app
+    let (next_access_state, next_source_read_only, refreshed_source_reference) = match app
         .mobile_import()
         .directory_access(provider.opaque_source_reference.clone())
     {
-        Ok(access) => (
-            match access.state {
+        Ok(access) => {
+            let access_state = match access.state {
                 tauri_plugin_mobile_import::DirectoryAccessState::Ready => {
                     vault_provider::VaultProviderAccessState::Ready
                 }
@@ -338,18 +357,26 @@ fn refresh_android_provider_access(
                 tauri_plugin_mobile_import::DirectoryAccessState::Error => {
                     vault_provider::VaultProviderAccessState::Error
                 }
-            },
-            access.read_only,
-        ),
-        Err(_) => (vault_provider::VaultProviderAccessState::Error, true),
+            };
+            (
+                access_state,
+                access.read_only,
+                access.refreshed_source_reference,
+            )
+        }
+        Err(_) => (vault_provider::VaultProviderAccessState::Error, true, None),
     };
     if provider.access_state != next_access_state
         || provider.source_read_only != next_source_read_only
         || provider.read_only != next_source_read_only
+        || refreshed_source_reference.is_some()
     {
         provider.access_state = next_access_state;
         provider.source_read_only = next_source_read_only;
         provider.read_only = next_source_read_only;
+        if let Some(source_reference) = refreshed_source_reference {
+            provider.opaque_source_reference = source_reference;
+        }
         store.upsert(provider.clone());
         write_vault_provider_store(app, &store)?;
         let _ = app.emit("vault-provider-changed", provider.descriptor());
@@ -363,7 +390,7 @@ fn describe_provider_for_root(
 ) -> Result<vault_provider::VaultProviderDescriptor, String> {
     let store = read_vault_provider_store(app)?;
     if let Some(provider) = store.provider_for_mirror_root(root) {
-        #[cfg(target_os = "android")]
+        #[cfg(mobile)]
         {
             let state = app.state::<AppState>();
             let _reconcile_guard = state
@@ -373,9 +400,9 @@ fn describe_provider_for_root(
             vault_reconcile::recover_interrupted_reconcile(root)?;
             vault_reconcile::recover_interrupted_local_mutation(root)?;
             let provider_id = provider.provider_id.clone();
-            return refresh_android_provider_access(app, store, &provider_id);
+            return refresh_external_provider_access(app, store, &provider_id);
         }
-        #[cfg(not(target_os = "android"))]
+        #[cfg(not(mobile))]
         return Ok(provider.descriptor());
     }
     Ok(resolve_local_vault_provider(app, root.to_path_buf())?
@@ -469,10 +496,10 @@ struct ExternalVaultConflictResolutionResult {
     conflicts: Vec<vault_reconcile::ReconcileConflict>,
 }
 
-#[cfg(target_os = "android")]
+#[cfg(mobile)]
 const EXTERNAL_VAULT_PROGRESS_MIN_OPERATIONS: usize = 8;
 
-#[cfg(target_os = "android")]
+#[cfg(mobile)]
 #[derive(Debug, Clone, Copy, Serialize)]
 #[serde(rename_all = "camelCase")]
 enum VaultProviderOperationPhase {
@@ -482,7 +509,7 @@ enum VaultProviderOperationPhase {
     Failed,
 }
 
-#[cfg(target_os = "android")]
+#[cfg(mobile)]
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct VaultProviderOperationProgress<'a> {
@@ -495,7 +522,7 @@ struct VaultProviderOperationProgress<'a> {
     elapsed_ms: u64,
 }
 
-#[cfg(target_os = "android")]
+#[cfg(mobile)]
 struct VaultProviderOperationReporter<'a> {
     app: &'a AppHandle,
     provider_id: &'a str,
@@ -505,7 +532,7 @@ struct VaultProviderOperationReporter<'a> {
     active: bool,
 }
 
-#[cfg(target_os = "android")]
+#[cfg(mobile)]
 impl<'a> VaultProviderOperationReporter<'a> {
     fn start(app: &'a AppHandle, provider_id: &'a str, total: usize) -> Self {
         let reporter = Self {
@@ -559,7 +586,7 @@ impl<'a> VaultProviderOperationReporter<'a> {
     }
 }
 
-#[cfg(target_os = "android")]
+#[cfg(mobile)]
 impl Drop for VaultProviderOperationReporter<'_> {
     fn drop(&mut self) {
         if self.active {
@@ -575,17 +602,17 @@ struct VaultProviderStatus {
     pending_write_back: bool,
 }
 
-#[cfg(target_os = "android")]
+#[cfg(mobile)]
 struct RemoveDirectoryOnDrop(PathBuf);
 
-#[cfg(target_os = "android")]
+#[cfg(mobile)]
 impl Drop for RemoveDirectoryOnDrop {
     fn drop(&mut self) {
         let _ = fs::remove_dir_all(&self.0);
     }
 }
 
-#[cfg(target_os = "android")]
+#[cfg(mobile)]
 fn current_unix_timestamp() -> Result<u64, String> {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -593,8 +620,8 @@ fn current_unix_timestamp() -> Result<u64, String> {
         .map_err(|error| error.to_string())
 }
 
-#[cfg(target_os = "android")]
-fn validated_android_mirror_root(
+#[cfg(mobile)]
+fn validated_external_mirror_root(
     app: &AppHandle,
     provider: &vault_provider::ExternalVaultProviderRecord,
 ) -> Result<PathBuf, String> {
@@ -606,8 +633,8 @@ fn validated_android_mirror_root(
     Ok(recorded)
 }
 
-#[cfg(target_os = "android")]
-fn android_source_snapshot_path(mirror_root: &Path) -> Result<PathBuf, String> {
+#[cfg(mobile)]
+fn external_source_snapshot_path(mirror_root: &Path) -> Result<PathBuf, String> {
     let parent = mirror_root
         .parent()
         .ok_or_else(|| "External vault mirror has no parent directory".to_string())?;
@@ -622,13 +649,13 @@ fn android_source_snapshot_path(mirror_root: &Path) -> Result<PathBuf, String> {
     Ok(parent.join(format!(".{name}.source-snapshot-{nonce}")))
 }
 
-#[cfg(target_os = "android")]
-fn materialize_android_source_snapshot(
+#[cfg(mobile)]
+fn materialize_external_source_snapshot(
     app: &AppHandle,
     provider: &vault_provider::ExternalVaultProviderRecord,
     mirror_root: &Path,
 ) -> Result<(PathBuf, RemoveDirectoryOnDrop), String> {
-    let source_snapshot = android_source_snapshot_path(mirror_root)?;
+    let source_snapshot = external_source_snapshot_path(mirror_root)?;
     app.mobile_import()
         .mirror_directory(
             provider.opaque_source_reference.clone(),
@@ -639,9 +666,27 @@ fn materialize_android_source_snapshot(
     Ok((source_snapshot, cleanup))
 }
 
-#[cfg(target_os = "android")]
+#[cfg(mobile)]
+fn mobile_external_source_kind() -> vault_provider::VaultProviderSourceKind {
+    if cfg!(target_os = "ios") {
+        vault_provider::VaultProviderSourceKind::IosSecurityScopedBookmark
+    } else {
+        vault_provider::VaultProviderSourceKind::AndroidSafTree
+    }
+}
+
+#[cfg(mobile)]
 #[tauri::command]
-fn initialize_android_external_vault(
+async fn initialize_external_vault(
+    app: AppHandle,
+) -> Result<ExternalVaultInitializationResult, String> {
+    tauri::async_runtime::spawn_blocking(move || initialize_external_vault_blocking(app))
+        .await
+        .map_err(|error| format!("External vault initialization worker failed: {error}"))?
+}
+
+#[cfg(mobile)]
+fn initialize_external_vault_blocking(
     app: AppHandle,
 ) -> Result<ExternalVaultInitializationResult, String> {
     let state = app.state::<AppState>();
@@ -653,11 +698,11 @@ fn initialize_android_external_vault(
         .mobile_import()
         .select_directory()
         .map_err(|error| error.to_string())?;
-    let source_kind = vault_provider::VaultProviderSourceKind::AndroidSafTree;
-    let provider_id = vault_provider::external_provider_id(source_kind, &selected.source_reference);
+    let source_kind = mobile_external_source_kind();
+    let provider_id = vault_provider::external_provider_id(source_kind, &selected.source_identity);
     let mut store = read_vault_provider_store(&app)?;
     let existing = store
-        .provider_for_source(source_kind, &selected.source_reference)
+        .provider_for_source(source_kind, &selected.source_identity)
         .cloned();
     let mirror_root = existing
         .as_ref()
@@ -696,6 +741,7 @@ fn initialize_android_external_vault(
         provider_id,
         display_name: selected.display_name,
         source_kind,
+        source_identity: selected.source_identity,
         opaque_source_reference: selected.source_reference,
         mirror_root_path: path_to_string(&mirror_root),
         access_state: vault_provider::VaultProviderAccessState::Ready,
@@ -717,9 +763,21 @@ fn initialize_android_external_vault(
     })
 }
 
-#[cfg(target_os = "android")]
+#[cfg(mobile)]
 #[tauri::command]
-fn reauthorize_android_external_vault(
+async fn reauthorize_external_vault(
+    app: AppHandle,
+    provider_id: String,
+) -> Result<vault_provider::VaultProviderDescriptor, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        reauthorize_external_vault_blocking(app, provider_id)
+    })
+    .await
+    .map_err(|error| format!("External vault reauthorization worker failed: {error}"))?
+}
+
+#[cfg(mobile)]
+fn reauthorize_external_vault_blocking(
     app: AppHandle,
     provider_id: String,
 ) -> Result<vault_provider::VaultProviderDescriptor, String> {
@@ -733,8 +791,8 @@ fn reauthorize_android_external_vault(
         .provider(&provider_id)
         .cloned()
         .ok_or_else(|| format!("Unknown vault provider: {provider_id}"))?;
-    if provider.source_kind != vault_provider::VaultProviderSourceKind::AndroidSafTree {
-        return Err("The vault provider can not be reauthorized on Android".to_string());
+    if provider.source_kind != mobile_external_source_kind() {
+        return Err("The vault provider can not be reauthorized on this platform".to_string());
     }
 
     let selected = app
@@ -742,7 +800,7 @@ fn reauthorize_android_external_vault(
         .select_directory()
         .map_err(|error| error.to_string())?;
     let previous_source_reference = provider.opaque_source_reference.clone();
-    let source_changed = selected.source_reference != previous_source_reference;
+    let source_changed = selected.source_identity != provider.source_identity;
     if source_changed {
         app.mobile_import()
             .release_directory_access(previous_source_reference)
@@ -751,6 +809,7 @@ fn reauthorize_android_external_vault(
         provider.source_revision = None;
     }
     provider.display_name = selected.display_name;
+    provider.source_identity = selected.source_identity;
     provider.opaque_source_reference = selected.source_reference;
     provider.access_state = vault_provider::VaultProviderAccessState::Ready;
     provider.read_only = selected.read_only;
@@ -761,9 +820,21 @@ fn reauthorize_android_external_vault(
     Ok(descriptor)
 }
 
-#[cfg(target_os = "android")]
+#[cfg(mobile)]
 #[tauri::command]
-fn reconcile_android_external_vault(
+async fn reconcile_external_vault(
+    app: AppHandle,
+    provider_id: String,
+) -> Result<ExternalVaultReconcileResult, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        reconcile_external_vault_blocking(app, provider_id)
+    })
+    .await
+    .map_err(|error| format!("External vault reconcile worker failed: {error}"))?
+}
+
+#[cfg(mobile)]
+fn reconcile_external_vault_blocking(
     app: AppHandle,
     provider_id: String,
 ) -> Result<ExternalVaultReconcileResult, String> {
@@ -773,16 +844,16 @@ fn reconcile_android_external_vault(
         .lock()
         .map_err(|_| "External vault operation lock is unavailable".to_string())?;
 
-    reconcile_android_external_vault_locked(app.clone(), provider_id)
+    reconcile_external_vault_locked(app.clone(), provider_id)
 }
 
-#[cfg(target_os = "android")]
-fn reconcile_android_external_vault_locked(
+#[cfg(mobile)]
+fn reconcile_external_vault_locked(
     app: AppHandle,
     provider_id: String,
 ) -> Result<ExternalVaultReconcileResult, String> {
     let descriptor =
-        refresh_android_provider_access(&app, read_vault_provider_store(&app)?, &provider_id)?;
+        refresh_external_provider_access(&app, read_vault_provider_store(&app)?, &provider_id)?;
     if descriptor.access_state != vault_provider::VaultProviderAccessState::Ready {
         return Err(match descriptor.access_state {
             vault_provider::VaultProviderAccessState::AuthorizationRequired => {
@@ -800,10 +871,10 @@ fn reconcile_android_external_vault_locked(
         .provider(&provider_id)
         .cloned()
         .ok_or_else(|| format!("Unknown vault provider: {provider_id}"))?;
-    if provider.source_kind != vault_provider::VaultProviderSourceKind::AndroidSafTree {
-        return Err("The vault provider can not be reconciled on Android".to_string());
+    if provider.source_kind != mobile_external_source_kind() {
+        return Err("The vault provider can not be reconciled on this platform".to_string());
     }
-    let mirror_root = validated_android_mirror_root(&app, &provider)?;
+    let mirror_root = validated_external_mirror_root(&app, &provider)?;
     vault_reconcile::recover_interrupted_reconcile(&mirror_root)?;
     if vault_reconcile::recover_interrupted_local_mutation(&mirror_root)?
         || vault_reconcile::load_write_back_journal(&mirror_root)?.is_some()
@@ -814,7 +885,7 @@ fn reconcile_android_external_vault_locked(
     }
 
     let (source_snapshot, _source_snapshot_cleanup) =
-        materialize_android_source_snapshot(&app, &provider, &mirror_root)?;
+        materialize_external_source_snapshot(&app, &provider, &mirror_root)?;
 
     let source_manifest = vault_reconcile::build_manifest(&source_snapshot)?;
     let mirror_manifest = vault_reconcile::build_manifest(&mirror_root)?;
@@ -865,9 +936,9 @@ fn reconcile_android_external_vault_locked(
     })
 }
 
-#[cfg(target_os = "android")]
+#[cfg(mobile)]
 #[tauri::command]
-async fn write_back_android_external_vault(
+async fn write_back_external_vault(
     app: AppHandle,
     provider_id: String,
 ) -> Result<ExternalVaultWriteBackResult, String> {
@@ -878,20 +949,20 @@ async fn write_back_android_external_vault(
             .lock()
             .map_err(|_| "External vault operation lock is unavailable".to_string())?;
 
-        write_back_android_external_vault_locked(&app, &provider_id, false)
+        write_back_external_vault_locked(&app, &provider_id, false)
     })
     .await
     .map_err(|error| format!("External vault worker failed: {error}"))?
 }
 
-#[cfg(target_os = "android")]
-fn write_back_android_external_vault_locked(
+#[cfg(mobile)]
+fn write_back_external_vault_locked(
     app: &AppHandle,
     provider_id: &str,
     preserve_active_local_mutation: bool,
 ) -> Result<ExternalVaultWriteBackResult, String> {
     let descriptor =
-        refresh_android_provider_access(app, read_vault_provider_store(app)?, provider_id)?;
+        refresh_external_provider_access(app, read_vault_provider_store(app)?, provider_id)?;
     if descriptor.access_state != vault_provider::VaultProviderAccessState::Ready {
         return Err("External vault access is not ready for write-back".to_string());
     }
@@ -901,14 +972,14 @@ fn write_back_android_external_vault_locked(
         .provider(provider_id)
         .cloned()
         .ok_or_else(|| format!("Unknown vault provider: {provider_id}"))?;
-    if provider.source_kind != vault_provider::VaultProviderSourceKind::AndroidSafTree {
-        return Err("The vault provider can not write back on Android".to_string());
+    if provider.source_kind != mobile_external_source_kind() {
+        return Err("The vault provider can not write back on this platform".to_string());
     }
     if provider.source_read_only {
         return Err("The external vault source is read-only".to_string());
     }
 
-    let mirror_root = validated_android_mirror_root(app, &provider)?;
+    let mirror_root = validated_external_mirror_root(app, &provider)?;
     vault_reconcile::recover_interrupted_reconcile(&mirror_root)?;
     if !preserve_active_local_mutation {
         vault_reconcile::recover_interrupted_local_mutation(&mirror_root)?;
@@ -922,7 +993,7 @@ fn write_back_android_external_vault_locked(
     }
 
     let (source_snapshot, source_snapshot_cleanup) =
-        materialize_android_source_snapshot(app, &provider, &mirror_root)?;
+        materialize_external_source_snapshot(app, &provider, &mirror_root)?;
     let source_manifest = vault_reconcile::build_manifest(&source_snapshot)?;
     let mirror_manifest = vault_reconcile::build_manifest(&mirror_root)?;
     let baseline = vault_reconcile::load_baseline(&mirror_root)?;
@@ -1038,7 +1109,7 @@ fn write_back_android_external_vault_locked(
             kind,
         ) {
             let access =
-                refresh_android_provider_access(app, read_vault_provider_store(app)?, provider_id);
+                refresh_external_provider_access(app, read_vault_provider_store(app)?, provider_id);
             if let Ok(descriptor) = &access {
                 let _ = app.emit("vault-provider-changed", descriptor.clone());
             }
@@ -1065,7 +1136,7 @@ fn write_back_android_external_vault_locked(
     }
     drop(source_snapshot_cleanup);
     let (verified_source_snapshot, _verified_source_cleanup) =
-        materialize_android_source_snapshot(app, &provider, &mirror_root)?;
+        materialize_external_source_snapshot(app, &provider, &mirror_root)?;
     let verified_source_manifest = vault_reconcile::build_manifest(&verified_source_snapshot)?;
     if verified_source_manifest.entries != mirror_manifest.entries {
         return Err("External vault write-back failed its manifest verification".to_string());
@@ -1096,9 +1167,23 @@ fn write_back_android_external_vault_locked(
     })
 }
 
-#[cfg(target_os = "android")]
+#[cfg(mobile)]
 #[tauri::command]
-fn resolve_android_external_vault_conflict(
+async fn resolve_external_vault_conflict(
+    app: AppHandle,
+    provider_id: String,
+    relative_path: String,
+    resolution: ExternalVaultConflictResolution,
+) -> Result<ExternalVaultConflictResolutionResult, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        resolve_external_vault_conflict_blocking(app, provider_id, relative_path, resolution)
+    })
+    .await
+    .map_err(|error| format!("External vault conflict worker failed: {error}"))?
+}
+
+#[cfg(mobile)]
+fn resolve_external_vault_conflict_blocking(
     app: AppHandle,
     provider_id: String,
     relative_path: String,
@@ -1111,7 +1196,7 @@ fn resolve_android_external_vault_conflict(
         .map_err(|_| "External vault operation lock is unavailable".to_string())?;
 
     let descriptor =
-        refresh_android_provider_access(&app, read_vault_provider_store(&app)?, &provider_id)?;
+        refresh_external_provider_access(&app, read_vault_provider_store(&app)?, &provider_id)?;
     if descriptor.access_state != vault_provider::VaultProviderAccessState::Ready {
         return Err("External vault access is not ready for conflict resolution".to_string());
     }
@@ -1120,15 +1205,15 @@ fn resolve_android_external_vault_conflict(
         .provider(&provider_id)
         .cloned()
         .ok_or_else(|| format!("Unknown vault provider: {provider_id}"))?;
-    if provider.source_kind != vault_provider::VaultProviderSourceKind::AndroidSafTree {
-        return Err("The vault provider can not resolve conflicts on Android".to_string());
+    if provider.source_kind != mobile_external_source_kind() {
+        return Err("The vault provider can not resolve conflicts on this platform".to_string());
     }
     if matches!(resolution, ExternalVaultConflictResolution::UseJtype) && provider.source_read_only
     {
         return Err("The external vault source is read-only".to_string());
     }
 
-    let mirror_root = validated_android_mirror_root(&app, &provider)?;
+    let mirror_root = validated_external_mirror_root(&app, &provider)?;
     vault_reconcile::recover_interrupted_reconcile(&mirror_root)?;
     if vault_reconcile::recover_interrupted_local_mutation(&mirror_root)?
         || vault_reconcile::load_write_back_journal(&mirror_root)?.is_some()
@@ -1140,7 +1225,7 @@ fn resolve_android_external_vault_conflict(
     }
 
     let (source_snapshot, source_snapshot_cleanup) =
-        materialize_android_source_snapshot(&app, &provider, &mirror_root)?;
+        materialize_external_source_snapshot(&app, &provider, &mirror_root)?;
     let source_manifest = vault_reconcile::build_manifest(&source_snapshot)?;
     let mirror_manifest = vault_reconcile::build_manifest(&mirror_root)?;
     let baseline = vault_reconcile::load_baseline(&mirror_root)?;
@@ -1223,7 +1308,7 @@ fn resolve_android_external_vault_conflict(
                 Ok(())
             })();
             if let Err(error) = resolution_result {
-                let _ = refresh_android_provider_access(
+                let _ = refresh_external_provider_access(
                     &app,
                     read_vault_provider_store(&app)?,
                     &provider_id,
@@ -1235,7 +1320,7 @@ fn resolve_android_external_vault_conflict(
 
             drop(source_snapshot_cleanup);
             let (verified_source, _verified_source_cleanup) =
-                materialize_android_source_snapshot(&app, &provider, &mirror_root)?;
+                materialize_external_source_snapshot(&app, &provider, &mirror_root)?;
             let verified_source_manifest = vault_reconcile::build_manifest(&verified_source)?;
             let verified_mirror_manifest = vault_reconcile::build_manifest(&mirror_root)?;
             if verified_source_manifest.entries.get(&relative_path)
@@ -1249,7 +1334,7 @@ fn resolve_android_external_vault_conflict(
     }
 
     if provider.source_read_only {
-        let result = reconcile_android_external_vault_locked(app.clone(), provider_id.clone())?;
+        let result = reconcile_external_vault_locked(app.clone(), provider_id.clone())?;
         return Ok(ExternalVaultConflictResolutionResult {
             provider: result.provider,
             workspace: result.workspace,
@@ -1258,7 +1343,7 @@ fn resolve_android_external_vault_conflict(
         });
     }
 
-    let result = write_back_android_external_vault_locked(&app, &provider_id, false)?;
+    let result = write_back_external_vault_locked(&app, &provider_id, false)?;
     Ok(ExternalVaultConflictResolutionResult {
         provider: result.provider,
         workspace: result.workspace,
@@ -1267,50 +1352,48 @@ fn resolve_android_external_vault_conflict(
     })
 }
 
-#[cfg(not(target_os = "android"))]
+#[cfg(not(mobile))]
 #[tauri::command]
-fn initialize_android_external_vault(
-    _app: AppHandle,
-) -> Result<ExternalVaultInitializationResult, String> {
-    Err("Android external vault selection is only available on Android".to_string())
+fn initialize_external_vault(_app: AppHandle) -> Result<ExternalVaultInitializationResult, String> {
+    Err("External vault selection is only available on mobile".to_string())
 }
 
-#[cfg(not(target_os = "android"))]
+#[cfg(not(mobile))]
 #[tauri::command]
-fn reauthorize_android_external_vault(
+fn reauthorize_external_vault(
     _app: AppHandle,
     _provider_id: String,
 ) -> Result<vault_provider::VaultProviderDescriptor, String> {
-    Err("Android external vault reauthorization is only available on Android".to_string())
+    Err("External vault reauthorization is only available on mobile".to_string())
 }
 
-#[cfg(not(target_os = "android"))]
+#[cfg(not(mobile))]
 #[tauri::command]
-fn reconcile_android_external_vault(
+fn reconcile_external_vault(
     _app: AppHandle,
     _provider_id: String,
 ) -> Result<ExternalVaultReconcileResult, String> {
-    Err("Android external vault reconcile is only available on Android".to_string())
+    Err("External vault reconcile is only available on mobile".to_string())
 }
 
-#[cfg(not(target_os = "android"))]
+#[cfg(not(mobile))]
 #[tauri::command]
-fn write_back_android_external_vault(
+fn write_back_external_vault(
     _app: AppHandle,
     _provider_id: String,
 ) -> Result<ExternalVaultWriteBackResult, String> {
-    Err("Android external vault write-back is only available on Android".to_string())
+    Err("External vault write-back is only available on mobile".to_string())
 }
 
-#[cfg(not(target_os = "android"))]
+#[cfg(not(mobile))]
 #[tauri::command]
-fn resolve_android_external_vault_conflict(
+fn resolve_external_vault_conflict(
     _app: AppHandle,
     _provider_id: String,
     _relative_path: String,
     _resolution: ExternalVaultConflictResolution,
 ) -> Result<ExternalVaultConflictResolutionResult, String> {
-    Err("Android external vault conflict resolution is only available on Android".to_string())
+    Err("External vault conflict resolution is only available on mobile".to_string())
 }
 
 #[tauri::command]
@@ -1384,9 +1467,9 @@ fn exercise_android_external_vault_debug_local_failure(
     }
 }
 
-#[cfg(target_os = "android")]
+#[cfg(mobile)]
 /// Runs the existing local filesystem mutation unchanged, but serializes the
-/// mirror mutation and its SAF write-back as one JType operation. Source health
+/// mirror mutation and native-provider write-back as one JType operation. Source health
 /// is checked before local state changes; source content is compared only after
 /// the mutation so a stale editor save still produces a three-way conflict.
 fn with_external_vault_mutation<T>(
@@ -1420,7 +1503,7 @@ fn with_external_vault_mutation<T>(
                 .to_string(),
         );
     }
-    let descriptor = refresh_android_provider_access(app, store, &provider_id)?;
+    let descriptor = refresh_external_provider_access(app, store, &provider_id)?;
     if descriptor.access_state != vault_provider::VaultProviderAccessState::Ready {
         return Err("External vault access is not ready for mutation".to_string());
     }
@@ -1444,7 +1527,7 @@ fn with_external_vault_mutation<T>(
             return Err(error);
         }
     };
-    let result = match write_back_android_external_vault_locked(app, &provider_id, true) {
+    let result = match write_back_external_vault_locked(app, &provider_id, true) {
         Ok(result) => result,
         Err(error) => {
             if vault_reconcile::load_write_back_journal(&mirror_root)?.is_none() {
@@ -1469,7 +1552,7 @@ fn with_external_vault_mutation<T>(
     Ok(value)
 }
 
-#[cfg(not(target_os = "android"))]
+#[cfg(not(mobile))]
 fn with_external_vault_mutation<T>(
     _app: &AppHandle,
     _local_path: &Path,
@@ -2629,11 +2712,11 @@ pub fn run() {
             default_vault_path,
             describe_vault_provider,
             inspect_vault_provider,
-            initialize_android_external_vault,
-            reauthorize_android_external_vault,
-            reconcile_android_external_vault,
-            write_back_android_external_vault,
-            resolve_android_external_vault_conflict,
+            initialize_external_vault,
+            reauthorize_external_vault,
+            reconcile_external_vault,
+            write_back_external_vault,
+            resolve_external_vault_conflict,
             configure_android_external_vault_debug_fault,
             exercise_android_external_vault_debug_local_failure,
             open_default_vault,
@@ -2706,7 +2789,7 @@ pub fn run() {
             watcher_state: Mutex::new(WatcherState { watcher: None }),
             pending_open_paths: Mutex::new(Vec::new()),
             pending_external_file_sources: Mutex::new(Vec::new()),
-            #[cfg(target_os = "android")]
+            #[cfg(mobile)]
             external_vault_reconcile: Mutex::new(()),
         })
         .manage(WsListenerHandle(Mutex::new(None)))

@@ -1,0 +1,9 @@
+appId: net.jcode.jtype
+---
+- launchApp:
+    clearState: true
+- assertVisible: "打开库"
+- tapOn: "打开库"
+- assertVisible: "浏览"
+- tapOn: "浏览"
+- assertVisible: "我的iPhone"

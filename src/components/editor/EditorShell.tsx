@@ -790,8 +790,8 @@ export function EditorShell() {
       <ZoomIndicator />
       <div className={`relative z-30 flex min-h-[56px] min-w-0 items-center justify-between gap-3 bg-white/60 backdrop-blur-xl ${compactWorkbench ? "px-3" : "px-5"}`}>
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <div className="flex min-w-0 items-baseline gap-1">
+          <div className="flex min-w-0 items-center gap-2">
+            <div className="flex min-w-0 flex-1 items-baseline gap-1">
               {state.workspace && state.currentRelativePath && (
                 <span className="shrink-0 truncate text-xs text-[#9aa6a1]">
                   {state.workspace.name}
@@ -828,7 +828,7 @@ export function EditorShell() {
           </div>
         </div>
         <div className="header-action-group">
-          {!state.isDirty || <span id="file-state" className="status-chip status-chip-warning">{fileStateLabel}</span>}
+          {!state.isDirty || compactWorkbench || <span id="file-state" className="status-chip status-chip-warning">{fileStateLabel}</span>}
           {canPublishToCloud && canEditMarkdown && (!isPublished || hasUnpublishedChanges) && (
             <span className="header-tooltip header-tooltip-end group">
               <button
@@ -1017,7 +1017,16 @@ export function EditorShell() {
             id="editor"
             ref={editorRef}
             className={`h-full min-h-0 w-full resize-none bg-white/40 font-mono leading-7 text-stone-800 outline-none placeholder:text-[#9aa6a1] ${compactWorkbench ? "p-5" : "p-8"}`}
-            style={{ position: "relative", zIndex: 2, fontSize: "calc(13px * var(--jtype-zoom, 1))" }}
+            style={{
+              position: "relative",
+              zIndex: 2,
+              // iOS zooms the entire WebView when a focused text control is
+              // rendered below 16px. Keep the compact editor at that floor so
+              // native keyboard focus does not push header actions off-screen.
+              fontSize: compactWorkbench
+                ? "max(16px, calc(16px * var(--jtype-zoom, 1)))"
+                : "calc(13px * var(--jtype-zoom, 1))",
+            }}
             spellCheck={false}
             aria-label={t`Markdown editor`}
             placeholder={t`Open or drop a Markdown file to start editing.`}

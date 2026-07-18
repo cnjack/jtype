@@ -87,20 +87,20 @@ export const tauri = {
   inspectVaultProvider(rootPath: string) {
     return invoke<VaultProviderStatus>("inspect_vault_provider", { rootPath });
   },
-  initializeAndroidExternalVault() {
-    return invoke<ExternalVaultInitializationResult>("initialize_android_external_vault");
+  initializeExternalVault() {
+    return invoke<ExternalVaultInitializationResult>("initialize_external_vault");
   },
-  reauthorizeAndroidExternalVault(providerId: string) {
-    return invoke<VaultProviderDescriptor>("reauthorize_android_external_vault", { providerId });
+  reauthorizeExternalVault(providerId: string) {
+    return invoke<VaultProviderDescriptor>("reauthorize_external_vault", { providerId });
   },
-  reconcileAndroidExternalVault(providerId: string) {
-    return invoke<ExternalVaultReconcileResult>("reconcile_android_external_vault", { providerId });
+  reconcileExternalVault(providerId: string) {
+    return invoke<ExternalVaultReconcileResult>("reconcile_external_vault", { providerId });
   },
-  writeBackAndroidExternalVault(providerId: string) {
-    return invoke<ExternalVaultWriteBackResult>("write_back_android_external_vault", { providerId });
+  writeBackExternalVault(providerId: string) {
+    return invoke<ExternalVaultWriteBackResult>("write_back_external_vault", { providerId });
   },
-  resolveAndroidExternalVaultConflict(providerId: string, relativePath: string, resolution: ExternalVaultConflictResolution) {
-    return invoke<ExternalVaultConflictResolutionResult>("resolve_android_external_vault_conflict", {
+  resolveExternalVaultConflict(providerId: string, relativePath: string, resolution: ExternalVaultConflictResolution) {
+    return invoke<ExternalVaultConflictResolutionResult>("resolve_external_vault_conflict", {
       providerId,
       relativePath,
       resolution,

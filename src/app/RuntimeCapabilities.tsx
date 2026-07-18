@@ -24,7 +24,7 @@ function fallbackCapabilities(): RuntimeCapabilities {
     supportsProcessRestart: !isMobile,
     supportsCliInstall: !isMobile,
     supportsFileDrop: !isMobile,
-    supportsExternalVault: !isMobile || platform === "android",
+    supportsExternalVault: true,
     usesAppPrivateVault: isMobile,
   };
 }

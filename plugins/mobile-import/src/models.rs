@@ -12,13 +12,14 @@ pub struct MaterializedFile {
     pub path: String,
 }
 
-/// Native-only result from Android's Storage Access Framework picker. The
-/// source reference is consumed by Rust and persisted in app-private storage;
-/// it is never part of a Tauri command response to the WebView.
+/// Native-only result from an Android SAF or iOS document-picker selection.
+/// The source reference is consumed by Rust and persisted in app-private
+/// storage; it is never part of a Tauri command response to the WebView.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SelectedDirectory {
     pub source_reference: String,
+    pub source_identity: String,
     pub display_name: String,
     pub read_only: bool,
 }
@@ -43,6 +44,8 @@ pub enum DirectoryAccessState {
 pub struct DirectoryAccess {
     pub state: DirectoryAccessState,
     pub read_only: bool,
+    #[serde(default)]
+    pub refreshed_source_reference: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]

@@ -279,8 +279,8 @@ test.beforeEach(async ({ page }) => {
             return null;
           }
           if (cmd === "open_default_vault") return { ...workspaceSnapshot(), rootPath: "C:/Users/Jack/Documents/.jtype", name: ".jtype", metadataCreated: true };
-          if (cmd === "initialize_android_external_vault") return window.__EXTERNAL_VAULT_RESULT__;
-          if (cmd === "reauthorize_android_external_vault") {
+          if (cmd === "initialize_external_vault") return window.__EXTERNAL_VAULT_RESULT__;
+          if (cmd === "reauthorize_external_vault") {
             const external = window.__EXTERNAL_VAULT_RESULT__ as {
               provider: { accessState: string; capabilities: Record<string, boolean> };
             };
@@ -291,7 +291,7 @@ test.beforeEach(async ({ page }) => {
             external.provider.capabilities.canDelete = true;
             return external.provider;
           }
-          if (cmd === "reconcile_android_external_vault") {
+          if (cmd === "reconcile_external_vault") {
             const external = window.__EXTERNAL_VAULT_RESULT__ as {
               provider: Record<string, unknown>;
               workspace: Record<string, unknown>;
@@ -308,7 +308,7 @@ test.beforeEach(async ({ page }) => {
               conflicts,
             };
           }
-          if (cmd === "resolve_android_external_vault_conflict") {
+          if (cmd === "resolve_external_vault_conflict") {
             const external = window.__EXTERNAL_VAULT_RESULT__ as {
               provider: Record<string, unknown>;
               workspace: Record<string, unknown>;
@@ -324,7 +324,7 @@ test.beforeEach(async ({ page }) => {
               conflicts: window.__EXTERNAL_CONFLICTS__,
             };
           }
-          if (cmd === "write_back_android_external_vault") {
+          if (cmd === "write_back_external_vault") {
             const external = window.__EXTERNAL_VAULT_RESULT__ as {
               provider: Record<string, unknown>;
               workspace: Record<string, unknown>;
@@ -912,6 +912,9 @@ test("adapts the shared welcome screen to app-private mobile storage", async ({ 
   await expect(page.locator("#mobile-vault-navigation")).toBeHidden();
 
   await expect(page.getByLabel("Markdown editor")).toBeVisible();
+  expect(
+    await page.getByLabel("Markdown editor").evaluate((editor) => Number.parseFloat(getComputedStyle(editor).fontSize)),
+  ).toBeGreaterThanOrEqual(16);
   await expect(page.locator("#preview")).toBeHidden();
   await expect(page.getByTitle("Split")).toBeHidden();
   await page.getByTitle("Preview").click();
@@ -953,7 +956,11 @@ test("adapts the shared welcome screen to app-private mobile storage", async ({ 
   await expect(page.locator("#mobile-vault-navigation")).toBeHidden();
   await expect(page.getByLabel("Markdown editor")).toBeVisible();
   await page.getByLabel("Markdown editor").fill("# Mobile Note\n\nSaved on device.");
-  await page.getByRole("button", { name: "Save" }).click();
+  const mobileSaveButton = page.getByRole("button", { name: "Save" });
+  const mobileSaveBounds = await mobileSaveButton.boundingBox();
+  expect(mobileSaveBounds).not.toBeNull();
+  expect((mobileSaveBounds?.x ?? 0) + (mobileSaveBounds?.width ?? 0)).toBeLessThanOrEqual(390);
+  await mobileSaveButton.click();
   await expect.poll(() => page.evaluate(() => window.__E2E_FS__["C:/workspace/Mobile Note.md"])).toBe("# Mobile Note\n\nSaved on device.");
   await page.setViewportSize({ width: 844, height: 390 });
   await expect(page.locator("html")).toHaveAttribute("data-jtype-layout", "compact");
@@ -1100,6 +1107,69 @@ test("opens an Android SAF vault through the shared desktop vault action", async
     resolution: "useSource",
   });
   await expect(page.locator("#external-vault-conflict-dialog")).toBeHidden();
+});
+
+test("opens an iOS security-scoped vault through the shared desktop vault action", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(() => {
+    window.__RUNTIME_CAPABILITIES__ = {
+      platform: "ios",
+      clientType: "mobile",
+      isMobile: true,
+      isTouchPrimary: true,
+      prefersCompactLayout: true,
+      supportsWindowDrag: false,
+      supportsUpdater: false,
+      supportsProcessRestart: false,
+      supportsCliInstall: false,
+      supportsFileDrop: false,
+      supportsExternalVault: true,
+      usesAppPrivateVault: true,
+    };
+    const provider = {
+      providerId: "external:ios-e2e",
+      kind: "externalMirror",
+      displayName: "iCloud Notes",
+      localRootPath: "/var/mobile/Containers/Data/Application/e2e/Library/Application Support/net.jcode.jtype/vaults/external/ios-e2e",
+      accessState: "ready",
+      storageMode: "mirror",
+      capabilities: {
+        canRead: true,
+        canWrite: true,
+        canCreate: true,
+        canRename: true,
+        canDelete: true,
+        canWatch: true,
+        canReconcile: true,
+        canReauthorize: true,
+      },
+    };
+    window.__EXTERNAL_VAULT_RESULT__ = {
+      provider,
+      workspace: {
+        rootPath: provider.localRootPath,
+        name: "ios-e2e",
+        entries: [],
+        metadataCreated: false,
+      },
+      importedFiles: 3,
+      importedDirectories: 1,
+      importedBytes: 256,
+    };
+  });
+  await page.reload();
+
+  await expect(page.locator("#welcome-open-folder")).toBeVisible();
+  await page.locator("#welcome-open-folder").click();
+  await expect(page.locator("#vault-home h2")).toHaveText("iCloud Notes");
+  await expect(page.locator("#external-vault-status")).toContainText("selected device folder");
+  await expect(page.locator("#operation-log")).toContainText("Imported 3 files");
+  await page.getByRole("button", { name: "Local only" }).click();
+  await expect(page.locator("#vault-home-external-note")).toBeVisible();
+  await expect(page.getByRole("button", { name: "New Document" }).first()).toBeEnabled();
+  await page.locator("#mobile-navigation-button").click();
+  await expect(page.locator("#mobile-vault-navigation")).toBeVisible();
+  await expect(page.locator("#mobile-vault-navigation").getByRole("button", { name: "New Document", exact: true })).toBeEnabled();
 });
 
 test("imports an Android content URI through the shared resource flow", async ({ page }) => {

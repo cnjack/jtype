@@ -119,6 +119,7 @@ class MobileImportPlugin(private val activity: Activity) : Plugin(activity) {
             invoke.resolve(
                 JSObject()
                     .put("sourceReference", treeUri.toString())
+                    .put("sourceIdentity", treeUri.toString())
                     .put("displayName", safeFileName(metadata.first))
                     .put("readOnly", readOnly),
             )

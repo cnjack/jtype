@@ -1,16 +1,24 @@
 import type { RecentItem } from "./types";
 import { appStorage } from "./storage";
 
-const PRIVATE_DEFAULT_MARKER = "/vaults/default";
+const PRIVATE_VAULTS_MARKER = "/vaults";
 
 export function rebaseAppPrivateVaultPath(path: string, currentDefaultVault: string): string {
   if (!path || !currentDefaultVault || path === currentDefaultVault) return path;
   const normalized = path.replace(/\\/g, "/");
-  const markerIndex = normalized.lastIndexOf(PRIVATE_DEFAULT_MARKER);
+  const current = currentDefaultVault.replace(/\\/g, "/").replace(/\/+$/, "");
+  const currentMarkerIndex = current.lastIndexOf(PRIVATE_VAULTS_MARKER);
+  const markerIndex = normalized.lastIndexOf(PRIVATE_VAULTS_MARKER);
+  if (currentMarkerIndex < 0 || !current.slice(currentMarkerIndex).startsWith("/vaults/default")) return path;
   if (markerIndex < 0) return path;
-  const suffix = normalized.slice(markerIndex + PRIVATE_DEFAULT_MARKER.length);
-  if (suffix && !suffix.startsWith("/")) return path;
-  return `${currentDefaultVault.replace(/\/+$/, "")}${suffix}`;
+  const suffix = normalized.slice(markerIndex + PRIVATE_VAULTS_MARKER.length);
+  if (
+    suffix !== "/default"
+    && !suffix.startsWith("/default/")
+    && !suffix.startsWith("/external/")
+  ) return path;
+  const currentVaultsRoot = current.slice(0, currentMarkerIndex + PRIVATE_VAULTS_MARKER.length);
+  return `${currentVaultsRoot}${suffix}`;
 }
 
 export function rebaseAppPrivateVaultRecents(

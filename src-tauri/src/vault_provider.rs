@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::hash::Hasher;
 use std::path::{Path, PathBuf};
 
-pub const PROVIDER_STORE_VERSION: u32 = 1;
+pub const PROVIDER_STORE_VERSION: u32 = 2;
 
 #[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
@@ -99,6 +99,8 @@ pub struct ExternalVaultProviderRecord {
     pub provider_id: String,
     pub display_name: String,
     pub source_kind: VaultProviderSourceKind,
+    #[serde(default)]
+    pub source_identity: String,
     pub opaque_source_reference: String,
     pub mirror_root_path: String,
     pub access_state: VaultProviderAccessState,
@@ -127,8 +129,8 @@ impl ExternalVaultProviderRecord {
             storage_mode: VaultProviderStorageMode::Mirror,
             capabilities: VaultProviderCapabilities::external_mirror(
                 effective_read_only,
-                self.source_kind == VaultProviderSourceKind::AndroidSafTree,
-                self.source_kind == VaultProviderSourceKind::AndroidSafTree,
+                true,
+                true,
             ),
         }
     }
@@ -153,6 +155,15 @@ impl Default for VaultProviderStore {
 }
 
 impl VaultProviderStore {
+    pub fn normalize(&mut self) {
+        self.version = PROVIDER_STORE_VERSION;
+        for provider in &mut self.providers {
+            if provider.source_identity.is_empty() {
+                provider.source_identity = provider.opaque_source_reference.clone();
+            }
+        }
+    }
+
     pub fn provider(&self, provider_id: &str) -> Option<&ExternalVaultProviderRecord> {
         self.providers
             .iter()
@@ -184,11 +195,10 @@ impl VaultProviderStore {
     pub fn provider_for_source(
         &self,
         source_kind: VaultProviderSourceKind,
-        source_reference: &str,
+        source_identity: &str,
     ) -> Option<&ExternalVaultProviderRecord> {
         self.providers.iter().find(|provider| {
-            provider.source_kind == source_kind
-                && provider.opaque_source_reference == source_reference
+            provider.source_kind == source_kind && provider.source_identity == source_identity
         })
     }
 
@@ -274,15 +284,12 @@ fn stable_provider_id(prefix: &str, root: &Path) -> String {
     stable_value_id(prefix, &path_to_string(root))
 }
 
-pub fn external_provider_id(
-    source_kind: VaultProviderSourceKind,
-    source_reference: &str,
-) -> String {
+pub fn external_provider_id(source_kind: VaultProviderSourceKind, source_identity: &str) -> String {
     let source_kind = match source_kind {
         VaultProviderSourceKind::AndroidSafTree => "android-saf-tree",
         VaultProviderSourceKind::IosSecurityScopedBookmark => "ios-security-scoped-bookmark",
     };
-    stable_value_id("external", &format!("{source_kind}:{source_reference}"))
+    stable_value_id("external", &format!("{source_kind}:{source_identity}"))
 }
 
 pub fn mirror_directory_name(provider_id: &str) -> &str {
@@ -352,6 +359,7 @@ mod tests {
             provider_id: "external:fixture".to_string(),
             display_name: "Shared notes".to_string(),
             source_kind: VaultProviderSourceKind::AndroidSafTree,
+            source_identity: "android-tree:secret".to_string(),
             opaque_source_reference: "content://provider/tree/secret".to_string(),
             mirror_root_path: "/app/data/vaults/external/fixture".to_string(),
             access_state: VaultProviderAccessState::AuthorizationRequired,
@@ -373,17 +381,19 @@ mod tests {
 
         let mut ios_record = record;
         ios_record.source_kind = VaultProviderSourceKind::IosSecurityScopedBookmark;
-        assert!(!ios_record.descriptor().capabilities.can_reconcile);
-        assert!(!ios_record.descriptor().capabilities.can_reauthorize);
+        assert!(ios_record.descriptor().capabilities.can_reconcile);
+        assert!(ios_record.descriptor().capabilities.can_reauthorize);
 
         ios_record.access_state = VaultProviderAccessState::Ready;
         assert!(ios_record.descriptor().capabilities.can_write);
     }
 
     #[test]
-    fn provider_store_schema_defaults_to_version_one() {
+    fn provider_store_schema_normalizes_to_current_version() {
         let store: VaultProviderStore = serde_json::from_str(r#"{"providers":[]}"#).unwrap();
-        assert_eq!(store, VaultProviderStore::default());
+        let mut normalized = store;
+        normalized.normalize();
+        assert_eq!(normalized, VaultProviderStore::default());
     }
 
     #[test]
@@ -406,7 +416,14 @@ mod tests {
         )
         .unwrap();
 
-        assert!(store.providers[0].source_read_only);
+        let mut normalized = store;
+        normalized.normalize();
+        assert!(normalized.providers[0].source_read_only);
+        assert_eq!(
+            normalized.providers[0].source_identity,
+            "content://provider/tree/legacy"
+        );
+        assert_eq!(normalized.version, PROVIDER_STORE_VERSION);
     }
 
     #[test]
@@ -428,6 +445,7 @@ mod tests {
             provider_id: "external:fixture".to_string(),
             display_name: "Shared notes".to_string(),
             source_kind: VaultProviderSourceKind::AndroidSafTree,
+            source_identity: "android-tree:notes".to_string(),
             opaque_source_reference: "content://provider/tree/notes".to_string(),
             mirror_root_path: "/app/data/vaults/external/fixture".to_string(),
             access_state: VaultProviderAccessState::Ready,
@@ -448,7 +466,7 @@ mod tests {
             store
                 .provider_for_source(
                     VaultProviderSourceKind::AndroidSafTree,
-                    &record.opaque_source_reference,
+                    &record.source_identity,
                 )
                 .map(|provider| provider.provider_id.as_str()),
             Some("external:fixture")
