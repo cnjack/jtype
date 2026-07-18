@@ -2,14 +2,14 @@
 
 > 最后更新：2026-07-18  
 > Feature branch：`codex/mobile-app`  
-> 当前阶段：Phase 2D — 系统集成与可靠性；系统分享、recovery、无障碍、共享触控交互、键盘辅助栏、5,000 文档大 vault、大 Markdown/附件/1,200-card Board，以及 sync batching/retry/idempotency/服务中断恢复双模拟器 gate 已完成，继续 physical low-memory、native on-demand、真实设备弱网、通知与真机终验
+> 当前阶段：Phase 2D — 系统集成与可靠性；系统分享、recovery、无障碍、共享触控交互、键盘辅助栏、5,000 文档大 vault、大 Markdown/附件/1,200-card Board、sync reliability，以及 Android/iOS 系统通知 → 文档定位已完成，继续 APNs/FCM、physical low-memory、native on-demand、真实设备弱网与真机终验
 > 状态说明：`[ ]` 未开始、`[~]` 进行中、`[x]` 已完成；只有附上真实测试证据后才能标记完成。
 
 ## 目标
 
 在不改变现有 desktop 行为的前提下，让同一套 JType 应用代码运行于 macOS、Windows、Linux、Android 和 iOS。
 
-移动端以 **desktop 产品体验** 为基准，而不是以 web dashboard 为基准。以下 desktop 功能属于移动端范围：
+移动端以 **desktop 产品体验** 为基准，而不是以 web dashboard 为基准。这里的“不做 Markdown 文档列表、编辑器、预览、Document Info”是指 **不另做一套 mobile 版本**：这些能力需要出现时，直接复用 Desktop 的现有 UI、状态和操作代码，只在内部 adapter / capability / adaptive container 做 Android 与 iOS 兼容。复用范围包括：
 
 - vault 与 Markdown 文档列表
 - Markdown 编辑器
@@ -18,7 +18,7 @@
 - Board
 - 搜索、Quick open、命令和账户/云同步
 
-移动端不包含 web landing page、help/docs website、web dashboard 导航等网站内容。首次启动可以有必要的 vault 初始化或登录引导，但不能演变成营销 landing page。
+移动端不包含 web landing page、help/docs website、web dashboard 导航等网站内容，也不从 web frontend 复制产品页。首次启动可以有必要的 vault 初始化或登录引导，但不能演变成营销 landing page。
 
 ## 架构约束
 
@@ -171,7 +171,7 @@
 1. **2A Provider contract（约 3–5 天）**：先冻结 provider identity、capability、mirror metadata、reconcile plan 和错误模型；现有 app-private filesystem 成为第一个 provider 实现，UI/AppState/commands 不改调用语义。
 2. **2B Android SAF（约 1–2 周）**：目录选择、persistable tree URI、mirror 初次导入、双向增量 reconcile、权限丢失重新授权；Android 模拟器逐段留截图与报告。
 3. **2C iOS folder provider（已完成工程与 Simulator gate）**：folder picker、security-scoped bookmark、访问生命周期、mirror reconcile、覆盖安装容器迁移和 shared editor write-back 已通过；失效重新授权与第三方 Files provider 保留到 physical iPhone 终验。
-4. **2D 系统集成与可靠性（约 1–2 周）**：share target、pending OAuth 冷恢复、无障碍、草稿恢复、大 vault/弱网测试；5,000 文档共享索引、大 Markdown/附件/1,200-card Board 渐进渲染，以及 sync batching/retry/idempotency/服务中断恢复已通过双模拟器 gate，继续 physical low-memory、native on-demand、真实设备弱网与双平台真机 gate。
+4. **2D 系统集成与可靠性（约 1–2 周）**：share target、pending OAuth 冷恢复、无障碍、草稿恢复、大 vault/弱网测试；5,000 文档共享索引、大 Markdown/附件/1,200-card Board 渐进渲染、sync batching/retry/idempotency/服务中断恢复，以及双平台原生通知文档定位已通过模拟器 gate，继续 APNs/FCM、physical low-memory、native on-demand、真实设备弱网与双平台真机 gate。
 
 每个增量继续复用 desktop `Sidebar`、`VaultHome`、`EditorShell`、Document Info、Board、commands 和 sync model。provider 差异只能进入 Rust/provider adapter 与 canonical capability，不允许出现第二套 mobile 文件树或编辑器。
 
@@ -195,10 +195,10 @@
 
 ### 2.3 系统入口与后台能力
 
-- [~] 固定自有 OAuth deep link 与 pending OAuth 冷启动恢复已接入；universal/app links 和文档定位待完成
+- [~] 固定自有 OAuth deep link、pending OAuth 冷启动恢复，以及严格的 `jtype://open/document` workspace/path 定位已接入；universal/app links 待完成（证据：`docs/mobile/reports/phase-2-notification-routing.md`，实现：`2a1fc09`）
 - [x] Android share target / iOS share extension 已把 Markdown、纯文本、URL 和文件接入现有 vault import 与 desktop/shared editor；cold/warm Android 和 Safari → iOS extension → JType 闭环均通过（证据：`docs/mobile/reports/phase-2-share-import.md`，实现：`ce9239b`）
-- [ ] APNs/FCM 通知用于协作变化提示；后台只做系统允许的有限刷新
-- [ ] 通知/深链进入后定位到正确 cloud workspace、vault 和文档
+- [~] 本地原生协作通知、按需权限、Android channel 与双平台 tap callback 已接入；iOS 前台立即呈现兼容了 notification plugin 的本地时区解析，APNs/FCM token/服务端投递和系统允许的有限后台刷新待完成（证据：`docs/mobile/reports/phase-2-notification-routing.md`，实现：`2a1fc09`、`ff21f86`）
+- [x] 通知/深链已通过 vault binding 定位正确 cloud workspace、vault 和文档；Android API 36 与 iOS 26.5 Simulator 原生系统通知 → 点击 → Desktop 共用 EditorShell 闭环均通过（证据：`docs/mobile/reports/phase-2-notification-routing.md`，实现：`2a1fc09`、`ff21f86`）
 
 ### 2.4 大 vault 性能与可靠性
 
@@ -211,14 +211,14 @@
 
 - [~] Android 外部 vault 全链路已通过；iOS Simulator 已通过选择、重启/覆盖安装恢复和 shared editor 写回，physical iPhone 权限失效恢复待完成
 - [~] Android 外部 app 修改文件后的真实 reconcile/conflict 已通过；iOS 复用同一 Rust plan 与共享 dialog，并有 contract/E2E 覆盖，真实 Files provider 双边冲突留到 physical iPhone gate
-- [~] Android/iOS share smoke flow 与 OAuth deep-link 已通过；通知、universal/app links 和通知/深链文档定位待完成
+- [~] Android/iOS share smoke flow、OAuth deep-link、canonical 文档 route 与双平台原生通知点击定位已通过；APNs/FCM、universal/app links 与真实设备矩阵待完成
 - [x] 5,000 文档大 vault 基准达到预先记录阈值：Android native 131 ms / shared index 24.9 ms，iOS native 48 ms，首批树 window 160；双平台均精确搜索并打开尾部文档（证据：`docs/mobile/reports/phase-2-large-vault.md`）
 - [x] 当前 2D large-vault 增量的 desktop build、web build、jtype-core 38/38、Tauri Rust 28/28、unit 50/50、app E2E 50/50、Android APK 与 iOS archive 全部通过；双端 5,000 文档 Maestro flow 通过；后续 Phase 2 增量继续重复完整 gate
 - [x] 当前 2D large-content 增量的 desktop/web build、jtype-core 38/38、Tauri Rust 28/28、unit 50/50、app E2E 51/51、Android universal APK 与 iOS simulator archive 全部通过；双端大 Markdown 与 1,200-card Board 共四条 Maestro flow 通过（证据：`docs/mobile/reports/phase-2-large-content.md`）
 - [x] 当前 2D sync-reliability 增量的 desktop/web build、unit 55/55、app E2E 53/53、web E2E 27/27、jtype-core 38/38、Tauri 28/28、web service sync 15/15、Android APK 与 signed/no-sign iOS simulator archive 全部通过；双端 121-document 三批、离线错误和恢复闭环通过（证据：`docs/mobile/reports/phase-2-weak-network-sync.md`）
 - [ ] 双平台模拟器与至少一台真实设备截图/录像证据已保存
-- [~] `docs/mobile/reports/phase-2.md` 已记录 2A、2B、2C、2D recovery、系统分享、无障碍、触控交互、大 vault、大内容与 sync reliability 结果；细节见 `phase-2-ios-external-vault.md`、`phase-2-mobile-recovery.md`、`phase-2-share-import.md`、`phase-2-accessibility.md`、`phase-2-interactions.md`、`phase-2-large-vault.md`、`phase-2-large-content.md`、`phase-2-weak-network-sync.md`，后续持续更新到 Phase 2 终验
-- [~] tracking 已记录当前 Phase 2 commit hashes（最新实现 `798be1c`）；后续增量继续追加
+- [~] `docs/mobile/reports/phase-2.md` 已记录 2A、2B、2C、2D recovery、系统分享、无障碍、触控交互、大 vault、大内容、sync reliability 与通知文档定位结果；细节见各专项报告，后续持续更新到 Phase 2 终验
+- [~] tracking 已记录当前 Phase 2 commit hashes（最新实现 `ff21f86`）；后续增量继续追加
 
 ## Phase 3 — Store readiness
 
@@ -289,6 +289,8 @@
 | 2026-07-18 | 2.4 / 2D | `85dee2f` | 共享 workspace index、bounded search、160 行渐进树 window 与 Android/iOS 5,000 文档性能 gate | `docs/mobile/reports/phase-2-large-vault.md` |
 | 2026-07-18 | 2.4 / 2D | `4cdf48d` | 共享 Markdown/diagram/attachment 与 1,200-card Board 渐进渲染、完整模型搜索和 mobile visual viewport 兼容 | `docs/mobile/reports/phase-2-large-content.md` |
 | 2026-07-18 | 2.4 / 2D | `798be1c` | desktop/mobile 共用 sync batching/retry、服务端顺序/并发 request-id 幂等、可观测错误与 reconnect 离线编辑保护 | `docs/mobile/reports/phase-2-weak-network-sync.md` |
+| 2026-07-18 | 2.3 / 2D | `2a1fc09` | 移动端原生通知、严格无凭据文档 route、vault binding 定位与 Desktop 共用打开操作 | `docs/mobile/reports/phase-2-notification-routing.md` |
+| 2026-07-18 | 2.3 / 2D | `ff21f86` | iOS 前台原生通知立即呈现，兼容 notification plugin 的 ISO `Z` 本地时区解析 | `docs/mobile/reports/phase-2-notification-routing.md` |
 
 ## 当前环境审计（2026-07-18）
 
