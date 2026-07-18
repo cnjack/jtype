@@ -178,11 +178,11 @@
 ### 2.1 External vault provider
 
 - [x] 定义 `VaultBackend` / `VaultProvider` descriptor、identity、access state、capability 与 versioned native record 边界；现有 app-private/local vault 已通过 provider resolver 打开，UI、AppState、commands、相对路径和 sync document model 不变（证据：`docs/mobile/reports/phase-2.md`，实现：`002fd18`）
-- [~] Android Storage Access Framework：系统目录选择、persistable URI permission、递归枚举、原子首次 mirror、幂等重复选择与冷启动恢复已完成；source 写入/重命名/删除、permission health、重新授权和 reconcile 待后续 2B 增量（证据：`docs/mobile/reports/phase-2.md`，实现：`18fbeb8`）
+- [~] Android Storage Access Framework：系统目录选择、persistable URI permission、递归枚举、原子首次 mirror、幂等重复选择、permission health、目录失效检测、重新授权、旧 grant 释放与冷启动恢复已完成；source reconcile、写入、重命名和删除待后续 2B 增量（证据：`docs/mobile/reports/phase-2.md`，实现：`18fbeb8`、`0b69f16`）
 - [ ] iOS folder picker：security-scoped bookmark、权限恢复、失效后的重新授权
 - [~] external directory ↔ app-private mirror 的 record、storage mode 与 capability contract 已建立；Android native record 持久化与首次导入已完成，reconcile、冲突、删除规则及 iOS 实现待 2B/2C 完成
 - [ ] 当 mirror 被证明不足时，再将 provider 扩展为零拷贝访问；不在 UI 层分叉
-- [ ] 外部权限丢失、目录被移动或文件被其他 app 修改时有可恢复提示
+- [~] Android external provider 已能检测权限丢失/目录移动并保持同一 provider identity 完成重新授权；正式复用 UI 提示与“其他 app 修改文件”的 reconcile/冲突恢复待完成，iOS 待 2C
 
 ### 2.2 移动交互完善
 
@@ -267,6 +267,7 @@
 | 2026-07-18 | 1.6–1.7 | `ad5a9ef` | iOS 容器路径迁移、eager conflict 可见性、同路径冲突去重与 legacy duplicate 清理 | `docs/mobile/reports/phase-1.md`、`docs/mobile/reports/phase-1-conflict.md` |
 | 2026-07-18 | 2.1 / 2A | `002fd18` | 建立 provider identity、descriptor、capability、native-only external record 与 app-private provider resolver | `docs/mobile/reports/phase-2.md` |
 | 2026-07-18 | 2.1 / 2B | `18fbeb8` | Android SAF picker、persistable permission、native-only record、原子首次 mirror、幂等重复选择与冷启动恢复 | `docs/mobile/reports/phase-2.md` |
+| 2026-07-18 | 2.1 / 2B | `0b69f16` | Android SAF permission health、目录失效检测、同 provider 重新授权与旧 grant 释放 | `docs/mobile/reports/phase-2.md` |
 | 2026-07-18 | 2.2 / shell | `232222c` | 约束共享 Welcome 内容在窄屏和本地化文案下的宽度 | `docs/mobile/reports/phase-2.md` |
 | 2026-07-18 | 2.2 / shell | `309aebb` | 将共享 App shell Grid 列固定为 `minmax(0, 1fr)`，增加完整中文 locale overflow 回归 | `docs/mobile/reports/phase-2.md` |
 
