@@ -44,6 +44,23 @@ pub struct WorkspaceSnapshot {
     pub metadata_created: bool,
 }
 
+/// One deterministic, shallow page of direct children inside a vault folder.
+///
+/// The existing `WorkspaceSnapshot` remains the canonical UI model. Mobile can
+/// hydrate that model page-by-page without introducing a second file-tree type,
+/// while Desktop can continue using `open_workspace` and its complete tree.
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkspaceEntryPage {
+    pub relative_path: String,
+    pub entries: Vec<FileTreeNode>,
+    pub start_index: usize,
+    pub total_entries: usize,
+    pub next_cursor: Option<String>,
+}
+
+pub const MAX_WORKSPACE_PAGE_SIZE: usize = 500;
+
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct PublishResult {
@@ -290,6 +307,77 @@ pub fn open_workspace(root: &Path) -> Result<WorkspaceSnapshot, String> {
         name,
         entries,
         metadata_created,
+    })
+}
+
+/// Read a bounded, shallow page of one folder's direct tree entries.
+///
+/// `cursor` is an opaque decimal offset returned by the previous page. The
+/// directory is re-read and sorted for each request so a mutation cannot make
+/// an old in-memory iterator escape the vault. Callers refresh the canonical
+/// snapshot after mutations; a cursor past the new end is rejected as stale.
+pub fn read_workspace_entry_page(
+    root: &Path,
+    relative_path: &str,
+    cursor: Option<&str>,
+    page_size: usize,
+) -> Result<WorkspaceEntryPage, String> {
+    #[cfg(debug_assertions)]
+    let started_at = Instant::now();
+    if !root.is_dir() {
+        return Err("Workspace path must be a directory.".to_string());
+    }
+    if page_size == 0 || page_size > MAX_WORKSPACE_PAGE_SIZE {
+        return Err(format!(
+            "Workspace page size must be between 1 and {MAX_WORKSPACE_PAGE_SIZE}."
+        ));
+    }
+
+    validate_workspace_page_parent(relative_path)?;
+    let parent = safe_join(root, relative_path)?;
+    if !parent.is_dir() {
+        return Err("Workspace page path must be a directory.".to_string());
+    }
+
+    let start_index = match cursor {
+        Some(value) => value
+            .parse::<usize>()
+            .map_err(|_| "Workspace page cursor is invalid.".to_string())?,
+        None => 0,
+    };
+    let mut children = read_children_shallow(root, &parent)?;
+    sort_nodes(&mut children);
+    let total_entries = children.len();
+    if start_index > total_entries {
+        return Err("Workspace page cursor is stale.".to_string());
+    }
+    let end_index = start_index.saturating_add(page_size).min(total_entries);
+    let entries = children[start_index..end_index].to_vec();
+    let trimmed_relative_path = relative_path.trim_matches('/');
+    let relative_path = if trimmed_relative_path.is_empty() || trimmed_relative_path == "." {
+        String::new()
+    } else {
+        path_to_string(Path::new(trimmed_relative_path))
+    };
+
+    #[cfg(debug_assertions)]
+    if total_entries >= 1_000 {
+        eprintln!(
+            "[JTypePerformance] workspace_page parent={} start={} returned={} total={} elapsed_ms={}",
+            if relative_path.is_empty() { "/" } else { &relative_path },
+            start_index,
+            entries.len(),
+            total_entries,
+            started_at.elapsed().as_millis()
+        );
+    }
+
+    Ok(WorkspaceEntryPage {
+        relative_path,
+        entries,
+        start_index,
+        total_entries,
+        next_cursor: (end_index < total_entries).then(|| end_index.to_string()),
     })
 }
 
@@ -924,7 +1012,25 @@ fn ensure_workspace_metadata(root: &Path) -> Result<bool, String> {
     Ok(created)
 }
 
-fn read_children(root: &Path, current: &Path) -> Result<Vec<FileTreeNode>, String> {
+fn is_ignored_tree_entry(name: &str) -> bool {
+    matches!(name, ".git" | "node_modules" | "target")
+}
+
+fn visible_tree_file_kind(path: &Path) -> Option<EntryKind> {
+    if is_board_path(path) {
+        Some(EntryKind::Board)
+    } else if is_markdown_path(path) {
+        Some(EntryKind::Markdown)
+    } else if is_diagram_path(path) {
+        Some(EntryKind::Diagram)
+    } else if is_binary_document_path(path) {
+        Some(EntryKind::Asset)
+    } else {
+        None
+    }
+}
+
+fn read_children_shallow(root: &Path, current: &Path) -> Result<Vec<FileTreeNode>, String> {
     let mut nodes = Vec::new();
 
     for entry in fs::read_dir(current).map_err(|error| error.to_string())? {
@@ -932,27 +1038,21 @@ fn read_children(root: &Path, current: &Path) -> Result<Vec<FileTreeNode>, Strin
         let path = entry.path();
         let file_name = entry.file_name().to_string_lossy().to_string();
 
-        if file_name == ".git" || file_name == "node_modules" || file_name == "target" {
+        if is_ignored_tree_entry(&file_name) {
             continue;
         }
 
         let relative = path.strip_prefix(root).map_err(|error| error.to_string())?;
 
         if path.is_dir() {
-            let mut children = read_children(root, &path)?;
-            sort_nodes(&mut children);
             nodes.push(FileTreeNode {
                 name: file_name,
                 path: path_to_string(&path),
                 relative_path: path_to_string(relative),
                 kind: EntryKind::Folder,
-                children,
+                children: Vec::new(),
             });
-        } else if is_markdown_path(&path)
-            || is_board_path(&path)
-            || is_diagram_path(&path)
-            || is_binary_document_path(&path)
-        {
+        } else if let Some(kind) = visible_tree_file_kind(&path) {
             // First-class tree entries: text documents + binary documents (pdf).
             // Inline images (is_image_path) are intentionally NOT listed — they are
             // markdown attachments, embedded via `![](path)`. They still sync as
@@ -961,21 +1061,47 @@ fn read_children(root: &Path, current: &Path) -> Result<Vec<FileTreeNode>, Strin
                 name: file_name,
                 path: path_to_string(&path),
                 relative_path: path_to_string(relative),
-                kind: if is_board_path(&path) {
-                    EntryKind::Board
-                } else if is_markdown_path(&path) {
-                    EntryKind::Markdown
-                } else if is_diagram_path(&path) {
-                    EntryKind::Diagram
-                } else {
-                    EntryKind::Asset
-                },
+                kind,
                 children: Vec::new(),
             });
         }
     }
 
     Ok(nodes)
+}
+
+fn read_children(root: &Path, current: &Path) -> Result<Vec<FileTreeNode>, String> {
+    let mut nodes = read_children_shallow(root, current)?;
+    for node in &mut nodes {
+        if node.kind != EntryKind::Folder {
+            continue;
+        }
+        let mut children = read_children(root, Path::new(&node.path))?;
+        sort_nodes(&mut children);
+        node.children = children;
+    }
+    Ok(nodes)
+}
+
+fn validate_workspace_page_parent(relative_path: &str) -> Result<(), String> {
+    for component in Path::new(relative_path).components() {
+        match component {
+            Component::Normal(value) => {
+                let name = value.to_string_lossy();
+                if is_ignored_tree_entry(&name) {
+                    return Err("Workspace page path is excluded from the tree.".to_string());
+                }
+            }
+            Component::ParentDir => {
+                return Err("Path cannot escape the workspace.".to_string());
+            }
+            Component::Prefix(_) | Component::RootDir => {
+                return Err("Path must be relative to the workspace.".to_string());
+            }
+            Component::CurDir => {}
+        }
+    }
+    Ok(())
 }
 
 /// Tree sort rank: folders first, then boards, markdown docs, diagrams, assets.
@@ -994,6 +1120,8 @@ fn sort_nodes(nodes: &mut [FileTreeNode]) {
         kind_rank(&a.kind)
             .cmp(&kind_rank(&b.kind))
             .then_with(|| a.name.to_lowercase().cmp(&b.name.to_lowercase()))
+            .then_with(|| a.name.cmp(&b.name))
+            .then_with(|| a.relative_path.cmp(&b.relative_path))
     });
 }
 
@@ -2181,6 +2309,90 @@ mod tests {
         assert!(dir.path().join(".jtype").join("publish.json").exists());
         assert_eq!(snapshot.entries[0].name, ".jtype");
         assert_eq!(snapshot.entries[1].name, "notes");
+    }
+
+    #[test]
+    fn workspace_entry_pages_are_shallow_bounded_and_deterministic() {
+        let dir = tempdir().unwrap();
+        let root = dir.path();
+        fs::create_dir(root.join("nested")).unwrap();
+        fs::write(root.join("nested").join("inside.md"), "# Inside").unwrap();
+        fs::create_dir(root.join("target")).unwrap();
+        fs::write(root.join("target").join("ignored.md"), "# Ignored").unwrap();
+        fs::write(root.join("cover.png"), "inline image").unwrap();
+        for index in 0..405 {
+            fs::write(root.join(format!("note-{index:03}.md")), format!("# {index}"))
+                .unwrap();
+        }
+        open_workspace(root).unwrap();
+
+        let first = read_workspace_entry_page(root, "", None, 160).unwrap();
+        assert_eq!(first.relative_path, "");
+        assert_eq!(first.start_index, 0);
+        assert_eq!(first.total_entries, 407); // .jtype + nested + 405 notes
+        assert_eq!(first.entries.len(), 160);
+        assert_eq!(first.next_cursor.as_deref(), Some("160"));
+        assert_eq!(first.entries[0].name, ".jtype");
+        assert_eq!(first.entries[1].name, "nested");
+        assert!(first.entries[1].children.is_empty());
+        assert!(first.entries.iter().all(|entry| entry.name != "cover.png"));
+        assert!(first.entries.iter().all(|entry| entry.name != "target"));
+
+        let second = read_workspace_entry_page(
+            root,
+            "",
+            first.next_cursor.as_deref(),
+            160,
+        )
+        .unwrap();
+        assert_eq!(second.start_index, 160);
+        assert_eq!(second.entries.len(), 160);
+        assert_eq!(second.next_cursor.as_deref(), Some("320"));
+        assert_eq!(second.entries[0].name, "note-158.md");
+
+        let third = read_workspace_entry_page(
+            root,
+            "",
+            second.next_cursor.as_deref(),
+            160,
+        )
+        .unwrap();
+        assert_eq!(third.start_index, 320);
+        assert_eq!(third.entries.len(), 87);
+        assert_eq!(third.entries.last().unwrap().name, "note-404.md");
+        assert!(third.next_cursor.is_none());
+
+        let nested = read_workspace_entry_page(root, "nested", None, 160).unwrap();
+        assert_eq!(nested.relative_path, "nested");
+        assert_eq!(nested.total_entries, 1);
+        assert_eq!(nested.entries[0].relative_path, "nested/inside.md");
+    }
+
+    #[test]
+    fn workspace_entry_pages_reject_unsafe_limits_paths_and_cursors() {
+        let dir = tempdir().unwrap();
+        let root = dir.path();
+        fs::write(root.join("note.md"), "# Note").unwrap();
+        open_workspace(root).unwrap();
+
+        assert!(read_workspace_entry_page(root, "", None, 0)
+            .unwrap_err()
+            .contains("between 1 and"));
+        assert!(read_workspace_entry_page(root, "", None, MAX_WORKSPACE_PAGE_SIZE + 1)
+            .unwrap_err()
+            .contains("between 1 and"));
+        assert!(read_workspace_entry_page(root, "../outside", None, 10)
+            .unwrap_err()
+            .contains("escape"));
+        assert!(read_workspace_entry_page(root, "target", None, 10)
+            .unwrap_err()
+            .contains("excluded"));
+        assert!(read_workspace_entry_page(root, "", Some("not-a-cursor"), 10)
+            .unwrap_err()
+            .contains("invalid"));
+        assert!(read_workspace_entry_page(root, "", Some("999"), 10)
+            .unwrap_err()
+            .contains("stale"));
     }
 
     #[test]

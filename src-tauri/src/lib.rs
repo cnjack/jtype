@@ -37,7 +37,8 @@ use tauri_plugin_secure_storage::SecureStorageExt;
 
 use workspace::{
     AiIndexResult, AssetSyncState, EntryKind, FolderContentsSummary, PublishResult, SyncBaseEntry,
-    SyncDocument, SyncFolder, TrashItemInfo, TrashMetadata, ValidationResult, WorkspaceSnapshot,
+    SyncDocument, SyncFolder, TrashItemInfo, TrashMetadata, ValidationResult, WorkspaceEntryPage,
+    WorkspaceSnapshot,
 };
 
 struct WatcherState {
@@ -1898,6 +1899,22 @@ fn open_workspace(app: AppHandle, path: String) -> Result<WorkspaceSnapshot, Str
     workspace::open_workspace(&root)
 }
 
+/// Return one shallow page that can be merged into the canonical shared
+/// `WorkspaceSnapshot`. The provider adapter runs first so interrupted external
+/// mirror transactions recover before either Desktop or Mobile reads the tree.
+#[tauri::command]
+fn read_workspace_entry_page(
+    app: AppHandle,
+    root_path: String,
+    relative_path: String,
+    cursor: Option<String>,
+    page_size: usize,
+) -> Result<WorkspaceEntryPage, String> {
+    let root = PathBuf::from(root_path);
+    let _provider = describe_provider_for_root(&app, &root)?;
+    workspace::read_workspace_entry_page(&root, &relative_path, cursor.as_deref(), page_size)
+}
+
 #[tauri::command]
 fn detect_vault_root(path: String) -> Option<String> {
     workspace::detect_vault_root(&PathBuf::from(path)).map(|p| path_to_string(&p))
@@ -3089,6 +3106,7 @@ pub fn run() {
             write_binary_file,
             read_binary_file,
             open_workspace,
+            read_workspace_entry_page,
             detect_vault_root,
             create_workspace_entry,
             import_external_paths,

@@ -2,6 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { isTauriRuntime } from "./utils";
 import type {
   WorkspaceSnapshot,
+  WorkspaceEntryPage,
   PublishResult,
   AiIndexResult,
   ValidationResult,
@@ -80,6 +81,19 @@ export const tauri = {
   },
   openWorkspace(path: string) {
     return invoke<WorkspaceSnapshot>("open_workspace", { path });
+  },
+  readWorkspaceEntryPage(
+    rootPath: string,
+    relativePath: string,
+    cursor: string | null,
+    pageSize: number,
+  ) {
+    return invoke<WorkspaceEntryPage>("read_workspace_entry_page", {
+      rootPath,
+      relativePath,
+      cursor,
+      pageSize,
+    });
   },
   openDefaultVault() {
     return invoke<WorkspaceSnapshot>("open_default_vault");

@@ -86,6 +86,19 @@ export type WorkspaceSnapshot = {
   metadataCreated: boolean;
 };
 
+/**
+ * One shallow page of direct vault children. Pages are merged back into the
+ * canonical WorkspaceSnapshot, so platform adapters never create a second UI
+ * tree or a mobile-only document model.
+ */
+export type WorkspaceEntryPage = {
+  relativePath: string;
+  entries: FileTreeNode[];
+  startIndex: number;
+  totalEntries: number;
+  nextCursor: string | null;
+};
+
 export type VaultProviderKind = "appPrivate" | "localDirectory" | "externalMirror";
 export type VaultProviderAccessState =
   | "ready"
