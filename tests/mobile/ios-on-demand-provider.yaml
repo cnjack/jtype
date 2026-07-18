@@ -1,0 +1,17 @@
+appId: net.jcode.jtype
+---
+- launchApp:
+    clearState: false
+- runFlow:
+    when:
+      visible: "^关闭$|^Close$"
+    commands:
+      - tapOn: "^关闭$|^Close$"
+- extendedWaitUntil:
+    visible: "Check external changes"
+    timeout: 30000
+- tapOn: "Check external changes"
+- extendedWaitUntil:
+    visible: "Check external changes"
+    timeout: 30000
+- assertVisible: ".*File Provider Storage.*"

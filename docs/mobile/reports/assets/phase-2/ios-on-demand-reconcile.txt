@@ -1,0 +1,26 @@
+iOS Files provider on-demand reconciliation gate
+Date: 2026-07-19 (Asia/Shanghai)
+Device: iPhone 17 Pro Simulator, iOS 26.5
+Provider: external:f366b273a0fdce37 (iOS security-scoped bookmark)
+Fixture: File Provider Storage/JTypeOnDemand20260718
+Shape: 1 directory + 120 Markdown files
+
+Maestro flow: tests/mobile/ios-on-demand-provider.yaml
+Result: PASS for baseline, one-change, and immediate unchanged runs
+
+Baseline unchanged
+2026-07-19 05:55:29.253 [JTypePerformance] external_source_scan provider=external:f366b273a0fdce37 entries=121 files=120 bytes=4560 elapsed_ms=15
+Materialization: none
+
+Exactly one changed file (JTypeOnDemand20260718/note-001.md)
+2026-07-19 05:56:23.766 [JTypePerformance] external_source_scan provider=external:f366b273a0fdce37 entries=121 files=120 bytes=4594 elapsed_ms=17
+2026-07-19 05:56:23.775 [JTypePerformance] external_source_materialize provider=external:f366b273a0fdce37 requested_paths=1 files=1 directories=0 bytes=72
+
+Immediate unchanged recheck
+2026-07-19 05:57:13.405 [JTypePerformance] external_source_scan provider=external:f366b273a0fdce37 entries=121 files=120 bytes=4594 elapsed_ms=16
+Materialization: none
+
+The screenshot ios-on-demand-reconcile.png shows the shared VaultHome and
+VaultProviderBanner after the one-file reconciliation. The UI lists the same
+Desktop-owned document routes and reports that changes are synchronized with
+the selected device folder.
