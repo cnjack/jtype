@@ -127,6 +127,36 @@ export type ExternalVaultInitializationResult = {
   importedBytes: number;
 };
 
+export type ExternalVaultReconcileStatus =
+  | "baselineEstablished"
+  | "unchanged"
+  | "pulled"
+  | "localChangesPending"
+  | "conflict";
+
+export type ExternalVaultReconcileConflictReason =
+  | "baselineRequired"
+  | "bothModified"
+  | "sourceDeletedMirrorModified"
+  | "sourceModifiedMirrorDeleted"
+  | "sourceRemovedParentWithLocalChanges";
+
+export type ExternalVaultReconcileConflict = {
+  relativePath: string;
+  reason: ExternalVaultReconcileConflictReason;
+};
+
+export type ExternalVaultReconcileResult = {
+  provider: VaultProviderDescriptor;
+  workspace: WorkspaceSnapshot;
+  status: ExternalVaultReconcileStatus;
+  pulledFiles: number;
+  pulledDirectories: number;
+  deletedEntries: number;
+  pendingLocalChanges: number;
+  conflicts: ExternalVaultReconcileConflict[];
+};
+
 export type PublishResult = {
   outputDir: string;
   pages: string[];

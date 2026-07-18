@@ -62,7 +62,7 @@ impl VaultProviderCapabilities {
         }
     }
 
-    pub fn external_mirror(read_only: bool, can_reauthorize: bool) -> Self {
+    pub fn external_mirror(read_only: bool, can_reconcile: bool, can_reauthorize: bool) -> Self {
         Self {
             can_read: true,
             can_write: !read_only,
@@ -72,7 +72,7 @@ impl VaultProviderCapabilities {
             can_watch: true,
             // These become true only when the provider adapter has real
             // reconcile and reauthorization commands wired end to end.
-            can_reconcile: false,
+            can_reconcile,
             can_reauthorize,
         }
     }
@@ -118,6 +118,7 @@ impl ExternalVaultProviderRecord {
             storage_mode: VaultProviderStorageMode::Mirror,
             capabilities: VaultProviderCapabilities::external_mirror(
                 self.read_only,
+                self.source_kind == VaultProviderSourceKind::AndroidSafTree,
                 self.source_kind == VaultProviderSourceKind::AndroidSafTree,
             ),
         }
@@ -339,13 +340,14 @@ mod tests {
 
         assert_eq!(descriptor.kind, VaultProviderKind::ExternalMirror);
         assert_eq!(descriptor.storage_mode, VaultProviderStorageMode::Mirror);
-        assert!(!descriptor.capabilities.can_reconcile);
+        assert!(descriptor.capabilities.can_reconcile);
         assert!(descriptor.capabilities.can_reauthorize);
         assert!(!json.to_string().contains("content://"));
         assert!(!json.to_string().contains("opaqueSourceReference"));
 
         let mut ios_record = record;
         ios_record.source_kind = VaultProviderSourceKind::IosSecurityScopedBookmark;
+        assert!(!ios_record.descriptor().capabilities.can_reconcile);
         assert!(!ios_record.descriptor().capabilities.can_reauthorize);
     }
 
