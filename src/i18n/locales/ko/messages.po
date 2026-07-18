@@ -81,6 +81,11 @@ msgid "A browser opened to the authorization page. Enter the code below to "
 "finish signing in."
 msgstr ""
 
+#: src/components/modals/ExternalVaultConflictDialog.tsx
+msgid "A device folder was removed while JType still has changed items inside "
+"it."
+msgstr "기기 폴더가 삭제되었지만 JType에는 변경된 항목이 남아 있습니다."
+
 #: src/components/modals/NewResourceDialog.tsx
 msgid "A hand-drawn style whiteboard canvas"
 msgstr "손그림 스타일의 화이트보드 캔버스"
@@ -204,6 +209,10 @@ msgstr "굵게"
 msgid "Bold - Ctrl+B"
 msgstr "굵게 - Ctrl+B"
 
+#: src/components/modals/ExternalVaultConflictDialog.tsx
+msgid "Both the device folder and JType changed this path."
+msgstr "기기 폴더와 JType에서 모두 이 경로를 변경했습니다."
+
 #: src/components/modals/AccountDialog.tsx
 msgid "Bound"
 msgstr "바인딩됨"
@@ -291,6 +300,11 @@ msgstr "노트를 선택하거나 새로 만드세요. 이 볼트는 <0>{0}</0>�
 msgid "Choose what you want to create."
 msgstr "생성할 항목을 선택하세요."
 
+#: src/components/modals/ExternalVaultConflictDialog.tsx
+msgid "Choose which version to keep for each path. JType will never overwrite "
+"both versions silently."
+msgstr "각 경로에서 유지할 버전을 선택하세요. JType은 두 버전을 확인 없이 덮어쓰지 않습니다."
+
 #~ msgid "Clear filter"
 #~ msgstr ""
 
@@ -304,6 +318,7 @@ msgstr ""
 
 #: src/components/modals/AccountDialog.tsx
 #: src/components/modals/ConflictDialog.tsx
+#: src/components/modals/ExternalVaultConflictDialog.tsx
 #: src/components/sidebar/MobileSidebarDialog.tsx
 msgid "Close"
 msgstr "닫기"
@@ -698,6 +713,10 @@ msgstr "PDF 내보내는 중..."
 msgid "External changes need your choice before syncing can continue."
 msgstr "외부 변경 사항의 처리 방법을 선택해야 동기화를 계속할 수 있습니다."
 
+#: src/components/modals/ExternalVaultConflictDialog.tsx
+msgid "External vault conflicts"
+msgstr "외부 vault 충돌"
+
 #: src/components/sidebar/Sidebar.tsx
 msgid "Favorite"
 msgstr "즐겨찾기"
@@ -841,6 +860,14 @@ msgstr "기울임꼴 - Ctrl+I"
 #: src/components/modals/NewResourceDialog.tsx
 msgid "Kanban board"
 msgstr "칸반 보드"
+
+#: src/components/modals/ExternalVaultConflictDialog.tsx
+msgid "Keep device folder version"
+msgstr "기기 폴더 버전 유지"
+
+#: src/components/modals/ExternalVaultConflictDialog.tsx
+msgid "Keep JType version"
+msgstr "JType 버전 유지"
 
 #: src/components/layout/Header.tsx
 msgid "Language"
@@ -1071,6 +1098,10 @@ msgstr "설치되지 않음"
 #: src/components/editor/SlashMenu.tsx
 msgid "Numbered list"
 msgstr ""
+
+#: src/components/modals/ExternalVaultConflictDialog.tsx
+msgid "One version is a file and the other is a folder."
+msgstr "한 버전은 파일이고 다른 버전은 폴더입니다."
 
 #: src/components/editor/EditorShell.tsx
 msgid "Only web, email, and phone links can be opened from preview."
@@ -1327,6 +1358,14 @@ msgstr "다시 게시"
 msgid "Reset zoom"
 msgstr "줌 재설정"
 
+#: src/components/layout/VaultProviderBanner.tsx
+msgid "Resolve external vault conflicts"
+msgstr "외부 vault 충돌 해결"
+
+#: src/components/modals/ExternalVaultConflictDialog.tsx
+msgid "Resolving…"
+msgstr "해결 중…"
+
 #: src/components/modals/AccountDialog.tsx
 msgid "Restart your terminal to pick up the updated PATH."
 msgstr "업데이트된 PATH를 적용하려면 터미널을 다시 시작하세요."
@@ -1502,9 +1541,25 @@ msgstr "템플릿 이름"
 #~ msgid "Templates"
 #~ msgstr ""
 
+#: src/components/modals/ExternalVaultConflictDialog.tsx
+msgid "The device folder and JType mirror do not share a trusted baseline."
+msgstr "기기 폴더와 JType 미러에 공통으로 신뢰할 수 있는 기준 상태가 없습니다."
+
+#: src/components/modals/ExternalVaultConflictDialog.tsx
+msgid "The path changed in the device folder but was deleted in JType."
+msgstr "이 경로는 기기 폴더에서 변경되었지만 JType에서는 삭제되었습니다."
+
+#: src/components/modals/ExternalVaultConflictDialog.tsx
+msgid "The path was deleted from the device folder but changed in JType."
+msgstr "이 경로는 기기 폴더에서 삭제되었지만 JType에서는 변경되었습니다."
+
 #: src/components/editor/EditorShell.tsx
 msgid "The public snapshot is behind the current document."
 msgstr "공개 스냅샷이 현재 문서보다 오래되었습니다."
+
+#: src/components/modals/ExternalVaultConflictDialog.tsx
+msgid "The selected device folder is read-only"
+msgstr "선택한 기기 폴더는 읽기 전용입니다"
 
 #: src/components/layout/VaultProviderBanner.tsx
 msgid "The selected folder is unavailable. Choose it again to continue."

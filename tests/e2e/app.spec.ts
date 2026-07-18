@@ -16,6 +16,8 @@ declare global {
     __RUNTIME_CAPABILITIES__?: Record<string, unknown>;
     __EXTERNAL_VAULT_RESULT__?: Record<string, unknown>;
     __EXTERNAL_PENDING__?: boolean;
+    __EXTERNAL_CONFLICTS__?: Array<{ relativePath: string; reason: string }>;
+    __LAST_EXTERNAL_RESOLUTION__?: Record<string, unknown>;
     __CLOUD_PROFILE__?: Record<string, unknown>;
     __START_LISTENER_ARGS__?: Record<string, unknown>;
     __START_LISTENER_CALLS__: Record<string, unknown>[];
@@ -294,15 +296,32 @@ test.beforeEach(async ({ page }) => {
               provider: Record<string, unknown>;
               workspace: Record<string, unknown>;
             };
+            const conflicts = window.__EXTERNAL_CONFLICTS__ ?? [];
             return {
               provider: external.provider,
               workspace: external.workspace,
-              status: "unchanged",
+              status: conflicts.length > 0 ? "conflict" : "unchanged",
               pulledFiles: 0,
               pulledDirectories: 0,
               deletedEntries: 0,
               pendingLocalChanges: 0,
-              conflicts: [],
+              conflicts,
+            };
+          }
+          if (cmd === "resolve_android_external_vault_conflict") {
+            const external = window.__EXTERNAL_VAULT_RESULT__ as {
+              provider: Record<string, unknown>;
+              workspace: Record<string, unknown>;
+            };
+            window.__LAST_EXTERNAL_RESOLUTION__ = { ...args };
+            window.__EXTERNAL_CONFLICTS__ = (window.__EXTERNAL_CONFLICTS__ ?? []).filter(
+              (conflict) => conflict.relativePath !== args.relativePath,
+            );
+            return {
+              provider: external.provider,
+              workspace: external.workspace,
+              pendingWriteBack: false,
+              conflicts: window.__EXTERNAL_CONFLICTS__,
             };
           }
           if (cmd === "write_back_android_external_vault") {
@@ -1026,6 +1045,35 @@ test("opens an Android SAF vault through the shared desktop vault action", async
   await page.getByRole("button", { name: "Finish interrupted changes" }).click();
   await expect(page.locator("#external-vault-status")).toContainText("selected device folder");
   await expect(page.locator("#vault-home h2")).toHaveText("Device Notes");
+
+  await page.evaluate(() => {
+    window.__EXTERNAL_CONFLICTS__ = [{ relativePath: "intro.md", reason: "bothModified" }];
+  });
+  await page.getByRole("button", { name: "Check external changes" }).click();
+  await expect(page.locator("#external-vault-conflict-dialog")).toBeVisible();
+  await expect(page.locator("#external-vault-conflict-dialog")).toContainText("intro.md");
+  await expect(page.locator("#external-vault-conflict-dialog")).toContainText("Both the device folder and JType changed this path.");
+  await page.getByRole("button", { name: "Keep JType version" }).click();
+  await expect.poll(() => page.evaluate(() => window.__LAST_EXTERNAL_RESOLUTION__)).toEqual({
+    providerId: "external:saf-e2e",
+    relativePath: "intro.md",
+    resolution: "useJtype",
+  });
+  await expect(page.locator("#external-vault-conflict-dialog")).toBeHidden();
+  await expect(page.locator("#external-vault-status")).toContainText("selected device folder");
+
+  await page.evaluate(() => {
+    window.__EXTERNAL_CONFLICTS__ = [{ relativePath: "guides/setup.md", reason: "sourceModifiedMirrorDeleted" }];
+  });
+  await page.getByRole("button", { name: "Check external changes" }).click();
+  await expect(page.locator("#external-vault-conflict-dialog")).toContainText("guides/setup.md");
+  await page.getByRole("button", { name: "Keep device folder version" }).click();
+  await expect.poll(() => page.evaluate(() => window.__LAST_EXTERNAL_RESOLUTION__)).toEqual({
+    providerId: "external:saf-e2e",
+    relativePath: "guides/setup.md",
+    resolution: "useSource",
+  });
+  await expect(page.locator("#external-vault-conflict-dialog")).toBeHidden();
 });
 
 test("imports an Android content URI through the shared resource flow", async ({ page }) => {

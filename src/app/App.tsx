@@ -19,6 +19,7 @@ import { QuickSwitcher } from "../components/modals/QuickSwitcher";
 import { NewResourceDialog } from "../components/modals/NewResourceDialog";
 import { AccountDialog } from "../components/modals/AccountDialog";
 import { ConflictDialog } from "../components/modals/ConflictDialog";
+import { ExternalVaultConflictDialog } from "../components/modals/ExternalVaultConflictDialog";
 import { ExclamationTriangleIcon, SignalSlashIcon } from "@heroicons/react/24/outline";
 import { PromptDialogProvider } from "@shared/components/PromptDialogContext";
 import { AppVersion } from "@shared/components";
@@ -603,6 +604,7 @@ function AppContent() {
         <NewResourceDialog />
         <AccountDialog />
         <ConflictDialog />
+        <ExternalVaultConflictDialog />
         {capabilities.isMobile && (
           <MobileSidebarDialog open={mobileNavigationOpen} onClose={() => setMobileNavigationOpen(false)} />
         )}

@@ -40,6 +40,7 @@ export interface AppState {
   workspace: WorkspaceSnapshot | null;
   vaultProviderStatus: VaultProviderStatus | null;
   externalVaultConflicts: ExternalVaultReconcileConflict[];
+  externalVaultConflictDialogOpen: boolean;
   syncToken: string;
   syncUsername: string;
   syncSiteUrl: string;
@@ -116,6 +117,7 @@ export type AppAction =
   | { type: "UPDATE_WORKSPACE"; workspace: WorkspaceSnapshot }
   | { type: "SET_VAULT_PROVIDER_STATUS"; status: VaultProviderStatus | null }
   | { type: "SET_EXTERNAL_VAULT_CONFLICTS"; conflicts: ExternalVaultReconcileConflict[] }
+  | { type: "SET_EXTERNAL_VAULT_CONFLICT_DIALOG"; open: boolean }
   | { type: "SET_SYNC_SESSION"; token: string; username: string; siteUrl: string; profile: CloudProfile }
   | { type: "SET_CLOUD_PROFILE"; profile: CloudProfile }
   | { type: "SET_VAULT_BINDINGS"; bindings: VaultBinding[] }
@@ -178,6 +180,7 @@ const initialState: AppState = {
   workspace: null,
   vaultProviderStatus: null,
   externalVaultConflicts: [],
+  externalVaultConflictDialogOpen: false,
   syncToken: appStorage.getSensitive("sync.token", ""),
   syncUsername: appStorage.get("sync.username", ""),
   syncSiteUrl: appStorage.get("sync.siteUrl", ""),
@@ -245,6 +248,7 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         workspace: action.workspace,
         vaultProviderStatus: action.providerStatus ?? null,
         externalVaultConflicts: [],
+        externalVaultConflictDialogOpen: false,
         currentPath: "",
         currentRelativePath: "",
         currentKind: "",
@@ -405,6 +409,8 @@ export function appReducer(state: AppState, action: AppAction): AppState {
     }
     case "SET_EXTERNAL_VAULT_CONFLICTS":
       return { ...state, externalVaultConflicts: action.conflicts };
+    case "SET_EXTERNAL_VAULT_CONFLICT_DIALOG":
+      return { ...state, externalVaultConflictDialogOpen: action.open };
     case "SET_SYNC_SESSION": {
       appStorage.setSensitive("sync.token", action.token);
       appStorage.set("sync.username", action.username);
@@ -564,6 +570,7 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         workspace: null,
         vaultProviderStatus: null,
         externalVaultConflicts: [],
+        externalVaultConflictDialogOpen: false,
         currentPath: "",
         currentRelativePath: "",
         currentKind: "",

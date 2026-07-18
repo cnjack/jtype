@@ -10,7 +10,7 @@ import { httpRequest } from "@shared/lib/http";
 import { basename, isMarkdownPath, relativePathFromWorkspace, normalizePath } from "../lib/utils";
 import { isEditableResourcePath, isDiagramTextPath, isViewableAssetPath } from "@shared/lib/fileTypes";
 import { writeFrontmatter, titleFromMarkdown } from "@shared/lib/frontmatter";
-import type { RecentItem, FileTreeNode, BoardConfig } from "../lib/types";
+import type { RecentItem, FileTreeNode, BoardConfig, ExternalVaultConflictResolution } from "../lib/types";
 import { markdownNodes, extractMarkdownLinks } from "../lib/utils";
 import { appStorage } from "../lib/storage";
 import type { AICommandProposal } from "../lib/aiCommands";
@@ -343,6 +343,9 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
           status: { provider: result.provider, pendingWriteBack: result.pendingJournal },
         });
         dispatch({ type: "SET_EXTERNAL_VAULT_CONFLICTS", conflicts: result.conflicts });
+        if (result.conflicts.length > 0) {
+          dispatch({ type: "SET_EXTERNAL_VAULT_CONFLICT_DIALOG", open: true });
+        }
         dispatch({
           type: "SET_STATUS",
           message: result.status === "conflict"
@@ -358,6 +361,9 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
           status: { provider: result.provider, pendingWriteBack: false },
         });
         dispatch({ type: "SET_EXTERNAL_VAULT_CONFLICTS", conflicts: result.conflicts });
+        if (result.conflicts.length > 0) {
+          dispatch({ type: "SET_EXTERNAL_VAULT_CONFLICT_DIALOG", open: true });
+        }
         dispatch({
           type: "SET_STATUS",
           message: result.status === "conflict"
@@ -377,6 +383,46 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
   }, [dispatch, state.isDirty, state.vaultProviderStatus, state.workspace]);
+
+  const resolveExternalVaultConflict = useCallback(async (
+    relativePath: string,
+    resolution: ExternalVaultConflictResolution,
+  ) => {
+    const status = state.vaultProviderStatus;
+    if (!state.workspace || status?.provider.kind !== "externalMirror") return;
+    try {
+      dispatch({ type: "SET_LOADING", isLoading: true });
+      dispatch({ type: "SET_STATUS", message: `Resolving external conflict for ${relativePath}...` });
+      const result = await tauri.resolveAndroidExternalVaultConflict(
+        status.provider.providerId,
+        relativePath,
+        resolution,
+      );
+      dispatch({
+        type: "UPDATE_WORKSPACE",
+        workspace: { ...result.workspace, name: result.provider.displayName },
+      });
+      dispatch({
+        type: "SET_VAULT_PROVIDER_STATUS",
+        status: { provider: result.provider, pendingWriteBack: result.pendingWriteBack },
+      });
+      dispatch({ type: "SET_EXTERNAL_VAULT_CONFLICTS", conflicts: result.conflicts });
+      if (result.conflicts.length === 0) {
+        dispatch({ type: "SET_EXTERNAL_VAULT_CONFLICT_DIALOG", open: false });
+        dispatch({ type: "SET_STATUS", message: "External vault conflicts resolved." });
+      } else {
+        dispatch({
+          type: "SET_STATUS",
+          message: `${result.conflicts.length} external vault conflict${result.conflicts.length === 1 ? " remains" : "s remain"}.`,
+        });
+      }
+    } catch (error) {
+      dispatch({ type: "SET_STATUS", message: String(error) });
+      throw error;
+    } finally {
+      dispatch({ type: "SET_LOADING", isLoading: false });
+    }
+  }, [dispatch, state.vaultProviderStatus, state.workspace]);
 
   const reauthorizeExternalVault = useCallback(async () => {
     const status = state.vaultProviderStatus;
@@ -1233,6 +1279,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     openDefaultVault,
     refreshVaultProvider,
     reconcileExternalVault,
+    resolveExternalVaultConflict,
     reauthorizeExternalVault,
     saveCurrentFile,
     saveDraftAs,

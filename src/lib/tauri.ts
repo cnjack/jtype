@@ -20,6 +20,8 @@ import type {
   VaultProviderDescriptor,
   VaultProviderStatus,
   ExternalVaultInitializationResult,
+  ExternalVaultConflictResolution,
+  ExternalVaultConflictResolutionResult,
   ExternalVaultReconcileResult,
   ExternalVaultWriteBackResult,
 } from "./types";
@@ -96,6 +98,13 @@ export const tauri = {
   },
   writeBackAndroidExternalVault(providerId: string) {
     return invoke<ExternalVaultWriteBackResult>("write_back_android_external_vault", { providerId });
+  },
+  resolveAndroidExternalVaultConflict(providerId: string, relativePath: string, resolution: ExternalVaultConflictResolution) {
+    return invoke<ExternalVaultConflictResolutionResult>("resolve_android_external_vault_conflict", {
+      providerId,
+      relativePath,
+      resolution,
+    });
   },
   createEntry(rootPath: string, relativePath: string, kind: string) {
     return invoke<WorkspaceSnapshot>("create_workspace_entry", { rootPath, relativePath, kind });

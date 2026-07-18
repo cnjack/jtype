@@ -863,6 +863,60 @@ pub(crate) fn apply_reconcile_plan(
     Ok(())
 }
 
+/// Atomically replaces one conflicted path (including its managed subtree)
+/// in the mirror with the current source version. The regular reconcile plan
+/// remains responsible for advancing the baseline after all conflicts have
+/// converged.
+pub(crate) fn apply_source_conflict_resolution(
+    mirror_root: &Path,
+    source_snapshot: &Path,
+    relative_path: &str,
+) -> Result<(), String> {
+    // Validate the path even when neither side currently contains it.
+    safe_relative_join(mirror_root, relative_path)?;
+    safe_relative_join(source_snapshot, relative_path)?;
+
+    let source = build_manifest(source_snapshot)?;
+    let mirror = build_manifest(mirror_root)?;
+    let prefix = format!("{relative_path}/");
+    let affected_paths = source
+        .entries
+        .keys()
+        .chain(mirror.entries.keys())
+        .filter(|path| path.as_str() == relative_path || path.starts_with(&prefix))
+        .cloned()
+        .collect::<BTreeSet<_>>();
+    if affected_paths.is_empty() {
+        return Err("The external vault conflict path no longer exists".to_string());
+    }
+
+    let operations = affected_paths
+        .iter()
+        .map(|path| ReconcileOperation {
+            relative_path: path.clone(),
+            source: source.entries.get(path).cloned(),
+        })
+        .collect::<Vec<_>>();
+    let mut expected_entries = mirror.entries.clone();
+    expected_entries.retain(|path, _| path.as_str() != relative_path && !path.starts_with(&prefix));
+    for path in &affected_paths {
+        if let Some(entry) = source.entries.get(path) {
+            expected_entries.insert(path.clone(), entry.clone());
+        }
+    }
+
+    apply_reconcile_plan(
+        mirror_root,
+        source_snapshot,
+        &ReconcilePlan {
+            operations,
+            conflicts: Vec::new(),
+            expected_mirror: VaultManifest::from_entries(expected_entries),
+            baseline_was_missing: false,
+        },
+    )
+}
+
 fn transaction_sibling(root: &Path, suffix: &str) -> Result<PathBuf, String> {
     let parent = root
         .parent()
@@ -1031,6 +1085,34 @@ mod tests {
                 relative_path: "intro.md".to_string(),
                 reason: ReconcileConflictReason::BothModified,
             }]
+        );
+    }
+
+    #[test]
+    fn source_conflict_resolution_replaces_only_the_selected_subtree() {
+        let fixture = tempfile::tempdir().unwrap();
+        let source_root = fixture.path().join("source");
+        let mirror_root = fixture.path().join("mirror");
+        for root in [&source_root, &mirror_root] {
+            fs::create_dir_all(root).unwrap();
+            write(root, "untouched.md", "same");
+        }
+        write(&source_root, "notes/conflict.md", "source");
+        write(&source_root, "notes/source-only.md", "source child");
+        write(&mirror_root, "notes/conflict.md", "mirror");
+        write(&mirror_root, "notes/mirror-only.md", "mirror child");
+
+        apply_source_conflict_resolution(&mirror_root, &source_root, "notes").unwrap();
+
+        assert_eq!(
+            fs::read_to_string(mirror_root.join("notes/conflict.md")).unwrap(),
+            "source"
+        );
+        assert!(mirror_root.join("notes/source-only.md").is_file());
+        assert!(!mirror_root.join("notes/mirror-only.md").exists());
+        assert_eq!(
+            fs::read_to_string(mirror_root.join("untouched.md")).unwrap(),
+            "same"
         );
     }
 

@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { listen } from "@tauri-apps/api/event";
+import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
   ArrowPathIcon,
@@ -8,12 +9,13 @@ import {
   FolderOpenIcon,
   KeyIcon,
 } from "@heroicons/react/24/outline";
-import { useAppState } from "../../app/AppState";
+import { useAppDispatch, useAppState } from "../../app/AppState";
 import { useFileSystem } from "../../hooks";
 import { tauri } from "../../lib/tauri";
 
 export function VaultProviderBanner() {
   const state = useAppState();
+  const dispatch = useAppDispatch();
   const fs = useFileSystem();
   const status = state.vaultProviderStatus;
   const provider = status?.provider;
@@ -68,9 +70,15 @@ export function VaultProviderBanner() {
         <span className="block truncate text-xs opacity-75">{message}</span>
       </span>
       {hasConflicts && (
-        <span className="shrink-0 rounded-full bg-amber-100 px-2 py-1 text-[11px] font-semibold text-amber-800">
+        <button
+          type="button"
+          className="shrink-0 rounded-full bg-amber-100 px-2 py-1 text-[11px] font-semibold text-amber-800 transition hover:bg-amber-200"
+          title={t`Resolve external vault conflicts`}
+          aria-label={t`Resolve external vault conflicts`}
+          onClick={() => dispatch({ type: "SET_EXTERNAL_VAULT_CONFLICT_DIALOG", open: true })}
+        >
           {state.externalVaultConflicts.length} <Trans>conflicts</Trans>
-        </span>
+        </button>
       )}
       {needsAccess ? (
         <button

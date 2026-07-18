@@ -451,6 +451,22 @@ struct ExternalVaultWriteBackResult {
     conflicts: Vec<vault_reconcile::ReconcileConflict>,
 }
 
+#[derive(Debug, Clone, Copy, Deserialize)]
+#[serde(rename_all = "camelCase")]
+enum ExternalVaultConflictResolution {
+    UseSource,
+    UseJtype,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct ExternalVaultConflictResolutionResult {
+    provider: vault_provider::VaultProviderDescriptor,
+    workspace: WorkspaceSnapshot,
+    pending_write_back: bool,
+    conflicts: Vec<vault_reconcile::ReconcileConflict>,
+}
+
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct VaultProviderStatus {
@@ -656,11 +672,16 @@ fn reconcile_android_external_vault(
         .lock()
         .map_err(|_| "External vault operation lock is unavailable".to_string())?;
 
-    let descriptor = refresh_android_provider_access(
-        &app,
-        read_vault_provider_store(&app)?,
-        &provider_id,
-    )?;
+    reconcile_android_external_vault_locked(app.clone(), provider_id)
+}
+
+#[cfg(target_os = "android")]
+fn reconcile_android_external_vault_locked(
+    app: AppHandle,
+    provider_id: String,
+) -> Result<ExternalVaultReconcileResult, String> {
+    let descriptor =
+        refresh_android_provider_access(&app, read_vault_provider_store(&app)?, &provider_id)?;
     if descriptor.access_state != vault_provider::VaultProviderAccessState::Ready {
         return Err(match descriptor.access_state {
             vault_provider::VaultProviderAccessState::AuthorizationRequired => {
@@ -697,15 +718,9 @@ fn reconcile_android_external_vault(
     let source_manifest = vault_reconcile::build_manifest(&source_snapshot)?;
     let mirror_manifest = vault_reconcile::build_manifest(&mirror_root)?;
     let baseline = vault_reconcile::load_baseline(&mirror_root)?;
-    let baseline = vault_reconcile::trusted_baseline(
-        baseline.as_ref(),
-        provider.source_revision.as_deref(),
-    );
-    let plan = vault_reconcile::plan_reconcile(
-        baseline,
-        &source_manifest,
-        &mirror_manifest,
-    );
+    let baseline =
+        vault_reconcile::trusted_baseline(baseline.as_ref(), provider.source_revision.as_deref());
+    let plan = vault_reconcile::plan_reconcile(baseline, &source_manifest, &mirror_manifest);
     let status = plan.status(&source_manifest);
     let pending_local_changes = plan.pending_local_changes(&source_manifest);
 
@@ -909,11 +924,8 @@ fn write_back_android_external_vault_locked(
             operation.relative_path.clone(),
             kind,
         ) {
-            let access = refresh_android_provider_access(
-                app,
-                read_vault_provider_store(app)?,
-                provider_id,
-            );
+            let access =
+                refresh_android_provider_access(app, read_vault_provider_store(app)?, provider_id);
             if let Ok(descriptor) = &access {
                 let _ = app.emit("vault-provider-changed", descriptor.clone());
             }
@@ -962,6 +974,177 @@ fn write_back_android_external_vault_locked(
     })
 }
 
+#[cfg(target_os = "android")]
+#[tauri::command]
+fn resolve_android_external_vault_conflict(
+    app: AppHandle,
+    provider_id: String,
+    relative_path: String,
+    resolution: ExternalVaultConflictResolution,
+) -> Result<ExternalVaultConflictResolutionResult, String> {
+    let state = app.state::<AppState>();
+    let _reconcile_guard = state
+        .external_vault_reconcile
+        .lock()
+        .map_err(|_| "External vault operation lock is unavailable".to_string())?;
+
+    let descriptor =
+        refresh_android_provider_access(&app, read_vault_provider_store(&app)?, &provider_id)?;
+    if descriptor.access_state != vault_provider::VaultProviderAccessState::Ready {
+        return Err("External vault access is not ready for conflict resolution".to_string());
+    }
+    let store = read_vault_provider_store(&app)?;
+    let provider = store
+        .provider(&provider_id)
+        .cloned()
+        .ok_or_else(|| format!("Unknown vault provider: {provider_id}"))?;
+    if provider.source_kind != vault_provider::VaultProviderSourceKind::AndroidSafTree {
+        return Err("The vault provider can not resolve conflicts on Android".to_string());
+    }
+    if matches!(resolution, ExternalVaultConflictResolution::UseJtype) && provider.source_read_only
+    {
+        return Err("The external vault source is read-only".to_string());
+    }
+
+    let mirror_root = validated_android_mirror_root(&app, &provider)?;
+    vault_reconcile::recover_interrupted_reconcile(&mirror_root)?;
+    if vault_reconcile::recover_interrupted_local_mutation(&mirror_root)?
+        || vault_reconcile::load_write_back_journal(&mirror_root)?.is_some()
+    {
+        return Err(
+            "External vault has a pending mutation; finish write-back before resolving conflicts"
+                .to_string(),
+        );
+    }
+
+    let (source_snapshot, source_snapshot_cleanup) =
+        materialize_android_source_snapshot(&app, &provider, &mirror_root)?;
+    let source_manifest = vault_reconcile::build_manifest(&source_snapshot)?;
+    let mirror_manifest = vault_reconcile::build_manifest(&mirror_root)?;
+    let baseline = vault_reconcile::load_baseline(&mirror_root)?;
+    let baseline =
+        vault_reconcile::trusted_baseline(baseline.as_ref(), provider.source_revision.as_deref());
+    let reconcile_plan =
+        vault_reconcile::plan_reconcile(baseline, &source_manifest, &mirror_manifest);
+    let write_back_plan = vault_reconcile::plan_write_back(&source_manifest, &mirror_manifest);
+    let is_current_conflict = reconcile_plan
+        .conflicts
+        .iter()
+        .chain(write_back_plan.conflicts.iter())
+        .any(|conflict| conflict.relative_path == relative_path);
+    if !is_current_conflict {
+        return Err("The external vault conflict is stale; check for changes again".to_string());
+    }
+
+    match resolution {
+        ExternalVaultConflictResolution::UseSource => {
+            vault_reconcile::apply_source_conflict_resolution(
+                &mirror_root,
+                &source_snapshot,
+                &relative_path,
+            )?;
+        }
+        ExternalVaultConflictResolution::UseJtype => {
+            let source_kind = source_manifest
+                .entries
+                .get(&relative_path)
+                .map(|entry| entry.kind);
+            let mirror_kind = mirror_manifest
+                .entries
+                .get(&relative_path)
+                .map(|entry| entry.kind);
+            let resolution_result: Result<(), String> = (|| {
+                let mut deleted_source = false;
+                if source_kind
+                    .zip(mirror_kind)
+                    .is_some_and(|(source, mirror)| source != mirror)
+                {
+                    app.mobile_import()
+                        .apply_directory_change(
+                            provider.opaque_source_reference.clone(),
+                            path_to_string(&mirror_root),
+                            relative_path.clone(),
+                            tauri_plugin_mobile_import::DirectoryChangeKind::Delete,
+                        )
+                        .map_err(|error| error.to_string())?;
+                    deleted_source = true;
+                }
+                let kind = match mirror_kind {
+                    Some(vault_reconcile::ManifestEntryKind::Directory) => {
+                        tauri_plugin_mobile_import::DirectoryChangeKind::UpsertDirectory
+                    }
+                    Some(vault_reconcile::ManifestEntryKind::File) => {
+                        tauri_plugin_mobile_import::DirectoryChangeKind::UpsertFile
+                    }
+                    None => {
+                        if source_kind.is_some() && !deleted_source {
+                            app.mobile_import()
+                                .apply_directory_change(
+                                    provider.opaque_source_reference.clone(),
+                                    path_to_string(&mirror_root),
+                                    relative_path.clone(),
+                                    tauri_plugin_mobile_import::DirectoryChangeKind::Delete,
+                                )
+                                .map_err(|error| error.to_string())?;
+                        }
+                        return Ok(());
+                    }
+                };
+                app.mobile_import()
+                    .apply_directory_change(
+                        provider.opaque_source_reference.clone(),
+                        path_to_string(&mirror_root),
+                        relative_path.clone(),
+                        kind,
+                    )
+                    .map_err(|error| error.to_string())?;
+                Ok(())
+            })();
+            if let Err(error) = resolution_result {
+                let _ = refresh_android_provider_access(
+                    &app,
+                    read_vault_provider_store(&app)?,
+                    &provider_id,
+                );
+                return Err(format!(
+                    "Unable to resolve external vault conflict: {error}"
+                ));
+            }
+
+            drop(source_snapshot_cleanup);
+            let (verified_source, _verified_source_cleanup) =
+                materialize_android_source_snapshot(&app, &provider, &mirror_root)?;
+            let verified_source_manifest = vault_reconcile::build_manifest(&verified_source)?;
+            let verified_mirror_manifest = vault_reconcile::build_manifest(&mirror_root)?;
+            if verified_source_manifest.entries.get(&relative_path)
+                != verified_mirror_manifest.entries.get(&relative_path)
+            {
+                return Err(
+                    "External vault conflict resolution failed its path verification".to_string(),
+                );
+            }
+        }
+    }
+
+    if provider.source_read_only {
+        let result = reconcile_android_external_vault_locked(app.clone(), provider_id.clone())?;
+        return Ok(ExternalVaultConflictResolutionResult {
+            provider: result.provider,
+            workspace: result.workspace,
+            pending_write_back: false,
+            conflicts: result.conflicts,
+        });
+    }
+
+    let result = write_back_android_external_vault_locked(&app, &provider_id, false)?;
+    Ok(ExternalVaultConflictResolutionResult {
+        provider: result.provider,
+        workspace: result.workspace,
+        pending_write_back: result.pending_journal,
+        conflicts: result.conflicts,
+    })
+}
+
 #[cfg(not(target_os = "android"))]
 #[tauri::command]
 fn initialize_android_external_vault(
@@ -995,6 +1178,17 @@ fn write_back_android_external_vault(
     _provider_id: String,
 ) -> Result<ExternalVaultWriteBackResult, String> {
     Err("Android external vault write-back is only available on Android".to_string())
+}
+
+#[cfg(not(target_os = "android"))]
+#[tauri::command]
+fn resolve_android_external_vault_conflict(
+    _app: AppHandle,
+    _provider_id: String,
+    _relative_path: String,
+    _resolution: ExternalVaultConflictResolution,
+) -> Result<ExternalVaultConflictResolutionResult, String> {
+    Err("Android external vault conflict resolution is only available on Android".to_string())
 }
 
 #[tauri::command]
@@ -1928,10 +2122,9 @@ fn read_binding_store(app: &AppHandle) -> Result<VaultBindingStore, String> {
         let current_default = default_vault_dir(app)?;
         let mut changed = false;
         for binding in &mut store.bindings {
-            if let Some(rebased) = rebase_mobile_default_vault_path(
-                &binding.local_vault_path,
-                &current_default,
-            ) {
+            if let Some(rebased) =
+                rebase_mobile_default_vault_path(&binding.local_vault_path, &current_default)
+            {
                 binding.local_vault_path = rebased;
                 changed = true;
             }
@@ -1952,8 +2145,12 @@ fn rebase_mobile_default_vault_path(stored: &str, current_default: &Path) -> Opt
         return None;
     }
     let mut components = stored_path.components().rev();
-    let is_private_default = components.next().is_some_and(|part| part.as_os_str() == "default")
-        && components.next().is_some_and(|part| part.as_os_str() == "vaults");
+    let is_private_default = components
+        .next()
+        .is_some_and(|part| part.as_os_str() == "default")
+        && components
+            .next()
+            .is_some_and(|part| part.as_os_str() == "vaults");
     is_private_default.then(|| path_to_string(current_default))
 }
 
@@ -2158,9 +2355,7 @@ fn load_vault_settings(
         if !entries.contains_key(&current_path) {
             let stale_path = entries
                 .keys()
-                .find(|path| {
-                    rebase_mobile_default_vault_path(path, &current_default).is_some()
-                })
+                .find(|path| rebase_mobile_default_vault_path(path, &current_default).is_some())
                 .cloned();
             if let Some(stale_path) = stale_path {
                 if let Some(settings) = entries.remove(&stale_path) {
@@ -2284,6 +2479,7 @@ pub fn run() {
             reauthorize_android_external_vault,
             reconcile_android_external_vault,
             write_back_android_external_vault,
+            resolve_android_external_vault_conflict,
             configure_android_external_vault_debug_fault,
             exercise_android_external_vault_debug_local_failure,
             open_default_vault,
@@ -2453,9 +2649,8 @@ mod tests {
     #[test]
     fn stale_mobile_default_vault_path_rebases_to_current_container() {
         let stale = "/old/container/Library/Application Support/net.jcode.jtype/vaults/default";
-        let current = Path::new(
-            "/new/container/Library/Application Support/net.jcode.jtype/vaults/default",
-        );
+        let current =
+            Path::new("/new/container/Library/Application Support/net.jcode.jtype/vaults/default");
 
         assert_eq!(
             rebase_mobile_default_vault_path(stale, current),

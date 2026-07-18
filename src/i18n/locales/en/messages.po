@@ -81,6 +81,12 @@ msgid "A browser opened to the authorization page. Enter the code below to "
 msgstr "A browser opened to the authorization page. Enter the code below to "
 "finish signing in."
 
+#: src/components/modals/ExternalVaultConflictDialog.tsx
+msgid "A device folder was removed while JType still has changed items inside "
+"it."
+msgstr "A device folder was removed while JType still has changed items inside "
+"it."
+
 #: src/components/modals/NewResourceDialog.tsx
 msgid "A hand-drawn style whiteboard canvas"
 msgstr "A hand-drawn style whiteboard canvas"
@@ -213,6 +219,10 @@ msgstr "Bold"
 msgid "Bold - Ctrl+B"
 msgstr "Bold - Ctrl+B"
 
+#: src/components/modals/ExternalVaultConflictDialog.tsx
+msgid "Both the device folder and JType changed this path."
+msgstr "Both the device folder and JType changed this path."
+
 #: src/components/modals/AccountDialog.tsx
 msgid "Bound"
 msgstr "Bound"
@@ -307,6 +317,12 @@ msgstr "Choose a note or create a new one. This vault lives at <0>{0}</0>."
 msgid "Choose what you want to create."
 msgstr "Choose what you want to create."
 
+#: src/components/modals/ExternalVaultConflictDialog.tsx
+msgid "Choose which version to keep for each path. JType will never overwrite "
+"both versions silently."
+msgstr "Choose which version to keep for each path. JType will never overwrite "
+"both versions silently."
+
 #: src/components/BoardView.tsx
 #~ msgid "Clear filter"
 #~ msgstr "Clear filter"
@@ -321,6 +337,7 @@ msgstr "Click to copy"
 
 #: src/components/modals/AccountDialog.tsx
 #: src/components/modals/ConflictDialog.tsx
+#: src/components/modals/ExternalVaultConflictDialog.tsx
 #: src/components/sidebar/MobileSidebarDialog.tsx
 msgid "Close"
 msgstr "Close"
@@ -731,6 +748,10 @@ msgstr "Exporting PDF..."
 msgid "External changes need your choice before syncing can continue."
 msgstr "External changes need your choice before syncing can continue."
 
+#: src/components/modals/ExternalVaultConflictDialog.tsx
+msgid "External vault conflicts"
+msgstr "External vault conflicts"
+
 #: src/components/sidebar/Sidebar.tsx
 msgid "Favorite"
 msgstr "Favorite"
@@ -880,6 +901,14 @@ msgstr "Italic - Ctrl+I"
 #: src/components/modals/NewResourceDialog.tsx
 msgid "Kanban board"
 msgstr "Kanban board"
+
+#: src/components/modals/ExternalVaultConflictDialog.tsx
+msgid "Keep device folder version"
+msgstr "Keep device folder version"
+
+#: src/components/modals/ExternalVaultConflictDialog.tsx
+msgid "Keep JType version"
+msgstr "Keep JType version"
 
 #: src/components/layout/Header.tsx
 msgid "Language"
@@ -1119,6 +1148,10 @@ msgstr "Not installed"
 #: src/components/editor/SlashMenu.tsx
 msgid "Numbered list"
 msgstr "Numbered list"
+
+#: src/components/modals/ExternalVaultConflictDialog.tsx
+msgid "One version is a file and the other is a folder."
+msgstr "One version is a file and the other is a folder."
 
 #: src/components/editor/EditorShell.tsx
 msgid "Only web, email, and phone links can be opened from preview."
@@ -1384,6 +1417,14 @@ msgstr "Republish"
 msgid "Reset zoom"
 msgstr "Reset zoom"
 
+#: src/components/layout/VaultProviderBanner.tsx
+msgid "Resolve external vault conflicts"
+msgstr "Resolve external vault conflicts"
+
+#: src/components/modals/ExternalVaultConflictDialog.tsx
+msgid "Resolving…"
+msgstr "Resolving…"
+
 #: src/components/modals/AccountDialog.tsx
 msgid "Restart your terminal to pick up the updated PATH."
 msgstr "Restart your terminal to pick up the updated PATH."
@@ -1573,9 +1614,25 @@ msgstr "Template name"
 #~ msgid "Templates"
 #~ msgstr "Templates"
 
+#: src/components/modals/ExternalVaultConflictDialog.tsx
+msgid "The device folder and JType mirror do not share a trusted baseline."
+msgstr "The device folder and JType mirror do not share a trusted baseline."
+
+#: src/components/modals/ExternalVaultConflictDialog.tsx
+msgid "The path changed in the device folder but was deleted in JType."
+msgstr "The path changed in the device folder but was deleted in JType."
+
+#: src/components/modals/ExternalVaultConflictDialog.tsx
+msgid "The path was deleted from the device folder but changed in JType."
+msgstr "The path was deleted from the device folder but changed in JType."
+
 #: src/components/editor/EditorShell.tsx
 msgid "The public snapshot is behind the current document."
 msgstr "The public snapshot is behind the current document."
+
+#: src/components/modals/ExternalVaultConflictDialog.tsx
+msgid "The selected device folder is read-only"
+msgstr "The selected device folder is read-only"
 
 #: src/components/layout/VaultProviderBanner.tsx
 msgid "The selected folder is unavailable. Choose it again to continue."

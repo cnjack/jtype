@@ -81,6 +81,11 @@ msgid "A browser opened to the authorization page. Enter the code below to "
 "finish signing in."
 msgstr ""
 
+#: src/components/modals/ExternalVaultConflictDialog.tsx
+msgid "A device folder was removed while JType still has changed items inside "
+"it."
+msgstr "デバイスフォルダーが削除されましたが、JType 内には変更された項目が残っています。"
+
 #: src/components/modals/NewResourceDialog.tsx
 msgid "A hand-drawn style whiteboard canvas"
 msgstr "手描き風のホワイトボードキャンバス"
@@ -204,6 +209,10 @@ msgstr "太字"
 msgid "Bold - Ctrl+B"
 msgstr "太字 - Ctrl+B"
 
+#: src/components/modals/ExternalVaultConflictDialog.tsx
+msgid "Both the device folder and JType changed this path."
+msgstr "デバイスフォルダーと JType の両方がこのパスを変更しました。"
+
 #: src/components/modals/AccountDialog.tsx
 msgid "Bound"
 msgstr "バインド済み"
@@ -291,6 +300,11 @@ msgstr "ノートを選択するか、新規作成してください。このボ
 msgid "Choose what you want to create."
 msgstr "作成するものを選んでください。"
 
+#: src/components/modals/ExternalVaultConflictDialog.tsx
+msgid "Choose which version to keep for each path. JType will never overwrite "
+"both versions silently."
+msgstr "各パスで保持するバージョンを選択してください。JType が両方のバージョンを確認なしに上書きすることはありません。"
+
 #~ msgid "Clear filter"
 #~ msgstr ""
 
@@ -304,6 +318,7 @@ msgstr ""
 
 #: src/components/modals/AccountDialog.tsx
 #: src/components/modals/ConflictDialog.tsx
+#: src/components/modals/ExternalVaultConflictDialog.tsx
 #: src/components/sidebar/MobileSidebarDialog.tsx
 msgid "Close"
 msgstr "閉じる"
@@ -698,6 +713,10 @@ msgstr "PDF をエクスポート中..."
 msgid "External changes need your choice before syncing can continue."
 msgstr "外部の変更を処理する方法を選択してから、同期を続行してください。"
 
+#: src/components/modals/ExternalVaultConflictDialog.tsx
+msgid "External vault conflicts"
+msgstr "外部 vault の競合"
+
 #: src/components/sidebar/Sidebar.tsx
 msgid "Favorite"
 msgstr "お気に入り"
@@ -841,6 +860,14 @@ msgstr "斜体 - Ctrl+I"
 #: src/components/modals/NewResourceDialog.tsx
 msgid "Kanban board"
 msgstr "カンバンボード"
+
+#: src/components/modals/ExternalVaultConflictDialog.tsx
+msgid "Keep device folder version"
+msgstr "デバイスフォルダーのバージョンを保持"
+
+#: src/components/modals/ExternalVaultConflictDialog.tsx
+msgid "Keep JType version"
+msgstr "JType のバージョンを保持"
 
 #: src/components/layout/Header.tsx
 msgid "Language"
@@ -1071,6 +1098,10 @@ msgstr "未インストール"
 #: src/components/editor/SlashMenu.tsx
 msgid "Numbered list"
 msgstr ""
+
+#: src/components/modals/ExternalVaultConflictDialog.tsx
+msgid "One version is a file and the other is a folder."
+msgstr "一方のバージョンはファイルで、もう一方はフォルダーです。"
 
 #: src/components/editor/EditorShell.tsx
 msgid "Only web, email, and phone links can be opened from preview."
@@ -1327,6 +1358,14 @@ msgstr "再公開"
 msgid "Reset zoom"
 msgstr "ズームをリセット"
 
+#: src/components/layout/VaultProviderBanner.tsx
+msgid "Resolve external vault conflicts"
+msgstr "外部 vault の競合を解決"
+
+#: src/components/modals/ExternalVaultConflictDialog.tsx
+msgid "Resolving…"
+msgstr "解決中…"
+
 #: src/components/modals/AccountDialog.tsx
 msgid "Restart your terminal to pick up the updated PATH."
 msgstr "更新された PATH を反映するにはターミナルを再起動してください。"
@@ -1502,9 +1541,25 @@ msgstr "テンプレート名"
 #~ msgid "Templates"
 #~ msgstr ""
 
+#: src/components/modals/ExternalVaultConflictDialog.tsx
+msgid "The device folder and JType mirror do not share a trusted baseline."
+msgstr "デバイスフォルダーと JType ミラーに共通の信頼できる基準状態がありません。"
+
+#: src/components/modals/ExternalVaultConflictDialog.tsx
+msgid "The path changed in the device folder but was deleted in JType."
+msgstr "このパスはデバイスフォルダーで変更されましたが、JType では削除されています。"
+
+#: src/components/modals/ExternalVaultConflictDialog.tsx
+msgid "The path was deleted from the device folder but changed in JType."
+msgstr "このパスはデバイスフォルダーから削除されましたが、JType では変更されています。"
+
 #: src/components/editor/EditorShell.tsx
 msgid "The public snapshot is behind the current document."
 msgstr "公開スナップショットが現在のドキュメントより古くなっています。"
+
+#: src/components/modals/ExternalVaultConflictDialog.tsx
+msgid "The selected device folder is read-only"
+msgstr "選択したデバイスフォルダーは読み取り専用です"
 
 #: src/components/layout/VaultProviderBanner.tsx
 msgid "The selected folder is unavailable. Choose it again to continue."

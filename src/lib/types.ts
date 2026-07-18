@@ -152,6 +152,15 @@ export type ExternalVaultReconcileConflict = {
   reason: ExternalVaultReconcileConflictReason;
 };
 
+export type ExternalVaultConflictResolution = "useSource" | "useJtype";
+
+export type ExternalVaultConflictResolutionResult = {
+  provider: VaultProviderDescriptor;
+  workspace: WorkspaceSnapshot;
+  pendingWriteBack: boolean;
+  conflicts: ExternalVaultReconcileConflict[];
+};
+
 export type ExternalVaultReconcileResult = {
   provider: VaultProviderDescriptor;
   workspace: WorkspaceSnapshot;

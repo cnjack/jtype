@@ -61,8 +61,7 @@ pub async fn start_ws_listener(
                 let mut outbox_rx = outbox.subscribe();
                 // Single interval lives here — no separate spawn, so aborting the
                 // outer start_ws_listener task also cancels writes and reads together.
-                let mut ping_interval =
-                    tokio::time::interval(std::time::Duration::from_secs(30));
+                let mut ping_interval = tokio::time::interval(std::time::Duration::from_secs(30));
 
                 loop {
                     tokio::select! {

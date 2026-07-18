@@ -160,7 +160,11 @@ async fn download(url: &str) -> Result<Vec<u8>, String> {
         .user_agent("jtype-desktop")
         .build()
         .map_err(|e| e.to_string())?;
-    let resp = client.get(url).send().await.map_err(|e| format!("download: {e}"))?;
+    let resp = client
+        .get(url)
+        .send()
+        .await
+        .map_err(|e| format!("download: {e}"))?;
     if !resp.status().is_success() {
         return Err(format!("download failed: {}", resp.status()));
     }
@@ -186,7 +190,11 @@ fn add_to_path(dir: &Path) -> Result<(), String> {
         if !create {
             continue;
         }
-        if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(&p) {
+        if let Ok(mut f) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(&p)
+        {
             let _ = f.write_all(block.as_bytes());
         }
     }
