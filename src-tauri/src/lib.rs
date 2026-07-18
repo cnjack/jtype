@@ -102,6 +102,14 @@ fn runtime_capabilities() -> RuntimeCapabilities {
     }
 }
 
+/// Simulator notification previews are intentionally unavailable in release
+/// builds. Product notification delivery will enter through APNs/FCM, while
+/// this gate gives Android/iOS simulator tests the same native tap payload.
+#[tauri::command]
+fn mobile_notification_debug_enabled() -> bool {
+    cfg!(all(mobile, debug_assertions))
+}
+
 #[tauri::command]
 fn perform_haptic(app: AppHandle, style: String) -> Result<bool, String> {
     #[cfg(mobile)]
@@ -2930,6 +2938,7 @@ pub fn run() {
     {
         builder = builder
             .plugin(tauri_plugin_deep_link::init())
+            .plugin(tauri_plugin_notification::init())
             .plugin(tauri_plugin_mobile_import::init())
             .plugin(tauri_plugin_mobile_interaction::init())
             .plugin(tauri_plugin_mobile_share::init())
@@ -2947,6 +2956,7 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             runtime_capabilities,
+            mobile_notification_debug_enabled,
             perform_haptic,
             initial_open_paths,
             initial_external_file_sources,

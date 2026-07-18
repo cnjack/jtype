@@ -546,7 +546,22 @@ test.beforeEach(async ({ page }) => {
             pluginSubscriptions.delete(Number(args.channelId));
             return null;
           }
+          if (cmd === "plugin:notification|register_listener" || cmd === "plugin:notification|registerListener") {
+            const handler = args.handler as { id: number };
+            pluginSubscriptions.set(handler.id, {
+              plugin: "notification",
+              event: String(args.event),
+              handler: handler.id,
+              nextIndex: 0,
+            });
+            return null;
+          }
+          if (cmd === "plugin:notification|remove_listener") {
+            pluginSubscriptions.delete(Number(args.channelId));
+            return null;
+          }
           if (cmd === "plugin:deep-link|get_current") return window.__INITIAL_DEEP_LINKS__ ?? null;
+          if (cmd === "mobile_notification_debug_enabled") return false;
           if (cmd === "plugin:updater|check") return null;
           if (cmd === "plugin:dialog|open") {
             const options = args.options as { directory?: boolean };
@@ -1884,6 +1899,85 @@ test("returns mobile browser authorization through the registered deep link", as
   });
   expect(callbackListeners).toBeGreaterThan(0);
   await expect(page.locator("#operation-log")).toContainText("Connected as jack", { timeout: 5000 });
+});
+
+test("opens the bound vault and shared document from a cold mobile deep link", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__RUNTIME_CAPABILITIES__ = {
+      platform: "android",
+      clientType: "mobile",
+      isMobile: true,
+      isTouchPrimary: true,
+      prefersCompactLayout: true,
+      supportsWindowDrag: false,
+      supportsUpdater: false,
+      supportsProcessRestart: false,
+      supportsCliInstall: false,
+      supportsFileDrop: false,
+      supportsExternalVault: false,
+      usesAppPrivateVault: true,
+    };
+    window.__VAULT_BINDINGS__ = [{
+      workspaceId: "workspace-e2e",
+      workspaceName: "Team notes",
+      workspaceSlug: "team-notes",
+      workspaceRole: "editor",
+      localVaultPath: "C:/workspace",
+      lastPulledClock: 0,
+    }];
+    window.__INITIAL_DEEP_LINKS__ = [
+      "jtype://open/document?workspaceId=workspace-e2e&path=guides%2Fsetup.md",
+    ];
+  });
+  await page.reload();
+
+  await expect(page.getByLabel("Markdown editor")).toHaveValue("# Setup\n\nInstall and run.");
+  await expect(page.locator("#operation-log")).toContainText("Opened guides/setup.md.");
+});
+
+test("routes a native notification tap through the shared desktop document operations", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__RUNTIME_CAPABILITIES__ = {
+      platform: "ios",
+      clientType: "mobile",
+      isMobile: true,
+      isTouchPrimary: true,
+      prefersCompactLayout: true,
+      supportsWindowDrag: false,
+      supportsUpdater: false,
+      supportsProcessRestart: false,
+      supportsCliInstall: false,
+      supportsFileDrop: false,
+      supportsExternalVault: true,
+      usesAppPrivateVault: true,
+    };
+    window.__VAULT_BINDINGS__ = [{
+      workspaceId: "workspace-e2e",
+      workspaceName: "Team notes",
+      workspaceSlug: "team-notes",
+      workspaceRole: "editor",
+      localVaultPath: "C:/workspace",
+      lastPulledClock: 0,
+    }];
+  });
+  await page.reload();
+  await expect(page.locator("#welcome-screen")).toBeVisible();
+  await page.evaluate(() => window.localStorage.setItem(
+    "mobile.notification.latestRoute",
+    "jtype://open/document?workspaceId=workspace-e2e&path=intro.md",
+  ));
+
+  await expect.poll(() => page.evaluate(() => window.__EMIT_TAURI_PLUGIN_EVENT__(
+      "notification",
+      "actionPerformed",
+      {
+        actionId: "tap",
+        notification: null,
+      },
+    )),
+  ).toBeGreaterThan(0);
+  await expect(page.getByLabel("Markdown editor")).toHaveValue("# Intro\n\nHello from workspace.");
+  expect(await page.evaluate(() => window.localStorage.getItem("mobile.notification.latestRoute"))).toBeNull();
 });
 
 test("restores encrypted mobile browser authorization after a cold reload", async ({ page }) => {

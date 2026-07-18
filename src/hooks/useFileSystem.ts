@@ -287,8 +287,10 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
       dispatch({ type: "OPEN_WORKSPACE", workspace, providerStatus });
       dispatch({ type: "SET_STATUS", message: workspace.metadataCreated ? "Vault opened and .jtype metadata created." : "Vault opened." });
       addRecent({ kind: "workspace", name: workspace.name, path: workspace.rootPath });
+      return workspace;
     } catch (error) {
       dispatch({ type: "SET_STATUS", message: String(error) });
+      return null;
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }

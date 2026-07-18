@@ -50,6 +50,7 @@ tauri-plugin-mobile-share = { path = "../plugins/mobile-share" }
 tauri-plugin-mobile-interaction = { path = "../plugins/mobile-interaction" }
 tauri-plugin-secure-storage = { path = "../plugins/secure-storage" }
 tauri-plugin-deep-link = "2"
+tauri-plugin-notification = "2"
 
 [target.'cfg(windows)'.dependencies]
 winreg = "0.52"

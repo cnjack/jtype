@@ -1,6 +1,6 @@
 import React, { useReducer, useCallback, useEffect, useRef, useState, createContext, useContext } from "react";
 import { appReducer, initialState, AppStateContext, AppDispatchContext } from "./AppState";
-import { useFileSystem, useCloudSync, useKeyboardShortcuts, useCommands, useDraftCloseGuard, useMobileDraftRecovery, useMobileOAuthDeepLink, useMobileSyncRecovery } from "../hooks";
+import { useFileSystem, useCloudSync, useKeyboardShortcuts, useCommands, useDraftCloseGuard, useMobileDocumentNavigation, useMobileDraftRecovery, useMobileOAuthDeepLink, useMobileSyncRecovery } from "../hooks";
 import type { MobileSyncRecoveryReason } from "../hooks";
 import { usePeriodicSync } from "../hooks/usePeriodicSync";
 import { useCloudEvents } from "../hooks/useCloudEvents";
@@ -103,6 +103,13 @@ function AppContent() {
     }
   }, [state.workspace, state.syncToken, state.vaultBindings, state.vaultSettings, state.currentRelativePath, state.currentPath, state.currentKind, state.isDirty, sync, dispatch]);
   const fs = useFileSystem(autoSync);
+  useMobileDocumentNavigation({
+    ready: mobileDraftRecoveryReady,
+    openWorkspace: fs.openWorkspace,
+    openMarkdownFile: fs.openMarkdownFile,
+    openDiagramFile: fs.openDiagramFile,
+    pullOnly: sync.pullOnly,
+  });
   useMobileDraftRecovery({
     enabled: capabilities.isMobile,
     ready: mobileDraftRecoveryReady,
@@ -505,8 +512,12 @@ function AppContent() {
     if (isTauriRuntime()) {
       (async () => {
         const { tauri } = await import("../lib/tauri");
-        sync.loadCloudProfile();
-        sync.loadVaultBindings();
+        if (capabilities.isMobile) {
+          await Promise.all([sync.loadCloudProfile(), sync.loadVaultBindings()]);
+        } else {
+          void sync.loadCloudProfile();
+          void sync.loadVaultBindings();
+        }
         if (capabilities.supportsFileDrop) fs.registerDragDrop();
 
         let lastWorkspacePath = state.lastWorkspacePath;
