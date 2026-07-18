@@ -11,6 +11,7 @@ import {
   type MobileDocumentRoute,
 } from "../lib/mobileNavigation";
 import {
+  mobileCollaborationPreviewDelayMs,
   consumeLatestMobileCollaborationRoute,
   showMobileCollaborationNotification,
 } from "../lib/mobileNotifications";
@@ -74,11 +75,9 @@ export function useMobileDocumentNavigation({
         if (!debugEnabled || disposed) continue;
         const shown = await showMobileCollaborationNotification(capabilities.platform, {
           ...preview,
-          // The notification plugin's iOS `Schedule.at` implementation parses
-          // the ISO `Z` suffix as a local-time literal. In positive UTC offsets
-          // a short delay is rejected as a past date, so iOS uses its native
-          // foreground presentation while Android keeps the background delay.
-          delayMs: capabilities.platform === "android" ? 2_500 : undefined,
+          // Keep preview delivery off the first WebView paint on both mobile
+          // platforms. The notification adapter owns iOS scheduler correction.
+          delayMs: mobileCollaborationPreviewDelayMs(capabilities.platform),
         }).catch(() => false);
         if (!shown && !disposed) {
           dispatch({ type: "SET_STATUS", message: "Notification permission is required for this simulator check." });
