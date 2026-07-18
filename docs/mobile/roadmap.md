@@ -190,12 +190,12 @@
 - [ ] long-press context actions、swipe、selection 和 haptic feedback
 - [ ] undo/redo、keyboard accessory、硬件键盘 shortcuts 与 desktop command system 对齐
 - [ ] accessibility labels、VoiceOver/TalkBack、动态字体与对比度检查
-- [ ] 低内存、进后台、被系统终止后的草稿恢复
-- [ ] device OAuth pending state 的安全持久化与进程终止/冷回跳恢复
+- [x] 单一 untitled draft 已使用 app-private 原子 snapshot 完成后台补写、进程终止冷恢复、删空/保存/放弃清理；Android/iOS 均通过连续 cold-launch gate（证据：`docs/mobile/reports/phase-2-mobile-recovery.md`，实现：`49dea60`）
+- [x] device OAuth pending state 已使用 Android Keystore / iOS Keychain 安全持久化，并完成单一 poll owner、10 分钟 expiry、网络重试、进程终止/冷回跳恢复和取消清理（证据：`docs/mobile/reports/phase-2-mobile-recovery.md`，实现：`49dea60`）
 
 ### 2.3 系统入口与后台能力
 
-- [~] 固定自有 OAuth deep link 已接入；universal/app links、冷启动恢复和文档定位待完成
+- [~] 固定自有 OAuth deep link 与 pending OAuth 冷启动恢复已接入；universal/app links 和文档定位待完成
 - [ ] Android share target / iOS share extension 将 Markdown、文本或文件导入 vault
 - [ ] APNs/FCM 通知用于协作变化提示；后台只做系统允许的有限刷新
 - [ ] 通知/深链进入后定位到正确 cloud workspace、vault 和文档
@@ -213,7 +213,7 @@
 - [~] Android 外部 app 修改文件后的真实 reconcile/conflict 已通过；iOS 复用同一 Rust plan 与共享 dialog，并有 contract/E2E 覆盖，真实 Files provider 双边冲突留到 physical iPhone gate
 - [ ] share/deep-link/notification smoke flow 通过
 - [ ] 大 vault 基准达到报告中预先记录的阈值
-- [ ] desktop build、Rust tests、app E2E 全部通过
+- [x] 当前 2D recovery 增量的 desktop build、Rust 28/28、unit 47/47、app E2E 46/46 全部通过；后续 Phase 2 增量继续重复完整 gate
 - [ ] 双平台模拟器与至少一台真实设备截图/录像证据已保存
 - [~] `docs/mobile/reports/phase-2.md` 已记录 2A、2B 与 2C Simulator 结果，iOS 细节见 `docs/mobile/reports/phase-2-ios-external-vault.md`；后续持续更新到 Phase 2 终验
 - [~] tracking 已记录当前 Phase 2 commit hashes；后续增量继续追加
@@ -279,6 +279,7 @@
 | 2026-07-18 | 2.1 / 2B | `15df904` | 共享 Headless UI 逐路径冲突选择，真实 API 36 双向收敛、精确验证与 baseline 推进 | `docs/mobile/reports/phase-2.md` |
 | 2026-07-18 | 2.1 / 2B | `f0e3443` | 共享 provider banner 的 SAF 批量 applying/verifying 进度，120 文件真实 create/delete 与后台 worker IPC 兼容 | `docs/mobile/reports/phase-2.md` |
 | 2026-07-18 | 2.1 / 2C | `2e52c8b` | iOS security-scoped folder provider、mobile external command 泛化、container path rebase、shared editor iOS focus 修复与 picker smoke | `docs/mobile/reports/phase-2-ios-external-vault.md` |
+| 2026-07-18 | 2.2 / 2D | `49dea60` | app-private untitled draft 原子冷恢复、Keystore/Keychain pending OAuth、单一 poll owner与双平台 process-kill gate | `docs/mobile/reports/phase-2-mobile-recovery.md` |
 | 2026-07-18 | 2.2 / shell | `232222c` | 约束共享 Welcome 内容在窄屏和本地化文案下的宽度 | `docs/mobile/reports/phase-2.md` |
 | 2026-07-18 | 2.2 / shell | `309aebb` | 将共享 App shell Grid 列固定为 `minmax(0, 1fr)`，增加完整中文 locale overflow 回归 | `docs/mobile/reports/phase-2.md` |
 

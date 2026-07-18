@@ -4,9 +4,9 @@
 
 Feature branch：`codex/mobile-app`
 
-当前 app code commit：`2e52c8b`
+当前 app code commit：`49dea60`
 
-本报告状态：进行中；2A provider contract、2B Android SAF 与 2C iOS security-scoped provider 的工程/Simulator gate 已完成。iOS 已通过系统目录选择、native-only bookmark、首次镜像、覆盖安装后的容器迁移、冷启动恢复和 shared editor write-back；physical iPhone 的 bookmark 失效/重新授权仍保留在最终真实设备 gate。下一段进入 2D 系统集成与可靠性。
+本报告状态：进行中；2A provider contract、2B Android SAF 与 2C iOS security-scoped provider 的工程/Simulator gate 已完成。2D 已完成 app-private 草稿冷恢复与 Keystore/Keychain pending OAuth 冷恢复；系统分享入口、无障碍、大 vault/弱网和 physical-device gate 继续进行。iOS external provider 已通过系统目录选择、native-only bookmark、首次镜像、覆盖安装后的容器迁移、冷启动恢复和 shared editor write-back；physical iPhone 的 bookmark 失效/重新授权仍保留在最终真实设备 gate。
 
 ## 本增量结论
 
@@ -484,6 +484,13 @@ E2E 现在以完整中文 locale 在 390×844 viewport 验证：content panel �
 - `15df904`：在共享 Headless UI dialog 中逐路径选择设备目录或 JType 版本，并以 provider adapter 完成验证、收敛与 baseline 推进。
 - `f0e3443`：在共享 provider banner 中显示 SAF 批量 write-back/verification 进度，并将大批量共享 mutation 移到 blocking worker，保持 desktop IPC contract 不变。
 - `2e52c8b`：iOS security-scoped folder provider、mobile external command 泛化、container path rebase、shared editor iOS focus 修复与 native picker smoke flow。
+- `49dea60`：单一 untitled draft 的 app-private 原子 snapshot、双平台 cold recovery，以及 Keystore/Keychain pending OAuth、单一 poll owner、expiry/retry/cancel 清理。
+
+## 2D 草稿与 pending OAuth 冷恢复
+
+移动端仍使用 desktop/shared `NEW_DRAFT`、`EditorShell`、Account Dialog、device OAuth 和 cloud profile。兼容层只补充 app lifecycle 与原生持久化：一份 dirty untitled draft 写入 app-private 原子 snapshot；device OAuth pending record 在打开浏览器前写入 Android Keystore 或 iOS Keychain。显式系统打开/分享目标优先于 draft，draft 又优先于 last-opened document。
+
+Android API 36 与 signed iPhone 17 Pro Simulator / iOS 26.5 均完成连续 process-kill gate：draft 在 cold launch 后恢复并在 Discard 后永久清理；OAuth 在两次 cold launch 后仍恢复 waiting，Cancel 后再冷启动回到 Connect in browser。完整安全边界、自动化和截图见 [`phase-2-mobile-recovery.md`](phase-2-mobile-recovery.md)。
 
 ## 自动化与构建结果
 
@@ -546,13 +553,12 @@ efaf0b4b082cda9833811b3cdc5071b2f96ae26487a72f406be74207e947e4de  android-saf-ba
 c213478f4fe7e1bde3d85447c08b9793b4559dc36de2cd40b80c065572bf876f  ios-security-scoped-shared-editor.png
 ```
 
-## 下一增量：2D 系统集成与可靠性
+## 下一增量：2D 系统入口、无障碍与可靠性
 
-2A、2B 与 2C 的工程/Simulator gate 已收口。下一段继续保持 desktop/shared product surface，处理：
+2A、2B、2C 与 2D recovery 的工程/Simulator gate 已收口。下一段继续保持 desktop/shared product surface，处理：
 
 1. Android share target 与 iOS share extension，把 Markdown、纯文本和文件导入用户选择的 vault。
-2. pending OAuth 的安全持久化、进程终止与冷回跳恢复。
-3. VoiceOver/TalkBack、动态字体、对比度、键盘 accessory 与硬件快捷键。
-4. 草稿冷恢复、低内存/后台终止、大 vault、弱网与最终真实设备 gate。
+2. VoiceOver/TalkBack、动态字体、对比度、键盘 accessory 与硬件快捷键。
+3. 低内存、大 vault、弱网与最终真实设备 gate。
 
 physical iPhone 上的 bookmark 失效/重新授权、iCloud/第三方 Files provider 行为与 signed build 继续作为 Phase 2 最终验收项，不用 Simulator 结果替代。
