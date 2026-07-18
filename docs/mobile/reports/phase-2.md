@@ -4,9 +4,9 @@
 
 Feature branch：`codex/mobile-app`
 
-当前 app code commit：`15df904`
+当前 app code commit：`f0e3443`
 
-本报告状态：进行中；2A provider contract 已完成。2B 已完成 Android SAF 系统目录选择、persistable permission、native-only provider record、首次原子镜像、permission health、目录失效检测、重新授权、内容哈希 baseline、安全 pull reconcile、冲突阻断、冷启动恢复、带 mutation journal 的受控 write-back、shared workbench mutation routing、native operation 中途磁盘不足/权限撤销后的 journal 恢复、local mutation closure 的 rollback/cold recovery、write capability、正式共享产品 UI，以及逐路径冲突选择。2B 仅剩大批量操作可见进度；2C iOS security-scoped folder provider 尚未开始。
+本报告状态：进行中；2A provider contract 与 2B Android SAF 已完成。Android 已通过系统目录选择、persistable permission、native-only provider record、首次原子镜像、permission health、目录失效检测、重新授权、内容哈希 baseline、安全 pull reconcile、冲突阻断、冷启动恢复、带 mutation journal 的受控 write-back、shared workbench mutation routing、native operation 中途磁盘不足/权限撤销后的 journal 恢复、local mutation closure 的 rollback/cold recovery、write capability、正式共享产品 UI、逐路径冲突选择，以及大批量操作可见进度。下一段进入 2C iOS security-scoped folder provider。
 
 ## 本增量结论
 
@@ -53,7 +53,7 @@ Android provider store 使用 app config 目录内的 `vault-providers.json`，�
 6. provider store 能幂等 upsert，并按 source 或 mirror root 恢复记录。
 7. schema 1 的旧 external record 缺少 `sourceReadOnly` 时安全迁移为 source 只读，不会在升级后意外开放写入。
 
-当前 `cargo test --manifest-path src-tauri/Cargo.toml` 结果为 27/27，覆盖 provider capability、reconcile/write-back、local rollback 与 cold recovery。
+当前 `cargo test --manifest-path src-tauri/Cargo.toml` 结果为 28/28，覆盖 provider capability、reconcile/write-back、local rollback、cold recovery 与 source conflict subtree 原子替换。
 
 ### Android Emulator：2A app-private contract
 
@@ -260,7 +260,7 @@ conflicts           [{ relativePath: "intro.md", reason: "bothModified" }]
 - mirror capability 现在同时受 native `sourceReadOnly` 和 access state 约束；权限不为 `ready` 时共享写动作立即进入只读状态。
 - source 内容变化检测、安全 pull、受控双向 write-back、删除/rename、journal retry、local/native 两阶段进程终止恢复、native operation 中途权限撤销/磁盘不足恢复、冲突阻断与正式逐路径冲突选择均已实现。
 - 当前每次 reconcile 仍完整枚举并 materialize source 到短期 app-private snapshot，再按 manifest delta 更新 mirror；真正的按需 source materialization 与大 vault 性能优化留在 2D。
-- permission health、replacement tree 重新授权、pull command、正式状态提示和重新授权 callback 已接入共享 UI；大批量操作的可见进度仍待 2D。
+- permission health、replacement tree 重新授权、pull command、正式状态提示、重新授权 callback 与大批量 write-back/verification 进度均已接入共享 UI；2D 继续优化完整枚举与 materialization 性能。
 
 ### Android Emulator：2B shared workbench mutation routing
 
@@ -416,6 +416,24 @@ resolution command 在 external operation lock 内重新 materialize source 并�
 
 E2E 同时覆盖两种选择的 command payload、剩余 conflict state 与 dialog 关闭；Rust 新增 source subtree 原子替换测试，Rust 总结果从 27/27 增加到 28/28。
 
+### Android Emulator：2B 大批量可见进度
+
+环境：`JType_API_36_1`，Android 16 / API 36，arm64，1080×2424；app code commit `f0e3443`。测试继续使用 provider `external:41922042f61ba816`、Documents source `JTypeExternal0718Moved3` 与相同 app-private mirror。
+
+SAF write-back 现在对至少 8 个 native operation 发出 canonical `vault-provider-operation-progress` event，包含 provider、阶段、完成数、总数、当前路径与耗时。共享 `VaultProviderBanner` 监听同一事件，在原有 provider 状态 surface 中显示 applying / verifying、计数、秒数和无障碍 progressbar；完成或失败后恢复正常 provider 状态。没有新增 mobile-only 页面，也没有复制文件列表或操作代码。
+
+第一次真实 gate 暴露出一个关键问题：Rust 虽然持续发出了事件，但同步 Tauri command 占住 WebView 调用线程，UI 只能在命令结束后处理事件，因此长操作期间仍看不到反馈。修复将可能产生大批量 SAF 写回的共享 cloud apply/delete、folder import/rename/move/delete 与 trash restore 等命令放入 Tauri blocking worker；IPC command 名、参数、返回值和 TypeScript Promise contract 不变，desktop/iOS 仍执行同一 filesystem mutation。
+
+真实产品 UI 连续验证：
+
+1. 标准 `delete_workspace_folder` 删除 120 个文件，native plan 为 121 项；2 秒内出现 `0/121`，11 秒时更新为 `32/121`，约 30.0 秒完成。source 与 mirror 中目标目录均不存在，progressbar 自动清除。
+2. 标准 `apply_cloud_documents` 新建 120 个约 4 KB 文件，6 秒时为 `34/121`，33 秒时进入 `121/121` verifying，约 35.7 秒完成。source/mirror 均为 120/120，随后再以标准 delete 完整清理。
+3. create/delete 后 baseline 正常推进，write-back journal、local mutation marker/backup、reconcile staging 与 temporary file 均无残留。进度事件没有改变 source-first write-back、verification 或 journal commit 顺序。
+
+![Android SAF batch progress](assets/phase-2/android-saf-batch-progress.png)
+
+E2E 通过 synthetic native event 覆盖 `42/120` applying → completed 的共享 state、文案、ARIA 数值与自动清除；完整 desktop App E2E 仍为 43/43。
+
 ### iPhone Simulator
 
 环境：iPhone 17 Pro Simulator，iOS 26.5，arm64；app code commit `309aebb`。
@@ -452,12 +470,14 @@ E2E 现在以完整中文 locale 在 390×844 viewport 验证：content panel �
 - `c78eaad`：shared mutation 的完整 mirror backup/marker、local error rollback、进程终止冷恢复与 journal-aware forward recovery。
 - `276ced1`：开放 Android external vault capability，把入口、状态、重新授权、pending write-back 与写操作接入同一套 desktop/shared UI。
 - `15df904`：在共享 Headless UI dialog 中逐路径选择设备目录或 JType 版本，并以 provider adapter 完成验证、收敛与 baseline 推进。
+- `f0e3443`：在共享 provider banner 中显示 SAF 批量 write-back/verification 进度，并将大批量共享 mutation 移到 blocking worker，保持 desktop IPC contract 不变。
 
 ## 自动化与构建结果
 
 | 验证 | 结果 |
 | --- | --- |
 | `npm run build` | PASS |
+| `npm run build --prefix services/jtype-web/frontend` | PASS |
 | `npm run test:unit` | PASS，47/47 |
 | `npx playwright test tests/e2e/app.spec.ts` | PASS，43/43 |
 | `cargo test --manifest-path src-tauri/Cargo.toml` | PASS，28/28；新增 source conflict subtree 原子替换测试 |
@@ -478,20 +498,21 @@ E2E 现在以完整中文 locale 在 390×844 viewport 验证：content panel �
 | Android 正式 Open vault → SAF picker → shared VaultHome / Editor create-save-trash | PASS；source 同步写入/删除，provider display name 保持稳定 |
 | Android 正式 provider banner / permission read-only / reauthorize / pending journal action | PASS；E2E 共享 UI 状态闭环 |
 | Android 正式 conflict dialog / keep JType / keep device folder / baseline advance | PASS；真实 API 36 两个方向均完成 source/mirror 收敛，E2E payload/state 闭环 |
+| Android 120-file create/delete / live progress / verification / cleanup | PASS；`34/121` applying、`121/121` verifying 均在操作期间可见，source/mirror 收敛且无 transaction 残留 |
 | `cargo check --release --manifest-path src-tauri/Cargo.toml` | PASS；release `debug_assertions=false` 分支不暴露 fault 配置 |
-| `pnpm tauri ios build --debug --target aarch64-sim --no-sign --archive-only --ci` | PASS；共享 conflict UI 编译通过，iOS external capability 仍未开放 |
+| `pnpm tauri ios build --debug --target aarch64-sim --no-sign --archive-only --ci` | PASS；共享 conflict/progress UI 编译通过，iOS external capability 仍未开放 |
 | iOS clean install / Maestro default vault flow / localized shell | PASS（2A contract 增量；本次只重跑 compile gate） |
 
 Android debug APK：
 
 - `src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk`
-- 375,734,227 bytes
-- SHA-256 `c0e79c09738b18505ff9692838979441d49aa5b941819a8b0f94e52a481e9c45`
+- 379,286,299 bytes
+- SHA-256 `9592a5078456a1ee8cda93824924184e13a24ff2e0bad9e8d37054c4ef36f851`
 
 iOS archive：
 
 - `src-tauri/gen/apple/build/jtype_iOS.xcarchive`
-- no-sign simulator archive，约 99 MB
+- no-sign simulator archive，约 100 MB
 
 截图 SHA-256：
 
@@ -508,15 +529,16 @@ d7ca9b5f30658ff8d135cbff757c36c0c7ca2bfc33231246ac9830176f5cff0f  android-saf-lo
 67fa5e07c856d9aa2795c16878e7a1493d8d755085243d482440edbc5fbc53e5  android-saf-product-ui.png
 8b33279cf5e1e59b5e651c33392bfaa4ac2c6afba4097a9cbf1170b4162b42e7  android-saf-shared-editor.png
 857ba5a38d37dad57fb28dbc38d6cbd3717d2bed4dc56c0f9dca8fde31a9f5f0  android-saf-conflict-dialog.png
+efaf0b4b082cda9833811b3cdc5071b2f96ae26487a72f406be74207e947e4de  android-saf-batch-progress.png
 ```
 
-## 下一增量：2B 大批量可见进度
+## 下一增量：2C iOS security-scoped folder provider
 
-下一段继续按已冻结的 contract 实现：
+2B Android SAF 已收口。下一段继续按已冻结的 provider contract 实现：
 
-1. 针对超过 100 文件的批量 delete/write 增加 provider operation progress/timing，复用共享 banner/status surface，避免长时间无反馈。
-2. 复跑 120 文件 create/delete、进程终止和 journal retry，确认 progress event 不改变事务顺序与 desktop command contract。
-3. 补一轮正式 UI 的权限丢失、重新授权和 pending journal 截图证据，完成 2B 报告收口。
-4. 进入 2C iOS security-scoped bookmark，并复用相同 provider store、descriptor、mirror 状态机与冲突 dialog。
+1. 在 iOS native adapter 中接入系统 folder picker 与 security-scoped bookmark；bookmark 只进入 native record，不返回 WebView。
+2. 明确 `startAccessingSecurityScopedResource` / `stopAccessingSecurityScopedResource` 生命周期、stale bookmark 更新、失效检测与重新授权。
+3. 复用同一 provider store、descriptor、app-private mirror、baseline、reconcile/write-back journal、冲突 dialog 与批量 progress surface，不建立 iOS 专用文件树或编辑器。
+4. 以 signed Simulator 验证选择/冷启动恢复/增删改查/冲突/失效重新授权，并保持 no-sign archive 与 desktop/web 回归门禁。
 
-iOS security-scoped bookmark 会在 Android SAF contract 与 reconcile 行为稳定后复用同一 store、descriptor 和 mirror 状态机。
+iOS 适配完成后再进入 2D share target、pending OAuth 冷恢复、无障碍、草稿恢复与大 vault/弱网终验。
