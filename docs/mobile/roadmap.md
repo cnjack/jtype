@@ -2,7 +2,7 @@
 
 > 最后更新：2026-07-18  
 > Feature branch：`codex/mobile-app`  
-> 当前阶段：Phase 2D — 系统集成与可靠性；系统分享、recovery、无障碍、共享触控交互、键盘辅助栏、5,000 文档大 vault、大 Markdown/附件/1,200-card Board、sync reliability，以及 Android/iOS 系统通知 → 文档定位已完成，继续 APNs/FCM、physical low-memory、native on-demand、真实设备弱网与真机终验
+> 当前阶段：Phase 2D — 系统集成与可靠性；系统分享、recovery、无障碍、共享触控交互、键盘辅助栏、5,000 文档大 vault、大 Markdown/附件/1,200-card Board、sync reliability，以及 Android/iOS 系统通知 → 文档定位已完成；external reconcile/write-back 已改为 native full scan + plan-driven source materialization，继续原生按需枚举、APNs/FCM、physical low-memory、真实设备弱网与真机终验
 > 状态说明：`[ ]` 未开始、`[~]` 进行中、`[x]` 已完成；只有附上真实测试证据后才能标记完成。
 
 ## 目标
@@ -171,7 +171,7 @@
 1. **2A Provider contract（约 3–5 天）**：先冻结 provider identity、capability、mirror metadata、reconcile plan 和错误模型；现有 app-private filesystem 成为第一个 provider 实现，UI/AppState/commands 不改调用语义。
 2. **2B Android SAF（约 1–2 周）**：目录选择、persistable tree URI、mirror 初次导入、双向增量 reconcile、权限丢失重新授权；Android 模拟器逐段留截图与报告。
 3. **2C iOS folder provider（已完成工程与 Simulator gate）**：folder picker、security-scoped bookmark、访问生命周期、mirror reconcile、覆盖安装容器迁移和 shared editor write-back 已通过；失效重新授权与第三方 Files provider 保留到 physical iPhone 终验。
-4. **2D 系统集成与可靠性（约 1–2 周）**：share target、pending OAuth 冷恢复、无障碍、草稿恢复、大 vault/弱网测试；5,000 文档共享索引、大 Markdown/附件/1,200-card Board 渐进渲染、sync batching/retry/idempotency/服务中断恢复，以及双平台原生通知文档定位已通过模拟器 gate，继续 APNs/FCM、physical low-memory、native on-demand、真实设备弱网与双平台真机 gate。
+4. **2D 系统集成与可靠性（约 1–2 周）**：share target、pending OAuth 冷恢复、无障碍、草稿恢复、大 vault/弱网测试；5,000 文档共享索引、大 Markdown/附件/1,200-card Board 渐进渲染、sync batching/retry/idempotency/服务中断恢复，以及双平台原生通知文档定位已通过模拟器 gate；external reconcile/write-back 的选择性 source materialization 已完成工程 gate，继续原生按需枚举、真实 provider 复测、APNs/FCM、physical low-memory、真实设备弱网与双平台真机 gate。
 
 每个增量继续复用 desktop `Sidebar`、`VaultHome`、`EditorShell`、Document Info、Board、commands 和 sync model。provider 差异只能进入 Rust/provider adapter 与 canonical capability，不允许出现第二套 mobile 文件树或编辑器。
 
@@ -184,6 +184,7 @@
 - [ ] 当 mirror 被证明不足时，再将 provider 扩展为零拷贝访问；不在 UI 层分叉
 - [x] Android external provider 已能检测权限丢失/目录移动、保持同一 provider identity 重新授权，并在其他 app 修改文件后安全 pull、合并不相交 source/local 变化、阻断同路径双边冲突并逐路径选择保留 source/JType；共享 desktop mutation 已通过 provider adapter 写回 SAF，native 磁盘不足/权限撤销可保留 journal 后恢复；正式共享 UI 已提供状态、重新授权、pending journal、冲突数量、选择 dialog 与大批量 write-back/verification 进度
 - [~] iOS external provider 已完成真实 folder selection、native-only bookmark、首次 mirror、冷启动/覆盖安装恢复和 source write-back；bookmark 失效与 iCloud/第三方 Files provider 的真机 gate 待完成
+- [~] Android/iOS external reconcile、write-back 前置 pull/verification 与 `UseSource` 冲突解决已改为 native SHA-256 full scan 后仅 materialize plan 所需路径；Rust/TypeScript/Android/iOS build gate 已通过，120-file 双模拟器 `1 changed / 0 changed` provider 实测因当前 Device Hub/Running Device 输入限制待复跑（证据：`docs/mobile/reports/phase-2-native-on-demand.md`，实现：`5970d15`）
 
 ### 2.2 移动交互完善
 
@@ -202,7 +203,7 @@
 
 ### 2.4 大 vault 性能与可靠性
 
-- [~] 共享 workspace index、Sidebar/Quick Open bounded exact-first search、每级 160 行渐进树 window 已在 5,000 文档 Android/iOS 模拟器和 2,500 文档 Desktop E2E 中通过；原生 `WorkspaceSnapshot` / external source 的按需枚举与 materialization 仍待完成（证据：`docs/mobile/reports/phase-2-large-vault.md`，实现：`85dee2f`）
+- [~] 共享 workspace index、Sidebar/Quick Open bounded exact-first search、每级 160 行渐进树 window 已在 5,000 文档 Android/iOS 模拟器和 2,500 文档 Desktop E2E 中通过；external reconcile/write-back 已完成 plan-driven source materialization，但 native scan 仍完整 hash、app-private `WorkspaceSnapshot` 仍完整枚举，分页/partial snapshot/按文档读取待完成（证据：`docs/mobile/reports/phase-2-large-vault.md`、`docs/mobile/reports/phase-2-native-on-demand.md`，实现：`85dee2f`、`5970d15`）
 - [~] 大 Markdown、Mermaid、KaTeX、23 张 3072×3072 附件和 1,200-card Board 已完成共享渐进渲染、完整模型尾部搜索、Desktop E2E 与 Android/iOS Simulator gate；physical device 的 memory warning、峰值 RSS 和后台恢复仍待完成（证据：`docs/mobile/reports/phase-2-large-content.md`，实现：`4cdf48d`）
 - [x] desktop/mobile 共用 sync transport 已完成 50-operation / 约 1 MB 确定性 batching、最多 3 次 transient retry、稳定 request-id、服务端顺序/并发 replay 幂等和可观测 batch/attempt 错误；Android/iOS 121-document `50 + 50 + 21` 服务中断/恢复与 reconnect 本地编辑保护通过（证据：`docs/mobile/reports/phase-2-weak-network-sync.md`，实现：`798be1c`）
 - [ ] 真实设备弱网、离线、磁盘不足、权限变化与进程终止测试
@@ -216,9 +217,10 @@
 - [x] 当前 2D large-vault 增量的 desktop build、web build、jtype-core 38/38、Tauri Rust 28/28、unit 50/50、app E2E 50/50、Android APK 与 iOS archive 全部通过；双端 5,000 文档 Maestro flow 通过；后续 Phase 2 增量继续重复完整 gate
 - [x] 当前 2D large-content 增量的 desktop/web build、jtype-core 38/38、Tauri Rust 28/28、unit 50/50、app E2E 51/51、Android universal APK 与 iOS simulator archive 全部通过；双端大 Markdown 与 1,200-card Board 共四条 Maestro flow 通过（证据：`docs/mobile/reports/phase-2-large-content.md`）
 - [x] 当前 2D sync-reliability 增量的 desktop/web build、unit 55/55、app E2E 53/53、web E2E 27/27、jtype-core 38/38、Tauri 28/28、web service sync 15/15、Android APK 与 signed/no-sign iOS simulator archive 全部通过；双端 121-document 三批、离线错误和恢复闭环通过（证据：`docs/mobile/reports/phase-2-weak-network-sync.md`）
+- [~] 当前 2D provider on-demand 增量的 plugin cargo check、Tauri 29/29、unit 59/59、app E2E 55/55、Android universal APK 与 iOS simulator archive 全部通过；120-file 双模拟器原生 provider 交互/日志 gate 待在可转发 touch 的测试宿主复跑（证据：`docs/mobile/reports/phase-2-native-on-demand.md`）
 - [ ] 双平台模拟器与至少一台真实设备截图/录像证据已保存
 - [~] `docs/mobile/reports/phase-2.md` 已记录 2A、2B、2C、2D recovery、系统分享、无障碍、触控交互、大 vault、大内容、sync reliability 与通知文档定位结果；细节见各专项报告，后续持续更新到 Phase 2 终验
-- [~] tracking 已记录当前 Phase 2 commit hashes（最新实现 `ff21f86`）；后续增量继续追加
+- [~] tracking 已记录当前 Phase 2 commit hashes（最新实现 `5970d15`）；后续增量继续追加
 
 ## Phase 3 — Store readiness
 
@@ -291,6 +293,7 @@
 | 2026-07-18 | 2.4 / 2D | `798be1c` | desktop/mobile 共用 sync batching/retry、服务端顺序/并发 request-id 幂等、可观测错误与 reconnect 离线编辑保护 | `docs/mobile/reports/phase-2-weak-network-sync.md` |
 | 2026-07-18 | 2.3 / 2D | `2a1fc09` | 移动端原生通知、严格无凭据文档 route、vault binding 定位与 Desktop 共用打开操作 | `docs/mobile/reports/phase-2-notification-routing.md` |
 | 2026-07-18 | 2.3 / 2D | `ff21f86` | iOS 前台原生通知立即呈现，兼容 notification plugin 的 ISO `Z` 本地时区解析 | `docs/mobile/reports/phase-2-notification-routing.md` |
+| 2026-07-18 | 2.4 / 2D | `5970d15` | Android/iOS native source manifest scan，以及 reconcile/write-back/conflict 按 plan 选择性 materialization；完整 native 枚举与真实 provider 性能 gate 继续进行 | `docs/mobile/reports/phase-2-native-on-demand.md` |
 
 ## 当前环境审计（2026-07-18）
 
