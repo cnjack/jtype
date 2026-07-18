@@ -34,4 +34,28 @@ impl<R: Runtime> MobileImport<R> {
             )
             .map_err(Into::into)
     }
+
+    #[cfg(target_os = "android")]
+    pub fn select_directory(&self) -> crate::Result<SelectedDirectory> {
+        self.0
+            .run_mobile_plugin("selectDirectory", ())
+            .map_err(Into::into)
+    }
+
+    #[cfg(target_os = "android")]
+    pub fn mirror_directory(
+        &self,
+        source_reference: impl Into<String>,
+        mirror_root_path: impl Into<String>,
+    ) -> crate::Result<MirroredDirectory> {
+        self.0
+            .run_mobile_plugin(
+                "mirrorDirectory",
+                MirrorDirectoryRequest {
+                    source_reference: source_reference.into(),
+                    mirror_root_path: mirror_root_path.into(),
+                },
+            )
+            .map_err(Into::into)
+    }
 }

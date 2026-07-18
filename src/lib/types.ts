@@ -119,6 +119,14 @@ export type VaultProviderDescriptor = {
   capabilities: VaultProviderCapabilities;
 };
 
+export type ExternalVaultInitializationResult = {
+  provider: VaultProviderDescriptor;
+  workspace: WorkspaceSnapshot;
+  importedFiles: number;
+  importedDirectories: number;
+  importedBytes: number;
+};
+
 export type PublishResult = {
   outputDir: string;
   pages: string[];

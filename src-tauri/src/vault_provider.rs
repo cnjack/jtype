@@ -70,8 +70,10 @@ impl VaultProviderCapabilities {
             can_rename: !read_only,
             can_delete: !read_only,
             can_watch: true,
-            can_reconcile: true,
-            can_reauthorize: true,
+            // These become true only when the provider adapter has real
+            // reconcile and reauthorization commands wired end to end.
+            can_reconcile: false,
+            can_reauthorize: false,
         }
     }
 }
@@ -133,6 +135,38 @@ impl Default for VaultProviderStore {
         Self {
             version: PROVIDER_STORE_VERSION,
             providers: Vec::new(),
+        }
+    }
+}
+
+impl VaultProviderStore {
+    pub fn provider_for_mirror_root(&self, root: &Path) -> Option<&ExternalVaultProviderRecord> {
+        let normalized_root = path_to_string(root);
+        self.providers
+            .iter()
+            .find(|provider| provider.mirror_root_path == normalized_root)
+    }
+
+    pub fn provider_for_source(
+        &self,
+        source_kind: VaultProviderSourceKind,
+        source_reference: &str,
+    ) -> Option<&ExternalVaultProviderRecord> {
+        self.providers.iter().find(|provider| {
+            provider.source_kind == source_kind
+                && provider.opaque_source_reference == source_reference
+        })
+    }
+
+    pub fn upsert(&mut self, provider: ExternalVaultProviderRecord) {
+        if let Some(existing) = self
+            .providers
+            .iter_mut()
+            .find(|existing| existing.provider_id == provider.provider_id)
+        {
+            *existing = provider;
+        } else {
+            self.providers.push(provider);
         }
     }
 }
@@ -203,6 +237,28 @@ impl LocalVaultProvider {
 }
 
 fn stable_provider_id(prefix: &str, root: &Path) -> String {
+    stable_value_id(prefix, &path_to_string(root))
+}
+
+pub fn external_provider_id(
+    source_kind: VaultProviderSourceKind,
+    source_reference: &str,
+) -> String {
+    let source_kind = match source_kind {
+        VaultProviderSourceKind::AndroidSafTree => "android-saf-tree",
+        VaultProviderSourceKind::IosSecurityScopedBookmark => "ios-security-scoped-bookmark",
+    };
+    stable_value_id("external", &format!("{source_kind}:{source_reference}"))
+}
+
+pub fn mirror_directory_name(provider_id: &str) -> &str {
+    provider_id
+        .strip_prefix("external:")
+        .filter(|value| !value.is_empty())
+        .unwrap_or(provider_id)
+}
+
+fn stable_value_id(prefix: &str, value: &str) -> String {
     // FNV-1a is deliberately fixed rather than using DefaultHasher so provider
     // ids remain stable across Rust toolchain updates.
     struct Fnv1a(u64);
@@ -220,7 +276,7 @@ fn stable_provider_id(prefix: &str, root: &Path) -> String {
     }
 
     let mut hasher = Fnv1a(0xcbf29ce484222325);
-    hasher.write(path_to_string(root).as_bytes());
+    hasher.write(value.as_bytes());
     format!("{prefix}:{:016x}", hasher.finish())
 }
 
@@ -274,8 +330,8 @@ mod tests {
 
         assert_eq!(descriptor.kind, VaultProviderKind::ExternalMirror);
         assert_eq!(descriptor.storage_mode, VaultProviderStorageMode::Mirror);
-        assert!(descriptor.capabilities.can_reconcile);
-        assert!(descriptor.capabilities.can_reauthorize);
+        assert!(!descriptor.capabilities.can_reconcile);
+        assert!(!descriptor.capabilities.can_reauthorize);
         assert!(!json.to_string().contains("content://"));
         assert!(!json.to_string().contains("opaqueSourceReference"));
     }
@@ -284,5 +340,56 @@ mod tests {
     fn provider_store_schema_defaults_to_version_one() {
         let store: VaultProviderStore = serde_json::from_str(r#"{"providers":[]}"#).unwrap();
         assert_eq!(store, VaultProviderStore::default());
+    }
+
+    #[test]
+    fn external_provider_identity_is_stable_and_source_scoped() {
+        let source = "content://provider/tree/primary%3ANotes";
+        let first = external_provider_id(VaultProviderSourceKind::AndroidSafTree, source);
+        let second = external_provider_id(VaultProviderSourceKind::AndroidSafTree, source);
+        let ios = external_provider_id(VaultProviderSourceKind::IosSecurityScopedBookmark, source);
+
+        assert_eq!(first, second);
+        assert_ne!(first, ios);
+        assert!(first.starts_with("external:"));
+        assert_eq!(mirror_directory_name(&first).len(), 16);
+    }
+
+    #[test]
+    fn provider_store_upserts_and_resolves_native_records() {
+        let record = ExternalVaultProviderRecord {
+            provider_id: "external:fixture".to_string(),
+            display_name: "Shared notes".to_string(),
+            source_kind: VaultProviderSourceKind::AndroidSafTree,
+            opaque_source_reference: "content://provider/tree/notes".to_string(),
+            mirror_root_path: "/app/data/vaults/external/fixture".to_string(),
+            access_state: VaultProviderAccessState::Ready,
+            read_only: false,
+            last_reconciled_at: None,
+            source_revision: None,
+        };
+        let mut store = VaultProviderStore::default();
+        store.upsert(record.clone());
+        let mut updated = record.clone();
+        updated.read_only = true;
+        store.upsert(updated);
+
+        assert_eq!(store.providers.len(), 1);
+        assert!(store.providers[0].read_only);
+        assert_eq!(
+            store
+                .provider_for_source(
+                    VaultProviderSourceKind::AndroidSafTree,
+                    &record.opaque_source_reference,
+                )
+                .map(|provider| provider.provider_id.as_str()),
+            Some("external:fixture")
+        );
+        assert_eq!(
+            store
+                .provider_for_mirror_root(Path::new(&record.mirror_root_path))
+                .map(|provider| provider.provider_id.as_str()),
+            Some("external:fixture")
+        );
     }
 }

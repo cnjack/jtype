@@ -253,13 +253,75 @@ fn resolve_local_vault_provider(
     ))
 }
 
+fn vault_provider_store_file(app: &AppHandle) -> Result<PathBuf, String> {
+    Ok(config_dir(app)?.join("vault-providers.json"))
+}
+
+fn read_vault_provider_store(
+    app: &AppHandle,
+) -> Result<vault_provider::VaultProviderStore, String> {
+    let file = vault_provider_store_file(app)?;
+    if !file.exists() {
+        return Ok(vault_provider::VaultProviderStore::default());
+    }
+    let content = fs::read_to_string(file).map_err(|error| error.to_string())?;
+    serde_json::from_str(&content).map_err(|error| error.to_string())
+}
+
+#[cfg(target_os = "android")]
+fn write_vault_provider_store(
+    app: &AppHandle,
+    store: &vault_provider::VaultProviderStore,
+) -> Result<(), String> {
+    let path = vault_provider_store_file(app)?;
+    let parent = path
+        .parent()
+        .ok_or_else(|| "Vault provider store has no parent directory".to_string())?;
+    fs::create_dir_all(parent).map_err(|error| error.to_string())?;
+    let nonce = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_err(|error| error.to_string())?
+        .as_nanos();
+    let temporary = parent.join(format!(".vault-providers.json.tmp-{nonce}"));
+    let json = serde_json::to_string_pretty(store).map_err(|error| error.to_string())?;
+    fs::write(&temporary, json).map_err(|error| error.to_string())?;
+    if let Err(error) = fs::rename(&temporary, &path) {
+        let _ = fs::remove_file(&temporary);
+        return Err(error.to_string());
+    }
+    Ok(())
+}
+
+#[cfg(target_os = "android")]
+fn external_vault_mirror_root(app: &AppHandle, provider_id: &str) -> Result<PathBuf, String> {
+    app.path()
+        .app_data_dir()
+        .map(|base| {
+            base.join("vaults")
+                .join("external")
+                .join(vault_provider::mirror_directory_name(provider_id))
+        })
+        .map_err(|error| error.to_string())
+}
+
+fn describe_provider_for_root(
+    app: &AppHandle,
+    root: &Path,
+) -> Result<vault_provider::VaultProviderDescriptor, String> {
+    if let Some(provider) = read_vault_provider_store(app)?.provider_for_mirror_root(root) {
+        return Ok(provider.descriptor());
+    }
+    Ok(resolve_local_vault_provider(app, root.to_path_buf())?
+        .descriptor()
+        .clone())
+}
+
 #[tauri::command]
 fn describe_vault_provider(
     app: AppHandle,
     root_path: String,
 ) -> Result<vault_provider::VaultProviderDescriptor, String> {
-    let provider = resolve_local_vault_provider(&app, PathBuf::from(root_path))?;
-    Ok(provider.descriptor().clone())
+    describe_provider_for_root(&app, &PathBuf::from(root_path))
 }
 
 #[tauri::command]
@@ -267,6 +329,97 @@ fn open_default_vault(app: AppHandle) -> Result<WorkspaceSnapshot, String> {
     let path = default_vault_dir(&app)?;
     let provider = resolve_local_vault_provider(&app, path)?;
     workspace::open_workspace(provider.prepare_root(true)?)
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct ExternalVaultInitializationResult {
+    provider: vault_provider::VaultProviderDescriptor,
+    workspace: WorkspaceSnapshot,
+    imported_files: u64,
+    imported_directories: u64,
+    imported_bytes: u64,
+}
+
+#[cfg(target_os = "android")]
+#[tauri::command]
+fn initialize_android_external_vault(
+    app: AppHandle,
+) -> Result<ExternalVaultInitializationResult, String> {
+    let selected = app
+        .mobile_import()
+        .select_directory()
+        .map_err(|error| error.to_string())?;
+    let source_kind = vault_provider::VaultProviderSourceKind::AndroidSafTree;
+    let provider_id = vault_provider::external_provider_id(source_kind, &selected.source_reference);
+    let mut store = read_vault_provider_store(&app)?;
+    let existing = store
+        .provider_for_source(source_kind, &selected.source_reference)
+        .cloned();
+    let mirror_root = existing
+        .as_ref()
+        .map(|provider| PathBuf::from(&provider.mirror_root_path))
+        .unwrap_or(external_vault_mirror_root(&app, &provider_id)?);
+
+    let mirrored = if mirror_root.is_dir() {
+        None
+    } else {
+        Some(
+            app.mobile_import()
+                .mirror_directory(
+                    selected.source_reference.clone(),
+                    path_to_string(&mirror_root),
+                )
+                .map_err(|error| error.to_string())?,
+        )
+    };
+    let last_reconciled_at = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_err(|error| error.to_string())?
+        .as_secs();
+    let source_revision = mirrored
+        .as_ref()
+        .map(|result| result.source_revision.clone())
+        .or_else(|| {
+            existing
+                .as_ref()
+                .and_then(|provider| provider.source_revision.clone())
+        });
+
+    // The selected source may be writable, but the initial-import increment is
+    // deliberately exposed as read-only until write-back/reconcile is complete.
+    // This prevents edits in the mirror from being mistaken for source writes.
+    let record = vault_provider::ExternalVaultProviderRecord {
+        provider_id,
+        display_name: selected.display_name,
+        source_kind,
+        opaque_source_reference: selected.source_reference,
+        mirror_root_path: path_to_string(&mirror_root),
+        access_state: vault_provider::VaultProviderAccessState::Ready,
+        read_only: true,
+        last_reconciled_at: Some(last_reconciled_at),
+        source_revision,
+    };
+    let workspace = workspace::open_workspace(&mirror_root)?;
+    let descriptor = record.descriptor();
+    store.upsert(record);
+    write_vault_provider_store(&app, &store)?;
+
+    Ok(ExternalVaultInitializationResult {
+        provider: descriptor,
+        workspace,
+        imported_files: mirrored.as_ref().map_or(0, |result| result.files),
+        imported_directories: mirrored.as_ref().map_or(0, |result| result.directories),
+        imported_bytes: mirrored.as_ref().map_or(0, |result| result.bytes),
+    })
+}
+
+#[cfg(not(target_os = "android"))]
+#[tauri::command]
+fn initialize_android_external_vault(
+    _app: AppHandle,
+) -> Result<ExternalVaultInitializationResult, String> {
+    Err("Android external vault selection is only available on Android".to_string())
 }
 
 #[tauri::command]
@@ -403,8 +556,9 @@ fn read_binary_file(path: String) -> Result<Vec<u8>, String> {
 
 #[tauri::command]
 fn open_workspace(app: AppHandle, path: String) -> Result<WorkspaceSnapshot, String> {
-    let provider = resolve_local_vault_provider(&app, PathBuf::from(path))?;
-    workspace::open_workspace(provider.local_root())
+    let root = PathBuf::from(path);
+    let _provider = describe_provider_for_root(&app, &root)?;
+    workspace::open_workspace(&root)
 }
 
 #[tauri::command]
@@ -1325,6 +1479,7 @@ pub fn run() {
             initial_external_file_sources,
             default_vault_path,
             describe_vault_provider,
+            initialize_android_external_vault,
             open_default_vault,
             read_markdown_file,
             write_markdown_file,

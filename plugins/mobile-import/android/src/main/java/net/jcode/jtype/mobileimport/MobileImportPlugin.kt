@@ -1,8 +1,13 @@
 package net.jcode.jtype.mobileimport
 
 import android.app.Activity
+import android.content.Intent
 import android.net.Uri
+import android.provider.DocumentsContract
+import android.provider.DocumentsContract.Document
 import android.provider.OpenableColumns
+import androidx.activity.result.ActivityResult
+import app.tauri.annotation.ActivityCallback
 import app.tauri.annotation.Command
 import app.tauri.annotation.InvokeArg
 import app.tauri.annotation.TauriPlugin
@@ -11,6 +16,7 @@ import app.tauri.plugin.JSObject
 import app.tauri.plugin.Plugin
 import java.io.File
 import java.io.InputStream
+import java.util.Locale
 import java.util.UUID
 
 @InvokeArg
@@ -18,8 +24,137 @@ class MaterializeArgs {
     lateinit var source: String
 }
 
+@InvokeArg
+class MirrorDirectoryArgs {
+    lateinit var sourceReference: String
+    lateinit var mirrorRootPath: String
+}
+
+private data class MirrorStats(
+    var files: Long = 0,
+    var directories: Long = 0,
+    var bytes: Long = 0,
+    var latestModified: Long = 0,
+    var entries: Long = 0,
+)
+
 @TauriPlugin
 class MobileImportPlugin(private val activity: Activity) : Plugin(activity) {
+    @Command
+    fun selectDirectory(invoke: Invoke) {
+        try {
+            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+                addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
+                addFlags(Intent.FLAG_GRANT_PREFIX_URI_PERMISSION)
+            }
+            startActivityForResult(invoke, intent, "selectDirectoryResult")
+        } catch (error: Exception) {
+            invoke.reject("Unable to open the Android folder picker: ${error.message}")
+        }
+    }
+
+    @ActivityCallback
+    fun selectDirectoryResult(invoke: Invoke, result: ActivityResult) {
+        try {
+            if (result.resultCode == Activity.RESULT_CANCELED) {
+                invoke.reject("Folder picker cancelled")
+                return
+            }
+            check(result.resultCode == Activity.RESULT_OK) { "Folder picker failed" }
+            val resultIntent = result.data ?: error("Folder picker returned no result")
+            val treeUri = resultIntent.data ?: error("Folder picker returned no directory")
+            check(treeUri.scheme == "content") { "The selected folder is not a document provider tree" }
+
+            val grantFlags = resultIntent.flags and (
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            )
+            check(grantFlags and Intent.FLAG_GRANT_READ_URI_PERMISSION != 0) {
+                "The selected folder did not grant read access"
+            }
+            activity.contentResolver.takePersistableUriPermission(treeUri, grantFlags)
+
+            val metadata = rootMetadata(treeUri)
+            val persisted = activity.contentResolver.persistedUriPermissions
+                .firstOrNull { it.uri == treeUri }
+                ?: error("The folder permission was not persisted")
+            val rootSupportsWrite = metadata.second and (
+                Document.FLAG_DIR_SUPPORTS_CREATE or Document.FLAG_SUPPORTS_WRITE
+            ) != 0
+            val readOnly = !persisted.isWritePermission || !rootSupportsWrite
+
+            invoke.resolve(
+                JSObject()
+                    .put("sourceReference", treeUri.toString())
+                    .put("displayName", safeFileName(metadata.first))
+                    .put("readOnly", readOnly),
+            )
+        } catch (error: Exception) {
+            invoke.reject("Unable to retain access to the selected folder: ${error.message}")
+        }
+    }
+
+    @Command
+    fun mirrorDirectory(invoke: Invoke) {
+        val args = try {
+            invoke.parseArgs(MirrorDirectoryArgs::class.java)
+        } catch (error: Exception) {
+            invoke.reject("Invalid external vault request: ${error.message}")
+            return
+        }
+
+        Thread {
+            try {
+                val treeUri = Uri.parse(args.sourceReference)
+                check(treeUri.scheme == "content") { "External vault source must be a content URI" }
+                val permission = activity.contentResolver.persistedUriPermissions
+                    .firstOrNull { it.uri == treeUri }
+                    ?: error("Authorization for the selected folder is no longer available")
+                check(permission.isReadPermission) { "The selected folder is not readable" }
+
+                val dataRoot = File(activity.applicationInfo.dataDir).canonicalFile
+                val externalRoot = File(dataRoot, "vaults/external").canonicalFile
+                val mirrorRoot = File(args.mirrorRootPath).canonicalFile
+                check(mirrorRoot.path.startsWith(externalRoot.path + File.separator)) {
+                    "External vault mirrors must stay in app-private storage"
+                }
+                check(!mirrorRoot.exists()) { "The external vault mirror already exists" }
+                val parent = mirrorRoot.parentFile ?: error("The mirror path has no parent")
+                check(parent.mkdirs() || parent.isDirectory) { "Could not create the mirror parent directory" }
+
+                val stage = File(parent, ".${mirrorRoot.name}.importing-${UUID.randomUUID()}")
+                val stats = try {
+                    check(stage.mkdirs()) { "Could not create the mirror staging directory" }
+                    MirrorStats().also { mirrorStats ->
+                        copyChildren(
+                            treeUri,
+                            DocumentsContract.getTreeDocumentId(treeUri),
+                            stage,
+                            mirrorStats,
+                            0,
+                        )
+                        check(stage.renameTo(mirrorRoot)) { "Could not activate the imported vault mirror" }
+                    }
+                } catch (error: Exception) {
+                    stage.deleteRecursively()
+                    throw error
+                }
+
+                val sourceRevision = "${stats.latestModified}:${stats.entries}:${stats.bytes}"
+                invoke.resolve(
+                    JSObject()
+                        .put("files", stats.files)
+                        .put("directories", stats.directories)
+                        .put("bytes", stats.bytes)
+                        .put("sourceRevision", sourceRevision),
+                )
+            } catch (error: Exception) {
+                invoke.reject("Unable to import the selected vault: ${error.message}")
+            }
+        }.start()
+    }
+
     @Command
     fun materialize(invoke: Invoke) {
         val args = try {
@@ -75,6 +210,105 @@ class MobileImportPlugin(private val activity: Activity) : Plugin(activity) {
         }
     }
 
+    private fun rootMetadata(treeUri: Uri): Pair<String, Int> {
+        val rootDocumentUri = DocumentsContract.buildDocumentUriUsingTree(
+            treeUri,
+            DocumentsContract.getTreeDocumentId(treeUri),
+        )
+        val projection = arrayOf(Document.COLUMN_DISPLAY_NAME, Document.COLUMN_FLAGS)
+        return activity.contentResolver.query(rootDocumentUri, projection, null, null, null)?.use { cursor ->
+            check(cursor.moveToFirst()) { "The selected folder is unavailable" }
+            val nameIndex = cursor.getColumnIndex(Document.COLUMN_DISPLAY_NAME)
+            val flagsIndex = cursor.getColumnIndex(Document.COLUMN_FLAGS)
+            val fallbackName = DocumentsContract.getTreeDocumentId(treeUri)
+                .substringAfterLast(':')
+                .substringAfterLast('/')
+                .ifBlank { "External vault" }
+            val name = if (nameIndex >= 0 && !cursor.isNull(nameIndex)) cursor.getString(nameIndex) else fallbackName
+            val flags = if (flagsIndex >= 0 && !cursor.isNull(flagsIndex)) cursor.getInt(flagsIndex) else 0
+            name to flags
+        } ?: error("The selected folder provider returned no metadata")
+    }
+
+    private fun copyChildren(
+        treeUri: Uri,
+        parentDocumentId: String,
+        targetDirectory: File,
+        stats: MirrorStats,
+        depth: Int,
+    ) {
+        check(depth <= MAX_DEPTH) { "The selected vault exceeds the maximum folder depth" }
+        val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(treeUri, parentDocumentId)
+        val projection = arrayOf(
+            Document.COLUMN_DOCUMENT_ID,
+            Document.COLUMN_DISPLAY_NAME,
+            Document.COLUMN_MIME_TYPE,
+            Document.COLUMN_LAST_MODIFIED,
+            Document.COLUMN_SIZE,
+            Document.COLUMN_FLAGS,
+        )
+        val children = mutableListOf<Array<Any?>>()
+        activity.contentResolver.query(childrenUri, projection, null, null, null)?.use { cursor ->
+            val idIndex = cursor.getColumnIndexOrThrow(Document.COLUMN_DOCUMENT_ID)
+            val nameIndex = cursor.getColumnIndexOrThrow(Document.COLUMN_DISPLAY_NAME)
+            val mimeIndex = cursor.getColumnIndexOrThrow(Document.COLUMN_MIME_TYPE)
+            val modifiedIndex = cursor.getColumnIndex(Document.COLUMN_LAST_MODIFIED)
+            val sizeIndex = cursor.getColumnIndex(Document.COLUMN_SIZE)
+            val flagsIndex = cursor.getColumnIndex(Document.COLUMN_FLAGS)
+            while (cursor.moveToNext()) {
+                check(stats.entries + children.size.toLong() < MAX_ENTRIES) {
+                    "The selected vault contains too many entries"
+                }
+                children += arrayOf(
+                    cursor.getString(idIndex),
+                    cursor.getString(nameIndex),
+                    cursor.getString(mimeIndex),
+                    if (modifiedIndex >= 0 && !cursor.isNull(modifiedIndex)) cursor.getLong(modifiedIndex) else 0L,
+                    if (sizeIndex >= 0 && !cursor.isNull(sizeIndex)) cursor.getLong(sizeIndex) else 0L,
+                    if (flagsIndex >= 0 && !cursor.isNull(flagsIndex)) cursor.getInt(flagsIndex) else 0,
+                )
+            }
+        } ?: error("The selected folder can not be enumerated")
+
+        val names = mutableSetOf<String>()
+        for (child in children) {
+            stats.entries += 1
+            check(stats.entries <= MAX_ENTRIES) { "The selected vault contains too many entries" }
+            val documentId = child[0] as String
+            val name = safeFileName(child[1] as String?)
+            val mimeType = child[2] as String
+            val lastModified = child[3] as Long
+            val flags = child[5] as Int
+            check(names.add(name)) { "The selected folder contains duplicate file names" }
+            stats.latestModified = maxOf(stats.latestModified, lastModified)
+
+            if (mimeType == Document.MIME_TYPE_DIR) {
+                if (name.lowercase(Locale.ROOT) in RESERVED_DIRECTORIES) continue
+                val childTarget = File(targetDirectory, name)
+                check(childTarget.mkdir()) { "Could not create mirror folder $name" }
+                stats.directories += 1
+                copyChildren(treeUri, documentId, childTarget, stats, depth + 1)
+                continue
+            }
+
+            check(flags and Document.FLAG_VIRTUAL_DOCUMENT == 0) {
+                "Virtual document $name can not be mirrored"
+            }
+            val documentUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, documentId)
+            val target = File(targetDirectory, name)
+            var copiedBytes = 0L
+            activity.contentResolver.openInputStream(documentUri).use { input ->
+                checkNotNull(input) { "Document $name can not be opened" }
+                target.outputStream().use { output ->
+                    copiedBytes = input.copyTo(output)
+                }
+            }
+            if (lastModified > 0) target.setLastModified(lastModified)
+            stats.files += 1
+            stats.bytes += copiedBytes
+        }
+    }
+
     private fun safeFileName(candidate: String?): String {
         val leaf = candidate
             ?.substringAfterLast('/')
@@ -83,5 +317,11 @@ class MobileImportPlugin(private val activity: Activity) : Plugin(activity) {
             ?.trim()
             .orEmpty()
         return if (leaf.isEmpty() || leaf == "." || leaf == "..") "imported-file" else leaf
+    }
+
+    companion object {
+        private const val MAX_DEPTH = 64
+        private const val MAX_ENTRIES = 50_000L
+        private val RESERVED_DIRECTORIES = setOf(".jtype", ".git", "node_modules", "target")
     }
 }
