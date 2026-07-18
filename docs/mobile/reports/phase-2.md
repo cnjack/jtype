@@ -4,9 +4,9 @@
 
 Feature branch：`codex/mobile-app`
 
-当前 app code commit：`4cdf48d`
+当前 app code commit：`798be1c`
 
-本报告状态：进行中；2A provider contract、2B Android SAF 与 2C iOS security-scoped provider 的工程/Simulator gate 已完成。2D 已完成 app-private 草稿冷恢复、Keystore/Keychain pending OAuth 冷恢复、Android share target / iOS Share Extension、模拟器无障碍、共享触控交互与键盘辅助栏、5,000 文档大 vault，以及 353,355-character Markdown / Mermaid / KaTeX / 23 张大附件 / 1,200-card Board 的共享渐进渲染 gate。弱网、通知、native on-demand 和 physical low-memory/device gate 继续进行。iOS external provider 已通过系统目录选择、native-only bookmark、首次镜像、覆盖安装后的容器迁移、冷启动恢复和 shared editor write-back；physical iPhone 的 bookmark 失效/重新授权仍保留在最终真实设备 gate。
+本报告状态：进行中；2A provider contract、2B Android SAF 与 2C iOS security-scoped provider 的工程/Simulator gate 已完成。2D 已完成 app-private 草稿冷恢复、Keystore/Keychain pending OAuth 冷恢复、Android share target / iOS Share Extension、模拟器无障碍、共享触控交互与键盘辅助栏、5,000 文档大 vault、353,355-character Markdown / Mermaid / KaTeX / 23 张大附件 / 1,200-card Board 的共享渐进渲染，以及 sync batching、retry、request-id 幂等、可观测错误与双模拟器服务中断恢复 gate。真实设备弱网、通知、native on-demand 和 physical low-memory/device gate 继续进行。iOS external provider 已通过系统目录选择、native-only bookmark、首次镜像、覆盖安装后的容器迁移、冷启动恢复和 shared editor write-back；physical iPhone 的 bookmark 失效/重新授权仍保留在最终真实设备 gate。
 
 ## 本增量结论
 
@@ -21,6 +21,8 @@ Android SAF 没有新增 mobile-only 产品页：native picker 与 opaque tree U
 大 vault 性能也在同一产品层收口：一个 WeakMap 缓存的 workspace index 由 Sidebar、VaultHome、Quick Open、Editor wikilink 和 filesystem link impact 共用；每级文件树只挂载 160 个 sibling，并围绕 active path 定位。Android/iOS 没有新增 mobile-only 文档列表或搜索页，也没有复用 web dashboard、landing page 或 help/docs website。
 
 大内容渲染继续沿用同一边界：共享 Preview 首批挂载 240 个 Markdown block，Mermaid 与 vault-relative 大图按可见性加载；Board 每列首批 80 张，Table/Agenda/Swimlane 首批 160 张，但搜索、计数、filter 与依赖关系仍使用完整模型。Android/iOS 没有新增 mobile-only Preview 或 Board；PDF/export 显式渲染完整文档。
+
+同步可靠性也继续复用 desktop 产品层：`useCloudSync` / `useEagerSync`、Account dialog、operation log、Editor 与 lifecycle adapter 都是同一份代码。push 现在按 50-operation / 约 1 MB 确定性切批，pull/push 对 transient failure 最多尝试 3 次；服务端对顺序和并发 request-id replay 返回缓存响应。Android/iOS 没有新增 mobile-only sync 页面，也没有复用 web dashboard。
 
 本增量建立的边界包括：
 
@@ -535,16 +537,25 @@ Android API 36 的 5,003 篇实际 workspace（5,000 夹具 + 原有 3 篇）原
 
 Android 最终包实测 workspace open 201 ms、shared index 23.2 ms、Preview 首批渲染 107 ms。iPhone 17 Pro / iOS 26.5 最终 archive 完成 Documents → large Markdown → Preview → scroll，以及 Quick Open → 1,200-card Board → 搜索 01197 的完整 flow。验证同时修复 touch toolbar action 排序、compact Board 搜索顺序、Preview 大图宽度和 iOS Dynamic Type 下 layout/visual viewport 不一致的问题；所有修复都落在 shared root/container 或 runtime capability，没有第二套移动 UI。完整阈值、自动化、截图和 physical low-memory 剩余边界见 [`phase-2-large-content.md`](phase-2-large-content.md)。
 
+## 2D 同步批处理、重试与离线恢复
+
+共享 sync transport 现在将 121-document fixture 稳定拆为 `50 + 50 + 21` 三批，同一批次重试保持同一 request-id；pull/push 对 network、408、425、429 与 5xx 最多尝试 3 次。服务端 reservation/cache 对顺序 replay 和两个并发 handler 均只执行一次 mutation，不同 payload 复用 request-id 返回 400。
+
+Android API 36 与 iPhone 17 Pro / iOS 26.5 在 Axum 服务关闭期间均能通过同一个 EditorShell 保存离线编辑，并显示 bounded error 与 Offline；服务恢复后 lifecycle sync 显示 `Synced 121 change(s) in 3 batches` 与 Connected，服务端目标文档 clock `122`、version count `2`。重放同时发现并修复 WebSocket reconnect 增量 pull 未加载 sync base、可能覆盖本地离线编辑的竞态。完整实现、API 测试、双模拟器步骤和截图见 [`phase-2-weak-network-sync.md`](phase-2-weak-network-sync.md)。physical device 丢包/延迟/网络切换仍待最终 gate。
+
 ## 自动化与构建结果
 
 | 验证 | 结果 |
 | --- | --- |
 | `npm run build` | PASS |
 | `npm run build --prefix services/jtype-web/frontend` | PASS |
-| `npm run test:unit` | PASS，50/50；包含 5,000/20,000 文档索引、bounded search、wikilink 与 active window 回归 |
-| `npx playwright test tests/e2e/app.spec.ts` | PASS，51/51；包含 mobile accessibility/interaction、大 vault，以及 353,355-character Preview、KaTeX、Mermaid、lazy attachment、1,200-card Board 与尾部搜索回归 |
+| `npm run test:unit` | PASS，55/55；增加 sync batch size/bytes、稳定 request-id 与 retry 回归 |
+| `npx playwright test tests/e2e/app.spec.ts` | PASS，53/53；增加 mobile 三批 retry 与 WebSocket reconnect 本地编辑保护 |
+| `npm run test:web` | PASS，27/27 |
 | `cargo test --manifest-path services/jtype-core/Cargo.toml` | PASS，38/38 |
 | `cargo test --manifest-path src-tauri/Cargo.toml` | PASS，28/28；新增 source conflict subtree 原子替换测试 |
+| `cargo test --manifest-path services/jtype-web/Cargo.toml` | PASS；sync 15/15，包含顺序/并发 request-id 幂等与 collision 拒绝 |
+| `cargo check --manifest-path services/jtype-web/Cargo.toml` | PASS |
 | `cargo check --manifest-path plugins/mobile-import/Cargo.toml` | PASS |
 | `cargo fmt --manifest-path plugins/mobile-import/Cargo.toml --check` | PASS |
 | `cargo check --manifest-path plugins/mobile-interaction/Cargo.toml` | PASS |
@@ -579,18 +590,19 @@ Android 最终包实测 workspace open 201 ms、shared index 23.2 ms、Preview �
 | iOS 5,000 文档 cold open / 精确搜索 / 尾部文档 shared EditorShell | PASS；native 48 ms、Maestro 18.08 s（含 driver/assertion） |
 | Android 大 Markdown / Mermaid / KaTeX / 23 张大图 / 1,200-card Board | PASS；Preview 240/1,826 block 107 ms，尾部卡片 01197 精确可见 |
 | iOS 大 Markdown / 大图 / 1,200-card Board | PASS；最终 archive 四条共享操作链路与 visual viewport 截图通过 |
+| Android/iOS 121-document 三批、服务中断、离线保存、bounded error 与恢复 | PASS；目标文档 clock 122、version 2 |
 
 Android debug APK：
 
 - `src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk`
-- 740,663,642 bytes（四 ABI universal debug gate）
-- SHA-256 `d4916852dedcc03cf1400bab38b97e1bd72bb5d4c1887909613049915913d410`
+- 199,325,407 bytes（arm64 debug APK gate）
+- SHA-256 `f13da1503678baeedd0f4cc47392df39afe720f951bfe75e7cac6e36e553414e`
 
 iOS archive：
 
 - `src-tauri/gen/apple/build/jtype_iOS.xcarchive`
 - no-sign simulator archive；包含 `JType.app/PlugIns/JType Share.appex`
-- app binary 106,874,360 bytes；SHA-256 `492b4bceeb5cc4b3528f569f1440681b43cd9f90cbfdd9eb8abe93147d5e53e2`
+- app binary 106,874,360 bytes；SHA-256 `5906513b0a926f270ecba5ada86405fea1c4e4cb9a7118cabeb8afca4ed5a6c7`
 
 截图 SHA-256：
 
@@ -626,14 +638,18 @@ e7a42b28950fcacb1fa4b443be54d6521bdec5efd05858870a90bcedfd075522  android-large-
 8fc2525e14ace87183b7ccc5e2f917451d309aeaf336ee80487b7db8eb5a6cce  ios-large-content-preview.png
 794e892fa2bc0a9781035213081fc4318563b4e6cab44e6a1de3c3041cc9f115  android-large-board.png
 29002f6767ae88bb6df6af1535e6363395f87eceb248e9004dfb9f805d65e7a5  ios-large-board.png
+a1a94055c5a34025296fa1efa0b3110341700373deaf99d9fbe6650f4ffe6c67  android-weak-network-error.png
+4d2b890255bae2e1880b9196fa22e9076756515a2ceea2592ad142c04a85172f  android-weak-network-sync.png
+d43808152c716ef2299b0dec18e799bf6dca60e265afcb4a5343f0c9796655f6  ios-weak-network-error.png
+2b8f9306a7796521f67fb4ea0844e2f07f9308148ca395f9a83cfa0d4fe69ed0  ios-weak-network-sync.png
 ```
 
 ## 下一增量：2D 性能、可靠性与系统通知
 
-2A、2B、2C 与 2D recovery/share-import/accessibility/touch interaction/5,000-document vault/大内容渐进渲染的工程 gate 已收口。下一段继续保持 desktop/shared product surface，处理：
+2A、2B、2C 与 2D recovery/share-import/accessibility/touch interaction/5,000-document vault/大内容渐进渲染/sync batching-retry-idempotency 的工程 gate 已收口。下一段继续保持 desktop/shared product surface，处理：
 
 1. physical device 的大 Markdown/附件/Board 低内存与峰值 RSS gate，以及 external provider native on-demand materialization。
-2. 弱网、sync batching、重试、幂等和系统分享的大文件/进程终止矩阵。
+2. physical device 弱网、网络切换、低存储，以及系统分享大文件/进程终止矩阵。
 3. APNs/FCM 通知与通知/深链的 cloud workspace、vault、文档定位。
 4. physical iPhone 的 gesture/haptic/VoiceOver 与双端真实设备最终 gate。
 
