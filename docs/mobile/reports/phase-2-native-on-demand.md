@@ -131,5 +131,5 @@ e646299f60e8b7ad70d3dc16e7ce41a8dc882c99c3d51fc4e8b4c0d9d2ce63a0  ios-shared-wel
 
 1. 在可转发 touch 的 iOS Simulator/physical iPhone 重跑相同 Files provider flow。
 2. 补充双端 reconcile total time、峰值 RSS/存储增长；Android native scan/materialized file/bytes 已有真实数据。
-3. shared shallow page contract 与 canonical `WorkspaceSnapshot` merger 已在 `3f945c4` 建立；下一步补齐 native search/path resolve 后再启用 mobile partial snapshot 与按文档读取。首次 mirror 的离线策略单独决策，详见 [`phase-2-workspace-pagination.md`](phase-2-workspace-pagination.md)。
+3. shared shallow page contract 与 canonical `WorkspaceSnapshot` merger 已在 `3f945c4` 建立，未加载 entry native search/path/wikilink/link-impact query 已在 `1060d1c` 建立；下一步接入 shared loaded-first/native-fallback resolver 后再启用 mobile partial snapshot 与按文档读取。首次 mirror 的离线策略单独决策，详见 [`phase-2-workspace-pagination.md`](phase-2-workspace-pagination.md) 与 [`phase-2-unloaded-entry-resolution.md`](phase-2-unloaded-entry-resolution.md)。
 4. 为 Android Studio 提供明确的 arm64 run configuration/variant，避免 IDE 默认 `armDebug` 与 arm64 AVD 不匹配。

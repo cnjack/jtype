@@ -100,7 +100,7 @@ dac94d5830263edb1e210c73e1b7b6ca9813f8eca18e269d3bbb2db1a80ac258  android-worksp
 
 ## 下一步
 
-1. 为未加载 entry 增加 canonical native exact/fuzzy search 与 relative-path resolve，并覆盖 Quick Open、wikilink、link impact、通知和 deep link。
+1. 未加载 entry 的 canonical native exact/fuzzy search、relative-path/wikilink resolve 与 link-impact query 已在 `1060d1c` 完成 contract gate；完整边界见 [`phase-2-unloaded-entry-resolution.md`](phase-2-unloaded-entry-resolution.md)。
 2. 仅在 mobile runtime capability 下以根目录首屏创建 partial `WorkspaceSnapshot`；Desktop `open_workspace` 保持不变。
 3. 将共享 Sidebar 的 folder expansion / Show more 接到同一 page loader，mutation 后从受影响目录首屏刷新；文档正文继续通过现有 read command 在打开时读取。
 4. 在 Android/iOS 5,000 文档夹具上记录 cold open、首屏 IPC、峰值 RSS、尾部精确搜索/定位和连续分页，再决定是否需要 provider-native streaming cursor。

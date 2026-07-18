@@ -4,9 +4,9 @@
 
 Feature branch：`codex/mobile-app`
 
-当前 app code commit：`3f945c4`
+当前 app code commit：`999dc11`
 
-本报告状态：进行中；2A provider contract、2B Android SAF 与 2C iOS security-scoped provider 的工程/Simulator gate 已完成。2D 已完成 app-private 草稿冷恢复、Keystore/Keychain pending OAuth 冷恢复、Android share target / iOS Share Extension、模拟器无障碍、共享触控交互与键盘辅助栏、5,000 文档大 vault、353,355-character Markdown / Mermaid / KaTeX / 23 张大附件 / 1,200-card Board 的共享渐进渲染、sync batching/retry/request-id 幂等/服务中断恢复，以及 Android/iOS 本地原生通知文档定位 gate。external reconcile/write-back 已从整库临时复制改为 native full scan + plan-driven source materialization；Android 120-file SAF `1 changed / 0 changed` 原生复测已通过，iOS 本轮 Files provider 交互仍待可触摸宿主或 physical iPhone。共享浅层 workspace page 与 canonical snapshot merger 的工程/构建 gate 已完成，但移动运行时尚未启用 partial snapshot。真实设备弱网、APNs/FCM 厂商投递、native search/path resolve、运行时分页和 physical low-memory/device gate 继续进行。iOS external provider 已通过系统目录选择、native-only bookmark、首次镜像、覆盖安装后的容器迁移、冷启动恢复和 shared editor write-back；physical iPhone 的 bookmark 失效/重新授权仍保留在最终真实设备 gate。
+本报告状态：进行中；2A provider contract、2B Android SAF 与 2C iOS security-scoped provider 的工程/Simulator gate 已完成。2D 已完成 app-private 草稿冷恢复、Keystore/Keychain pending OAuth 冷恢复、Android share target / iOS Share Extension、模拟器无障碍、共享触控交互与键盘辅助栏、5,000 文档大 vault、353,355-character Markdown / Mermaid / KaTeX / 23 张大附件 / 1,200-card Board 的共享渐进渲染、sync batching/retry/request-id 幂等/服务中断恢复，以及 Android/iOS 本地原生通知文档定位 gate。external reconcile/write-back 已从整库临时复制改为 native full scan + plan-driven source materialization；Android 120-file SAF `1 changed / 0 changed` 原生复测已通过，iOS 本轮 Files provider 交互仍待可触摸宿主或 physical iPhone。共享浅层 workspace page、canonical snapshot merger 与未加载 entry native query 的工程/构建 gate 已完成，但移动运行时尚未启用 partial snapshot。真实设备弱网、APNs/FCM 厂商投递、shared loaded-first/native-fallback resolver、运行时分页和 physical low-memory/device gate 继续进行。iOS external provider 已通过系统目录选择、native-only bookmark、首次镜像、覆盖安装后的容器迁移、冷启动恢复和 shared editor write-back；physical iPhone 的 bookmark 失效/重新授权仍保留在最终真实设备 gate。
 
 ## 本增量结论
 
@@ -507,6 +507,7 @@ E2E 现在以完整中文 locale 在 390×844 viewport 验证：content panel �
 - `798be1c`：desktop/mobile 共用 sync batching/retry、稳定 request-id、服务端幂等与 reconnect 离线编辑保护。
 - `2a1fc09`：严格无凭据文档 route、移动端原生通知 adapter、vault binding 定位与 Desktop 共用打开操作。
 - `ff21f86`：iOS 前台原生通知立即呈现，兼容 notification plugin 的 ISO `Z` 本地时区解析。
+- `999dc11`：iOS notification preview 先让出 WKWebView 首次 paint，再调用前台通知；Android 保持 native schedule，并增加 delivery-mode 单测。
 
 ## 2D 草稿与 pending OAuth 冷恢复
 
@@ -556,7 +557,7 @@ Android API 36 与 iPhone 17 Pro / iOS 26.5 在 Axum 服务关闭期间均能通
 
 Android API 36 已显示真实系统通知，并在点击后定位到绑定 vault 的 `performance-note-00001.md` 和共用 EditorShell。官方 adapter 在 Android 实机模拟器回调中给出 `notification: null`，实现以固定 collaboration notification ID 和读取即删除的 canonical-route fallback 兼容；iOS payload 缺少 `extra` 时走同一边界。route 拒绝凭据、fragment、未知/重复参数、路径 traversal 与 reserved metadata segment。
 
-iPhone 17 Pro / iOS 26.5 Simulator 同样显示真实系统横幅，点击后消费一次性 canonical route fallback，并使用共用 EditorShell 打开 `Performance note 00001`；fallback localStorage 记录数随后为 `0`。Tauri notification `2.3.3` 的 iOS `Schedule.at()` 会把 ISO `Z` 按本地时间 literal 解析，兼容层让 iOS 前台立即呈现，Android 继续使用 2.5 秒延时；route、状态和 UI 仍完全共用。APNs/FCM token 与服务端投递、有限后台刷新、universal/app links 继续留在后续。完整边界、截图、artifact hash 与限制见 [`phase-2-notification-routing.md`](phase-2-notification-routing.md)。
+iPhone 17 Pro / iOS 26.5 Simulator 同样显示真实系统横幅，点击后消费一次性 canonical route fallback，并使用共用 EditorShell 打开 `Performance note 00001`；fallback localStorage 记录数随后为 `0`。Tauri notification `2.3.3` 的 iOS `Schedule.at()` 会把 ISO `Z` 按本地时间 literal 解析；兼容层在 JavaScript 中等待 2.5 秒、确保 WKWebView 首次 paint 完成后，再调用 iOS 前台立即呈现，Android 继续使用 native 2.5 秒 schedule。fresh-install 白屏通过提交级二分定位到 `ff21f86`，并由 `999dc11` 修复；route、状态和 UI 仍完全共用。APNs/FCM token 与服务端投递、有限后台刷新、universal/app links 继续留在后续。完整边界、截图、artifact hash 与限制见 [`phase-2-notification-routing.md`](phase-2-notification-routing.md) 与 [`phase-2-unloaded-entry-resolution.md`](phase-2-unloaded-entry-resolution.md)。
 
 ## 2D External provider 按需物化
 
@@ -568,7 +569,13 @@ Android SAF 与 iOS security-scoped provider 新增 native content-addressed sca
 
 Rust core 现在可以按目录返回 shallow `WorkspaceEntryPage`，默认共享批量 160、硬上限 500；visible kind、folder-first 排序、relative path 和安全边界与完整 `open_workspace` 一致。Tauri command 在读取前继续执行 external provider recovery。React merger 将 root/nested page immutable merge 回 canonical `WorkspaceSnapshot`，并在父目录 refresh 时保留已加载 folder children；没有增加 mobile-only tree、state、列表或操作。
 
-这一契约在 `3f945c4` 只完成底层与 build gate，运行时仍调用完整 `open_workspace`。原因是当前 Quick Open、Sidebar search、wikilink、filesystem link impact 和通知/deep-link 定位使用完整 workspace index；在 native search/path resolve 完成前切到 partial root 会造成功能倒退。因此本段不宣称 cold open、内存或 provider I/O 改善。jtype-core 40/40、Tauri 29/29、unit 63/63、app E2E 55/55、Desktop build、Android APK 与 iOS simulator archive 均通过；最终 APK/archive 也分别显示 shared VaultHome/Welcome。移动 build 必须串行执行，因为 Android/iOS Tauri `beforeBuildCommand` 当前共享同一个根 `dist/`。完整契约、限制、artifact/screenshot hash 与启用顺序见 [`phase-2-workspace-pagination.md`](phase-2-workspace-pagination.md)。
+这一契约在 `3f945c4` 只完成底层与 build gate，运行时仍调用完整 `open_workspace`。Quick Open、Sidebar search、wikilink、filesystem link impact 和通知/deep-link 原本依赖完整 workspace index，因此不能直接切到 partial root；`1060d1c` 已补齐 native query contract，下一段仍需 shared loaded-first/native-fallback resolver 与 completeness state 后才能安全启用。因此本段不宣称 cold open、内存或 provider I/O 改善。jtype-core 40/40、Tauri 29/29、unit 63/63、app E2E 55/55、Desktop build、Android APK 与 iOS simulator archive 均通过；最终 APK/archive 也分别显示 shared VaultHome/Welcome。移动 build 必须串行执行，因为 Android/iOS Tauri `beforeBuildCommand` 当前共享同一个根 `dist/`。完整契约、限制、artifact/screenshot hash 与启用顺序见 [`phase-2-workspace-pagination.md`](phase-2-workspace-pagination.md)。
+
+## 2D 未加载 entry 原生查询契约
+
+Rust core 现在可以在不先构造完整 recursive snapshot 的前提下查询 native vault：Sidebar document search 保持 Markdown substring 语义；Quick Open 保持 Markdown/Board、exact-before-fuzzy 与 parent folder filter；exact relative path、wikilink relative-stem-first/basename-first-fallback，以及 rename link impact 都返回现有 canonical `FileTreeNode` / impact shape。结果有 100 项硬上限，跳过 `.jtype` 与既有 reserved tree，Tauri command 读取 external mirror 前仍执行 provider recovery。
+
+实现 commit `1060d1c` 只增加 core/Tauri/TypeScript contract，没有切换 `WorkspaceSnapshot` completeness、QuickSwitcher、Sidebar、EditorShell 或 `useFileSystem`。因此 Desktop 和当前 mobile runtime 仍使用完整 `open_workspace` 与同步 `WorkspaceIndex`，未保存 editor buffer、现有 UI/操作和 E2E 行为没有变化；本段也不宣称搜索、cold open、RSS 或 IPC 性能改善。最终 artifact gate 同时发现并以 `999dc11` 修复 iOS notification preview 抢在 WKWebView 首次 paint 前调用 plugin 的白屏问题。jtype-core 43/43、Tauri 29/29、unit 66/66、app E2E 55/55、Desktop build、Android APK 与 iOS simulator archive 均通过。完整语义、artifact hash 和 partial runtime 接入顺序见 [`phase-2-unloaded-entry-resolution.md`](phase-2-unloaded-entry-resolution.md)。
 
 ## 自动化与构建结果
 
@@ -576,10 +583,10 @@ Rust core 现在可以按目录返回 shallow `WorkspaceEntryPage`，默认共�
 | --- | --- |
 | `npm run build` | PASS |
 | `npm run build --prefix services/jtype-web/frontend` | PASS |
-| `npm run test:unit` | PASS，63/63；新增 canonical workspace page root/nested merge、refresh preservation 与结构/顺序 guard |
+| `npm run test:unit` | PASS，66/66；包含 canonical workspace page/query guard，以及 iOS first-paint/Android native-schedule delivery mode 回归 |
 | `npx playwright test tests/e2e/app.spec.ts` | PASS，55/55；包含 mobile 三批 retry、cold document deep link 与 native notification tap fallback |
 | `npm run test:web` | PASS，27/27 |
-| `cargo test --manifest-path services/jtype-core/Cargo.toml` | PASS，40/40；新增 405-document shallow pagination 与 limit/path/cursor guard |
+| `cargo test --manifest-path services/jtype-core/Cargo.toml` | PASS，43/43；包含 405-document shallow pagination、未加载 entry exact/fuzzy search、path/wikilink resolve 与 nested link impact guard |
 | `cargo test --manifest-path src-tauri/Cargo.toml` | PASS，29/29；包含 source conflict subtree 原子替换与 native manifest canonical revision/path guard |
 | `cargo test --manifest-path services/jtype-web/Cargo.toml` | PASS；sync 15/15，包含顺序/并发 request-id 幂等与 collision 拒绝 |
 | `cargo check --manifest-path services/jtype-web/Cargo.toml` | PASS |
@@ -624,18 +631,19 @@ Rust core 现在可以按目录返回 shallow `WorkspaceEntryPage`，默认共�
 | Android 120-file external provider `1 changed / 0 changed` 原生复测 | PASS；SAF picker + shared VaultHome；551 ms / 1 file / 89 bytes，立即复扫 540 ms / 0 materialize |
 | iOS 120-file external provider `1 changed / 0 changed` 本轮原生复测 | 待完成；native app/shared Welcome 启动通过，但当前 Simulator canvas 不转发 WebView click，不记录虚构性能数字 |
 | Shared workspace pagination contract | PASS；jtype-core 40/40、Tauri 29/29、unit 63/63、app E2E 55/55、Desktop build 与双平台 mobile build；运行时 partial snapshot 未启用 |
+| Unloaded-entry native query contract | PASS；jtype-core 43/43、Tauri 29/29、unit 66/66、app E2E 55/55、Desktop build、双平台 mobile build 与 cold-launch screenshot；shared async fallback/partial snapshot 未启用 |
 
 Android debug APK：
 
 - `src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk`
-- 394,013,070 bytes（当前 workspace pagination contract universal debug APK gate）
-- SHA-256 `a81b3915a418d22127d30f74d39ba1c6b187077df48349047a8f6f563a9758d4`
+- 394,311,366 bytes（当前 unloaded-entry query contract universal debug APK gate）
+- SHA-256 `44a2dbb64221c939a29db82269894dc28dd3c4d237d8f8130c1bd8c0b38bd22d`
 
 iOS archive：
 
 - `src-tauri/gen/apple/build/jtype_iOS.xcarchive`
 - no-sign simulator archive；包含 `JType.app/PlugIns/JType Share.appex`
-- app binary 108,695,928 bytes；SHA-256 `42093181cc1fbdff2adcdfe4aec644e591cc96d188e61b68e4c53d5e23029ca2`
+- app binary 108,822,248 bytes；SHA-256 `85f059c1d37ed073b4c53219fcf94d9078a26c5ec0b04a2b4a6eca069b6e7bbc`
 
 截图 SHA-256：
 
@@ -683,13 +691,15 @@ ff6c2100eb7960b95222a2e028c2753bd46199197304bffaaa9bdecfac7a4a24  notification-i
 e646299f60e8b7ad70d3dc16e7ce41a8dc882c99c3d51fc4e8b4c0d9d2ce63a0  ios-shared-welcome.jpeg
 dac94d5830263edb1e210c73e1b7b6ca9813f8eca18e269d3bbb2db1a80ac258  android-workspace-pagination-smoke.png
 9d165ba82efe8b6ae73f23f4ca3f3138f86840cd3c0d84a8bc630b55a84837ee  ios-workspace-pagination-smoke.png
+f4311cf3d1e9c312f6802e4e44886d19a8ead1de549e8fe776fd57d51f3eda5a  android-unloaded-entry-query-smoke.png
+5d988efcefdacac41dcd90d2d967e85cd4b2e1140efa724a7e53cf9096eeaf9f  ios-unloaded-entry-query-smoke.png
 ```
 
 ## 下一增量：2D provider 复测、真实设备可靠性与厂商通知投递
 
 2A、2B、2C 与 2D recovery/share-import/accessibility/touch interaction/5,000-document vault/大内容渐进渲染/sync batching-retry-idempotency，以及 Android/iOS 本地系统通知 → 文档定位的工程 gate 已收口。下一段继续保持 desktop/shared product surface，处理：
 
-1. 补跑 iOS external provider 120-file `1 changed / 0 changed` scan/materialization 指标；shared shallow page contract 已完成，下一步补齐 native search/path resolve，再启用 mobile partial `WorkspaceSnapshot`、folder page loading 与按文档读取。Android 相同 provider 原生 gate 已通过，首次 mirror 的离线策略单独决策。
+1. 补跑 iOS external provider 120-file `1 changed / 0 changed` scan/materialization 指标；shared shallow page 和未加载 entry native query contract 已完成，下一步接入 shared loaded-first/native-fallback resolver，再启用 mobile partial `WorkspaceSnapshot`、folder page loading 与按文档读取。Android 相同 provider 原生 gate 已通过，首次 mirror 的离线策略单独决策。
 2. physical device 弱网、网络切换、低存储，以及系统分享大文件/进程终止矩阵。
 3. 接入 APNs/FCM token/服务端投递、有限后台刷新和 universal/app links；继续复用现有 canonical workspace/vault/document route。
 4. physical iPhone 的 gesture/haptic/VoiceOver 与双端真实设备最终 gate。

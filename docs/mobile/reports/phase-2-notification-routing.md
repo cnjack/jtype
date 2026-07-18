@@ -1,8 +1,9 @@
 # Phase 2D — 系统通知与文档定位
 
-日期：2026-07-18  
-Feature branch：`codex/mobile-app`  
-实现 commits：`2a1fc09`、`ff21f86`
+日期：2026-07-18；首屏回归更新：2026-07-19
+
+Feature branch：`codex/mobile-app`
+实现 commits：`2a1fc09`、`ff21f86`、`999dc11`
 
 ## 结论
 
@@ -100,7 +101,7 @@ Simulator 通知预览入口 `jtype://debug/notification?...` 需要 Rust comman
 5. 应用定位到对应 binding，并使用共用 Desktop EditorShell 打开 `Performance note 00001`。
 6. 点击完成后确认 fallback localStorage 记录数为 `0`。
 
-Tauri notification `2.3.3` 的 iOS `Schedule.at()` 会把带 `Z` 的 ISO 时间按本地时间 literal 解析；在 Asia/Shanghai 时区，短延时会被判定为过去时间。兼容层因此让 iOS 使用原生前台立即呈现，Android 继续使用 2.5 秒延时。这个分支只决定系统通知何时呈现，不复制 route、navigation、文档打开或 UI 代码。
+Tauri notification `2.3.3` 的 iOS `Schedule.at()` 会把带 `Z` 的 ISO 时间按本地时间 literal 解析；在 Asia/Shanghai 时区，短延时会被判定为过去时间。兼容层因此先在 JavaScript 进程内等待 2.5 秒，让 WKWebView 完成首次 paint，再动态导入 plugin 并使用 iOS 原生前台立即呈现；Android 继续把 2.5 秒延时交给 native scheduler。这个分支只决定系统通知何时呈现，不复制 route、navigation、文档打开或 UI 代码。
 
 ![iOS system notification](assets/phase-2/notification-ios.png)
 
@@ -113,14 +114,26 @@ ff6c2100eb7960b95222a2e028c2753bd46199197304bffaaa9bdecfac7a4a24  notification-i
 8cb3a85b74f01f925b9b50311b50dca3c7bd99c1b655a0010484a3cd7743add3  notification-target-ios.png
 ```
 
+## Fresh-launch 首屏回归
+
+在后续 unloaded-entry artifact gate 中，fresh uninstall/install 的 iOS archive 停留在白色 launch surface。独立 worktree 的 clean build 与 Simulator framebuffer 二分确认：`798be1c`、`2a1fc09` 正常，`ff21f86` 是第一个白屏提交，后续 `5970d15` 仍复现。App Group entitlement 和单纯修正 `Schedule.at` 墙上时间都不能消除问题；触发条件是通知 plugin 的成功调用发生在 WKWebView 首次 paint 前。
+
+`999dc11` 把 iOS preview 的延迟放在 plugin import/call 之前，Android 行为不变，并为 delivery mode 增加纯函数单测。最终 no-sign archive 在 iPhone 17 Pro / iOS 26.5 Simulator 卸载旧包、安装、冷启动并等待 6 秒后正常显示同一 shared Welcome：
+
+![iOS first-paint regression smoke](assets/phase-2/ios-unloaded-entry-query-smoke.png)
+
+```text
+5d988efcefdacac41dcd90d2d967e85cd4b2e1140efa724a7e53cf9096eeaf9f  ios-unloaded-entry-query-smoke.png  1206x2622
+```
+
 ## 自动化与构建
 
 | 验证 | 结果 |
 | --- | --- |
-| `pnpm run test:unit` | PASS，59/59；新增 route round-trip、安全拒绝、notification payload 与 debug preview 4 条测试 |
+| `pnpm run test:unit` | PASS，66/66；包含 route/payload 与 iOS first-paint、Android native schedule 三条 delivery-mode 回归 |
 | `pnpm exec playwright test tests/e2e/app.spec.ts` | PASS，55/55；新增 cold deep link 和 Android `notification:null` tap fallback 两条测试 |
 | `pnpm build` | PASS |
-| `cargo test --manifest-path src-tauri/Cargo.toml` | PASS，28/28 |
+| `cargo test --manifest-path src-tauri/Cargo.toml` | PASS，29/29 |
 | `cargo check --manifest-path src-tauri/Cargo.toml` | PASS |
 | `pnpm tauri android build --debug --target aarch64 --apk --ci` | PASS |
 | `pnpm tauri ios build --debug --target aarch64-sim --no-sign --archive-only --ci` | PASS |
@@ -130,12 +143,12 @@ ff6c2100eb7960b95222a2e028c2753bd46199197304bffaaa9bdecfac7a4a24  notification-i
 构建产物：
 
 ```text
-7b929576676ae538b2e8404d9d205b29c9f087d16298b9b38551b29a54844c24  app-universal-debug.apk
-bfcc3233c0983c67b9c50894624b6e4bae79d656c8e51417a7f57b5339242024  JType.app/JType
+44a2dbb64221c939a29db82269894dc28dd3c4d237d8f8130c1bd8c0b38bd22d  app-universal-debug.apk
+85f059c1d37ed073b4c53219fcf94d9078a26c5ec0b04a2b4a6eca069b6e7bbc  JType.app/JType
 ```
 
-- Android universal debug APK：393,793,862 bytes
-- iOS Simulator app binary：108,425,176 bytes
+- Android universal debug APK：394,311,366 bytes
+- iOS Simulator app binary：108,822,248 bytes
 
 ## 后续工作
 
