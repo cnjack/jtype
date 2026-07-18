@@ -25,6 +25,12 @@
         {
           "scheme": ["jtype"],
           "appLink": false
+        },
+        {
+          "scheme": ["https"],
+          "host": "jtype.nightc.com",
+          "path": ["/open/document"],
+          "appLink": true
         }
       ]
     }

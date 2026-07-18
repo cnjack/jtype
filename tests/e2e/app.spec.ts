@@ -2138,7 +2138,7 @@ test("opens the bound vault and shared document from a cold mobile deep link", a
       lastPulledClock: 0,
     }];
     window.__INITIAL_DEEP_LINKS__ = [
-      "jtype://open/document?workspaceId=workspace-e2e&path=guides%2Fsetup.md",
+      "https://jtype.nightc.com/open/document?workspaceId=workspace-e2e&path=guides%2Fsetup.md",
     ];
   });
   await page.reload();

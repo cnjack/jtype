@@ -44,6 +44,10 @@ services:
       JTYPED_DATABASE_URL: mysql://jtype:${MYSQL_PASSWORD:-jtype-local}@mysql:3306/${MYSQL_DATABASE:-jtype}
       JTYPED_BIND_ADDR: 0.0.0.0:13345
       JTYPED_PUBLIC_BASE_URL: http://localhost:13345
+      # Native HTTPS link verification stays disabled until real release
+      # identities are supplied. Android accepts comma-separated SHA-256 certs.
+      JTYPED_APPLE_APP_LINK_TEAM_ID: ${JTYPED_APPLE_APP_LINK_TEAM_ID:-}
+      JTYPED_ANDROID_APP_LINK_CERT_SHA256: ${JTYPED_ANDROID_APP_LINK_CERT_SHA256:-}
       # Durable asset storage via the rustfs (S3-compatible) service. Without
       # these, the web service falls back to its own ephemeral container
       # filesystem and all uploaded images are lost on rebuild.

@@ -60,6 +60,8 @@ resources:
 env:
   JTYPED_BIND_ADDR: "0.0.0.0:13345"
   JTYPED_PUBLIC_BASE_URL: "http://localhost:13345"
+  JTYPED_APPLE_APP_LINK_TEAM_ID: ""
+  JTYPED_ANDROID_APP_LINK_CERT_SHA256: ""
 
 # 使用已有的数据库连接字符串（优先级高于 mysql 配置）
 # 如果设置了这个，会忽略 mysql.host/port/database/user/password

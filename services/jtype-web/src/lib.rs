@@ -1,3 +1,4 @@
+pub mod app_links;
 pub mod board_events;
 pub mod db;
 pub mod error;
@@ -33,6 +34,7 @@ pub struct AppState {
     pub hub: hub::ConnectionHub,
     pub storage: storage::SharedStore,
     pub mailer: mail::SharedMailer,
+    pub app_links: app_links::AppLinkConfig,
 }
 
 impl AppState {
@@ -89,7 +91,13 @@ pub async fn run_from_env() -> Result<(), AppError> {
     // SMTP config resolves DB (admin UI) → env (`JTYPED_SMTP_*`) → default.
     let smtp_cfg = settings::load_smtp_config(&pool).await?;
     let mailer = mail::from_config(&smtp_cfg);
-    let (app, _hub) = build_app(pool.clone(), public_base_url, storage, mailer);
+    let (app, _hub) = build_app_with_app_links(
+        pool.clone(),
+        public_base_url,
+        storage,
+        mailer,
+        app_links::AppLinkConfig::from_env(),
+    );
     let listener = tokio::net::TcpListener::bind(&bind_addr)
         .await
         .map_err(|e| AppError::Server(e.to_string()))?;
@@ -124,6 +132,22 @@ pub fn build_app(
     storage: storage::DynStore,
     mailer: Option<mail::Mailer>,
 ) -> (Router, hub::ConnectionHub) {
+    build_app_with_app_links(
+        pool,
+        public_base_url,
+        storage,
+        mailer,
+        app_links::AppLinkConfig::default(),
+    )
+}
+
+pub fn build_app_with_app_links(
+    pool: Pool<MySql>,
+    public_base_url: String,
+    storage: storage::DynStore,
+    mailer: Option<mail::Mailer>,
+    app_links: app_links::AppLinkConfig,
+) -> (Router, hub::ConnectionHub) {
     let hub = hub::ConnectionHub::new();
     let cleanup_hub = hub.clone();
     tokio::spawn(async move {
@@ -139,6 +163,7 @@ pub fn build_app(
         hub,
         storage: storage::shared(storage),
         mailer: mail::shared(mailer),
+        app_links,
     };
 
     let return_hub = state.hub.clone();
@@ -148,6 +173,16 @@ pub fn build_app(
     let api = Router::new()
         // Health
         .route("/health", get(|| async { "ok" }))
+        // Native app/site trust. Empty signing config intentionally returns
+        // empty authorization manifests rather than trusting a placeholder.
+        .route(
+            "/.well-known/apple-app-site-association",
+            get(app_links::apple_app_site_association),
+        )
+        .route(
+            "/.well-known/assetlinks.json",
+            get(app_links::android_asset_links),
+        )
         // Auth API
         .route("/api/register", post(handlers::auth::register))
         .route("/api/login", post(handlers::auth::login))

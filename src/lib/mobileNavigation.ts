@@ -1,5 +1,7 @@
 export const MOBILE_DOCUMENT_ROUTE_HOST = "open";
 export const MOBILE_DOCUMENT_ROUTE_PATH = "/document";
+export const MOBILE_APP_LINK_ORIGIN = "https://jtype.nightc.com";
+export const MOBILE_APP_LINK_PATH = "/open/document";
 export const MOBILE_NOTIFICATION_ROUTE_KEY = "routeUrl";
 
 const RESERVED_SEGMENTS = new Set([".jtype", ".git", "node_modules", "target"]);
@@ -29,23 +31,38 @@ function normalizeRelativePath(value: string): string | null {
   return normalized;
 }
 
-export function createMobileDocumentRouteUrl(route: MobileDocumentRoute): string | null {
+function createDocumentRouteUrl(route: MobileDocumentRoute, baseUrl: string): string | null {
   const workspaceId = route.workspaceId.trim();
   const relativePath = normalizeRelativePath(route.relativePath);
   if (!WORKSPACE_ID_PATTERN.test(workspaceId) || !relativePath) return null;
-  const url = new URL(`jtype://${MOBILE_DOCUMENT_ROUTE_HOST}${MOBILE_DOCUMENT_ROUTE_PATH}`);
+  const url = new URL(baseUrl);
   url.searchParams.set("workspaceId", workspaceId);
   url.searchParams.set("path", relativePath);
   return url.toString();
 }
 
+export function createMobileDocumentRouteUrl(route: MobileDocumentRoute): string | null {
+  return createDocumentRouteUrl(
+    route,
+    `jtype://${MOBILE_DOCUMENT_ROUTE_HOST}${MOBILE_DOCUMENT_ROUTE_PATH}`,
+  );
+}
+
+export function createMobileDocumentAppLinkUrl(route: MobileDocumentRoute): string | null {
+  return createDocumentRouteUrl(route, `${MOBILE_APP_LINK_ORIGIN}${MOBILE_APP_LINK_PATH}`);
+}
+
 export function parseMobileDocumentRouteUrl(candidate: string): MobileDocumentRoute | null {
   try {
     const url = new URL(candidate);
+    const isCustomSchemeRoute = url.protocol === "jtype:"
+      && url.hostname === MOBILE_DOCUMENT_ROUTE_HOST
+      && url.pathname === MOBILE_DOCUMENT_ROUTE_PATH;
+    const isAppLinkRoute = url.protocol === "https:"
+      && url.origin === MOBILE_APP_LINK_ORIGIN
+      && url.pathname === MOBILE_APP_LINK_PATH;
     if (
-      url.protocol !== "jtype:"
-      || url.hostname !== MOBILE_DOCUMENT_ROUTE_HOST
-      || url.pathname !== MOBILE_DOCUMENT_ROUTE_PATH
+      (!isCustomSchemeRoute && !isAppLinkRoute)
       || url.username
       || url.password
       || url.port

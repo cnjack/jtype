@@ -19,6 +19,10 @@ mysql:
 
 env:
   JTYPED_PUBLIC_BASE_URL: "https://your-domain.com"
+  # Required before signed builds can claim universal/app links. For Play App
+  # Signing, use the app-signing certificate fingerprint from Play Console.
+  JTYPED_APPLE_APP_LINK_TEAM_ID: "YOURTEAMID"
+  JTYPED_ANDROID_APP_LINK_CERT_SHA256: "00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF"
 
 # 启用 Ingress
 ingress:

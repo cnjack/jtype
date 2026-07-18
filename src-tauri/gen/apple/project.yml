@@ -106,6 +106,8 @@ targets:
     entitlements:
       path: jtype_iOS/jtype_iOS.entitlements
       properties:
+        com.apple.developer.associated-domains:
+          - applinks:jtype.nightc.com
         com.apple.security.application-groups:
           - group.net.jcode.jtype
         keychain-access-groups:
