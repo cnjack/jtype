@@ -12,6 +12,8 @@
     "dialog:allow-save",
     "deep-link:default",
     "fs:allow-read-text-file",
+    "mobile-import:allow-registerListener",
+    "mobile-import:allow-removeListener",
     "opener:default"
   ]
 }

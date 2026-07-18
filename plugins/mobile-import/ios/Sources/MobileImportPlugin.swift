@@ -66,6 +66,23 @@ private enum MobileImportError: LocalizedError {
 
 class MobileImportPlugin: Plugin, UIDocumentPickerDelegate {
   private var pendingDirectoryInvoke: Invoke?
+  private let shareLock = NSLock()
+  private var claimedShareSources = Set<String>()
+
+  @objc public func takePendingShares(_ invoke: Invoke) throws {
+    DispatchQueue.global(qos: .userInitiated).async {
+      do {
+        try self.moveSharedRequestsIntoAppCache()
+        let discovered = try self.localShareSources()
+        self.shareLock.lock()
+        let sources = discovered.filter { self.claimedShareSources.insert($0).inserted }
+        self.shareLock.unlock()
+        invoke.resolve(["sources": sources])
+      } catch {
+        invoke.reject("Unable to receive shared files: \(error.localizedDescription)")
+      }
+    }
+  }
 
   @objc public func materialize(_ invoke: Invoke) throws {
     let args = try invoke.parseArgs(MaterializeArgs.self)
@@ -100,11 +117,14 @@ class MobileImportPlugin: Plugin, UIDocumentPickerDelegate {
         )
         let target = importDirectory!.appendingPathComponent(fileName, isDirectory: false)
         try FileManager.default.copyItem(at: sourceURL, to: target)
+        self.removeDisposableShareSource(sourceURL)
+        self.releaseShareClaim(args.source)
         invoke.resolve(["path": target.path])
       } catch {
         if let directory = importDirectory {
           try? FileManager.default.removeItem(at: directory)
         }
+        self.releaseShareClaim(args.source)
         invoke.reject("Unable to import external file: \(error.localizedDescription)")
       }
     }
@@ -335,6 +355,94 @@ class MobileImportPlugin: Plugin, UIDocumentPickerDelegate {
       return url
     }
     return URL(fileURLWithPath: source)
+  }
+
+  private func moveSharedRequestsIntoAppCache() throws {
+    guard let groupRoot = FileManager.default.containerURL(
+      forSecurityApplicationGroupIdentifier: Self.shareAppGroup
+    ) else {
+      return
+    }
+    let sharedInbox = groupRoot.appendingPathComponent(Self.shareInboxDirectory, isDirectory: true)
+    guard FileManager.default.fileExists(atPath: sharedInbox.path) else { return }
+
+    let localInbox = localShareInboxRoot()
+    try FileManager.default.createDirectory(
+      at: localInbox,
+      withIntermediateDirectories: true,
+      attributes: nil
+    )
+    let requests = try FileManager.default.contentsOfDirectory(
+      at: sharedInbox,
+      includingPropertiesForKeys: [.isDirectoryKey],
+      options: [.skipsHiddenFiles]
+    )
+    for request in requests.sorted(by: { $0.lastPathComponent < $1.lastPathComponent }) {
+      guard (try? request.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true else {
+        continue
+      }
+      var target = localInbox.appendingPathComponent(request.lastPathComponent, isDirectory: true)
+      if FileManager.default.fileExists(atPath: target.path) {
+        target = localInbox.appendingPathComponent(UUID().uuidString, isDirectory: true)
+      }
+      do {
+        try FileManager.default.moveItem(at: request, to: target)
+      } catch {
+        try FileManager.default.copyItem(at: request, to: target)
+        try FileManager.default.removeItem(at: request)
+      }
+    }
+  }
+
+  private func localShareSources() throws -> [String] {
+    let root = localShareInboxRoot()
+    guard FileManager.default.fileExists(atPath: root.path) else { return [] }
+    let requests = try FileManager.default.contentsOfDirectory(
+      at: root,
+      includingPropertiesForKeys: [.isDirectoryKey],
+      options: [.skipsHiddenFiles]
+    )
+    var sources: [String] = []
+    for request in requests.sorted(by: { $0.lastPathComponent < $1.lastPathComponent }) {
+      guard (try? request.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true else {
+        continue
+      }
+      let files = try FileManager.default.contentsOfDirectory(
+        at: request,
+        includingPropertiesForKeys: [.isDirectoryKey],
+        options: [.skipsHiddenFiles]
+      )
+      for file in files.sorted(by: { $0.lastPathComponent < $1.lastPathComponent }) {
+        guard (try? file.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) != true else {
+          continue
+        }
+        sources.append(file.path)
+      }
+    }
+    return Array(sources.prefix(Self.maximumShareSources))
+  }
+
+  private func localShareInboxRoot() -> URL {
+    let cacheRoot = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
+      ?? FileManager.default.temporaryDirectory
+    return cacheRoot.appendingPathComponent(Self.localShareInboxDirectory, isDirectory: true)
+  }
+
+  private func removeDisposableShareSource(_ sourceURL: URL) {
+    let root = localShareInboxRoot().standardizedFileURL
+    let source = sourceURL.standardizedFileURL
+    guard isDescendant(source, of: root) else { return }
+    try? FileManager.default.removeItem(at: source)
+    let request = source.deletingLastPathComponent()
+    if (try? FileManager.default.contentsOfDirectory(atPath: request.path).isEmpty) == true {
+      try? FileManager.default.removeItem(at: request)
+    }
+  }
+
+  private func releaseShareClaim(_ source: String) {
+    shareLock.lock()
+    claimedShareSources.remove(source)
+    shareLock.unlock()
   }
 
   private func resolveDirectory(_ reference: String) throws -> ScopedDirectory {
@@ -660,6 +768,10 @@ class MobileImportPlugin: Plugin, UIDocumentPickerDelegate {
   }
 
   private static let reservedDirectories = Set([".jtype", ".git", "node_modules", "target"])
+  private static let shareAppGroup = "group.net.jcode.jtype"
+  private static let shareInboxDirectory = "ShareInbox"
+  private static let localShareInboxDirectory = "jtype-share-inbox"
+  private static let maximumShareSources = 32
 }
 
 @_cdecl("init_plugin_mobile_import")

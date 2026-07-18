@@ -24,6 +24,41 @@ targetTemplates:
     settings:
       groups: [app]
 targets:
+  ShareExtension:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: ShareExtension
+    info:
+      path: ShareExtension/Info.plist
+      properties:
+        CFBundleDisplayName: JType
+        CFBundleShortVersionString: 0.1.0
+        CFBundleVersion: "0.1.0"
+        NSExtension:
+          NSExtensionAttributes:
+            NSExtensionActivationRule:
+              NSExtensionActivationSupportsAttachmentsWithMaxCount: 32
+              NSExtensionActivationSupportsFileWithMaxCount: 32
+              NSExtensionActivationSupportsImageWithMaxCount: 32
+              NSExtensionActivationSupportsText: true
+              NSExtensionActivationSupportsWebURLWithMaxCount: 1
+          NSExtensionPointIdentifier: com.apple.share-services
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ShareViewController
+    entitlements:
+      path: ShareExtension/ShareExtension.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.net.jcode.jtype
+    settings:
+      base:
+        APPLICATION_EXTENSION_API_ONLY: true
+        CODE_SIGN_ENTITLEMENTS: ShareExtension/ShareExtension.entitlements
+        PRODUCT_BUNDLE_IDENTIFIER: net.jcode.jtype.ShareExtension
+        PRODUCT_NAME: JType Share
+        SKIP_INSTALL: true
+        SWIFT_VERSION: 5.0
+        TARGETED_DEVICE_FAMILY: "1,2"
   jtype_iOS:
     type: application
     platform: iOS
@@ -53,8 +88,28 @@ targets:
           - UIInterfaceOrientationLandscapeRight
         CFBundleShortVersionString: 0.1.0
         CFBundleVersion: "0.1.0"
+        CFBundleDocumentTypes:
+          - CFBundleTypeExtensions: [md, markdown, mdown, mkd]
+            CFBundleTypeName: Markdown Document
+            CFBundleTypeRole: Editor
+            LSHandlerRank: Default
+        CFBundleURLTypes:
+          - CFBundleURLName: jtype
+            CFBundleURLSchemes: [jtype]
+        LSSupportsOpeningDocumentsInPlace: false
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+          NSExceptionDomains:
+            localhost:
+              NSExceptionAllowsInsecureHTTPLoads: true
+              NSIncludesSubdomains: true
     entitlements:
       path: jtype_iOS/jtype_iOS.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.net.jcode.jtype
+        keychain-access-groups:
+          - $(AppIdentifierPrefix)$(PRODUCT_BUNDLE_IDENTIFIER)
     scheme:
       environmentVariables:
         RUST_BACKTRACE: full
@@ -70,6 +125,8 @@ targets:
         EXCLUDED_ARCHS[sdk=iphoneos*]: x86_64
       groups: [app]
     dependencies:
+      - target: ShareExtension
+        embed: true
       - framework: libapp.a
         embed: false
       - sdk: CoreGraphics.framework

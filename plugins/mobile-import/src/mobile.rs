@@ -35,6 +35,12 @@ impl<R: Runtime> MobileImport<R> {
             .map_err(Into::into)
     }
 
+    pub fn take_pending_shares(&self) -> crate::Result<PendingShareSources> {
+        self.0
+            .run_mobile_plugin("takePendingShares", ())
+            .map_err(Into::into)
+    }
+
     #[cfg(any(target_os = "android", target_os = "ios"))]
     pub fn select_directory(&self) -> crate::Result<SelectedDirectory> {
         self.0

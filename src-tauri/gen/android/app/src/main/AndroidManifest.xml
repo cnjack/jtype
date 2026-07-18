@@ -32,6 +32,24 @@
                 <data android:scheme="jtype" />
             </intent-filter>
             <!-- DEEP LINK PLUGIN. AUTO-GENERATED. DO NOT REMOVE. -->
+            <!-- Android share target. Native code only captures ephemeral
+                 sources; the shared React/Rust import command owns placement. -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+                <data android:mimeType="text/markdown" />
+                <data android:mimeType="text/vnd.mermaid" />
+                <data android:mimeType="text/yaml" />
+                <data android:mimeType="image/*" />
+                <data android:mimeType="application/pdf" />
+                <data android:mimeType="application/json" />
+                <data android:mimeType="application/yaml" />
+                <data android:mimeType="application/vnd.jgraph.mxfile" />
+                <data android:mimeType="application/vnd.excalidraw+json" />
+                <data android:mimeType="application/octet-stream" />
+            </intent-filter>
             <!-- tauri-file-associations. AUTO-GENERATED. DO NOT REMOVE. -->
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />

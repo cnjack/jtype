@@ -8,12 +8,14 @@ import android.provider.DocumentsContract
 import android.provider.DocumentsContract.Document
 import android.provider.OpenableColumns
 import android.webkit.MimeTypeMap
+import android.webkit.WebView
 import androidx.activity.result.ActivityResult
 import app.tauri.annotation.ActivityCallback
 import app.tauri.annotation.Command
 import app.tauri.annotation.InvokeArg
 import app.tauri.annotation.TauriPlugin
 import app.tauri.plugin.Invoke
+import app.tauri.plugin.JSArray
 import app.tauri.plugin.JSObject
 import app.tauri.plugin.Plugin
 import java.io.File
@@ -74,6 +76,32 @@ private data class MirrorStats(
 @TauriPlugin
 class MobileImportPlugin(private val activity: Activity) : Plugin(activity) {
     private var debugDirectoryFault: DebugDirectoryFault? = null
+    private val pendingShareSources = linkedSetOf<String>()
+
+    init {
+        // Capture a cold ACTION_SEND during plugin registration, before the
+        // WebView can issue its first drain command.
+        captureShareIntent(activity.intent)
+    }
+
+    override fun load(webView: WebView) {
+        super.load(webView)
+        captureShareIntent(activity.intent)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        if (captureShareIntent(intent)) {
+            trigger("shareReceived", JSObject())
+        }
+    }
+
+    @Command
+    fun takePendingShares(invoke: Invoke) {
+        val sources = synchronized(pendingShareSources) {
+            pendingShareSources.toList().also { pendingShareSources.clear() }
+        }
+        invoke.resolve(JSObject().put("sources", JSArray(sources)))
+    }
 
     @Command
     fun selectDirectory(invoke: Invoke) {
@@ -412,6 +440,7 @@ class MobileImportPlugin(private val activity: Activity) : Plugin(activity) {
                     else -> File(args.source).name
                 }
                 val fileName = safeFileName(displayName)
+                val disposableShareSource = disposableShareSource(uri, args.source)
                 importDirectory = File(
                     activity.cacheDir,
                     "jtype-imports/${UUID.randomUUID()}",
@@ -422,6 +451,7 @@ class MobileImportPlugin(private val activity: Activity) : Plugin(activity) {
                 openSource(uri, args.source).use { input ->
                     target.outputStream().use { output -> input.copyTo(output) }
                 }
+                disposableShareSource?.parentFile?.deleteRecursively()
 
                 invoke.resolve(JSObject().put("path", target.absolutePath))
             } catch (error: Exception) {
@@ -438,6 +468,70 @@ class MobileImportPlugin(private val activity: Activity) : Plugin(activity) {
             "file" -> File(uri.path ?: error("The selected file URL has no path")).inputStream()
             else -> File(source).inputStream()
         }
+
+    private fun captureShareIntent(intent: Intent?): Boolean {
+        if (intent == null || intent.getBooleanExtra(SHARE_CONSUMED_EXTRA, false)) return false
+        if (intent.action != Intent.ACTION_SEND && intent.action != Intent.ACTION_SEND_MULTIPLE) return false
+
+        val sources = linkedSetOf<String>()
+        @Suppress("DEPRECATION")
+        when (intent.action) {
+            Intent.ACTION_SEND -> (intent.getParcelableExtra(Intent.EXTRA_STREAM) as? Uri)?.let {
+                sources += it.toString()
+            }
+            Intent.ACTION_SEND_MULTIPLE -> intent.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)
+                ?.forEach { sources += it.toString() }
+        }
+        intent.clipData?.let { clip ->
+            for (index in 0 until minOf(clip.itemCount, MAX_SHARE_SOURCES)) {
+                clip.getItemAt(index).uri?.let { sources += it.toString() }
+            }
+        }
+
+        val acceptedUris = sources
+            .asSequence()
+            .map(Uri::parse)
+            .filter { it.scheme.equals("content", true) || it.scheme.equals("file", true) }
+            .map(Uri::toString)
+            .take(MAX_SHARE_SOURCES)
+            .toMutableList()
+
+        if (acceptedUris.isEmpty()) {
+            val text = intent.getCharSequenceExtra(Intent.EXTRA_TEXT)?.toString()
+            if (!text.isNullOrBlank() && text.toByteArray(Charsets.UTF_8).size <= MAX_SHARED_TEXT_BYTES) {
+                val subject = intent.getStringExtra(Intent.EXTRA_SUBJECT)?.trim().orEmpty()
+                runCatching {
+                    val requestDirectory = File(
+                        activity.cacheDir,
+                        "$SHARE_INBOX_DIRECTORY/${UUID.randomUUID()}",
+                    )
+                    check(requestDirectory.mkdirs()) { "Could not create the share inbox" }
+                    val baseName = subject.ifBlank { "Shared text" }
+                    File(requestDirectory, safeFileName("$baseName.md")).also {
+                        it.writeText(text, Charsets.UTF_8)
+                    }
+                }.getOrNull()?.let { acceptedUris += it.absolutePath }
+            }
+        }
+
+        if (acceptedUris.isNotEmpty()) {
+            synchronized(pendingShareSources) { pendingShareSources.addAll(acceptedUris) }
+        }
+        // Activity recreation must not enqueue the same share request again.
+        intent.putExtra(SHARE_CONSUMED_EXTRA, true)
+        return acceptedUris.isNotEmpty()
+    }
+
+    private fun disposableShareSource(uri: Uri, source: String): File? {
+        if (uri.scheme != null) return null
+        return try {
+            val inboxRoot = File(activity.cacheDir, SHARE_INBOX_DIRECTORY).canonicalFile
+            val sourceFile = File(source).canonicalFile
+            sourceFile.takeIf { it.path.startsWith(inboxRoot.path + File.separator) }
+        } catch (_: Exception) {
+            null
+        }
+    }
 
     private fun applyDebugDirectoryFaultIfNeeded(treeUri: Uri) {
         val fault = synchronized(this) {
@@ -748,6 +842,10 @@ class MobileImportPlugin(private val activity: Activity) : Plugin(activity) {
     companion object {
         private const val MAX_DEPTH = 64
         private const val MAX_ENTRIES = 50_000L
+        private const val MAX_SHARE_SOURCES = 32
+        private const val MAX_SHARED_TEXT_BYTES = 10 * 1024 * 1024
+        private const val SHARE_INBOX_DIRECTORY = "jtype-share-inbox"
+        private const val SHARE_CONSUMED_EXTRA = "net.jcode.jtype.share.CONSUMED"
         private val RESERVED_DIRECTORIES = setOf(".jtype", ".git", "node_modules", "target")
     }
 }

@@ -1,0 +1,20 @@
+appId: com.apple.mobilesafari
+---
+- launchApp:
+    clearState: false
+- openLink: https://example.com/jtype-ios-share-proof
+- waitForAnimationToEnd
+- tapOn:
+    id: MoreMenuButton
+- tapOn:
+    id: ShareButton
+- assertVisible: "JType"
+- tapOn:
+    # The iOS share sheet is hosted in a remote scene, so its text bounds are
+    # not tappable through XCUITest. Tap the visible JType action card instead.
+    point: "61%,73%"
+- assertVisible: "Saved for JType.*"
+- launchApp:
+    appId: net.jcode.jtype
+    clearState: false
+- assertVisible: ".*example.com/jtype-ios-share-proof.*"

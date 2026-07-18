@@ -26,7 +26,7 @@ import { AppVersion } from "@shared/components";
 import { isTauriRuntime, relativePathFromWorkspace } from "../lib/utils";
 import { isDiagramTextPath } from "@shared/lib/fileTypes";
 import type { MobileDraftRecovery } from "../lib/types";
-import { invoke } from "@tauri-apps/api/core";
+import { addPluginListener, invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { RuntimeCapabilitiesProvider, useRuntimeCapabilities } from "./RuntimeCapabilities";
 
@@ -429,6 +429,26 @@ function AppContent() {
 
   useEffect(() => {
     if (!isTauriRuntime()) return;
+    let drainInFlight = false;
+    let drainRequested = false;
+    const drainExternalSources = async () => {
+      drainRequested = true;
+      if (drainInFlight) return;
+      drainInFlight = true;
+      try {
+        do {
+          drainRequested = false;
+          const { tauri } = await import("../lib/tauri");
+          const sources = await tauri.initialExternalFileSources();
+          if (sources.length > 0) await importExternalSourcesRef.current(sources);
+        } while (drainRequested);
+      } catch {
+        // Startup retains its own visible import error handling. A resume with
+        // no pending platform share is intentionally silent.
+      } finally {
+        drainInFlight = false;
+      }
+    };
     const unlistenOpenMarkdown = listen<string[]>("open-markdown-files", (event) => {
       const targetFile = event.payload.find((path) => /\.(md|markdown|mdown|mkd)$/i.test(path));
       if (targetFile) void openMarkdownFileRef.current(targetFile);
@@ -436,18 +456,32 @@ function AppContent() {
     const unlistenExternalUris = listen<string[]>("open-external-file-uris", () => {
       // The backend queues before emitting. Draining that queue here prevents a
       // warm open-with event from being imported again on the next cold start.
-      void import("../lib/tauri")
-        .then(({ tauri }) => tauri.initialExternalFileSources())
-        .then((sources) => {
-          if (sources.length > 0) void importExternalSourcesRef.current(sources);
-        })
-        .catch(() => undefined);
+      void drainExternalSources();
     });
+    const unlistenLifecycle = listen<string>("app:lifecycle", (event) => {
+      // Android share intents carry EXTRA_STREAM/EXTRA_TEXT rather than a URL,
+      // so the native plugin drains them when the activity returns to front.
+      if (event.payload === "active") void drainExternalSources();
+    });
+    const nativeShareListener = capabilities.isMobile
+      ? addPluginListener("mobile-import", "shareReceived", () => {
+          void drainExternalSources();
+        })
+      : null;
+    nativeShareListener?.then(() => {
+      void drainExternalSources();
+    });
+    // Native plugin load can finish a fraction after the first Rust startup
+    // command on Android cold launch. Drain once after listeners are installed
+    // so an ACTION_SEND used to start the process cannot be missed.
+    void drainExternalSources();
     return () => {
       unlistenOpenMarkdown.then((fn) => fn());
       unlistenExternalUris.then((fn) => fn());
+      unlistenLifecycle.then((fn) => fn());
+      nativeShareListener?.then((listener) => listener.unregister());
     };
-  }, [dispatch]);
+  }, [capabilities.isMobile, dispatch]);
 
   useEffect(() => {
     if (!isTauriRuntime() || !state.workspace) return;

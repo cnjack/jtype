@@ -215,13 +215,35 @@ fn initial_open_paths(state: tauri::State<'_, AppState>) -> Vec<String> {
 }
 
 #[tauri::command]
-fn initial_external_file_sources(state: tauri::State<'_, AppState>) -> Vec<String> {
-    state
+fn initial_external_file_sources(
+    app: AppHandle,
+    state: tauri::State<'_, AppState>,
+) -> Result<Vec<String>, String> {
+    #[cfg(mobile)]
+    let native_sources = app
+        .mobile_import()
+        .take_pending_shares()
+        .map_err(|error| error.to_string())?
+        .sources;
+    #[cfg(desktop)]
+    let native_sources: Vec<String> = {
+        let _ = app;
+        Vec::new()
+    };
+    let sources: Vec<String> = state
         .pending_external_file_sources
         .lock()
         .unwrap()
         .drain(..)
-        .collect()
+        .chain(native_sources)
+        .collect();
+    let mut unique_sources = Vec::with_capacity(sources.len());
+    for source in sources {
+        if !unique_sources.contains(&source) {
+            unique_sources.push(source);
+        }
+    }
+    Ok(unique_sources)
 }
 
 fn normalize_open_path_arg(arg: &str) -> Option<String> {

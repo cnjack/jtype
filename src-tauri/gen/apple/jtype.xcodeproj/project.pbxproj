@@ -11,8 +11,11 @@
 		0CB288F69DA073958AAD3A29 /* assets in Resources */ = {isa = PBXBuildFile; fileRef = 9B2760A516AB22FD9C620293 /* assets */; };
 		1CE4ACA6104B37F217771188 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0254E3B0CD756F0B43F58274 /* Metal.framework */; };
 		31BB61115ECAC0366F50BFCA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 26493CBC18BFD641FC191D9C /* Assets.xcassets */; };
+		473A8BC495FA36F6A28DD157 /* ShareExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 10007AA6CEA4FBE383007105 /* ShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		680E7953F482FB7911D9B2B8 /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F709821E3E2FC2739E2C840 /* MetalKit.framework */; };
+		69F43F5BB400E107E3507DAE /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D367A61F981F8C59321FC175 /* ShareViewController.swift */; };
 		6DB696C48506B355A30D5709 /* libapp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7C07DE9CF3ED728543ACC89F /* libapp.a */; };
+		8C62D0E27066CEE50A2456E9 /* libapp.a in Resources */ = {isa = PBXBuildFile; fileRef = EA5499F8CCF0EB3357611423 /* libapp.a */; };
 		A2D4EC3C44D834801258B80B /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 282970254C996B9EC75E1EE6 /* LaunchScreen.storyboard */; };
 		A5546941EB923495A5973D58 /* main.mm in Sources */ = {isa = PBXBuildFile; fileRef = E8429EE46C8A08AFEB5A7D3C /* main.mm */; };
 		C05E247ACAE3E381199A7571 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 39448858F580B8FDB3E9704B /* QuartzCore.framework */; };
@@ -21,27 +24,58 @@
 		D860B91205F0C0A4A862330D /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6BCCB1B53B27F23E99811258 /* WebKit.framework */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		93274054DE5D8C31EAFB6FCE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3B9983B47410804A024DDF5F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 0EEE9E910BB865007E4C2C8C;
+			remoteInfo = ShareExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		925728D4240038D544514E68 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				473A8BC495FA36F6A28DD157 /* ShareExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		0167B1986E3F518732B9C13C /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		0254E3B0CD756F0B43F58274 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
+		10007AA6CEA4FBE383007105 /* ShareExtension.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = ShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		1F709821E3E2FC2739E2C840 /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
 		26493CBC18BFD641FC191D9C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		282970254C996B9EC75E1EE6 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		2C1839382A19C8C0E0A827D4 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		3482F877BD8E978FEA32C088 /* lib.rs */ = {isa = PBXFileReference; path = lib.rs; sourceTree = "<group>"; };
 		39448858F580B8FDB3E9704B /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
+		3C9FC3A0787DB23324ADD522 /* vault_provider.rs */ = {isa = PBXFileReference; path = vault_provider.rs; sourceTree = "<group>"; };
 		56F4AF33D7C174EB1280D70D /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		69A8D4C6DDD13D5FFE710E98 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		6BCCB1B53B27F23E99811258 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
+		6C41839C9AA47451952A2AAD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		708322ECDB0C09C7EE3669B8 /* main.rs */ = {isa = PBXFileReference; path = main.rs; sourceTree = "<group>"; };
 		7493E92A38FA008949229FB6 /* bindings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bindings.h; sourceTree = "<group>"; };
 		7C07DE9CF3ED728543ACC89F /* libapp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libapp.a; sourceTree = "<group>"; };
 		82DA35A9297744F516CB4AAF /* cli_install.rs */ = {isa = PBXFileReference; path = cli_install.rs; sourceTree = "<group>"; };
 		9B2760A516AB22FD9C620293 /* assets */ = {isa = PBXFileReference; lastKnownFileType = folder; path = assets; sourceTree = SOURCE_ROOT; };
+		B6B21F0ADF702AB3EEE530E3 /* ShareExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ShareExtension.entitlements; sourceTree = "<group>"; };
 		BAECE4050E52FEB58CB8445B /* ws_client.rs */ = {isa = PBXFileReference; path = ws_client.rs; sourceTree = "<group>"; };
+		C37DA4E115FF8B3FB1295821 /* vault_reconcile.rs */ = {isa = PBXFileReference; path = vault_reconcile.rs; sourceTree = "<group>"; };
 		C618DEBE0144D2A278702282 /* jtype_iOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = jtype_iOS.entitlements; sourceTree = "<group>"; };
+		D367A61F981F8C59321FC175 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
 		E09D6E026A31D389DDF37538 /* jtype_iOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = jtype_iOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E8429EE46C8A08AFEB5A7D3C /* main.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = main.mm; sourceTree = "<group>"; };
+		EA5499F8CCF0EB3357611423 /* libapp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libapp.a; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -72,6 +106,14 @@
 			path = jtype;
 			sourceTree = "<group>";
 		};
+		128652E831B8BF702E22060A /* arm64 */ = {
+			isa = PBXGroup;
+			children = (
+				C1B2699BB856C92D3538AA95 /* debug */,
+			);
+			path = arm64;
+			sourceTree = "<group>";
+		};
 		20AE37BF5AE6D6507C6E28F6 = {
 			isa = PBXGroup;
 			children = (
@@ -80,6 +122,7 @@
 				282970254C996B9EC75E1EE6 /* LaunchScreen.storyboard */,
 				C5D5FA67CE5577C947119169 /* Externals */,
 				419773C5DD2E8988D8F20CA0 /* jtype_iOS */,
+				D242E177CDF9CDD7E8A8CF61 /* ShareExtension */,
 				A46B80290D62F624955C9B77 /* Sources */,
 				2E289FD28A45771B4822ED4A /* src */,
 				9F2B2D93D333371C1A0975A8 /* Frameworks */,
@@ -93,6 +136,8 @@
 				82DA35A9297744F516CB4AAF /* cli_install.rs */,
 				3482F877BD8E978FEA32C088 /* lib.rs */,
 				708322ECDB0C09C7EE3669B8 /* main.rs */,
+				3C9FC3A0787DB23324ADD522 /* vault_provider.rs */,
+				C37DA4E115FF8B3FB1295821 /* vault_reconcile.rs */,
 				BAECE4050E52FEB58CB8445B /* ws_client.rs */,
 			);
 			name = src;
@@ -103,6 +148,7 @@
 			isa = PBXGroup;
 			children = (
 				E09D6E026A31D389DDF37538 /* jtype_iOS.app */,
+				10007AA6CEA4FBE383007105 /* ShareExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -139,11 +185,30 @@
 			path = Sources;
 			sourceTree = "<group>";
 		};
+		C1B2699BB856C92D3538AA95 /* debug */ = {
+			isa = PBXGroup;
+			children = (
+				EA5499F8CCF0EB3357611423 /* libapp.a */,
+			);
+			path = debug;
+			sourceTree = "<group>";
+		};
 		C5D5FA67CE5577C947119169 /* Externals */ = {
 			isa = PBXGroup;
 			children = (
+				128652E831B8BF702E22060A /* arm64 */,
 			);
 			path = Externals;
+			sourceTree = "<group>";
+		};
+		D242E177CDF9CDD7E8A8CF61 /* ShareExtension */ = {
+			isa = PBXGroup;
+			children = (
+				6C41839C9AA47451952A2AAD /* Info.plist */,
+				B6B21F0ADF702AB3EEE530E3 /* ShareExtension.entitlements */,
+				D367A61F981F8C59321FC175 /* ShareViewController.swift */,
+			);
+			path = ShareExtension;
 			sourceTree = "<group>";
 		};
 		DB6185F80468ED85F0156F12 /* bindings */ = {
@@ -154,9 +219,33 @@
 			path = bindings;
 			sourceTree = "<group>";
 		};
+		"TEMP_EF18FD8D-9D79-4892-AC8F-19D1B818E7C6" /* x86_64 */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = x86_64;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		0EEE9E910BB865007E4C2C8C /* ShareExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4B92136F01811121DDF56EE7 /* Build configuration list for PBXNativeTarget "ShareExtension" */;
+			buildPhases = (
+				5E9E07BE552CBA334830116A /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ShareExtension;
+			packageProductDependencies = (
+			);
+			productName = ShareExtension;
+			productReference = 10007AA6CEA4FBE383007105 /* ShareExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		27EC637B32CDD111E326B425 /* jtype_iOS */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = FFF951B0A7780628ED921878 /* Build configuration list for PBXNativeTarget "jtype_iOS" */;
@@ -165,10 +254,12 @@
 				992BBCB42A0E305BCD6790A6 /* Sources */,
 				AA00D667627B5F3A9724FC06 /* Resources */,
 				D43C7EC4874D82237C6E5542 /* Frameworks */,
+				925728D4240038D544514E68 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				9E8422B08409FDDCF60DA8AD /* PBXTargetDependency */,
 			);
 			name = jtype_iOS;
 			packageProductDependencies = (
@@ -202,6 +293,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
+				0EEE9E910BB865007E4C2C8C /* ShareExtension */,
 				27EC637B32CDD111E326B425 /* jtype_iOS */,
 			);
 		};
@@ -215,6 +307,7 @@
 				31BB61115ECAC0366F50BFCA /* Assets.xcassets in Resources */,
 				A2D4EC3C44D834801258B80B /* LaunchScreen.storyboard in Resources */,
 				0CB288F69DA073958AAD3A29 /* assets in Resources */,
+				8C62D0E27066CEE50A2456E9 /* libapp.a in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -245,6 +338,14 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		5E9E07BE552CBA334830116A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				69F43F5BB400E107E3507DAE /* ShareViewController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		992BBCB42A0E305BCD6790A6 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -254,6 +355,14 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		9E8422B08409FDDCF60DA8AD /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 0EEE9E910BB865007E4C2C8C /* ShareExtension */;
+			targetProxy = 93274054DE5D8C31EAFB6FCE /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		0570AE761CD900768586C53B /* debug */ = {
@@ -375,6 +484,46 @@
 			};
 			name = release;
 		};
+		1F47F605EB01D0A5341D17BB /* release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = ShareExtension/ShareExtension.entitlements;
+				INFOPLIST_FILE = ShareExtension/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = net.jcode.jtype.ShareExtension;
+				PRODUCT_NAME = "JType Share";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = release;
+		};
+		61CBA7235FDA71042E2BCAAD /* debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = ShareExtension/ShareExtension.entitlements;
+				INFOPLIST_FILE = ShareExtension/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = net.jcode.jtype.ShareExtension;
+				PRODUCT_NAME = "JType Share";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = debug;
+		};
 		73D26E91BFEAE4B47C0567DB /* debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -440,6 +589,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		4B92136F01811121DDF56EE7 /* Build configuration list for PBXNativeTarget "ShareExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				61CBA7235FDA71042E2BCAAD /* debug */,
+				1F47F605EB01D0A5341D17BB /* release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = debug;
+		};
 		996031FFCA5F4C355F7DA6AD /* Build configuration list for PBXProject "jtype" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

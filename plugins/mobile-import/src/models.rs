@@ -12,6 +12,15 @@ pub struct MaterializedFile {
     pub path: String,
 }
 
+/// Sources captured by the platform share target. The native adapter keeps
+/// URI grants and temporary text files out of the WebView until Rust drains
+/// them into the existing external-import command.
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct PendingShareSources {
+    pub sources: Vec<String>,
+}
+
 /// Native-only result from an Android SAF or iOS document-picker selection.
 /// The source reference is consumed by Rust and persisted in app-private
 /// storage; it is never part of a Tauri command response to the WebView.

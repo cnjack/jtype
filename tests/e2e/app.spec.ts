@@ -35,6 +35,7 @@ declare global {
     __OAUTH_START_BODY__?: Record<string, unknown>;
     __OAUTH_POLL_PENDING__: boolean;
     __EMIT_TAURI_EVENT__: (event: string, payload: unknown) => number;
+    __EMIT_TAURI_PLUGIN_EVENT__: (plugin: string, event: string, payload: unknown) => number;
   }
 }
 
@@ -87,6 +88,7 @@ test.beforeEach(async ({ page }) => {
     let eventId = 0;
     const tauriCallbacks = new Map<number, (value: unknown) => void>();
     const eventSubscriptions = new Map<number, { event: string; handler: number }>();
+    const pluginSubscriptions = new Map<number, { plugin: string; event: string; handler: number; nextIndex: number }>();
     const trashItems: Array<{ trashId: string; relativePath: string; name: string; trashedAt: number; content: string }> = [];
     const workspaceSnapshot = () => JSON.parse(JSON.stringify(workspace));
     const removeWorkspaceEntry = (entries: Array<{ relativePath: string; path: string; children: unknown[] }>, relativePath: string): boolean => {
@@ -204,6 +206,19 @@ test.beforeEach(async ({ page }) => {
         }
         return invoked;
       },
+      __EMIT_TAURI_PLUGIN_EVENT__: (plugin: string, event: string, payload: unknown) => {
+        let invoked = 0;
+        for (const subscription of pluginSubscriptions.values()) {
+          if (subscription.plugin !== plugin || subscription.event !== event) continue;
+          tauriCallbacks.get(subscription.handler)?.({
+            index: subscription.nextIndex,
+            message: payload,
+          });
+          subscription.nextIndex += 1;
+          invoked += 1;
+        }
+        return invoked;
+      },
       __TAURI_EVENT_PLUGIN_INTERNALS__: {
         unregisterListener: (_event: string, id: number) => eventSubscriptions.delete(id),
       },
@@ -240,7 +255,9 @@ test.beforeEach(async ({ page }) => {
             return JSON.parse((window as unknown as { __INITIAL_OPEN_PATHS_JSON__?: string }).__INITIAL_OPEN_PATHS_JSON__ ?? "[]");
           }
           if (cmd === "initial_external_file_sources") {
-            return JSON.parse(window.__INITIAL_EXTERNAL_SOURCES_JSON__ ?? "[]");
+            const sources = JSON.parse(window.__INITIAL_EXTERNAL_SOURCES_JSON__ ?? "[]");
+            window.__INITIAL_EXTERNAL_SOURCES_JSON__ = "[]";
+            return sources;
           }
           if (cmd === "load_cloud_profile") {
             return window.__CLOUD_PROFILE__ ?? { serverUrl: "http://localhost:13345", username: "", siteUrl: "", token: "", deviceId: "dev_e2e" };
@@ -404,6 +421,20 @@ test.beforeEach(async ({ page }) => {
           }
           if (cmd === "plugin:event|unlisten") {
             eventSubscriptions.delete(Number(args.eventId));
+            return null;
+          }
+          if (cmd === "plugin:mobile-import|registerListener") {
+            const handler = args.handler as { id: number };
+            pluginSubscriptions.set(handler.id, {
+              plugin: "mobile-import",
+              event: String(args.event),
+              handler: handler.id,
+              nextIndex: 0,
+            });
+            return null;
+          }
+          if (cmd === "plugin:mobile-import|remove_listener") {
+            pluginSubscriptions.delete(Number(args.channelId));
             return null;
           }
           if (cmd === "plugin:deep-link|get_current") return window.__INITIAL_DEEP_LINKS__ ?? null;
@@ -1262,6 +1293,41 @@ test("imports an initial mobile open-with URL into the private vault", async ({ 
     "file:///private/tmp/Shared%20Draft.md",
   ]);
   await expect(page.locator("#operation-log")).toContainText("Imported Shared Draft.md");
+});
+
+test("drains a warm Android share intent through the existing vault import", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(() => {
+    window.__RUNTIME_CAPABILITIES__ = {
+      platform: "android",
+      clientType: "mobile",
+      isMobile: true,
+      isTouchPrimary: true,
+      prefersCompactLayout: true,
+      supportsWindowDrag: false,
+      supportsUpdater: false,
+      supportsProcessRestart: false,
+      supportsCliInstall: false,
+      supportsFileDrop: false,
+      supportsExternalVault: true,
+      usesAppPrivateVault: true,
+    };
+  });
+  await page.reload();
+  await page.locator("#welcome-default-vault").click();
+  await page.getByRole("button", { name: "Local only" }).click();
+
+  await page.evaluate(() => {
+    window.__INITIAL_EXTERNAL_SOURCES_JSON__ = JSON.stringify([
+      "content://com.android.externalstorage.documents/document/primary%3ADownload%2FWarm%20Share.md",
+    ]);
+    window.__EMIT_TAURI_PLUGIN_EVENT__("mobile-import", "shareReceived", {});
+  });
+
+  await expect.poll(() => page.evaluate(() => window.__LAST_IMPORT_ARGS__?.sourcePaths)).toEqual([
+    "content://com.android.externalstorage.documents/document/primary%3ADownload%2FWarm%20Share.md",
+  ]);
+  await expect(page.getByLabel("Markdown editor")).toHaveValue("# Imported Note\n\nCopied into the private vault.");
 });
 
 test("reuses the regular desktop workbench on a mobile tablet viewport", async ({ page }) => {
