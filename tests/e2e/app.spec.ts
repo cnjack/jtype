@@ -1185,6 +1185,14 @@ test("keeps the Desktop workbench while mobile hydrates a partial vault on deman
   await expect.poll(() => page.evaluate(() =>
     window.__WORKSPACE_QUERY_CALLS__.filter((call) => call === "read_workspace_entry_page").length,
   )).toBeGreaterThanOrEqual(2);
+  await expect(mobileSidebar.getByRole("button", { name: /Show more/ })).toHaveCount(1);
+  await expect(mobileSidebar.locator('[data-native-page="root"]')).toHaveCount(1);
+  await mobileSidebar.locator('[data-native-page="root"]').click();
+  await expect.poll(() => page.evaluate(() =>
+    window.__WORKSPACE_QUERY_CALLS__.filter((call) => call === "read_workspace_entry_page").length,
+  )).toBeGreaterThanOrEqual(3);
+  await expect(mobileSidebar.getByRole("button", { name: /Show more/ })).toHaveCount(0);
+  await expect(mobileSidebar.locator('[data-native-page="root"]')).toHaveCount(0);
 
   await mobileSidebar.getByRole("button", { name: "Close" }).click();
   await page.locator("#vault-home").getByRole("button", { name: "Quick open" }).click();

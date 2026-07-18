@@ -517,7 +517,7 @@ function ExplorerPanel() {
                     partialWorkspace={partialWorkspace}
                     entryPages={state.workspace.entryPages ?? {}}
                     pageRelativePath=""
-                    onLoadPage={(relativePath) => { void fs.loadWorkspaceEntryPage(relativePath); }}
+                    onLoadPage={fs.loadWorkspaceEntryPage}
                   />
                 )}
               </>
@@ -848,7 +848,7 @@ type TreeNodeListProps = {
   partialWorkspace: boolean;
   entryPages: Record<string, WorkspaceEntryPageState>;
   pageRelativePath: string;
-  onLoadPage: (relativePath: string) => void;
+  onLoadPage: (relativePath: string) => Promise<void>;
 };
 
 function TreeNodeList({
@@ -863,6 +863,7 @@ function TreeNodeList({
   ...callbacks
 }: TreeNodeListProps) {
   const [requestedCount, setRequestedCount] = useState(TREE_RENDER_BATCH_SIZE);
+  const [loadingPage, setLoadingPage] = useState(false);
   const windowRange = useMemo(
     () => progressiveTreeWindow(nodes, requestedCount, activePath),
     [activePath, nodes, requestedCount],
@@ -875,6 +876,14 @@ function TreeNodeList({
     ? Math.max(0, nativePage.totalEntries - nativePage.loadedEntries)
     : 0;
   const showMore = () => setRequestedCount((count) => count + TREE_RENDER_BATCH_SIZE);
+  const showMoreAfter = () => {
+    if (loadingPage) return;
+    showMore();
+    if (!partialWorkspace || !nativePage?.nextCursor) return;
+    setLoadingPage(true);
+    void onLoadPage(pageRelativePath).finally(() => setLoadingPage(false));
+  };
+  const remainingAfter = afterCount + nativeRemaining;
 
   return (
     <ul
@@ -909,28 +918,18 @@ function TreeNodeList({
           {...callbacks}
         />
       ))}
-      {afterCount > 0 && (
+      {remainingAfter > 0 && (
         <li>
           <button
             type="button"
             className="tree-button justify-center text-xs font-semibold text-[#006f6b]"
-            onClick={showMore}
+            data-native-page={nativePage?.nextCursor ? pageRelativePath || "root" : undefined}
+            aria-busy={loadingPage || undefined}
+            disabled={loadingPage}
+            onClick={showMoreAfter}
           >
             <span><Trans>Show more</Trans></span>
-            <span className="rounded-full bg-[#e8f6f2] px-2 py-0.5 tabular-nums">{afterCount}</span>
-          </button>
-        </li>
-      )}
-      {partialWorkspace && nativePage?.nextCursor && (
-        <li>
-          <button
-            type="button"
-            className="tree-button justify-center text-xs font-semibold text-[#006f6b]"
-            data-native-page={pageRelativePath || "root"}
-            onClick={() => onLoadPage(pageRelativePath)}
-          >
-            <span><Trans>Show more</Trans></span>
-            <span className="rounded-full bg-[#e8f6f2] px-2 py-0.5 tabular-nums">{nativeRemaining}</span>
+            <span className="rounded-full bg-[#e8f6f2] px-2 py-0.5 tabular-nums">{remainingAfter}</span>
           </button>
         </li>
       )}
