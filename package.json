@@ -22,6 +22,7 @@
     "mobile:ios:dev": "tauri ios dev",
     "mobile:ios:build": "tauri ios build",
     "mobile:ios:build:simulator-static": "tauri ios build --debug --target aarch64-sim --no-sign --archive-only --ci && bash scripts/mobile-verify-ios-static-archive.sh",
+    "mobile:android:verify-studio-variant": "cd src-tauri/gen/android && ./gradlew :app:verifyAndroidStudioDefaultVariant --console=plain",
     "mobile:ios:verify-static": "bash scripts/mobile-verify-ios-static-archive.sh",
     "i18n:extract": "lingui extract",
     "i18n:extract:web": "lingui extract --config services/jtype-web/frontend/lingui.config.ts",

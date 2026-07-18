@@ -38,11 +38,31 @@ open class RustPlugin : Plugin<Project> {
                 defaultArchList.forEachIndexed { index, arch ->
                     create(arch) {
                         dimension = "abi"
+                        // Android Studio otherwise selects armDebug first, which cannot
+                        // run on the arm64 emulator and physical-device baseline.
+                        isDefault = arch == "arm64"
                         ndk {
                             abiFilters.add(defaultAbiList[index])
                         }
                     }
                 }
+            }
+        }
+
+        tasks.register("verifyAndroidStudioDefaultVariant") {
+            group = "verification"
+            description = "Verify Android Studio defaults to the arm64 app variant"
+            doLast {
+                val defaults = project.extensions
+                    .getByType(ApplicationExtension::class.java)
+                    .productFlavors
+                    .filter { it.isDefault }
+                    .map { it.name }
+
+                check(defaults == listOf("arm64")) {
+                    "Expected arm64 to be the only Android Studio default flavor, got $defaults"
+                }
+                logger.lifecycle("Android Studio default flavor: ${defaults.single()}")
             }
         }
 

@@ -9,4 +9,7 @@ appId: net.jcode.jtype
 - inputText: "performance-note-04999"
 - assertVisible: ".*performance-note-04999.md.*"
 - tapOn: ".*performance-note-04999.md.*"
+- tapOn:
+    text: "^Close$"
+    optional: true
 - assertVisible: "(?s).*Shared desktop/mobile large vault fixture 04999.*"
