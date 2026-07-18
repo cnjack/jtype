@@ -6,7 +6,7 @@ Feature branch：`codex/mobile-app`
 
 实现 commit：`1a92435`
 
-状态：移动端 partial `WorkspaceSnapshot`、共享 loaded-first/native-fallback 查询、folder page hydration 与 mutation/sync/watch partial re-bootstrap 已接入；Desktop 继续完整打开。后续 `231aa18` 已完成 Android 5,008-entry cold open、IPC/snapshot、连续分页、RSS 与尾部打开 gate，并把重复的 DOM/native Show more 合并为一个共享操作。`5865737` 已纠正 iOS archive 身份误判并修复启动 share-plugin 主线程等待；clean static archive 的 5,406-entry cold open 与 unloaded `04999` cold restore 已通过。
+状态：移动端 partial `WorkspaceSnapshot`、共享 loaded-first/native-fallback 查询、folder page hydration 与 mutation/sync/watch partial re-bootstrap 已接入；Desktop 继续完整打开。后续 `231aa18` 已完成 Android 5,008-entry cold open、IPC/snapshot、连续分页、RSS 与尾部打开 gate，并把重复的 DOM/native Show more 合并为一个共享操作。`5865737` 已纠正 iOS archive 身份误判并修复启动 share-plugin 主线程等待。`a74b43a` 进一步加入有界 shallow-page cache 与 revision cursor；Android 5,008-entry、iOS clean-static 5,406-entry 的交互式第二页均为 `cache=hit elapsed_ms=0`。
 
 ## 结论
 
@@ -29,19 +29,19 @@ Feature branch：`codex/mobile-app`
 
 当前限制：
 
-1. 每页仍会重新枚举并排序当前目录的全部直接子项；它限制 snapshot/IPC，不是 provider-native streaming cursor。
+1. 首次读取目录仍会枚举并排序全部直接子项；后续页复用最多 32 个目录、合计 50,000 项的 LRU cache。它仍不是 provider-native streaming cursor。
 2. external vault 首次 mirror 与每次 native source manifest/hash scan 仍可能遍历完整 source；partial runtime 当前作用于 app-private mirror 的 workspace state。
-3. page cursor 是当前确定性排序的 offset；目录变化后 mutation/watch 路径重新 bootstrap，而不是继续使用旧 cursor。
-4. Android Simulator 的 5,008-entry cold open、连续分页与 RSS，以及 iOS Simulator 的 5,406-entry clean-static cold open/tail restore 已在后续报告通过；双平台 physical-device peak/memory-warning、iOS 交互式分页/搜索和低内存恢复仍待测。
+3. page cursor 绑定目录 metadata revision；目录变化后旧 cursor 明确判 stale，共享 hook 自动 refresh 当前文件夹首屏。mutation/watch 的全 workspace re-bootstrap 保持不变。
+4. Android Simulator 的 5,008-entry cold open、连续分页与 RSS，以及 iOS Simulator 的 5,406-entry clean-static cold open/tail restore/交互式第二页已通过；双平台 physical-device peak/memory-warning、低内存恢复仍待测。
 
 ## 自动化与构建
 
 | 验证 | 结果 |
 | --- | --- |
 | `pnpm build` | PASS；Android 当前源码构建的 `beforeBuildCommand` 完成 TypeScript/Vite production build |
-| `pnpm test:unit` | PASS，72/72；含 partial merge、loaded/native resolver、native failure fallback 与 partial bootstrap byte/time metrics |
+| `pnpm test:unit` | PASS，73/73；含 opaque cursor、partial merge、loaded/native resolver、native failure fallback 与 partial bootstrap byte/time metrics |
 | `pnpm test:e2e` | PASS，56/56；含 405-document partial bootstrap、root/nested page 与未加载尾部 Quick Open |
-| `cargo test --manifest-path services/jtype-core/Cargo.toml` | PASS，44/44 |
+| `cargo test --manifest-path services/jtype-core/Cargo.toml` | PASS，46/46；含 cache hit、mutation invalidation 与 LRU bound |
 | `cargo test --manifest-path src-tauri/Cargo.toml --lib` | PASS，29/29 |
 | `CI=true pnpm tauri android build --debug --target aarch64 --apk --ci` | PASS |
 | `CI=true pnpm tauri ios build --debug --target aarch64-sim --no-sign --archive-only --ci` | PASS；静态 archive 构建通过，当前 Simulator 静态运行 gate 见下文 |
@@ -50,12 +50,12 @@ Feature branch：`codex/mobile-app`
 
 ```text
 Android universal debug APK
-394,161,686 bytes
-SHA-256 053d6082941fd0f779e42756eb580e3ba15a8a8c037fa21bbe00d9f28bd0d276
+396,017,062 bytes（`a74b43a` follow-up）
+SHA-256 29e4a2d7aef730d9a2d6ba32af1d4f07ff27ea42b4357fb30e6b691cb7947623
 
-iOS Simulator archive app binary（`5865737` follow-up）
-108,980,840 bytes
-SHA-256 43c4f17c84ec2dd3c62fe63f27e13e3e11eeffb1abf8eb1f14681e64ca100488
+iOS Simulator archive app binary（`a74b43a` follow-up）
+109,370,520 bytes
+SHA-256 610ccbe0d80124492543ca1abaef4095616e763d61b07b255db4584f83e5ff42
 ```
 
 Android API 36 arm64 emulator 覆盖安装最终 APK 后显式 cold launch 成功，`TotalTime=336 ms`。已有 120-document SAF mirror 恢复到同一 `VaultHome`，首屏显示 12 个 Markdown 条目：
@@ -79,7 +79,7 @@ iPhone 17 Pro / iOS 26.5 Simulator 使用 signed Tauri dev build 与临时 HTTPS
 
 大库恢复还暴露了另一项真实兼容问题：同步 `initial_external_file_sources` 在 WebView 主线程等待 iOS native plugin，而 plugin response queue 又需要主线程完成上一条 listener response，造成首帧无法提交。`5865737` 将该调用放入 Tauri background worker，并让 bounded share-inbox drain 在 native command 内完成。修复后的 clean static archive 在 iPhone 17 Pro / iOS 26.5 Simulator 上以 160 / 5,406 partial root 启动，并冷恢复打开未加载的 `performance-note-04999.md` 到 Desktop 共用 `EditorShell`。
 
-准确 gate 状态是：iOS compile/archive、静态 artifact identity、5,406-entry partial cold open 与 unloaded tail cold restore **PASS**。本轮 XCUITest driver 无法稳定查询 hierarchy，因此交互式连续分页/搜索、Files provider 性能、RSS/memory warning 与 physical iPhone 仍未完成；详见 [`phase-2-partial-large-vault.md`](phase-2-partial-large-vault.md)。
+准确 gate 状态是：iOS compile/archive、静态 artifact identity、5,406-entry partial cold open、unloaded tail cold restore 与交互式第二页 **PASS**。`a74b43a` follow-up 的 Maestro/XCUITest flow 已成功执行 Show more，native 日志为 `cache=hit elapsed_ms=0`；Files provider 性能、RSS/memory warning 与 physical iPhone 仍未完成。详见 [`phase-2-partial-page-cache.md`](phase-2-partial-page-cache.md)。
 
 Android 与 iOS Tauri build 继续串行执行，因为两者的 `beforeBuildCommand` 共用根 `dist/`。
 
@@ -87,6 +87,6 @@ Android 与 iOS Tauri build 继续串行执行，因为两者的 `beforeBuildCom
 
 Android 5,008-entry Simulator follow-up、日志、截图与 artifact hash 见 [`phase-2-partial-large-vault.md`](phase-2-partial-large-vault.md)。
 
-1. 在 iOS Simulator 可用 driver 与双平台 physical device 补交互式 tail search、连续 folder paging、峰值 RSS、memory warning 和后台恢复。
-2. 评估 provider-native streaming cursor 与增量 source manifest，分别减少单目录重复枚举和 external full hash I/O。
+1. 在双平台 physical device 补交互式 tail search、连续 folder paging、峰值 RSS、memory warning 和后台恢复；Simulator 第二页已完成。
+2. 评估 provider-native streaming cursor 与增量 source manifest，分别减少目录首次枚举和 external full hash I/O；连续 shallow page 已由有界 cache 收口。
 3. 在 physical iPhone 补齐 signed static archive、Files provider 与 low-memory gate；Simulator 静态 cold-launch/tail restore 已通过，不再归类为 custom-scheme 环境阻塞。
