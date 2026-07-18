@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { useAppDispatch, useAppState } from "../../app/AppState";
+import { isCurrentVaultReadOnly, useAppDispatch, useAppState } from "../../app/AppState";
 import { useFileSystem } from "../../hooks";
 import { markdownNodes } from "../../lib/utils";
 import { tauri } from "../../lib/tauri";
@@ -72,7 +72,7 @@ export function Sidebar() {
     : null;
   const currentVaultSettings = state.workspace ? state.vaultSettings[state.workspace.rootPath] : undefined;
   const activeCloudBinding = currentVaultSettings?.cloudSyncEnabled === false ? null : currentBinding;
-  const isCloudViewer = activeCloudBinding?.workspaceRole === "viewer";
+  const isCloudViewer = activeCloudBinding?.workspaceRole === "viewer" || isCurrentVaultReadOnly(state);
   const workspaceName = activeCloudBinding?.workspaceName || state.workspace?.name || t`No vault`;
   const docCount = state.workspace ? markdownNodes(state.workspace.entries).length : 0;
 
@@ -231,7 +231,10 @@ function ExplorerPanel() {
   const currentBinding = state.workspace
     ? state.vaultBindings.find((binding) => binding.localVaultPath === state.workspace?.rootPath)
     : null;
-  const isCloudViewer = Boolean(currentBinding?.workspaceRole === "viewer" && currentVaultSettings?.cloudSyncEnabled !== false);
+  const isCloudViewer = Boolean(
+    (currentBinding?.workspaceRole === "viewer" && currentVaultSettings?.cloudSyncEnabled !== false)
+      || isCurrentVaultReadOnly(state),
+  );
 
   // Persist expand state
   useEffect(() => {
@@ -675,7 +678,7 @@ function ExplorerPanel() {
           >
             <ClipboardIcon className="mr-2 h-3.5 w-3.5" /><Trans>Copy path</Trans>
           </button>
-          {tauri.isAvailable && capabilities.supportsExternalVault && (
+          {tauri.isAvailable && capabilities.supportsExternalVault && !capabilities.isMobile && (
             <button
               type="button"
               className="context-menu-button"

@@ -12,6 +12,8 @@ import type {
   SyncConflict,
   SyncStatus,
   VaultSettings,
+  VaultProviderStatus,
+  ExternalVaultReconcileConflict,
 } from "../lib/types";
 import type { AICommandProposal } from "./aiCommands";
 import { appStorage } from "../lib/storage";
@@ -36,6 +38,8 @@ export interface AppState {
   isDraft: boolean;
   isLoading: boolean;
   workspace: WorkspaceSnapshot | null;
+  vaultProviderStatus: VaultProviderStatus | null;
+  externalVaultConflicts: ExternalVaultReconcileConflict[];
   syncToken: string;
   syncUsername: string;
   syncSiteUrl: string;
@@ -82,6 +86,14 @@ export interface AppState {
   findBarOpen: boolean;
 }
 
+export function isCurrentVaultReadOnly(state: AppState) {
+  const provider = state.vaultProviderStatus?.provider;
+  return Boolean(
+    provider
+      && (provider.accessState !== "ready" || !provider.capabilities.canWrite),
+  );
+}
+
 export type AppAction =
   | { type: "SET_LOADING"; isLoading: boolean }
   | { type: "SET_STATUS"; message: string }
@@ -90,7 +102,7 @@ export type AppAction =
   | { type: "SET_EDITOR_MODE"; mode: EditorMode }
   | { type: "TOGGLE_FOCUS_MODE" }
   | { type: "TOGGLE_DOCUMENT_PANEL" }
-  | { type: "OPEN_WORKSPACE"; workspace: WorkspaceSnapshot }
+  | { type: "OPEN_WORKSPACE"; workspace: WorkspaceSnapshot; providerStatus?: VaultProviderStatus }
   | { type: "OPEN_FILE"; path: string; relativePath: string; content: string; kind: EntryKind }
   | { type: "SET_EDITOR_CONTENT"; content: string; sync?: boolean }
   | { type: "SAVE_FILE" }
@@ -102,6 +114,8 @@ export type AppAction =
   | { type: "COMMIT_DRAFT"; path: string; relativePath: string }
   | { type: "DISCARD_DRAFT" }
   | { type: "UPDATE_WORKSPACE"; workspace: WorkspaceSnapshot }
+  | { type: "SET_VAULT_PROVIDER_STATUS"; status: VaultProviderStatus | null }
+  | { type: "SET_EXTERNAL_VAULT_CONFLICTS"; conflicts: ExternalVaultReconcileConflict[] }
   | { type: "SET_SYNC_SESSION"; token: string; username: string; siteUrl: string; profile: CloudProfile }
   | { type: "SET_CLOUD_PROFILE"; profile: CloudProfile }
   | { type: "SET_VAULT_BINDINGS"; bindings: VaultBinding[] }
@@ -162,6 +176,8 @@ const initialState: AppState = {
   isDraft: false,
   isLoading: false,
   workspace: null,
+  vaultProviderStatus: null,
+  externalVaultConflicts: [],
   syncToken: appStorage.getSensitive("sync.token", ""),
   syncUsername: appStorage.get("sync.username", ""),
   syncSiteUrl: appStorage.get("sync.siteUrl", ""),
@@ -227,6 +243,8 @@ export function appReducer(state: AppState, action: AppAction): AppState {
       return {
         ...state,
         workspace: action.workspace,
+        vaultProviderStatus: action.providerStatus ?? null,
+        externalVaultConflicts: [],
         currentPath: "",
         currentRelativePath: "",
         currentKind: "",
@@ -364,8 +382,29 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         pendingAiProposal: null,
         mode: getMode({ workspace: state.workspace, currentPath: "", isDraft: false }),
       };
-    case "UPDATE_WORKSPACE":
-      return { ...state, workspace: action.workspace };
+    case "UPDATE_WORKSPACE": {
+      const externalProvider =
+        state.vaultProviderStatus?.provider.kind === "externalMirror" &&
+        action.workspace.rootPath === state.workspace?.rootPath
+          ? state.vaultProviderStatus.provider
+          : null;
+      return {
+        ...state,
+        workspace: externalProvider
+          ? { ...action.workspace, name: externalProvider.displayName }
+          : action.workspace,
+      };
+    }
+    case "SET_VAULT_PROVIDER_STATUS": {
+      const workspace =
+        action.status?.provider.kind === "externalMirror" &&
+        state.workspace?.rootPath === action.status.provider.localRootPath
+          ? { ...state.workspace, name: action.status.provider.displayName }
+          : state.workspace;
+      return { ...state, workspace, vaultProviderStatus: action.status };
+    }
+    case "SET_EXTERNAL_VAULT_CONFLICTS":
+      return { ...state, externalVaultConflicts: action.conflicts };
     case "SET_SYNC_SESSION": {
       appStorage.setSensitive("sync.token", action.token);
       appStorage.set("sync.username", action.username);
@@ -523,6 +562,8 @@ export function appReducer(state: AppState, action: AppAction): AppState {
       return {
         ...state,
         workspace: null,
+        vaultProviderStatus: null,
+        externalVaultConflicts: [],
         currentPath: "",
         currentRelativePath: "",
         currentKind: "",

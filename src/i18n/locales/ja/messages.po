@@ -154,6 +154,10 @@ msgstr "詳細"
 msgid "All"
 msgstr ""
 
+#: src/components/layout/VaultProviderBanner.tsx
+msgid "An interrupted change is ready to finish safely."
+msgstr "中断された変更を安全に完了できます。"
+
 #~ msgid "Assignee"
 #~ msgstr ""
 
@@ -260,9 +264,18 @@ msgstr "カード"
 #~ msgid "cards"
 #~ msgstr ""
 
+#: src/components/layout/VaultProviderBanner.tsx
+msgid "Changes are synced with the selected device folder."
+msgstr "変更は選択したデバイス上のフォルダーと同期されています。"
+
 #: src/components/sidebar/Sidebar.tsx
 msgid "Choose a local folder"
 msgstr "ローカルフォルダーを選択"
+
+#: src/components/layout/VaultHome.tsx
+msgid "Choose a note or create a new one. Changes are kept in sync with the "
+"selected device folder."
+msgstr "ノートを選択するか新規作成してください。変更は選択したデバイス上のフォルダーと同期されます。"
 
 #: src/components/layout/VaultHome.tsx
 msgid "Choose a note or create a new one. Stored privately by JType on this "
@@ -372,6 +385,10 @@ msgstr "コマンドライン (jtype)"
 #: src/components/modals/CommandPalette.tsx
 msgid "Command palette"
 msgstr "コマンドパレット"
+
+#: src/components/layout/VaultProviderBanner.tsx
+msgid "conflicts"
+msgstr "件の競合"
 
 #: src/components/modals/AccountDialog.tsx
 msgid "Connect desktop sync through the browser and choose the service "
@@ -677,6 +694,10 @@ msgstr "PDF を {outputPath} にエクスポートしました。"
 msgid "Exporting PDF..."
 msgstr "PDF をエクスポート中..."
 
+#: src/components/layout/VaultProviderBanner.tsx
+msgid "External changes need your choice before syncing can continue."
+msgstr "外部の変更を処理する方法を選択してから、同期を続行してください。"
+
 #: src/components/sidebar/Sidebar.tsx
 msgid "Favorite"
 msgstr "お気に入り"
@@ -703,6 +724,10 @@ msgstr "フォーカスモード"
 #: src/components/modals/DeleteFolderDialog.tsx
 msgid "Folder <0>\"{folderName}\"</0>"
 msgstr "フォルダー <0>\"{folderName}\"</0>"
+
+#: src/components/layout/VaultProviderBanner.tsx
+msgid "Folder access is required. Choose this vault again to continue."
+msgstr "フォルダーへのアクセスが必要です。続行するには、このボルトをもう一度選択してください。"
 
 #: src/components/modals/CreateFolderDialog.tsx
 msgid "Folder name"
@@ -1123,6 +1148,10 @@ msgid "Open vault"
 msgstr "ボルトを開く"
 
 #: src/components/editor/EditorShell.tsx
+msgid "Opened system sharing for {fileName}."
+msgstr "{fileName} のシステム共有を開きました。"
+
+#: src/components/editor/EditorShell.tsx
 msgid "Outgoing links"
 msgstr "発信リンク"
 
@@ -1476,6 +1505,10 @@ msgstr "テンプレート名"
 #: src/components/editor/EditorShell.tsx
 msgid "The public snapshot is behind the current document."
 msgstr "公開スナップショットが現在のドキュメントより古くなっています。"
+
+#: src/components/layout/VaultProviderBanner.tsx
+msgid "The selected folder is unavailable. Choose it again to continue."
+msgstr "選択したフォルダーを利用できません。続行するには、もう一度選択してください。"
 
 #: src/components/modals/AccountDialog.tsx
 msgid "Then run `jtype login` to sign in."

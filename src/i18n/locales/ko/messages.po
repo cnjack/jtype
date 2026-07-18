@@ -154,6 +154,10 @@ msgstr "고급"
 msgid "All"
 msgstr ""
 
+#: src/components/layout/VaultProviderBanner.tsx
+msgid "An interrupted change is ready to finish safely."
+msgstr "중단된 변경 사항을 안전하게 완료할 준비가 되었습니다."
+
 #~ msgid "Assignee"
 #~ msgstr ""
 
@@ -260,9 +264,18 @@ msgstr "카드"
 #~ msgid "cards"
 #~ msgstr ""
 
+#: src/components/layout/VaultProviderBanner.tsx
+msgid "Changes are synced with the selected device folder."
+msgstr "변경 사항이 선택한 기기 폴더와 동기화되었습니다."
+
 #: src/components/sidebar/Sidebar.tsx
 msgid "Choose a local folder"
 msgstr "로컬 폴더 선택"
+
+#: src/components/layout/VaultHome.tsx
+msgid "Choose a note or create a new one. Changes are kept in sync with the "
+"selected device folder."
+msgstr "노트를 선택하거나 새로 만드세요. 변경 사항은 선택한 기기 폴더와 동기화됩니다."
 
 #: src/components/layout/VaultHome.tsx
 msgid "Choose a note or create a new one. Stored privately by JType on this "
@@ -372,6 +385,10 @@ msgstr "명령줄 (jtype)"
 #: src/components/modals/CommandPalette.tsx
 msgid "Command palette"
 msgstr "명령 팔레트"
+
+#: src/components/layout/VaultProviderBanner.tsx
+msgid "conflicts"
+msgstr "개 충돌"
 
 #: src/components/modals/AccountDialog.tsx
 msgid "Connect desktop sync through the browser and choose the service "
@@ -677,6 +694,10 @@ msgstr "PDF를 {outputPath}에 내보냈습니다."
 msgid "Exporting PDF..."
 msgstr "PDF 내보내는 중..."
 
+#: src/components/layout/VaultProviderBanner.tsx
+msgid "External changes need your choice before syncing can continue."
+msgstr "외부 변경 사항의 처리 방법을 선택해야 동기화를 계속할 수 있습니다."
+
 #: src/components/sidebar/Sidebar.tsx
 msgid "Favorite"
 msgstr "즐겨찾기"
@@ -703,6 +724,10 @@ msgstr "집중 모드"
 #: src/components/modals/DeleteFolderDialog.tsx
 msgid "Folder <0>\"{folderName}\"</0>"
 msgstr "폴더 <0>\"{folderName}\"</0>"
+
+#: src/components/layout/VaultProviderBanner.tsx
+msgid "Folder access is required. Choose this vault again to continue."
+msgstr "폴더 접근 권한이 필요합니다. 계속하려면 이 볼트를 다시 선택하세요."
 
 #: src/components/modals/CreateFolderDialog.tsx
 msgid "Folder name"
@@ -1123,6 +1148,10 @@ msgid "Open vault"
 msgstr "볼트 열기"
 
 #: src/components/editor/EditorShell.tsx
+msgid "Opened system sharing for {fileName}."
+msgstr "{fileName}의 시스템 공유를 열었습니다."
+
+#: src/components/editor/EditorShell.tsx
 msgid "Outgoing links"
 msgstr "나가는 링크"
 
@@ -1476,6 +1505,10 @@ msgstr "템플릿 이름"
 #: src/components/editor/EditorShell.tsx
 msgid "The public snapshot is behind the current document."
 msgstr "공개 스냅샷이 현재 문서보다 오래되었습니다."
+
+#: src/components/layout/VaultProviderBanner.tsx
+msgid "The selected folder is unavailable. Choose it again to continue."
+msgstr "선택한 폴더를 사용할 수 없습니다. 계속하려면 다시 선택하세요."
 
 #: src/components/modals/AccountDialog.tsx
 msgid "Then run `jtype login` to sign in."

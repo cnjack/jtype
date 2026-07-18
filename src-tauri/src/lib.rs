@@ -93,7 +93,7 @@ fn runtime_capabilities() -> RuntimeCapabilities {
         supports_process_restart: !is_mobile,
         supports_cli_install: !is_mobile,
         supports_file_drop: !is_mobile,
-        supports_external_vault: !is_mobile,
+        supports_external_vault: !is_mobile || cfg!(target_os = "android"),
         uses_app_private_vault: is_mobile,
     }
 }
@@ -343,11 +343,14 @@ fn refresh_android_provider_access(
     };
     if provider.access_state != next_access_state
         || provider.source_read_only != next_source_read_only
+        || provider.read_only != next_source_read_only
     {
         provider.access_state = next_access_state;
         provider.source_read_only = next_source_read_only;
+        provider.read_only = next_source_read_only;
         store.upsert(provider.clone());
         write_vault_provider_store(app, &store)?;
+        let _ = app.emit("vault-provider-changed", provider.descriptor());
     }
     Ok(provider.descriptor())
 }
@@ -384,6 +387,24 @@ fn describe_vault_provider(
     root_path: String,
 ) -> Result<vault_provider::VaultProviderDescriptor, String> {
     describe_provider_for_root(&app, &PathBuf::from(root_path))
+}
+
+#[tauri::command]
+fn inspect_vault_provider(
+    app: AppHandle,
+    root_path: String,
+) -> Result<VaultProviderStatus, String> {
+    let root = PathBuf::from(root_path);
+    let provider = describe_provider_for_root(&app, &root)?;
+    let pending_write_back = if provider.kind == vault_provider::VaultProviderKind::ExternalMirror {
+        vault_reconcile::load_write_back_journal(&root)?.is_some()
+    } else {
+        false
+    };
+    Ok(VaultProviderStatus {
+        provider,
+        pending_write_back,
+    })
 }
 
 #[tauri::command]
@@ -428,6 +449,13 @@ struct ExternalVaultWriteBackResult {
     pulled_before_write: u64,
     pending_journal: bool,
     conflicts: Vec<vault_reconcile::ReconcileConflict>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct VaultProviderStatus {
+    provider: vault_provider::VaultProviderDescriptor,
+    pending_write_back: bool,
 }
 
 #[cfg(target_os = "android")]
@@ -547,9 +575,6 @@ fn initialize_android_external_vault(
         )
     };
 
-    // The selected source may be writable, but the initial-import increment is
-    // deliberately exposed as read-only until write-back/reconcile is complete.
-    // This prevents edits in the mirror from being mistaken for source writes.
     let record = vault_provider::ExternalVaultProviderRecord {
         provider_id,
         display_name: selected.display_name,
@@ -557,7 +582,7 @@ fn initialize_android_external_vault(
         opaque_source_reference: selected.source_reference,
         mirror_root_path: path_to_string(&mirror_root),
         access_state: vault_provider::VaultProviderAccessState::Ready,
-        read_only: true,
+        read_only: selected.read_only,
         source_read_only: selected.read_only,
         last_reconciled_at,
         source_revision,
@@ -611,7 +636,7 @@ fn reauthorize_android_external_vault(
     provider.display_name = selected.display_name;
     provider.opaque_source_reference = selected.source_reference;
     provider.access_state = vault_provider::VaultProviderAccessState::Ready;
-    provider.read_only = true;
+    provider.read_only = selected.read_only;
     provider.source_read_only = selected.read_only;
     let descriptor = provider.descriptor();
     store.upsert(provider);
@@ -889,7 +914,10 @@ fn write_back_android_external_vault_locked(
                 read_vault_provider_store(app)?,
                 provider_id,
             );
-            let recovery = match access {
+            if let Ok(descriptor) = &access {
+                let _ = app.emit("vault-provider-changed", descriptor.clone());
+            }
+            let recovery = match &access {
                 Ok(descriptor)
                     if descriptor.access_state
                         != vault_provider::VaultProviderAccessState::Ready =>
@@ -2251,6 +2279,7 @@ pub fn run() {
             initial_external_file_sources,
             default_vault_path,
             describe_vault_provider,
+            inspect_vault_provider,
             initialize_android_external_vault,
             reauthorize_android_external_vault,
             reconcile_android_external_vault,

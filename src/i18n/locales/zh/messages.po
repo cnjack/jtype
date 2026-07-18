@@ -154,6 +154,10 @@ msgstr "高级"
 msgid "All"
 msgstr "全部"
 
+#: src/components/layout/VaultProviderBanner.tsx
+msgid "An interrupted change is ready to finish safely."
+msgstr "中断的更改已准备好安全完成。"
+
 #~ msgid "Assignee"
 #~ msgstr "负责人"
 
@@ -260,9 +264,18 @@ msgstr "卡片"
 #~ msgid "cards"
 #~ msgstr "张卡片"
 
+#: src/components/layout/VaultProviderBanner.tsx
+msgid "Changes are synced with the selected device folder."
+msgstr "更改已与所选设备文件夹同步。"
+
 #: src/components/sidebar/Sidebar.tsx
 msgid "Choose a local folder"
 msgstr "选择本地文件夹"
+
+#: src/components/layout/VaultHome.tsx
+msgid "Choose a note or create a new one. Changes are kept in sync with the "
+"selected device folder."
+msgstr "选择或新建一篇笔记。更改会与所选设备文件夹保持同步。"
 
 #: src/components/layout/VaultHome.tsx
 msgid "Choose a note or create a new one. Stored privately by JType on this "
@@ -372,6 +385,10 @@ msgstr "命令行 (jtype)"
 #: src/components/modals/CommandPalette.tsx
 msgid "Command palette"
 msgstr "命令面板"
+
+#: src/components/layout/VaultProviderBanner.tsx
+msgid "conflicts"
+msgstr "个冲突"
 
 #: src/components/modals/AccountDialog.tsx
 msgid "Connect desktop sync through the browser and choose the service "
@@ -677,6 +694,10 @@ msgstr "PDF 已导出到 {outputPath}。"
 msgid "Exporting PDF..."
 msgstr "正在导出 PDF…"
 
+#: src/components/layout/VaultProviderBanner.tsx
+msgid "External changes need your choice before syncing can continue."
+msgstr "外部更改需要由你选择处理方式，之后才能继续同步。"
+
 #: src/components/sidebar/Sidebar.tsx
 msgid "Favorite"
 msgstr "收藏"
@@ -703,6 +724,10 @@ msgstr "专注模式"
 #: src/components/modals/DeleteFolderDialog.tsx
 msgid "Folder <0>\"{folderName}\"</0>"
 msgstr "文件夹 <0>\"{folderName}\"</0>"
+
+#: src/components/layout/VaultProviderBanner.tsx
+msgid "Folder access is required. Choose this vault again to continue."
+msgstr "需要文件夹访问权限。请重新选择这个库以继续。"
 
 #: src/components/modals/CreateFolderDialog.tsx
 msgid "Folder name"
@@ -1123,6 +1148,10 @@ msgid "Open vault"
 msgstr "打开库"
 
 #: src/components/editor/EditorShell.tsx
+msgid "Opened system sharing for {fileName}."
+msgstr "已为 {fileName} 打开系统分享。"
+
+#: src/components/editor/EditorShell.tsx
 msgid "Outgoing links"
 msgstr "出站链接"
 
@@ -1476,6 +1505,10 @@ msgstr "模板名称"
 #: src/components/editor/EditorShell.tsx
 msgid "The public snapshot is behind the current document."
 msgstr "公开快照落后于当前文档。"
+
+#: src/components/layout/VaultProviderBanner.tsx
+msgid "The selected folder is unavailable. Choose it again to continue."
+msgstr "所选文件夹不可用。请重新选择以继续。"
 
 #: src/components/modals/AccountDialog.tsx
 msgid "Then run `jtype login` to sign in."

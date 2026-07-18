@@ -3,7 +3,7 @@ import { open, save } from "@tauri-apps/plugin-dialog";
 import { openPath } from "@tauri-apps/plugin-opener";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { t } from "@lingui/core/macro";
-import { useAppDispatch, useAppState } from "../app/AppState";
+import { isCurrentVaultReadOnly, useAppDispatch, useAppState } from "../app/AppState";
 import { usePrompt, useConfirm } from "@shared/components/PromptDialogContext";
 import { tauri } from "../lib/tauri";
 import { httpRequest } from "@shared/lib/http";
@@ -28,7 +28,10 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
   const currentVaultBinding = state.workspace
     ? state.vaultBindings.find((binding) => binding.localVaultPath === state.workspace?.rootPath)
     : null;
-  const isCloudViewer = Boolean(currentVaultBinding?.workspaceRole === "viewer" && currentVaultSettings?.cloudSyncEnabled !== false);
+  const isVaultReadOnly = Boolean(
+    (currentVaultBinding?.workspaceRole === "viewer" && currentVaultSettings?.cloudSyncEnabled !== false)
+      || isCurrentVaultReadOnly(state),
+  );
 
   /** Returns cloud REST context for the current vault, or null if sync is not active. */
   const getCloudContext = useCallback(() => {
@@ -126,8 +129,8 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     targetFolderOverride?: string,
   ): Promise<string[]> => {
     if (!tauri.isAvailable || sourcePaths.length === 0) return [];
-    if (isCloudViewer) {
-      dispatch({ type: "SET_STATUS", message: "Viewer access is read-only." });
+    if (isVaultReadOnly) {
+      dispatch({ type: "SET_STATUS", message: "This vault is read-only." });
       return [];
     }
 
@@ -144,7 +147,11 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
           }
         }
         if (!workspace) workspace = await tauri.openDefaultVault();
-        dispatch({ type: "OPEN_WORKSPACE", workspace });
+        const providerStatus = await tauri.inspectVaultProvider(workspace.rootPath);
+        if (providerStatus.provider.kind === "externalMirror") {
+          workspace = { ...workspace, name: providerStatus.provider.displayName };
+        }
+        dispatch({ type: "OPEN_WORKSPACE", workspace, providerStatus });
         addRecent({ kind: "workspace", name: workspace.name, path: workspace.rootPath });
       }
       if (!workspace) {
@@ -199,7 +206,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
   }, [
     capabilities.usesAppPrivateVault,
     dispatch,
-    isCloudViewer,
+    isVaultReadOnly,
     openDiagramFile,
     openMarkdownFile,
     state.currentKind,
@@ -235,6 +242,28 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
 
   const chooseWorkspaceFolder = useCallback(async () => {
     if (!tauri.isAvailable) return;
+    if (capabilities.platform === "android") {
+      try {
+        dispatch({ type: "SET_LOADING", isLoading: true });
+        dispatch({ type: "SET_STATUS", message: "Choose a folder for this vault..." });
+        const result = await tauri.initializeAndroidExternalVault();
+        const workspace = { ...result.workspace, name: result.provider.displayName };
+        const providerStatus = { provider: result.provider, pendingWriteBack: false };
+        dispatch({ type: "OPEN_WORKSPACE", workspace, providerStatus });
+        dispatch({
+          type: "SET_STATUS",
+          message: result.importedFiles > 0
+            ? `External vault opened. Imported ${result.importedFiles} files.`
+            : "External vault opened.",
+        });
+        addRecent({ kind: "workspace", name: result.provider.displayName, path: workspace.rootPath });
+      } catch (error) {
+        dispatch({ type: "SET_STATUS", message: String(error) });
+      } finally {
+        dispatch({ type: "SET_LOADING", isLoading: false });
+      }
+      return;
+    }
     try {
       const selected = await open({ multiple: false, directory: true });
       if (!selected) return;
@@ -243,14 +272,18 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } catch (error) {
       dispatch({ type: "SET_STATUS", message: String(error) });
     }
-  }, [dispatch]);
+  }, [capabilities.platform, dispatch]);
 
   const openWorkspace = useCallback(async (path: string) => {
     try {
       dispatch({ type: "SET_LOADING", isLoading: true });
       dispatch({ type: "SET_STATUS", message: "Opening..." });
-      const workspace = await tauri.openWorkspace(path);
-      dispatch({ type: "OPEN_WORKSPACE", workspace });
+      let workspace = await tauri.openWorkspace(path);
+      const providerStatus = await tauri.inspectVaultProvider(workspace.rootPath);
+      if (providerStatus.provider.kind === "externalMirror") {
+        workspace = { ...workspace, name: providerStatus.provider.displayName };
+      }
+      dispatch({ type: "OPEN_WORKSPACE", workspace, providerStatus });
       dispatch({ type: "SET_STATUS", message: workspace.metadataCreated ? "Vault opened and .jtype metadata created." : "Vault opened." });
       addRecent({ kind: "workspace", name: workspace.name, path: workspace.rootPath });
     } catch (error) {
@@ -264,8 +297,12 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     if (!tauri.isAvailable) return;
     try {
       dispatch({ type: "SET_LOADING", isLoading: true });
-      const workspace = await tauri.openDefaultVault();
-      dispatch({ type: "OPEN_WORKSPACE", workspace });
+      let workspace = await tauri.openDefaultVault();
+      const providerStatus = await tauri.inspectVaultProvider(workspace.rootPath);
+      if (providerStatus.provider.kind === "externalMirror") {
+        workspace = { ...workspace, name: providerStatus.provider.displayName };
+      }
+      dispatch({ type: "OPEN_WORKSPACE", workspace, providerStatus });
       dispatch({ type: "SET_STATUS", message: workspace.metadataCreated ? "Default vault created." : "Default vault opened." });
       addRecent({ kind: "workspace", name: workspace.name, path: workspace.rootPath });
     } catch (error) {
@@ -274,6 +311,92 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
   }, [dispatch]);
+
+  const refreshVaultProvider = useCallback(async () => {
+    if (!tauri.isAvailable || !state.workspace) return null;
+    try {
+      const status = await tauri.inspectVaultProvider(state.workspace.rootPath);
+      dispatch({ type: "SET_VAULT_PROVIDER_STATUS", status });
+      return status;
+    } catch (error) {
+      dispatch({ type: "SET_STATUS", message: String(error) });
+      return null;
+    }
+  }, [dispatch, state.workspace]);
+
+  const reconcileExternalVault = useCallback(async () => {
+    const status = state.vaultProviderStatus;
+    if (!state.workspace || status?.provider.kind !== "externalMirror") return;
+    if (state.isDirty) {
+      dispatch({ type: "SET_STATUS", message: "Save or discard the current edit before checking external changes." });
+      return;
+    }
+    try {
+      dispatch({ type: "SET_LOADING", isLoading: true });
+      dispatch({ type: "SET_STATUS", message: status.pendingWriteBack ? "Finishing interrupted changes..." : "Checking external changes..." });
+      if (status.pendingWriteBack) {
+        const result = await tauri.writeBackAndroidExternalVault(status.provider.providerId);
+        const workspace = { ...result.workspace, name: result.provider.displayName };
+        dispatch({ type: "UPDATE_WORKSPACE", workspace });
+        dispatch({
+          type: "SET_VAULT_PROVIDER_STATUS",
+          status: { provider: result.provider, pendingWriteBack: result.pendingJournal },
+        });
+        dispatch({ type: "SET_EXTERNAL_VAULT_CONFLICTS", conflicts: result.conflicts });
+        dispatch({
+          type: "SET_STATUS",
+          message: result.status === "conflict"
+            ? "External vault has changes that need your choice."
+            : "Interrupted external changes were completed.",
+        });
+      } else {
+        const result = await tauri.reconcileAndroidExternalVault(status.provider.providerId);
+        const workspace = { ...result.workspace, name: result.provider.displayName };
+        dispatch({ type: "UPDATE_WORKSPACE", workspace });
+        dispatch({
+          type: "SET_VAULT_PROVIDER_STATUS",
+          status: { provider: result.provider, pendingWriteBack: false },
+        });
+        dispatch({ type: "SET_EXTERNAL_VAULT_CONFLICTS", conflicts: result.conflicts });
+        dispatch({
+          type: "SET_STATUS",
+          message: result.status === "conflict"
+            ? "External vault has changes that need your choice."
+            : result.status === "pulled"
+              ? `External vault updated: ${result.pulledFiles} files pulled.`
+              : "External vault is up to date.",
+        });
+      }
+    } catch (error) {
+      dispatch({ type: "SET_STATUS", message: String(error) });
+      try {
+        const nextStatus = await tauri.inspectVaultProvider(state.workspace.rootPath);
+        dispatch({ type: "SET_VAULT_PROVIDER_STATUS", status: nextStatus });
+      } catch { /* keep the actionable operation error */ }
+    } finally {
+      dispatch({ type: "SET_LOADING", isLoading: false });
+    }
+  }, [dispatch, state.isDirty, state.vaultProviderStatus, state.workspace]);
+
+  const reauthorizeExternalVault = useCallback(async () => {
+    const status = state.vaultProviderStatus;
+    if (!state.workspace || status?.provider.kind !== "externalMirror") return;
+    try {
+      dispatch({ type: "SET_LOADING", isLoading: true });
+      dispatch({ type: "SET_STATUS", message: "Choose this external vault again..." });
+      const provider = await tauri.reauthorizeAndroidExternalVault(status.provider.providerId);
+      const nextStatus = await tauri.inspectVaultProvider(state.workspace.rootPath);
+      dispatch({
+        type: "SET_VAULT_PROVIDER_STATUS",
+        status: { ...nextStatus, provider },
+      });
+      dispatch({ type: "SET_STATUS", message: nextStatus.pendingWriteBack ? "Access restored. Finish the interrupted changes." : "External vault access restored." });
+    } catch (error) {
+      dispatch({ type: "SET_STATUS", message: String(error) });
+    } finally {
+      dispatch({ type: "SET_LOADING", isLoading: false });
+    }
+  }, [dispatch, state.vaultProviderStatus, state.workspace]);
 
   // Promote a draft into a file inside the current workspace. Mirrors
   // createDocument() but writes the draft's existing content and dispatches
@@ -363,8 +486,8 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     // Editable diagram resources (Mermaid `.mmd`, Excalidraw) save as text too.
     const isEditableDiagram = state.currentKind === "diagram" && isEditableResourcePath(state.currentPath);
     if (!isMarkdownDoc && !isEditableDiagram) return;
-    if (isCloudViewer) {
-      dispatch({ type: "SET_STATUS", message: "Viewer access is read-only." });
+    if (isVaultReadOnly) {
+      dispatch({ type: "SET_STATUS", message: "This vault is read-only." });
       return;
     }
     const content = contentOverride ?? state.editorContent;
@@ -389,7 +512,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, isCloudViewer, saveDraftAs, state.isDraft, state.currentPath, state.currentKind, state.editorContent, state.currentRelativePath]);
+  }, [dispatch, isVaultReadOnly, saveDraftAs, state.isDraft, state.currentPath, state.currentKind, state.editorContent, state.currentRelativePath]);
 
   const exportCurrentMarkdown = useCallback(async () => {
     if (!state.currentPath || state.currentKind !== "markdown") return;
@@ -417,8 +540,8 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
 
   const createDocument = useCallback(async (relativePath: string, baseDir = "") => {
     if (!state.workspace) return;
-    if (isCloudViewer) {
-      dispatch({ type: "SET_STATUS", message: "Viewer access is read-only." });
+    if (isVaultReadOnly) {
+      dispatch({ type: "SET_STATUS", message: "This vault is read-only." });
       return;
     }
     let trimmed = relativePath.trim();
@@ -452,7 +575,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, isCloudViewer, state.workspace, openMarkdownFile, getCloudContext, cloudRest]);
+  }, [dispatch, isVaultReadOnly, state.workspace, openMarkdownFile, getCloudContext, cloudRest]);
 
   /**
    * Create a new diagram resource (Mermaid `.mmd`, Excalidraw `.excalidraw`, …)
@@ -461,8 +584,8 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
    */
   const createDiagram = useCallback(async (relativePath: string, starter = "", baseDir = "") => {
     if (!state.workspace) return;
-    if (isCloudViewer) {
-      dispatch({ type: "SET_STATUS", message: "Viewer access is read-only." });
+    if (isVaultReadOnly) {
+      dispatch({ type: "SET_STATUS", message: "This vault is read-only." });
       return;
     }
     let trimmed = relativePath.trim();
@@ -489,7 +612,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, isCloudViewer, state.workspace, openDiagramFile, getCloudContext, cloudRest]);
+  }, [dispatch, isVaultReadOnly, state.workspace, openDiagramFile, getCloudContext, cloudRest]);
 
   /**
    * Create a new `.board` view file (kanban over card-notes) and open it in-pane.
@@ -497,8 +620,8 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
    */
   const createBoard = useCallback(async (name: string, baseDir = "") => {
     if (!state.workspace) return;
-    if (isCloudViewer) {
-      dispatch({ type: "SET_STATUS", message: "Viewer access is read-only." });
+    if (isVaultReadOnly) {
+      dispatch({ type: "SET_STATUS", message: "This vault is read-only." });
       return;
     }
     const trimmed = name.trim();
@@ -538,7 +661,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, isCloudViewer, state.workspace]);
+  }, [dispatch, isVaultReadOnly, state.workspace]);
 
   /**
    * Import a binary asset (image, PDF) from disk into the current vault and open
@@ -546,8 +669,8 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
    */
   const importAsset = useCallback(async (targetFolder = "") => {
     if (!tauri.isAvailable || !state.workspace) return;
-    if (isCloudViewer) {
-      dispatch({ type: "SET_STATUS", message: "Viewer access is read-only." });
+    if (isVaultReadOnly) {
+      dispatch({ type: "SET_STATUS", message: "This vault is read-only." });
       return;
     }
     try {
@@ -589,12 +712,12 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [capabilities.isMobile, dispatch, importExternalSources, isCloudViewer, state.workspace]);
+  }, [capabilities.isMobile, dispatch, importExternalSources, isVaultReadOnly, state.workspace]);
 
   const renameEntry = useCallback(async (fromRelativePath: string, toRelativePath: string, updateLinks: boolean) => {
     if (!state.workspace) return;
-    if (isCloudViewer) {
-      dispatch({ type: "SET_STATUS", message: "Viewer access is read-only." });
+    if (isVaultReadOnly) {
+      dispatch({ type: "SET_STATUS", message: "This vault is read-only." });
       return;
     }
     try {
@@ -619,7 +742,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, isCloudViewer, state.workspace, openMarkdownFile, openDiagramFile, getCloudContext, cloudRest]);
+  }, [dispatch, isVaultReadOnly, state.workspace, openMarkdownFile, openDiagramFile, getCloudContext, cloudRest]);
 
   const renameCurrentEntry = useCallback(async () => {
     if (!state.workspace || !state.currentRelativePath) return;
@@ -639,8 +762,8 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
 
   const deleteEntry = useCallback(async (relativePath: string) => {
     if (!state.workspace || !relativePath) return;
-    if (isCloudViewer) {
-      dispatch({ type: "SET_STATUS", message: "Viewer access is read-only." });
+    if (isVaultReadOnly) {
+      dispatch({ type: "SET_STATUS", message: "This vault is read-only." });
       return;
     }
     const confirmed = await confirm(`Move ${relativePath} to trash?`, { title: "Move to trash" });
@@ -660,7 +783,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, isCloudViewer, state.workspace, state.currentRelativePath]);
+  }, [dispatch, isVaultReadOnly, state.workspace, state.currentRelativePath]);
 
   const deleteCurrentEntry = useCallback(async () => {
     if (!state.currentRelativePath) return;
@@ -679,8 +802,8 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
 
   const restoreTrashItem = useCallback(async (trashId: string) => {
     if (!state.workspace) return;
-    if (isCloudViewer) {
-      dispatch({ type: "SET_STATUS", message: "Viewer access is read-only." });
+    if (isVaultReadOnly) {
+      dispatch({ type: "SET_STATUS", message: "This vault is read-only." });
       return;
     }
     try {
@@ -733,12 +856,12 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, isCloudViewer, state.workspace]);
+  }, [dispatch, isVaultReadOnly, state.workspace]);
 
   const emptyTrash = useCallback(async () => {
     if (!state.workspace) return;
-    if (isCloudViewer) {
-      dispatch({ type: "SET_STATUS", message: "Viewer access is read-only." });
+    if (isVaultReadOnly) {
+      dispatch({ type: "SET_STATUS", message: "This vault is read-only." });
       return;
     }
     const confirmed = await confirm("Empty trash permanently?", { title: "Empty trash", destructive: true });
@@ -769,12 +892,12 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, isCloudViewer, state.workspace]);
+  }, [dispatch, isVaultReadOnly, state.workspace]);
 
   const permanentDeleteTrash = useCallback(async (trashId: string) => {
     if (!state.workspace) return;
-    if (isCloudViewer) {
-      dispatch({ type: "SET_STATUS", message: "Viewer access is read-only." });
+    if (isVaultReadOnly) {
+      dispatch({ type: "SET_STATUS", message: "This vault is read-only." });
       return;
     }
     try {
@@ -824,7 +947,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } catch (error) {
       dispatch({ type: "SET_STATUS", message: String(error) });
     }
-  }, [dispatch, isCloudViewer, state.workspace]);
+  }, [dispatch, isVaultReadOnly, state.workspace]);
 
   const exportSite = useCallback(async () => {
     if (!state.workspace) return;
@@ -966,8 +1089,8 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
 
   const createFolder = useCallback(async (folderRelativePath: string) => {
     if (!state.workspace) return;
-    if (isCloudViewer) {
-      dispatch({ type: "SET_STATUS", message: "Viewer access is read-only." });
+    if (isVaultReadOnly) {
+      dispatch({ type: "SET_STATUS", message: "This vault is read-only." });
       return;
     }
     try {
@@ -989,12 +1112,12 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, isCloudViewer, state.workspace, getCloudContext, cloudRest]);
+  }, [dispatch, isVaultReadOnly, state.workspace, getCloudContext, cloudRest]);
 
   const renameFolder = useCallback(async (fromRelativePath: string, toRelativePath: string) => {
     if (!state.workspace) return;
-    if (isCloudViewer) {
-      dispatch({ type: "SET_STATUS", message: "Viewer access is read-only." });
+    if (isVaultReadOnly) {
+      dispatch({ type: "SET_STATUS", message: "This vault is read-only." });
       return;
     }
     try {
@@ -1008,12 +1131,12 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, isCloudViewer, state.workspace]);
+  }, [dispatch, isVaultReadOnly, state.workspace]);
 
   const moveFolder = useCallback(async (fromRelativePath: string, toRelativePath: string) => {
     if (!state.workspace) return;
-    if (isCloudViewer) {
-      dispatch({ type: "SET_STATUS", message: "Viewer access is read-only." });
+    if (isVaultReadOnly) {
+      dispatch({ type: "SET_STATUS", message: "This vault is read-only." });
       return;
     }
     try {
@@ -1027,12 +1150,12 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, isCloudViewer, state.workspace]);
+  }, [dispatch, isVaultReadOnly, state.workspace]);
 
   const deleteFolder = useCallback(async (folderRelativePath: string, softDelete = true, skipConfirm = false) => {
     if (!state.workspace) return;
-    if (isCloudViewer) {
-      dispatch({ type: "SET_STATUS", message: "Viewer access is read-only." });
+    if (isVaultReadOnly) {
+      dispatch({ type: "SET_STATUS", message: "This vault is read-only." });
       return;
     }
     if (!skipConfirm) {
@@ -1055,7 +1178,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, isCloudViewer, state.workspace, state.currentRelativePath]);
+  }, [dispatch, isVaultReadOnly, state.workspace, state.currentRelativePath]);
 
   const openInitialPath = useCallback(async () => {
     if (!tauri.isAvailable) return;
@@ -1108,6 +1231,9 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     chooseWorkspaceFolder,
     openWorkspace,
     openDefaultVault,
+    refreshVaultProvider,
+    reconcileExternalVault,
+    reauthorizeExternalVault,
     saveCurrentFile,
     saveDraftAs,
     commitDraftToWorkspace,

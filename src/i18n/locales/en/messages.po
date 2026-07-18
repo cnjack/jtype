@@ -157,6 +157,10 @@ msgstr "Advanced"
 msgid "All"
 msgstr "All"
 
+#: src/components/layout/VaultProviderBanner.tsx
+msgid "An interrupted change is ready to finish safely."
+msgstr "An interrupted change is ready to finish safely."
+
 #: src/components/BoardTable.tsx
 #: src/components/BoardView.tsx
 #: src/components/CardPeek.tsx
@@ -274,9 +278,19 @@ msgstr "Card"
 #~ msgid "cards"
 #~ msgstr "cards"
 
+#: src/components/layout/VaultProviderBanner.tsx
+msgid "Changes are synced with the selected device folder."
+msgstr "Changes are synced with the selected device folder."
+
 #: src/components/sidebar/Sidebar.tsx
 msgid "Choose a local folder"
 msgstr "Choose a local folder"
+
+#: src/components/layout/VaultHome.tsx
+msgid "Choose a note or create a new one. Changes are kept in sync with the "
+"selected device folder."
+msgstr "Choose a note or create a new one. Changes are kept in sync with the "
+"selected device folder."
 
 #: src/components/layout/VaultHome.tsx
 msgid "Choose a note or create a new one. Stored privately by JType on this "
@@ -392,6 +406,10 @@ msgstr "Command line (jtype)"
 #: src/components/modals/CommandPalette.tsx
 msgid "Command palette"
 msgstr "Command palette"
+
+#: src/components/layout/VaultProviderBanner.tsx
+msgid "conflicts"
+msgstr "conflicts"
 
 #: src/components/modals/AccountDialog.tsx
 msgid "Connect desktop sync through the browser and choose the service "
@@ -709,6 +727,10 @@ msgstr "Exported PDF to {outputPath}."
 msgid "Exporting PDF..."
 msgstr "Exporting PDF..."
 
+#: src/components/layout/VaultProviderBanner.tsx
+msgid "External changes need your choice before syncing can continue."
+msgstr "External changes need your choice before syncing can continue."
+
 #: src/components/sidebar/Sidebar.tsx
 msgid "Favorite"
 msgstr "Favorite"
@@ -736,6 +758,10 @@ msgstr "Focus mode"
 #: src/components/modals/DeleteFolderDialog.tsx
 msgid "Folder <0>\"{folderName}\"</0>"
 msgstr "Folder <0>\"{folderName}\"</0>"
+
+#: src/components/layout/VaultProviderBanner.tsx
+msgid "Folder access is required. Choose this vault again to continue."
+msgstr "Folder access is required. Choose this vault again to continue."
 
 #: src/components/modals/CreateFolderDialog.tsx
 msgid "Folder name"
@@ -1172,6 +1198,10 @@ msgid "Open vault"
 msgstr "Open vault"
 
 #: src/components/editor/EditorShell.tsx
+msgid "Opened system sharing for {fileName}."
+msgstr "Opened system sharing for {fileName}."
+
+#: src/components/editor/EditorShell.tsx
 msgid "Outgoing links"
 msgstr "Outgoing links"
 
@@ -1546,6 +1576,10 @@ msgstr "Template name"
 #: src/components/editor/EditorShell.tsx
 msgid "The public snapshot is behind the current document."
 msgstr "The public snapshot is behind the current document."
+
+#: src/components/layout/VaultProviderBanner.tsx
+msgid "The selected folder is unavailable. Choose it again to continue."
+msgstr "The selected folder is unavailable. Choose it again to continue."
 
 #: src/components/modals/AccountDialog.tsx
 msgid "Then run `jtype login` to sign in."

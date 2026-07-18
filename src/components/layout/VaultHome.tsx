@@ -1,6 +1,6 @@
 import { Trans, Plural } from "@lingui/react/macro";
 import { useMemo } from "react";
-import { useAppDispatch, useAppState } from "../../app/AppState";
+import { isCurrentVaultReadOnly, useAppDispatch, useAppState } from "../../app/AppState";
 import { useFileSystem } from "../../hooks";
 import { markdownNodes } from "../../lib/utils";
 import { appStorage } from "../../lib/storage";
@@ -17,6 +17,10 @@ export function VaultHome() {
   const recentItems = useMemo(() => readRecentItems(), [state.currentPath]);
   const recentDocs = recentItems.filter((item) => item.kind === "file").slice(0, 4);
   const vaultName = state.workspace?.name ?? "Vault";
+  const externalProvider = state.vaultProviderStatus?.provider.kind === "externalMirror"
+    ? state.vaultProviderStatus.provider
+    : null;
+  const isReadOnly = isCurrentVaultReadOnly(state);
   const currentBinding = state.workspace
     ? state.vaultBindings.find((binding) => binding.localVaultPath === state.workspace?.rootPath)
     : null;
@@ -38,7 +42,11 @@ export function VaultHome() {
           <div className="max-w-3xl">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#008884]"><Trans>Vault ready</Trans></p>
             <h2 className={`${capabilities.prefersCompactLayout ? "text-3xl" : "text-4xl"} mt-4 break-words font-semibold tracking-[-0.035em] text-stone-950`}>{vaultName}</h2>
-            {capabilities.usesAppPrivateVault ? (
+            {externalProvider ? (
+              <p id="vault-home-external-note" className="mt-3 max-w-2xl text-sm leading-7 text-[#5f6d68]">
+                <Trans>Choose a note or create a new one. Changes are kept in sync with the selected device folder.</Trans>
+              </p>
+            ) : capabilities.usesAppPrivateVault ? (
               <p id="vault-home-private-note" className="mt-3 max-w-2xl text-sm leading-7 text-[#5f6d68]">
                 <Trans>Choose a note or create a new one. Stored privately by JType on this device.</Trans>
               </p>
@@ -48,7 +56,7 @@ export function VaultHome() {
               </p>
             )}
             <div className="mt-6 flex flex-wrap gap-2">
-              <button className="toolbar-button toolbar-button-primary" type="button" onClick={() => dispatch({ type: "SET_CREATE_NOTE_DIALOG", open: true })}>
+              <button className="toolbar-button toolbar-button-primary" type="button" disabled={isReadOnly} onClick={() => dispatch({ type: "SET_CREATE_NOTE_DIALOG", open: true })}>
                 <Trans>New Document</Trans>
               </button>
               <button className="toolbar-button" type="button" onClick={() => dispatch({ type: "SET_QUICK_SWITCHER", open: true })}>

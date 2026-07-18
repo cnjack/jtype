@@ -14,6 +14,8 @@ declare global {
     __VAULT_BINDINGS__: unknown[];
     __VAULT_SETTINGS__: Record<string, { cloudSyncEnabled: boolean; syncPromptDismissedAt: string | null; syncDisabledPermanently: boolean }>;
     __RUNTIME_CAPABILITIES__?: Record<string, unknown>;
+    __EXTERNAL_VAULT_RESULT__?: Record<string, unknown>;
+    __EXTERNAL_PENDING__?: boolean;
     __CLOUD_PROFILE__?: Record<string, unknown>;
     __START_LISTENER_ARGS__?: Record<string, unknown>;
     __START_LISTENER_CALLS__: Record<string, unknown>[];
@@ -275,6 +277,83 @@ test.beforeEach(async ({ page }) => {
             return null;
           }
           if (cmd === "open_default_vault") return { ...workspaceSnapshot(), rootPath: "C:/Users/Jack/Documents/.jtype", name: ".jtype", metadataCreated: true };
+          if (cmd === "initialize_android_external_vault") return window.__EXTERNAL_VAULT_RESULT__;
+          if (cmd === "reauthorize_android_external_vault") {
+            const external = window.__EXTERNAL_VAULT_RESULT__ as {
+              provider: { accessState: string; capabilities: Record<string, boolean> };
+            };
+            external.provider.accessState = "ready";
+            external.provider.capabilities.canWrite = true;
+            external.provider.capabilities.canCreate = true;
+            external.provider.capabilities.canRename = true;
+            external.provider.capabilities.canDelete = true;
+            return external.provider;
+          }
+          if (cmd === "reconcile_android_external_vault") {
+            const external = window.__EXTERNAL_VAULT_RESULT__ as {
+              provider: Record<string, unknown>;
+              workspace: Record<string, unknown>;
+            };
+            return {
+              provider: external.provider,
+              workspace: external.workspace,
+              status: "unchanged",
+              pulledFiles: 0,
+              pulledDirectories: 0,
+              deletedEntries: 0,
+              pendingLocalChanges: 0,
+              conflicts: [],
+            };
+          }
+          if (cmd === "write_back_android_external_vault") {
+            const external = window.__EXTERNAL_VAULT_RESULT__ as {
+              provider: Record<string, unknown>;
+              workspace: Record<string, unknown>;
+            };
+            window.__EXTERNAL_PENDING__ = false;
+            return {
+              provider: external.provider,
+              workspace: external.workspace,
+              status: "written",
+              writtenFiles: 1,
+              createdDirectories: 0,
+              deletedEntries: 0,
+              pulledBeforeWrite: 0,
+              pendingJournal: false,
+              conflicts: [],
+            };
+          }
+          if (cmd === "inspect_vault_provider") {
+            const rootPath = String(args.rootPath ?? "C:/workspace");
+            const external = window.__EXTERNAL_VAULT_RESULT__ as {
+              provider?: Record<string, unknown>;
+              workspace?: { rootPath?: string };
+            } | undefined;
+            if (external?.provider && external.workspace?.rootPath === rootPath) {
+              return { provider: external.provider, pendingWriteBack: window.__EXTERNAL_PENDING__ ?? false };
+            }
+            return {
+              provider: {
+                providerId: `local:${rootPath}`,
+                kind: "localDirectory",
+                displayName: rootPath.split(/[\\/]/).filter(Boolean).at(-1) ?? "Vault",
+                localRootPath: rootPath,
+                accessState: "ready",
+                storageMode: "direct",
+                capabilities: {
+                  canRead: true,
+                  canWrite: true,
+                  canCreate: true,
+                  canRename: true,
+                  canDelete: true,
+                  canWatch: true,
+                  canReconcile: false,
+                  canReauthorize: false,
+                },
+              },
+              pendingWriteBack: false,
+            };
+          }
           if (cmd === "plugin:event|listen") {
             const id = ++eventId;
             eventSubscriptions.set(id, { event: String(args.event), handler: Number(args.handler) });
@@ -860,6 +939,93 @@ test("adapts the shared welcome screen to app-private mobile storage", async ({ 
   await page.setViewportSize({ width: 844, height: 390 });
   await expect(page.locator("html")).toHaveAttribute("data-jtype-layout", "compact");
   await expect(page.getByTitle("Split")).toBeHidden();
+});
+
+test("opens an Android SAF vault through the shared desktop vault action", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(() => {
+    window.__RUNTIME_CAPABILITIES__ = {
+      platform: "android",
+      clientType: "mobile",
+      isMobile: true,
+      isTouchPrimary: true,
+      prefersCompactLayout: true,
+      supportsWindowDrag: false,
+      supportsUpdater: false,
+      supportsProcessRestart: false,
+      supportsCliInstall: false,
+      supportsFileDrop: false,
+      supportsExternalVault: true,
+      usesAppPrivateVault: true,
+    };
+    const provider = {
+      providerId: "external:saf-e2e",
+      kind: "externalMirror",
+      displayName: "Device Notes",
+      localRootPath: "/data/user/0/net.jcode.jtype/vaults/external/saf-e2e",
+      accessState: "ready",
+      storageMode: "mirror",
+      capabilities: {
+        canRead: true,
+        canWrite: true,
+        canCreate: true,
+        canRename: true,
+        canDelete: true,
+        canWatch: true,
+        canReconcile: true,
+        canReauthorize: true,
+      },
+    };
+    window.__EXTERNAL_VAULT_RESULT__ = {
+      provider,
+      workspace: {
+        rootPath: provider.localRootPath,
+        name: "saf-e2e",
+        entries: [],
+        metadataCreated: false,
+      },
+      importedFiles: 2,
+      importedDirectories: 1,
+      importedBytes: 128,
+    };
+  });
+  await page.reload();
+
+  await expect(page.locator("#welcome-open-folder")).toBeVisible();
+  await page.locator("#welcome-open-folder").click();
+  await expect(page.locator("#vault-home h2")).toHaveText("Device Notes");
+  await expect(page.locator("#external-vault-status")).toContainText("Device Notes");
+  await expect(page.locator("#external-vault-status")).toContainText("selected device folder");
+  await expect(page.locator("#operation-log")).toContainText("Imported 2 files");
+  await page.getByRole("button", { name: "Local only" }).click();
+  await expect(page.locator("#vault-home-external-note")).toBeVisible();
+  await expect(page.getByRole("button", { name: "New Document" }).first()).toBeEnabled();
+
+  await page.evaluate(() => {
+    const external = window.__EXTERNAL_VAULT_RESULT__ as {
+      provider: { accessState: string; capabilities: Record<string, boolean> };
+    };
+    external.provider.accessState = "authorizationRequired";
+    external.provider.capabilities.canWrite = false;
+    external.provider.capabilities.canCreate = false;
+    external.provider.capabilities.canRename = false;
+    external.provider.capabilities.canDelete = false;
+    window.__EMIT_TAURI_EVENT__("vault-provider-changed", external.provider);
+  });
+  await expect(page.locator("#external-vault-status")).toContainText("Folder access is required");
+  await expect(page.getByRole("button", { name: "New Document" }).first()).toBeDisabled();
+  await page.getByRole("button", { name: "Choose folder again" }).click();
+  await expect(page.locator("#external-vault-status")).toContainText("selected device folder");
+
+  await page.evaluate(() => {
+    window.__EXTERNAL_PENDING__ = true;
+    const external = window.__EXTERNAL_VAULT_RESULT__ as { provider: Record<string, unknown> };
+    window.__EMIT_TAURI_EVENT__("vault-provider-changed", external.provider);
+  });
+  await expect(page.locator("#external-vault-status")).toContainText("interrupted change");
+  await page.getByRole("button", { name: "Finish interrupted changes" }).click();
+  await expect(page.locator("#external-vault-status")).toContainText("selected device folder");
+  await expect(page.locator("#vault-home h2")).toHaveText("Device Notes");
 });
 
 test("imports an Android content URI through the shared resource flow", async ({ page }) => {

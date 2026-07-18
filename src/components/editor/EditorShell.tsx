@@ -3,7 +3,7 @@ import { Trans } from "@lingui/react/macro";
 import { useRef, useEffect, useCallback, useState } from "react";
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle, Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { save } from "@tauri-apps/plugin-dialog";
-import { useAppDispatch, useAppState } from "../../app/AppState";
+import { isCurrentVaultReadOnly, useAppDispatch, useAppState } from "../../app/AppState";
 import { useFileSystem } from "../../hooks";
 import { renderMarkdownToHtml, renderToContainer } from "@shared/lib/markdown";
 import { parseFrontmatter, writeFrontmatter } from "@shared/lib/frontmatter";
@@ -337,7 +337,10 @@ export function EditorShell() {
   const currentVaultBinding = state.workspace
     ? state.vaultBindings.find((binding) => binding.localVaultPath === state.workspace?.rootPath)
     : null;
-  const isCloudViewer = Boolean(currentVaultBinding?.workspaceRole === "viewer" && currentVaultSettings?.cloudSyncEnabled !== false);
+  const isCloudViewer = Boolean(
+    (currentVaultBinding?.workspaceRole === "viewer" && currentVaultSettings?.cloudSyncEnabled !== false)
+      || isCurrentVaultReadOnly(state),
+  );
   const canEditMarkdown = isMarkdown && !isCloudViewer;
   // Editable diagram resources (Mermaid `.mmd`, Excalidraw) save like documents.
   const canEditDiagram = isDiagramView && !isCloudViewer && isEditableResourcePath(state.currentPath);

@@ -10,6 +10,7 @@ import { Header } from "../components/layout/Header";
 import { UpdateBanner } from "../components/layout/UpdateBanner";
 import { WelcomeScreen } from "../components/layout/WelcomeScreen";
 import { VaultHome } from "../components/layout/VaultHome";
+import { VaultProviderBanner } from "../components/layout/VaultProviderBanner";
 import { Sidebar } from "../components/sidebar/Sidebar";
 import { MobileSidebarDialog } from "../components/sidebar/MobileSidebarDialog";
 import { EditorShell } from "../components/editor/EditorShell";
@@ -558,7 +559,8 @@ function AppContent() {
             {/* The content floats as a single rounded panel that the shell (header,
                 sidebar, status bar) wraps around — no divider lines, just a soft
                 tinted lift. */}
-            <div id="app-content-panel" className={`${capabilities.isMobile ? "mx-3 mb-2 mt-1" : "m-2.5"} grid min-h-0 min-w-0 grid-cols-1 overflow-hidden rounded-2xl bg-[#fbfdfb] shadow-[0_1px_2px_rgba(20,45,38,0.04),0_16px_38px_-24px_rgba(20,45,38,0.22)] ring-1 ring-black/[0.035]`}>
+            <div id="app-content-panel" className={`${capabilities.isMobile ? "mx-3 mb-2 mt-1" : "m-2.5"} grid min-h-0 min-w-0 grid-cols-1 ${state.vaultProviderStatus?.provider.kind === "externalMirror" ? "grid-rows-[auto_minmax(0,1fr)]" : "grid-rows-[minmax(0,1fr)]"} overflow-hidden rounded-2xl bg-[#fbfdfb] shadow-[0_1px_2px_rgba(20,45,38,0.04),0_16px_38px_-24px_rgba(20,45,38,0.22)] ring-1 ring-black/[0.035]`}>
+              <VaultProviderBanner />
               {showWelcome ? <WelcomeScreen /> : showVaultHome ? <VaultHome /> : showEditor ? <EditorShell /> : <WelcomeScreen />}
             </div>
           </section>

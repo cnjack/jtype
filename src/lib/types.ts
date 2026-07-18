@@ -119,6 +119,11 @@ export type VaultProviderDescriptor = {
   capabilities: VaultProviderCapabilities;
 };
 
+export type VaultProviderStatus = {
+  provider: VaultProviderDescriptor;
+  pendingWriteBack: boolean;
+};
+
 export type ExternalVaultInitializationResult = {
   provider: VaultProviderDescriptor;
   workspace: WorkspaceSnapshot;

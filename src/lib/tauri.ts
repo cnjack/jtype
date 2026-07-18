@@ -18,6 +18,7 @@ import type {
   AssetSyncState,
   RuntimeCapabilities,
   VaultProviderDescriptor,
+  VaultProviderStatus,
   ExternalVaultInitializationResult,
   ExternalVaultReconcileResult,
   ExternalVaultWriteBackResult,
@@ -80,6 +81,9 @@ export const tauri = {
   },
   describeVaultProvider(rootPath: string) {
     return invoke<VaultProviderDescriptor>("describe_vault_provider", { rootPath });
+  },
+  inspectVaultProvider(rootPath: string) {
+    return invoke<VaultProviderStatus>("inspect_vault_provider", { rootPath });
   },
   initializeAndroidExternalVault() {
     return invoke<ExternalVaultInitializationResult>("initialize_android_external_vault");
