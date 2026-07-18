@@ -2,7 +2,7 @@
 
 > 最后更新：2026-07-19
 > Feature branch：`codex/mobile-app`  
-> 当前阶段：Phase 2D — 系统集成与可靠性；系统分享、recovery、无障碍、共享触控交互、键盘辅助栏、5,000 文档大 vault、大内容/Board、sync reliability、系统通知 → 文档定位，以及 mobile partial workspace runtime/loaded-native fallback/folder hydration 已完成；Android partial 5,008-entry 与 iOS clean-static 5,406-entry cold open/tail restore/交互式第二页已通过，连续 shallow page 的双端 native cache hit 为 0 ms。external reconcile/write-back 已改为 native full scan + plan-driven source materialization，unchanged 稳定状态已复用 trusted baseline 消除重复 mirror full hash；Android Studio 已默认选择 arm64 flavor，fail-closed physical-device preflight 已落地并正确保持当前无真机/无 iOS 签名环境 blocked；继续 source full-hash/provider-native streaming、APNs/FCM、双平台 physical low-memory/performance、真实设备弱网与真机终验
+> 当前阶段：Phase 2D — 系统集成与可靠性；系统分享、recovery、无障碍、共享触控交互、键盘辅助栏、5,000 文档大 vault、大内容/Board、sync reliability、系统通知 → 文档定位，以及 mobile partial workspace runtime/loaded-native fallback/folder hydration 已完成；Android partial 5,008-entry 与 iOS clean-static 5,406-entry cold open/tail restore/交互式第二页已通过，连续 shallow page 的双端 native cache hit 为 0 ms。external reconcile/write-back 已改为 native full scan + plan-driven source materialization，unchanged 稳定状态已复用 trusted baseline 消除重复 mirror full hash；HTTPS universal/app-link route、Android autoVerify、iOS associated-domain 与 Axum fail-closed well-known endpoints 已完成工程及 Simulator gate。Android Studio 已默认选择 arm64 flavor，physical-device preflight 已正确保持当前无真机/无 iOS 签名环境 blocked；继续生产关联部署、release signing、APNs/FCM、source full-hash/provider-native streaming、双平台 physical low-memory/performance、真实设备弱网与真机终验
 > 状态说明：`[ ]` 未开始、`[~]` 进行中、`[x]` 已完成；只有附上真实测试证据后才能标记完成。
 
 ## 目标
@@ -196,7 +196,7 @@
 
 ### 2.3 系统入口与后台能力
 
-- [~] 固定自有 OAuth deep link、pending OAuth 冷启动恢复，以及严格的 `jtype://open/document` workspace/path 定位已接入；universal/app links 待完成（证据：`docs/mobile/reports/phase-2-notification-routing.md`，实现：`2a1fc09`）
+- [~] 固定自有 OAuth deep link、pending OAuth 冷启动恢复，以及严格的 custom/HTTPS workspace/path 定位已接入；Android `autoVerify`、iOS associated-domain 和 Axum fail-closed association endpoints 已在 `799358c` 完成。生产域名发布、真实 Team ID/release 证书、signed build 与 physical-device verified association 待完成（证据：`docs/mobile/reports/phase-2-notification-routing.md`、`docs/mobile/reports/phase-2-universal-app-links.md`，实现：`2a1fc09`、`799358c`）
 - [x] Android share target / iOS share extension 已把 Markdown、纯文本、URL 和文件接入现有 vault import 与 desktop/shared editor；cold/warm Android 和 Safari → iOS extension → JType 闭环均通过（证据：`docs/mobile/reports/phase-2-share-import.md`，实现：`ce9239b`）
 - [~] 本地原生协作通知、按需权限、Android channel 与双平台 tap callback 已接入；iOS 在 JavaScript 延迟窗口后调用前台呈现，兼容 notification plugin 的本地时区解析并避免首次 paint 白屏，APNs/FCM token/服务端投递和系统允许的有限后台刷新待完成（证据：`docs/mobile/reports/phase-2-notification-routing.md`、`docs/mobile/reports/phase-2-unloaded-entry-resolution.md`，实现：`2a1fc09`、`ff21f86`、`999dc11`）
 - [x] 通知/深链已通过 vault binding 定位正确 cloud workspace、vault 和文档；Android API 36 与 iOS 26.5 Simulator 原生系统通知 → 点击 → Desktop 共用 EditorShell 闭环，以及最终 artifact cold launch 均通过（证据：`docs/mobile/reports/phase-2-notification-routing.md`、`docs/mobile/reports/phase-2-unloaded-entry-resolution.md`，实现：`2a1fc09`、`ff21f86`、`999dc11`）
@@ -213,7 +213,7 @@
 
 - [~] Android 外部 vault 全链路已通过；iOS Simulator 已通过选择、重启/覆盖安装恢复和 shared editor 写回，physical iPhone 权限失效恢复待完成
 - [~] Android 外部 app 修改文件后的真实 reconcile/conflict 已通过；iOS 复用同一 Rust plan 与共享 dialog，并有 contract/E2E 覆盖，真实 Files provider 双边冲突留到 physical iPhone gate
-- [~] Android/iOS share smoke flow、OAuth deep-link、canonical 文档 route 与双平台原生通知点击定位已通过；APNs/FCM、universal/app links 与真实设备矩阵待完成
+- [~] Android/iOS share smoke flow、OAuth deep-link、custom/HTTPS canonical 文档 route 与双平台原生通知点击定位已通过；Universal/App Link 工程与 Simulator fallback gate 已完成，生产 verified association、APNs/FCM 与真实设备矩阵待完成
 - [x] 5,000 文档大 vault 基准达到预先记录阈值：Android native 131 ms / shared index 24.9 ms，iOS native 48 ms，首批树 window 160；双平台均精确搜索并打开尾部文档（证据：`docs/mobile/reports/phase-2-large-vault.md`）
 - [x] 当前 2D large-vault 增量的 desktop build、web build、jtype-core 38/38、Tauri Rust 28/28、unit 50/50、app E2E 50/50、Android APK 与 iOS archive 全部通过；双端 5,000 文档 Maestro flow 通过；后续 Phase 2 增量继续重复完整 gate
 - [x] 当前 2D large-content 增量的 desktop/web build、jtype-core 38/38、Tauri Rust 28/28、unit 50/50、app E2E 51/51、Android universal APK 与 iOS simulator archive 全部通过；双端大 Markdown 与 1,200-card Board 共四条 Maestro flow 通过（证据：`docs/mobile/reports/phase-2-large-content.md`）
@@ -225,9 +225,10 @@
 - [x] 当前 Android Studio arm64 增量通过 default-flavor verification、Tauri session build、arm64-only APK 安装/冷启动、large-vault Maestro flow、unit 73/73、app E2E 56/56、jtype-core 46/46、Tauri 29/29、Desktop build 与 iOS static archive verifier（证据：`docs/mobile/reports/phase-2-android-studio-arm64.md`）
 - [x] physical-device preflight 工程 gate 已完成：Android/iOS 可独立或联合 fail-closed 检查，Emulator/Simulator 只作诊断，设备标识在 Markdown/JSON 中脱敏；当前真实环境严格模式按预期 exit 2（Android 真机 0、iPhone 真机 0、Apple Development identity 0、team 未配置）（证据：`docs/mobile/reports/phase-2-physical-device-preflight.md`，实现：`c63aac3`）
 - [x] 当前 stable mirror reuse 增量通过 Tauri 30/30、jtype-core 46/46、unit 78/78、app E2E 56/56、Desktop build、Android aarch64 APK、iOS static archive verifier 与双端 provider Simulator gate；Android changed/restored source 负例保持原 1-file materialize（证据：`docs/mobile/reports/phase-2-mirror-manifest-reuse.md`，实现：`a374204`）
+- [x] 当前 Universal/App Link contract 增量通过 unit 81/81、app E2E 56/56、Tauri 30/30、jtype-core 46/46、web service 63/63 + endpoint integration 2/2、Desktop build、Android APK 与 iOS static archive；Android 显式 HTTPS Intent 和 iOS custom-scheme fallback 均打开共用 EditorShell。生产域名目前仍返回 SPA HTML，signed verified association 与 physical-device gate 明确保留（证据：`docs/mobile/reports/phase-2-universal-app-links.md`，实现：`799358c`）
 - [~] 双平台模拟器截图已持续保存；Android/iOS physical screenshot/recording 均待真实设备接入后完成，不能用现有 Emulator/Simulator 证据替代
 - [~] `docs/mobile/reports/phase-2.md` 已记录 2A、2B、2C、2D recovery、系统分享、无障碍、触控交互、大 vault、大内容、sync reliability、通知文档定位与 partial workspace runtime；细节见各专项报告，后续持续更新到 Phase 2 终验
-- [~] tracking 已记录当前 Phase 2 commit hashes（最新 gate `a374204`）；后续增量继续追加
+- [~] tracking 已记录当前 Phase 2 commit hashes（最新实现 gate `799358c`）；后续增量继续追加
 
 ## Phase 3 — Store readiness
 
@@ -312,6 +313,7 @@
 | 2026-07-19 | 2.4 / tooling | `cc2ec80` | Android Studio 默认 arm64 product flavor、Gradle model gate、Tauri session arm64 build 与 AVD shared EditorShell runtime 验证 | `docs/mobile/reports/phase-2-android-studio-arm64.md` |
 | 2026-07-19 | 2.5 / tooling | `c63aac3` | Android/iOS fail-closed physical-device preflight、脱敏 Markdown/JSON 证据、Emulator/Simulator 排除与 signing/team 前置检查 | `docs/mobile/reports/phase-2-physical-device-preflight.md` |
 | 2026-07-19 | 2.4 / 2D | `a374204` | trusted baseline == fresh source 且无 mutation/journal 时跳过 app-private mirror duplicate hash；双端 unchanged 与 Android changed/restored fallback gate | `docs/mobile/reports/phase-2-mirror-manifest-reuse.md` |
+| 2026-07-19 | 2.3 / 2D | `799358c` | 严格 HTTPS 文档 route、Android autoVerify、iOS associated-domain 与 Axum fail-closed well-known association endpoints；生产签名/部署 gate 保留 | `docs/mobile/reports/phase-2-universal-app-links.md` |
 
 ## 当前环境审计（2026-07-18）
 

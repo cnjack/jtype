@@ -4,7 +4,7 @@
 
 Feature branch：`codex/mobile-app`
 
-当前 app code commit：`a374204`
+当前 app code commit：`799358c`
 
 当前 iOS provider gate commit：`264db8a`
 
@@ -12,7 +12,7 @@ Feature branch：`codex/mobile-app`
 
 当前 external mirror reuse commit：`a374204`
 
-本报告状态：进行中；2A provider contract、2B Android SAF 与 2C iOS security-scoped provider 的工程/Simulator gate 已完成。2D 已完成 app-private 草稿冷恢复、Keystore/Keychain pending OAuth 冷恢复、Android share target / iOS Share Extension、模拟器无障碍、共享触控交互与键盘辅助栏、5,000 文档大 vault、大 Markdown/附件/1,200-card Board 渐进渲染、sync reliability、本地原生通知文档定位，以及 mobile partial `WorkspaceSnapshot`、shared loaded-first/native-fallback resolver 与 folder hydration。Android partial 5,008-entry cold open、IPC/snapshot、RSS 和尾部打开，以及 iOS clean static archive 的 5,406-entry partial cold open、unloaded tail cold restore 均已通过；双端交互式第二页使用有界 shallow cache，native hit 均为 0 ms。external reconcile/write-back 已改为 native full scan + plan-driven source materialization；Android SAF 与 iOS local Files provider 的原生复测均通过。`a374204` 在 source 完整 SHA-256 与可信 baseline 完全一致、无 mutation/journal 时复用 baseline，消除 unchanged 稳定状态的第二次 app-private mirror full hash；Android/iOS Simulator 均命中，Android changed/restored source 仍精确走 1-file materialization。Android Studio 已把 `arm64` 设为唯一默认 product flavor。`c63aac3` 新增 fail-closed physical-device preflight，当前真实报告正确排除 Emulator/Simulator，并因 0 真机、0 Apple Development identity 和未配置 team 保持 blocked。真实设备弱网、APNs/FCM、provider-native streaming、source full-hash 优化、双平台 physical low-memory/performance、physical bookmark 生命周期与真机终验继续进行。
+本报告状态：进行中；2A provider contract、2B Android SAF 与 2C iOS security-scoped provider 的工程/Simulator gate 已完成。2D 已完成 app-private 草稿冷恢复、Keystore/Keychain pending OAuth 冷恢复、Android share target / iOS Share Extension、模拟器无障碍、共享触控交互与键盘辅助栏、5,000 文档大 vault、大 Markdown/附件/1,200-card Board 渐进渲染、sync reliability、本地原生通知文档定位、HTTPS universal/app-link 工程契约，以及 mobile partial `WorkspaceSnapshot`、shared loaded-first/native-fallback resolver 与 folder hydration。Android partial 5,008-entry cold open、IPC/snapshot、RSS 和尾部打开，以及 iOS clean static archive 的 5,406-entry partial cold open、unloaded tail cold restore 均已通过；双端交互式第二页使用有界 shallow cache，native hit 均为 0 ms。external reconcile/write-back 已改为 native full scan + plan-driven source materialization；Android SAF 与 iOS local Files provider 的原生复测均通过。`a374204` 在 source 完整 SHA-256 与可信 baseline 完全一致、无 mutation/journal 时复用 baseline，消除 unchanged 稳定状态的第二次 app-private mirror full hash；Android/iOS Simulator 均命中，Android changed/restored source 仍精确走 1-file materialization。`799358c` 增加严格 HTTPS route、Android autoVerify、iOS associated-domain 和 Axum fail-closed association endpoint；当前生产域名尚未部署 JSON association，真实 signing/physical verified link 继续 blocked。Android Studio 已把 `arm64` 设为唯一默认 product flavor。`c63aac3` 新增 fail-closed physical-device preflight，当前真实报告正确排除 Emulator/Simulator，并因 0 真机、0 Apple Development identity 和未配置 team 保持 blocked。真实设备弱网、APNs/FCM、provider-native streaming、source full-hash 优化、双平台 physical low-memory/performance、physical bookmark 生命周期与真机终验继续进行。
 
 ## 本增量结论
 
@@ -563,7 +563,13 @@ Android API 36 与 iPhone 17 Pro / iOS 26.5 在 Axum 服务关闭期间均能通
 
 Android API 36 已显示真实系统通知，并在点击后定位到绑定 vault 的 `performance-note-00001.md` 和共用 EditorShell。官方 adapter 在 Android 实机模拟器回调中给出 `notification: null`，实现以固定 collaboration notification ID 和读取即删除的 canonical-route fallback 兼容；iOS payload 缺少 `extra` 时走同一边界。route 拒绝凭据、fragment、未知/重复参数、路径 traversal 与 reserved metadata segment。
 
-iPhone 17 Pro / iOS 26.5 Simulator 同样显示真实系统横幅，点击后消费一次性 canonical route fallback，并使用共用 EditorShell 打开 `Performance note 00001`；fallback localStorage 记录数随后为 `0`。Tauri notification `2.3.3` 的 iOS `Schedule.at()` 会把 ISO `Z` 按本地时间 literal 解析；兼容层在 JavaScript 中等待 2.5 秒、确保 WKWebView 首次 paint 完成后，再调用 iOS 前台立即呈现，Android 继续使用 native 2.5 秒 schedule。fresh-install 白屏通过提交级二分定位到 `ff21f86`，并由 `999dc11` 修复；route、状态和 UI 仍完全共用。APNs/FCM token 与服务端投递、有限后台刷新、universal/app links 继续留在后续。完整边界、截图、artifact hash 与限制见 [`phase-2-notification-routing.md`](phase-2-notification-routing.md) 与 [`phase-2-unloaded-entry-resolution.md`](phase-2-unloaded-entry-resolution.md)。
+iPhone 17 Pro / iOS 26.5 Simulator 同样显示真实系统横幅，点击后消费一次性 canonical route fallback，并使用共用 EditorShell 打开 `Performance note 00001`；fallback localStorage 记录数随后为 `0`。Tauri notification `2.3.3` 的 iOS `Schedule.at()` 会把 ISO `Z` 按本地时间 literal 解析；兼容层在 JavaScript 中等待 2.5 秒、确保 WKWebView 首次 paint 完成后，再调用 iOS 前台立即呈现，Android 继续使用 native 2.5 秒 schedule。fresh-install 白屏通过提交级二分定位到 `ff21f86`，并由 `999dc11` 修复；route、状态和 UI 仍完全共用。APNs/FCM token 与服务端投递、有限后台刷新继续留在后续。完整边界、截图、artifact hash 与限制见 [`phase-2-notification-routing.md`](phase-2-notification-routing.md) 与 [`phase-2-unloaded-entry-resolution.md`](phase-2-unloaded-entry-resolution.md)。
+
+## 2D Universal / Android App Links
+
+`799358c` 将同一 canonical 文档 route 扩展到严格的 `https://jtype.nightc.com/open/document`：HTTPS 与 `jtype://` fallback 共用 parser、vault-binding resolver、`openWorkspace` 和 Desktop 的 EditorShell/Board 操作。Android manifest 使用 exact host/path 的 `autoVerify` filter，iOS canonical project/entitlement 声明 `applinks:jtype.nightc.com`；Axum 用部署环境中的 Apple Team ID 与 Android release certificate fingerprints 生成 fail-closed AASA/assetlinks JSON，没有增加 mobile-only 页面或 web 产品内容。
+
+Android API 36 已用显式 HTTPS Intent cold-start 最终 APK，并打开 `Performance note 00001` 的共用 EditorShell；iPhone 17 Pro / iOS 26.5 no-sign archive 已通过 entitlement build setting/static gate，并用 custom fallback 打开共用 EditorShell。当前生产域名两个 well-known URL 仍返回 SPA HTML，所以 Android verifier relation false、iOS HTTPS 按预期停留 Safari；生产发布、release signing 与 physical verified association 不宣称通过。完整命令、构建 hash、截图和官方规范链接见 [`phase-2-universal-app-links.md`](phase-2-universal-app-links.md)。
 
 ## 2D External provider 按需物化
 
@@ -663,18 +669,21 @@ Rust core 现在可以在不先构造完整 recursive snapshot 的前提下查�
 | Mobile partial workspace runtime | PASS；jtype-core 46/46、Tauri 29/29、unit 73/73、app E2E 56/56、Desktop build、双平台构建与 Android final APK/cold launch；iOS clean static 5,406-entry cold open + unloaded tail cold restore PASS |
 | Partial large-vault performance | Android PASS：cold 302 ms、native first page 16 ms、IPC 22.4 ms、snapshot 30,580 bytes、RSS 无增长、尾部 search/open；iOS static first page/tail restore PASS（114/51 ms）；physical memory gate 待完成 |
 | Partial shallow-page cache | PASS；Android 5,008-entry 与 iOS 5,406-entry 均完成交互式第二页，`cache=hit elapsed_ms=0`；cursor mutation invalidation 与 bounded LRU 回归通过 |
+| Universal/App Link contract | PASS；unit 81/81、app E2E 56/56、Tauri 30/30、jtype-core 46/46、web 63/63 + association integration 2/2、Desktop build、Android APK、iOS static archive |
+| Android HTTPS route / domain verification | 显式 HTTPS Intent → shared EditorShell PASS；production `assetlinks.json` 未部署，auto verification BLOCKED |
+| iOS Universal Link / fallback | entitlement/static config 与 custom fallback → shared EditorShell PASS；production AASA + signed association BLOCKED |
 
 Android debug APK：
 
 - `src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk`
-- 402,744,398 bytes（当前 `a374204` aarch64 gate build）
-- SHA-256 `46cf37ddb20bda49c74dbe4ed6f586dd8fd9a0618043aa9cd6d6f1d42a55bc98`
+- 204,323,392 bytes（当前 `799358c` universal/app-link gate build）
+- SHA-256 `111b155dd800cc41605e6b8992307cbea776e2fb57409a1c10e5b44b9e72cb0e`
 
 iOS archive：
 
 - `src-tauri/gen/apple/build/jtype_iOS.xcarchive`
 - no-sign simulator archive；包含 `JType.app/PlugIns/JType Share.appex`
-- app binary 109,371,624 bytes；SHA-256 `c446e267f19458328ea0c4194742d00a4c546a912080708a5b7092e853b627e4`
+- app binary 109,372,136 bytes；SHA-256 `094718e6fecffabe04278cddf5d315b0c9c39a5b0015d853fd4fca475efa7873`
 
 截图 SHA-256：
 
@@ -739,6 +748,9 @@ a71e5b1dd6357c5844d389fdc06002db09e25c3a568bc56a55600120938d75d2  android-partia
 c16eeccec0a04340425fcc5ad51b7cb61fc1e7d3048966467c107b02d93d26a8  android-partial-page-cache-tail-editor.png
 71479396e13e455e331c5ae75ea7a171ef7b49d13fe2bc4cc446db56cb766c82  ios-partial-page-cache-hit.png
 989408520a25c5649915f2b7c1cf253d461fac7d9f37e169eaa757f8abe766e2  ios-partial-page-cache-tail-editor.png
+e09a90164d91db2e12de1647283bf40826b27ad2e8f6dd63a6f2e1f6915c8117  android-app-link-route.png
+f4647f3baf19b0d02a5edac52b99f1734a23cf75005b83dfab6dc1cfa2ee26e1  ios-universal-link-unverified.png
+66f7f7e547ac1775d76a9b731184e66f59882785766bcf8959e1d284fd8967d7  ios-app-link-route-fallback.png
 ```
 
 ## 下一增量：2D provider 复测、真实设备可靠性与厂商通知投递
@@ -747,7 +759,7 @@ c16eeccec0a04340425fcc5ad51b7cb61fc1e7d3048966467c107b02d93d26a8  android-partia
 
 1. Android/iOS external provider 120-file `1 changed / 0 changed`、stable mirror baseline reuse、shared loaded-first/native-fallback resolver、mobile partial `WorkspaceSnapshot`、folder page loading、按打开读取正文、Android 5,008-entry 与 iOS clean-static 5,406-entry cold/第二页 Simulator gate 已完成。下一步在双平台 physical-device fixture 记录交互式连续分页/搜索、source scan/total reconcile、peak RSS/memory warning、iPhone bookmark 生命周期；source full-hash 优化与 provider-native streaming 仍需保持离线/冲突正确性。
 2. physical device 弱网、网络切换、低存储，以及系统分享大文件/进程终止矩阵。
-3. 接入 APNs/FCM token/服务端投递、有限后台刷新和 universal/app links；继续复用现有 canonical workspace/vault/document route。
+3. 接入 APNs/FCM token/服务端投递与有限后台刷新；将已完成的 association endpoints 以真实 Team ID/release certificate 发布，并完成 signed Android/iOS physical-device verified-link gate。
 4. physical iPhone 的 gesture/haptic/VoiceOver 与双端真实设备最终 gate；先运行 `pnpm mobile:device:preflight`，只有 READY 才进入真机证据矩阵。
 
 Android Studio 默认 arm64 的配置缺口已由 `cc2ec80` 关闭；宿主解锁后可补工具栏 **Run app** 可视录屏，但不再需要 ABI 代码变更。

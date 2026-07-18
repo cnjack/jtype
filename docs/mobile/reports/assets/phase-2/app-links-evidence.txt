@@ -1,0 +1,71 @@
+JType Phase 2D universal / Android App Links evidence
+Date: 2026-07-19
+Implementation commit: 799358c
+
+Canonical routes
+- HTTPS: https://jtype.nightc.com/open/document?workspaceId=<id>&path=<relative-path>
+- fallback: jtype://open/document?workspaceId=<id>&path=<relative-path>
+- Both routes enter the same mobileNavigation parser, vault-binding resolver, openWorkspace/open-document actions, and shared Desktop EditorShell.
+
+Automated regression
+- pnpm build: PASS
+- pnpm test:unit: PASS, 81/81
+- npx playwright test tests/e2e/app.spec.ts: PASS, 56/56
+- cargo test --manifest-path src-tauri/Cargo.toml: PASS, 30/30
+- cargo test --manifest-path services/jtype-core/Cargo.toml: PASS, 46/46
+- cargo test --manifest-path services/jtype-web/Cargo.toml --lib: PASS, 63/63
+- cargo test --manifest-path services/jtype-web/Cargo.toml --test app_links_tests: PASS, 2/2
+- cargo check --manifest-path services/jtype-web/Cargo.toml: PASS
+- docker compose config --quiet: PASS
+- Helm render: NOT RUN; helm CLI is not installed on this host.
+
+Local association endpoint gate
+- Server: 127.0.0.1:13346 with test-only environment identities.
+- JTYPED_APPLE_APP_LINK_TEAM_ID=A1B2C3D4E5
+- JTYPED_ANDROID_APP_LINK_CERT_SHA256 supplied as a valid 64-hex certificate fingerprint.
+- GET /.well-known/apple-app-site-association: HTTP 200, application/json, appID A1B2C3D4E5.net.jcode.jtype, exact component /open/document.
+- GET /.well-known/assetlinks.json: HTTP 200, application/json, package_name net.jcode.jtype, normalized SHA-256 certificate fingerprint.
+- Missing or invalid identity configuration returns an empty association list (fail closed).
+
+Current production-domain observation (2026-07-19)
+- GET https://jtype.nightc.com/.well-known/apple-app-site-association: HTTP 200, content-type text/html; charset=utf-8, existing JType Cloud SPA HTML.
+- GET https://jtype.nightc.com/.well-known/assetlinks.json: HTTP 200, content-type text/html; charset=utf-8, existing JType Cloud SPA HTML.
+- Result: the implementation has not been deployed to the production domain; Apple/Android association verification must remain failed/blocked.
+
+Android Emulator gate
+- Device: emulator-5554, arm64, Android API 36.
+- Build: pnpm tauri android build --debug --target aarch64 --apk --ci: PASS.
+- APK: src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk
+- APK size: 204323392 bytes
+- APK SHA-256: 111b155dd800cc41605e6b8992307cbea776e2fb57409a1c10e5b44b9e72cb0e
+- Installed with adb install -r.
+- Cold explicit HTTPS intent:
+  adb shell am start -W -a android.intent.action.VIEW -c android.intent.category.BROWSABLE -d 'https://jtype.nightc.com/open/document?workspaceId=dd3a196e-2b7a-47dc-8a7a-69de70283acb&path=performance-note-00001.md' net.jcode.jtype
+- Result: PASS, cold MainActivity start in 313 ms; the route opened Performance note 00001 in the shared EditorShell.
+- Generated manifest: exact https scheme, jtype.nightc.com host, /open/document literal path, android:autoVerify=true.
+- Domain verifier: relation false / verification state 1024 because production assetlinks.json is not deployed. Automatic verified-link ownership is BLOCKED, not passed.
+- Screenshot: android-app-link-route.png
+- Screenshot SHA-256: e09a90164d91db2e12de1647283bf40826b27ad2e8f6dd63a6f2e1f6915c8117
+
+iOS Simulator gate
+- Device: iPhone 17 Pro Simulator, iOS 26.5, UDID BD64DE20-5397-486C-8899-4B974425A0AD.
+- Build: pnpm mobile:ios:build:simulator-static: PASS.
+- Static archive verifier: PASS.
+- App binary size: 109372136 bytes
+- App binary SHA-256: 094718e6fecffabe04278cddf5d315b0c9c39a5b0015d853fd4fca475efa7873
+- xcodebuild build settings: CODE_SIGN_ENTITLEMENTS=jtype_iOS/jtype_iOS.entitlements; PRODUCT_BUNDLE_IDENTIFIER=net.jcode.jtype.
+- Canonical entitlement: com.apple.developer.associated-domains contains applinks:jtype.nightc.com.
+- The simulator archive is no-sign and there is no Apple Development identity/team on this host, so there is no signed embedded-entitlement claim.
+- Opening the HTTPS URL remained in Safari, as expected while production AASA is SPA HTML and the app is unsigned. Universal Link ownership is BLOCKED, not passed.
+- Custom fallback route was then opened with simctl and tests/mobile/ios-document-route-fallback.yaml passed, opening JTypeOnDemand20260718/note-001.md in the same shared EditorShell.
+- The fallback flow used a simulator-only vault binding fixture outside the repository; no product/UI behavior was added for the fixture.
+- Screenshot: ios-universal-link-unverified.png
+- Screenshot SHA-256: f4647f3baf19b0d02a5edac52b99f1734a23cf75005b83dfab6dc1cfa2ee26e1
+- Screenshot: ios-app-link-route-fallback.png
+- Screenshot SHA-256: 66f7f7e547ac1775d76a9b731184e66f59882785766bcf8959e1d284fd8967d7
+
+Remaining release gate
+- Deploy the Axum well-known endpoints with the real Apple Team ID and all release Android signing certificate SHA-256 fingerprints.
+- Build a signed iOS app whose embedded associated-domains entitlement matches the deployed AASA.
+- Install release-signed Android/iOS builds on physical devices.
+- Verify ordinary browser/mail HTTPS taps cold- and warm-open JType without an app chooser or Safari fallback, then repeat workspace/path rejection and unavailable-binding cases.
