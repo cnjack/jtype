@@ -2,7 +2,7 @@
 
 > 最后更新：2026-07-19
 > Feature branch：`codex/mobile-app`  
-> 当前阶段：Phase 2D — 系统集成与可靠性；系统分享、recovery、无障碍、共享触控交互、键盘辅助栏、5,000 文档大 vault、大内容/Board、sync reliability、系统通知 → 文档定位，以及 mobile partial workspace runtime/loaded-native fallback/folder hydration 已完成；Android partial 5,008-entry 与 iOS clean-static 5,406-entry cold open/tail restore/交互式第二页已通过，连续 shallow page 的双端 native cache hit 为 0 ms。external reconcile/write-back 已改为 native full scan + plan-driven source materialization，Android Studio 已默认选择 arm64 flavor；继续 provider-native streaming、APNs/FCM、双平台 physical low-memory/performance、真实设备弱网与真机终验
+> 当前阶段：Phase 2D — 系统集成与可靠性；系统分享、recovery、无障碍、共享触控交互、键盘辅助栏、5,000 文档大 vault、大内容/Board、sync reliability、系统通知 → 文档定位，以及 mobile partial workspace runtime/loaded-native fallback/folder hydration 已完成；Android partial 5,008-entry 与 iOS clean-static 5,406-entry cold open/tail restore/交互式第二页已通过，连续 shallow page 的双端 native cache hit 为 0 ms。external reconcile/write-back 已改为 native full scan + plan-driven source materialization，Android Studio 已默认选择 arm64 flavor，fail-closed physical-device preflight 已落地并正确保持当前无真机/无 iOS 签名环境 blocked；继续 provider-native streaming、APNs/FCM、双平台 physical low-memory/performance、真实设备弱网与真机终验
 > 状态说明：`[ ]` 未开始、`[~]` 进行中、`[x]` 已完成；只有附上真实测试证据后才能标记完成。
 
 ## 目标
@@ -223,9 +223,10 @@
 - [x] 当前 2D unloaded-entry query contract 增量的 jtype-core 43/43、Tauri 29/29、unit 66/66、app E2E 55/55、Desktop build、Android universal APK、iOS simulator archive 与双平台 cold-launch screenshot 全部通过；这是 partial runtime 的前置 contract gate，不作为搜索或启动性能验收（证据：`docs/mobile/reports/phase-2-unloaded-entry-resolution.md`）
 - [~] 当前 2D partial workspace runtime 增量及 page-cache follow-up 的 jtype-core 46/46、Tauri 29/29、unit 73/73、app E2E 56/56、Desktop build 与双平台 mobile build 通过；Android 5,008-entry 与 iOS clean-static 5,406-entry 的第二页交互均为 cache hit / 0 ms，双端 120-file provider Simulator gate 也已完成。双平台 physical performance/low-memory 与 physical Files provider 生命周期 gate 待完成（证据：`docs/mobile/reports/phase-2-partial-workspace-runtime.md`、`docs/mobile/reports/phase-2-partial-large-vault.md`、`docs/mobile/reports/phase-2-partial-page-cache.md`、`docs/mobile/reports/phase-2-native-on-demand.md`）
 - [x] 当前 Android Studio arm64 增量通过 default-flavor verification、Tauri session build、arm64-only APK 安装/冷启动、large-vault Maestro flow、unit 73/73、app E2E 56/56、jtype-core 46/46、Tauri 29/29、Desktop build 与 iOS static archive verifier（证据：`docs/mobile/reports/phase-2-android-studio-arm64.md`）
-- [ ] 双平台模拟器与至少一台真实设备截图/录像证据已保存
+- [x] physical-device preflight 工程 gate 已完成：Android/iOS 可独立或联合 fail-closed 检查，Emulator/Simulator 只作诊断，设备标识在 Markdown/JSON 中脱敏；当前真实环境严格模式按预期 exit 2（Android 真机 0、iPhone 真机 0、Apple Development identity 0、team 未配置）（证据：`docs/mobile/reports/phase-2-physical-device-preflight.md`，实现：`c63aac3`）
+- [~] 双平台模拟器截图已持续保存；Android/iOS physical screenshot/recording 均待真实设备接入后完成，不能用现有 Emulator/Simulator 证据替代
 - [~] `docs/mobile/reports/phase-2.md` 已记录 2A、2B、2C、2D recovery、系统分享、无障碍、触控交互、大 vault、大内容、sync reliability、通知文档定位与 partial workspace runtime；细节见各专项报告，后续持续更新到 Phase 2 终验
-- [~] tracking 已记录当前 Phase 2 commit hashes（最新 gate `cc2ec80`）；后续增量继续追加
+- [~] tracking 已记录当前 Phase 2 commit hashes（最新 gate `c63aac3`）；后续增量继续追加
 
 ## Phase 3 — Store readiness
 
@@ -308,6 +309,7 @@
 | 2026-07-19 | 2.4 / 2D | `a74b43a` | 有界 shallow-page LRU cache、revision cursor/stale refresh、后台分页 worker，并完成 Android/iOS 5,000-entry 交互式 cache-hit gate | `docs/mobile/reports/phase-2-partial-page-cache.md` |
 | 2026-07-19 | 2.4 / 2D | `264db8a` | iOS security-scoped Files provider 120-file baseline / 1 changed / immediate unchanged 原生 gate、Maestro flow、截图与性能日志 | `docs/mobile/reports/phase-2-native-on-demand.md` |
 | 2026-07-19 | 2.4 / tooling | `cc2ec80` | Android Studio 默认 arm64 product flavor、Gradle model gate、Tauri session arm64 build 与 AVD shared EditorShell runtime 验证 | `docs/mobile/reports/phase-2-android-studio-arm64.md` |
+| 2026-07-19 | 2.5 / tooling | `c63aac3` | Android/iOS fail-closed physical-device preflight、脱敏 Markdown/JSON 证据、Emulator/Simulator 排除与 signing/team 前置检查 | `docs/mobile/reports/phase-2-physical-device-preflight.md` |
 
 ## 当前环境审计（2026-07-18）
 

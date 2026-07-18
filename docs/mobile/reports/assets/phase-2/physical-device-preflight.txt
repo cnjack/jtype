@@ -1,0 +1,45 @@
+JType Phase 2 physical-device preflight evidence
+Observed: 2026-07-19 (Asia/Shanghai)
+Implementation: c63aac3
+
+Report command:
+  pnpm mobile:device:preflight:report
+Exit: 0 (diagnostic report mode)
+
+Strict command:
+  pnpm mobile:device:preflight -- --format json
+Exit: 2 (required physical-device gate blocked)
+
+Overall: BLOCKED
+
+Android
+  required: true
+  ready: false
+  attached physical devices: 0
+  ignored Emulator devices: 1
+  blocker: No physical Android device is attached; Emulator entries do not satisfy this gate.
+
+iOS
+  required: true
+  ready: false
+  available physical iPhones: 0
+  ignored booted Simulators: 1
+  Apple Development identities: 0
+  DEVELOPMENT_TEAM configured: no
+  blocker: No available paired physical iPhone is attached; Simulator entries do not satisfy this gate.
+  blocker: No valid Apple Development code-signing identity is installed.
+  blocker: No iOS DEVELOPMENT_TEAM is configured; set JTYPE_IOS_DEVELOPMENT_TEAM for the physical build.
+
+Required next actions
+  1. Connect and unlock an Android device, then enable and authorize USB debugging.
+  2. Connect and trust an iPhone, enable Developer Mode, and wait for CoreDevice state available.
+  3. Add the Apple developer account in Xcode and create/download an Apple Development certificate.
+  4. Export JTYPE_IOS_DEVELOPMENT_TEAM with the team ID used by JType and its Share Extension.
+
+Runtime diagnostics
+  Android Emulator: emulator-5554 / API 36 / arm64-v8a
+  Android cold launch: Status ok / LaunchState COLD / TotalTime 326 ms
+  iOS Simulator: iPhone 17 Pro / iOS 26.5
+  iOS launch PID: 94108
+
+Emulator and Simulator results are diagnostic only and do not satisfy the physical-device gate.
