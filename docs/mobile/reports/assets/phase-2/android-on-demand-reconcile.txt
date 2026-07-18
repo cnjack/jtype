@@ -1,0 +1,31 @@
+JType Android external-provider on-demand reconcile gate
+Date: 2026-07-19 Asia/Shanghai
+Device: sdk_gphone64_arm64, Android 16 / API 36
+App: net.jcode.jtype 0.1.0 (versionCode 1000)
+App code commit: 5970d15
+Fixture: Download/JType-OnDemand-20260718, 120 Markdown files
+Provider: external:08146a5fec427b79
+
+Flow:
+1. Select the fixture through the Android system SAF folder picker and grant persisted access.
+2. Open the shared VaultHome and run an unchanged baseline scan.
+3. Append `Android on-demand reconcile marker 2026-07-19` to note-001.md in the source folder.
+4. Run reconcile: exactly one source file is pulled and materialized.
+5. Run reconcile again without another source mutation: scan completes with no materialization event.
+
+Native logcat evidence:
+07-19 00:31:31.303  9065  9085 I RustStdoutStderr: [JTypePerformance] external_source_scan provider=external:08146a5fec427b79 entries=120 files=120 bytes=5040 elapsed_ms=559
+07-19 00:32:23.689  9065  9085 I RustStdoutStderr: [JTypePerformance] external_source_scan provider=external:08146a5fec427b79 entries=120 files=120 bytes=5087 elapsed_ms=551
+07-19 00:32:23.753  9065  9085 I RustStdoutStderr: [JTypePerformance] external_source_materialize provider=external:08146a5fec427b79 requested_paths=1 files=1 directories=0 bytes=89
+07-19 00:34:11.517  9065  9085 I RustStdoutStderr: [JTypePerformance] external_source_scan provider=external:08146a5fec427b79 entries=120 files=120 bytes=5087 elapsed_ms=540
+
+Expected/observed invariants:
+- Changed run: scanned=120, requested_paths=1, materialized_files=1, materialized_bytes=89.
+- Immediate unchanged run: scanned=120 and no external_source_materialize event.
+- Shared product surface: Desktop Sidebar/VaultHome/provider banner; no mobile-only document list/editor/preview/Document Info.
+
+Artifacts:
+- android-on-demand-reconcile.png
+  SHA-256 53ef21ae9cf84ee62cffebed9912375d2ae802e4b61971ba2c1a33f9b0ec9790
+- app-universal-debug.apk
+  SHA-256 991e4cd6baefbf2dad308873db417b2ca3b5f886fd1f0913a44eeb563b90cb40

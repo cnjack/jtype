@@ -6,7 +6,7 @@ Feature branch：`codex/mobile-app`
 
 当前 app code commit：`5970d15`
 
-本报告状态：进行中；2A provider contract、2B Android SAF 与 2C iOS security-scoped provider 的工程/Simulator gate 已完成。2D 已完成 app-private 草稿冷恢复、Keystore/Keychain pending OAuth 冷恢复、Android share target / iOS Share Extension、模拟器无障碍、共享触控交互与键盘辅助栏、5,000 文档大 vault、353,355-character Markdown / Mermaid / KaTeX / 23 张大附件 / 1,200-card Board 的共享渐进渲染、sync batching/retry/request-id 幂等/服务中断恢复，以及 Android/iOS 本地原生通知文档定位 gate。external reconcile/write-back 已从整库临时复制改为 native full scan + plan-driven source materialization；工程与构建 gate 已通过，120-file 双模拟器真实 provider 交互复测仍待完成。真实设备弱网、APNs/FCM 厂商投递、原生按需枚举和 physical low-memory/device gate 继续进行。iOS external provider 已通过系统目录选择、native-only bookmark、首次镜像、覆盖安装后的容器迁移、冷启动恢复和 shared editor write-back；physical iPhone 的 bookmark 失效/重新授权仍保留在最终真实设备 gate。
+本报告状态：进行中；2A provider contract、2B Android SAF 与 2C iOS security-scoped provider 的工程/Simulator gate 已完成。2D 已完成 app-private 草稿冷恢复、Keystore/Keychain pending OAuth 冷恢复、Android share target / iOS Share Extension、模拟器无障碍、共享触控交互与键盘辅助栏、5,000 文档大 vault、353,355-character Markdown / Mermaid / KaTeX / 23 张大附件 / 1,200-card Board 的共享渐进渲染、sync batching/retry/request-id 幂等/服务中断恢复，以及 Android/iOS 本地原生通知文档定位 gate。external reconcile/write-back 已从整库临时复制改为 native full scan + plan-driven source materialization；工程与构建 gate 已通过，Android 120-file SAF `1 changed / 0 changed` 原生复测已通过，iOS 本轮 Files provider 交互仍待可触摸宿主或 physical iPhone。真实设备弱网、APNs/FCM 厂商投递、原生按需枚举和 physical low-memory/device gate 继续进行。iOS external provider 已通过系统目录选择、native-only bookmark、首次镜像、覆盖安装后的容器迁移、冷启动恢复和 shared editor write-back；physical iPhone 的 bookmark 失效/重新授权仍保留在最终真实设备 gate。
 
 ## 本增量结论
 
@@ -560,7 +560,7 @@ iPhone 17 Pro / iOS 26.5 Simulator 同样显示真实系统横幅，点击后消
 
 Android SAF 与 iOS security-scoped provider 新增 native content-addressed scan；Rust 继续使用相同 source/baseline/mirror manifest 与 reconcile plan，只 materialize source upsert 路径。write-back 的前置 pull、最终 verification 和逐路径 `UseSource` 也走同一边界，shared Desktop UI/commands/`WorkspaceSnapshot` contract 没有分叉。
 
-工程 gate 已通过：mobile-import cargo check、Tauri 29/29、unit 59/59、app E2E 55/55、Android universal APK 与 iOS simulator archive 全部 PASS。为避免夸大，本轮没有把旧 provider 截图当成新性能证据：Android Studio 虽识别外部启动的 AVD，但没有打开可操作的 Running Device canvas；iOS native app clean launch 能显示共用 Welcome，但 Xcode Device Hub canvas 只产生 hover、不转发 WebView click。120-file `1 changed / 0 changed` 的 native scan/materialization 日志与耗时仍待复跑。详见 [`phase-2-native-on-demand.md`](phase-2-native-on-demand.md)。
+工程 gate 已通过：mobile-import cargo check、Tauri 29/29、unit 59/59、app E2E 55/55、Android universal APK 与 iOS simulator archive 全部 PASS。Android Studio 的嵌入式 Running Devices canvas 已完成真实 SAF picker → shared `VaultHome` → 120-file `1 changed / 0 changed`：changed run native scan 551 ms、只 materialize 1 file / 89 bytes；立即复扫 540 ms 且没有 materialize 事件。iOS native app clean launch 能显示共用 Welcome，但当前 Simulator canvas 仍不转发 WebView click，因此不宣称本轮 iOS Files provider 性能 gate 通过。详见 [`phase-2-native-on-demand.md`](phase-2-native-on-demand.md)。
 
 ## 自动化与构建结果
 
@@ -613,7 +613,8 @@ Android SAF 与 iOS security-scoped provider 新增 native content-addressed sca
 | Android system notification → tap → bound vault → shared EditorShell target | PASS；真实 API 36 系统通知与 `notification: null` adapter callback |
 | iOS system notification → tap → bound vault → shared EditorShell target | PASS；真实 iOS 26.5 系统横幅、点击、fallback 消费与 `Performance note 00001` |
 | Android/iOS external provider plan-driven materialization 工程 gate | PASS；native plugin contract、Rust 29/29、unit 59/59、app E2E 55/55、双平台构建通过 |
-| Android/iOS 120-file external provider `1 changed / 0 changed` 原生复测 | 待完成；当前 Android Studio/Device Hub 测试宿主未提供可转发的 app canvas 输入，不记录虚构性能数字 |
+| Android 120-file external provider `1 changed / 0 changed` 原生复测 | PASS；SAF picker + shared VaultHome；551 ms / 1 file / 89 bytes，立即复扫 540 ms / 0 materialize |
+| iOS 120-file external provider `1 changed / 0 changed` 本轮原生复测 | 待完成；native app/shared Welcome 启动通过，但当前 Simulator canvas 不转发 WebView click，不记录虚构性能数字 |
 
 Android debug APK：
 
@@ -669,13 +670,15 @@ d43808152c716ef2299b0dec18e799bf6dca60e265afcb4a5343f0c9796655f6  ios-weak-netwo
 27a25b145e4fe6ce74e7d7872d8cbaf1f11ce4eebbe7523e4101d131e488abad  notification-target-android.png
 ff6c2100eb7960b95222a2e028c2753bd46199197304bffaaa9bdecfac7a4a24  notification-ios.png
 8cb3a85b74f01f925b9b50311b50dca3c7bd99c1b655a0010484a3cd7743add3  notification-target-ios.png
+53ef21ae9cf84ee62cffebed9912375d2ae802e4b61971ba2c1a33f9b0ec9790  android-on-demand-reconcile.png
+e646299f60e8b7ad70d3dc16e7ce41a8dc882c99c3d51fc4e8b4c0d9d2ce63a0  ios-shared-welcome.jpeg
 ```
 
 ## 下一增量：2D provider 复测、真实设备可靠性与厂商通知投递
 
 2A、2B、2C 与 2D recovery/share-import/accessibility/touch interaction/5,000-document vault/大内容渐进渲染/sync batching-retry-idempotency，以及 Android/iOS 本地系统通知 → 文档定位的工程 gate 已收口。下一段继续保持 desktop/shared product surface，处理：
 
-1. 补跑 external provider 120-file 双模拟器 `1 changed / 0 changed` scan/materialization 指标，并继续 native 分页枚举、partial `WorkspaceSnapshot` 与按文档读取；首次 mirror 的离线策略单独决策。
+1. 补跑 iOS external provider 120-file `1 changed / 0 changed` scan/materialization 指标，并继续 native 分页枚举、partial `WorkspaceSnapshot` 与按文档读取；Android 相同原生 gate 已通过，首次 mirror 的离线策略单独决策。
 2. physical device 弱网、网络切换、低存储，以及系统分享大文件/进程终止矩阵。
 3. 接入 APNs/FCM token/服务端投递、有限后台刷新和 universal/app links；继续复用现有 canonical workspace/vault/document route。
 4. physical iPhone 的 gesture/haptic/VoiceOver 与双端真实设备最终 gate。

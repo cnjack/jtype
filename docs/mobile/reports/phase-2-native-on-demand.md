@@ -1,12 +1,12 @@
 # Phase 2D：External provider 按需物化
 
-日期：2026-07-18
+日期：2026-07-18；Android 原生复测补录于 2026-07-19
 
 Feature branch：`codex/mobile-app`
 
 实现 commit：`5970d15`
 
-状态：工程实现与自动化 gate 已完成；Android/iOS 原生 provider 的本轮 Simulator 交互复测未完成，不作为真实 provider 性能证据。
+状态：工程实现与自动化 gate 已完成；Android API 36 原生 SAF `1 changed / 0 changed` 交互与日志 gate 已通过。iOS native app 启动与 shared Welcome 已通过，但当前 Simulator host 仍不转发设备画布触摸，Files provider 本轮复测保留到可触摸宿主或 physical iPhone。
 
 ## 结论
 
@@ -18,6 +18,8 @@ Android SAF 与 iOS security-scoped provider 的 reconcile、write-back 前置 p
 4. 继续使用原有原子 mirror transaction、write-back journal、冲突模型和 shared provider banner。
 
 这次没有建立 mobile-only 文件树、编辑器、预览、Document Info 或操作页。`WorkspaceSnapshot`、`AppState`、`Sidebar`、`VaultHome`、`EditorShell`、Board、commands 和 provider UI 仍与 Desktop 共用；平台差异只存在于 mobile-import native adapter 与 Rust provider adapter。
+
+Android 真实 SAF 复测确认这一边界实际成立：系统 folder picker 授权 `Download/JType-OnDemand-20260718` 后，应用回到同一 `VaultHome`，显示 120 篇 Markdown；单文件 source 变化只 materialize 1 个文件，紧接着的 unchanged reconcile 只扫描、不 materialize。
 
 ## 明确边界
 
@@ -97,22 +99,37 @@ SHA-256 3b63cefc875c63f2c489c5e684ecb046ff575e3916be4c97b6478cda5099666d
 - Android：API 36.1 `JType_API_36_1` 的 `Download/JType-OnDemand-20260718`。
 - iOS：iPhone 17 Pro / iOS 26.5 的 local Files provider `JTypeOnDemand20260718`。
 
-iOS 清理旧的 6,202-file app-private 压力测试容器并重装后，native Tauri app 能正常显示与 Desktop 共用的 Welcome；旧容器完整备份在 `/tmp/jtype-ios-container-before-ondemand`，外部 Files fixture 未删除。但 Xcode 26.6 Device Hub 的 canvas 在本轮 Computer Use 会话中只产生 WebView hover，不转发 click，无法进入系统 folder picker。
+iOS 清理旧的 6,202-file app-private 压力测试容器并重装后，native Tauri app 能正常显示与 Desktop 共用的 Welcome；旧容器完整备份在 `/tmp/jtype-ios-container-before-ondemand`，外部 Files fixture 未删除。但 Simulator 26.5 的设备 canvas 在本轮 Computer Use 会话中仍不转发 WebView click，无法进入系统 folder picker。报告只保存 shared Welcome 启动证据，不把它当作 Files provider 性能证据。
 
-Android APK 已安装，Android Studio 完成 Gradle sync 并识别正在运行的 `JType_API_36_1`；当前独立 qemu 窗口不是 Computer Use 可寻址 app，Android Studio 也没有为该外部启动的 AVD 打开可操作的 Running Device canvas。
+Android Studio 从 IDE 启动 AVD 后提供了可操作的 Running Devices canvas。安装已由 CLI 验证的 arm64 universal debug APK 后，使用 Computer Use 完成：
 
-因此本报告不宣称以下 gate 已通过，也不记录虚构的 native elapsed/materialized 数字：
+1. shared Sidebar 的 **Open another vault** → Android 系统 SAF picker；
+2. 选择 `Download/JType-OnDemand-20260718`、授权并回到 shared `VaultHome`；
+3. unchanged baseline scan；
+4. 外部修改 `note-001.md` 后再次检查；
+5. 不再修改 source，立即做第三次检查。
 
-- 原生 folder picker 选择 120-file fixture；
-- 修改 1 个 source 文件后显示 `scanned=120 / materialized=1`；
-- 第二次 unchanged reconcile 显示 `materialized=0`；
-- 双端本轮 `external_source_scan` / `external_source_materialize` 实机日志。
+| 轮次 | entries | files | source bytes | native scan | materialized |
+| --- | ---: | ---: | ---: | ---: | --- |
+| unchanged baseline | 120 | 120 | 5,040 | 559 ms | 0；无 materialize 事件 |
+| `note-001.md` changed | 120 | 120 | 5,087 | 551 ms | 1 path / 1 file / 89 bytes |
+| immediate unchanged | 120 | 120 | 5,087 | 540 ms | 0；无 materialize 事件 |
 
-旧的 Android SAF/iOS security-scoped 选择、mirror、write-back 与 shared editor 截图仍证明既有 provider 产品链路，但不能替代本增量的按需物化性能 gate。
+shared 状态栏在 changed run 显示 `External vault updated: 1 files pulled after scanning 120 entries...`；截图原文件为 [`assets/phase-2/android-on-demand-reconcile.png`](assets/phase-2/android-on-demand-reconcile.png)，原生日志为 [`assets/phase-2/android-on-demand-reconcile.txt`](assets/phase-2/android-on-demand-reconcile.txt)。
+
+Android Studio 的普通 **Run app** 还暴露了一个独立的开发体验问题：IDE 默认选择 `armDebug`，而当前 AVD 是 `arm64-v8a`，Tauri task 因 ABI 不匹配退出。该失败不属于 APK/runtime gate；同一源码的 `pnpm tauri android build --debug --target aarch64 --apk --ci` artifact 已成功安装并完成上述流程。后续应给 IDE run configuration 固定 arm64 variant，避免开发者误入错误 flavor。
+
+证据哈希：
+
+```text
+53ef21ae9cf84ee62cffebed9912375d2ae802e4b61971ba2c1a33f9b0ec9790  android-on-demand-reconcile.png
+e646299f60e8b7ad70d3dc16e7ce41a8dc882c99c3d51fc4e8b4c0d9d2ce63a0  ios-shared-welcome.jpeg
+991e4cd6baefbf2dad308873db417b2ca3b5f886fd1f0913a44eeb563b90cb40  app-universal-debug.apk
+```
 
 ## 下一步
 
-1. 从 Android Studio 启动嵌入式 AVD，并在可操作的 Running Device canvas 重跑 120-file `1 changed / 0 changed` 两轮 reconcile。
-2. 在可转发 touch 的 iOS Simulator/physical iPhone 重跑相同 Files provider flow。
-3. 记录 native scan elapsed、materialized file/bytes、reconcile total time 和峰值存储增长。
-4. 在保持 shared Desktop contract 的前提下，再拆分 native 分页枚举、partial `WorkspaceSnapshot` 与按文档读取；首次 mirror 的离线策略单独决策。
+1. 在可转发 touch 的 iOS Simulator/physical iPhone 重跑相同 Files provider flow。
+2. 补充双端 reconcile total time、峰值 RSS/存储增长；Android native scan/materialized file/bytes 已有真实数据。
+3. 在保持 shared Desktop contract 的前提下，再拆分 native 分页枚举、partial `WorkspaceSnapshot` 与按文档读取；首次 mirror 的离线策略单独决策。
+4. 为 Android Studio 提供明确的 arm64 run configuration/variant，避免 IDE 默认 `armDebug` 与 arm64 AVD 不匹配。

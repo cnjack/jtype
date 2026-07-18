@@ -184,7 +184,7 @@
 - [ ] 当 mirror 被证明不足时，再将 provider 扩展为零拷贝访问；不在 UI 层分叉
 - [x] Android external provider 已能检测权限丢失/目录移动、保持同一 provider identity 重新授权，并在其他 app 修改文件后安全 pull、合并不相交 source/local 变化、阻断同路径双边冲突并逐路径选择保留 source/JType；共享 desktop mutation 已通过 provider adapter 写回 SAF，native 磁盘不足/权限撤销可保留 journal 后恢复；正式共享 UI 已提供状态、重新授权、pending journal、冲突数量、选择 dialog 与大批量 write-back/verification 进度
 - [~] iOS external provider 已完成真实 folder selection、native-only bookmark、首次 mirror、冷启动/覆盖安装恢复和 source write-back；bookmark 失效与 iCloud/第三方 Files provider 的真机 gate 待完成
-- [~] Android/iOS external reconcile、write-back 前置 pull/verification 与 `UseSource` 冲突解决已改为 native SHA-256 full scan 后仅 materialize plan 所需路径；Rust/TypeScript/Android/iOS build gate 已通过，120-file 双模拟器 `1 changed / 0 changed` provider 实测因当前 Device Hub/Running Device 输入限制待复跑（证据：`docs/mobile/reports/phase-2-native-on-demand.md`，实现：`5970d15`）
+- [~] Android/iOS external reconcile、write-back 前置 pull/verification 与 `UseSource` 冲突解决已改为 native SHA-256 full scan 后仅 materialize plan 所需路径；Android API 36 的 120-file SAF `1 changed / 0 changed` 已实测为 `551 ms + 1 file/89 bytes`、随后 `540 ms + 0 materialize`。iOS Files provider 本轮复测仍待可转发 touch 的 Simulator host 或 physical iPhone（证据：`docs/mobile/reports/phase-2-native-on-demand.md`，实现：`5970d15`）
 
 ### 2.2 移动交互完善
 
@@ -217,7 +217,7 @@
 - [x] 当前 2D large-vault 增量的 desktop build、web build、jtype-core 38/38、Tauri Rust 28/28、unit 50/50、app E2E 50/50、Android APK 与 iOS archive 全部通过；双端 5,000 文档 Maestro flow 通过；后续 Phase 2 增量继续重复完整 gate
 - [x] 当前 2D large-content 增量的 desktop/web build、jtype-core 38/38、Tauri Rust 28/28、unit 50/50、app E2E 51/51、Android universal APK 与 iOS simulator archive 全部通过；双端大 Markdown 与 1,200-card Board 共四条 Maestro flow 通过（证据：`docs/mobile/reports/phase-2-large-content.md`）
 - [x] 当前 2D sync-reliability 增量的 desktop/web build、unit 55/55、app E2E 53/53、web E2E 27/27、jtype-core 38/38、Tauri 28/28、web service sync 15/15、Android APK 与 signed/no-sign iOS simulator archive 全部通过；双端 121-document 三批、离线错误和恢复闭环通过（证据：`docs/mobile/reports/phase-2-weak-network-sync.md`）
-- [~] 当前 2D provider on-demand 增量的 plugin cargo check、Tauri 29/29、unit 59/59、app E2E 55/55、Android universal APK 与 iOS simulator archive 全部通过；120-file 双模拟器原生 provider 交互/日志 gate 待在可转发 touch 的测试宿主复跑（证据：`docs/mobile/reports/phase-2-native-on-demand.md`）
+- [~] 当前 2D provider on-demand 增量的 plugin cargo check、Tauri 29/29、unit 59/59、app E2E 55/55、Android universal APK 与 iOS simulator archive 全部通过；Android 120-file SAF 原生交互/日志 gate 已通过，iOS Files provider 本轮交互仍待可转发 touch 的测试宿主或 physical iPhone（证据：`docs/mobile/reports/phase-2-native-on-demand.md`）
 - [ ] 双平台模拟器与至少一台真实设备截图/录像证据已保存
 - [~] `docs/mobile/reports/phase-2.md` 已记录 2A、2B、2C、2D recovery、系统分享、无障碍、触控交互、大 vault、大内容、sync reliability 与通知文档定位结果；细节见各专项报告，后续持续更新到 Phase 2 终验
 - [~] tracking 已记录当前 Phase 2 commit hashes（最新实现 `5970d15`）；后续增量继续追加
