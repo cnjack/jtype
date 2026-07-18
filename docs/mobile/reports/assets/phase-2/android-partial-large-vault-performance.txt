@@ -1,0 +1,21 @@
+JType Phase 2D partial large-vault performance evidence
+Date: 2026-07-19
+Implementation: 231aa18
+Device: Android API 36 arm64 emulator, 1080x2424
+Fixture: 5,008 root entries (5,000 generated Markdown files plus 8 existing entries)
+
+Cold launch
+Activity TotalTime: 302 ms
+[JTypePerformance] workspace_page parent=/ start=0 returned=160 total=5008 elapsed_ms=16
+[JTypePerformance] workspace_open_partial loaded=160 total=5008 elapsed_ms=16
+[JTypePerformance] workspace_bootstrap_partial source=path loaded=160 total=5008 ipc_ms=22.4 snapshot_bytes=30580
+Stable after 5 seconds: TOTAL PSS 126056 KB; TOTAL RSS 304012 KB; TOTAL SWAP PSS 106 KB
+
+Second native page
+[JTypePerformance] workspace_page parent=/ start=160 returned=160 total=5008 elapsed_ms=21
+After page: TOTAL PSS 119549 KB; TOTAL RSS 298260 KB; TOTAL SWAP PSS 47 KB
+
+Functional gate
+Initial page: 160/5008; one shared Show more action
+Second page: 320/5008 native entries loaded; one shared Show more action; 4688 remaining
+Tail query/open: performance-note-04999.md opened in the shared Desktop EditorShell

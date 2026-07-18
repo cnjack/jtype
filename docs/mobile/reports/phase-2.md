@@ -1,12 +1,12 @@
 # Phase 2：External vault provider and mobile integration
 
-日期：2026-07-18
+日期：2026-07-19
 
 Feature branch：`codex/mobile-app`
 
-当前 app code commit：`1a92435`
+当前 app code commit：`231aa18`
 
-本报告状态：进行中；2A provider contract、2B Android SAF 与 2C iOS security-scoped provider 的工程/Simulator gate 已完成。2D 已完成 app-private 草稿冷恢复、Keystore/Keychain pending OAuth 冷恢复、Android share target / iOS Share Extension、模拟器无障碍、共享触控交互与键盘辅助栏、5,000 文档大 vault、大 Markdown/附件/1,200-card Board 渐进渲染、sync reliability、本地原生通知文档定位，以及 mobile partial `WorkspaceSnapshot`、shared loaded-first/native-fallback resolver 与 folder hydration。external reconcile/write-back 已改为 native full scan + plan-driven source materialization；Android 120-file SAF 原生复测通过，iOS Files provider 与 physical bookmark gate 仍待真机。真实设备弱网、APNs/FCM、provider-native streaming、partial runtime 的 physical low-memory/performance 和 iOS 静态 archive 当前环境兼容 gate 继续进行。
+本报告状态：进行中；2A provider contract、2B Android SAF 与 2C iOS security-scoped provider 的工程/Simulator gate 已完成。2D 已完成 app-private 草稿冷恢复、Keystore/Keychain pending OAuth 冷恢复、Android share target / iOS Share Extension、模拟器无障碍、共享触控交互与键盘辅助栏、5,000 文档大 vault、大 Markdown/附件/1,200-card Board 渐进渲染、sync reliability、本地原生通知文档定位，以及 mobile partial `WorkspaceSnapshot`、shared loaded-first/native-fallback resolver 与 folder hydration。Android partial 5,008-entry cold open、IPC/snapshot、连续分页、RSS 和尾部打开已通过。external reconcile/write-back 已改为 native full scan + plan-driven source materialization；Android 120-file SAF 原生复测通过，iOS Files provider 与 physical bookmark gate 仍待真机。真实设备弱网、APNs/FCM、provider-native streaming、partial runtime 的 physical low-memory/performance 和 iOS 静态 archive 当前环境兼容 gate 继续进行。
 
 ## 本增量结论
 
@@ -583,13 +583,17 @@ Rust core 现在可以在不先构造完整 recursive snapshot 的前提下查�
 
 405-document E2E 验证 root/nested paging 和未加载尾部 Quick Open；Android API 36 最终 APK cold launch 336 ms 并恢复 120-document SAF mirror。iOS compile/archive 和临时 HTTPS dev build 的 shared/native 405-document flow 通过，但当前 Xcode 26.6 / iOS 26.5 Simulator 的静态 custom-scheme JavaScript 空白在基线 `434757d` 同样复现，因此静态 artifact runtime 保留到 physical iPhone 或不同稳定环境重测。完整实现、构建 hash、截图和限制见 [`phase-2-partial-workspace-runtime.md`](phase-2-partial-workspace-runtime.md)。
 
+## 2D Mobile partial 5,000-entry performance follow-up
+
+`231aa18` 沿用 Desktop 共用 `TreeNodeList`，把已加载 DOM window 与 native shallow page 的两个 Show more 合并为一个操作；Desktop complete snapshot 不调用 mobile page。Android API 36 的 5,008-entry default vault cold launch 为 302 ms，native 首批 160 项 16 ms，JavaScript → Tauri IPC 22.4 ms、snapshot 30,580 bytes；第二页 21 ms，RSS 从约 304 MB 到约 298 MB，tail search/open `performance-note-04999.md` 继续进入共用 EditorShell。iOS archive 编译通过，但当前静态 runtime 仍复现基线空白，不宣称 iOS 性能 PASS。完整日志、截图、artifact hash 与限制见 [`phase-2-partial-large-vault.md`](phase-2-partial-large-vault.md)。
+
 ## 自动化与构建结果
 
 | 验证 | 结果 |
 | --- | --- |
 | `npm run build` | PASS |
 | `npm run build --prefix services/jtype-web/frontend` | PASS |
-| `npm run test:unit` | PASS，70/70；包含 canonical workspace page/query guard、loaded/native resolver fallback，以及 iOS first-paint/Android native-schedule delivery mode 回归 |
+| `npm run test:unit` | PASS，72/72；包含 canonical workspace page/query guard、loaded/native resolver fallback、partial bootstrap metrics，以及 iOS first-paint/Android native-schedule delivery mode 回归 |
 | `npx playwright test tests/e2e/app.spec.ts` | PASS，56/56；包含 405-document partial bootstrap/paging/tail Quick Open、mobile 三批 retry、cold document deep link 与 native notification tap fallback |
 | `npm run test:web` | PASS，27/27 |
 | `cargo test --manifest-path services/jtype-core/Cargo.toml` | PASS，44/44；包含 partial workspace completeness/root page、405-document shallow pagination、未加载 entry exact/fuzzy search、path/wikilink resolve 与 nested link impact guard |
@@ -638,19 +642,20 @@ Rust core 现在可以在不先构造完整 recursive snapshot 的前提下查�
 | iOS 120-file external provider `1 changed / 0 changed` 本轮原生复测 | 待完成；native app/shared Welcome 启动通过，但当前 Simulator canvas 不转发 WebView click，不记录虚构性能数字 |
 | Shared workspace pagination contract | PASS；jtype-core 40/40、Tauri 29/29、unit 63/63、app E2E 55/55、Desktop build 与双平台 mobile build；`3f945c4` contract commit 未启用 runtime，后续已由 `1a92435` 接入 |
 | Unloaded-entry native query contract | PASS；jtype-core 43/43、Tauri 29/29、unit 66/66、app E2E 55/55、Desktop build、双平台 mobile build 与 cold-launch screenshot；`1060d1c` contract commit 未启用 fallback，后续已由 `1a92435` 接入 |
-| Mobile partial workspace runtime | PASS；jtype-core 44/44、Tauri 29/29、unit 70/70、app E2E 56/56、Desktop build 与 Android final APK/cold launch；iOS compile/archive 和 HTTPS dev shared/native flow PASS，当前环境静态 archive runtime 在基线同样空白，待 physical/different stable environment |
+| Mobile partial workspace runtime | PASS；jtype-core 44/44、Tauri 29/29、unit 72/72、app E2E 56/56、Desktop build 与 Android final APK/cold launch；iOS compile/archive 和 HTTPS dev shared/native flow PASS，当前环境静态 archive runtime 在基线同样空白，待 physical/different stable environment |
+| Android partial 5,008-entry performance | PASS；cold 302 ms、native first page 16 ms、IPC 22.4 ms、snapshot 30,580 bytes、连续第二页 21 ms、RSS 无增长、尾部 search/open；iOS static runtime 与 physical low-memory 待完成 |
 
 Android debug APK：
 
 - `src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk`
-- 394,311,366 bytes（当前 unloaded-entry query contract universal debug APK gate）
-- SHA-256 `44a2dbb64221c939a29db82269894dc28dd3c4d237d8f8130c1bd8c0b38bd22d`
+- 394,161,686 bytes（当前 `231aa18` partial 5,008-entry gate）
+- SHA-256 `ec3f72e7ebea809348148f769de6b0d624fe8af8c53812f647095b73cc05d6c9`
 
 iOS archive：
 
 - `src-tauri/gen/apple/build/jtype_iOS.xcarchive`
 - no-sign simulator archive；包含 `JType.app/PlugIns/JType Share.appex`
-- app binary 108,822,248 bytes；SHA-256 `85f059c1d37ed073b4c53219fcf94d9078a26c5ec0b04a2b4a6eca069b6e7bbc`
+- app binary 108,871,656 bytes；SHA-256 `7a66b01464e04e0f31cea73c2cc3283296909707e1e8f875b5592af39f859694`
 
 截图 SHA-256：
 
@@ -700,13 +705,17 @@ dac94d5830263edb1e210c73e1b7b6ca9813f8eca18e269d3bbb2db1a80ac258  android-worksp
 9d165ba82efe8b6ae73f23f4ca3f3138f86840cd3c0d84a8bc630b55a84837ee  ios-workspace-pagination-smoke.png
 f4311cf3d1e9c312f6802e4e44886d19a8ead1de549e8fe776fd57d51f3eda5a  android-unloaded-entry-query-smoke.png
 5d988efcefdacac41dcd90d2d967e85cd4b2e1140efa724a7e53cf9096eeaf9f  ios-unloaded-entry-query-smoke.png
+11ae9a0d299083f43bc61274bf2e71b2fbd62570a63427138ff40b46cd5b4f51  android-partial-large-vault-page.png
+1ca1c4256e06381bd0c43516e1e76e6f1cc283b44e5b2e10554d0c772802853a  android-partial-large-vault-search.png
+a71e5b1dd6357c5844d389fdc06002db09e25c3a568bc56a55600120938d75d2  android-partial-large-vault-editor.png
+daa7a7b60c0bd3aea0f8af773e91f5c59b0744f22447ef2beff64b4b9f290bdc  ios-partial-large-vault-static-blank.png
 ```
 
 ## 下一增量：2D provider 复测、真实设备可靠性与厂商通知投递
 
 2A、2B、2C 与 2D recovery/share-import/accessibility/touch interaction/5,000-document vault/大内容渐进渲染/sync batching-retry-idempotency，以及 Android/iOS 本地系统通知 → 文档定位的工程 gate 已收口。下一段继续保持 desktop/shared product surface，处理：
 
-1. 补跑 iOS external provider 120-file `1 changed / 0 changed` scan/materialization 指标；shared loaded-first/native-fallback resolver、mobile partial `WorkspaceSnapshot`、folder page loading 与按打开读取正文已完成。下一步在 5,000-document/physical-device fixture 记录 cold open、RSS 和连续分页，并单独决策首次 mirror 离线策略与 provider-native streaming。
+1. 补跑 iOS external provider 120-file `1 changed / 0 changed` scan/materialization 指标；shared loaded-first/native-fallback resolver、mobile partial `WorkspaceSnapshot`、folder page loading、按打开读取正文与 Android 5,008-entry Simulator 性能门已完成。下一步在 iOS 5,000-document 与双平台 physical-device fixture 记录 cold open、peak RSS/memory warning 和连续分页，并单独决策首次 mirror 离线策略与 provider-native streaming。
 2. physical device 弱网、网络切换、低存储，以及系统分享大文件/进程终止矩阵。
 3. 接入 APNs/FCM token/服务端投递、有限后台刷新和 universal/app links；继续复用现有 canonical workspace/vault/document route。
 4. physical iPhone 的 gesture/haptic/VoiceOver 与双端真实设备最终 gate。

@@ -6,7 +6,7 @@ Feature branch：`codex/mobile-app`
 
 实现 commit：`1a92435`
 
-状态：移动端 partial `WorkspaceSnapshot`、共享 loaded-first/native-fallback 查询、folder page hydration 与 mutation/sync/watch partial re-bootstrap 已接入；Desktop 继续完整打开。Android artifact/cold-launch gate 通过，iOS 共享功能链路通过；当前 Xcode 26.6 + iOS 26.5 Simulator 的静态 custom-scheme JavaScript 加载问题在基线 `434757d` 同样复现，仍需在 physical iPhone 或不同稳定 Simulator 环境补静态产物运行 gate。
+状态：移动端 partial `WorkspaceSnapshot`、共享 loaded-first/native-fallback 查询、folder page hydration 与 mutation/sync/watch partial re-bootstrap 已接入；Desktop 继续完整打开。后续 `231aa18` 已完成 Android 5,008-entry cold open、IPC/snapshot、连续分页、RSS 与尾部打开 gate，并把重复的 DOM/native Show more 合并为一个共享操作。iOS 当前 Xcode 26.6 + iOS 26.5 Simulator 的静态 custom-scheme JavaScript 加载问题在基线 `434757d` 同样复现，仍需在 physical iPhone 或不同稳定 Simulator 环境补静态产物运行 gate。
 
 ## 结论
 
@@ -32,14 +32,14 @@ Feature branch：`codex/mobile-app`
 1. 每页仍会重新枚举并排序当前目录的全部直接子项；它限制 snapshot/IPC，不是 provider-native streaming cursor。
 2. external vault 首次 mirror 与每次 native source manifest/hash scan 仍可能遍历完整 source；partial runtime 当前作用于 app-private mirror 的 workspace state。
 3. page cursor 是当前确定性排序的 offset；目录变化后 mutation/watch 路径重新 bootstrap，而不是继续使用旧 cursor。
-4. 5,000-document physical-device cold open、峰值 RSS、连续分页和低内存恢复仍待测，不能从 405-document功能 gate 推导性能结论。
+4. Android Simulator 的 5,008-entry cold open、连续分页与 RSS 已在后续报告通过；physical-device peak/memory-warning、iOS 5,000-entry static runtime 和低内存恢复仍待测。
 
 ## 自动化与构建
 
 | 验证 | 结果 |
 | --- | --- |
 | `pnpm build` | PASS；Android 当前源码构建的 `beforeBuildCommand` 完成 TypeScript/Vite production build |
-| `pnpm test:unit` | PASS，70/70；含 partial merge、loaded/native resolver 与 native failure fallback |
+| `pnpm test:unit` | PASS，72/72；含 partial merge、loaded/native resolver、native failure fallback 与 partial bootstrap byte/time metrics |
 | `pnpm test:e2e` | PASS，56/56；含 405-document partial bootstrap、root/nested page 与未加载尾部 Quick Open |
 | `cargo test --manifest-path services/jtype-core/Cargo.toml` | PASS，44/44 |
 | `cargo test --manifest-path src-tauri/Cargo.toml --lib` | PASS，29/29 |
@@ -83,6 +83,8 @@ Android 与 iOS Tauri build 继续串行执行，因为两者的 `beforeBuildCom
 
 ## 下一步
 
-1. 在 Android/iOS 5,000-document fixture 与 physical device 记录 cold open、首屏 IPC、峰值 RSS、尾部 search/resolve 和连续 folder paging。
+Android 5,008-entry Simulator follow-up、日志、截图与 artifact hash 见 [`phase-2-partial-large-vault.md`](phase-2-partial-large-vault.md)。
+
+1. 在 iOS 5,000-document fixture 与双平台 physical device 补 cold open、峰值 RSS、memory warning、尾部 search/resolve 和连续 folder paging。
 2. 评估 provider-native streaming cursor 与增量 source manifest，分别减少单目录重复枚举和 external full hash I/O。
 3. 在 physical iPhone 或不同稳定 Xcode/Simulator 环境补齐静态 archive cold-launch、Files provider 与 low-memory gate。

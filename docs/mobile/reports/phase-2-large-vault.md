@@ -141,9 +141,9 @@ fa339e2158ccb3a4677c020a65f25cbd3b9b2542e7a82e3f5e867823e8cf2ce0  android-large-
 
 ## 剩余边界
 
-这次完成的是共享前端索引、bounded search 和 DOM 渐进挂载，并证明当前原生全量枚举在 5,000 文档下满足 gate。以下工作仍保留在 Phase 2D：
+这次完成的是共享前端索引、bounded search 和 DOM 渐进挂载，并证明当时的原生全量枚举在 5,000 文档下满足 gate。后续 `1a92435` 已接入 mobile partial root bootstrap，`231aa18` 已完成 Android 5,008-entry IPC/RSS/连续分页门，见 [`phase-2-partial-large-vault.md`](phase-2-partial-large-vault.md)。以下工作仍保留在 Phase 2D：
 
-- `open_workspace` 仍会构造完整 `WorkspaceSnapshot`；真正的 native folder on-demand scan/materialization 尚未实现；
+- Desktop `open_workspace` 仍构造完整 `WorkspaceSnapshot`；mobile 已使用 shallow partial page，但 provider-native streaming cursor 尚未实现；
 - external provider reconcile 仍会完整 materialize source snapshot；
 - 大 Markdown、Mermaid、KaTeX、附件和大 Board 的内存/渲染 gate；
 - sync batching、弱网、离线重试、幂等与可观测错误；
