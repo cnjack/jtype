@@ -77,6 +77,55 @@ pub struct WorkspaceEntryPage {
 }
 
 pub const MAX_WORKSPACE_PAGE_SIZE: usize = 500;
+const MAX_WORKSPACE_PAGE_CACHE_DIRECTORIES: usize = 32;
+const MAX_WORKSPACE_PAGE_CACHE_ENTRIES: usize = 50_000;
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+struct WorkspacePageCacheKey {
+    root_path: PathBuf,
+    relative_path: String,
+}
+
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
+struct WorkspaceDirectoryFingerprint {
+    modified_nanos: u128,
+    metadata_len: u64,
+}
+
+#[derive(Debug)]
+struct CachedWorkspaceDirectory {
+    fingerprint: WorkspaceDirectoryFingerprint,
+    entries: Vec<FileTreeNode>,
+    last_used: u64,
+}
+
+/// Native, bounded cache for shallow mobile tree pages.
+///
+/// Desktop continues opening a complete recursive tree. Mobile keeps the same
+/// canonical snapshot/UI contract, while later `Show more` pages reuse one
+/// sorted native directory scan until that directory's metadata changes.
+#[derive(Debug, Default)]
+pub struct WorkspaceEntryPageCache {
+    directories: HashMap<WorkspacePageCacheKey, CachedWorkspaceDirectory>,
+    cached_entries: usize,
+    clock: u64,
+    #[cfg(test)]
+    directory_scans: usize,
+    #[cfg(test)]
+    cache_hits: usize,
+    #[cfg(test)]
+    evictions: usize,
+}
+
+#[cfg(test)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct WorkspaceEntryPageCacheStats {
+    directory_scans: usize,
+    cache_hits: usize,
+    evictions: usize,
+    cached_directories: usize,
+    cached_entries: usize,
+}
 
 /// Which existing Desktop search surface is requesting native vault results.
 /// The result nodes still use the canonical shared `FileTreeNode` shape.
@@ -364,9 +413,14 @@ pub fn open_workspace(root: &Path) -> Result<WorkspaceSnapshot, String> {
 /// Desktop keeps using `open_workspace`; mobile opts into this adapter through
 /// an explicit runtime capability and hydrates folders with
 /// `read_workspace_entry_page`.
-pub fn open_workspace_partial(
+pub fn open_workspace_partial(root: &Path, page_size: usize) -> Result<WorkspaceSnapshot, String> {
+    open_workspace_partial_cached(root, page_size, &mut WorkspaceEntryPageCache::default())
+}
+
+pub fn open_workspace_partial_cached(
     root: &Path,
     page_size: usize,
+    page_cache: &mut WorkspaceEntryPageCache,
 ) -> Result<WorkspaceSnapshot, String> {
     #[cfg(debug_assertions)]
     let started_at = Instant::now();
@@ -375,7 +429,7 @@ pub fn open_workspace_partial(
     }
 
     let metadata_created = ensure_workspace_metadata(root)?;
-    let page = read_workspace_entry_page(root, "", None, page_size)?;
+    let page = page_cache.read_workspace_entry_page(root, "", None, page_size)?;
     let mut entry_pages = HashMap::new();
     entry_pages.insert(
         String::new(),
@@ -406,72 +460,283 @@ pub fn open_workspace_partial(
 
 /// Read a bounded, shallow page of one folder's direct tree entries.
 ///
-/// `cursor` is an opaque decimal offset returned by the previous page. The
-/// directory is re-read and sorted for each request so a mutation cannot make
-/// an old in-memory iterator escape the vault. Callers refresh the canonical
-/// snapshot after mutations; a cursor past the new end is rejected as stale.
+/// `cursor` is an opaque directory-revision + offset token returned by the
+/// previous page. The standalone function preserves the stateless core API;
+/// Tauri uses `WorkspaceEntryPageCache` so later pages reuse a bounded sorted
+/// scan while the directory fingerprint remains unchanged.
 pub fn read_workspace_entry_page(
     root: &Path,
     relative_path: &str,
     cursor: Option<&str>,
     page_size: usize,
 ) -> Result<WorkspaceEntryPage, String> {
-    #[cfg(debug_assertions)]
-    let started_at = Instant::now();
-    if !root.is_dir() {
-        return Err("Workspace path must be a directory.".to_string());
-    }
-    if page_size == 0 || page_size > MAX_WORKSPACE_PAGE_SIZE {
-        return Err(format!(
-            "Workspace page size must be between 1 and {MAX_WORKSPACE_PAGE_SIZE}."
-        ));
+    WorkspaceEntryPageCache::default().read_workspace_entry_page(
+        root,
+        relative_path,
+        cursor,
+        page_size,
+    )
+}
+
+impl WorkspaceEntryPageCache {
+    pub fn read_workspace_entry_page(
+        &mut self,
+        root: &Path,
+        relative_path: &str,
+        cursor: Option<&str>,
+        page_size: usize,
+    ) -> Result<WorkspaceEntryPage, String> {
+        #[cfg(debug_assertions)]
+        let started_at = Instant::now();
+        if !root.is_dir() {
+            return Err("Workspace path must be a directory.".to_string());
+        }
+        if page_size == 0 || page_size > MAX_WORKSPACE_PAGE_SIZE {
+            return Err(format!(
+                "Workspace page size must be between 1 and {MAX_WORKSPACE_PAGE_SIZE}."
+            ));
+        }
+
+        validate_workspace_page_parent(relative_path)?;
+        let parent = safe_join(root, relative_path)?;
+        if !parent.is_dir() {
+            return Err("Workspace page path must be a directory.".to_string());
+        }
+
+        let normalized_relative_path = normalize_workspace_page_path(relative_path);
+        let key = WorkspacePageCacheKey {
+            root_path: root.to_path_buf(),
+            relative_path: normalized_relative_path.clone(),
+        };
+        let parsed_cursor = cursor.map(parse_workspace_page_cursor).transpose()?;
+        let observed_fingerprint = workspace_directory_fingerprint(&parent)?;
+        if let Some((expected_revision, _)) = parsed_cursor {
+            if expected_revision != workspace_page_revision(&key, observed_fingerprint) {
+                return Err("Workspace page cursor is stale.".to_string());
+            }
+        }
+
+        self.clock = self.clock.saturating_add(1);
+        let last_used = self.clock;
+        let cache_hit = self
+            .directories
+            .get(&key)
+            .map(|cached| cached.fingerprint == observed_fingerprint)
+            .unwrap_or(false);
+
+        if cache_hit {
+            #[cfg(test)]
+            {
+                self.cache_hits += 1;
+            }
+            let cached = self
+                .directories
+                .get_mut(&key)
+                .expect("workspace page cache hit must retain its entry");
+            cached.last_used = last_used;
+            return build_workspace_entry_page(
+                &normalized_relative_path,
+                &cached.entries,
+                parsed_cursor,
+                page_size,
+                workspace_page_revision(&key, cached.fingerprint),
+                true,
+                #[cfg(debug_assertions)]
+                started_at,
+            );
+        }
+
+        if let Some(stale) = self.directories.remove(&key) {
+            self.cached_entries = self.cached_entries.saturating_sub(stale.entries.len());
+        }
+
+        let (fingerprint, children) = read_workspace_directory_stable(root, &parent)?;
+        #[cfg(test)]
+        {
+            self.directory_scans += 1;
+        }
+        let revision = workspace_page_revision(&key, fingerprint);
+        if let Some((expected_revision, _)) = parsed_cursor {
+            if expected_revision != revision {
+                return Err("Workspace page cursor is stale.".to_string());
+            }
+        }
+
+        let page = build_workspace_entry_page(
+            &normalized_relative_path,
+            &children,
+            parsed_cursor,
+            page_size,
+            revision,
+            false,
+            #[cfg(debug_assertions)]
+            started_at,
+        )?;
+        self.insert(key, fingerprint, children, last_used);
+        Ok(page)
     }
 
-    validate_workspace_page_parent(relative_path)?;
-    let parent = safe_join(root, relative_path)?;
-    if !parent.is_dir() {
-        return Err("Workspace page path must be a directory.".to_string());
+    fn insert(
+        &mut self,
+        key: WorkspacePageCacheKey,
+        fingerprint: WorkspaceDirectoryFingerprint,
+        entries: Vec<FileTreeNode>,
+        last_used: u64,
+    ) {
+        if entries.len() > MAX_WORKSPACE_PAGE_CACHE_ENTRIES {
+            return;
+        }
+        while !self.directories.is_empty()
+            && (self.directories.len() >= MAX_WORKSPACE_PAGE_CACHE_DIRECTORIES
+                || self.cached_entries.saturating_add(entries.len())
+                    > MAX_WORKSPACE_PAGE_CACHE_ENTRIES)
+        {
+            let Some(lru_key) = self
+                .directories
+                .iter()
+                .min_by_key(|(_, cached)| cached.last_used)
+                .map(|(key, _)| key.clone())
+            else {
+                break;
+            };
+            if let Some(evicted) = self.directories.remove(&lru_key) {
+                self.cached_entries = self.cached_entries.saturating_sub(evicted.entries.len());
+                #[cfg(test)]
+                {
+                    self.evictions += 1;
+                }
+            }
+        }
+
+        self.cached_entries = self.cached_entries.saturating_add(entries.len());
+        self.directories.insert(
+            key,
+            CachedWorkspaceDirectory {
+                fingerprint,
+                entries,
+                last_used,
+            },
+        );
     }
 
-    let start_index = match cursor {
-        Some(value) => value
-            .parse::<usize>()
-            .map_err(|_| "Workspace page cursor is invalid.".to_string())?,
-        None => 0,
-    };
-    let mut children = read_children_shallow(root, &parent)?;
-    sort_nodes(&mut children);
+    #[cfg(test)]
+    fn stats(&self) -> WorkspaceEntryPageCacheStats {
+        WorkspaceEntryPageCacheStats {
+            directory_scans: self.directory_scans,
+            cache_hits: self.cache_hits,
+            evictions: self.evictions,
+            cached_directories: self.directories.len(),
+            cached_entries: self.cached_entries,
+        }
+    }
+}
+
+fn normalize_workspace_page_path(relative_path: &str) -> String {
+    let trimmed_relative_path = relative_path.trim_matches('/');
+    if trimmed_relative_path.is_empty() || trimmed_relative_path == "." {
+        String::new()
+    } else {
+        path_to_string(Path::new(trimmed_relative_path))
+    }
+}
+
+fn workspace_directory_fingerprint(
+    directory: &Path,
+) -> Result<WorkspaceDirectoryFingerprint, String> {
+    let metadata = fs::metadata(directory).map_err(|error| error.to_string())?;
+    let modified = metadata.modified().map_err(|error| error.to_string())?;
+    let modified_nanos = modified
+        .duration_since(UNIX_EPOCH)
+        .map_err(|error| error.to_string())?
+        .as_nanos();
+    Ok(WorkspaceDirectoryFingerprint {
+        modified_nanos,
+        metadata_len: metadata.len(),
+    })
+}
+
+fn workspace_page_revision(
+    key: &WorkspacePageCacheKey,
+    fingerprint: WorkspaceDirectoryFingerprint,
+) -> u64 {
+    let mut hasher = DefaultHasher::new();
+    key.hash(&mut hasher);
+    fingerprint.hash(&mut hasher);
+    hasher.finish()
+}
+
+fn parse_workspace_page_cursor(cursor: &str) -> Result<(u64, usize), String> {
+    let mut parts = cursor.split(':');
+    if parts.next() != Some("v1") {
+        return Err("Workspace page cursor is invalid.".to_string());
+    }
+    let revision = parts
+        .next()
+        .and_then(|value| u64::from_str_radix(value, 16).ok())
+        .ok_or_else(|| "Workspace page cursor is invalid.".to_string())?;
+    let start_index = parts
+        .next()
+        .and_then(|value| value.parse::<usize>().ok())
+        .ok_or_else(|| "Workspace page cursor is invalid.".to_string())?;
+    if parts.next().is_some() {
+        return Err("Workspace page cursor is invalid.".to_string());
+    }
+    Ok((revision, start_index))
+}
+
+fn read_workspace_directory_stable(
+    root: &Path,
+    parent: &Path,
+) -> Result<(WorkspaceDirectoryFingerprint, Vec<FileTreeNode>), String> {
+    for _ in 0..3 {
+        let before = workspace_directory_fingerprint(parent)?;
+        let mut children = read_children_shallow(root, parent)?;
+        sort_nodes(&mut children);
+        let after = workspace_directory_fingerprint(parent)?;
+        if before == after {
+            return Ok((after, children));
+        }
+    }
+    Err("Workspace directory changed while reading its page.".to_string())
+}
+
+fn build_workspace_entry_page(
+    relative_path: &str,
+    children: &[FileTreeNode],
+    cursor: Option<(u64, usize)>,
+    page_size: usize,
+    revision: u64,
+    cache_hit: bool,
+    #[cfg(debug_assertions)] started_at: Instant,
+) -> Result<WorkspaceEntryPage, String> {
+    let start_index = cursor.map(|(_, start_index)| start_index).unwrap_or(0);
     let total_entries = children.len();
     if start_index > total_entries {
         return Err("Workspace page cursor is stale.".to_string());
     }
     let end_index = start_index.saturating_add(page_size).min(total_entries);
     let entries = children[start_index..end_index].to_vec();
-    let trimmed_relative_path = relative_path.trim_matches('/');
-    let relative_path = if trimmed_relative_path.is_empty() || trimmed_relative_path == "." {
-        String::new()
-    } else {
-        path_to_string(Path::new(trimmed_relative_path))
-    };
 
     #[cfg(debug_assertions)]
     if total_entries >= 1_000 {
         eprintln!(
-            "[JTypePerformance] workspace_page parent={} start={} returned={} total={} elapsed_ms={}",
+            "[JTypePerformance] workspace_page parent={} start={} returned={} total={} cache={} elapsed_ms={}",
             if relative_path.is_empty() { "/" } else { &relative_path },
             start_index,
             entries.len(),
             total_entries,
+            if cache_hit { "hit" } else { "miss" },
             started_at.elapsed().as_millis()
         );
     }
 
     Ok(WorkspaceEntryPage {
-        relative_path,
+        relative_path: relative_path.to_string(),
         entries,
         start_index,
         total_entries,
-        next_cursor: (end_index < total_entries).then(|| end_index.to_string()),
+        next_cursor: (end_index < total_entries)
+            .then(|| format!("v1:{revision:016x}:{end_index}")),
     })
 }
 
@@ -2751,14 +3016,10 @@ mod tests {
         assert_eq!(snapshot.entries[0].relative_path, ".jtype");
         assert_eq!(snapshot.entries[1].relative_path, "nested");
         assert!(snapshot.entries[1].children.is_empty());
-        assert_eq!(
-            snapshot.entry_pages.get(""),
-            Some(&WorkspaceEntryPageState {
-                loaded_entries: 160,
-                total_entries: 207,
-                next_cursor: Some("160".to_string()),
-            })
-        );
+        let root_page = snapshot.entry_pages.get("").unwrap();
+        assert_eq!(root_page.loaded_entries, 160);
+        assert_eq!(root_page.total_entries, 207);
+        assert!(root_page.next_cursor.as_deref().unwrap().ends_with(":160"));
     }
 
     #[test]
@@ -2781,7 +3042,7 @@ mod tests {
         assert_eq!(first.start_index, 0);
         assert_eq!(first.total_entries, 407); // .jtype + nested + 405 notes
         assert_eq!(first.entries.len(), 160);
-        assert_eq!(first.next_cursor.as_deref(), Some("160"));
+        assert!(first.next_cursor.as_deref().unwrap().ends_with(":160"));
         assert_eq!(first.entries[0].name, ".jtype");
         assert_eq!(first.entries[1].name, "nested");
         assert!(first.entries[1].children.is_empty());
@@ -2797,7 +3058,7 @@ mod tests {
         .unwrap();
         assert_eq!(second.start_index, 160);
         assert_eq!(second.entries.len(), 160);
-        assert_eq!(second.next_cursor.as_deref(), Some("320"));
+        assert!(second.next_cursor.as_deref().unwrap().ends_with(":320"));
         assert_eq!(second.entries[0].name, "note-158.md");
 
         let third = read_workspace_entry_page(
@@ -2842,7 +3103,78 @@ mod tests {
             .contains("invalid"));
         assert!(read_workspace_entry_page(root, "", Some("999"), 10)
             .unwrap_err()
+            .contains("invalid"));
+        assert!(read_workspace_entry_page(root, "", Some("v1:0000000000000000:1"), 10)
+            .unwrap_err()
             .contains("stale"));
+    }
+
+    #[test]
+    fn workspace_entry_page_cache_reuses_scan_and_invalidates_after_mutation() {
+        let dir = tempdir().unwrap();
+        let root = dir.path();
+        for index in 0..405 {
+            fs::write(root.join(format!("note-{index:03}.md")), format!("# {index}"))
+                .unwrap();
+        }
+        open_workspace(root).unwrap();
+        let mut cache = WorkspaceEntryPageCache::default();
+
+        let first = cache
+            .read_workspace_entry_page(root, "", None, 160)
+            .unwrap();
+        let second = cache
+            .read_workspace_entry_page(root, "", first.next_cursor.as_deref(), 160)
+            .unwrap();
+        assert_eq!(second.start_index, 160);
+        assert_eq!(
+            cache.stats(),
+            WorkspaceEntryPageCacheStats {
+                directory_scans: 1,
+                cache_hits: 1,
+                evictions: 0,
+                cached_directories: 1,
+                cached_entries: 406,
+            }
+        );
+
+        let fingerprint_before = workspace_directory_fingerprint(root).unwrap();
+        fs::write(root.join("note-new.md"), "# New").unwrap();
+        let fingerprint_after = workspace_directory_fingerprint(root).unwrap();
+        assert_ne!(fingerprint_before, fingerprint_after);
+        assert!(cache
+            .read_workspace_entry_page(root, "", second.next_cursor.as_deref(), 160)
+            .unwrap_err()
+            .contains("stale"));
+
+        let refreshed = cache
+            .read_workspace_entry_page(root, "", None, 160)
+            .unwrap();
+        assert_eq!(refreshed.total_entries, 407);
+        assert_eq!(cache.stats().directory_scans, 2);
+    }
+
+    #[test]
+    fn workspace_entry_page_cache_evicts_old_directories_with_a_fixed_bound() {
+        let dir = tempdir().unwrap();
+        let root = dir.path();
+        for index in 0..=MAX_WORKSPACE_PAGE_CACHE_DIRECTORIES {
+            let folder = root.join(format!("folder-{index:02}"));
+            fs::create_dir(&folder).unwrap();
+            fs::write(folder.join("note.md"), "# Note").unwrap();
+        }
+        let mut cache = WorkspaceEntryPageCache::default();
+
+        for index in 0..=MAX_WORKSPACE_PAGE_CACHE_DIRECTORIES {
+            cache
+                .read_workspace_entry_page(root, &format!("folder-{index:02}"), None, 10)
+                .unwrap();
+        }
+
+        let stats = cache.stats();
+        assert_eq!(stats.cached_directories, MAX_WORKSPACE_PAGE_CACHE_DIRECTORIES);
+        assert_eq!(stats.cached_entries, MAX_WORKSPACE_PAGE_CACHE_DIRECTORIES);
+        assert_eq!(stats.evictions, 1);
     }
 
     #[test]

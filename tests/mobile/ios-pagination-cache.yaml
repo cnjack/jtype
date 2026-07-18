@@ -1,0 +1,16 @@
+appId: net.jcode.jtype
+---
+- launchApp:
+    clearState: false
+- assertVisible: "Documents|文档"
+- tapOn: "Documents|文档"
+- waitForAnimationToEnd
+- scrollUntilVisible:
+    element:
+      text: "Show more.*|显示更多.*"
+    direction: DOWN
+    timeout: 45000
+    speed: 90
+- tapOn: "Show more.*|显示更多.*"
+- waitForAnimationToEnd
+- assertVisible: ".*documents loaded.*|.*已加载.*个文档.*"

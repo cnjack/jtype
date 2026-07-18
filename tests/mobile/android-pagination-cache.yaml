@@ -1,0 +1,16 @@
+appId: net.jcode.jtype
+---
+- launchApp:
+    clearState: false
+- assertVisible: "Documents"
+- tapOn: "Documents"
+- waitForAnimationToEnd
+- scrollUntilVisible:
+    element:
+      text: "Show more.*"
+    direction: DOWN
+    timeout: 45000
+    speed: 90
+- tapOn: "Show more.*"
+- waitForAnimationToEnd
+- assertVisible: ".*documents loaded.*"

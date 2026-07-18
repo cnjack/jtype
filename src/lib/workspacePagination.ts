@@ -14,6 +14,10 @@ export function workspaceEntryPageState(
   return workspace?.entryPages?.[relativePath];
 }
 
+export function workspacePageCursorIsStale(error: unknown) {
+  return String(error).includes("Workspace page cursor is stale.");
+}
+
 function parentRelativePath(relativePath: string) {
   const index = relativePath.lastIndexOf("/");
   return index < 0 ? "" : relativePath.slice(0, index);
@@ -42,8 +46,11 @@ function validatePage(page: WorkspaceEntryPage) {
   if (page.entries.length === 0 && endIndex < page.totalEntries) {
     throw new Error("Workspace page made no progress.");
   }
-  const expectedCursor = endIndex < page.totalEntries ? String(endIndex) : null;
-  if (page.nextCursor !== expectedCursor) {
+  if (endIndex < page.totalEntries) {
+    if (typeof page.nextCursor !== "string" || page.nextCursor.trim().length === 0) {
+      throw new Error("Workspace page cursor does not match its contents.");
+    }
+  } else if (page.nextCursor !== null) {
     throw new Error("Workspace page cursor does not match its contents.");
   }
   const paths = new Set<string>();

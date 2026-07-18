@@ -24,6 +24,7 @@ import {
 import {
   WORKSPACE_ENTRY_PAGE_SIZE,
   workspaceEntryPageState,
+  workspacePageCursorIsStale,
   workspaceSnapshotIsPartial,
 } from "../lib/workspacePagination";
 
@@ -372,7 +373,26 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
         page,
       });
     } catch (error) {
-      dispatch({ type: "SET_STATUS", message: String(error) });
+      if (cursor !== null && workspacePageCursorIsStale(error)) {
+        try {
+          const refreshedPage = await tauri.readWorkspaceEntryPage(
+            workspace.rootPath,
+            relativePath,
+            null,
+            WORKSPACE_ENTRY_PAGE_SIZE,
+          );
+          dispatch({
+            type: "MERGE_WORKSPACE_ENTRY_PAGE",
+            rootPath: workspace.rootPath,
+            page: refreshedPage,
+          });
+          dispatch({ type: "SET_STATUS", message: "Vault changed; folder refreshed." });
+        } catch (refreshError) {
+          dispatch({ type: "SET_STATUS", message: String(refreshError) });
+        }
+      } else {
+        dispatch({ type: "SET_STATUS", message: String(error) });
+      }
     } finally {
       workspacePageLoadsRef.current.delete(key);
     }

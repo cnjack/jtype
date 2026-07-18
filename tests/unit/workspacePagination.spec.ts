@@ -1,6 +1,10 @@
 import { expect, test } from "@playwright/test";
 import type { FileTreeNode, WorkspaceEntryPage, WorkspaceSnapshot } from "../../src/lib/types";
-import { mergeWorkspaceEntryPage, WORKSPACE_ENTRY_PAGE_SIZE } from "../../src/lib/workspacePagination";
+import {
+  mergeWorkspaceEntryPage,
+  WORKSPACE_ENTRY_PAGE_SIZE,
+  workspacePageCursorIsStale,
+} from "../../src/lib/workspacePagination";
 
 function node(relativePath: string, kind: FileTreeNode["kind"] = "markdown", children: FileTreeNode[] = []): FileTreeNode {
   return {
@@ -63,6 +67,18 @@ test("merges sequential root pages into the canonical workspace snapshot", () =>
     totalEntries: 3,
     nextCursor: null,
   });
+});
+
+test("accepts opaque native cursors and recognizes stale cursor failures", () => {
+  const firstPage = {
+    ...page("", [node("note-001.md")], 0, 2),
+    nextCursor: "v1:0123456789abcdef:1",
+  };
+  const merged = mergeWorkspaceEntryPage(workspace(), firstPage);
+
+  expect(merged.entryPages?.[""]?.nextCursor).toBe("v1:0123456789abcdef:1");
+  expect(workspacePageCursorIsStale(new Error("Workspace page cursor is stale."))).toBe(true);
+  expect(workspacePageCursorIsStale(new Error("Workspace page cursor is invalid."))).toBe(false);
 });
 
 test("hydrates a nested folder without changing sibling UI nodes", () => {

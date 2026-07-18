@@ -55,6 +55,7 @@ struct AppState {
     watcher_state: Mutex<WatcherState>,
     pending_open_paths: Mutex<Vec<String>>,
     pending_external_file_sources: Mutex<Vec<String>>,
+    workspace_entry_pages: Mutex<workspace::WorkspaceEntryPageCache>,
     #[cfg(mobile)]
     external_vault_reconcile: Mutex<()>,
 }
@@ -535,13 +536,23 @@ fn open_default_vault(app: AppHandle) -> Result<WorkspaceSnapshot, String> {
 }
 
 #[tauri::command]
-fn open_default_vault_partial(
+async fn open_default_vault_partial(
     app: AppHandle,
     page_size: usize,
 ) -> Result<WorkspaceSnapshot, String> {
-    let path = default_vault_dir(&app)?;
-    let provider = resolve_local_vault_provider(&app, path)?;
-    workspace::open_workspace_partial(provider.prepare_root(true)?, page_size)
+    tauri::async_runtime::spawn_blocking(move || {
+        let path = default_vault_dir(&app)?;
+        let provider = resolve_local_vault_provider(&app, path)?;
+        let root = provider.prepare_root(true)?;
+        let state = app.state::<AppState>();
+        let mut page_cache = state
+            .workspace_entry_pages
+            .lock()
+            .map_err(|_| "Workspace page cache is unavailable.".to_string())?;
+        workspace::open_workspace_partial_cached(root, page_size, &mut page_cache)
+    })
+    .await
+    .map_err(|error| format!("Default vault page worker failed: {error}"))?
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -1919,30 +1930,53 @@ fn open_workspace(app: AppHandle, path: String) -> Result<WorkspaceSnapshot, Str
 /// as Desktop, but entries contain only the first shallow root page and carry
 /// explicit completeness/cursor state for shared folder hydration.
 #[tauri::command]
-fn open_workspace_partial(
+async fn open_workspace_partial(
     app: AppHandle,
     path: String,
     page_size: usize,
 ) -> Result<WorkspaceSnapshot, String> {
-    let root = PathBuf::from(path);
-    let _provider = describe_provider_for_root(&app, &root)?;
-    workspace::open_workspace_partial(&root, page_size)
+    tauri::async_runtime::spawn_blocking(move || {
+        let root = PathBuf::from(path);
+        let _provider = describe_provider_for_root(&app, &root)?;
+        let state = app.state::<AppState>();
+        let mut page_cache = state
+            .workspace_entry_pages
+            .lock()
+            .map_err(|_| "Workspace page cache is unavailable.".to_string())?;
+        workspace::open_workspace_partial_cached(&root, page_size, &mut page_cache)
+    })
+    .await
+    .map_err(|error| format!("Workspace open page worker failed: {error}"))?
 }
 
 /// Return one shallow page that can be merged into the canonical shared
 /// `WorkspaceSnapshot`. The provider adapter runs first so interrupted external
 /// mirror transactions recover before either Desktop or Mobile reads the tree.
 #[tauri::command]
-fn read_workspace_entry_page(
+async fn read_workspace_entry_page(
     app: AppHandle,
     root_path: String,
     relative_path: String,
     cursor: Option<String>,
     page_size: usize,
 ) -> Result<WorkspaceEntryPage, String> {
-    let root = PathBuf::from(root_path);
-    let _provider = describe_provider_for_root(&app, &root)?;
-    workspace::read_workspace_entry_page(&root, &relative_path, cursor.as_deref(), page_size)
+    tauri::async_runtime::spawn_blocking(move || {
+        let root = PathBuf::from(root_path);
+        let _provider = describe_provider_for_root(&app, &root)?;
+        let state = app.state::<AppState>();
+        let mut page_cache = state
+            .workspace_entry_pages
+            .lock()
+            .map_err(|_| "Workspace page cache is unavailable.".to_string())?;
+        page_cache.read_workspace_entry_page(
+            &root,
+            &relative_path,
+            cursor.as_deref(),
+            page_size,
+        )
+    })
+    .await
+    .map_err(|error| format!("Workspace page worker failed: {error}"))?
 }
 
 /// Native query adapter for shared Desktop search surfaces once a mobile vault
@@ -3261,6 +3295,7 @@ pub fn run() {
             watcher_state: Mutex::new(WatcherState { watcher: None }),
             pending_open_paths: Mutex::new(Vec::new()),
             pending_external_file_sources: Mutex::new(Vec::new()),
+            workspace_entry_pages: Mutex::new(workspace::WorkspaceEntryPageCache::default()),
             #[cfg(mobile)]
             external_vault_reconcile: Mutex::new(()),
         })
