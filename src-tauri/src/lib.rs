@@ -11,6 +11,8 @@ use jtype_core as workspace;
 
 use notify::Watcher;
 use serde::{Deserialize, Serialize};
+#[cfg(target_os = "android")]
+use std::time::Instant;
 #[cfg(mobile)]
 use std::time::{SystemTime, UNIX_EPOCH};
 use std::{
@@ -467,6 +469,105 @@ struct ExternalVaultConflictResolutionResult {
     conflicts: Vec<vault_reconcile::ReconcileConflict>,
 }
 
+#[cfg(target_os = "android")]
+const EXTERNAL_VAULT_PROGRESS_MIN_OPERATIONS: usize = 8;
+
+#[cfg(target_os = "android")]
+#[derive(Debug, Clone, Copy, Serialize)]
+#[serde(rename_all = "camelCase")]
+enum VaultProviderOperationPhase {
+    Applying,
+    Verifying,
+    Completed,
+    Failed,
+}
+
+#[cfg(target_os = "android")]
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct VaultProviderOperationProgress<'a> {
+    provider_id: &'a str,
+    operation: &'static str,
+    phase: VaultProviderOperationPhase,
+    completed: usize,
+    total: usize,
+    current_path: Option<&'a str>,
+    elapsed_ms: u64,
+}
+
+#[cfg(target_os = "android")]
+struct VaultProviderOperationReporter<'a> {
+    app: &'a AppHandle,
+    provider_id: &'a str,
+    total: usize,
+    completed: usize,
+    started_at: Instant,
+    active: bool,
+}
+
+#[cfg(target_os = "android")]
+impl<'a> VaultProviderOperationReporter<'a> {
+    fn start(app: &'a AppHandle, provider_id: &'a str, total: usize) -> Self {
+        let reporter = Self {
+            app,
+            provider_id,
+            total,
+            completed: 0,
+            started_at: Instant::now(),
+            active: true,
+        };
+        reporter.emit(VaultProviderOperationPhase::Applying, None);
+        reporter
+    }
+
+    fn advance(&mut self, completed: usize, current_path: &str) {
+        self.completed = completed;
+        let emit_every = (self.total / 100).max(1);
+        if completed == self.total || completed % emit_every == 0 {
+            self.emit(VaultProviderOperationPhase::Applying, Some(current_path));
+        }
+    }
+
+    fn verifying(&self) {
+        self.emit(VaultProviderOperationPhase::Verifying, None);
+    }
+
+    fn complete(mut self) {
+        self.completed = self.total;
+        self.emit(VaultProviderOperationPhase::Completed, None);
+        self.active = false;
+    }
+
+    fn emit(&self, phase: VaultProviderOperationPhase, current_path: Option<&str>) {
+        let elapsed_ms = self
+            .started_at
+            .elapsed()
+            .as_millis()
+            .min(u128::from(u64::MAX)) as u64;
+        let _ = self.app.emit(
+            "vault-provider-operation-progress",
+            VaultProviderOperationProgress {
+                provider_id: self.provider_id,
+                operation: "writeBack",
+                phase,
+                completed: self.completed,
+                total: self.total,
+                current_path,
+                elapsed_ms,
+            },
+        );
+    }
+}
+
+#[cfg(target_os = "android")]
+impl Drop for VaultProviderOperationReporter<'_> {
+    fn drop(&mut self) {
+        if self.active {
+            self.emit(VaultProviderOperationPhase::Failed, None);
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct VaultProviderStatus {
@@ -766,17 +867,21 @@ fn reconcile_android_external_vault_locked(
 
 #[cfg(target_os = "android")]
 #[tauri::command]
-fn write_back_android_external_vault(
+async fn write_back_android_external_vault(
     app: AppHandle,
     provider_id: String,
 ) -> Result<ExternalVaultWriteBackResult, String> {
-    let state = app.state::<AppState>();
-    let _reconcile_guard = state
-        .external_vault_reconcile
-        .lock()
-        .map_err(|_| "External vault operation lock is unavailable".to_string())?;
+    tauri::async_runtime::spawn_blocking(move || {
+        let state = app.state::<AppState>();
+        let _reconcile_guard = state
+            .external_vault_reconcile
+            .lock()
+            .map_err(|_| "External vault operation lock is unavailable".to_string())?;
 
-    write_back_android_external_vault_locked(&app, &provider_id, false)
+        write_back_android_external_vault_locked(&app, &provider_id, false)
+    })
+    .await
+    .map_err(|error| format!("External vault worker failed: {error}"))?
 }
 
 #[cfg(target_os = "android")]
@@ -906,7 +1011,15 @@ fn write_back_android_external_vault_locked(
     };
     vault_reconcile::save_write_back_journal(&mirror_root, &journal)?;
 
-    for operation in &write_back_plan.operations {
+    let mut operation_progress =
+        (write_back_plan.operations.len() >= EXTERNAL_VAULT_PROGRESS_MIN_OPERATIONS).then(|| {
+            VaultProviderOperationReporter::start(
+                app,
+                provider_id,
+                write_back_plan.operations.len(),
+            )
+        });
+    for (index, operation) in write_back_plan.operations.iter().enumerate() {
         let kind = match operation.kind {
             vault_reconcile::WriteBackOperationKind::UpsertDirectory => {
                 tauri_plugin_mobile_import::DirectoryChangeKind::UpsertDirectory
@@ -942,8 +1055,14 @@ fn write_back_android_external_vault_locked(
                 "External vault write-back was interrupted; the pending journal was retained. It is safe to {recovery}: {error}"
             ));
         }
+        if let Some(progress) = &mut operation_progress {
+            progress.advance(index + 1, &operation.relative_path);
+        }
     }
 
+    if let Some(progress) = &operation_progress {
+        progress.verifying();
+    }
     drop(source_snapshot_cleanup);
     let (verified_source_snapshot, _verified_source_cleanup) =
         materialize_android_source_snapshot(app, &provider, &mirror_root)?;
@@ -960,6 +1079,9 @@ fn write_back_android_external_vault_locked(
     write_vault_provider_store(app, &store)?;
     vault_reconcile::commit_local_mutation(&mirror_root)?;
     vault_reconcile::clear_write_back_journal(&mirror_root)?;
+    if let Some(progress) = operation_progress {
+        progress.complete();
+    }
 
     Ok(ExternalVaultWriteBackResult {
         provider: descriptor,
@@ -1554,28 +1676,32 @@ fn prepare_external_source(
 }
 
 #[tauri::command]
-fn import_external_paths(
+async fn import_external_paths(
     app: AppHandle,
     root_path: String,
     source_paths: Vec<String>,
     target_folder: String,
 ) -> Result<(WorkspaceSnapshot, Vec<String>), String> {
-    let root = PathBuf::from(root_path);
-    let imported = with_external_vault_mutation(&app, &root, || {
-        let mut imported = Vec::new();
-        for source in &source_paths {
-            let prepared = prepare_external_source(&app, source)?;
-            let result = workspace::import_external_path(&root, &prepared.path, &target_folder);
-            if let Some(cleanup_dir) = prepared.cleanup_dir {
-                let _ = fs::remove_dir_all(cleanup_dir);
+    tauri::async_runtime::spawn_blocking(move || {
+        let root = PathBuf::from(root_path);
+        let imported = with_external_vault_mutation(&app, &root, || {
+            let mut imported = Vec::new();
+            for source in &source_paths {
+                let prepared = prepare_external_source(&app, source)?;
+                let result = workspace::import_external_path(&root, &prepared.path, &target_folder);
+                if let Some(cleanup_dir) = prepared.cleanup_dir {
+                    let _ = fs::remove_dir_all(cleanup_dir);
+                }
+                let relative = result?;
+                imported.push(relative);
             }
-            let relative = result?;
-            imported.push(relative);
-        }
-        Ok(imported)
-    })?;
-    let snapshot = workspace::open_workspace(&root)?;
-    Ok((snapshot, imported))
+            Ok(imported)
+        })?;
+        let snapshot = workspace::open_workspace(&root)?;
+        Ok((snapshot, imported))
+    })
+    .await
+    .map_err(|error| format!("Import external paths worker failed: {error}"))?
 }
 
 /// List vault-relative paths of binary assets (images/PDFs) for blob sync.
@@ -1861,18 +1987,22 @@ fn bind_cloud_workspace(
 }
 
 #[tauri::command]
-fn apply_cloud_documents(
+async fn apply_cloud_documents(
     app: AppHandle,
     root_path: String,
     documents: Vec<CloudSyncDocument>,
     folders: Vec<CloudSyncFolder>,
 ) -> Result<ApplyCloudResult, String> {
-    let root = PathBuf::from(root_path);
-    let mut result = with_external_vault_mutation(&app, &root, || {
-        apply_cloud_documents_core(&root, documents, folders)
-    })?;
-    result.workspace = workspace::open_workspace(&root)?;
-    Ok(result)
+    tauri::async_runtime::spawn_blocking(move || {
+        let root = PathBuf::from(root_path);
+        let mut result = with_external_vault_mutation(&app, &root, || {
+            apply_cloud_documents_core(&root, documents, folders)
+        })?;
+        result.workspace = workspace::open_workspace(&root)?;
+        Ok(result)
+    })
+    .await
+    .map_err(|error| format!("Apply cloud documents worker failed: {error}"))?
 }
 
 fn apply_cloud_documents_core(
@@ -1909,42 +2039,50 @@ fn apply_cloud_documents_core(
 }
 
 #[tauri::command]
-fn apply_deleted_cloud_folders(
+async fn apply_deleted_cloud_folders(
     app: AppHandle,
     root_path: String,
     folders: Vec<CloudSyncFolder>,
 ) -> Result<WorkspaceSnapshot, String> {
-    let root = PathBuf::from(root_path);
-    with_external_vault_mutation(&app, &root, || {
-        let mut folders = folders;
-        folders.sort_by(|left, right| right.relative_path.cmp(&left.relative_path));
-        for folder in folders {
-            let target = safe_join(&root, &folder.relative_path)?;
-            if target.is_dir()
-                && fs::read_dir(&target)
-                    .map_err(|error| error.to_string())?
-                    .next()
-                    .is_none()
-            {
-                fs::remove_dir(&target).map_err(|error| error.to_string())?;
+    tauri::async_runtime::spawn_blocking(move || {
+        let root = PathBuf::from(root_path);
+        with_external_vault_mutation(&app, &root, || {
+            let mut folders = folders;
+            folders.sort_by(|left, right| right.relative_path.cmp(&left.relative_path));
+            for folder in folders {
+                let target = safe_join(&root, &folder.relative_path)?;
+                if target.is_dir()
+                    && fs::read_dir(&target)
+                        .map_err(|error| error.to_string())?
+                        .next()
+                        .is_none()
+                {
+                    fs::remove_dir(&target).map_err(|error| error.to_string())?;
+                }
             }
-        }
-        Ok(())
-    })?;
-    workspace::open_workspace(&root)
+            Ok(())
+        })?;
+        workspace::open_workspace(&root)
+    })
+    .await
+    .map_err(|error| format!("Apply deleted cloud folders worker failed: {error}"))?
 }
 
 #[tauri::command]
-fn trash_workspace_entry(
+async fn trash_workspace_entry(
     app: AppHandle,
     root_path: String,
     relative_path: String,
 ) -> Result<WorkspaceSnapshot, String> {
-    let root = PathBuf::from(root_path);
-    with_external_vault_mutation(&app, &root, || {
-        workspace::trash_entry(&root, &relative_path)
-    })?;
-    workspace::open_workspace(&root)
+    tauri::async_runtime::spawn_blocking(move || {
+        let root = PathBuf::from(root_path);
+        with_external_vault_mutation(&app, &root, || {
+            workspace::trash_entry(&root, &relative_path)
+        })?;
+        workspace::open_workspace(&root)
+    })
+    .await
+    .map_err(|error| format!("Trash workspace entry worker failed: {error}"))?
 }
 
 #[tauri::command]
@@ -1953,16 +2091,20 @@ fn list_workspace_trash(root_path: String) -> Result<Vec<TrashItemInfo>, String>
 }
 
 #[tauri::command]
-fn restore_workspace_trash(
+async fn restore_workspace_trash(
     app: AppHandle,
     root_path: String,
     trash_id: String,
 ) -> Result<WorkspaceSnapshot, String> {
-    let root = PathBuf::from(root_path);
-    with_external_vault_mutation(&app, &root, || {
-        workspace::restore_from_trash(&root, &trash_id).map(|_| ())
-    })?;
-    workspace::open_workspace(&root)
+    tauri::async_runtime::spawn_blocking(move || {
+        let root = PathBuf::from(root_path);
+        with_external_vault_mutation(&app, &root, || {
+            workspace::restore_from_trash(&root, &trash_id).map(|_| ())
+        })?;
+        workspace::open_workspace(&root)
+    })
+    .await
+    .map_err(|error| format!("Restore workspace trash worker failed: {error}"))?
 }
 
 #[tauri::command]
@@ -2198,48 +2340,60 @@ fn create_workspace_folder(
 }
 
 #[tauri::command]
-fn rename_workspace_folder(
+async fn rename_workspace_folder(
     app: AppHandle,
     root_path: String,
     from_relative_path: String,
     to_relative_path: String,
 ) -> Result<(WorkspaceSnapshot, Vec<String>), String> {
-    let root = PathBuf::from(root_path);
-    let impacted = with_external_vault_mutation(&app, &root, || {
-        workspace::rename_folder(&root, &from_relative_path, &to_relative_path)
-    })?;
-    let snapshot = workspace::open_workspace(&root)?;
-    Ok((snapshot, impacted))
+    tauri::async_runtime::spawn_blocking(move || {
+        let root = PathBuf::from(root_path);
+        let impacted = with_external_vault_mutation(&app, &root, || {
+            workspace::rename_folder(&root, &from_relative_path, &to_relative_path)
+        })?;
+        let snapshot = workspace::open_workspace(&root)?;
+        Ok((snapshot, impacted))
+    })
+    .await
+    .map_err(|error| format!("Rename workspace folder worker failed: {error}"))?
 }
 
 #[tauri::command]
-fn move_workspace_folder(
+async fn move_workspace_folder(
     app: AppHandle,
     root_path: String,
     from_relative_path: String,
     to_relative_path: String,
 ) -> Result<(WorkspaceSnapshot, Vec<String>), String> {
-    let root = PathBuf::from(root_path);
-    let impacted = with_external_vault_mutation(&app, &root, || {
-        workspace::move_folder(&root, &from_relative_path, &to_relative_path)
-    })?;
-    let snapshot = workspace::open_workspace(&root)?;
-    Ok((snapshot, impacted))
+    tauri::async_runtime::spawn_blocking(move || {
+        let root = PathBuf::from(root_path);
+        let impacted = with_external_vault_mutation(&app, &root, || {
+            workspace::move_folder(&root, &from_relative_path, &to_relative_path)
+        })?;
+        let snapshot = workspace::open_workspace(&root)?;
+        Ok((snapshot, impacted))
+    })
+    .await
+    .map_err(|error| format!("Move workspace folder worker failed: {error}"))?
 }
 
 #[tauri::command]
-fn delete_workspace_folder(
+async fn delete_workspace_folder(
     app: AppHandle,
     root_path: String,
     folder_relative_path: String,
     soft_delete: bool,
 ) -> Result<(WorkspaceSnapshot, Vec<String>), String> {
-    let root = PathBuf::from(root_path);
-    let impacted = with_external_vault_mutation(&app, &root, || {
-        workspace::delete_folder(&root, &folder_relative_path, soft_delete)
-    })?;
-    let snapshot = workspace::open_workspace(&root)?;
-    Ok((snapshot, impacted))
+    tauri::async_runtime::spawn_blocking(move || {
+        let root = PathBuf::from(root_path);
+        let impacted = with_external_vault_mutation(&app, &root, || {
+            workspace::delete_folder(&root, &folder_relative_path, soft_delete)
+        })?;
+        let snapshot = workspace::open_workspace(&root)?;
+        Ok((snapshot, impacted))
+    })
+    .await
+    .map_err(|error| format!("Delete workspace folder worker failed: {error}"))?
 }
 
 #[tauri::command]

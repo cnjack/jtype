@@ -717,6 +717,10 @@ msgstr "외부 변경 사항의 처리 방법을 선택해야 동기화를 계�
 msgid "External vault conflicts"
 msgstr "외부 vault 충돌"
 
+#: src/components/layout/VaultProviderBanner.tsx
+msgid "External vault operation progress"
+msgstr "외부 vault 작업 진행률"
+
 #: src/components/sidebar/Sidebar.tsx
 msgid "Favorite"
 msgstr "즐겨찾기"
@@ -1509,6 +1513,10 @@ msgstr "동기화 충돌 ({0})"
 msgid "Sync current vault"
 msgstr "현재 볼트 동기화"
 
+#: src/components/layout/VaultProviderBanner.tsx
+msgid "Sync in progress"
+msgstr "동기화 중"
+
 #: src/components/modals/AccountDialog.tsx
 msgid "Sync now"
 msgstr "지금 동기화"
@@ -1516,6 +1524,12 @@ msgstr "지금 동기화"
 #: src/components/editor/EditorShell.tsx
 msgid "Sync this document before publishing."
 msgstr "게시하기 전에 이 문서를 동기화하세요."
+
+#. placeholder {0}: progress.completed
+#. placeholder {1}: progress.total
+#: src/components/layout/VaultProviderBanner.tsx
+msgid "Syncing {0} of {1} external changes…"
+msgstr "외부 변경 사항 동기화 중: {0}/{1}…"
 
 #. placeholder {0}: activeCloudBinding.workspaceName
 #: src/components/sidebar/Sidebar.tsx
@@ -1680,6 +1694,11 @@ msgstr "볼트 루트"
 #: src/components/modals/DeviceAuthWaiting.tsx
 msgid "Verification code expired"
 msgstr ""
+
+#. placeholder {0}: progress.total
+#: src/components/layout/VaultProviderBanner.tsx
+msgid "Verifying {0} external changes…"
+msgstr "외부 변경 사항 {0}개 확인 중…"
 
 #: src/components/editor/EditorShell.tsx
 msgid "View published page"

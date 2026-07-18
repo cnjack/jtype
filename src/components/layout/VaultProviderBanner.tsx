@@ -12,6 +12,7 @@ import {
 import { useAppDispatch, useAppState } from "../../app/AppState";
 import { useFileSystem } from "../../hooks";
 import { tauri } from "../../lib/tauri";
+import type { VaultProviderOperationProgress } from "../../lib/types";
 
 export function VaultProviderBanner() {
   const state = useAppState();
@@ -20,6 +21,9 @@ export function VaultProviderBanner() {
   const status = state.vaultProviderStatus;
   const provider = status?.provider;
   const isExternal = provider?.kind === "externalMirror";
+  const progress = state.vaultProviderOperationProgress?.providerId === provider?.providerId
+    ? state.vaultProviderOperationProgress
+    : null;
 
   useEffect(() => {
     if (!isExternal || !tauri.isAvailable) return;
@@ -37,12 +41,33 @@ export function VaultProviderBanner() {
     };
   }, [fs.refreshVaultProvider, isExternal]);
 
+  useEffect(() => {
+    if (!isExternal || !provider || !tauri.isAvailable) return;
+    const unlisten = listen<VaultProviderOperationProgress>(
+      "vault-provider-operation-progress",
+      ({ payload }) => {
+        if (payload.providerId !== provider.providerId) return;
+        dispatch({
+          type: "SET_VAULT_PROVIDER_OPERATION_PROGRESS",
+          progress: payload.phase === "applying" || payload.phase === "verifying" ? payload : null,
+        });
+      },
+    );
+    return () => {
+      void unlisten.then((stop) => stop());
+    };
+  }, [dispatch, isExternal, provider]);
+
   if (!isExternal || !provider || !status) return null;
 
   const needsAccess = provider.accessState !== "ready";
   const hasConflicts = state.externalVaultConflicts.length > 0;
-  const tone = needsAccess || status.pendingWriteBack || hasConflicts ? "amber" : "green";
-  const message = needsAccess
+  const tone = progress ? "blue" : needsAccess || status.pendingWriteBack || hasConflicts ? "amber" : "green";
+  const message = progress
+    ? progress.phase === "verifying"
+      ? <Trans>Verifying {progress.total} external changes…</Trans>
+      : <Trans>Syncing {progress.completed} of {progress.total} external changes…</Trans>
+    : needsAccess
     ? provider.accessState === "sourceUnavailable"
       ? <Trans>The selected folder is unavailable. Choose it again to continue.</Trans>
       : <Trans>Folder access is required. Choose this vault again to continue.</Trans>
@@ -55,16 +80,23 @@ export function VaultProviderBanner() {
   return (
     <section
       id="external-vault-status"
-      className={`flex min-w-0 items-center gap-3 border-b px-4 py-2.5 text-sm ${
-        tone === "amber"
+      className={`relative flex min-w-0 items-center gap-3 border-b px-4 py-2.5 text-sm ${
+        tone === "blue"
+          ? "border-sky-200 bg-sky-50 text-sky-950"
+          : tone === "amber"
           ? "border-amber-200 bg-amber-50 text-amber-950"
           : "border-emerald-100 bg-emerald-50/80 text-emerald-950"
       }`}
       aria-live="polite"
     >
-      <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${tone === "amber" ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"}`}>
-        {tone === "amber" ? <ExclamationTriangleIcon className="h-4.5 w-4.5" /> : <FolderOpenIcon className="h-4.5 w-4.5" />}
+      <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${tone === "blue" ? "bg-sky-100 text-sky-700" : tone === "amber" ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"}`}>
+        {progress ? <ArrowPathIcon className="h-4.5 w-4.5 animate-spin" /> : tone === "amber" ? <ExclamationTriangleIcon className="h-4.5 w-4.5" /> : <FolderOpenIcon className="h-4.5 w-4.5" />}
       </span>
+      {progress && (
+        <span className="shrink-0 rounded-full bg-sky-100 px-2 py-1 text-[11px] font-semibold tabular-nums text-sky-800">
+          {progress.completed}/{progress.total} · {Math.max(0, Math.round(progress.elapsedMs / 1000))}s
+        </span>
+      )}
       <span className="min-w-0 flex-1">
         <span className="block truncate font-semibold">{provider.displayName}</span>
         <span className="block truncate text-xs opacity-75">{message}</span>
@@ -94,14 +126,29 @@ export function VaultProviderBanner() {
       ) : (
         <button
           type="button"
-          title={status.pendingWriteBack ? "Finish interrupted changes" : "Check external changes"}
-          aria-label={status.pendingWriteBack ? "Finish interrupted changes" : "Check external changes"}
-          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition disabled:opacity-50 ${tone === "amber" ? "bg-amber-700 text-white hover:bg-amber-800" : "bg-white text-emerald-700 ring-1 ring-emerald-200 hover:bg-emerald-100"}`}
-          disabled={state.isLoading || state.isDirty}
+          title={progress ? t`Sync in progress` : status.pendingWriteBack ? "Finish interrupted changes" : "Check external changes"}
+          aria-label={progress ? t`Sync in progress` : status.pendingWriteBack ? "Finish interrupted changes" : "Check external changes"}
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition disabled:opacity-50 ${tone === "blue" ? "bg-sky-700 text-white" : tone === "amber" ? "bg-amber-700 text-white hover:bg-amber-800" : "bg-white text-emerald-700 ring-1 ring-emerald-200 hover:bg-emerald-100"}`}
+          disabled={Boolean(progress) || state.isLoading || state.isDirty}
           onClick={() => { void fs.reconcileExternalVault(); }}
         >
-          {status.pendingWriteBack ? <CheckCircleIcon className="h-4.5 w-4.5" /> : <ArrowPathIcon className="h-4.5 w-4.5" />}
+          {progress ? <ArrowPathIcon className="h-4.5 w-4.5 animate-spin" /> : status.pendingWriteBack ? <CheckCircleIcon className="h-4.5 w-4.5" /> : <ArrowPathIcon className="h-4.5 w-4.5" />}
         </button>
+      )}
+      {progress && (
+        <span
+          role="progressbar"
+          aria-label={t`External vault operation progress`}
+          aria-valuemin={0}
+          aria-valuemax={progress.total}
+          aria-valuenow={progress.completed}
+          className="absolute inset-x-0 bottom-0 h-0.5 overflow-hidden bg-sky-100"
+        >
+          <span
+            className="block h-full bg-sky-600 transition-[width] duration-200"
+            style={{ width: `${progress.total > 0 ? (progress.completed / progress.total) * 100 : 0}%` }}
+          />
+        </span>
       )}
     </section>
   );

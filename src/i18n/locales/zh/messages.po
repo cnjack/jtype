@@ -717,6 +717,10 @@ msgstr "外部更改需要由你选择处理方式，之后才能继续同步。
 msgid "External vault conflicts"
 msgstr "外部 vault 冲突"
 
+#: src/components/layout/VaultProviderBanner.tsx
+msgid "External vault operation progress"
+msgstr "外部 vault 操作进度"
+
 #: src/components/sidebar/Sidebar.tsx
 msgid "Favorite"
 msgstr "收藏"
@@ -1509,6 +1513,10 @@ msgstr "同步冲突（{0}）"
 msgid "Sync current vault"
 msgstr "同步当前库"
 
+#: src/components/layout/VaultProviderBanner.tsx
+msgid "Sync in progress"
+msgstr "正在同步"
+
 #: src/components/modals/AccountDialog.tsx
 msgid "Sync now"
 msgstr "立即同步"
@@ -1516,6 +1524,12 @@ msgstr "立即同步"
 #: src/components/editor/EditorShell.tsx
 msgid "Sync this document before publishing."
 msgstr "发布前请先同步此文档。"
+
+#. placeholder {0}: progress.completed
+#. placeholder {1}: progress.total
+#: src/components/layout/VaultProviderBanner.tsx
+msgid "Syncing {0} of {1} external changes…"
+msgstr "正在同步外部更改：{0}/{1}…"
 
 #. placeholder {0}: activeCloudBinding.workspaceName
 #: src/components/sidebar/Sidebar.tsx
@@ -1680,6 +1694,11 @@ msgstr "库根目录"
 #: src/components/modals/DeviceAuthWaiting.tsx
 msgid "Verification code expired"
 msgstr "验证码已过期"
+
+#. placeholder {0}: progress.total
+#: src/components/layout/VaultProviderBanner.tsx
+msgid "Verifying {0} external changes…"
+msgstr "正在验证 {0} 项外部更改…"
 
 #: src/components/editor/EditorShell.tsx
 msgid "View published page"

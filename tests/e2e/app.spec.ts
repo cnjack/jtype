@@ -1021,6 +1021,32 @@ test("opens an Android SAF vault through the shared desktop vault action", async
   await expect(page.getByRole("button", { name: "New Document" }).first()).toBeEnabled();
 
   await page.evaluate(() => {
+    window.__EMIT_TAURI_EVENT__("vault-provider-operation-progress", {
+      providerId: "external:saf-e2e",
+      operation: "writeBack",
+      phase: "applying",
+      completed: 42,
+      total: 120,
+      currentPath: "batch/note-042.md",
+      elapsedMs: 8300,
+    });
+  });
+  await expect(page.locator("#external-vault-status")).toContainText("Syncing 42 of 120 external changes");
+  await expect(page.getByRole("progressbar", { name: "External vault operation progress" })).toHaveAttribute("aria-valuenow", "42");
+  await page.evaluate(() => {
+    window.__EMIT_TAURI_EVENT__("vault-provider-operation-progress", {
+      providerId: "external:saf-e2e",
+      operation: "writeBack",
+      phase: "completed",
+      completed: 120,
+      total: 120,
+      currentPath: null,
+      elapsedMs: 15100,
+    });
+  });
+  await expect(page.getByRole("progressbar", { name: "External vault operation progress" })).toBeHidden();
+
+  await page.evaluate(() => {
     const external = window.__EXTERNAL_VAULT_RESULT__ as {
       provider: { accessState: string; capabilities: Record<string, boolean> };
     };

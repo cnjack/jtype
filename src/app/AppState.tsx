@@ -13,6 +13,7 @@ import type {
   SyncStatus,
   VaultSettings,
   VaultProviderStatus,
+  VaultProviderOperationProgress,
   ExternalVaultReconcileConflict,
 } from "../lib/types";
 import type { AICommandProposal } from "./aiCommands";
@@ -39,6 +40,7 @@ export interface AppState {
   isLoading: boolean;
   workspace: WorkspaceSnapshot | null;
   vaultProviderStatus: VaultProviderStatus | null;
+  vaultProviderOperationProgress: VaultProviderOperationProgress | null;
   externalVaultConflicts: ExternalVaultReconcileConflict[];
   externalVaultConflictDialogOpen: boolean;
   syncToken: string;
@@ -116,6 +118,7 @@ export type AppAction =
   | { type: "DISCARD_DRAFT" }
   | { type: "UPDATE_WORKSPACE"; workspace: WorkspaceSnapshot }
   | { type: "SET_VAULT_PROVIDER_STATUS"; status: VaultProviderStatus | null }
+  | { type: "SET_VAULT_PROVIDER_OPERATION_PROGRESS"; progress: VaultProviderOperationProgress | null }
   | { type: "SET_EXTERNAL_VAULT_CONFLICTS"; conflicts: ExternalVaultReconcileConflict[] }
   | { type: "SET_EXTERNAL_VAULT_CONFLICT_DIALOG"; open: boolean }
   | { type: "SET_SYNC_SESSION"; token: string; username: string; siteUrl: string; profile: CloudProfile }
@@ -179,6 +182,7 @@ const initialState: AppState = {
   isLoading: false,
   workspace: null,
   vaultProviderStatus: null,
+  vaultProviderOperationProgress: null,
   externalVaultConflicts: [],
   externalVaultConflictDialogOpen: false,
   syncToken: appStorage.getSensitive("sync.token", ""),
@@ -247,6 +251,7 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         ...state,
         workspace: action.workspace,
         vaultProviderStatus: action.providerStatus ?? null,
+        vaultProviderOperationProgress: null,
         externalVaultConflicts: [],
         externalVaultConflictDialogOpen: false,
         currentPath: "",
@@ -407,6 +412,8 @@ export function appReducer(state: AppState, action: AppAction): AppState {
           : state.workspace;
       return { ...state, workspace, vaultProviderStatus: action.status };
     }
+    case "SET_VAULT_PROVIDER_OPERATION_PROGRESS":
+      return { ...state, vaultProviderOperationProgress: action.progress };
     case "SET_EXTERNAL_VAULT_CONFLICTS":
       return { ...state, externalVaultConflicts: action.conflicts };
     case "SET_EXTERNAL_VAULT_CONFLICT_DIALOG":
@@ -569,6 +576,7 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         ...state,
         workspace: null,
         vaultProviderStatus: null,
+        vaultProviderOperationProgress: null,
         externalVaultConflicts: [],
         externalVaultConflictDialogOpen: false,
         currentPath: "",

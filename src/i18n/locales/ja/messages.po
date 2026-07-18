@@ -717,6 +717,10 @@ msgstr "外部の変更を処理する方法を選択してから、同期を続
 msgid "External vault conflicts"
 msgstr "外部 vault の競合"
 
+#: src/components/layout/VaultProviderBanner.tsx
+msgid "External vault operation progress"
+msgstr "外部 vault 操作の進捗"
+
 #: src/components/sidebar/Sidebar.tsx
 msgid "Favorite"
 msgstr "お気に入り"
@@ -1509,6 +1513,10 @@ msgstr "同期の競合（{0}）"
 msgid "Sync current vault"
 msgstr "現在のボルトを同期"
 
+#: src/components/layout/VaultProviderBanner.tsx
+msgid "Sync in progress"
+msgstr "同期中"
+
 #: src/components/modals/AccountDialog.tsx
 msgid "Sync now"
 msgstr "今すぐ同期"
@@ -1516,6 +1524,12 @@ msgstr "今すぐ同期"
 #: src/components/editor/EditorShell.tsx
 msgid "Sync this document before publishing."
 msgstr "公開する前にこのドキュメントを同期してください。"
+
+#. placeholder {0}: progress.completed
+#. placeholder {1}: progress.total
+#: src/components/layout/VaultProviderBanner.tsx
+msgid "Syncing {0} of {1} external changes…"
+msgstr "外部変更を同期中：{0}/{1}…"
 
 #. placeholder {0}: activeCloudBinding.workspaceName
 #: src/components/sidebar/Sidebar.tsx
@@ -1680,6 +1694,11 @@ msgstr "ボルトルート"
 #: src/components/modals/DeviceAuthWaiting.tsx
 msgid "Verification code expired"
 msgstr ""
+
+#. placeholder {0}: progress.total
+#: src/components/layout/VaultProviderBanner.tsx
+msgid "Verifying {0} external changes…"
+msgstr "{0} 件の外部変更を検証中…"
 
 #: src/components/editor/EditorShell.tsx
 msgid "View published page"

@@ -124,6 +124,16 @@ export type VaultProviderStatus = {
   pendingWriteBack: boolean;
 };
 
+export type VaultProviderOperationProgress = {
+  providerId: string;
+  operation: "writeBack";
+  phase: "applying" | "verifying" | "completed" | "failed";
+  completed: number;
+  total: number;
+  currentPath: string | null;
+  elapsedMs: number;
+};
+
 export type ExternalVaultInitializationResult = {
   provider: VaultProviderDescriptor;
   workspace: WorkspaceSnapshot;

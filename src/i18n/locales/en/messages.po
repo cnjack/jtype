@@ -752,6 +752,10 @@ msgstr "External changes need your choice before syncing can continue."
 msgid "External vault conflicts"
 msgstr "External vault conflicts"
 
+#: src/components/layout/VaultProviderBanner.tsx
+msgid "External vault operation progress"
+msgstr "External vault operation progress"
+
 #: src/components/sidebar/Sidebar.tsx
 msgid "Favorite"
 msgstr "Favorite"
@@ -1578,6 +1582,10 @@ msgstr "Sync Conflicts ({0})"
 msgid "Sync current vault"
 msgstr "Sync current vault"
 
+#: src/components/layout/VaultProviderBanner.tsx
+msgid "Sync in progress"
+msgstr "Sync in progress"
+
 #: src/components/modals/AccountDialog.tsx
 msgid "Sync now"
 msgstr "Sync now"
@@ -1585,6 +1593,12 @@ msgstr "Sync now"
 #: src/components/editor/EditorShell.tsx
 msgid "Sync this document before publishing."
 msgstr "Sync this document before publishing."
+
+#. placeholder {0}: progress.completed
+#. placeholder {1}: progress.total
+#: src/components/layout/VaultProviderBanner.tsx
+msgid "Syncing {0} of {1} external changes…"
+msgstr "Syncing {0} of {1} external changes…"
 
 #. placeholder {0}: activeCloudBinding.workspaceName
 #: src/components/sidebar/Sidebar.tsx
@@ -1758,6 +1772,11 @@ msgstr "vault root"
 #: src/components/modals/DeviceAuthWaiting.tsx
 msgid "Verification code expired"
 msgstr "Verification code expired"
+
+#. placeholder {0}: progress.total
+#: src/components/layout/VaultProviderBanner.tsx
+msgid "Verifying {0} external changes…"
+msgstr "Verifying {0} external changes…"
 
 #: src/components/editor/EditorShell.tsx
 msgid "View published page"
