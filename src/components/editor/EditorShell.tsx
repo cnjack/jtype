@@ -8,7 +8,7 @@ import { useFileSystem } from "../../hooks";
 import { renderMarkdownToHtml, renderToContainer } from "@shared/lib/markdown";
 import { parseFrontmatter, writeFrontmatter } from "@shared/lib/frontmatter";
 import { basename, escapeHtml, isTauriRuntime, normalizePath } from "../../lib/utils";
-import { findMarkdownByWikiTarget, workspaceIndexFor } from "../../lib/workspaceIndex";
+import { resolveWorkspaceWikiTarget } from "../../lib/workspaceResolver";
 import { useCommandsList } from "../../app/App";
 import { addMarkdownTableColumn, addMarkdownTableRow, formatMarkdownTable, insertAtCursor, insertBlockAtSafeCursor, insertOrEditTable } from "../../hooks/useCommands";
 import { useEagerSync } from "../../hooks/useEagerSync";
@@ -568,9 +568,13 @@ export function EditorShell() {
     if (wikilink) {
       event.preventDefault();
       const target = wikilink.getAttribute("data-wikilink") ?? "";
-      const node = findMarkdownByWikiTarget(workspaceIndexFor(state.workspace?.entries), target);
-      if (node) void fs.openMarkdownFile(node.path, node.relativePath);
-      else dispatch({ type: "SET_STATUS", message: t`No note named "${target}".` });
+      if (!state.workspace) return;
+      void resolveWorkspaceWikiTarget(state.workspace, target).then((node) => {
+        if (node) void fs.openMarkdownFile(node.path, node.relativePath);
+        else dispatch({ type: "SET_STATUS", message: t`No note named "${target}".` });
+      }).catch((error) => {
+        dispatch({ type: "SET_STATUS", message: String(error) });
+      });
       return;
     }
     const anchor = (event.target as HTMLElement).closest("a[href]") as HTMLAnchorElement | null;

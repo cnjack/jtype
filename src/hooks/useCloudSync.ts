@@ -12,6 +12,7 @@ import { createSyncPushBatches, createSyncRunId, postSyncPush, requestWithSyncRe
 import { useRuntimeCapabilities } from "../app/RuntimeCapabilities";
 import { MOBILE_OAUTH_CALLBACK_URL } from "@shared/lib/mobileOAuth";
 import { registerMobileOAuthReturnHandler } from "../lib/mobileOAuthReturn";
+import { openWorkspaceForRuntime } from "../lib/workspaceRuntime";
 
 type PullOnlyOptions = {
   full?: boolean;
@@ -435,12 +436,15 @@ export function useCloudSync({ recoverMobileOAuth = false }: { recoverMobileOAut
       await tauri.saveAssetSyncState(rootPath, { clock: maxClock, bases });
       if (changedLocally) {
         try {
-          const workspace = await tauri.openWorkspace(rootPath);
+          const workspace = await openWorkspaceForRuntime(
+            rootPath,
+            capabilities.usesPartialWorkspace === true,
+          );
           dispatch({ type: "UPDATE_WORKSPACE", workspace });
         } catch { /* non-critical */ }
       }
     } catch { /* asset sync is best-effort; never break document sync */ }
-  }, [capabilities.clientType, dispatch, state.workspace, state.syncToken, getServiceUrl]);
+  }, [capabilities.clientType, capabilities.usesPartialWorkspace, dispatch, state.workspace, state.syncToken, getServiceUrl]);
 
   const runSyncWorkspaceToWeb = useCallback(async (options: SyncWorkspaceOptions = {}): Promise<SyncPushDocument | undefined> => {
     if (!state.workspace) {
@@ -888,14 +892,21 @@ export function useCloudSync({ recoverMobileOAuth = false }: { recoverMobileOAut
       try {
         await tauri.deleteSyncBases(state.workspace.rootPath, pullData.deletedPaths.map((d) => d.relativePath));
       } catch { /* non-critical */ }
-      const workspace = await tauri.openWorkspace(state.workspace.rootPath);
+      const workspace = await openWorkspaceForRuntime(
+        state.workspace.rootPath,
+        capabilities.usesPartialWorkspace === true,
+      );
       dispatch({ type: "UPDATE_WORKSPACE", workspace });
       console.log("[cloud:pull] workspace updated after deletions");
     }
     if (pullData.deletedFolders && pullData.deletedFolders.length > 0 && tauri.isAvailable) {
-      const workspace = await tauri.applyDeletedCloudFolders(
+      await tauri.applyDeletedCloudFolders(
         state.workspace.rootPath,
         pullData.deletedFolders.map((f) => ({ relativePath: f.relativePath }))
+      );
+      const workspace = await openWorkspaceForRuntime(
+        state.workspace.rootPath,
+        capabilities.usesPartialWorkspace === true,
       );
       dispatch({ type: "UPDATE_WORKSPACE", workspace });
     }
@@ -980,7 +991,10 @@ export function useCloudSync({ recoverMobileOAuth = false }: { recoverMobileOAut
         // Refresh workspace so Sidebar trash list re-renders
         if (trashChanged) {
           try {
-            const workspace = await tauri.openWorkspace(state.workspace.rootPath);
+            const workspace = await openWorkspaceForRuntime(
+              state.workspace.rootPath,
+              capabilities.usesPartialWorkspace === true,
+            );
             dispatch({ type: "UPDATE_WORKSPACE", workspace });
           } catch { /* ignore */ }
         }
@@ -1007,7 +1021,7 @@ export function useCloudSync({ recoverMobileOAuth = false }: { recoverMobileOAut
       // Used to prevent push from re-deleting files that the server actively has.
       receivedDocumentPaths: pullData.documents.map((d) => d.relativePath),
     };
-  }, [capabilities.clientType, dispatch, state.workspace, state.syncToken, state.cloudProfile, getServiceUrl, handleWorkspaceAccessLoss]);
+  }, [capabilities.clientType, capabilities.usesPartialWorkspace, dispatch, state.workspace, state.syncToken, state.cloudProfile, getServiceUrl, handleWorkspaceAccessLoss]);
 
   const applyCloudDocuments = useCallback(async (documents: CloudDocument[], folders: CloudFolder[] = [], skipRelativePath?: string): Promise<CloudDocument[]> => {
     if (!state.workspace || (documents.length === 0 && folders.length === 0)) {
@@ -1046,10 +1060,14 @@ export function useCloudSync({ recoverMobileOAuth = false }: { recoverMobileOAut
       }))
     );
     markCloudWriteBatch(hashEntries);
-    const { workspace, writtenPaths } = await tauri.applyCloudDocuments(
+    const { writtenPaths } = await tauri.applyCloudDocuments(
       state.workspace.rootPath,
       filtered.map((d) => ({ relativePath: d.relativePath, content: d.content })),
       folders.map((f) => ({ relativePath: f.relativePath }))
+    );
+    const workspace = await openWorkspaceForRuntime(
+      state.workspace.rootPath,
+      capabilities.usesPartialWorkspace === true,
     );
     dispatch({ type: "UPDATE_WORKSPACE", workspace });
     // Only the docs the Rust side actually wrote to disk. Returning `filtered`
@@ -1074,7 +1092,7 @@ export function useCloudSync({ recoverMobileOAuth = false }: { recoverMobileOAut
       dispatch({ type: "OPEN_FILE", path: state.currentPath, relativePath: state.currentRelativePath, content: currentDoc.content, kind: state.currentKind as EntryKind });
     }
     return applied;
-  }, [dispatch, state.workspace, state.isDirty, state.currentRelativePath, state.currentPath, state.currentKind, state.editorContent]);
+  }, [capabilities.usesPartialWorkspace, dispatch, state.workspace, state.isDirty, state.currentRelativePath, state.currentPath, state.currentKind, state.editorContent]);
 
   // Keep ref in sync so pullCloudWorkspace always uses the latest version.
   applyCloudDocumentsRef.current = applyCloudDocuments;

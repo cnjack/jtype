@@ -42,6 +42,23 @@ pub struct WorkspaceSnapshot {
     pub name: String,
     pub entries: Vec<FileTreeNode>,
     pub metadata_created: bool,
+    pub completeness: WorkspaceSnapshotCompleteness,
+    pub entry_pages: HashMap<String, WorkspaceEntryPageState>,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum WorkspaceSnapshotCompleteness {
+    Complete,
+    Partial,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkspaceEntryPageState {
+    pub loaded_entries: usize,
+    pub total_entries: usize,
+    pub next_cursor: Option<String>,
 }
 
 /// One deterministic, shallow page of direct children inside a vault folder.
@@ -297,6 +314,17 @@ pub fn detect_vault_root(file_path: &Path) -> Option<PathBuf> {
     }
 }
 
+fn workspace_display_name(root: &Path) -> String {
+    if root.file_name().map_or(false, |name| name == ".jtype") {
+        "Vault".to_string()
+    } else {
+        root.file_name()
+            .and_then(|value| value.to_str())
+            .unwrap_or("Workspace")
+            .to_string()
+    }
+}
+
 pub fn open_workspace(root: &Path) -> Result<WorkspaceSnapshot, String> {
     #[cfg(debug_assertions)]
     let started_at = Instant::now();
@@ -308,14 +336,7 @@ pub fn open_workspace(root: &Path) -> Result<WorkspaceSnapshot, String> {
     let mut entries = read_children(root, root)?;
     sort_nodes(&mut entries);
 
-    let name = if root.file_name().map_or(false, |n| n == ".jtype") {
-        "Vault".to_string()
-    } else {
-        root.file_name()
-            .and_then(|value| value.to_str())
-            .unwrap_or("Workspace")
-            .to_string()
-    };
+    let name = workspace_display_name(root);
 
     #[cfg(debug_assertions)]
     {
@@ -333,6 +354,53 @@ pub fn open_workspace(root: &Path) -> Result<WorkspaceSnapshot, String> {
         name,
         entries,
         metadata_created,
+        completeness: WorkspaceSnapshotCompleteness::Complete,
+        entry_pages: HashMap::new(),
+    })
+}
+
+/// Open only the first shallow root page while preserving the canonical
+/// `WorkspaceSnapshot` shape consumed by the shared Desktop/mobile UI.
+/// Desktop keeps using `open_workspace`; mobile opts into this adapter through
+/// an explicit runtime capability and hydrates folders with
+/// `read_workspace_entry_page`.
+pub fn open_workspace_partial(
+    root: &Path,
+    page_size: usize,
+) -> Result<WorkspaceSnapshot, String> {
+    #[cfg(debug_assertions)]
+    let started_at = Instant::now();
+    if !root.is_dir() {
+        return Err("Workspace path must be a directory.".to_string());
+    }
+
+    let metadata_created = ensure_workspace_metadata(root)?;
+    let page = read_workspace_entry_page(root, "", None, page_size)?;
+    let mut entry_pages = HashMap::new();
+    entry_pages.insert(
+        String::new(),
+        WorkspaceEntryPageState {
+            loaded_entries: page.entries.len(),
+            total_entries: page.total_entries,
+            next_cursor: page.next_cursor.clone(),
+        },
+    );
+
+    #[cfg(debug_assertions)]
+    eprintln!(
+        "[JTypePerformance] workspace_open_partial loaded={} total={} elapsed_ms={}",
+        page.entries.len(),
+        page.total_entries,
+        started_at.elapsed().as_millis(),
+    );
+
+    Ok(WorkspaceSnapshot {
+        root_path: path_to_string(root),
+        name: workspace_display_name(root),
+        entries: page.entries,
+        metadata_created,
+        completeness: WorkspaceSnapshotCompleteness::Partial,
+        entry_pages,
     })
 }
 
@@ -2656,10 +2724,41 @@ mod tests {
         let snapshot = open_workspace(dir.path()).unwrap();
 
         assert!(snapshot.metadata_created);
+        assert_eq!(snapshot.completeness, WorkspaceSnapshotCompleteness::Complete);
+        assert!(snapshot.entry_pages.is_empty());
         assert!(dir.path().join(".jtype").join("workspace.json").exists());
         assert!(dir.path().join(".jtype").join("publish.json").exists());
         assert_eq!(snapshot.entries[0].name, ".jtype");
         assert_eq!(snapshot.entries[1].name, "notes");
+    }
+
+    #[test]
+    fn opens_partial_workspace_with_explicit_root_page_state() {
+        let dir = tempdir().unwrap();
+        let root = dir.path();
+        fs::create_dir(root.join("nested")).unwrap();
+        fs::write(root.join("nested/inside.md"), "# Inside").unwrap();
+        for index in 0..205 {
+            fs::write(root.join(format!("note-{index:03}.md")), format!("# {index}"))
+                .unwrap();
+        }
+
+        let snapshot = open_workspace_partial(root, 160).unwrap();
+
+        assert!(snapshot.metadata_created);
+        assert_eq!(snapshot.completeness, WorkspaceSnapshotCompleteness::Partial);
+        assert_eq!(snapshot.entries.len(), 160);
+        assert_eq!(snapshot.entries[0].relative_path, ".jtype");
+        assert_eq!(snapshot.entries[1].relative_path, "nested");
+        assert!(snapshot.entries[1].children.is_empty());
+        assert_eq!(
+            snapshot.entry_pages.get(""),
+            Some(&WorkspaceEntryPageState {
+                loaded_entries: 160,
+                total_entries: 207,
+                next_cursor: Some("160".to_string()),
+            })
+        );
     }
 
     #[test]

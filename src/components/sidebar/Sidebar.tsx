@@ -1,16 +1,15 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { isCurrentVaultReadOnly, useAppDispatch, useAppState } from "../../app/AppState";
-import { useFileSystem, useMobileInteraction, useTouchActionGesture } from "../../hooks";
+import { useFileSystem, useMobileInteraction, useTouchActionGesture, useWorkspaceEntrySearch } from "../../hooks";
 import { tauri } from "../../lib/tauri";
 import { appStorage } from "../../lib/storage";
 import {
   progressiveTreeWindow,
-  searchWorkspaceDocuments,
   TREE_RENDER_BATCH_SIZE,
   workspaceIndexFor,
 } from "../../lib/workspaceIndex";
-import type { EntryKind, FileTreeNode, LocalTrashItem, RecentItem, TrashMetadataItem } from "../../lib/types";
+import type { EntryKind, FileTreeNode, LocalTrashItem, RecentItem, TrashMetadataItem, WorkspaceEntryPageState } from "../../lib/types";
 import { useCallback, useEffect, useState, useMemo, type ReactNode } from "react";
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle, Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/react";
 import { DeleteFolderDialog } from "../modals/DeleteFolderDialog";
@@ -46,6 +45,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { resourceTypeForPath } from "@shared/lib/fileTypes";
 import { useRuntimeCapabilities } from "../../app/RuntimeCapabilities";
+import { workspaceSnapshotIsPartial } from "../../lib/workspacePagination";
 
 /** Tree icon for a diagram resource, by its concrete type. */
 function diagramIcon(name: string) {
@@ -81,6 +81,10 @@ export function Sidebar() {
   const workspaceName = activeCloudBinding?.workspaceName || state.workspace?.name || t`No vault`;
   const workspaceIndex = workspaceIndexFor(state.workspace?.entries);
   const docCount = workspaceIndex.documents.length;
+  const partialWorkspace = workspaceSnapshotIsPartial(state.workspace);
+  const documentCountLabel = state.workspace
+    ? partialWorkspace ? t`${docCount} documents loaded` : t`${docCount} documents`
+    : t`Open a vault or Markdown file.`;
 
   return (
     <aside id="workspace-sidebar" className="flex min-h-0 flex-col bg-transparent">
@@ -96,7 +100,7 @@ export function Sidebar() {
             <span className="min-w-0 flex-1">
               <span id="workspace-name" className="block truncate text-sm font-semibold text-stone-950">{workspaceName}</span>
               <span id="workspace-path" className="block truncate text-xs text-[#6b7773]">
-                {state.workspace ? t`${docCount} documents` : t`Open a vault or Markdown file.`}
+                {documentCountLabel}
               </span>
             </span>
             <ChevronDownIcon className="h-4 w-4 shrink-0 text-[#8a9691]" />
@@ -114,7 +118,7 @@ export function Sidebar() {
                   <span className="min-w-0 flex-1">
                     <span className="block truncate">{workspaceName}</span>
                     <span className="block truncate text-xs font-normal text-[#6b7773]">
-                      <Trans>{docCount} documents</Trans>
+                      {partialWorkspace ? <Trans>{docCount} documents loaded</Trans> : <Trans>{docCount} documents</Trans>}
                     </span>
                   </span>
                   <CheckIcon className="h-4 w-4 shrink-0 text-[#006f6b]" />
@@ -260,6 +264,7 @@ function ExplorerPanel() {
   }, [state.workspace?.rootPath]);
 
   const workspaceIndex = workspaceIndexFor(state.workspace?.entries);
+  const partialWorkspace = workspaceSnapshotIsPartial(state.workspace);
   const allFolderPaths = useMemo(
     () => new Set(workspaceIndex.folders.map((node) => node.relativePath)),
     [workspaceIndex],
@@ -272,8 +277,11 @@ function ExplorerPanel() {
       dispatch({ type: "SET_EXPANDED_FOLDERS", folders: new Set<string>() });
     } else {
       dispatch({ type: "SET_EXPANDED_FOLDERS", folders: new Set(allFolderPaths) });
+      if (partialWorkspace) {
+        for (const folderPath of allFolderPaths) void fs.loadWorkspaceEntryPage(folderPath);
+      }
     }
-  }, [allExpanded, allFolderPaths, dispatch]);
+  }, [allExpanded, allFolderPaths, dispatch, fs, partialWorkspace]);
 
   const handleDrop = useCallback(async (targetFolder: string, sourceRelativePath: string) => {
     if (!state.workspace) return;
@@ -301,10 +309,14 @@ function ExplorerPanel() {
     }
   }, [isCloudViewer, state.workspace, dispatch, fs]);
 
-  const filteredResults = useMemo(() => {
-    if (!query) return null;
-    return searchWorkspaceDocuments(workspaceIndex, query, 30);
-  }, [workspaceIndex, query]);
+  const search = useWorkspaceEntrySearch(
+    query ? state.workspace : null,
+    query,
+    "",
+    "documents",
+    30,
+  );
+  const filteredResults = query ? search.entries : null;
 
   const showNodeMenu = useCallback((node: FileTreeNode, x: number, y: number) => {
     setContextMenu({ node, x, y });
@@ -317,9 +329,18 @@ function ExplorerPanel() {
     [state.workspace?.entries],
   );
 
-  const openNode = useCallback((node: FileTreeNode) => {
+  const toggleNode = useCallback((node: TreeDisplayNode) => {
+    const sourceRelativePath = node.childSourceRelativePath ?? node.relativePath;
+    const isOpening = !state.expandedFolders.has(node.relativePath);
+    dispatch({ type: "TOGGLE_EXPAND_FOLDER", folderPath: node.relativePath });
+    if (isOpening && partialWorkspace) {
+      void fs.loadWorkspaceEntryPage(sourceRelativePath);
+    }
+  }, [dispatch, fs, partialWorkspace, state.expandedFolders]);
+
+  const openNode = useCallback((node: TreeDisplayNode) => {
     if (node.kind === "folder") {
-      dispatch({ type: "TOGGLE_EXPAND_FOLDER", folderPath: node.relativePath });
+      toggleNode(node);
     } else if (node.kind === "markdown") {
       void fs.openMarkdownFile(node.path, node.relativePath);
     } else if (node.kind === "diagram") {
@@ -327,11 +348,7 @@ function ExplorerPanel() {
     } else {
       dispatch({ type: "SELECT_TREE_NODE", node });
     }
-  }, [dispatch, fs]);
-
-  const toggleNode = useCallback((relativePath: string) => {
-    dispatch({ type: "TOGGLE_EXPAND_FOLDER", folderPath: relativePath });
-  }, [dispatch]);
+  }, [dispatch, fs, toggleNode]);
 
   const loadTrash = useCallback(async () => {
     const items = await fs.listTrash();
@@ -405,6 +422,7 @@ function ExplorerPanel() {
           data-index-size={workspaceIndex.documents.length}
           data-index-build-ms={workspaceIndex.buildDurationMs}
           data-result-count={filteredResults.length}
+          data-partial-workspace={search.isPartial || undefined}
         >
           {filteredResults.length === 0 ? (
             <p className="text-xs text-stone-500"><Trans>No matches.</Trans></p>
@@ -496,6 +514,10 @@ function ExplorerPanel() {
                     onContextMenu={showNodeMenu}
                     onActionMenu={showNodeMenu}
                     onDrop={handleDrop}
+                    partialWorkspace={partialWorkspace}
+                    entryPages={state.workspace.entryPages ?? {}}
+                    pageRelativePath=""
+                    onLoadPage={(relativePath) => { void fs.loadWorkspaceEntryPage(relativePath); }}
                   />
                 )}
               </>
@@ -786,17 +808,23 @@ function ExplorerPanel() {
  * sibling `<name>/` folder are shown as one expandable board node (the folder's
  * card files nest under the board), so they don't appear as two separate entries.
  */
-function groupBoardsWithFolders(entries: FileTreeNode[]): FileTreeNode[] {
+type TreeDisplayNode = FileTreeNode & { childSourceRelativePath?: string };
+
+function groupBoardsWithFolders(entries: FileTreeNode[]): TreeDisplayNode[] {
   const boardBases = new Set<string>();
   for (const e of entries) if (e.kind === "board") boardBases.add(e.name.replace(/\.board$/i, ""));
   const folderByName = new Map<string, FileTreeNode>();
   for (const e of entries) if (e.kind === "folder") folderByName.set(e.name, e);
-  const out: FileTreeNode[] = [];
+  const out: TreeDisplayNode[] = [];
   for (const e of entries) {
     if (e.kind === "folder" && boardBases.has(e.name)) continue; // merged into its board
     if (e.kind === "board") {
       const folder = folderByName.get(e.name.replace(/\.board$/i, ""));
-      out.push(folder ? { ...e, children: [...e.children, ...folder.children] } : e);
+      out.push(folder ? {
+        ...e,
+        children: [...e.children, ...folder.children],
+        childSourceRelativePath: folder.relativePath,
+      } : e);
     } else {
       out.push(e);
     }
@@ -806,20 +834,34 @@ function groupBoardsWithFolders(entries: FileTreeNode[]): FileTreeNode[] {
 
 type TreeNodeListProps = {
   id?: string;
-  nodes: FileTreeNode[];
+  nodes: TreeDisplayNode[];
   depth: number;
   activePath: string;
   expandedPaths: Set<string>;
   touchPrimary: boolean;
-  onOpen: (node: FileTreeNode) => void;
-  onToggle: (relativePath: string) => void;
+  onOpen: (node: TreeDisplayNode) => void;
+  onToggle: (node: TreeDisplayNode) => void;
   onTouchFeedback: ReturnType<typeof useMobileInteraction>;
   onContextMenu: (node: FileTreeNode, x: number, y: number) => void;
   onActionMenu: (node: FileTreeNode, x: number, y: number) => void;
   onDrop: (targetFolder: string, sourceRelativePath: string) => void;
+  partialWorkspace: boolean;
+  entryPages: Record<string, WorkspaceEntryPageState>;
+  pageRelativePath: string;
+  onLoadPage: (relativePath: string) => void;
 };
 
-function TreeNodeList({ id, nodes, depth, activePath, ...callbacks }: TreeNodeListProps) {
+function TreeNodeList({
+  id,
+  nodes,
+  depth,
+  activePath,
+  partialWorkspace,
+  entryPages,
+  pageRelativePath,
+  onLoadPage,
+  ...callbacks
+}: TreeNodeListProps) {
   const [requestedCount, setRequestedCount] = useState(TREE_RENDER_BATCH_SIZE);
   const windowRange = useMemo(
     () => progressiveTreeWindow(nodes, requestedCount, activePath),
@@ -828,6 +870,10 @@ function TreeNodeList({ id, nodes, depth, activePath, ...callbacks }: TreeNodeLi
   const renderedCount = windowRange.end - windowRange.start;
   const beforeCount = windowRange.start;
   const afterCount = nodes.length - windowRange.end;
+  const nativePage = entryPages[pageRelativePath];
+  const nativeRemaining = nativePage
+    ? Math.max(0, nativePage.totalEntries - nativePage.loadedEntries)
+    : 0;
   const showMore = () => setRequestedCount((count) => count + TREE_RENDER_BATCH_SIZE);
 
   return (
@@ -852,7 +898,16 @@ function TreeNodeList({ id, nodes, depth, activePath, ...callbacks }: TreeNodeLi
         </li>
       )}
       {nodes.slice(windowRange.start, windowRange.end).map((node) => (
-        <TreeNode key={node.path} node={node} depth={depth} activePath={activePath} {...callbacks} />
+        <TreeNode
+          key={node.path}
+          node={node}
+          depth={depth}
+          activePath={activePath}
+          partialWorkspace={partialWorkspace}
+          entryPages={entryPages}
+          onLoadPage={onLoadPage}
+          {...callbacks}
+        />
       ))}
       {afterCount > 0 && (
         <li>
@@ -863,6 +918,19 @@ function TreeNodeList({ id, nodes, depth, activePath, ...callbacks }: TreeNodeLi
           >
             <span><Trans>Show more</Trans></span>
             <span className="rounded-full bg-[#e8f6f2] px-2 py-0.5 tabular-nums">{afterCount}</span>
+          </button>
+        </li>
+      )}
+      {partialWorkspace && nativePage?.nextCursor && (
+        <li>
+          <button
+            type="button"
+            className="tree-button justify-center text-xs font-semibold text-[#006f6b]"
+            data-native-page={pageRelativePath || "root"}
+            onClick={() => onLoadPage(pageRelativePath)}
+          >
+            <span><Trans>Show more</Trans></span>
+            <span className="rounded-full bg-[#e8f6f2] px-2 py-0.5 tabular-nums">{nativeRemaining}</span>
           </button>
         </li>
       )}
@@ -882,13 +950,17 @@ function TreeNode({
   onContextMenu,
   onActionMenu,
   onDrop,
-}: Omit<TreeNodeListProps, "id" | "nodes"> & { node: FileTreeNode }) {
+  partialWorkspace,
+  entryPages,
+  onLoadPage,
+}: Omit<TreeNodeListProps, "id" | "nodes" | "pageRelativePath"> & { node: TreeDisplayNode }) {
   const [dragOver, setDragOver] = useState(false);
 
   const isActive = node.relativePath === activePath;
   const isFolder = node.kind === "folder";
   // A board with merged card children is expandable too (chevron toggles, row opens it).
-  const isExpandable = isFolder || (node.kind === "board" && node.children.length > 0);
+  const childSourceRelativePath = node.childSourceRelativePath ?? node.relativePath;
+  const isExpandable = isFolder || (node.kind === "board" && (node.children.length > 0 || !!node.childSourceRelativePath));
   const isExpanded = isExpandable && expandedPaths.has(node.relativePath);
   const NodeIcon = isFolder
     ? FolderIcon
@@ -967,7 +1039,7 @@ function TreeNode({
             className="shrink-0 cursor-pointer text-[#8a9691]"
             onClick={(e) => {
               e.stopPropagation();
-              onToggle(node.relativePath);
+              onToggle(node);
             }}
           >
             {isExpanded ? <ChevronDownIcon className="h-3.5 w-3.5" /> : <ChevronRightIcon className="h-3.5 w-3.5" />}
@@ -991,7 +1063,7 @@ function TreeNode({
           <EllipsisHorizontalIcon className="h-5 w-5" />
         </button>
       )}
-      {isExpandable && isExpanded && node.children.length > 0 && (
+      {isExpandable && isExpanded && (
         <TreeNodeList
           nodes={groupBoardsWithFolders(node.children)}
           depth={depth + 1}
@@ -1004,6 +1076,10 @@ function TreeNode({
           onContextMenu={onContextMenu}
           onActionMenu={onActionMenu}
           onDrop={onDrop}
+          partialWorkspace={partialWorkspace}
+          entryPages={entryPages}
+          pageRelativePath={childSourceRelativePath}
+          onLoadPage={onLoadPage}
         />
       )}
     </li>

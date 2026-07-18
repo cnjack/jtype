@@ -4,10 +4,13 @@ import { tauri } from "../lib/tauri";
 import { useAppState, useAppDispatch } from "../app/AppState";
 import { sha256Hex } from "../lib/utils";
 import { consumeCloudWrite } from "../lib/cloudWriteHashes";
+import { useRuntimeCapabilities } from "../app/RuntimeCapabilities";
+import { openWorkspaceForRuntime } from "../lib/workspaceRuntime";
 
 export function useFileWatcher(onExternalChange?: (changedPaths: string[]) => void) {
   const state = useAppState();
   const dispatch = useAppDispatch();
+  const capabilities = useRuntimeCapabilities();
   const unlistenRef = useRef<UnlistenFn | null>(null);
   const debounceRef = useRef<number | null>(null);
   const lastSaveTimeRef = useRef<number>(0);
@@ -54,7 +57,10 @@ export function useFileWatcher(onExternalChange?: (changedPaths: string[]) => vo
           const { currentPath, currentRelativePath, isDirty, rootPath: currentRootPath } = latestStateRef.current;
           if (!currentRootPath) return;
 
-          const workspace = await t.openWorkspace(currentRootPath);
+          const workspace = await openWorkspaceForRuntime(
+            currentRootPath,
+            capabilities.usesPartialWorkspace === true,
+          );
           dispatch({ type: "UPDATE_WORKSPACE", workspace });
 
           const changedPaths = event.payload;
@@ -119,7 +125,7 @@ export function useFileWatcher(onExternalChange?: (changedPaths: string[]) => vo
       }
       tauri.stopFileWatcher().catch(() => {});
     };
-  }, [state.workspace?.rootPath, dispatch]);
+  }, [capabilities.usesPartialWorkspace, state.workspace?.rootPath, dispatch]);
 
   useEffect(() => {
     if (!state.isDirty) {

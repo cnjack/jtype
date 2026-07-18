@@ -84,6 +84,16 @@ export type WorkspaceSnapshot = {
   name: string;
   entries: FileTreeNode[];
   metadataCreated: boolean;
+  /** Missing means a legacy/full Desktop snapshot. */
+  completeness?: "complete" | "partial";
+  /** Direct-child page state keyed by vault-relative folder path; root is "". */
+  entryPages?: Record<string, WorkspaceEntryPageState>;
+};
+
+export type WorkspaceEntryPageState = {
+  loadedEntries: number;
+  totalEntries: number;
+  nextCursor: string | null;
 };
 
 /**
@@ -575,4 +585,6 @@ export type RuntimeCapabilities = {
   supportsFileDrop: boolean;
   supportsExternalVault: boolean;
   usesAppPrivateVault: boolean;
+  /** Mobile can hydrate the canonical tree page-by-page; Desktop stays full. */
+  usesPartialWorkspace?: boolean;
 };

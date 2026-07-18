@@ -12,5 +12,6 @@ export { useMobileDocumentNavigation } from "./useMobileDocumentNavigation";
 export { useMobileDraftRecovery } from "./useMobileDraftRecovery";
 export { useMobileInteraction } from "./useMobileInteraction";
 export { useTouchActionGesture } from "./useTouchActionGesture";
+export { useWorkspaceEntrySearch } from "./useWorkspaceEntrySearch";
 export type { MobileSyncRecoveryReason } from "./useMobileSyncRecovery";
 export type { CommandDef } from "./useCommands";

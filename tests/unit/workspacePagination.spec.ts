@@ -18,6 +18,8 @@ function workspace(entries: FileTreeNode[] = []): WorkspaceSnapshot {
     name: "Vault",
     entries,
     metadataCreated: false,
+    completeness: "partial",
+    entryPages: {},
   };
 }
 
@@ -51,6 +53,16 @@ test("merges sequential root pages into the canonical workspace snapshot", () =>
   expect(second.entries.map((entry) => entry.relativePath))
     .toEqual(["docs", "note-001.md", "note-002.md"]);
   expect(first.entries).toHaveLength(2);
+  expect(first.entryPages?.[""]).toEqual({
+    loadedEntries: 2,
+    totalEntries: 3,
+    nextCursor: "2",
+  });
+  expect(second.entryPages?.[""]).toEqual({
+    loadedEntries: 3,
+    totalEntries: 3,
+    nextCursor: null,
+  });
 });
 
 test("hydrates a nested folder without changing sibling UI nodes", () => {
@@ -64,6 +76,11 @@ test("hydrates a nested folder without changing sibling UI nodes", () => {
   expect(hydrated.entries[0].children.map((entry) => entry.relativePath))
     .toEqual(["docs/a.md", "docs/b.md"]);
   expect(hydrated.entries[1]).toBe(sibling);
+  expect(hydrated.entryPages?.docs).toEqual({
+    loadedEntries: 2,
+    totalEntries: 2,
+    nextCursor: null,
+  });
 });
 
 test("root refresh preserves children already loaded for the same folder", () => {
@@ -76,6 +93,7 @@ test("root refresh preserves children already loaded for the same folder", () =>
 
   expect(refreshed.entries[0].children).toEqual([child]);
   expect(refreshed.entries[1].relativePath).toBe("new.md");
+  expect(refreshed.entryPages?.[""]?.loadedEntries).toBe(2);
 });
 
 test("rejects out-of-order, duplicate, and non-child pages", () => {

@@ -17,7 +17,9 @@ import {
 } from "../lib/mobileNotifications";
 import { workspaceIndexFor } from "../lib/workspaceIndex";
 import { isTauriRuntime } from "../lib/utils";
-import type { WorkspaceSnapshot } from "../lib/types";
+import type { FileTreeNode, WorkspaceSnapshot } from "../lib/types";
+import { workspaceSnapshotIsPartial } from "../lib/workspacePagination";
+import { resolveWorkspaceEntry } from "../lib/workspaceResolver";
 
 type MobileDocumentNavigationOperations = {
   ready: boolean;
@@ -29,6 +31,8 @@ type MobileDocumentNavigationOperations = {
 
 type PendingRoute = MobileDocumentRoute & {
   pulled: boolean;
+  nativeResolved: boolean;
+  resolvedNode: FileTreeNode | null;
 };
 
 /**
@@ -51,7 +55,7 @@ export function useMobileDocumentNavigation({
   const operationInFlightRef = useRef(false);
 
   const queueRoute = (route: MobileDocumentRoute) => {
-    setPending({ ...route, pulled: false });
+    setPending({ ...route, pulled: false, nativeResolved: false, resolvedNode: null });
   };
 
   useEffect(() => {
@@ -143,12 +147,37 @@ export function useMobileDocumentNavigation({
       return;
     }
 
-    const node = workspaceIndexFor(state.workspace.entries).allNodes.find(
+    const loadedNode = workspaceIndexFor(state.workspace.entries).allNodes.find(
       (item) => item.relativePath === pending.relativePath,
     );
+    if (!loadedNode && workspaceSnapshotIsPartial(state.workspace) && !pending.nativeResolved) {
+      operationInFlightRef.current = true;
+      void resolveWorkspaceEntry(state.workspace, pending.relativePath)
+        .then((resolvedNode) => {
+          setPending((current) => current
+            && current.workspaceId === pending.workspaceId
+            && current.relativePath === pending.relativePath
+            ? { ...current, nativeResolved: true, resolvedNode }
+            : current);
+        })
+        .catch(() => {
+          setPending((current) => current
+            && current.workspaceId === pending.workspaceId
+            && current.relativePath === pending.relativePath
+            ? { ...current, nativeResolved: true, resolvedNode: null }
+            : current);
+        })
+        .finally(() => {
+          operationInFlightRef.current = false;
+          setNavigationRevision((value) => value + 1);
+        });
+      return;
+    }
+
+    const node = loadedNode ?? pending.resolvedNode;
     if (!node && !pending.pulled && state.syncToken) {
       operationInFlightRef.current = true;
-      setPending({ ...pending, pulled: true });
+      setPending({ ...pending, pulled: true, nativeResolved: false, resolvedNode: null });
       void pullOnly({ full: true, reason: "mobile-document-route" })
         .catch(() => undefined)
         .finally(() => {

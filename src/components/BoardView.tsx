@@ -23,6 +23,7 @@ import { basename, normalizePath } from "../lib/utils";
 import type { BoardConfig, BoardCard, CardTemplate } from "../lib/types";
 import { useRuntimeCapabilities } from "../app/RuntimeCapabilities";
 import { useMobileInteraction } from "../hooks/useMobileInteraction";
+import { openWorkspaceForRuntime } from "../lib/workspaceRuntime";
 
 function rand(): string {
   return Math.random().toString(36).slice(2, 6);
@@ -232,10 +233,16 @@ export function BoardView({ boardPath, boardRelativePath }: { boardPath: string;
       }
       const path = `${rootPath}/${rel}`;
       await tauri.writeFile(path, content);
-      dispatch({ type: "UPDATE_WORKSPACE", workspace: await tauri.openWorkspace(rootPath) });
+      dispatch({
+        type: "UPDATE_WORKSPACE",
+        workspace: await openWorkspaceForRuntime(
+          rootPath,
+          capabilities.usesPartialWorkspace === true,
+        ),
+      });
       return path;
     },
-    [rootPath, cardsDir, dispatch],
+    [capabilities.usesPartialWorkspace, rootPath, cardsDir, dispatch],
   );
 
   const actions: BoardActions = useMemo(
@@ -317,8 +324,14 @@ export function BoardView({ boardPath, boardRelativePath }: { boardPath: string;
         if (!raw) return;
         if (!(await confirm(t`Delete card "${card.title}"? It moves to the trash.`))) return;
         try {
-          const ws = await tauri.trashEntry(rootPath, raw.relativePath);
-          dispatch({ type: "UPDATE_WORKSPACE", workspace: ws });
+          await tauri.trashEntry(rootPath, raw.relativePath);
+          dispatch({
+            type: "UPDATE_WORKSPACE",
+            workspace: await openWorkspaceForRuntime(
+              rootPath,
+              capabilities.usesPartialWorkspace === true,
+            ),
+          });
           await load();
         } catch (e) {
           setError(String(e));
@@ -328,13 +341,22 @@ export function BoardView({ boardPath, boardRelativePath }: { boardPath: string;
         if (cardsToDelete.length === 0) return;
         if (!(await confirm(t`Delete ${cardsToDelete.length} cards? They move to the trash.`))) return;
         try {
-          let ws = null;
+          let changed = false;
           for (const card of cardsToDelete) {
             const raw = rawById.get(card.id);
             if (!raw) continue;
-            ws = await tauri.trashEntry(rootPath, raw.relativePath);
+            await tauri.trashEntry(rootPath, raw.relativePath);
+            changed = true;
           }
-          if (ws) dispatch({ type: "UPDATE_WORKSPACE", workspace: ws });
+          if (changed) {
+            dispatch({
+              type: "UPDATE_WORKSPACE",
+              workspace: await openWorkspaceForRuntime(
+                rootPath,
+                capabilities.usesPartialWorkspace === true,
+              ),
+            });
+          }
           await load();
         } catch (e) {
           setError(String(e));
@@ -381,7 +403,13 @@ export function BoardView({ boardPath, boardRelativePath }: { boardPath: string;
             /* overwrite */
           }
           await tauri.writeFile(`${rootPath}/${rel}`, writeFrontmatter(body, next));
-          dispatch({ type: "UPDATE_WORKSPACE", workspace: await tauri.openWorkspace(rootPath) });
+          dispatch({
+            type: "UPDATE_WORKSPACE",
+            workspace: await openWorkspaceForRuntime(
+              rootPath,
+              capabilities.usesPartialWorkspace === true,
+            ),
+          });
           await load();
         } catch (e) {
           setError(String(e));
@@ -456,7 +484,7 @@ export function BoardView({ boardPath, boardRelativePath }: { boardPath: string;
       },
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [config, rawCards, rawById, rootPath, cardsDir, load, saveConfig, writeNew, prompt, confirm, dispatch],
+    [config, rawCards, rawById, rootPath, cardsDir, load, saveConfig, writeNew, prompt, confirm, dispatch, capabilities.usesPartialWorkspace],
   );
 
   const createFromTemplate = useCallback(

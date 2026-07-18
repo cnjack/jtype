@@ -10,12 +10,22 @@ import { httpRequest } from "@shared/lib/http";
 import { basename, isMarkdownPath, relativePathFromWorkspace, normalizePath } from "../lib/utils";
 import { isEditableResourcePath, isDiagramTextPath, isViewableAssetPath } from "@shared/lib/fileTypes";
 import { writeFrontmatter, titleFromMarkdown } from "@shared/lib/frontmatter";
-import type { RecentItem, FileTreeNode, BoardConfig, ExternalVaultConflictResolution } from "../lib/types";
+import type { RecentItem, FileTreeNode, BoardConfig, ExternalVaultConflictResolution, WorkspaceSnapshot } from "../lib/types";
 import { extractMarkdownLinks } from "../lib/utils";
 import { workspaceIndexFor } from "../lib/workspaceIndex";
 import { appStorage } from "../lib/storage";
 import type { AICommandProposal } from "../lib/aiCommands";
 import { useRuntimeCapabilities } from "../app/RuntimeCapabilities";
+import {
+  adaptWorkspaceForRuntime,
+  openDefaultVaultForRuntime,
+  openWorkspaceForRuntime,
+} from "../lib/workspaceRuntime";
+import {
+  WORKSPACE_ENTRY_PAGE_SIZE,
+  workspaceEntryPageState,
+  workspaceSnapshotIsPartial,
+} from "../lib/workspacePagination";
 
 export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
   const dispatch = useAppDispatch();
@@ -24,7 +34,24 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
   const prompt = usePrompt();
   const confirm = useConfirm();
   const onAfterSaveRef = useRef(onAfterSave);
+  const workspacePageLoadsRef = useRef(new Set<string>());
   onAfterSaveRef.current = onAfterSave;
+  const usePartialWorkspace = capabilities.usesPartialWorkspace === true;
+  const adaptWorkspace = useCallback(
+    (workspace: WorkspaceSnapshot) => adaptWorkspaceForRuntime(workspace, usePartialWorkspace),
+    [usePartialWorkspace],
+  );
+  const updateWorkspaceForRuntime = useCallback(async (
+    workspace: WorkspaceSnapshot,
+    displayName?: string,
+  ) => {
+    const runtimeWorkspace = await adaptWorkspace(workspace);
+    const nextWorkspace = displayName
+      ? { ...runtimeWorkspace, name: displayName }
+      : runtimeWorkspace;
+    dispatch({ type: "UPDATE_WORKSPACE", workspace: nextWorkspace });
+    return nextWorkspace;
+  }, [adaptWorkspace, dispatch]);
   const currentVaultSettings = state.workspace ? state.vaultSettings[state.workspace.rootPath] : undefined;
   const currentVaultBinding = state.workspace
     ? state.vaultBindings.find((binding) => binding.localVaultPath === state.workspace?.rootPath)
@@ -141,13 +168,13 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
       if (!workspace && capabilities.usesAppPrivateVault) {
         if (state.lastWorkspacePath) {
           try {
-            workspace = await tauri.openWorkspace(state.lastWorkspacePath);
+            workspace = await openWorkspaceForRuntime(state.lastWorkspacePath, usePartialWorkspace);
           } catch {
             // A stale app-private path should not make an OS open-with request
             // fail. Fall back to the canonical default vault.
           }
         }
-        if (!workspace) workspace = await tauri.openDefaultVault();
+        if (!workspace) workspace = await openDefaultVaultForRuntime(usePartialWorkspace);
         const providerStatus = await tauri.inspectVaultProvider(workspace.rootPath);
         if (providerStatus.provider.kind === "externalMirror") {
           workspace = { ...workspace, name: providerStatus.provider.displayName };
@@ -165,11 +192,12 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
           ? state.currentRelativePath
           : state.currentRelativePath.split("/").slice(0, -1).join("/")
       );
-      const [nextWorkspace, imported] = await tauri.importExternalPaths(
+      const [nativeWorkspace, imported] = await tauri.importExternalPaths(
         workspace.rootPath,
         sourcePaths,
         targetFolder,
       );
+      const nextWorkspace = await adaptWorkspace(nativeWorkspace);
       dispatch({ type: "UPDATE_WORKSPACE", workspace: nextWorkspace });
 
       const firstFile = imported.find(
@@ -205,6 +233,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
   }, [
+    adaptWorkspace,
     capabilities.usesAppPrivateVault,
     dispatch,
     isVaultReadOnly,
@@ -214,6 +243,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     state.currentRelativePath,
     state.lastWorkspacePath,
     state.workspace,
+    usePartialWorkspace,
   ]);
 
   const chooseMarkdownFile = useCallback(async () => {
@@ -248,7 +278,8 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
         dispatch({ type: "SET_LOADING", isLoading: true });
         dispatch({ type: "SET_STATUS", message: "Choose a folder for this vault..." });
         const result = await tauri.initializeExternalVault();
-        const workspace = { ...result.workspace, name: result.provider.displayName };
+        const runtimeWorkspace = await adaptWorkspace(result.workspace);
+        const workspace = { ...runtimeWorkspace, name: result.provider.displayName };
         const providerStatus = { provider: result.provider, pendingWriteBack: false };
         dispatch({ type: "OPEN_WORKSPACE", workspace, providerStatus });
         dispatch({
@@ -273,13 +304,13 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } catch (error) {
       dispatch({ type: "SET_STATUS", message: String(error) });
     }
-  }, [capabilities.isMobile, capabilities.supportsExternalVault, dispatch]);
+  }, [adaptWorkspace, capabilities.isMobile, capabilities.supportsExternalVault, dispatch]);
 
   const openWorkspace = useCallback(async (path: string) => {
     try {
       dispatch({ type: "SET_LOADING", isLoading: true });
       dispatch({ type: "SET_STATUS", message: "Opening..." });
-      let workspace = await tauri.openWorkspace(path);
+      let workspace = await openWorkspaceForRuntime(path, usePartialWorkspace);
       const providerStatus = await tauri.inspectVaultProvider(workspace.rootPath);
       if (providerStatus.provider.kind === "externalMirror") {
         workspace = { ...workspace, name: providerStatus.provider.displayName };
@@ -294,13 +325,13 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch]);
+  }, [dispatch, usePartialWorkspace]);
 
   const openDefaultVault = useCallback(async () => {
     if (!tauri.isAvailable) return;
     try {
       dispatch({ type: "SET_LOADING", isLoading: true });
-      let workspace = await tauri.openDefaultVault();
+      let workspace = await openDefaultVaultForRuntime(usePartialWorkspace);
       const providerStatus = await tauri.inspectVaultProvider(workspace.rootPath);
       if (providerStatus.provider.kind === "externalMirror") {
         workspace = { ...workspace, name: providerStatus.provider.displayName };
@@ -313,7 +344,39 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch]);
+  }, [dispatch, usePartialWorkspace]);
+
+  const loadWorkspaceEntryPage = useCallback(async (
+    relativePath: string,
+    options: { refresh?: boolean } = {},
+  ) => {
+    const workspace = state.workspace;
+    if (!workspace || !workspaceSnapshotIsPartial(workspace)) return;
+    const currentPage = workspaceEntryPageState(workspace, relativePath);
+    if (!options.refresh && currentPage?.nextCursor === null) return;
+    const cursor = options.refresh ? null : currentPage?.nextCursor ?? null;
+    const key = `${workspace.rootPath}\0${relativePath}\0${cursor ?? "first"}`;
+    if (workspacePageLoadsRef.current.has(key)) return;
+
+    workspacePageLoadsRef.current.add(key);
+    try {
+      const page = await tauri.readWorkspaceEntryPage(
+        workspace.rootPath,
+        relativePath,
+        cursor,
+        WORKSPACE_ENTRY_PAGE_SIZE,
+      );
+      dispatch({
+        type: "MERGE_WORKSPACE_ENTRY_PAGE",
+        rootPath: workspace.rootPath,
+        page,
+      });
+    } catch (error) {
+      dispatch({ type: "SET_STATUS", message: String(error) });
+    } finally {
+      workspacePageLoadsRef.current.delete(key);
+    }
+  }, [dispatch, state.workspace]);
 
   const refreshVaultProvider = useCallback(async () => {
     if (!tauri.isAvailable || !state.workspace) return null;
@@ -339,8 +402,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
       dispatch({ type: "SET_STATUS", message: status.pendingWriteBack ? "Finishing interrupted changes..." : "Checking external changes..." });
       if (status.pendingWriteBack) {
         const result = await tauri.writeBackExternalVault(status.provider.providerId);
-        const workspace = { ...result.workspace, name: result.provider.displayName };
-        dispatch({ type: "UPDATE_WORKSPACE", workspace });
+        await updateWorkspaceForRuntime(result.workspace, result.provider.displayName);
         dispatch({
           type: "SET_VAULT_PROVIDER_STATUS",
           status: { provider: result.provider, pendingWriteBack: result.pendingJournal },
@@ -357,8 +419,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
         });
       } else {
         const result = await tauri.reconcileExternalVault(status.provider.providerId);
-        const workspace = { ...result.workspace, name: result.provider.displayName };
-        dispatch({ type: "UPDATE_WORKSPACE", workspace });
+        await updateWorkspaceForRuntime(result.workspace, result.provider.displayName);
         dispatch({
           type: "SET_VAULT_PROVIDER_STATUS",
           status: { provider: result.provider, pendingWriteBack: false },
@@ -385,7 +446,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, state.isDirty, state.vaultProviderStatus, state.workspace]);
+  }, [dispatch, state.isDirty, state.vaultProviderStatus, state.workspace, updateWorkspaceForRuntime]);
 
   const resolveExternalVaultConflict = useCallback(async (
     relativePath: string,
@@ -401,10 +462,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
         relativePath,
         resolution,
       );
-      dispatch({
-        type: "UPDATE_WORKSPACE",
-        workspace: { ...result.workspace, name: result.provider.displayName },
-      });
+      await updateWorkspaceForRuntime(result.workspace, result.provider.displayName);
       dispatch({
         type: "SET_VAULT_PROVIDER_STATUS",
         status: { provider: result.provider, pendingWriteBack: result.pendingWriteBack },
@@ -425,7 +483,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, state.vaultProviderStatus, state.workspace]);
+  }, [dispatch, state.vaultProviderStatus, state.workspace, updateWorkspaceForRuntime]);
 
   const reauthorizeExternalVault = useCallback(async () => {
     const status = state.vaultProviderStatus;
@@ -469,7 +527,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
       // createEntry writes an empty placeholder + guards against name collisions.
       const workspace = await tauri.createEntry(state.workspace.rootPath, trimmed, "markdown");
       await tauri.writeFile(`${workspace.rootPath}/${trimmed}`, content);
-      dispatch({ type: "UPDATE_WORKSPACE", workspace });
+      await updateWorkspaceForRuntime(workspace);
       dispatch({ type: "COMMIT_DRAFT", path: `${workspace.rootPath}/${trimmed}`, relativePath: trimmed });
       addRecent({ kind: "file", name: basename(`${workspace.rootPath}/${trimmed}`), path: `${workspace.rootPath}/${trimmed}` });
       dispatch({ type: "SET_STATUS", message: t`Saved ${trimmed}.` });
@@ -487,7 +545,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, state.workspace, state.isDraft, state.editorContent, getCloudContext, cloudRest]);
+  }, [dispatch, state.workspace, state.isDraft, state.editorContent, getCloudContext, cloudRest, updateWorkspaceForRuntime]);
 
   // "Save as" for a draft. Inside a workspace, open the NewResourceDialog so
   // the user picks a name/folder with the familiar vault UX. Outside any
@@ -606,7 +664,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
       dispatch({ type: "SET_LOADING", isLoading: true });
       const workspace = await tauri.createEntry(state.workspace.rootPath, trimmed, "markdown");
       console.log("[createDoc] file created locally:", trimmed);
-      dispatch({ type: "UPDATE_WORKSPACE", workspace });
+      await updateWorkspaceForRuntime(workspace);
       await openMarkdownFile(`${workspace.rootPath}/${trimmed}`, trimmed);
       // Notify cloud via REST so web clients see the new document immediately.
       if (tauri.isAvailable && getCloudContext()) {
@@ -624,7 +682,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, isVaultReadOnly, state.workspace, openMarkdownFile, getCloudContext, cloudRest]);
+  }, [dispatch, isVaultReadOnly, state.workspace, openMarkdownFile, getCloudContext, cloudRest, updateWorkspaceForRuntime]);
 
   /**
    * Create a new diagram resource (Mermaid `.mmd`, Excalidraw `.excalidraw`, …)
@@ -647,7 +705,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
       const workspace = await tauri.createEntry(state.workspace.rootPath, trimmed, "diagram");
       const fullPath = `${workspace.rootPath}/${trimmed}`;
       if (starter) await tauri.writeDiagramFile(fullPath, starter);
-      dispatch({ type: "UPDATE_WORKSPACE", workspace });
+      await updateWorkspaceForRuntime(workspace);
       await openDiagramFile(fullPath, trimmed);
       // Notify cloud so web clients see the new file immediately.
       if (tauri.isAvailable && getCloudContext()) {
@@ -661,7 +719,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, isVaultReadOnly, state.workspace, openDiagramFile, getCloudContext, cloudRest]);
+  }, [dispatch, isVaultReadOnly, state.workspace, openDiagramFile, getCloudContext, cloudRest, updateWorkspaceForRuntime]);
 
   /**
    * Create a new `.board` view file (kanban over card-notes) and open it in-pane.
@@ -695,7 +753,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
         relativePath,
         JSON.stringify(config, null, 2),
       );
-      dispatch({ type: "UPDATE_WORKSPACE", workspace });
+      await updateWorkspaceForRuntime(workspace);
       const node: FileTreeNode = {
         name: `${trimmed}.board`,
         path: `${workspace.rootPath}/${relativePath}`,
@@ -710,7 +768,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, isVaultReadOnly, state.workspace]);
+  }, [dispatch, isVaultReadOnly, state.workspace, updateWorkspaceForRuntime]);
 
   /**
    * Import a binary asset (image, PDF) from disk into the current vault and open
@@ -773,7 +831,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
       dispatch({ type: "SET_LOADING", isLoading: true });
       const impacted = updateLinks ? await findLinkImpacts(fromRelativePath) : [];
       const workspace = await tauri.renameEntry(state.workspace.rootPath, fromRelativePath, toRelativePath);
-      dispatch({ type: "UPDATE_WORKSPACE", workspace });
+      await updateWorkspaceForRuntime(workspace);
       if (updateLinks) await updateLinksAfterRename(impacted, fromRelativePath, toRelativePath);
       if (isMarkdownPath(toRelativePath)) {
         await openMarkdownFile(`${workspace.rootPath}/${toRelativePath}`, toRelativePath);
@@ -791,7 +849,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, isVaultReadOnly, state.workspace, openMarkdownFile, openDiagramFile, getCloudContext, cloudRest]);
+  }, [dispatch, isVaultReadOnly, state.workspace, openMarkdownFile, openDiagramFile, getCloudContext, cloudRest, updateWorkspaceForRuntime]);
 
   const renameCurrentEntry = useCallback(async () => {
     if (!state.workspace || !state.currentRelativePath) return;
@@ -821,7 +879,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
       dispatch({ type: "SET_LOADING", isLoading: true });
       const workspace = await tauri.trashEntry(state.workspace.rootPath, relativePath);
       removeRecentEntry(state.workspace.rootPath, relativePath);
-      dispatch({ type: "UPDATE_WORKSPACE", workspace });
+      await updateWorkspaceForRuntime(workspace);
       if (state.currentRelativePath === relativePath || state.currentRelativePath.startsWith(`${relativePath}/`)) {
         dispatch({ type: "CLEAR_DOCUMENT" });
       }
@@ -832,7 +890,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, isVaultReadOnly, state.workspace, state.currentRelativePath]);
+  }, [dispatch, isVaultReadOnly, state.workspace, state.currentRelativePath, updateWorkspaceForRuntime]);
 
   const deleteCurrentEntry = useCallback(async () => {
     if (!state.currentRelativePath) return;
@@ -877,7 +935,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
         } catch { /* ignore */ }
       }
       const workspace = await tauri.restoreFromTrash(state.workspace.rootPath, trashId);
-      dispatch({ type: "UPDATE_WORKSPACE", workspace });
+      await updateWorkspaceForRuntime(workspace);
       dispatch({ type: "SET_STATUS", message: "Restored from trash." });
       // Notify cloud via REST for real-time sync across clients
       if (tauri.isAvailable && cloudTrashId) {
@@ -905,7 +963,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, isVaultReadOnly, state.workspace]);
+  }, [dispatch, isVaultReadOnly, state.workspace, updateWorkspaceForRuntime]);
 
   const emptyTrash = useCallback(async () => {
     if (!state.workspace) return;
@@ -932,7 +990,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
           meta.pendingTrashOps = [];
           meta.items = [];
           await tauri.saveTrashMetadata(state.workspace.rootPath, meta);
-          const workspace = await tauri.openWorkspace(state.workspace.rootPath);
+          const workspace = await openWorkspaceForRuntime(state.workspace.rootPath, usePartialWorkspace);
           dispatch({ type: "UPDATE_WORKSPACE", workspace });
         } catch { /* non-critical */ }
       }
@@ -941,7 +999,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, isVaultReadOnly, state.workspace]);
+  }, [dispatch, isVaultReadOnly, state.workspace, usePartialWorkspace]);
 
   const permanentDeleteTrash = useCallback(async (trashId: string) => {
     if (!state.workspace) return;
@@ -989,14 +1047,14 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
             meta.items = meta.items.filter((i) => i.trashId !== trashId);
           }
           await tauri.saveTrashMetadata(state.workspace.rootPath, meta);
-          const workspace = await tauri.openWorkspace(state.workspace.rootPath);
+          const workspace = await openWorkspaceForRuntime(state.workspace.rootPath, usePartialWorkspace);
           dispatch({ type: "UPDATE_WORKSPACE", workspace });
         } catch { /* non-critical */ }
       }
     } catch (error) {
       dispatch({ type: "SET_STATUS", message: String(error) });
     }
-  }, [dispatch, isVaultReadOnly, state.workspace]);
+  }, [dispatch, isVaultReadOnly, state.workspace, usePartialWorkspace]);
 
   const exportSite = useCallback(async () => {
     if (!state.workspace) return;
@@ -1072,6 +1130,29 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
   const findLinkImpacts = useCallback(async (targetRelativePath: string) => {
     if (!state.workspace) return [];
     const targetName = basename(targetRelativePath);
+    if (workspaceSnapshotIsPartial(state.workspace) && tauri.isAvailable) {
+      const nativeImpacts = await tauri.findWorkspaceLinkImpacts(
+        state.workspace.rootPath,
+        targetRelativePath,
+      );
+
+      if (!state.currentPath || state.currentKind !== "markdown") return nativeImpacts;
+      const withoutSavedCurrent = nativeImpacts.filter(
+        (impact) => impact.path !== state.currentPath,
+      );
+      const matchingLink = extractMarkdownLinks(state.editorContent).find(
+        (link) => normalizePath(link.target) === normalizePath(targetRelativePath)
+          || basename(link.target) === targetName,
+      );
+      return matchingLink
+        ? [...withoutSavedCurrent, {
+            relativePath: state.currentRelativePath,
+            path: state.currentPath,
+            line: matchingLink.line,
+            content: state.editorContent,
+          }]
+        : withoutSavedCurrent;
+    }
     const impacts: Array<{ relativePath: string; path: string; line: number; content: string }> = [];
     for (const node of workspaceIndexFor(state.workspace.entries).documents) {
       try {
@@ -1085,7 +1166,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
       } catch { /* ignore unreadable files */ }
     }
     return impacts;
-  }, [state.workspace, state.currentPath, state.editorContent]);
+  }, [state.workspace, state.currentPath, state.currentKind, state.currentRelativePath, state.editorContent]);
 
   const updateLinksAfterRename = useCallback(async (
     impacts: Array<{ relativePath: string; path: string; content: string }>,
@@ -1145,7 +1226,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     try {
       dispatch({ type: "SET_LOADING", isLoading: true });
       const workspace = await tauri.createFolder(state.workspace.rootPath, folderRelativePath);
-      dispatch({ type: "UPDATE_WORKSPACE", workspace });
+      await updateWorkspaceForRuntime(workspace);
       dispatch({ type: "SET_STATUS", message: `Created folder ${folderRelativePath}.` });
       // Notify cloud via REST so other clients refresh their folder list.
       if (tauri.isAvailable && getCloudContext()) {
@@ -1161,7 +1242,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, isVaultReadOnly, state.workspace, getCloudContext, cloudRest]);
+  }, [dispatch, isVaultReadOnly, state.workspace, getCloudContext, cloudRest, updateWorkspaceForRuntime]);
 
   const renameFolder = useCallback(async (fromRelativePath: string, toRelativePath: string) => {
     if (!state.workspace) return;
@@ -1172,7 +1253,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     try {
       dispatch({ type: "SET_LOADING", isLoading: true });
       const [workspace] = await tauri.renameFolder(state.workspace.rootPath, fromRelativePath, toRelativePath);
-      dispatch({ type: "UPDATE_WORKSPACE", workspace });
+      await updateWorkspaceForRuntime(workspace);
       dispatch({ type: "SET_STATUS", message: `Renamed folder to ${toRelativePath}.` });
       window.dispatchEvent(new CustomEvent("jtype:vault-folder-changed"));
     } catch (error) {
@@ -1180,7 +1261,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, isVaultReadOnly, state.workspace]);
+  }, [dispatch, isVaultReadOnly, state.workspace, updateWorkspaceForRuntime]);
 
   const moveFolder = useCallback(async (fromRelativePath: string, toRelativePath: string) => {
     if (!state.workspace) return;
@@ -1191,7 +1272,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     try {
       dispatch({ type: "SET_LOADING", isLoading: true });
       const [workspace] = await tauri.moveFolder(state.workspace.rootPath, fromRelativePath, toRelativePath);
-      dispatch({ type: "UPDATE_WORKSPACE", workspace });
+      await updateWorkspaceForRuntime(workspace);
       dispatch({ type: "SET_STATUS", message: `Moved folder to ${toRelativePath}.` });
       window.dispatchEvent(new CustomEvent("jtype:vault-folder-changed"));
     } catch (error) {
@@ -1199,7 +1280,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, isVaultReadOnly, state.workspace]);
+  }, [dispatch, isVaultReadOnly, state.workspace, updateWorkspaceForRuntime]);
 
   const deleteFolder = useCallback(async (folderRelativePath: string, softDelete = true, skipConfirm = false) => {
     if (!state.workspace) return;
@@ -1214,7 +1295,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     try {
       dispatch({ type: "SET_LOADING", isLoading: true });
       const [workspace, impacted] = await tauri.deleteFolder(state.workspace.rootPath, folderRelativePath, softDelete);
-      dispatch({ type: "UPDATE_WORKSPACE", workspace });
+      await updateWorkspaceForRuntime(workspace);
       if (state.currentRelativePath.startsWith(`${folderRelativePath}/`)) {
         dispatch({ type: "CLEAR_DOCUMENT" });
       }
@@ -1227,7 +1308,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [dispatch, isVaultReadOnly, state.workspace, state.currentRelativePath]);
+  }, [dispatch, isVaultReadOnly, state.workspace, state.currentRelativePath, updateWorkspaceForRuntime]);
 
   const openInitialPath = useCallback(async () => {
     if (!tauri.isAvailable) return;
@@ -1280,6 +1361,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     chooseWorkspaceFolder,
     openWorkspace,
     openDefaultVault,
+    loadWorkspaceEntryPage,
     refreshVaultProvider,
     reconcileExternalVault,
     resolveExternalVaultConflict,

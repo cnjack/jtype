@@ -37,6 +37,7 @@ declare global {
     __E2E_INSTALL_LARGE_VAULT__?: (count?: number) => void;
     __E2E_INSTALL_LARGE_CONTENT__?: (sectionCount?: number, cardCount?: number) => void;
     __BINARY_READS__: string[];
+    __WORKSPACE_QUERY_CALLS__: string[];
     __INITIAL_EXTERNAL_SOURCES_JSON__?: string;
     __INITIAL_DEEP_LINKS__?: string[] | null;
     __LAST_OPEN_URL__?: string;
@@ -99,6 +100,53 @@ test.beforeEach(async ({ page }) => {
     const pluginSubscriptions = new Map<number, { plugin: string; event: string; handler: number; nextIndex: number }>();
     const trashItems: Array<{ trashId: string; relativePath: string; name: string; trashedAt: number; content: string }> = [];
     const workspaceSnapshot = () => JSON.parse(JSON.stringify(workspace));
+    const cloneShallowEntry = (entry: Record<string, unknown>) => ({ ...entry, children: [] });
+    const findWorkspaceNode = (
+      entries: Array<Record<string, unknown>>,
+      relativePath: string,
+    ): Record<string, unknown> | null => {
+      for (const entry of entries) {
+        if (entry.relativePath === relativePath) return entry;
+        const nested = findWorkspaceNode(
+          (entry.children as Array<Record<string, unknown>>) ?? [],
+          relativePath,
+        );
+        if (nested) return nested;
+      }
+      return null;
+    };
+    const flattenWorkspace = (entries: Array<Record<string, unknown>>) => {
+      const flattened: Array<Record<string, unknown>> = [];
+      const stack = [...entries].reverse();
+      while (stack.length > 0) {
+        const entry = stack.pop()!;
+        if (entry.relativePath === ".jtype" || String(entry.relativePath).startsWith(".jtype/")) continue;
+        flattened.push(entry);
+        const children = (entry.children as Array<Record<string, unknown>>) ?? [];
+        for (let index = children.length - 1; index >= 0; index -= 1) stack.push(children[index]);
+      }
+      return flattened;
+    };
+    const partialWorkspaceSnapshot = (rootPath = "C:/workspace", name = "workspace") => {
+      const pageSize = 160;
+      const entries = (workspace.entries as Array<Record<string, unknown>>)
+        .slice(0, pageSize)
+        .map(cloneShallowEntry);
+      return {
+        rootPath,
+        name,
+        entries,
+        metadataCreated: false,
+        completeness: "partial",
+        entryPages: {
+          "": {
+            loadedEntries: entries.length,
+            totalEntries: workspace.entries.length,
+            nextCursor: entries.length < workspace.entries.length ? String(entries.length) : null,
+          },
+        },
+      };
+    };
     const removeWorkspaceEntry = (entries: Array<{ relativePath: string; path: string; children: unknown[] }>, relativePath: string): boolean => {
       const index = entries.findIndex((entry) => entry.relativePath === relativePath);
       if (index >= 0) {
@@ -291,6 +339,7 @@ test.beforeEach(async ({ page }) => {
       __STOP_LISTENER_CALLS__: 0,
       __HAPTIC_STYLES__: [],
       __BINARY_READS__: [],
+      __WORKSPACE_QUERY_CALLS__: [],
       __OAUTH_POLL_PENDING__: false,
       __VAULT_SETTINGS__: {
         "C:/workspace": {
@@ -354,6 +403,7 @@ test.beforeEach(async ({ page }) => {
               supportsFileDrop: true,
               supportsExternalVault: true,
               usesAppPrivateVault: false,
+              usesPartialWorkspace: false,
             };
           }
           if (cmd === "initial_open_paths") {
@@ -429,6 +479,13 @@ test.beforeEach(async ({ page }) => {
             return null;
           }
           if (cmd === "open_default_vault") return { ...workspaceSnapshot(), rootPath: "C:/Users/Jack/Documents/.jtype", name: ".jtype", metadataCreated: true };
+          if (cmd === "open_default_vault_partial") {
+            window.__WORKSPACE_QUERY_CALLS__.push(cmd);
+            return {
+              ...partialWorkspaceSnapshot("C:/Users/Jack/Documents/.jtype", ".jtype"),
+              metadataCreated: true,
+            };
+          }
           if (cmd === "initialize_external_vault") return window.__EXTERNAL_VAULT_RESULT__;
           if (cmd === "reauthorize_external_vault") {
             const external = window.__EXTERNAL_VAULT_RESULT__ as {
@@ -582,7 +639,92 @@ test.beforeEach(async ({ page }) => {
             files[path] = "";
             return path;
           }
-          if (cmd === "open_workspace") return workspaceSnapshot();
+          if (cmd === "open_workspace") {
+            window.__WORKSPACE_QUERY_CALLS__.push(cmd);
+            const snapshot = workspaceSnapshot();
+            const rootPath = String(args.path ?? snapshot.rootPath);
+            return {
+              ...snapshot,
+              rootPath,
+              name: rootPath.split(/[\\/]/).filter(Boolean).at(-1) ?? snapshot.name,
+            };
+          }
+          if (cmd === "open_workspace_partial") {
+            window.__WORKSPACE_QUERY_CALLS__.push(cmd);
+            const rootPath = String(args.path ?? "C:/workspace");
+            return partialWorkspaceSnapshot(
+              rootPath,
+              rootPath.split(/[\\/]/).filter(Boolean).at(-1) ?? "workspace",
+            );
+          }
+          if (cmd === "read_workspace_entry_page") {
+            window.__WORKSPACE_QUERY_CALLS__.push(cmd);
+            const relativePath = String(args.relativePath ?? "");
+            const directEntries = relativePath
+              ? ((findWorkspaceNode(
+                  workspace.entries as Array<Record<string, unknown>>,
+                  relativePath,
+                )?.children as Array<Record<string, unknown>>) ?? [])
+              : workspace.entries as Array<Record<string, unknown>>;
+            const startIndex = args.cursor == null ? 0 : Number(args.cursor);
+            const pageSize = Number(args.pageSize ?? 160);
+            const entries = directEntries
+              .slice(startIndex, startIndex + pageSize)
+              .map(cloneShallowEntry);
+            const end = startIndex + entries.length;
+            return {
+              relativePath,
+              entries,
+              startIndex,
+              totalEntries: directEntries.length,
+              nextCursor: end < directEntries.length ? String(end) : null,
+            };
+          }
+          if (cmd === "search_workspace_entries") {
+            window.__WORKSPACE_QUERY_CALLS__.push(cmd);
+            const query = String(args.query ?? "").toLowerCase();
+            const folderFilter = String(args.folderFilter ?? "").toLowerCase();
+            const scope = String(args.scope);
+            const limit = Number(args.limit ?? 40);
+            return {
+              entries: flattenWorkspace(workspace.entries as Array<Record<string, unknown>>)
+                .filter((entry) => scope === "documents"
+                  ? entry.kind === "markdown"
+                  : entry.kind === "markdown" || entry.kind === "board")
+                .filter((entry) => {
+                  const relativePath = String(entry.relativePath);
+                  const parent = relativePath.includes("/")
+                    ? relativePath.slice(0, relativePath.lastIndexOf("/")).toLowerCase()
+                    : "";
+                  return (!folderFilter || parent.includes(folderFilter))
+                    && (!query || `${String(entry.name)} ${relativePath}`.toLowerCase().includes(query));
+                })
+                .slice(0, limit)
+                .map(cloneShallowEntry),
+            };
+          }
+          if (cmd === "resolve_workspace_entry") {
+            window.__WORKSPACE_QUERY_CALLS__.push(cmd);
+            const entry = findWorkspaceNode(
+              workspace.entries as Array<Record<string, unknown>>,
+              String(args.relativePath),
+            );
+            return entry ? cloneShallowEntry(entry) : null;
+          }
+          if (cmd === "resolve_workspace_wiki_target") {
+            window.__WORKSPACE_QUERY_CALLS__.push(cmd);
+            const target = String(args.target).replace(/\.md$/i, "").toLowerCase();
+            const entries = flattenWorkspace(workspace.entries as Array<Record<string, unknown>>)
+              .filter((entry) => entry.kind === "markdown");
+            const exact = entries.find((entry) => String(entry.relativePath).replace(/\.md$/i, "").toLowerCase() === target);
+            const basename = entries.find((entry) => String(entry.name).replace(/\.md$/i, "").toLowerCase() === target);
+            const entry = exact ?? basename;
+            return entry ? cloneShallowEntry(entry) : null;
+          }
+          if (cmd === "find_workspace_link_impacts") {
+            window.__WORKSPACE_QUERY_CALLS__.push(cmd);
+            return [];
+          }
           if (cmd === "read_markdown_file") return files[String(args.path)] ?? "";
           if (cmd === "write_markdown_file") {
             files[String(args.path)] = String(args.content);
@@ -1003,6 +1145,58 @@ test("opens a workspace and renders a markdown file", async ({ page }) => {
 
   await expect(page.getByLabel("Markdown editor")).toHaveValue("# Intro\n\nHello from workspace.");
   await expect(page.locator("#preview")).toContainText("Hello from workspace.");
+});
+
+test("keeps the Desktop workbench while mobile hydrates a partial vault on demand", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(() => {
+    window.__RUNTIME_CAPABILITIES__ = {
+      platform: "android",
+      clientType: "mobile",
+      isMobile: true,
+      isTouchPrimary: true,
+      prefersCompactLayout: true,
+      supportsWindowDrag: false,
+      supportsUpdater: false,
+      supportsProcessRestart: false,
+      supportsCliInstall: false,
+      supportsFileDrop: false,
+      supportsExternalVault: false,
+      usesAppPrivateVault: true,
+      usesPartialWorkspace: true,
+    };
+    window.__E2E_INSTALL_LARGE_VAULT__?.(405);
+  });
+  await page.reload();
+
+  await page.locator("#welcome-default-vault").click();
+  await expect(page.locator("#vault-home")).toBeVisible();
+  await expect.poll(() => page.evaluate(() => window.__WORKSPACE_QUERY_CALLS__))
+    .toContain("open_default_vault_partial");
+  expect(await page.evaluate(() => window.__WORKSPACE_QUERY_CALLS__.includes("open_workspace"))).toBe(false);
+  await page.getByRole("dialog", { name: /Sync/ }).getByRole("button", { name: "Later" }).click();
+
+  await page.locator("#mobile-navigation-button").click();
+  const mobileSidebar = page.locator("#mobile-vault-navigation");
+  await expect(mobileSidebar.locator('[data-native-page="root"]')).toBeVisible();
+  await mobileSidebar.getByRole("button", { name: "guides", exact: true }).click();
+  await expect(mobileSidebar.getByRole("button", { name: "setup.md", exact: true })).toBeVisible();
+  await mobileSidebar.locator('[data-native-page="root"]').click();
+  await expect.poll(() => page.evaluate(() =>
+    window.__WORKSPACE_QUERY_CALLS__.filter((call) => call === "read_workspace_entry_page").length,
+  )).toBeGreaterThanOrEqual(2);
+
+  await mobileSidebar.getByRole("button", { name: "Close" }).click();
+  await page.locator("#vault-home").getByRole("button", { name: "Quick open" }).click();
+  await page.locator("#quick-switcher-input").fill("performance-note-00404");
+  const tailResult = page.locator("#quick-results").getByRole("button", {
+    name: /performance-note-00404\.md/,
+  });
+  await expect(tailResult).toBeVisible();
+  await tailResult.click();
+  await expect(page.getByLabel("Markdown editor")).toHaveValue(/Performance note 404/);
+  await expect.poll(() => page.evaluate(() => window.__WORKSPACE_QUERY_CALLS__))
+    .toContain("search_workspace_entries");
 });
 
 test("opens an initial markdown file passed by the OS", async ({ page }) => {

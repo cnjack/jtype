@@ -1,10 +1,9 @@
 import { Trans, Plural } from "@lingui/react/macro";
 import { useMemo } from "react";
 import { isCurrentVaultReadOnly, useAppDispatch, useAppState } from "../../app/AppState";
-import { useFileSystem } from "../../hooks";
+import { useFileSystem, useWorkspaceEntrySearch } from "../../hooks";
 import { appStorage } from "../../lib/storage";
 import { basename } from "../../lib/utils";
-import { workspaceIndexFor } from "../../lib/workspaceIndex";
 import { SyncPromptDialog } from "../modals/SyncPromptDialog";
 import { useRuntimeCapabilities } from "../../app/RuntimeCapabilities";
 
@@ -13,7 +12,8 @@ export function VaultHome() {
   const dispatch = useAppDispatch();
   const fs = useFileSystem();
   const capabilities = useRuntimeCapabilities();
-  const documents = workspaceIndexFor(state.workspace?.entries).documents;
+  const documentSearch = useWorkspaceEntrySearch(state.workspace, "", "", "documents", 12);
+  const documents = documentSearch.entries;
   const recentItems = useMemo(() => readRecentItems(), [state.currentPath]);
   const recentDocs = recentItems.filter((item) => item.kind === "file").slice(0, 4);
   const vaultName = state.workspace?.name ?? "Vault";
@@ -69,7 +69,11 @@ export function VaultHome() {
             <section className="panel-card p-5">
               <div className="mb-3 flex items-center justify-between">
                 <p className="text-sm font-semibold text-stone-950"><Trans>Documents</Trans></p>
-                <span className="text-xs text-[#6b7773]"><Plural value={documents.length} one="# Markdown file" other="# Markdown files" /></span>
+                <span className="text-xs text-[#6b7773]">
+                  {documentSearch.isPartial
+                    ? <Trans>{documents.length} Markdown files shown</Trans>
+                    : <Plural value={documents.length} one="# Markdown file" other="# Markdown files" />}
+                </span>
               </div>
               <div className="space-y-1">
                 {documents.length === 0 ? (
@@ -78,7 +82,7 @@ export function VaultHome() {
                     <p className="mt-1 text-sm text-stone-500"><Trans>Create your first Markdown note or drop files into this vault.</Trans></p>
                   </div>
                 ) : (
-                  documents.slice(0, 12).map((node) => (
+                  documents.map((node) => (
                     <button key={node.path} type="button" className="command-row" onClick={() => fs.openMarkdownFile(node.path, node.relativePath)}>
                       <span className="min-w-0">
                         <span className="block truncate font-semibold">{basename(node.name).replace(/\.(md|markdown|mdown|mkd)$/i, "")}</span>

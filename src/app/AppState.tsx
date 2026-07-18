@@ -6,6 +6,7 @@ import type {
   EntryKind,
   FileTreeNode,
   WorkspaceSnapshot,
+  WorkspaceEntryPage,
   CloudProfile,
   VaultBinding,
   CloudWorkspace,
@@ -18,6 +19,7 @@ import type {
 } from "../lib/types";
 import type { AICommandProposal } from "./aiCommands";
 import { appStorage } from "../lib/storage";
+import { mergeWorkspaceEntryPage } from "../lib/workspacePagination";
 
 export type AppMode = "empty" | "workspace" | "single-file" | "draft";
 
@@ -118,6 +120,7 @@ export type AppAction =
   | { type: "COMMIT_DRAFT"; path: string; relativePath: string }
   | { type: "DISCARD_DRAFT" }
   | { type: "UPDATE_WORKSPACE"; workspace: WorkspaceSnapshot }
+  | { type: "MERGE_WORKSPACE_ENTRY_PAGE"; rootPath: string; page: WorkspaceEntryPage }
   | { type: "SET_VAULT_PROVIDER_STATUS"; status: VaultProviderStatus | null }
   | { type: "SET_VAULT_PROVIDER_OPERATION_PROGRESS"; progress: VaultProviderOperationProgress | null }
   | { type: "SET_EXTERNAL_VAULT_CONFLICTS"; conflicts: ExternalVaultReconcileConflict[] }
@@ -402,6 +405,13 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         workspace: externalProvider
           ? { ...action.workspace, name: externalProvider.displayName }
           : action.workspace,
+      };
+    }
+    case "MERGE_WORKSPACE_ENTRY_PAGE": {
+      if (!state.workspace || state.workspace.rootPath !== action.rootPath) return state;
+      return {
+        ...state,
+        workspace: mergeWorkspaceEntryPage(state.workspace, action.page),
       };
     }
     case "SET_VAULT_PROVIDER_STATUS": {

@@ -86,6 +86,9 @@ export const tauri = {
   openWorkspace(path: string) {
     return invoke<WorkspaceSnapshot>("open_workspace", { path });
   },
+  openWorkspacePartial(path: string, pageSize: number) {
+    return invoke<WorkspaceSnapshot>("open_workspace_partial", { path, pageSize });
+  },
   readWorkspaceEntryPage(
     rootPath: string,
     relativePath: string,
@@ -128,6 +131,9 @@ export const tauri = {
   },
   openDefaultVault() {
     return invoke<WorkspaceSnapshot>("open_default_vault");
+  },
+  openDefaultVaultPartial(pageSize: number) {
+    return invoke<WorkspaceSnapshot>("open_default_vault_partial", { pageSize });
   },
   defaultVaultPath() {
     return invoke<string>("default_vault_path");

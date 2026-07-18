@@ -3,6 +3,17 @@ import type { FileTreeNode, WorkspaceEntryPage, WorkspaceSnapshot } from "./type
 /** Matches the existing shared tree render window; native IO and DOM hydrate together. */
 export const WORKSPACE_ENTRY_PAGE_SIZE = 160;
 
+export function workspaceSnapshotIsPartial(workspace: WorkspaceSnapshot | null | undefined) {
+  return workspace?.completeness === "partial";
+}
+
+export function workspaceEntryPageState(
+  workspace: WorkspaceSnapshot | null | undefined,
+  relativePath: string,
+) {
+  return workspace?.entryPages?.[relativePath];
+}
+
 function parentRelativePath(relativePath: string) {
   const index = relativePath.lastIndexOf("/");
   return index < 0 ? "" : relativePath.slice(0, index);
@@ -94,12 +105,28 @@ export function mergeWorkspaceEntryPage(
   page: WorkspaceEntryPage,
 ): WorkspaceSnapshot {
   validatePage(page);
-  if (page.relativePath === "") {
-    return { ...workspace, entries: mergeDirectPage(workspace.entries, page) };
-  }
-  const merged = mergeFolderPage(workspace.entries, page);
-  if (!merged.found) {
-    throw new Error("Workspace page parent is not loaded.");
-  }
-  return { ...workspace, entries: merged.entries };
+  const entries = page.relativePath === ""
+    ? mergeDirectPage(workspace.entries, page)
+    : (() => {
+        const merged = mergeFolderPage(workspace.entries, page);
+        if (!merged.found) {
+          throw new Error("Workspace page parent is not loaded.");
+        }
+        return merged.entries;
+      })();
+  const loadedEntries = page.startIndex + page.entries.length;
+  const entryPages = {
+    ...(workspace.entryPages ?? {}),
+    [page.relativePath]: {
+      loadedEntries,
+      totalEntries: page.totalEntries,
+      nextCursor: page.nextCursor,
+    },
+  };
+
+  return {
+    ...workspace,
+    entries,
+    entryPages,
+  };
 }

@@ -74,6 +74,7 @@ struct RuntimeCapabilities {
     supports_file_drop: bool,
     supports_external_vault: bool,
     uses_app_private_vault: bool,
+    uses_partial_workspace: bool,
 }
 
 #[tauri::command]
@@ -100,6 +101,7 @@ fn runtime_capabilities() -> RuntimeCapabilities {
         supports_file_drop: !is_mobile,
         supports_external_vault: true,
         uses_app_private_vault: is_mobile,
+        uses_partial_workspace: is_mobile,
     }
 }
 
@@ -526,6 +528,16 @@ fn open_default_vault(app: AppHandle) -> Result<WorkspaceSnapshot, String> {
     let path = default_vault_dir(&app)?;
     let provider = resolve_local_vault_provider(&app, path)?;
     workspace::open_workspace(provider.prepare_root(true)?)
+}
+
+#[tauri::command]
+fn open_default_vault_partial(
+    app: AppHandle,
+    page_size: usize,
+) -> Result<WorkspaceSnapshot, String> {
+    let path = default_vault_dir(&app)?;
+    let provider = resolve_local_vault_provider(&app, path)?;
+    workspace::open_workspace_partial(provider.prepare_root(true)?, page_size)
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -1899,6 +1911,20 @@ fn open_workspace(app: AppHandle, path: String) -> Result<WorkspaceSnapshot, Str
     workspace::open_workspace(&root)
 }
 
+/// Mobile-only bootstrap adapter. It returns the same canonical snapshot shape
+/// as Desktop, but entries contain only the first shallow root page and carry
+/// explicit completeness/cursor state for shared folder hydration.
+#[tauri::command]
+fn open_workspace_partial(
+    app: AppHandle,
+    path: String,
+    page_size: usize,
+) -> Result<WorkspaceSnapshot, String> {
+    let root = PathBuf::from(path);
+    let _provider = describe_provider_for_root(&app, &root)?;
+    workspace::open_workspace_partial(&root, page_size)
+}
+
 /// Return one shallow page that can be merged into the canonical shared
 /// `WorkspaceSnapshot`. The provider adapter runs first so interrupted external
 /// mirror transactions recover before either Desktop or Mobile reads the tree.
@@ -3149,6 +3175,7 @@ pub fn run() {
             configure_android_external_vault_debug_fault,
             exercise_android_external_vault_debug_local_failure,
             open_default_vault,
+            open_default_vault_partial,
             read_markdown_file,
             write_markdown_file,
             share_markdown,
@@ -3156,6 +3183,7 @@ pub fn run() {
             write_binary_file,
             read_binary_file,
             open_workspace,
+            open_workspace_partial,
             read_workspace_entry_page,
             search_workspace_entries,
             resolve_workspace_entry,

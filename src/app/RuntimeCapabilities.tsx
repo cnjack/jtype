@@ -26,6 +26,7 @@ function fallbackCapabilities(): RuntimeCapabilities {
     supportsFileDrop: !isMobile,
     supportsExternalVault: true,
     usesAppPrivateVault: isMobile,
+    usesPartialWorkspace: isMobile,
   };
 }
 

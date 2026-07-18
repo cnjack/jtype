@@ -3,6 +3,7 @@ import { listen } from "@tauri-apps/api/event";
 import { useAppDispatch, useAppState } from "../app/AppState";
 import { tauri } from "../lib/tauri";
 import { useRuntimeCapabilities } from "../app/RuntimeCapabilities";
+import { openWorkspaceForRuntime } from "../lib/workspaceRuntime";
 
 type PullOnly = (options?: { full?: boolean; reason?: string; sinceClock?: number; sinceTrashEventClock?: number }) => Promise<void>;
 
@@ -117,7 +118,10 @@ export function useCloudEvents(pullOnly: PullOnly) {
                   (item) => item.relativePath !== relativePath
                 );
                 await tauri.saveTrashMetadata(s.workspace.rootPath, trashMetadata);
-                const workspace = await tauri.openWorkspace(s.workspace.rootPath);
+                const workspace = await openWorkspaceForRuntime(
+                  s.workspace.rootPath,
+                  capabilities.usesPartialWorkspace === true,
+                );
                 d({ type: "UPDATE_WORKSPACE", workspace });
                 console.log("[useCloudEvents] permanent delete processed", { deletedLocalTrashCount });
                 return;
@@ -130,7 +134,10 @@ export function useCloudEvents(pullOnly: PullOnly) {
                 });
                 try {
                   await tauri.trashEntry(s.workspace.rootPath, relativePath);
-                  const workspace = await tauri.openWorkspace(s.workspace.rootPath);
+                  const workspace = await openWorkspaceForRuntime(
+                    s.workspace.rootPath,
+                    capabilities.usesPartialWorkspace === true,
+                  );
                   d({ type: "UPDATE_WORKSPACE", workspace });
                   if (s.currentRelativePath === relativePath) {
                     d({ type: "CLEAR_DOCUMENT" });
@@ -160,7 +167,10 @@ export function useCloudEvents(pullOnly: PullOnly) {
               // Move to trash
               try {
                 await tauri.trashEntry(s.workspace.rootPath, relativePath);
-                const workspace = await tauri.openWorkspace(s.workspace.rootPath);
+                const workspace = await openWorkspaceForRuntime(
+                  s.workspace.rootPath,
+                  capabilities.usesPartialWorkspace === true,
+                );
                 d({ type: "UPDATE_WORKSPACE", workspace });
                 if (s.currentRelativePath === relativePath) {
                   d({ type: "SET_STATUS", message: `${relativePath} was moved to trash remotely.` });
@@ -217,5 +227,5 @@ export function useCloudEvents(pullOnly: PullOnly) {
       unlistenRemoteChange.then((fn) => fn());
       unlistenSyncRequired.then((fn) => fn());
     };
-  }, [capabilities.clientType]);
+  }, [capabilities.clientType, capabilities.usesPartialWorkspace]);
 }

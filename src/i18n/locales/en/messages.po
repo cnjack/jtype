@@ -51,9 +51,18 @@ msgstr "{0} copy"
 msgid "{0} documents - {1} budget"
 msgstr "{0} documents - {1} budget"
 
+#. placeholder {0}: documents.length
+#: src/components/layout/VaultHome.tsx
+msgid "{0} Markdown files shown"
+msgstr "{0} Markdown files shown"
+
 #: src/components/sidebar/Sidebar.tsx
 msgid "{docCount} documents"
 msgstr "{docCount} documents"
+
+#: src/components/sidebar/Sidebar.tsx
+msgid "{docCount} documents loaded"
+msgstr "{docCount} documents loaded"
 
 #: src/components/editor/ResourceViewer.tsx
 msgid "{label} files can not be previewed in JType yet."
