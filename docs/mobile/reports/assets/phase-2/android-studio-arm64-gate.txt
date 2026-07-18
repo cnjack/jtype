@@ -1,0 +1,57 @@
+JType Android Studio arm64 default-variant gate
+Date: 2026-07-19
+Branch: codex/mobile-app
+Implementation commit: cc2ec80
+
+1. Android Studio product-flavor model
+Command: pnpm mobile:android:verify-studio-variant
+Result: PASS
+Output: Android Studio default flavor: arm64
+
+All Tauri ABI variants remain available:
+- arm64Debug -> rustBuildArm64Debug -> target aarch64
+- armDebug -> rustBuildArmDebug -> target armv7
+- universal, x86 and x86_64 variants remain registered
+
+2. Tauri session boundary
+Direct command: ./gradlew :app:assembleArm64Debug
+Result outside a Tauri session: EXPECTED FAIL
+Reason: android-studio-script could not read CLI options because no Tauri WebSocket session was running (Connection refused).
+
+Session-backed command:
+pnpm tauri android build --debug --target aarch64 --apk --ci
+Result: PASS
+Tauri log: connection; remote_addr=127.0.0.1; android-studio-script --target aarch64
+
+3. APK and emulator identity
+APK: src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk
+Bytes: 204323392
+SHA-256: ba2e6d7b94883ca00d3a735e6c1d5d47779fcfcb179b60db7e4700a708acb764
+Packaged native library: lib/arm64-v8a/libjtype_lib.so
+AVD: JType_API_36_1 / emulator-5554 / API 36 / arm64-v8a
+Installed package primaryCpuAbi: arm64-v8a
+Cold launch: net.jcode.jtype/.MainActivity / Status ok
+
+4. Shared workbench runtime flow
+Flow: tests/mobile/android-large-vault.yaml
+Result: PASS
+- Documents visible
+- Search performance-note-04999
+- Open performance-note-04999.md
+- Close shared drawer
+- Shared desktop/mobile large vault fixture 04999 visible in EditorShell
+
+Screenshot: android-studio-arm64-runtime.png
+Screenshot SHA-256: e699e7de3cc1e2796bda09e87335b18068067ab85934d4ef5eb45eb9220ade44
+
+5. Cross-platform regression
+- pnpm test:unit: PASS 73/73
+- pnpm test:e2e: PASS 56/56
+- cargo test --manifest-path services/jtype-core/Cargo.toml: PASS 46/46
+- cargo test --manifest-path src-tauri/Cargo.toml: PASS 29/29
+- pnpm build: PASS
+- pnpm mobile:ios:build:simulator-static: PASS
+- iOS binary bytes: 109370520
+- iOS binary SHA-256: 7b428dbbe4c37d0c9fc5aca4fa1b7043e0284bcf1bce098d24efc87ac0b1f822
+
+Android Studio's visible toolbar could not be re-read during this follow-up because the host Mac was locked. The checked-in AGP ApplicationProductFlavor.isDefault model, its Gradle verification task, the session-backed arm64 build, installation and emulator runtime gate are all complete; the locked host is not represented as a UI-click pass.

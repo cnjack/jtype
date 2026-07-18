@@ -4,11 +4,11 @@
 
 Feature branch：`codex/mobile-app`
 
-当前 app code commit：`a74b43a`
+当前 app code commit：`cc2ec80`
 
 当前 iOS provider gate commit：`264db8a`
 
-本报告状态：进行中；2A provider contract、2B Android SAF 与 2C iOS security-scoped provider 的工程/Simulator gate 已完成。2D 已完成 app-private 草稿冷恢复、Keystore/Keychain pending OAuth 冷恢复、Android share target / iOS Share Extension、模拟器无障碍、共享触控交互与键盘辅助栏、5,000 文档大 vault、大 Markdown/附件/1,200-card Board 渐进渲染、sync reliability、本地原生通知文档定位，以及 mobile partial `WorkspaceSnapshot`、shared loaded-first/native-fallback resolver 与 folder hydration。Android partial 5,008-entry cold open、IPC/snapshot、RSS 和尾部打开，以及 iOS clean static archive 的 5,406-entry partial cold open、unloaded tail cold restore 均已通过；双端交互式第二页使用有界 shallow cache，native hit 均为 0 ms。external reconcile/write-back 已改为 native full scan + plan-driven source materialization；Android SAF 与 iOS local Files provider 的 120-file `1 changed / 0 changed` Simulator 原生复测均通过。真实设备弱网、APNs/FCM、provider-native streaming、双平台 physical low-memory/performance、physical bookmark 生命周期与真机终验继续进行。
+本报告状态：进行中；2A provider contract、2B Android SAF 与 2C iOS security-scoped provider 的工程/Simulator gate 已完成。2D 已完成 app-private 草稿冷恢复、Keystore/Keychain pending OAuth 冷恢复、Android share target / iOS Share Extension、模拟器无障碍、共享触控交互与键盘辅助栏、5,000 文档大 vault、大 Markdown/附件/1,200-card Board 渐进渲染、sync reliability、本地原生通知文档定位，以及 mobile partial `WorkspaceSnapshot`、shared loaded-first/native-fallback resolver 与 folder hydration。Android partial 5,008-entry cold open、IPC/snapshot、RSS 和尾部打开，以及 iOS clean static archive 的 5,406-entry partial cold open、unloaded tail cold restore 均已通过；双端交互式第二页使用有界 shallow cache，native hit 均为 0 ms。external reconcile/write-back 已改为 native full scan + plan-driven source materialization；Android SAF 与 iOS local Files provider 的 120-file `1 changed / 0 changed` Simulator 原生复测均通过。Android Studio 已把 `arm64` 设为唯一默认 product flavor，并通过 Tauri session build、arm64 AVD 安装/冷启动和 shared EditorShell flow。真实设备弱网、APNs/FCM、provider-native streaming、双平台 physical low-memory/performance、physical bookmark 生命周期与真机终验继续进行。
 
 ## 本增量结论
 
@@ -567,6 +567,10 @@ Android SAF 与 iOS security-scoped provider 新增 native content-addressed sca
 
 工程 gate 已通过：原实现的 mobile-import cargo check、Tauri 29/29、unit 59/59、app E2E 55/55 与双平台构建均 PASS；`264db8a` follow-up 又重跑当前 unit 73/73、app E2E 56/56、jtype-core 46/46、Tauri 29/29、Desktop build、Android universal APK 与 iOS static Simulator archive verifier，全部 PASS。Android SAF 120-file changed run 为 551 ms、只 materialize 1 file / 89 bytes，立即复扫 540 ms / 0 materialize；iOS local Files provider 为 17 ms、只 materialize 1 file / 72 bytes，立即复扫 16 ms / 0 materialize。两端都返回 Desktop 共用 `VaultHome` 与 provider banner。详见 [`phase-2-native-on-demand.md`](phase-2-native-on-demand.md)。
 
+## 2D Android Studio arm64 默认 variant
+
+`cc2ec80` 使用 Android Gradle Plugin 的 `ApplicationProductFlavor.isDefault` 把 Tauri `arm64` ABI flavor 标为唯一 Studio 默认项，解决普通 **Run app** 过去选到 `armDebug`、与 `arm64-v8a` AVD 不兼容的问题。universal/arm/x86/x86_64 variants 仍完整保留；新增 Gradle verification task 确认默认集合严格为 `[arm64]`。Tauri session-backed arm64 build、只含 `lib/arm64-v8a/libjtype_lib.so` 的 APK、AVD 安装/冷启动与 Documents → 尾部搜索 → 共用 EditorShell flow 均通过；Desktop/iOS 回归没有变化。详见 [`phase-2-android-studio-arm64.md`](phase-2-android-studio-arm64.md)。
+
 ## 2D 共享 workspace 分页契约
 
 Rust core 现在可以按目录返回 shallow `WorkspaceEntryPage`，默认共享批量 160、硬上限 500；visible kind、folder-first 排序、relative path 和安全边界与完整 `open_workspace` 一致。Tauri command 在读取前继续执行 external provider recovery。React merger 将 root/nested page immutable merge 回 canonical `WorkspaceSnapshot`，并在父目录 refresh 时保留已加载 folder children；没有增加 mobile-only tree、state、列表或操作。
@@ -647,6 +651,7 @@ Rust core 现在可以在不先构造完整 recursive snapshot 的前提下查�
 | Android/iOS external provider plan-driven materialization 工程 gate | PASS；native plugin contract、Rust 29/29、unit 59/59、app E2E 55/55、双平台构建通过 |
 | Android 120-file external provider `1 changed / 0 changed` 原生复测 | PASS；SAF picker + shared VaultHome；551 ms / 1 file / 89 bytes，立即复扫 540 ms / 0 materialize |
 | iOS 120-file external provider `1 changed / 0 changed` 原生复测 | PASS；security-scoped Files provider + shared VaultHome；17 ms / 1 file / 72 bytes，立即复扫 16 ms / 0 materialize |
+| Android Studio default arm64 variant / Tauri session build / AVD runtime | PASS；default flavor `arm64`、APK `primaryCpuAbi=arm64-v8a`、shared large-vault Maestro flow 通过 |
 | Shared workspace pagination contract | PASS；jtype-core 40/40、Tauri 29/29、unit 63/63、app E2E 55/55、Desktop build 与双平台 mobile build；`3f945c4` contract commit 未启用 runtime，后续已由 `1a92435` 接入 |
 | Unloaded-entry native query contract | PASS；jtype-core 43/43、Tauri 29/29、unit 66/66、app E2E 55/55、Desktop build、双平台 mobile build 与 cold-launch screenshot；`1060d1c` contract commit 未启用 fallback，后续已由 `1a92435` 接入 |
 | Mobile partial workspace runtime | PASS；jtype-core 46/46、Tauri 29/29、unit 73/73、app E2E 56/56、Desktop build、双平台构建与 Android final APK/cold launch；iOS clean static 5,406-entry cold open + unloaded tail cold restore PASS |
@@ -656,14 +661,14 @@ Rust core 现在可以在不先构造完整 recursive snapshot 的前提下查�
 Android debug APK：
 
 - `src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk`
-- 397,894,430 bytes（当前 `264db8a` gate follow-up build）
-- SHA-256 `3d393346d2ca7f9671e14ef3904215fdb286f7283f31eab069ca3efa2a8efb7f`
+- 204,323,392 bytes（当前 `cc2ec80` arm64-only gate build）
+- SHA-256 `ba2e6d7b94883ca00d3a735e6c1d5d47779fcfcb179b60db7e4700a708acb764`
 
 iOS archive：
 
 - `src-tauri/gen/apple/build/jtype_iOS.xcarchive`
 - no-sign simulator archive；包含 `JType.app/PlugIns/JType Share.appex`
-- app binary 109,370,520 bytes；SHA-256 `ff64226e3d970834c9b444cd709a837a633b17cefce620ff4364a839f017c1ee`
+- app binary 109,370,520 bytes；SHA-256 `7b428dbbe4c37d0c9fc5aca4fa1b7043e0284bcf1bce098d24efc87ac0b1f822`
 
 截图 SHA-256：
 
@@ -710,6 +715,7 @@ ff6c2100eb7960b95222a2e028c2753bd46199197304bffaaa9bdecfac7a4a24  notification-i
 53ef21ae9cf84ee62cffebed9912375d2ae802e4b61971ba2c1a33f9b0ec9790  android-on-demand-reconcile.png
 e646299f60e8b7ad70d3dc16e7ce41a8dc882c99c3d51fc4e8b4c0d9d2ce63a0  ios-shared-welcome.jpeg
 0c3d652d5c5244944caad33d5de572f4eaadefa3dbc56b019c793e79cedd7a1d  ios-on-demand-reconcile.png
+e699e7de3cc1e2796bda09e87335b18068067ab85934d4ef5eb45eb9220ade44  android-studio-arm64-runtime.png
 dac94d5830263edb1e210c73e1b7b6ca9813f8eca18e269d3bbb2db1a80ac258  android-workspace-pagination-smoke.png
 9d165ba82efe8b6ae73f23f4ca3f3138f86840cd3c0d84a8bc630b55a84837ee  ios-workspace-pagination-smoke.png
 f4311cf3d1e9c312f6802e4e44886d19a8ead1de549e8fe776fd57d51f3eda5a  android-unloaded-entry-query-smoke.png
@@ -733,5 +739,7 @@ c16eeccec0a04340425fcc5ad51b7cb61fc1e7d3048966467c107b02d93d26a8  android-partia
 2. physical device 弱网、网络切换、低存储，以及系统分享大文件/进程终止矩阵。
 3. 接入 APNs/FCM token/服务端投递、有限后台刷新和 universal/app links；继续复用现有 canonical workspace/vault/document route。
 4. physical iPhone 的 gesture/haptic/VoiceOver 与双端真实设备最终 gate。
+
+Android Studio 默认 arm64 的配置缺口已由 `cc2ec80` 关闭；宿主解锁后可补工具栏 **Run app** 可视录屏，但不再需要 ABI 代码变更。
 
 physical iPhone 上的 bookmark 失效/重新授权、iCloud/第三方 Files provider 行为与 signed build 继续作为 Phase 2 最终验收项，不用 Simulator 结果替代。

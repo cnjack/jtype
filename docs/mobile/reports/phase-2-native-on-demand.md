@@ -4,7 +4,7 @@
 
 Feature branch：`codex/mobile-app`
 
-实现 commit：`5970d15`；iOS Simulator gate follow-up：`264db8a`
+实现 commit：`5970d15`；iOS Simulator gate follow-up：`264db8a`；Android Studio arm64 follow-up：`cc2ec80`
 
 状态：工程实现与自动化 gate 已完成；Android API 36 原生 SAF 与 iPhone 17 Pro / iOS 26.5 Simulator 的 security-scoped Files provider 均已通过 120-file `1 changed / 0 changed` 交互、日志与 shared UI gate。physical iPhone 的 bookmark 失效/重新授权、iCloud/第三方 Files provider 和真机资源指标仍保留到最终验收。
 
@@ -143,7 +143,7 @@ iOS 通过同一 shared provider banner 的 **Check external changes** 连续执
 
 ![iOS Files provider one-change reconciliation in shared VaultHome](assets/phase-2/ios-on-demand-reconcile.png)
 
-Android Studio 的普通 **Run app** 还暴露了一个独立的开发体验问题：IDE 默认选择 `armDebug`，而当前 AVD 是 `arm64-v8a`，Tauri task 因 ABI 不匹配退出。该失败不属于 APK/runtime gate；同一源码的 `pnpm tauri android build --debug --target aarch64 --apk --ci` artifact 已成功安装并完成上述流程。后续应给 IDE run configuration 固定 arm64 variant，避免开发者误入错误 flavor。
+Android Studio 的普通 **Run app** 曾暴露一个独立的开发体验问题：IDE 默认选择 `armDebug`，而当前 AVD 是 `arm64-v8a`，Tauri task 因 ABI 不匹配退出。`cc2ec80` 已使用 Android Gradle Plugin 的 `ApplicationProductFlavor.isDefault` 把 `arm64` 标为唯一 Studio 默认 flavor，同时保留 universal/arm/x86/x86_64 任务；Gradle model 自检、Tauri session arm64 build、安装、冷启动和 shared large-vault Maestro flow 均通过。完整边界、截图和 artifact 见 [`phase-2-android-studio-arm64.md`](phase-2-android-studio-arm64.md)。
 
 证据哈希：
 
@@ -151,6 +151,7 @@ Android Studio 的普通 **Run app** 还暴露了一个独立的开发体验问�
 53ef21ae9cf84ee62cffebed9912375d2ae802e4b61971ba2c1a33f9b0ec9790  android-on-demand-reconcile.png
 e646299f60e8b7ad70d3dc16e7ce41a8dc882c99c3d51fc4e8b4c0d9d2ce63a0  ios-shared-welcome.jpeg
 0c3d652d5c5244944caad33d5de572f4eaadefa3dbc56b019c793e79cedd7a1d  ios-on-demand-reconcile.png
+e699e7de3cc1e2796bda09e87335b18068067ab85934d4ef5eb45eb9220ade44  android-studio-arm64-runtime.png
 991e4cd6baefbf2dad308873db417b2ca3b5f886fd1f0913a44eeb563b90cb40  app-universal-debug.apk
 3d393346d2ca7f9671e14ef3904215fdb286f7283f31eab069ca3efa2a8efb7f  follow-up app-universal-debug.apk
 ff64226e3d970834c9b444cd709a837a633b17cefce620ff4364a839f017c1ee  follow-up JType iOS binary
@@ -161,4 +162,4 @@ ff64226e3d970834c9b444cd709a837a633b17cefce620ff4364a839f017c1ee  follow-up JTyp
 1. 在 physical iPhone 补 bookmark 失效/重新授权、iCloud/第三方 Files provider 与 signed build；Simulator local Files provider 120-file gate 已完成，不替代真机权限生命周期。
 2. 补充双端 reconcile total time、峰值 RSS/存储增长；双端 native scan/materialized file/bytes 已有 Simulator 数据。
 3. shared shallow page contract 与 canonical `WorkspaceSnapshot` merger 已在 `3f945c4` 建立，未加载 entry native query 已在 `1060d1c` 建立，shared loaded-first/native-fallback resolver、mobile partial bootstrap、folder hydration 与按打开读取正文已在 `1a92435` 接通。首次 mirror 的离线策略与 provider-native streaming 仍单独决策，详见 [`phase-2-workspace-pagination.md`](phase-2-workspace-pagination.md)、[`phase-2-unloaded-entry-resolution.md`](phase-2-unloaded-entry-resolution.md) 与 [`phase-2-partial-workspace-runtime.md`](phase-2-partial-workspace-runtime.md)。
-4. 为 Android Studio 提供明确的 arm64 run configuration/variant，避免 IDE 默认 `armDebug` 与 arm64 AVD 不匹配。
+4. Android Studio 默认 `arm64` variant 已在 `cc2ec80` 完成；宿主解锁后只需补工具栏 **Run app** 的可视录屏，不再是 ABI 配置缺口。
