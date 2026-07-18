@@ -359,6 +359,7 @@ fn describe_provider_for_root(
                 .external_vault_reconcile
                 .lock()
                 .map_err(|_| "External vault operation lock is unavailable".to_string())?;
+            vault_reconcile::recover_interrupted_reconcile(root)?;
             let provider_id = provider.provider_id.clone();
             return refresh_android_provider_access(app, store, &provider_id);
         }
