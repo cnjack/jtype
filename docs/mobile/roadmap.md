@@ -2,7 +2,7 @@
 
 > 最后更新：2026-07-18  
 > Feature branch：`codex/mobile-app`  
-> 当前阶段：Phase 2 — External vaults and mobile integration
+> 当前阶段：Phase 2D — 系统集成与可靠性；2A/2B/2C 工程与 Simulator gate 已完成
 > 状态说明：`[ ]` 未开始、`[~]` 进行中、`[x]` 已完成；只有附上真实测试证据后才能标记完成。
 
 ## 目标
@@ -170,7 +170,7 @@
 
 1. **2A Provider contract（约 3–5 天）**：先冻结 provider identity、capability、mirror metadata、reconcile plan 和错误模型；现有 app-private filesystem 成为第一个 provider 实现，UI/AppState/commands 不改调用语义。
 2. **2B Android SAF（约 1–2 周）**：目录选择、persistable tree URI、mirror 初次导入、双向增量 reconcile、权限丢失重新授权；Android 模拟器逐段留截图与报告。
-3. **2C iOS folder provider（约 1–2 周）**：folder picker、security-scoped bookmark、访问生命周期、mirror reconcile 和失效恢复；signed Simulator 与真机分别验收。
+3. **2C iOS folder provider（已完成工程与 Simulator gate）**：folder picker、security-scoped bookmark、访问生命周期、mirror reconcile、覆盖安装容器迁移和 shared editor write-back 已通过；失效重新授权与第三方 Files provider 保留到 physical iPhone 终验。
 4. **2D 系统集成与可靠性（约 1–2 周）**：share target、pending OAuth 冷恢复、无障碍、草稿恢复、大 vault/弱网测试；最后执行双平台真实设备 gate。
 
 每个增量继续复用 desktop `Sidebar`、`VaultHome`、`EditorShell`、Document Info、Board、commands 和 sync model。provider 差异只能进入 Rust/provider adapter 与 canonical capability，不允许出现第二套 mobile 文件树或编辑器。
@@ -179,10 +179,11 @@
 
 - [x] 定义 `VaultBackend` / `VaultProvider` descriptor、identity、access state、capability 与 versioned native record 边界；现有 app-private/local vault 已通过 provider resolver 打开，UI、AppState、commands、相对路径和 sync document model 不变（证据：`docs/mobile/reports/phase-2.md`，实现：`002fd18`）
 - [x] Android Storage Access Framework：系统目录选择、persistable permission、原子首次 mirror、permission health、重新授权、SHA-256 baseline、三方安全 pull、both-modified guard、中断后 open recovery、versioned mutation journal，以及 shared workbench 的 write/create/rename/delete/Board/binary/folder/cloud/trash mutation routing 已完成；120 文件 native write-back 的进程终止、磁盘不足、真实 persisted permission 撤销、local multi-file closure rollback/cold recovery，以及 shared banner 大批量 applying/verifying 进度均已通过真实 API 36 模拟器。write capability、正式 Open vault 入口、共享 VaultHome/Editor、provider status/reauthorize/pending UI 与逐路径冲突选择已开放并通过产品 UI（证据：`docs/mobile/reports/phase-2.md`，实现：`18fbeb8`、`0b69f16`、`f9537f2`、`231a2dc`、`99a7d39`、`123bea6`、`455eafe`、`c78eaad`、`276ced1`、`15df904`、`f0e3443`）
-- [ ] iOS folder picker：security-scoped bookmark、权限恢复、失效后的重新授权
-- [~] external directory ↔ app-private mirror 的 record、storage mode 与 capability contract 已建立；Android native record、首次导入、内容 baseline、安全 pull、受控双向 write-back、delete/rename、local transaction、journal retry、native fault recovery、conflict guard、shared command routing、write capability、正式共享 UI、逐路径冲突选择与大批量进度已完成；iOS 实现待 2C 完成
+- [~] iOS folder picker：security-scoped bookmark、稳定 source identity、成对 access lifecycle、stale bookmark refresh、首次 mirror、冷恢复、container UUID rebase 与 shared editor write-back 已通过 iPhone Simulator；physical iPhone 的 bookmark 失效/重新授权待最终 gate（证据：`docs/mobile/reports/phase-2-ios-external-vault.md`，实现：`2e52c8b`）
+- [x] external directory ↔ app-private mirror 的 record、storage mode 与 capability contract 已由 Android/iOS 共用；两端复用同一 baseline、reconcile/write-back journal、shared command routing、capability、正式共享 UI、冲突与进度模型，不存在 mobile-only 文件树或编辑器
 - [ ] 当 mirror 被证明不足时，再将 provider 扩展为零拷贝访问；不在 UI 层分叉
 - [x] Android external provider 已能检测权限丢失/目录移动、保持同一 provider identity 重新授权，并在其他 app 修改文件后安全 pull、合并不相交 source/local 变化、阻断同路径双边冲突并逐路径选择保留 source/JType；共享 desktop mutation 已通过 provider adapter 写回 SAF，native 磁盘不足/权限撤销可保留 journal 后恢复；正式共享 UI 已提供状态、重新授权、pending journal、冲突数量、选择 dialog 与大批量 write-back/verification 进度
+- [~] iOS external provider 已完成真实 folder selection、native-only bookmark、首次 mirror、冷启动/覆盖安装恢复和 source write-back；bookmark 失效与 iCloud/第三方 Files provider 的真机 gate 待完成
 
 ### 2.2 移动交互完善
 
@@ -208,13 +209,13 @@
 
 ### 2.5 Phase 2 验收
 
-- [ ] Android/iOS 外部 vault 选择、重启后恢复、增删改查和权限丢失恢复通过
-- [~] Android 外部 app 修改文件后 JType 能 reconcile，并以正式共享 dialog 逐路径选择，不会静默覆盖；iOS provider 待 2C
+- [~] Android 外部 vault 全链路已通过；iOS Simulator 已通过选择、重启/覆盖安装恢复和 shared editor 写回，physical iPhone 权限失效恢复待完成
+- [~] Android 外部 app 修改文件后的真实 reconcile/conflict 已通过；iOS 复用同一 Rust plan 与共享 dialog，并有 contract/E2E 覆盖，真实 Files provider 双边冲突留到 physical iPhone gate
 - [ ] share/deep-link/notification smoke flow 通过
 - [ ] 大 vault 基准达到报告中预先记录的阈值
 - [ ] desktop build、Rust tests、app E2E 全部通过
 - [ ] 双平台模拟器与至少一台真实设备截图/录像证据已保存
-- [~] `docs/mobile/reports/phase-2.md` 已记录 2A provider contract 与 2B Android SAF 首次 mirror 增量；后续持续更新到 Phase 2 终验
+- [~] `docs/mobile/reports/phase-2.md` 已记录 2A、2B 与 2C Simulator 结果，iOS 细节见 `docs/mobile/reports/phase-2-ios-external-vault.md`；后续持续更新到 Phase 2 终验
 - [~] tracking 已记录当前 Phase 2 commit hashes；后续增量继续追加
 
 ## Phase 3 — Store readiness
@@ -277,6 +278,7 @@
 | 2026-07-18 | 2.1 / 2B | `276ced1` | 开放 Android external vault capability，以原 Open vault action 接入 SAF，并在共享 VaultHome/Editor 中提供状态、重新授权和 pending journal 操作 | `docs/mobile/reports/phase-2.md` |
 | 2026-07-18 | 2.1 / 2B | `15df904` | 共享 Headless UI 逐路径冲突选择，真实 API 36 双向收敛、精确验证与 baseline 推进 | `docs/mobile/reports/phase-2.md` |
 | 2026-07-18 | 2.1 / 2B | `f0e3443` | 共享 provider banner 的 SAF 批量 applying/verifying 进度，120 文件真实 create/delete 与后台 worker IPC 兼容 | `docs/mobile/reports/phase-2.md` |
+| 2026-07-18 | 2.1 / 2C | `2e52c8b` | iOS security-scoped folder provider、mobile external command 泛化、container path rebase、shared editor iOS focus 修复与 picker smoke | `docs/mobile/reports/phase-2-ios-external-vault.md` |
 | 2026-07-18 | 2.2 / shell | `232222c` | 约束共享 Welcome 内容在窄屏和本地化文案下的宽度 | `docs/mobile/reports/phase-2.md` |
 | 2026-07-18 | 2.2 / shell | `309aebb` | 将共享 App shell Grid 列固定为 `minmax(0, 1fr)`，增加完整中文 locale overflow 回归 | `docs/mobile/reports/phase-2.md` |
 

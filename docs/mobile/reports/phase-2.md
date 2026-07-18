@@ -4,9 +4,9 @@
 
 Feature branch：`codex/mobile-app`
 
-当前 app code commit：`f0e3443`
+当前 app code commit：`2e52c8b`
 
-本报告状态：进行中；2A provider contract 与 2B Android SAF 已完成。Android 已通过系统目录选择、persistable permission、native-only provider record、首次原子镜像、permission health、目录失效检测、重新授权、内容哈希 baseline、安全 pull reconcile、冲突阻断、冷启动恢复、带 mutation journal 的受控 write-back、shared workbench mutation routing、native operation 中途磁盘不足/权限撤销后的 journal 恢复、local mutation closure 的 rollback/cold recovery、write capability、正式共享产品 UI、逐路径冲突选择，以及大批量操作可见进度。下一段进入 2C iOS security-scoped folder provider。
+本报告状态：进行中；2A provider contract、2B Android SAF 与 2C iOS security-scoped provider 的工程/Simulator gate 已完成。iOS 已通过系统目录选择、native-only bookmark、首次镜像、覆盖安装后的容器迁移、冷启动恢复和 shared editor write-back；physical iPhone 的 bookmark 失效/重新授权仍保留在最终真实设备 gate。下一段进入 2D 系统集成与可靠性。
 
 ## 本增量结论
 
@@ -22,9 +22,9 @@ Android SAF 没有新增 mobile-only 产品页：native picker 与 opaque tree U
 - storage mode：`direct` 与 `mirror`。
 - capability：read/write/create/rename/delete/watch/reconcile/reauthorize。
 - external native record：区分 Android SAF tree 与 iOS security-scoped bookmark，包含 mirror root、只读状态、source revision 和最后 reconcile 时间。
-- versioned provider store schema：当前版本 `1`。
+- versioned provider store schema：当前版本 `2`，source identity 与可刷新 source reference 分离。
 
-`open_default_vault` 与 `open_workspace` 先解析 provider，再继续调用现有 `jtype-core` / workspace 实现，因此 `WorkspaceSnapshot`、前端 state 和 command callback 没有变化。SAF 会先 reconcile 到 app-private mirror，再复用当前 workspace 文件操作；现有 read/write/create/rename/delete、Board、binary、folder、cloud 和 trash mutation 已按 root/path 自动进入 provider adapter，desktop/iOS 仍直通原实现。iOS bookmark 会复用同一 contract。
+`open_default_vault` 与 `open_workspace` 先解析 provider，再继续调用现有 `jtype-core` / workspace 实现，因此 `WorkspaceSnapshot`、前端 state 和 command callback 没有变化。Android SAF 与 iOS bookmark 都先 reconcile 到 app-private mirror，再复用当前 workspace 文件操作；现有 read/write/create/rename/delete、Board、binary、folder、cloud 和 trash mutation 已按 root/path 自动进入同一个 mobile provider adapter，desktop 仍直通原实现。
 
 ## 安全边界
 
@@ -37,7 +37,7 @@ accessState, storageMode, capabilities
 
 Android persistable tree URI 与 iOS security-scoped bookmark 只存在于 Rust/native record 的 `opaqueSourceReference`。descriptor 序列化测试确认不会输出 `content://`、bookmark 或 `opaqueSourceReference`，前端 canonical type 也没有这些字段。
 
-Android provider store 使用 app config 目录内的 `vault-providers.json`，写入采用同目录 temporary file → rename 的原子替换。SAF mirror 也先写入同目录 staging tree，完整枚举成功后才 rename 为稳定 provider root；失败会删除 staging tree，不会暴露半成品 vault。
+mobile provider store 使用 app config 目录内的 `vault-providers.json`，写入采用同目录 temporary file → rename 的原子替换。Android SAF 与 iOS bookmark 的首次 mirror 都先写入同目录 staging tree，完整枚举成功后才 rename 为稳定 provider root；失败会删除 staging tree，不会暴露半成品 vault。
 
 ## Provider 验证
 
@@ -48,10 +48,10 @@ Android provider store 使用 app config 目录内的 `vault-providers.json`，�
 1. mobile 默认库解析为 `appPrivate` / `direct`。
 2. desktop/local directory provider ID 跨解析保持稳定。
 3. external mirror capability 正确，native source reference 不进入 descriptor JSON。
-4. 缺省 store JSON 迁移到 schema version 1。
-5. Android/iOS source kind 与 opaque source reference 共同生成稳定、隔离的 external provider ID。
+4. 缺省/旧 store JSON normalize 到 schema version 2。
+5. Android/iOS source kind 与稳定 source identity 共同生成隔离的 external provider ID；可刷新 bookmark 不参与 identity。
 6. provider store 能幂等 upsert，并按 source 或 mirror root 恢复记录。
-7. schema 1 的旧 external record 缺少 `sourceReadOnly` 时安全迁移为 source 只读，不会在升级后意外开放写入。
+7. schema 1 的旧 external record 缺少 `sourceReadOnly` / `sourceIdentity` 时安全迁移，不会在升级后意外开放写入。
 
 当前 `cargo test --manifest-path src-tauri/Cargo.toml` 结果为 28/28，覆盖 provider capability、reconcile/write-back、local rollback、cold recovery 与 source conflict subtree 原子替换。
 
@@ -273,7 +273,7 @@ conflicts           [{ relativePath: "intro.md", reason: "bothModified" }]
 3. 在同一锁内调用已经验证的 SAF write-back transaction；若三方比较发现 `bothModified`，command 以包含结构化 conflict 的错误返回，不推进 baseline，也不修改 source。
 4. 对 root mutation，write-back 完成后再重新打开 workspace，因此 source-only 安全 pull 会反映在返回的 `WorkspaceSnapshot` 中。
 
-`provider_for_local_path` 只接受 mirror root 本身或其真实 descendant；相邻前缀目录与包含 `.` / `..` 的路径不会被误路由。非 Android 实现继续直接调用原 closure，desktop/iOS 的 command 参数和返回值不变。
+`provider_for_local_path` 只接受 mirror root 本身或其真实 descendant；相邻前缀目录与包含 `.` / `..` 的路径不会被误路由。desktop 继续直接调用原 closure；Android/iOS 通过同一个 mobile adapter 包裹 closure，command 参数和返回值不变。
 
 在真实模拟器中通过同一批 desktop/shared commands 完成并核对 source/mirror：
 
@@ -422,7 +422,7 @@ E2E 同时覆盖两种选择的 command payload、剩余 conflict state 与 dial
 
 SAF write-back 现在对至少 8 个 native operation 发出 canonical `vault-provider-operation-progress` event，包含 provider、阶段、完成数、总数、当前路径与耗时。共享 `VaultProviderBanner` 监听同一事件，在原有 provider 状态 surface 中显示 applying / verifying、计数、秒数和无障碍 progressbar；完成或失败后恢复正常 provider 状态。没有新增 mobile-only 页面，也没有复制文件列表或操作代码。
 
-第一次真实 gate 暴露出一个关键问题：Rust 虽然持续发出了事件，但同步 Tauri command 占住 WebView 调用线程，UI 只能在命令结束后处理事件，因此长操作期间仍看不到反馈。修复将可能产生大批量 SAF 写回的共享 cloud apply/delete、folder import/rename/move/delete 与 trash restore 等命令放入 Tauri blocking worker；IPC command 名、参数、返回值和 TypeScript Promise contract 不变，desktop/iOS 仍执行同一 filesystem mutation。
+第一次真实 gate 暴露出一个关键问题：Rust 虽然持续发出了事件，但同步 Tauri command 占住 WebView 调用线程，UI 只能在命令结束后处理事件，因此长操作期间仍看不到反馈。修复将可能产生大批量 external write-back 的共享 cloud apply/delete、folder import/rename/move/delete 与 trash restore 等命令放入 Tauri blocking worker；IPC command 名、参数、返回值和 TypeScript Promise contract 不变，desktop 继续执行同一 filesystem mutation。
 
 真实产品 UI 连续验证：
 
@@ -448,6 +448,18 @@ Library/Application Support/net.jcode.jtype/vaults/default
 
 ![iOS app-private provider](assets/phase-2/provider-contract-ios.png)
 
+### iPhone Simulator：2C security-scoped external vault
+
+环境：iPhone 17 Pro Simulator，iOS 26.5，arm64；app code commit `2e52c8b`。
+
+iOS 使用系统 folder picker、security-scoped bookmark 与稳定 volume/file identity 接入既有 external provider contract。bookmark 只存于 native store；每次操作平衡 security-scoped access，stale bookmark 可在 health check 中刷新。首次 staging mirror、三方 reconcile、journal write-back、conflict/progress surface 与 Android 共用 Rust 实现。
+
+真实 Files fixture 已完成选择、首次镜像、共享 VaultHome/Editor 打开、terminate/launch、两次覆盖安装后的 container UUID rebase，以及 shared Save 写回 source/mirror。compact editor 同时增加 16px iOS focus 下限，避免键盘触发 WebView 自动缩放后把 Save 挤出 viewport。
+
+![iOS security-scoped vault in shared EditorShell](assets/phase-2/ios-security-scoped-shared-editor.png)
+
+完整实现、安全边界、Simulator 证据与剩余真机 gate：[`phase-2-ios-external-vault.md`](phase-2-ios-external-vault.md)。
+
 ## 本轮发现并修复的共享壳层问题
 
 iOS 中文 locale 暴露出 desktop 共享壳层的隐式 Grid 列会按中文 Header/状态栏最小内容宽度撑开。修复没有建立 mobile-only 页面，而是在唯一 `App` shell 上显式使用 `minmax(0, 1fr)`，并给 shell、内容轨道和 content panel 增加 `min-width: 0`。
@@ -465,12 +477,13 @@ E2E 现在以完整中文 locale 在 390×844 viewport 验证：content panel �
 - `f9537f2`：SHA-256 manifest baseline、三方 reconcile plan、原子安全 pull、delete/rename 与 conflict guard。
 - `231a2dc`：external describe/open 在事务中断后先恢复 mirror backup，再返回 provider/workspace。
 - `99a7d39`：Android SAF create/write/delete adapter、确定性 write-back plan、versioned mutation journal、source-first conflict guard 与 manifest verification。
-- `123bea6`：现有 shared workbench mutation command 通过 provider adapter 路由到 Android SAF，并保持 desktop/iOS 直通实现。
+- `123bea6`：现有 shared workbench mutation command 首先通过 provider adapter 路由到 Android SAF，并保持 desktop/iOS 直通实现；`2e52c8b` 再将同一 adapter 开放给 iOS。
 - `455eafe`：debug-only Android SAF native fault injector、失败后 journal 保留、permission health 即时刷新与 retry-safe 错误。
 - `c78eaad`：shared mutation 的完整 mirror backup/marker、local error rollback、进程终止冷恢复与 journal-aware forward recovery。
 - `276ced1`：开放 Android external vault capability，把入口、状态、重新授权、pending write-back 与写操作接入同一套 desktop/shared UI。
 - `15df904`：在共享 Headless UI dialog 中逐路径选择设备目录或 JType 版本，并以 provider adapter 完成验证、收敛与 baseline 推进。
 - `f0e3443`：在共享 provider banner 中显示 SAF 批量 write-back/verification 进度，并将大批量共享 mutation 移到 blocking worker，保持 desktop IPC contract 不变。
+- `2e52c8b`：iOS security-scoped folder provider、mobile external command 泛化、container path rebase、shared editor iOS focus 修复与 native picker smoke flow。
 
 ## 自动化与构建结果
 
@@ -479,7 +492,7 @@ E2E 现在以完整中文 locale 在 390×844 viewport 验证：content panel �
 | `npm run build` | PASS |
 | `npm run build --prefix services/jtype-web/frontend` | PASS |
 | `npm run test:unit` | PASS，47/47 |
-| `npx playwright test tests/e2e/app.spec.ts` | PASS，43/43 |
+| `npx playwright test tests/e2e/app.spec.ts` | PASS，44/44 |
 | `cargo test --manifest-path src-tauri/Cargo.toml` | PASS，28/28；新增 source conflict subtree 原子替换测试 |
 | `cargo check --manifest-path plugins/mobile-import/Cargo.toml` | PASS |
 | `cargo fmt --manifest-path plugins/mobile-import/Cargo.toml --check` | PASS |
@@ -500,14 +513,14 @@ E2E 现在以完整中文 locale 在 390×844 viewport 验证：content panel �
 | Android 正式 conflict dialog / keep JType / keep device folder / baseline advance | PASS；真实 API 36 两个方向均完成 source/mirror 收敛，E2E payload/state 闭环 |
 | Android 120-file create/delete / live progress / verification / cleanup | PASS；`34/121` applying、`121/121` verifying 均在操作期间可见，source/mirror 收敛且无 transaction 残留 |
 | `cargo check --release --manifest-path src-tauri/Cargo.toml` | PASS；release `debug_assertions=false` 分支不暴露 fault 配置 |
-| `pnpm tauri ios build --debug --target aarch64-sim --no-sign --archive-only --ci` | PASS；共享 conflict/progress UI 编译通过，iOS external capability 仍未开放 |
-| iOS clean install / Maestro default vault flow / localized shell | PASS（2A contract 增量；本次只重跑 compile gate） |
+| `pnpm tauri ios build --debug --target aarch64-sim --no-sign --archive-only --ci` | PASS；security-scoped external provider 编译通过 |
+| iOS clean picker / initial mirror / cold restore / container migration / shared editor write-back | PASS；Files source 与 mirror 收敛 |
 
 Android debug APK：
 
 - `src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk`
-- 379,286,299 bytes
-- SHA-256 `9592a5078456a1ee8cda93824924184e13a24ff2e0bad9e8d37054c4ef36f851`
+- 198,968,021 bytes（aarch64 target gate）
+- SHA-256 `4c0c1160f29bbaa19475c1f8b863da0f1416b937fb7763b60cf871e2c45fecb0`
 
 iOS archive：
 
@@ -530,15 +543,16 @@ d7ca9b5f30658ff8d135cbff757c36c0c7ca2bfc33231246ac9830176f5cff0f  android-saf-lo
 8b33279cf5e1e59b5e651c33392bfaa4ac2c6afba4097a9cbf1170b4162b42e7  android-saf-shared-editor.png
 857ba5a38d37dad57fb28dbc38d6cbd3717d2bed4dc56c0f9dca8fde31a9f5f0  android-saf-conflict-dialog.png
 efaf0b4b082cda9833811b3cdc5071b2f96ae26487a72f406be74207e947e4de  android-saf-batch-progress.png
+c213478f4fe7e1bde3d85447c08b9793b4559dc36de2cd40b80c065572bf876f  ios-security-scoped-shared-editor.png
 ```
 
-## 下一增量：2C iOS security-scoped folder provider
+## 下一增量：2D 系统集成与可靠性
 
-2B Android SAF 已收口。下一段继续按已冻结的 provider contract 实现：
+2A、2B 与 2C 的工程/Simulator gate 已收口。下一段继续保持 desktop/shared product surface，处理：
 
-1. 在 iOS native adapter 中接入系统 folder picker 与 security-scoped bookmark；bookmark 只进入 native record，不返回 WebView。
-2. 明确 `startAccessingSecurityScopedResource` / `stopAccessingSecurityScopedResource` 生命周期、stale bookmark 更新、失效检测与重新授权。
-3. 复用同一 provider store、descriptor、app-private mirror、baseline、reconcile/write-back journal、冲突 dialog 与批量 progress surface，不建立 iOS 专用文件树或编辑器。
-4. 以 signed Simulator 验证选择/冷启动恢复/增删改查/冲突/失效重新授权，并保持 no-sign archive 与 desktop/web 回归门禁。
+1. Android share target 与 iOS share extension，把 Markdown、纯文本和文件导入用户选择的 vault。
+2. pending OAuth 的安全持久化、进程终止与冷回跳恢复。
+3. VoiceOver/TalkBack、动态字体、对比度、键盘 accessory 与硬件快捷键。
+4. 草稿冷恢复、低内存/后台终止、大 vault、弱网与最终真实设备 gate。
 
-iOS 适配完成后再进入 2D share target、pending OAuth 冷恢复、无障碍、草稿恢复与大 vault/弱网终验。
+physical iPhone 上的 bookmark 失效/重新授权、iCloud/第三方 Files provider 行为与 signed build 继续作为 Phase 2 最终验收项，不用 Simulator 结果替代。
