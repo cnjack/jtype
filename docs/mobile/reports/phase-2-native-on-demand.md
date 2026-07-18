@@ -4,9 +4,9 @@
 
 Feature branch：`codex/mobile-app`
 
-实现 commit：`5970d15`；iOS Simulator gate follow-up：`264db8a`；Android Studio arm64 follow-up：`cc2ec80`
+实现 commit：`5970d15`；iOS Simulator gate follow-up：`264db8a`；Android Studio arm64 follow-up：`cc2ec80`；stable mirror reuse follow-up：`a374204`
 
-状态：工程实现与自动化 gate 已完成；Android API 36 原生 SAF 与 iPhone 17 Pro / iOS 26.5 Simulator 的 security-scoped Files provider 均已通过 120-file `1 changed / 0 changed` 交互、日志与 shared UI gate。physical iPhone 的 bookmark 失效/重新授权、iCloud/第三方 Files provider 和真机资源指标仍保留到最终验收。
+状态：工程实现与自动化 gate 已完成；Android API 36 原生 SAF 与 iPhone 17 Pro / iOS 26.5 Simulator 的 security-scoped Files provider 均已通过 source scan、选择性 materialization、stable mirror baseline reuse 与 shared UI gate。physical iPhone 的 bookmark 失效/重新授权、iCloud/第三方 Files provider、source full-hash 与真机资源指标仍保留到最终验收。
 
 ## 结论
 
@@ -29,6 +29,7 @@ iOS local Files provider 复测得到相同结论：已有 security-scoped bookm
 
 - 首次选择外部 vault 仍完整 mirror 到 app-private root，保证离线可用和既有 Desktop filesystem contract 不变。
 - native scan 仍会完整枚举目录并读取所有文件内容以计算 SHA-256；它消除了整库临时复制，但尚未消除整库 hash I/O。
+- `a374204` 在可信 baseline 与 fresh source manifest 完全相同且无 mutation/journal 时，跳过第二次 app-private mirror full hash；source 仍完整内容寻址，changed/restored source 均回退原 materialization 路径。详见 [`phase-2-mirror-manifest-reuse.md`](phase-2-mirror-manifest-reuse.md)。
 - 在本实现 commit `5970d15` 中，app-private mirror 的 `WorkspaceSnapshot` 仍完整枚举；后续 `1a92435` 已让 mobile runtime 使用 partial snapshot 与打开时读取正文。external 首次 mirror、完整 source hash scan 与 provider-native streaming 仍未改变。
 - source 只在 plan 要求 pull/upsert 或 `UseSource` 冲突选择时 materialize；纯删除、无变化检查和 `UseJtype` verification 不复制 source 文件。
 
@@ -82,6 +83,8 @@ debug build 新增两类日志：
 | `tests/mobile/ios-on-demand-provider.yaml` | PASS；iOS shared provider banner → Check external changes |
 
 2026-07-19 follow-up 又在当前分支重跑 `pnpm build`、unit 73/73、app E2E 56/56、jtype-core 46/46、Tauri 29/29、Android universal APK、iOS static Simulator archive verifier 和 iOS Maestro flow，全部 PASS。
+
+`a374204` follow-up 再次通过 unit 78/78、app E2E 56/56、jtype-core 46/46、Tauri 30/30、Desktop build、Android aarch64 APK 与 iOS static archive verifier。Android unchanged 120-entry 与 iOS unchanged 123-entry 均输出 `external_mirror_manifest_reuse`；Android source changed/restored 两轮均按预期只 materialize 1 file，最终 SHA 回到原值。
 
 Android universal debug APK：
 
@@ -161,5 +164,5 @@ ff64226e3d970834c9b444cd709a837a633b17cefce620ff4364a839f017c1ee  follow-up JTyp
 
 1. 在 physical iPhone 补 bookmark 失效/重新授权、iCloud/第三方 Files provider 与 signed build；Simulator local Files provider 120-file gate 已完成，不替代真机权限生命周期。
 2. 补充双端 reconcile total time、峰值 RSS/存储增长；双端 native scan/materialized file/bytes 已有 Simulator 数据。
-3. shared shallow page contract 与 canonical `WorkspaceSnapshot` merger 已在 `3f945c4` 建立，未加载 entry native query 已在 `1060d1c` 建立，shared loaded-first/native-fallback resolver、mobile partial bootstrap、folder hydration 与按打开读取正文已在 `1a92435` 接通。首次 mirror 的离线策略与 provider-native streaming 仍单独决策，详见 [`phase-2-workspace-pagination.md`](phase-2-workspace-pagination.md)、[`phase-2-unloaded-entry-resolution.md`](phase-2-unloaded-entry-resolution.md) 与 [`phase-2-partial-workspace-runtime.md`](phase-2-partial-workspace-runtime.md)。
+3. shared shallow page contract 与 canonical `WorkspaceSnapshot` merger 已在 `3f945c4` 建立，未加载 entry native query 已在 `1060d1c` 建立，shared loaded-first/native-fallback resolver、mobile partial bootstrap、folder hydration 与按打开读取正文已在 `1a92435` 接通；`a374204` 已消除 unchanged 稳定状态的重复 mirror hash。首次 mirror 的离线策略、source full-hash 与 provider-native streaming 仍单独决策，详见 [`phase-2-workspace-pagination.md`](phase-2-workspace-pagination.md)、[`phase-2-unloaded-entry-resolution.md`](phase-2-unloaded-entry-resolution.md)、[`phase-2-partial-workspace-runtime.md`](phase-2-partial-workspace-runtime.md) 与 [`phase-2-mirror-manifest-reuse.md`](phase-2-mirror-manifest-reuse.md)。
 4. Android Studio 默认 `arm64` variant 已在 `cc2ec80` 完成；宿主解锁后只需补工具栏 **Run app** 的可视录屏，不再是 ABI 配置缺口。

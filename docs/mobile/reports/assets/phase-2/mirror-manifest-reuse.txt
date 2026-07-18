@@ -1,0 +1,41 @@
+JType Phase 2D stable external mirror baseline reuse evidence
+Observed: 2026-07-19 (Asia/Shanghai)
+Implementation: a374204
+
+Android API 36 / arm64 AVD / SAF fixture
+
+Unchanged reconcile:
+  external_source_scan provider=<redacted> entries=120 files=120 bytes=5087 elapsed_ms=415
+  external_mirror_manifest_reuse provider=<redacted> operation=reconcile entries=120
+  workspace_open_partial loaded=121 total=121 elapsed_ms=0
+  materialized files: 0
+
+Changed-source fallback:
+  original source SHA-256: d44a0c57ed7b93580b2aedd0146a08ac4205868ef4517806506473ef994461d9
+  changed source SHA-256:  d2a04cd17aee85471f0745f8f5c9df782361e08f105d761342627c4e37eaa9cc
+  external_source_scan provider=<redacted> entries=120 files=120 bytes=5122 elapsed_ms=438
+  external_source_materialize provider=<redacted> requested_paths=1 files=1 directories=0 bytes=124
+  external_mirror_manifest_reuse: absent, as required
+
+Restored-source fallback and cleanup:
+  external_source_scan provider=<redacted> entries=120 files=120 bytes=5087 elapsed_ms=414
+  external_source_materialize provider=<redacted> requested_paths=1 files=1 directories=0 bytes=89
+  restored source SHA-256: d44a0c57ed7b93580b2aedd0146a08ac4205868ef4517806506473ef994461d9
+  temporary backup removed: yes
+
+iPhone 17 Pro / iOS 26.5 Simulator / security-scoped Files fixture
+
+Unchanged reconcile:
+  external_source_scan provider=<redacted> entries=123 files=121 bytes=4707 elapsed_ms=35
+  external_mirror_manifest_reuse provider=<redacted> operation=reconcile entries=123
+  workspace_open_partial loaded=3 total=3 elapsed_ms=0
+  materialized files: 0
+  Maestro ios-on-demand-provider: PASS
+
+Build artifacts:
+  Android arm64 debug APK: 402744398 bytes
+  Android SHA-256: 46cf37ddb20bda49c74dbe4ed6f586dd8fd9a0618043aa9cd6d6f1d42a55bc98
+  iOS Simulator app binary: 109371624 bytes
+  iOS SHA-256: c446e267f19458328ea0c4194742d00a4c546a912080708a5b7092e853b627e4
+
+The native source is still fully enumerated and content-hashed. Baseline reuse only skips the second app-private mirror hash when the trusted baseline exactly matches the fresh source manifest and no local mutation or write-back journal is active.
