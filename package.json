@@ -21,6 +21,8 @@
     "mobile:ios:init": "tauri ios init",
     "mobile:ios:dev": "tauri ios dev",
     "mobile:ios:build": "tauri ios build",
+    "mobile:ios:build:simulator-static": "tauri ios build --debug --target aarch64-sim --no-sign --archive-only --ci && bash scripts/mobile-verify-ios-static-archive.sh",
+    "mobile:ios:verify-static": "bash scripts/mobile-verify-ios-static-archive.sh",
     "i18n:extract": "lingui extract",
     "i18n:extract:web": "lingui extract --config services/jtype-web/frontend/lingui.config.ts",
     "i18n:compile": "lingui compile",

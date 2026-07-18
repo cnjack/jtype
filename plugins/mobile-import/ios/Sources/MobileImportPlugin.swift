@@ -81,17 +81,20 @@ class MobileImportPlugin: Plugin, UIDocumentPickerDelegate {
   private var claimedShareSources = Set<String>()
 
   @objc public func takePendingShares(_ invoke: Invoke) throws {
-    DispatchQueue.global(qos: .userInitiated).async {
-      do {
-        try self.moveSharedRequestsIntoAppCache()
-        let discovered = try self.localShareSources()
-        self.shareLock.lock()
-        let sources = discovered.filter { self.claimedShareSources.insert($0).inserted }
-        self.shareLock.unlock()
-        invoke.resolve(["sources": sources])
-      } catch {
-        invoke.reject("Unable to receive shared files: \(error.localizedDescription)")
-      }
+    // `run_mobile_plugin` waits synchronously for this startup response. On
+    // iOS, resolving from a background queue needs to hop back to the main
+    // plugin manager, which deadlocks when the Rust command itself is already
+    // waiting on the main thread. This drain is bounded to the small share
+    // inbox and must resolve before returning from the native command.
+    do {
+      try moveSharedRequestsIntoAppCache()
+      let discovered = try localShareSources()
+      shareLock.lock()
+      let sources = discovered.filter { claimedShareSources.insert($0).inserted }
+      shareLock.unlock()
+      invoke.resolve(["sources": sources])
+    } catch {
+      invoke.reject("Unable to receive shared files: \(error.localizedDescription)")
     }
   }
 

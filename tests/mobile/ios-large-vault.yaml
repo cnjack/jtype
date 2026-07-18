@@ -2,6 +2,12 @@ appId: net.jcode.jtype
 ---
 - launchApp:
     clearState: false
+- runFlow:
+    when:
+      visible: "使用默认库|Use default vault"
+    commands:
+      - tapOn: "使用默认库|Use default vault"
+      - waitForAnimationToEnd
 - assertVisible: "Documents|文档"
 - tapOn: "Documents|文档"
 - waitForAnimationToEnd

@@ -253,10 +253,13 @@ fn initial_open_paths(state: tauri::State<'_, AppState>) -> Vec<String> {
 }
 
 #[tauri::command]
-fn initial_external_file_sources(
-    app: AppHandle,
-    state: tauri::State<'_, AppState>,
-) -> Result<Vec<String>, String> {
+async fn initial_external_file_sources(app: AppHandle) -> Result<Vec<String>, String> {
+    tauri::async_runtime::spawn_blocking(move || initial_external_file_sources_blocking(app))
+        .await
+        .map_err(|error| format!("External share inbox worker failed: {error}"))?
+}
+
+fn initial_external_file_sources_blocking(app: AppHandle) -> Result<Vec<String>, String> {
     #[cfg(mobile)]
     let native_sources = app
         .mobile_import()
@@ -265,9 +268,10 @@ fn initial_external_file_sources(
         .sources;
     #[cfg(desktop)]
     let native_sources: Vec<String> = {
-        let _ = app;
+        let _ = &app;
         Vec::new()
     };
+    let state = app.state::<AppState>();
     let sources: Vec<String> = state
         .pending_external_file_sources
         .lock()
