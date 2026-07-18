@@ -6,6 +6,7 @@ import android.net.Uri
 import android.provider.DocumentsContract
 import android.provider.DocumentsContract.Document
 import android.provider.OpenableColumns
+import android.webkit.MimeTypeMap
 import androidx.activity.result.ActivityResult
 import app.tauri.annotation.ActivityCallback
 import app.tauri.annotation.Command
@@ -34,6 +35,21 @@ class MirrorDirectoryArgs {
 class DirectoryAccessArgs {
     lateinit var sourceReference: String
 }
+
+@InvokeArg
+class DirectoryChangeArgs {
+    lateinit var sourceReference: String
+    lateinit var mirrorRootPath: String
+    lateinit var relativePath: String
+    lateinit var kind: String
+}
+
+private data class DocumentNode(
+    val documentId: String,
+    val displayName: String,
+    val mimeType: String,
+    val flags: Int,
+)
 
 private data class MirrorStats(
     var files: Long = 0,
@@ -230,6 +246,108 @@ class MobileImportPlugin(private val activity: Activity) : Plugin(activity) {
     }
 
     @Command
+    fun applyDirectoryChange(invoke: Invoke) {
+        val args = try {
+            invoke.parseArgs(DirectoryChangeArgs::class.java)
+        } catch (error: Exception) {
+            invoke.reject("Invalid external vault write-back request: ${error.message}")
+            return
+        }
+
+        Thread {
+            try {
+                val treeUri = Uri.parse(args.sourceReference)
+                check(treeUri.scheme == "content") { "External vault source must be a content URI" }
+                val permission = activity.contentResolver.persistedUriPermissions
+                    .firstOrNull { it.uri == treeUri }
+                    ?: error("Authorization for the selected folder is no longer available")
+                check(permission.isReadPermission && permission.isWritePermission) {
+                    "The selected folder is not writable"
+                }
+
+                val dataRoot = File(activity.applicationInfo.dataDir).canonicalFile
+                val externalRoot = File(dataRoot, "vaults/external").canonicalFile
+                val mirrorRoot = File(args.mirrorRootPath).canonicalFile
+                check(mirrorRoot.path.startsWith(externalRoot.path + File.separator)) {
+                    "External vault mirrors must stay in app-private storage"
+                }
+                check(mirrorRoot.isDirectory) { "The external vault mirror is unavailable" }
+
+                val segments = validatedRelativeSegments(args.relativePath)
+                val rootDocumentId = DocumentsContract.getTreeDocumentId(treeUri)
+                val rootMetadata = rootMetadata(treeUri)
+                val root = DocumentNode(
+                    documentId = rootDocumentId,
+                    displayName = rootMetadata.first,
+                    mimeType = Document.MIME_TYPE_DIR,
+                    flags = rootMetadata.second,
+                )
+                val result = when (args.kind) {
+                    "upsertDirectory" -> {
+                        val (_, created) = ensureDirectoryPath(treeUri, root, segments)
+                        created to 0L
+                    }
+                    "upsertFile" -> {
+                        val localFile = File(mirrorRoot, args.relativePath).canonicalFile
+                        check(localFile.path.startsWith(mirrorRoot.path + File.separator)) {
+                            "External vault write-back path escaped its mirror"
+                        }
+                        check(localFile.isFile) { "The mirror file is unavailable" }
+                        val parentSegments = segments.dropLast(1)
+                        val fileName = segments.last()
+                        val (parent, _) = ensureDirectoryPath(treeUri, root, parentSegments)
+                        val existing = findChild(treeUri, parent.documentId, fileName)
+                        check(existing?.mimeType != Document.MIME_TYPE_DIR) {
+                            "A source directory already exists at ${args.relativePath}"
+                        }
+                        val document = existing ?: createDocument(
+                            treeUri,
+                            parent,
+                            mimeTypeFor(fileName),
+                            fileName,
+                        )
+                        check(document.flags and Document.FLAG_SUPPORTS_WRITE != 0) {
+                            "The source document is not writable: ${args.relativePath}"
+                        }
+                        val documentUri = documentUri(treeUri, document.documentId)
+                        val bytes = localFile.inputStream().use { input ->
+                            activity.contentResolver.openOutputStream(documentUri, "rwt").use { output ->
+                                checkNotNull(output) { "The source document can not be opened for writing" }
+                                input.copyTo(output)
+                            }
+                        }
+                        true to bytes
+                    }
+                    "delete" -> {
+                        val document = resolveDocumentPath(treeUri, root, segments)
+                        if (document == null) {
+                            false to 0L
+                        } else {
+                            check(document.flags and Document.FLAG_SUPPORTS_DELETE != 0) {
+                                "The source document can not be deleted: ${args.relativePath}"
+                            }
+                            check(DocumentsContract.deleteDocument(
+                                activity.contentResolver,
+                                documentUri(treeUri, document.documentId),
+                            )) { "The source document was not deleted: ${args.relativePath}" }
+                            true to 0L
+                        }
+                    }
+                    else -> error("Unsupported external vault write-back operation")
+                }
+
+                invoke.resolve(
+                    JSObject()
+                        .put("changed", result.first)
+                        .put("bytes", result.second),
+                )
+            } catch (error: Exception) {
+                invoke.reject("Unable to write back the external vault: ${error.message}")
+            }
+        }.start()
+    }
+
+    @Command
     fun materialize(invoke: Invoke) {
         val args = try {
             invoke.parseArgs(MaterializeArgs::class.java)
@@ -320,6 +438,145 @@ class MobileImportPlugin(private val activity: Activity) : Plugin(activity) {
                 .put("state", state)
                 .put("readOnly", readOnly),
         )
+    }
+
+    private fun validatedRelativeSegments(relativePath: String): List<String> {
+        check(relativePath.isNotBlank()) { "External vault write-back path is empty" }
+        check(!relativePath.contains('\\')) { "External vault write-back path is invalid" }
+        val segments = relativePath.split('/')
+        check(segments.size <= MAX_DEPTH + 1) { "External vault write-back path is too deep" }
+        for (segment in segments) {
+            check(segment.isNotBlank() && segment != "." && segment != "..") {
+                "External vault write-back path is invalid"
+            }
+            check(safeFileName(segment) == segment) { "External vault write-back name is unsafe" }
+            check(segment.lowercase(Locale.ROOT) !in RESERVED_DIRECTORIES) {
+                "Reserved directories can not be written back"
+            }
+        }
+        return segments
+    }
+
+    private fun ensureDirectoryPath(
+        treeUri: Uri,
+        root: DocumentNode,
+        segments: List<String>,
+    ): Pair<DocumentNode, Boolean> {
+        var current = root
+        var finalCreated = false
+        for ((index, segment) in segments.withIndex()) {
+            val existing = findChild(treeUri, current.documentId, segment)
+            if (existing != null) {
+                check(existing.mimeType == Document.MIME_TYPE_DIR) {
+                    "A source file blocks directory ${segments.take(index + 1).joinToString("/")}"
+                }
+                current = existing
+                continue
+            }
+            current = createDocument(
+                treeUri,
+                current,
+                Document.MIME_TYPE_DIR,
+                segment,
+            )
+            finalCreated = index == segments.lastIndex
+        }
+        return current to finalCreated
+    }
+
+    private fun resolveDocumentPath(
+        treeUri: Uri,
+        root: DocumentNode,
+        segments: List<String>,
+    ): DocumentNode? {
+        var current = root
+        for ((index, segment) in segments.withIndex()) {
+            val child = findChild(treeUri, current.documentId, segment) ?: return null
+            if (index < segments.lastIndex && child.mimeType != Document.MIME_TYPE_DIR) return null
+            current = child
+        }
+        return current
+    }
+
+    private fun findChild(treeUri: Uri, parentDocumentId: String, name: String): DocumentNode? {
+        val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(treeUri, parentDocumentId)
+        val projection = arrayOf(
+            Document.COLUMN_DOCUMENT_ID,
+            Document.COLUMN_DISPLAY_NAME,
+            Document.COLUMN_MIME_TYPE,
+            Document.COLUMN_FLAGS,
+        )
+        val cursor = activity.contentResolver.query(childrenUri, projection, null, null, null)
+            ?: error("The source directory can not be enumerated")
+        return cursor.use {
+            val idIndex = it.getColumnIndexOrThrow(Document.COLUMN_DOCUMENT_ID)
+            val nameIndex = it.getColumnIndexOrThrow(Document.COLUMN_DISPLAY_NAME)
+            val mimeIndex = it.getColumnIndexOrThrow(Document.COLUMN_MIME_TYPE)
+            val flagsIndex = it.getColumnIndex(Document.COLUMN_FLAGS)
+            var match: DocumentNode? = null
+            while (it.moveToNext()) {
+                if (it.getString(nameIndex) != name) continue
+                check(match == null) { "The source contains duplicate entry names" }
+                match = DocumentNode(
+                    documentId = it.getString(idIndex),
+                    displayName = name,
+                    mimeType = it.getString(mimeIndex),
+                    flags = if (flagsIndex >= 0 && !it.isNull(flagsIndex)) it.getInt(flagsIndex) else 0,
+                )
+            }
+            match
+        }
+    }
+
+    private fun createDocument(
+        treeUri: Uri,
+        parent: DocumentNode,
+        mimeType: String,
+        name: String,
+    ): DocumentNode {
+        check(parent.mimeType == Document.MIME_TYPE_DIR) { "The source parent is not a directory" }
+        check(parent.flags and Document.FLAG_DIR_SUPPORTS_CREATE != 0) {
+            "The source directory does not support create"
+        }
+        val createdUri = DocumentsContract.createDocument(
+            activity.contentResolver,
+            documentUri(treeUri, parent.documentId),
+            mimeType,
+            name,
+        ) ?: error("The source document was not created")
+        return queryDocument(createdUri) ?: error("The created source document returned no metadata")
+    }
+
+    private fun queryDocument(uri: Uri): DocumentNode? {
+        val projection = arrayOf(
+            Document.COLUMN_DOCUMENT_ID,
+            Document.COLUMN_DISPLAY_NAME,
+            Document.COLUMN_MIME_TYPE,
+            Document.COLUMN_FLAGS,
+        )
+        return activity.contentResolver.query(uri, projection, null, null, null)?.use { cursor ->
+            if (!cursor.moveToFirst()) return@use null
+            val idIndex = cursor.getColumnIndexOrThrow(Document.COLUMN_DOCUMENT_ID)
+            val nameIndex = cursor.getColumnIndexOrThrow(Document.COLUMN_DISPLAY_NAME)
+            val mimeIndex = cursor.getColumnIndexOrThrow(Document.COLUMN_MIME_TYPE)
+            val flagsIndex = cursor.getColumnIndex(Document.COLUMN_FLAGS)
+            DocumentNode(
+                documentId = cursor.getString(idIndex),
+                displayName = cursor.getString(nameIndex),
+                mimeType = cursor.getString(mimeIndex),
+                flags = if (flagsIndex >= 0 && !cursor.isNull(flagsIndex)) cursor.getInt(flagsIndex) else 0,
+            )
+        }
+    }
+
+    private fun documentUri(treeUri: Uri, documentId: String): Uri =
+        DocumentsContract.buildDocumentUriUsingTree(treeUri, documentId)
+
+    private fun mimeTypeFor(name: String): String {
+        val extension = name.substringAfterLast('.', "").lowercase(Locale.ROOT)
+        if (extension == "md" || extension == "markdown") return "text/markdown"
+        return MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension)
+            ?: "application/octet-stream"
     }
 
     private fun copyChildren(

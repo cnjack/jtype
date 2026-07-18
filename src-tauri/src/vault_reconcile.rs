@@ -12,6 +12,8 @@ const MANIFEST_VERSION: u32 = 1;
 const MAX_DEPTH: usize = 64;
 const MAX_ENTRIES: usize = 50_000;
 const BASELINE_FILE: &str = "external-vault-base.json";
+const WRITE_BACK_JOURNAL_FILE: &str = "external-vault-writeback.json";
+pub(crate) const WRITE_BACK_JOURNAL_VERSION: u32 = 1;
 const RESERVED_DIRECTORIES: [&str; 4] = [".jtype", ".git", "node_modules", "target"];
 
 #[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq)]
@@ -56,6 +58,7 @@ pub(crate) enum ReconcileConflictReason {
     SourceDeletedMirrorModified,
     SourceModifiedMirrorDeleted,
     SourceRemovedParentWithLocalChanges,
+    UnsafeTypeChange,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
@@ -75,6 +78,15 @@ pub(crate) enum ReconcileStatus {
     Conflict,
 }
 
+#[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub(crate) enum WriteBackStatus {
+    Unchanged,
+    Reconciled,
+    Written,
+    Conflict,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct ReconcileOperation {
     relative_path: String,
@@ -87,6 +99,62 @@ pub(crate) struct ReconcilePlan {
     pub conflicts: Vec<ReconcileConflict>,
     expected_mirror: VaultManifest,
     pub baseline_was_missing: bool,
+}
+
+#[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub(crate) enum WriteBackOperationKind {
+    UpsertDirectory,
+    UpsertFile,
+    Delete,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct WriteBackOperation {
+    pub relative_path: String,
+    pub kind: WriteBackOperationKind,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct WriteBackPlan {
+    pub operations: Vec<WriteBackOperation>,
+    pub conflicts: Vec<ReconcileConflict>,
+}
+
+impl WriteBackPlan {
+    pub fn written_files(&self) -> u64 {
+        self.operations
+            .iter()
+            .filter(|operation| operation.kind == WriteBackOperationKind::UpsertFile)
+            .count() as u64
+    }
+
+    pub fn created_directories(&self) -> u64 {
+        self.operations
+            .iter()
+            .filter(|operation| operation.kind == WriteBackOperationKind::UpsertDirectory)
+            .count() as u64
+    }
+
+    pub fn deleted_entries(&self) -> u64 {
+        self.operations
+            .iter()
+            .filter(|operation| operation.kind == WriteBackOperationKind::Delete)
+            .count() as u64
+    }
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct WriteBackJournal {
+    pub version: u32,
+    pub provider_id: String,
+    pub source_revision_before: String,
+    pub target_revision: String,
+    pub operations: Vec<WriteBackOperation>,
+    pub created_at: u64,
+    pub attempts: u32,
 }
 
 impl ReconcilePlan {
@@ -465,6 +533,125 @@ fn differing_entry_count(
     second: &BTreeMap<String, ManifestEntry>,
 ) -> usize {
     differing_paths(first, second).len()
+}
+
+pub(crate) fn plan_write_back(source: &VaultManifest, mirror: &VaultManifest) -> WriteBackPlan {
+    let paths = source
+        .entries
+        .keys()
+        .chain(mirror.entries.keys())
+        .cloned()
+        .collect::<BTreeSet<_>>();
+    let mut operations = Vec::new();
+    let mut conflicts = Vec::new();
+
+    for path in paths {
+        let source_entry = source.entries.get(&path);
+        let mirror_entry = mirror.entries.get(&path);
+        if source_entry == mirror_entry {
+            continue;
+        }
+        if source_entry
+            .zip(mirror_entry)
+            .is_some_and(|(source, mirror)| source.kind != mirror.kind)
+        {
+            conflicts.push(ReconcileConflict {
+                relative_path: path,
+                reason: ReconcileConflictReason::UnsafeTypeChange,
+            });
+            continue;
+        }
+        let kind = match mirror_entry.map(|entry| entry.kind) {
+            Some(ManifestEntryKind::Directory) => WriteBackOperationKind::UpsertDirectory,
+            Some(ManifestEntryKind::File) => WriteBackOperationKind::UpsertFile,
+            None => WriteBackOperationKind::Delete,
+        };
+        operations.push(WriteBackOperation {
+            relative_path: path,
+            kind,
+        });
+    }
+
+    operations.sort_by(|first, second| {
+        let first_key = write_back_order(first);
+        let second_key = write_back_order(second);
+        first_key.cmp(&second_key)
+    });
+    WriteBackPlan {
+        operations,
+        conflicts,
+    }
+}
+
+fn write_back_order(operation: &WriteBackOperation) -> (u8, usize, &str) {
+    match operation.kind {
+        WriteBackOperationKind::UpsertDirectory => (
+            0,
+            path_depth(&operation.relative_path),
+            &operation.relative_path,
+        ),
+        WriteBackOperationKind::UpsertFile => (
+            1,
+            path_depth(&operation.relative_path),
+            &operation.relative_path,
+        ),
+        WriteBackOperationKind::Delete => (
+            2,
+            usize::MAX - path_depth(&operation.relative_path),
+            &operation.relative_path,
+        ),
+    }
+}
+
+pub(crate) fn load_write_back_journal(root: &Path) -> Result<Option<WriteBackJournal>, String> {
+    let path = write_back_journal_path(root);
+    if !path.exists() {
+        return Ok(None);
+    }
+    let content = fs::read_to_string(path).map_err(|error| error.to_string())?;
+    let journal: WriteBackJournal =
+        serde_json::from_str(&content).map_err(|error| error.to_string())?;
+    if journal.version != WRITE_BACK_JOURNAL_VERSION {
+        return Err(format!(
+            "Unsupported external vault write-back journal version: {}",
+            journal.version
+        ));
+    }
+    Ok(Some(journal))
+}
+
+pub(crate) fn save_write_back_journal(
+    root: &Path,
+    journal: &WriteBackJournal,
+) -> Result<(), String> {
+    let metadata_dir = root.join(".jtype");
+    fs::create_dir_all(&metadata_dir).map_err(|error| error.to_string())?;
+    let target = write_back_journal_path(root);
+    let nonce = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_err(|error| error.to_string())?
+        .as_nanos();
+    let temporary = metadata_dir.join(format!(".{WRITE_BACK_JOURNAL_FILE}.tmp-{nonce}"));
+    let json = serde_json::to_vec_pretty(journal).map_err(|error| error.to_string())?;
+    fs::write(&temporary, json).map_err(|error| error.to_string())?;
+    if let Err(error) = fs::rename(&temporary, &target) {
+        let _ = fs::remove_file(&temporary);
+        return Err(error.to_string());
+    }
+    Ok(())
+}
+
+pub(crate) fn clear_write_back_journal(root: &Path) -> Result<bool, String> {
+    let path = write_back_journal_path(root);
+    if !path.exists() {
+        return Ok(false);
+    }
+    fs::remove_file(path).map_err(|error| error.to_string())?;
+    Ok(true)
+}
+
+fn write_back_journal_path(root: &Path) -> PathBuf {
+    root.join(".jtype").join(WRITE_BACK_JOURNAL_FILE)
 }
 
 pub(crate) fn recover_interrupted_reconcile(mirror_root: &Path) -> Result<(), String> {
@@ -876,5 +1063,82 @@ mod tests {
             fs::read_to_string(mirror_root.join("guides/setup.md")).unwrap(),
             "base"
         );
+    }
+
+    #[test]
+    fn write_back_plan_orders_create_write_and_deep_delete() {
+        let fixture = tempfile::tempdir().unwrap();
+        let source_root = fixture.path().join("source");
+        let mirror_root = fixture.path().join("mirror");
+        fs::create_dir_all(&source_root).unwrap();
+        fs::create_dir_all(&mirror_root).unwrap();
+        write(&source_root, "old/nested/deleted.md", "old");
+        write(&source_root, "edited.md", "source");
+        write(&mirror_root, "edited.md", "mirror");
+        write(&mirror_root, "new/created.md", "new");
+
+        let source = build_manifest(&source_root).unwrap();
+        let mirror = build_manifest(&mirror_root).unwrap();
+        let plan = plan_write_back(&source, &mirror);
+
+        assert!(plan.conflicts.is_empty());
+        assert_eq!(plan.created_directories(), 1);
+        assert_eq!(plan.written_files(), 2);
+        assert_eq!(plan.deleted_entries(), 3);
+        assert_eq!(
+            plan.operations[0],
+            WriteBackOperation {
+                relative_path: "new".to_string(),
+                kind: WriteBackOperationKind::UpsertDirectory,
+            }
+        );
+        assert_eq!(plan.operations.last().unwrap().relative_path, "old");
+    }
+
+    #[test]
+    fn write_back_plan_rejects_file_directory_type_changes() {
+        let fixture = tempfile::tempdir().unwrap();
+        let source_root = fixture.path().join("source");
+        let mirror_root = fixture.path().join("mirror");
+        fs::create_dir_all(&source_root).unwrap();
+        fs::create_dir_all(&mirror_root).unwrap();
+        write(&source_root, "entry", "file");
+        fs::create_dir(mirror_root.join("entry")).unwrap();
+
+        let plan = plan_write_back(
+            &build_manifest(&source_root).unwrap(),
+            &build_manifest(&mirror_root).unwrap(),
+        );
+        assert_eq!(plan.operations.len(), 0);
+        assert_eq!(
+            plan.conflicts,
+            vec![ReconcileConflict {
+                relative_path: "entry".to_string(),
+                reason: ReconcileConflictReason::UnsafeTypeChange,
+            }]
+        );
+    }
+
+    #[test]
+    fn write_back_journal_round_trips_and_clears() {
+        let root = tempfile::tempdir().unwrap();
+        let journal = WriteBackJournal {
+            version: WRITE_BACK_JOURNAL_VERSION,
+            provider_id: "external:fixture".to_string(),
+            source_revision_before: "source".to_string(),
+            target_revision: "target".to_string(),
+            operations: vec![WriteBackOperation {
+                relative_path: "intro.md".to_string(),
+                kind: WriteBackOperationKind::UpsertFile,
+            }],
+            created_at: 42,
+            attempts: 1,
+        };
+
+        save_write_back_journal(root.path(), &journal).unwrap();
+        assert_eq!(load_write_back_journal(root.path()).unwrap(), Some(journal));
+        assert!(clear_write_back_journal(root.path()).unwrap());
+        assert_eq!(load_write_back_journal(root.path()).unwrap(), None);
+        assert!(!clear_write_back_journal(root.path()).unwrap());
     }
 }

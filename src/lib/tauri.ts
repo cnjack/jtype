@@ -20,6 +20,7 @@ import type {
   VaultProviderDescriptor,
   ExternalVaultInitializationResult,
   ExternalVaultReconcileResult,
+  ExternalVaultWriteBackResult,
 } from "./types";
 
 export const tauri = {
@@ -88,6 +89,9 @@ export const tauri = {
   },
   reconcileAndroidExternalVault(providerId: string) {
     return invoke<ExternalVaultReconcileResult>("reconcile_android_external_vault", { providerId });
+  },
+  writeBackAndroidExternalVault(providerId: string) {
+    return invoke<ExternalVaultWriteBackResult>("write_back_android_external_vault", { providerId });
   },
   createEntry(rootPath: string, relativePath: string, kind: string) {
     return invoke<WorkspaceSnapshot>("create_workspace_entry", { rootPath, relativePath, kind });

@@ -88,4 +88,25 @@ impl<R: Runtime> MobileImport<R> {
             )
             .map_err(Into::into)
     }
+
+    #[cfg(target_os = "android")]
+    pub fn apply_directory_change(
+        &self,
+        source_reference: impl Into<String>,
+        mirror_root_path: impl Into<String>,
+        relative_path: impl Into<String>,
+        kind: DirectoryChangeKind,
+    ) -> crate::Result<AppliedDirectoryChange> {
+        self.0
+            .run_mobile_plugin(
+                "applyDirectoryChange",
+                DirectoryChangeRequest {
+                    source_reference: source_reference.into(),
+                    mirror_root_path: mirror_root_path.into(),
+                    relative_path: relative_path.into(),
+                    kind,
+                },
+            )
+            .map_err(Into::into)
+    }
 }

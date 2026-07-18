@@ -318,28 +318,34 @@ fn refresh_android_provider_access(
         .provider(provider_id)
         .cloned()
         .ok_or_else(|| format!("Unknown vault provider: {provider_id}"))?;
-    let next_access_state = match app
+    let (next_access_state, next_source_read_only) = match app
         .mobile_import()
         .directory_access(provider.opaque_source_reference.clone())
     {
-        Ok(access) => match access.state {
-            tauri_plugin_mobile_import::DirectoryAccessState::Ready => {
-                vault_provider::VaultProviderAccessState::Ready
-            }
-            tauri_plugin_mobile_import::DirectoryAccessState::AuthorizationRequired => {
-                vault_provider::VaultProviderAccessState::AuthorizationRequired
-            }
-            tauri_plugin_mobile_import::DirectoryAccessState::SourceUnavailable => {
-                vault_provider::VaultProviderAccessState::SourceUnavailable
-            }
-            tauri_plugin_mobile_import::DirectoryAccessState::Error => {
-                vault_provider::VaultProviderAccessState::Error
-            }
-        },
-        Err(_) => vault_provider::VaultProviderAccessState::Error,
+        Ok(access) => (
+            match access.state {
+                tauri_plugin_mobile_import::DirectoryAccessState::Ready => {
+                    vault_provider::VaultProviderAccessState::Ready
+                }
+                tauri_plugin_mobile_import::DirectoryAccessState::AuthorizationRequired => {
+                    vault_provider::VaultProviderAccessState::AuthorizationRequired
+                }
+                tauri_plugin_mobile_import::DirectoryAccessState::SourceUnavailable => {
+                    vault_provider::VaultProviderAccessState::SourceUnavailable
+                }
+                tauri_plugin_mobile_import::DirectoryAccessState::Error => {
+                    vault_provider::VaultProviderAccessState::Error
+                }
+            },
+            access.read_only,
+        ),
+        Err(_) => (vault_provider::VaultProviderAccessState::Error, true),
     };
-    if provider.access_state != next_access_state {
+    if provider.access_state != next_access_state
+        || provider.source_read_only != next_source_read_only
+    {
         provider.access_state = next_access_state;
+        provider.source_read_only = next_source_read_only;
         store.upsert(provider.clone());
         write_vault_provider_store(app, &store)?;
     }
@@ -409,6 +415,20 @@ struct ExternalVaultReconcileResult {
     conflicts: Vec<vault_reconcile::ReconcileConflict>,
 }
 
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct ExternalVaultWriteBackResult {
+    provider: vault_provider::VaultProviderDescriptor,
+    workspace: WorkspaceSnapshot,
+    status: vault_reconcile::WriteBackStatus,
+    written_files: u64,
+    created_directories: u64,
+    deleted_entries: u64,
+    pulled_before_write: u64,
+    pending_journal: bool,
+    conflicts: Vec<vault_reconcile::ReconcileConflict>,
+}
+
 #[cfg(target_os = "android")]
 struct RemoveDirectoryOnDrop(PathBuf);
 
@@ -454,6 +474,23 @@ fn android_source_snapshot_path(mirror_root: &Path) -> Result<PathBuf, String> {
         .map_err(|error| error.to_string())?
         .as_nanos();
     Ok(parent.join(format!(".{name}.source-snapshot-{nonce}")))
+}
+
+#[cfg(target_os = "android")]
+fn materialize_android_source_snapshot(
+    app: &AppHandle,
+    provider: &vault_provider::ExternalVaultProviderRecord,
+    mirror_root: &Path,
+) -> Result<(PathBuf, RemoveDirectoryOnDrop), String> {
+    let source_snapshot = android_source_snapshot_path(mirror_root)?;
+    app.mobile_import()
+        .mirror_directory(
+            provider.opaque_source_reference.clone(),
+            path_to_string(&source_snapshot),
+        )
+        .map_err(|error| error.to_string())?;
+    let cleanup = RemoveDirectoryOnDrop(source_snapshot.clone());
+    Ok((source_snapshot, cleanup))
 }
 
 #[cfg(target_os = "android")]
@@ -520,6 +557,7 @@ fn initialize_android_external_vault(
         mirror_root_path: path_to_string(&mirror_root),
         access_state: vault_provider::VaultProviderAccessState::Ready,
         read_only: true,
+        source_read_only: selected.read_only,
         last_reconciled_at,
         source_revision,
     };
@@ -573,6 +611,7 @@ fn reauthorize_android_external_vault(
     provider.opaque_source_reference = selected.source_reference;
     provider.access_state = vault_provider::VaultProviderAccessState::Ready;
     provider.read_only = true;
+    provider.source_read_only = selected.read_only;
     let descriptor = provider.descriptor();
     store.upsert(provider);
     write_vault_provider_store(&app, &store)?;
@@ -619,14 +658,8 @@ fn reconcile_android_external_vault(
     let mirror_root = validated_android_mirror_root(&app, &provider)?;
     vault_reconcile::recover_interrupted_reconcile(&mirror_root)?;
 
-    let source_snapshot = android_source_snapshot_path(&mirror_root)?;
-    app.mobile_import()
-        .mirror_directory(
-            provider.opaque_source_reference.clone(),
-            path_to_string(&source_snapshot),
-        )
-        .map_err(|error| error.to_string())?;
-    let _source_snapshot_cleanup = RemoveDirectoryOnDrop(source_snapshot.clone());
+    let (source_snapshot, _source_snapshot_cleanup) =
+        materialize_android_source_snapshot(&app, &provider, &mirror_root)?;
 
     let source_manifest = vault_reconcile::build_manifest(&source_snapshot)?;
     let mirror_manifest = vault_reconcile::build_manifest(&mirror_root)?;
@@ -683,6 +716,194 @@ fn reconcile_android_external_vault(
     })
 }
 
+#[cfg(target_os = "android")]
+#[tauri::command]
+fn write_back_android_external_vault(
+    app: AppHandle,
+    provider_id: String,
+) -> Result<ExternalVaultWriteBackResult, String> {
+    let state = app.state::<AppState>();
+    let _reconcile_guard = state
+        .external_vault_reconcile
+        .lock()
+        .map_err(|_| "External vault operation lock is unavailable".to_string())?;
+
+    let descriptor = refresh_android_provider_access(
+        &app,
+        read_vault_provider_store(&app)?,
+        &provider_id,
+    )?;
+    if descriptor.access_state != vault_provider::VaultProviderAccessState::Ready {
+        return Err("External vault access is not ready for write-back".to_string());
+    }
+
+    let mut store = read_vault_provider_store(&app)?;
+    let mut provider = store
+        .provider(&provider_id)
+        .cloned()
+        .ok_or_else(|| format!("Unknown vault provider: {provider_id}"))?;
+    if provider.source_kind != vault_provider::VaultProviderSourceKind::AndroidSafTree {
+        return Err("The vault provider can not write back on Android".to_string());
+    }
+    if provider.source_read_only {
+        return Err("The external vault source is read-only".to_string());
+    }
+
+    let mirror_root = validated_android_mirror_root(&app, &provider)?;
+    vault_reconcile::recover_interrupted_reconcile(&mirror_root)?;
+    let previous_journal = vault_reconcile::load_write_back_journal(&mirror_root)?;
+    if previous_journal
+        .as_ref()
+        .is_some_and(|journal| journal.provider_id != provider_id)
+    {
+        return Err("External vault write-back journal belongs to another provider".to_string());
+    }
+
+    let (source_snapshot, source_snapshot_cleanup) =
+        materialize_android_source_snapshot(&app, &provider, &mirror_root)?;
+    let source_manifest = vault_reconcile::build_manifest(&source_snapshot)?;
+    let mirror_manifest = vault_reconcile::build_manifest(&mirror_root)?;
+    let baseline = vault_reconcile::load_baseline(&mirror_root)?;
+    let baseline = vault_reconcile::trusted_baseline(
+        baseline.as_ref(),
+        provider.source_revision.as_deref(),
+    );
+    let pull_plan = vault_reconcile::plan_reconcile(
+        baseline,
+        &source_manifest,
+        &mirror_manifest,
+    );
+    let pulled_before_write = pull_plan.pulled_files()
+        + pull_plan.pulled_directories()
+        + pull_plan.deleted_entries();
+    if !pull_plan.conflicts.is_empty() {
+        return Ok(ExternalVaultWriteBackResult {
+            provider: provider.descriptor(),
+            workspace: workspace::open_workspace(&mirror_root)?,
+            status: vault_reconcile::WriteBackStatus::Conflict,
+            written_files: 0,
+            created_directories: 0,
+            deleted_entries: 0,
+            pulled_before_write: 0,
+            pending_journal: previous_journal.is_some(),
+            conflicts: pull_plan.conflicts,
+        });
+    }
+    if pull_plan.has_operations() {
+        vault_reconcile::apply_reconcile_plan(&mirror_root, &source_snapshot, &pull_plan)?;
+    }
+
+    let mirror_manifest = vault_reconcile::build_manifest(&mirror_root)?;
+    let write_back_plan = vault_reconcile::plan_write_back(&source_manifest, &mirror_manifest);
+    if !write_back_plan.conflicts.is_empty() {
+        return Ok(ExternalVaultWriteBackResult {
+            provider: provider.descriptor(),
+            workspace: workspace::open_workspace(&mirror_root)?,
+            status: vault_reconcile::WriteBackStatus::Conflict,
+            written_files: 0,
+            created_directories: 0,
+            deleted_entries: 0,
+            pulled_before_write,
+            pending_journal: previous_journal.is_some(),
+            conflicts: write_back_plan.conflicts,
+        });
+    }
+
+    let written_files = write_back_plan.written_files();
+    let created_directories = write_back_plan.created_directories();
+    let deleted_entries = write_back_plan.deleted_entries();
+    if write_back_plan.operations.is_empty() {
+        vault_reconcile::save_baseline(&mirror_root, &mirror_manifest)?;
+        provider.last_reconciled_at = Some(current_unix_timestamp()?);
+        provider.source_revision = Some(mirror_manifest.revision);
+        let descriptor = provider.descriptor();
+        store.upsert(provider);
+        write_vault_provider_store(&app, &store)?;
+        vault_reconcile::clear_write_back_journal(&mirror_root)?;
+        return Ok(ExternalVaultWriteBackResult {
+            provider: descriptor,
+            workspace: workspace::open_workspace(&mirror_root)?,
+            status: if pulled_before_write > 0 {
+                vault_reconcile::WriteBackStatus::Reconciled
+            } else {
+                vault_reconcile::WriteBackStatus::Unchanged
+            },
+            written_files: 0,
+            created_directories: 0,
+            deleted_entries: 0,
+            pulled_before_write,
+            pending_journal: false,
+            conflicts: Vec::new(),
+        });
+    }
+
+    let now = current_unix_timestamp()?;
+    let journal = vault_reconcile::WriteBackJournal {
+        version: vault_reconcile::WRITE_BACK_JOURNAL_VERSION,
+        provider_id: provider_id.clone(),
+        source_revision_before: source_manifest.revision.clone(),
+        target_revision: mirror_manifest.revision.clone(),
+        operations: write_back_plan.operations.clone(),
+        created_at: previous_journal
+            .as_ref()
+            .map_or(now, |journal| journal.created_at),
+        attempts: previous_journal
+            .as_ref()
+            .map_or(1, |journal| journal.attempts.saturating_add(1)),
+    };
+    vault_reconcile::save_write_back_journal(&mirror_root, &journal)?;
+
+    for operation in &write_back_plan.operations {
+        let kind = match operation.kind {
+            vault_reconcile::WriteBackOperationKind::UpsertDirectory => {
+                tauri_plugin_mobile_import::DirectoryChangeKind::UpsertDirectory
+            }
+            vault_reconcile::WriteBackOperationKind::UpsertFile => {
+                tauri_plugin_mobile_import::DirectoryChangeKind::UpsertFile
+            }
+            vault_reconcile::WriteBackOperationKind::Delete => {
+                tauri_plugin_mobile_import::DirectoryChangeKind::Delete
+            }
+        };
+        app.mobile_import()
+            .apply_directory_change(
+                provider.opaque_source_reference.clone(),
+                path_to_string(&mirror_root),
+                operation.relative_path.clone(),
+                kind,
+            )
+            .map_err(|error| error.to_string())?;
+    }
+
+    drop(source_snapshot_cleanup);
+    let (verified_source_snapshot, _verified_source_cleanup) =
+        materialize_android_source_snapshot(&app, &provider, &mirror_root)?;
+    let verified_source_manifest = vault_reconcile::build_manifest(&verified_source_snapshot)?;
+    if verified_source_manifest.entries != mirror_manifest.entries {
+        return Err("External vault write-back failed its manifest verification".to_string());
+    }
+
+    vault_reconcile::save_baseline(&mirror_root, &verified_source_manifest)?;
+    provider.last_reconciled_at = Some(current_unix_timestamp()?);
+    provider.source_revision = Some(verified_source_manifest.revision);
+    let descriptor = provider.descriptor();
+    store.upsert(provider);
+    write_vault_provider_store(&app, &store)?;
+    vault_reconcile::clear_write_back_journal(&mirror_root)?;
+
+    Ok(ExternalVaultWriteBackResult {
+        provider: descriptor,
+        workspace: workspace::open_workspace(&mirror_root)?,
+        status: vault_reconcile::WriteBackStatus::Written,
+        written_files,
+        created_directories,
+        deleted_entries,
+        pulled_before_write,
+        pending_journal: false,
+        conflicts: Vec::new(),
+    })
+}
+
 #[cfg(not(target_os = "android"))]
 #[tauri::command]
 fn initialize_android_external_vault(
@@ -707,6 +928,15 @@ fn reconcile_android_external_vault(
     _provider_id: String,
 ) -> Result<ExternalVaultReconcileResult, String> {
     Err("Android external vault reconcile is only available on Android".to_string())
+}
+
+#[cfg(not(target_os = "android"))]
+#[tauri::command]
+fn write_back_android_external_vault(
+    _app: AppHandle,
+    _provider_id: String,
+) -> Result<ExternalVaultWriteBackResult, String> {
+    Err("Android external vault write-back is only available on Android".to_string())
 }
 
 #[tauri::command]
@@ -1769,6 +1999,7 @@ pub fn run() {
             initialize_android_external_vault,
             reauthorize_android_external_vault,
             reconcile_android_external_vault,
+            write_back_android_external_vault,
             open_default_vault,
             read_markdown_file,
             write_markdown_file,

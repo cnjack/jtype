@@ -103,8 +103,14 @@ pub struct ExternalVaultProviderRecord {
     pub mirror_root_path: String,
     pub access_state: VaultProviderAccessState,
     pub read_only: bool,
+    #[serde(default = "default_true")]
+    pub source_read_only: bool,
     pub last_reconciled_at: Option<u64>,
     pub source_revision: Option<String>,
+}
+
+fn default_true() -> bool {
+    true
 }
 
 impl ExternalVaultProviderRecord {
@@ -332,6 +338,7 @@ mod tests {
             mirror_root_path: "/app/data/vaults/external/fixture".to_string(),
             access_state: VaultProviderAccessState::AuthorizationRequired,
             read_only: false,
+            source_read_only: false,
             last_reconciled_at: None,
             source_revision: None,
         };
@@ -358,6 +365,29 @@ mod tests {
     }
 
     #[test]
+    fn legacy_external_records_default_source_access_to_read_only() {
+        let store: VaultProviderStore = serde_json::from_str(
+            r#"{
+                "version": 1,
+                "providers": [{
+                    "providerId": "external:legacy",
+                    "displayName": "Legacy notes",
+                    "sourceKind": "androidSafTree",
+                    "opaqueSourceReference": "content://provider/tree/legacy",
+                    "mirrorRootPath": "/app/data/vaults/external/legacy",
+                    "accessState": "ready",
+                    "readOnly": true,
+                    "lastReconciledAt": null,
+                    "sourceRevision": null
+                }]
+            }"#,
+        )
+        .unwrap();
+
+        assert!(store.providers[0].source_read_only);
+    }
+
+    #[test]
     fn external_provider_identity_is_stable_and_source_scoped() {
         let source = "content://provider/tree/primary%3ANotes";
         let first = external_provider_id(VaultProviderSourceKind::AndroidSafTree, source);
@@ -380,6 +410,7 @@ mod tests {
             mirror_root_path: "/app/data/vaults/external/fixture".to_string(),
             access_state: VaultProviderAccessState::Ready,
             read_only: false,
+            source_read_only: false,
             last_reconciled_at: None,
             source_revision: None,
         };

@@ -66,3 +66,27 @@ pub struct MirroredDirectory {
     pub bytes: u64,
     pub source_revision: String,
 }
+
+#[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum DirectoryChangeKind {
+    UpsertDirectory,
+    UpsertFile,
+    Delete,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DirectoryChangeRequest {
+    pub source_reference: String,
+    pub mirror_root_path: String,
+    pub relative_path: String,
+    pub kind: DirectoryChangeKind,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AppliedDirectoryChange {
+    pub changed: bool,
+    pub bytes: u64,
+}

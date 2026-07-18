@@ -139,7 +139,8 @@ export type ExternalVaultReconcileConflictReason =
   | "bothModified"
   | "sourceDeletedMirrorModified"
   | "sourceModifiedMirrorDeleted"
-  | "sourceRemovedParentWithLocalChanges";
+  | "sourceRemovedParentWithLocalChanges"
+  | "unsafeTypeChange";
 
 export type ExternalVaultReconcileConflict = {
   relativePath: string;
@@ -154,6 +155,24 @@ export type ExternalVaultReconcileResult = {
   pulledDirectories: number;
   deletedEntries: number;
   pendingLocalChanges: number;
+  conflicts: ExternalVaultReconcileConflict[];
+};
+
+export type ExternalVaultWriteBackStatus =
+  | "unchanged"
+  | "reconciled"
+  | "written"
+  | "conflict";
+
+export type ExternalVaultWriteBackResult = {
+  provider: VaultProviderDescriptor;
+  workspace: WorkspaceSnapshot;
+  status: ExternalVaultWriteBackStatus;
+  writtenFiles: number;
+  createdDirectories: number;
+  deletedEntries: number;
+  pulledBeforeWrite: number;
+  pendingJournal: boolean;
   conflicts: ExternalVaultReconcileConflict[];
 };
 
