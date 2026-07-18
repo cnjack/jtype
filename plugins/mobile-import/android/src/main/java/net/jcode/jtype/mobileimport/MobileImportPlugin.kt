@@ -30,6 +30,11 @@ class MirrorDirectoryArgs {
     lateinit var mirrorRootPath: String
 }
 
+@InvokeArg
+class DirectoryAccessArgs {
+    lateinit var sourceReference: String
+}
+
 private data class MirrorStats(
     var files: Long = 0,
     var directories: Long = 0,
@@ -79,10 +84,7 @@ class MobileImportPlugin(private val activity: Activity) : Plugin(activity) {
             val persisted = activity.contentResolver.persistedUriPermissions
                 .firstOrNull { it.uri == treeUri }
                 ?: error("The folder permission was not persisted")
-            val rootSupportsWrite = metadata.second and (
-                Document.FLAG_DIR_SUPPORTS_CREATE or Document.FLAG_SUPPORTS_WRITE
-            ) != 0
-            val readOnly = !persisted.isWritePermission || !rootSupportsWrite
+            val readOnly = isReadOnly(persisted.isWritePermission, metadata.second)
 
             invoke.resolve(
                 JSObject()
@@ -92,6 +94,78 @@ class MobileImportPlugin(private val activity: Activity) : Plugin(activity) {
             )
         } catch (error: Exception) {
             invoke.reject("Unable to retain access to the selected folder: ${error.message}")
+        }
+    }
+
+    @Command
+    fun directoryAccess(invoke: Invoke) {
+        val args = try {
+            invoke.parseArgs(DirectoryAccessArgs::class.java)
+        } catch (error: Exception) {
+            invoke.reject("Invalid external vault access request: ${error.message}")
+            return
+        }
+
+        val treeUri = Uri.parse(args.sourceReference)
+        if (treeUri.scheme != "content") {
+            resolveDirectoryAccess(invoke, "error", true)
+            return
+        }
+        val persisted = activity.contentResolver.persistedUriPermissions
+            .firstOrNull { it.uri == treeUri && it.isReadPermission }
+        if (persisted == null) {
+            resolveDirectoryAccess(invoke, "authorizationRequired", true)
+            return
+        }
+
+        try {
+            val metadata = rootMetadataOrNull(treeUri)
+            if (metadata == null) {
+                resolveDirectoryAccess(invoke, "sourceUnavailable", true)
+                return
+            }
+            resolveDirectoryAccess(
+                invoke,
+                "ready",
+                isReadOnly(persisted.isWritePermission, metadata.second),
+            )
+        } catch (_: SecurityException) {
+            resolveDirectoryAccess(invoke, "authorizationRequired", true)
+        } catch (_: java.io.FileNotFoundException) {
+            resolveDirectoryAccess(invoke, "sourceUnavailable", true)
+        } catch (_: Exception) {
+            resolveDirectoryAccess(invoke, "error", true)
+        }
+    }
+
+    @Command
+    fun releaseDirectoryAccess(invoke: Invoke) {
+        val args = try {
+            invoke.parseArgs(DirectoryAccessArgs::class.java)
+        } catch (error: Exception) {
+            invoke.reject("Invalid external vault release request: ${error.message}")
+            return
+        }
+
+        try {
+            val treeUri = Uri.parse(args.sourceReference)
+            val persisted = activity.contentResolver.persistedUriPermissions
+                .firstOrNull { it.uri == treeUri }
+            if (persisted == null) {
+                invoke.resolve(JSObject().put("released", false))
+                return
+            }
+            var releaseFlags = 0
+            if (persisted.isReadPermission) {
+                releaseFlags = releaseFlags or Intent.FLAG_GRANT_READ_URI_PERMISSION
+            }
+            if (persisted.isWritePermission) {
+                releaseFlags = releaseFlags or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            }
+            activity.contentResolver.releasePersistableUriPermission(treeUri, releaseFlags)
+            invoke.resolve(JSObject().put("released", true))
+        } catch (error: Exception) {
+            invoke.reject("Unable to release external vault access: ${error.message}")
         }
     }
 
@@ -210,14 +284,17 @@ class MobileImportPlugin(private val activity: Activity) : Plugin(activity) {
         }
     }
 
-    private fun rootMetadata(treeUri: Uri): Pair<String, Int> {
+    private fun rootMetadata(treeUri: Uri): Pair<String, Int> =
+        rootMetadataOrNull(treeUri) ?: error("The selected folder provider returned no metadata")
+
+    private fun rootMetadataOrNull(treeUri: Uri): Pair<String, Int>? {
         val rootDocumentUri = DocumentsContract.buildDocumentUriUsingTree(
             treeUri,
             DocumentsContract.getTreeDocumentId(treeUri),
         )
         val projection = arrayOf(Document.COLUMN_DISPLAY_NAME, Document.COLUMN_FLAGS)
         return activity.contentResolver.query(rootDocumentUri, projection, null, null, null)?.use { cursor ->
-            check(cursor.moveToFirst()) { "The selected folder is unavailable" }
+            if (!cursor.moveToFirst()) return@use null
             val nameIndex = cursor.getColumnIndex(Document.COLUMN_DISPLAY_NAME)
             val flagsIndex = cursor.getColumnIndex(Document.COLUMN_FLAGS)
             val fallbackName = DocumentsContract.getTreeDocumentId(treeUri)
@@ -227,7 +304,22 @@ class MobileImportPlugin(private val activity: Activity) : Plugin(activity) {
             val name = if (nameIndex >= 0 && !cursor.isNull(nameIndex)) cursor.getString(nameIndex) else fallbackName
             val flags = if (flagsIndex >= 0 && !cursor.isNull(flagsIndex)) cursor.getInt(flagsIndex) else 0
             name to flags
-        } ?: error("The selected folder provider returned no metadata")
+        }
+    }
+
+    private fun isReadOnly(hasPersistedWritePermission: Boolean, documentFlags: Int): Boolean {
+        val rootSupportsWrite = documentFlags and (
+            Document.FLAG_DIR_SUPPORTS_CREATE or Document.FLAG_SUPPORTS_WRITE
+        ) != 0
+        return !hasPersistedWritePermission || !rootSupportsWrite
+    }
+
+    private fun resolveDirectoryAccess(invoke: Invoke, state: String, readOnly: Boolean) {
+        invoke.resolve(
+            JSObject()
+                .put("state", state)
+                .put("readOnly", readOnly),
+        )
     }
 
     private fun copyChildren(

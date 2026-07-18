@@ -43,6 +43,36 @@ impl<R: Runtime> MobileImport<R> {
     }
 
     #[cfg(target_os = "android")]
+    pub fn directory_access(
+        &self,
+        source_reference: impl Into<String>,
+    ) -> crate::Result<DirectoryAccess> {
+        self.0
+            .run_mobile_plugin(
+                "directoryAccess",
+                DirectoryAccessRequest {
+                    source_reference: source_reference.into(),
+                },
+            )
+            .map_err(Into::into)
+    }
+
+    #[cfg(target_os = "android")]
+    pub fn release_directory_access(
+        &self,
+        source_reference: impl Into<String>,
+    ) -> crate::Result<DirectoryPermissionRelease> {
+        self.0
+            .run_mobile_plugin(
+                "releaseDirectoryAccess",
+                DirectoryAccessRequest {
+                    source_reference: source_reference.into(),
+                },
+            )
+            .map_err(Into::into)
+    }
+
+    #[cfg(target_os = "android")]
     pub fn mirror_directory(
         &self,
         source_reference: impl Into<String>,

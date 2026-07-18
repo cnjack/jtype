@@ -25,6 +25,34 @@ pub struct SelectedDirectory {
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
+pub struct DirectoryAccessRequest {
+    pub source_reference: String,
+}
+
+#[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum DirectoryAccessState {
+    Ready,
+    AuthorizationRequired,
+    SourceUnavailable,
+    Error,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DirectoryAccess {
+    pub state: DirectoryAccessState,
+    pub read_only: bool,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DirectoryPermissionRelease {
+    pub released: bool,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct MirrorDirectoryRequest {
     pub source_reference: String,
     pub mirror_root_path: String,

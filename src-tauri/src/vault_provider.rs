@@ -62,7 +62,7 @@ impl VaultProviderCapabilities {
         }
     }
 
-    pub fn external_mirror(read_only: bool) -> Self {
+    pub fn external_mirror(read_only: bool, can_reauthorize: bool) -> Self {
         Self {
             can_read: true,
             can_write: !read_only,
@@ -73,7 +73,7 @@ impl VaultProviderCapabilities {
             // These become true only when the provider adapter has real
             // reconcile and reauthorization commands wired end to end.
             can_reconcile: false,
-            can_reauthorize: false,
+            can_reauthorize,
         }
     }
 }
@@ -116,7 +116,10 @@ impl ExternalVaultProviderRecord {
             local_root_path: self.mirror_root_path.clone(),
             access_state: self.access_state,
             storage_mode: VaultProviderStorageMode::Mirror,
-            capabilities: VaultProviderCapabilities::external_mirror(self.read_only),
+            capabilities: VaultProviderCapabilities::external_mirror(
+                self.read_only,
+                self.source_kind == VaultProviderSourceKind::AndroidSafTree,
+            ),
         }
     }
 }
@@ -140,6 +143,12 @@ impl Default for VaultProviderStore {
 }
 
 impl VaultProviderStore {
+    pub fn provider(&self, provider_id: &str) -> Option<&ExternalVaultProviderRecord> {
+        self.providers
+            .iter()
+            .find(|provider| provider.provider_id == provider_id)
+    }
+
     pub fn provider_for_mirror_root(&self, root: &Path) -> Option<&ExternalVaultProviderRecord> {
         let normalized_root = path_to_string(root);
         self.providers
@@ -331,9 +340,13 @@ mod tests {
         assert_eq!(descriptor.kind, VaultProviderKind::ExternalMirror);
         assert_eq!(descriptor.storage_mode, VaultProviderStorageMode::Mirror);
         assert!(!descriptor.capabilities.can_reconcile);
-        assert!(!descriptor.capabilities.can_reauthorize);
+        assert!(descriptor.capabilities.can_reauthorize);
         assert!(!json.to_string().contains("content://"));
         assert!(!json.to_string().contains("opaqueSourceReference"));
+
+        let mut ios_record = record;
+        ios_record.source_kind = VaultProviderSourceKind::IosSecurityScopedBookmark;
+        assert!(!ios_record.descriptor().capabilities.can_reauthorize);
     }
 
     #[test]

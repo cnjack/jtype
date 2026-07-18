@@ -82,6 +82,9 @@ export const tauri = {
   initializeAndroidExternalVault() {
     return invoke<ExternalVaultInitializationResult>("initialize_android_external_vault");
   },
+  reauthorizeAndroidExternalVault(providerId: string) {
+    return invoke<VaultProviderDescriptor>("reauthorize_android_external_vault", { providerId });
+  },
   createEntry(rootPath: string, relativePath: string, kind: string) {
     return invoke<WorkspaceSnapshot>("create_workspace_entry", { rootPath, relativePath, kind });
   },

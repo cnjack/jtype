@@ -304,11 +304,56 @@ fn external_vault_mirror_root(app: &AppHandle, provider_id: &str) -> Result<Path
         .map_err(|error| error.to_string())
 }
 
+#[cfg(target_os = "android")]
+fn refresh_android_provider_access(
+    app: &AppHandle,
+    mut store: vault_provider::VaultProviderStore,
+    provider_id: &str,
+) -> Result<vault_provider::VaultProviderDescriptor, String> {
+    let mut provider = store
+        .provider(provider_id)
+        .cloned()
+        .ok_or_else(|| format!("Unknown vault provider: {provider_id}"))?;
+    let next_access_state = match app
+        .mobile_import()
+        .directory_access(provider.opaque_source_reference.clone())
+    {
+        Ok(access) => match access.state {
+            tauri_plugin_mobile_import::DirectoryAccessState::Ready => {
+                vault_provider::VaultProviderAccessState::Ready
+            }
+            tauri_plugin_mobile_import::DirectoryAccessState::AuthorizationRequired => {
+                vault_provider::VaultProviderAccessState::AuthorizationRequired
+            }
+            tauri_plugin_mobile_import::DirectoryAccessState::SourceUnavailable => {
+                vault_provider::VaultProviderAccessState::SourceUnavailable
+            }
+            tauri_plugin_mobile_import::DirectoryAccessState::Error => {
+                vault_provider::VaultProviderAccessState::Error
+            }
+        },
+        Err(_) => vault_provider::VaultProviderAccessState::Error,
+    };
+    if provider.access_state != next_access_state {
+        provider.access_state = next_access_state;
+        store.upsert(provider.clone());
+        write_vault_provider_store(app, &store)?;
+    }
+    Ok(provider.descriptor())
+}
+
 fn describe_provider_for_root(
     app: &AppHandle,
     root: &Path,
 ) -> Result<vault_provider::VaultProviderDescriptor, String> {
-    if let Some(provider) = read_vault_provider_store(app)?.provider_for_mirror_root(root) {
+    let store = read_vault_provider_store(app)?;
+    if let Some(provider) = store.provider_for_mirror_root(root) {
+        #[cfg(target_os = "android")]
+        {
+            let provider_id = provider.provider_id.clone();
+            return refresh_android_provider_access(app, store, &provider_id);
+        }
+        #[cfg(not(target_os = "android"))]
         return Ok(provider.descriptor());
     }
     Ok(resolve_local_vault_provider(app, root.to_path_buf())?
@@ -414,12 +459,59 @@ fn initialize_android_external_vault(
     })
 }
 
+#[cfg(target_os = "android")]
+#[tauri::command]
+fn reauthorize_android_external_vault(
+    app: AppHandle,
+    provider_id: String,
+) -> Result<vault_provider::VaultProviderDescriptor, String> {
+    let mut store = read_vault_provider_store(&app)?;
+    let mut provider = store
+        .provider(&provider_id)
+        .cloned()
+        .ok_or_else(|| format!("Unknown vault provider: {provider_id}"))?;
+    if provider.source_kind != vault_provider::VaultProviderSourceKind::AndroidSafTree {
+        return Err("The vault provider can not be reauthorized on Android".to_string());
+    }
+
+    let selected = app
+        .mobile_import()
+        .select_directory()
+        .map_err(|error| error.to_string())?;
+    let previous_source_reference = provider.opaque_source_reference.clone();
+    let source_changed = selected.source_reference != previous_source_reference;
+    if source_changed {
+        app.mobile_import()
+            .release_directory_access(previous_source_reference)
+            .map_err(|error| error.to_string())?;
+        provider.last_reconciled_at = None;
+        provider.source_revision = None;
+    }
+    provider.display_name = selected.display_name;
+    provider.opaque_source_reference = selected.source_reference;
+    provider.access_state = vault_provider::VaultProviderAccessState::Ready;
+    provider.read_only = true;
+    let descriptor = provider.descriptor();
+    store.upsert(provider);
+    write_vault_provider_store(&app, &store)?;
+    Ok(descriptor)
+}
+
 #[cfg(not(target_os = "android"))]
 #[tauri::command]
 fn initialize_android_external_vault(
     _app: AppHandle,
 ) -> Result<ExternalVaultInitializationResult, String> {
     Err("Android external vault selection is only available on Android".to_string())
+}
+
+#[cfg(not(target_os = "android"))]
+#[tauri::command]
+fn reauthorize_android_external_vault(
+    _app: AppHandle,
+    _provider_id: String,
+) -> Result<vault_provider::VaultProviderDescriptor, String> {
+    Err("Android external vault reauthorization is only available on Android".to_string())
 }
 
 #[tauri::command]
@@ -1480,6 +1572,7 @@ pub fn run() {
             default_vault_path,
             describe_vault_provider,
             initialize_android_external_vault,
+            reauthorize_android_external_vault,
             open_default_vault,
             read_markdown_file,
             write_markdown_file,
