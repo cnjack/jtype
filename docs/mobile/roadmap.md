@@ -178,11 +178,11 @@
 ### 2.1 External vault provider
 
 - [x] 定义 `VaultBackend` / `VaultProvider` descriptor、identity、access state、capability 与 versioned native record 边界；现有 app-private/local vault 已通过 provider resolver 打开，UI、AppState、commands、相对路径和 sync document model 不变（证据：`docs/mobile/reports/phase-2.md`，实现：`002fd18`）
-- [~] Android Storage Access Framework：系统目录选择、persistable permission、原子首次 mirror、permission health、重新授权、SHA-256 baseline、三方安全 pull、both-modified guard、中断后 open recovery，以及带 versioned mutation journal 的原生 create/write/delete/rename write-back 已完成；shared workbench mutation routing、事务中途故障 gate、capability 开放与正式 UI 待后续 2B 增量（证据：`docs/mobile/reports/phase-2.md`，实现：`18fbeb8`、`0b69f16`、`f9537f2`、`231a2dc`、`99a7d39`）
+- [~] Android Storage Access Framework：系统目录选择、persistable permission、原子首次 mirror、permission health、重新授权、SHA-256 baseline、三方安全 pull、both-modified guard、中断后 open recovery、versioned mutation journal，以及 shared workbench 的 write/create/rename/delete/Board/binary/folder/cloud/trash mutation routing 已完成；120 文件写回中途进程终止后的 journal 冷恢复、权限丢失前置阻断和重新授权恢复均已通过真实 API 36 模拟器，capability 开放与正式 UI 待后续 2B 增量（证据：`docs/mobile/reports/phase-2.md`，实现：`18fbeb8`、`0b69f16`、`f9537f2`、`231a2dc`、`99a7d39`、`123bea6`）
 - [ ] iOS folder picker：security-scoped bookmark、权限恢复、失效后的重新授权
-- [~] external directory ↔ app-private mirror 的 record、storage mode 与 capability contract 已建立；Android native record、首次导入、内容 baseline、安全 pull、受控双向 write-back、delete/rename、journal retry 和 conflict guard 已完成，shared command routing/capability 开放与 iOS 实现待 2B/2C 完成
+- [~] external directory ↔ app-private mirror 的 record、storage mode 与 capability contract 已建立；Android native record、首次导入、内容 baseline、安全 pull、受控双向 write-back、delete/rename、journal retry、conflict guard 和 shared command routing 已完成，capability 开放与 iOS 实现待 2B/2C 完成
 - [ ] 当 mirror 被证明不足时，再将 provider 扩展为零拷贝访问；不在 UI 层分叉
-- [~] Android external provider 已能检测权限丢失/目录移动、保持同一 provider identity 重新授权，并在其他 app 修改文件后安全 pull、合并不相交 source/local 变化或阻断同路径双边冲突；原生 write-back 已通过模拟器，正式复用 UI 提示/冲突选择、shared mutation routing 与 iOS 实现待完成
+- [~] Android external provider 已能检测权限丢失/目录移动、保持同一 provider identity 重新授权，并在其他 app 修改文件后安全 pull、合并不相交 source/local 变化或阻断同路径双边冲突；共享 desktop mutation 已通过 provider adapter 写回 SAF，正式复用 UI 提示/冲突选择、capability 开放与 iOS 实现待完成
 
 ### 2.2 移动交互完善
 
@@ -271,6 +271,7 @@
 | 2026-07-18 | 2.1 / 2B | `f9537f2` | Android SAF SHA-256 baseline、三方安全 pull、原子 mirror 切换、delete/rename 与 conflict guard | `docs/mobile/reports/phase-2.md` |
 | 2026-07-18 | 2.1 / 2B | `231a2dc` | external describe/open 在事务中断后恢复 mirror backup | `docs/mobile/reports/phase-2.md` |
 | 2026-07-18 | 2.1 / 2B | `99a7d39` | Android SAF 受控 create/write/delete、确定性 write-back plan、versioned mutation journal 与 source-first conflict guard | `docs/mobile/reports/phase-2.md` |
+| 2026-07-18 | 2.1 / 2B | `123bea6` | shared Markdown/Board/binary/folder/cloud/trash mutation 通过 provider adapter 路由到 Android SAF | `docs/mobile/reports/phase-2.md` |
 | 2026-07-18 | 2.2 / shell | `232222c` | 约束共享 Welcome 内容在窄屏和本地化文案下的宽度 | `docs/mobile/reports/phase-2.md` |
 | 2026-07-18 | 2.2 / shell | `309aebb` | 将共享 App shell Grid 列固定为 `minmax(0, 1fr)`，增加完整中文 locale overflow 回归 | `docs/mobile/reports/phase-2.md` |
 
