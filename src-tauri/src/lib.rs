@@ -366,6 +366,7 @@ fn describe_provider_for_root(
                 .lock()
                 .map_err(|_| "External vault operation lock is unavailable".to_string())?;
             vault_reconcile::recover_interrupted_reconcile(root)?;
+            vault_reconcile::recover_interrupted_local_mutation(root)?;
             let provider_id = provider.provider_id.clone();
             return refresh_android_provider_access(app, store, &provider_id);
         }
@@ -657,6 +658,13 @@ fn reconcile_android_external_vault(
     }
     let mirror_root = validated_android_mirror_root(&app, &provider)?;
     vault_reconcile::recover_interrupted_reconcile(&mirror_root)?;
+    if vault_reconcile::recover_interrupted_local_mutation(&mirror_root)?
+        || vault_reconcile::load_write_back_journal(&mirror_root)?.is_some()
+    {
+        return Err(
+            "External vault has a pending mutation; finish write-back before reconcile".to_string(),
+        );
+    }
 
     let (source_snapshot, _source_snapshot_cleanup) =
         materialize_android_source_snapshot(&app, &provider, &mirror_root)?;
@@ -728,13 +736,14 @@ fn write_back_android_external_vault(
         .lock()
         .map_err(|_| "External vault operation lock is unavailable".to_string())?;
 
-    write_back_android_external_vault_locked(&app, &provider_id)
+    write_back_android_external_vault_locked(&app, &provider_id, false)
 }
 
 #[cfg(target_os = "android")]
 fn write_back_android_external_vault_locked(
     app: &AppHandle,
     provider_id: &str,
+    preserve_active_local_mutation: bool,
 ) -> Result<ExternalVaultWriteBackResult, String> {
     let descriptor =
         refresh_android_provider_access(app, read_vault_provider_store(app)?, provider_id)?;
@@ -756,6 +765,9 @@ fn write_back_android_external_vault_locked(
 
     let mirror_root = validated_android_mirror_root(app, &provider)?;
     vault_reconcile::recover_interrupted_reconcile(&mirror_root)?;
+    if !preserve_active_local_mutation {
+        vault_reconcile::recover_interrupted_local_mutation(&mirror_root)?;
+    }
     let previous_journal = vault_reconcile::load_write_back_journal(&mirror_root)?;
     if previous_journal
         .as_ref()
@@ -775,6 +787,7 @@ fn write_back_android_external_vault_locked(
     let pulled_before_write =
         pull_plan.pulled_files() + pull_plan.pulled_directories() + pull_plan.deleted_entries();
     if !pull_plan.conflicts.is_empty() {
+        vault_reconcile::commit_local_mutation(&mirror_root)?;
         return Ok(ExternalVaultWriteBackResult {
             provider: provider.descriptor(),
             workspace: workspace::open_workspace(&mirror_root)?,
@@ -794,6 +807,7 @@ fn write_back_android_external_vault_locked(
     let mirror_manifest = vault_reconcile::build_manifest(&mirror_root)?;
     let write_back_plan = vault_reconcile::plan_write_back(&source_manifest, &mirror_manifest);
     if !write_back_plan.conflicts.is_empty() {
+        vault_reconcile::commit_local_mutation(&mirror_root)?;
         return Ok(ExternalVaultWriteBackResult {
             provider: provider.descriptor(),
             workspace: workspace::open_workspace(&mirror_root)?,
@@ -817,6 +831,7 @@ fn write_back_android_external_vault_locked(
         let descriptor = provider.descriptor();
         store.upsert(provider);
         write_vault_provider_store(app, &store)?;
+        vault_reconcile::commit_local_mutation(&mirror_root)?;
         vault_reconcile::clear_write_back_journal(&mirror_root)?;
         return Ok(ExternalVaultWriteBackResult {
             provider: descriptor,
@@ -903,6 +918,7 @@ fn write_back_android_external_vault_locked(
     let descriptor = provider.descriptor();
     store.upsert(provider);
     write_vault_provider_store(app, &store)?;
+    vault_reconcile::commit_local_mutation(&mirror_root)?;
     vault_reconcile::clear_write_back_journal(&mirror_root)?;
 
     Ok(ExternalVaultWriteBackResult {
@@ -983,6 +999,47 @@ fn configure_android_external_vault_debug_fault(
     }
 }
 
+#[tauri::command]
+fn exercise_android_external_vault_debug_local_failure(
+    app: AppHandle,
+    root_path: String,
+    pause_after_partial_ms: u64,
+) -> Result<bool, String> {
+    #[cfg(all(target_os = "android", debug_assertions))]
+    {
+        const EXPECTED_ERROR: &str = "debug local mutation failure after partial changes";
+        let root = PathBuf::from(root_path);
+        let fixture = root.join("fault-local");
+        let result = with_external_vault_mutation(&app, &root, || {
+            fs::write(fixture.join("edited.md"), "partial edit")
+                .map_err(|error| error.to_string())?;
+            fs::remove_file(fixture.join("removed.md")).map_err(|error| error.to_string())?;
+            fs::write(fixture.join("created.md"), "partial create")
+                .map_err(|error| error.to_string())?;
+            if pause_after_partial_ms > 0 {
+                std::thread::sleep(std::time::Duration::from_millis(
+                    pause_after_partial_ms.min(30_000),
+                ));
+            }
+            Err(EXPECTED_ERROR.to_string())
+        });
+        return match result {
+            Err(error) if error == EXPECTED_ERROR => Ok(true),
+            Err(error) => Err(error),
+            Ok(()) => Err("External vault debug local mutation unexpectedly succeeded".to_string()),
+        };
+    }
+
+    #[cfg(not(all(target_os = "android", debug_assertions)))]
+    {
+        let _ = (app, root_path, pause_after_partial_ms);
+        Err(
+            "External vault local mutation fault is only available in Android debug builds"
+                .to_string(),
+        )
+    }
+}
+
 #[cfg(target_os = "android")]
 /// Runs the existing local filesystem mutation unchanged, but serializes the
 /// mirror mutation and its SAF write-back as one JType operation. Source health
@@ -1011,6 +1068,14 @@ fn with_external_vault_mutation<T>(
         .lock()
         .map_err(|_| "External vault operation lock is unavailable".to_string())?;
     vault_reconcile::recover_interrupted_reconcile(&mirror_root)?;
+    if vault_reconcile::recover_interrupted_local_mutation(&mirror_root)?
+        || vault_reconcile::load_write_back_journal(&mirror_root)?.is_some()
+    {
+        return Err(
+            "External vault has a pending mutation; recover write-back before another operation"
+                .to_string(),
+        );
+    }
     let descriptor = refresh_android_provider_access(app, store, &provider_id)?;
     if descriptor.access_state != vault_provider::VaultProviderAccessState::Ready {
         return Err("External vault access is not ready for mutation".to_string());
@@ -1023,8 +1088,33 @@ fn with_external_vault_mutation<T>(
         return Err("The external vault source is read-only".to_string());
     }
 
-    let value = mutation()?;
-    let result = write_back_android_external_vault_locked(app, &provider_id)?;
+    vault_reconcile::begin_local_mutation(&mirror_root)?;
+    let value = match mutation() {
+        Ok(value) => value,
+        Err(error) => {
+            vault_reconcile::rollback_local_mutation(&mirror_root).map_err(|rollback_error| {
+                format!(
+                    "External vault mutation failed ({error}) and rollback failed ({rollback_error})"
+                )
+            })?;
+            return Err(error);
+        }
+    };
+    let result = match write_back_android_external_vault_locked(app, &provider_id, true) {
+        Ok(result) => result,
+        Err(error) => {
+            if vault_reconcile::load_write_back_journal(&mirror_root)?.is_none() {
+                vault_reconcile::rollback_local_mutation(&mirror_root).map_err(
+                    |rollback_error| {
+                        format!(
+                            "External vault write-back failed ({error}) and rollback failed ({rollback_error})"
+                        )
+                    },
+                )?;
+            }
+            return Err(error);
+        }
+    };
     if result.status == vault_reconcile::WriteBackStatus::Conflict {
         let conflicts =
             serde_json::to_string(&result.conflicts).map_err(|error| error.to_string())?;
@@ -2166,6 +2256,7 @@ pub fn run() {
             reconcile_android_external_vault,
             write_back_android_external_vault,
             configure_android_external_vault_debug_fault,
+            exercise_android_external_vault_debug_local_failure,
             open_default_vault,
             read_markdown_file,
             write_markdown_file,

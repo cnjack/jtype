@@ -13,6 +13,7 @@ const MAX_DEPTH: usize = 64;
 const MAX_ENTRIES: usize = 50_000;
 const BASELINE_FILE: &str = "external-vault-base.json";
 const WRITE_BACK_JOURNAL_FILE: &str = "external-vault-writeback.json";
+const LOCAL_MUTATION_MARKER_VERSION: &str = "1\n";
 pub(crate) const WRITE_BACK_JOURNAL_VERSION: u32 = 1;
 const RESERVED_DIRECTORIES: [&str; 4] = [".jtype", ".git", "node_modules", "target"];
 
@@ -654,6 +655,114 @@ fn write_back_journal_path(root: &Path) -> PathBuf {
     root.join(".jtype").join(WRITE_BACK_JOURNAL_FILE)
 }
 
+/// Restores a mirror when the app stopped while an existing shared command was
+/// changing local files, before a SAF write-back journal could be established.
+/// A write-back journal means the local mutation completed and source recovery
+/// must continue forward instead of rolling the mirror back.
+pub(crate) fn recover_interrupted_local_mutation(mirror_root: &Path) -> Result<bool, String> {
+    let marker = transaction_sibling(mirror_root, "local-mutation")?;
+    let backup = transaction_sibling(mirror_root, "local-mutation-backup")?;
+    let failed = transaction_sibling(mirror_root, "local-mutation-failed")?;
+    let temporary = transaction_sibling(mirror_root, "local-mutation.tmp")?;
+
+    if temporary.exists() {
+        fs::remove_file(&temporary).map_err(|error| error.to_string())?;
+    }
+
+    if !marker.exists() {
+        if backup.exists() {
+            fs::remove_dir_all(&backup).map_err(|error| error.to_string())?;
+        }
+        if failed.exists() {
+            fs::remove_dir_all(&failed).map_err(|error| error.to_string())?;
+        }
+        return Ok(false);
+    }
+
+    if mirror_root.is_dir() && write_back_journal_path(mirror_root).exists() {
+        return Ok(true);
+    }
+
+    if backup.exists() {
+        if mirror_root.exists() {
+            if failed.exists() {
+                fs::remove_dir_all(&failed).map_err(|error| error.to_string())?;
+            }
+            fs::rename(mirror_root, &failed).map_err(|error| {
+                format!("Could not isolate interrupted external vault mutation: {error}")
+            })?;
+        }
+        if let Err(error) = fs::rename(&backup, mirror_root) {
+            if failed.exists() && !mirror_root.exists() {
+                let _ = fs::rename(&failed, mirror_root);
+            }
+            return Err(format!(
+                "Could not restore interrupted external vault mutation: {error}"
+            ));
+        }
+    }
+
+    if !mirror_root.is_dir() {
+        return Err("External vault mirror is unavailable after mutation recovery".to_string());
+    }
+    if failed.exists() {
+        fs::remove_dir_all(&failed).map_err(|error| error.to_string())?;
+    }
+    fs::remove_file(&marker).map_err(|error| error.to_string())?;
+    Ok(false)
+}
+
+pub(crate) fn begin_local_mutation(mirror_root: &Path) -> Result<(), String> {
+    if recover_interrupted_local_mutation(mirror_root)?
+        || write_back_journal_path(mirror_root).exists()
+    {
+        return Err(
+            "External vault has a pending write-back; recover it before another mutation"
+                .to_string(),
+        );
+    }
+    let marker = transaction_sibling(mirror_root, "local-mutation")?;
+    let backup = transaction_sibling(mirror_root, "local-mutation-backup")?;
+    copy_tree(mirror_root, &backup)?;
+
+    let temporary = transaction_sibling(mirror_root, "local-mutation.tmp")?;
+    fs::write(&temporary, LOCAL_MUTATION_MARKER_VERSION).map_err(|error| error.to_string())?;
+    if let Err(error) = fs::rename(&temporary, &marker) {
+        let _ = fs::remove_file(&temporary);
+        let _ = fs::remove_dir_all(&backup);
+        return Err(error.to_string());
+    }
+    Ok(())
+}
+
+pub(crate) fn rollback_local_mutation(mirror_root: &Path) -> Result<(), String> {
+    let marker = transaction_sibling(mirror_root, "local-mutation")?;
+    let backup = transaction_sibling(mirror_root, "local-mutation-backup")?;
+    if !marker.exists() || !backup.exists() {
+        return recover_interrupted_local_mutation(mirror_root).map(|_| ());
+    }
+    if write_back_journal_path(mirror_root).exists() {
+        return Err("External vault mutation already has a pending write-back".to_string());
+    }
+    recover_interrupted_local_mutation(mirror_root).map(|_| ())
+}
+
+pub(crate) fn commit_local_mutation(mirror_root: &Path) -> Result<(), String> {
+    let marker = transaction_sibling(mirror_root, "local-mutation")?;
+    let backup = transaction_sibling(mirror_root, "local-mutation-backup")?;
+    let failed = transaction_sibling(mirror_root, "local-mutation-failed")?;
+    if backup.exists() {
+        fs::remove_dir_all(&backup).map_err(|error| error.to_string())?;
+    }
+    if failed.exists() {
+        fs::remove_dir_all(&failed).map_err(|error| error.to_string())?;
+    }
+    if marker.exists() {
+        fs::remove_file(marker).map_err(|error| error.to_string())?;
+    }
+    Ok(())
+}
+
 pub(crate) fn recover_interrupted_reconcile(mirror_root: &Path) -> Result<(), String> {
     let stage = transaction_sibling(mirror_root, "reconciling")?;
     let backup = transaction_sibling(mirror_root, "reconcile-backup")?;
@@ -1140,5 +1249,88 @@ mod tests {
         assert!(clear_write_back_journal(root.path()).unwrap());
         assert_eq!(load_write_back_journal(root.path()).unwrap(), None);
         assert!(!clear_write_back_journal(root.path()).unwrap());
+    }
+
+    #[test]
+    fn local_mutation_rollback_restores_the_complete_mirror() {
+        let fixture = tempfile::tempdir().unwrap();
+        let mirror = fixture.path().join("mirror");
+        fs::create_dir(&mirror).unwrap();
+        write(&mirror, "kept.md", "original");
+        write(&mirror, "folder/removed.md", "restore me");
+
+        begin_local_mutation(&mirror).unwrap();
+        write(&mirror, "kept.md", "partial change");
+        fs::remove_file(mirror.join("folder/removed.md")).unwrap();
+        write(&mirror, "created.md", "partial create");
+        rollback_local_mutation(&mirror).unwrap();
+
+        assert_eq!(
+            fs::read_to_string(mirror.join("kept.md")).unwrap(),
+            "original"
+        );
+        assert_eq!(
+            fs::read_to_string(mirror.join("folder/removed.md")).unwrap(),
+            "restore me"
+        );
+        assert!(!mirror.join("created.md").exists());
+        assert!(!fixture.path().join(".mirror.local-mutation").exists());
+        assert!(!fixture
+            .path()
+            .join(".mirror.local-mutation-backup")
+            .exists());
+    }
+
+    #[test]
+    fn cold_recovery_rolls_back_before_a_write_back_journal_exists() {
+        let fixture = tempfile::tempdir().unwrap();
+        let mirror = fixture.path().join("mirror");
+        fs::create_dir(&mirror).unwrap();
+        write(&mirror, "intro.md", "original");
+
+        begin_local_mutation(&mirror).unwrap();
+        write(&mirror, "intro.md", "interrupted");
+
+        assert!(!recover_interrupted_local_mutation(&mirror).unwrap());
+        assert_eq!(
+            fs::read_to_string(mirror.join("intro.md")).unwrap(),
+            "original"
+        );
+    }
+
+    #[test]
+    fn cold_recovery_preserves_forward_state_when_write_back_is_journaled() {
+        let fixture = tempfile::tempdir().unwrap();
+        let mirror = fixture.path().join("mirror");
+        fs::create_dir(&mirror).unwrap();
+        write(&mirror, "intro.md", "original");
+        begin_local_mutation(&mirror).unwrap();
+        write(&mirror, "intro.md", "forward state");
+        let journal = WriteBackJournal {
+            version: WRITE_BACK_JOURNAL_VERSION,
+            provider_id: "external:fixture".to_string(),
+            source_revision_before: "source".to_string(),
+            target_revision: "target".to_string(),
+            operations: vec![WriteBackOperation {
+                relative_path: "intro.md".to_string(),
+                kind: WriteBackOperationKind::UpsertFile,
+            }],
+            created_at: 42,
+            attempts: 1,
+        };
+        save_write_back_journal(&mirror, &journal).unwrap();
+
+        assert!(recover_interrupted_local_mutation(&mirror).unwrap());
+        assert_eq!(
+            fs::read_to_string(mirror.join("intro.md")).unwrap(),
+            "forward state"
+        );
+        commit_local_mutation(&mirror).unwrap();
+        assert_eq!(load_write_back_journal(&mirror).unwrap(), Some(journal));
+        assert!(!fixture.path().join(".mirror.local-mutation").exists());
+        assert!(!fixture
+            .path()
+            .join(".mirror.local-mutation-backup")
+            .exists());
     }
 }
