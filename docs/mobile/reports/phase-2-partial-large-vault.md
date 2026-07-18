@@ -6,7 +6,7 @@ Feature branch：`codex/mobile-app`
 
 实现 commit：`231aa18`；iOS 静态运行修复：`5865737`；连续页 cache follow-up：`a74b43a`
 
-状态：Android API 36 的 5,008-entry partial cold open、连续分页、尾部搜索/打开与内存采样通过；iPhone 17 Pro / iOS 26.5 Simulator 的干净静态 archive 已完成 5,406-entry partial cold open、交互式第二页，并从首批 160 项之外冷恢复打开 `performance-note-04999.md`。两端第二页均为 native cache hit / 0 ms；physical-device low-memory 和 Files provider 性能 gate 仍待完成。
+状态：Android API 36 的 5,008-entry partial cold open、连续分页、尾部搜索/打开与内存采样通过；iPhone 17 Pro / iOS 26.5 Simulator 的干净静态 archive 已完成 5,406-entry partial cold open、交互式第二页，并从首批 160 项之外冷恢复打开 `performance-note-04999.md`。两端第二页均为 native cache hit / 0 ms；`264db8a` 又完成 iOS local Files provider 120-file on-demand gate。physical-device low-memory、bookmark 生命周期和第三方 provider 仍待完成。
 
 ## 结论
 
@@ -68,7 +68,7 @@ native 全 vault search 直接命中尚未加载的 `performance-note-04999.md`�
 
 ![iOS static partial large vault tail editor](assets/phase-2/ios-partial-large-vault-static-tail-editor.png)
 
-准确 gate 状态是：iOS clean static archive identity、5,406-entry partial cold open、unloaded tail cold restore 和交互式 Show more 第二页 **PASS**。`a74b43a` follow-up 中 Maestro/XCUITest 已稳定完成第二页 flow，日志为 `cache=hit elapsed_ms=0`。交互式 tail search 的 static cold-restore 功能已证明，但完整 Maestro search flow、RSS/memory-warning 与 physical iPhone 仍保留在最终 gate。
+准确 gate 状态是：iOS clean static archive identity、5,406-entry partial cold open、unloaded tail cold restore、交互式 Show more 第二页和 local Files provider 120-file on-demand **PASS**。`a74b43a` follow-up 中 Maestro/XCUITest 已稳定完成第二页 flow，日志为 `cache=hit elapsed_ms=0`；provider gate 证据见 `264db8a`。交互式 tail search 的 static cold-restore 功能已证明，但完整 Maestro search flow、RSS/memory-warning 与 physical iPhone 仍保留在最终 gate。
 
 连续页 cache 的双端日志、自动化、最新 artifact 与截图见 [`phase-2-partial-page-cache.md`](phase-2-partial-page-cache.md)。
 
@@ -110,4 +110,4 @@ a71e5b1dd6357c5844d389fdc06002db09e25c3a568bc56a55600120938d75d2  android-partia
 1. 首次读取目标目录仍会枚举并排序全部直接子项；连续页由 `a74b43a` 的有界 cache 直接切片，但仍不是 provider-native streaming cursor。
 2. external vault 首次 mirror 与 source manifest/hash scan 仍会遍历完整 source。
 3. physical Android/iPhone 的 peak RSS、memory warning、后台恢复与低存储 gate 未完成。
-4. iOS 静态 archive cold-open/tail restore/交互式第二页已通过；仍需补完整 tail-search automation、Files provider、peak RSS、memory warning、后台恢复与 physical iPhone。
+4. iOS 静态 archive cold-open/tail restore/交互式第二页和 local Files provider 已通过；仍需补完整 tail-search automation、peak RSS、memory warning、后台恢复，以及 physical iPhone bookmark/iCloud/第三方 provider。

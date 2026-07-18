@@ -142,4 +142,4 @@ d43808152c716ef2299b0dec18e799bf6dca60e265afcb4a5343f0c9796655f6  ios-weak-netwo
 - physical Android/iPhone 的高延迟、丢包、蜂窝/Wi-Fi 切换与系统后台时限；
 - 真机低存储/磁盘不足和进程终止与 sync batch 交叉矩阵；
 - APNs/FCM 与通知/深链文档定位；
-- native external provider on-demand materialization 和 physical low-memory gate。
+- provider-native streaming/full-hash 优化和 physical low-memory/provider lifecycle gate；Android/iOS 120-file Simulator on-demand 已在 `264db8a` 前后完成。

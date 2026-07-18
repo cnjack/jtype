@@ -79,7 +79,7 @@ iPhone 17 Pro / iOS 26.5 Simulator 使用 signed Tauri dev build 与临时 HTTPS
 
 大库恢复还暴露了另一项真实兼容问题：同步 `initial_external_file_sources` 在 WebView 主线程等待 iOS native plugin，而 plugin response queue 又需要主线程完成上一条 listener response，造成首帧无法提交。`5865737` 将该调用放入 Tauri background worker，并让 bounded share-inbox drain 在 native command 内完成。修复后的 clean static archive 在 iPhone 17 Pro / iOS 26.5 Simulator 上以 160 / 5,406 partial root 启动，并冷恢复打开未加载的 `performance-note-04999.md` 到 Desktop 共用 `EditorShell`。
 
-准确 gate 状态是：iOS compile/archive、静态 artifact identity、5,406-entry partial cold open、unloaded tail cold restore 与交互式第二页 **PASS**。`a74b43a` follow-up 的 Maestro/XCUITest flow 已成功执行 Show more，native 日志为 `cache=hit elapsed_ms=0`；Files provider 性能、RSS/memory warning 与 physical iPhone 仍未完成。详见 [`phase-2-partial-page-cache.md`](phase-2-partial-page-cache.md)。
+准确 gate 状态是：iOS compile/archive、静态 artifact identity、5,406-entry partial cold open、unloaded tail cold restore 与交互式第二页 **PASS**。`a74b43a` follow-up 的 Maestro/XCUITest flow 已成功执行 Show more，native 日志为 `cache=hit elapsed_ms=0`；`264db8a` 又完成 iOS local Files provider 120-file `1 changed / 0 changed` Simulator gate。RSS/memory warning、physical iPhone bookmark 生命周期与第三方 provider 仍未完成。详见 [`phase-2-partial-page-cache.md`](phase-2-partial-page-cache.md) 与 [`phase-2-native-on-demand.md`](phase-2-native-on-demand.md)。
 
 Android 与 iOS Tauri build 继续串行执行，因为两者的 `beforeBuildCommand` 共用根 `dist/`。
 
@@ -89,4 +89,4 @@ Android 5,008-entry Simulator follow-up、日志、截图与 artifact hash 见 [
 
 1. 在双平台 physical device 补交互式 tail search、连续 folder paging、峰值 RSS、memory warning 和后台恢复；Simulator 第二页已完成。
 2. 评估 provider-native streaming cursor 与增量 source manifest，分别减少目录首次枚举和 external full hash I/O；连续 shallow page 已由有界 cache 收口。
-3. 在 physical iPhone 补齐 signed static archive、Files provider 与 low-memory gate；Simulator 静态 cold-launch/tail restore 已通过，不再归类为 custom-scheme 环境阻塞。
+3. 在 physical iPhone 补齐 signed static archive、bookmark 失效/重新授权、iCloud/第三方 Files provider 与 low-memory gate；Simulator 静态 cold-launch/tail restore 和 local Files provider on-demand 已通过，不再归类为 custom-scheme 环境阻塞。
