@@ -4,9 +4,9 @@
 
 Feature branch：`codex/mobile-app`
 
-当前 app code commit：`ce9239b`
+当前 app code commit：`409919c`
 
-本报告状态：进行中；2A provider contract、2B Android SAF 与 2C iOS security-scoped provider 的工程/Simulator gate 已完成。2D 已完成 app-private 草稿冷恢复、Keystore/Keychain pending OAuth 冷恢复，以及 Android share target / iOS Share Extension；无障碍、大 vault/弱网和 physical-device gate 继续进行。iOS external provider 已通过系统目录选择、native-only bookmark、首次镜像、覆盖安装后的容器迁移、冷启动恢复和 shared editor write-back；physical iPhone 的 bookmark 失效/重新授权仍保留在最终真实设备 gate。
+本报告状态：进行中；2A provider contract、2B Android SAF 与 2C iOS security-scoped provider 的工程/Simulator gate 已完成。2D 已完成 app-private 草稿冷恢复、Keystore/Keychain pending OAuth 冷恢复、Android share target / iOS Share Extension，以及模拟器无障碍、动态字体与硬件键盘 gate；移动手势、大 vault/弱网和 physical-device gate 继续进行。iOS external provider 已通过系统目录选择、native-only bookmark、首次镜像、覆盖安装后的容器迁移、冷启动恢复和 shared editor write-back；physical iPhone 的 bookmark 失效/重新授权仍保留在最终真实设备 gate。
 
 ## 本增量结论
 
@@ -488,6 +488,7 @@ E2E 现在以完整中文 locale 在 390×844 viewport 验证：content panel �
 - `2e52c8b`：iOS security-scoped folder provider、mobile external command 泛化、container path rebase、shared editor iOS focus 修复与 native picker smoke flow。
 - `49dea60`：单一 untitled draft 的 app-private 原子 snapshot、双平台 cold recovery，以及 Keystore/Keychain pending OAuth、单一 poll owner、expiry/retry/cancel 清理。
 - `ce9239b`：Android cold/warm `ACTION_SEND`、iOS Share Extension / App Group inbox，以及复用现有 vault import 和 shared editor 的单一 drain 链路。
+- `409919c`：共享 UI accessibility 语义、键盘焦点、contrast/reduced-motion、Android WebView font scale、iOS Dynamic Type 与 native undo/redo history。
 
 ## 2D 草稿与 pending OAuth 冷恢复
 
@@ -501,6 +502,12 @@ Android manifest 注册 `ACTION_SEND` / `ACTION_SEND_MULTIPLE`，native plugin �
 
 Android API 36 已完成 cold text、warm text 和真实 MediaStore `content://` 文件的系统分享选择器 gate；signed iPhone 17 Pro Simulator / iOS 26.5 已完成 Safari → Share Sheet → JType extension → 主 app → shared Markdown editor。完整实现、安全边界、自动化和截图见 [`phase-2-share-import.md`](phase-2-share-import.md)。
 
+## 2D 无障碍、动态字体与硬件键盘
+
+本增量继续复用 desktop/shared `Header`、`Sidebar`、`EditorShell`、Board、toolbar 与 command system，只补充标准 ARIA 语义、keyboard focus、contrast/reduced-motion 和平台字体 adapter。Android WebView 现在跟随系统 font scale；iOS 通过 `-apple-system-body` 测量 Dynamic Type，在保持 hit-target 几何的前提下放大内容与 chrome 文本。格式化/插入命令进入 WebView 原生 editing history，Android 实际 `Ctrl+B` → undo → redo 已通过。
+
+Android API 36 实际启用 TalkBack 后完成 accessibility tree 与焦点 flow；iPhone 17 Pro Simulator / iOS 26.5 完成 XCUITest accessibility tree、accessibility-extra-large Dynamic Type、Increase Contrast 与 TAB flow。iOS physical VoiceOver 语音/手势仍保留为真机 gate。完整边界、命令、截图与 SHA-256 见 [`phase-2-accessibility.md`](phase-2-accessibility.md)。
+
 ## 自动化与构建结果
 
 | 验证 | 结果 |
@@ -508,7 +515,7 @@ Android API 36 已完成 cold text、warm text 和真实 MediaStore `content://`
 | `npm run build` | PASS |
 | `npm run build --prefix services/jtype-web/frontend` | PASS |
 | `npm run test:unit` | PASS，47/47 |
-| `npx playwright test tests/e2e/app.spec.ts` | PASS，47/47；包含 warm native share event drain |
+| `npx playwright test tests/e2e/app.spec.ts` | PASS，48/48；包含 mobile accessibility、focus、contrast、reduced-motion、shortcut 与 undo/redo 回归 |
 | `cargo test --manifest-path src-tauri/Cargo.toml` | PASS，28/28；新增 source conflict subtree 原子替换测试 |
 | `cargo check --manifest-path plugins/mobile-import/Cargo.toml` | PASS |
 | `cargo fmt --manifest-path plugins/mobile-import/Cargo.toml --check` | PASS |
@@ -533,12 +540,15 @@ Android API 36 已完成 cold text、warm text 和真实 MediaStore `content://`
 | iOS clean picker / initial mirror / cold restore / container migration / shared editor write-back | PASS；Files source 与 mirror 收敛 |
 | Android cold text / warm text / real MediaStore file system share | PASS；均进入现有 default vault 和 shared editor |
 | iOS Safari → Share Extension → App Group inbox → JType shared editor | PASS；archive 内含 `JType Share.appex` |
+| Android TalkBack accessibility tree / keyboard focus | PASS；实际 TalkBack service 已启用 |
+| iOS accessibility tree / Dynamic Type / Increase Contrast | PASS；XCUITest tree + TAB flow，physical VoiceOver 手势待终验 |
+| Android hardware keyboard Bold / undo / redo | PASS；`Ctrl+B` / `Ctrl+Z` / `Ctrl+Shift+Z` |
 
 Android debug APK：
 
 - `src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk`
-- 391,574,771 bytes（aarch64 target gate）
-- SHA-256 `e29aa54eba153daedd43ea140a3ab30dba6f2c80a7c94e8633baac4fce2cf16b`
+- 391,578,867 bytes（aarch64 target gate）
+- SHA-256 `6f862cec2ff2756b782c456fcb4432a5f52454385ec984bc6a4a7ffbd6c58bad`
 
 iOS archive：
 
@@ -564,14 +574,17 @@ efaf0b4b082cda9833811b3cdc5071b2f96ae26487a72f406be74207e947e4de  android-saf-ba
 c213478f4fe7e1bde3d85447c08b9793b4559dc36de2cd40b80c065572bf876f  ios-security-scoped-shared-editor.png
 63924e4d2368e9ee5a923e4862177eac1d3dd5ac4fd199557e99156ab53cb85a  android-share-import.png
 c1f67c690aa47c066d80a10b52eae6d609cf494dabfd2e8987583a93e458633d  ios-share-import.png
+57697105bd8a25350f878c456bda8d2fd7ad6f195ea8a0f4d96dcca97d5c2bbc  android-talkback-focus.png
+ef622b3a8b82e9c897934c81238fd6396573f3b1e97f2e18fb9153841dbf7359  android-accessibility-large-text.png
+5a3e39494e6fa771dbe27d2c0dd7bc7f0c4cbe82bdac237226d848fafbb93c34  ios-accessibility-large-text.png
 ```
 
-## 下一增量：2D 无障碍、性能与可靠性
+## 下一增量：2D 移动手势、性能与可靠性
 
-2A、2B、2C 与 2D recovery/share-import 的工程/Simulator gate 已收口。下一段继续保持 desktop/shared product surface，处理：
+2A、2B、2C 与 2D recovery/share-import/accessibility 的工程/Simulator gate 已收口。下一段继续保持 desktop/shared product surface，处理：
 
-1. VoiceOver/TalkBack、动态字体、对比度、键盘 accessory 与硬件快捷键。
+1. long-press、swipe selection、haptic feedback 与 keyboard accessory，继续复用现有 action/command callbacks。
 2. 低内存、大 vault、弱网、系统分享的大文件/进程终止矩阵。
-3. 通知与通知/深链定位，以及最终真实设备 gate。
+3. 通知与通知/深链定位，以及 physical VoiceOver/TalkBack 在内的最终真实设备 gate。
 
 physical iPhone 上的 bookmark 失效/重新授权、iCloud/第三方 Files provider 行为与 signed build 继续作为 Phase 2 最终验收项，不用 Simulator 结果替代。

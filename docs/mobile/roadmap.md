@@ -2,7 +2,7 @@
 
 > 最后更新：2026-07-18  
 > Feature branch：`codex/mobile-app`  
-> 当前阶段：Phase 2D — 系统集成与可靠性；系统分享入口与 recovery gate 已完成，继续无障碍、性能与真实设备终验
+> 当前阶段：Phase 2D — 系统集成与可靠性；系统分享、recovery、模拟器无障碍与硬件键盘 gate 已完成，继续移动手势、性能与真实设备终验
 > 状态说明：`[ ]` 未开始、`[~]` 进行中、`[x]` 已完成；只有附上真实测试证据后才能标记完成。
 
 ## 目标
@@ -188,8 +188,8 @@
 ### 2.2 移动交互完善
 
 - [ ] long-press context actions、swipe、selection 和 haptic feedback
-- [ ] undo/redo、keyboard accessory、硬件键盘 shortcuts 与 desktop command system 对齐
-- [ ] accessibility labels、VoiceOver/TalkBack、动态字体与对比度检查
+- [~] undo/redo 与硬件键盘 shortcuts 已进入 WebView 原生 history 并与 desktop command system 对齐；keyboard accessory 待完成（证据：`docs/mobile/reports/phase-2-accessibility.md`，实现：`409919c`）
+- [~] accessibility labels、TalkBack、iOS accessibility tree、动态字体、键盘焦点、reduced motion 与对比度已通过双模拟器 gate；physical iPhone VoiceOver 语音/手势与双端真机终验待完成（证据：`docs/mobile/reports/phase-2-accessibility.md`，实现：`409919c`）
 - [x] 单一 untitled draft 已使用 app-private 原子 snapshot 完成后台补写、进程终止冷恢复、删空/保存/放弃清理；Android/iOS 均通过连续 cold-launch gate（证据：`docs/mobile/reports/phase-2-mobile-recovery.md`，实现：`49dea60`）
 - [x] device OAuth pending state 已使用 Android Keystore / iOS Keychain 安全持久化，并完成单一 poll owner、10 分钟 expiry、网络重试、进程终止/冷回跳恢复和取消清理（证据：`docs/mobile/reports/phase-2-mobile-recovery.md`，实现：`49dea60`）
 
@@ -213,10 +213,10 @@
 - [~] Android 外部 app 修改文件后的真实 reconcile/conflict 已通过；iOS 复用同一 Rust plan 与共享 dialog，并有 contract/E2E 覆盖，真实 Files provider 双边冲突留到 physical iPhone gate
 - [~] Android/iOS share smoke flow 与 OAuth deep-link 已通过；通知、universal/app links 和通知/深链文档定位待完成
 - [ ] 大 vault 基准达到报告中预先记录的阈值
-- [x] 当前 2D share-import 增量的 desktop build、Rust 28/28、unit 47/47、app E2E 47/47、Android APK 与 iOS archive 全部通过；后续 Phase 2 增量继续重复完整 gate
+- [x] 当前 2D accessibility/keyboard 增量的 desktop build、Rust 28/28、unit 47/47、app E2E 48/48、Android APK 与 iOS archive 全部通过；后续 Phase 2 增量继续重复完整 gate
 - [ ] 双平台模拟器与至少一台真实设备截图/录像证据已保存
-- [~] `docs/mobile/reports/phase-2.md` 已记录 2A、2B、2C、2D recovery 与系统分享结果；细节见 `phase-2-ios-external-vault.md`、`phase-2-mobile-recovery.md`、`phase-2-share-import.md`，后续持续更新到 Phase 2 终验
-- [~] tracking 已记录当前 Phase 2 commit hashes（最新 `ce9239b`）；后续增量继续追加
+- [~] `docs/mobile/reports/phase-2.md` 已记录 2A、2B、2C、2D recovery、系统分享与无障碍结果；细节见 `phase-2-ios-external-vault.md`、`phase-2-mobile-recovery.md`、`phase-2-share-import.md`、`phase-2-accessibility.md`，后续持续更新到 Phase 2 终验
+- [~] tracking 已记录当前 Phase 2 commit hashes（最新实现 `409919c`）；后续增量继续追加
 
 ## Phase 3 — Store readiness
 
@@ -282,6 +282,7 @@
 | 2026-07-18 | 2.2 / 2D | `49dea60` | app-private untitled draft 原子冷恢复、Keystore/Keychain pending OAuth、单一 poll owner与双平台 process-kill gate | `docs/mobile/reports/phase-2-mobile-recovery.md` |
 | 2026-07-18 | 2.2 / shell | `232222c` | 约束共享 Welcome 内容在窄屏和本地化文案下的宽度 | `docs/mobile/reports/phase-2.md` |
 | 2026-07-18 | 2.2 / shell | `309aebb` | 将共享 App shell Grid 列固定为 `minmax(0, 1fr)`，增加完整中文 locale overflow 回归 | `docs/mobile/reports/phase-2.md` |
+| 2026-07-18 | 2.2 / 2D | `409919c` | 共享 UI 无障碍语义、Android/iOS 动态字体、键盘焦点、对比度与 WebView 原生 undo/redo | `docs/mobile/reports/phase-2-accessibility.md` |
 
 ## 当前环境审计（2026-07-18）
 
