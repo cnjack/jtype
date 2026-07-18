@@ -163,6 +163,21 @@ impl VaultProviderStore {
             .find(|provider| provider.mirror_root_path == normalized_root)
     }
 
+    pub fn provider_for_local_path(&self, path: &Path) -> Option<&ExternalVaultProviderRecord> {
+        if path.components().any(|component| {
+            matches!(
+                component,
+                std::path::Component::ParentDir | std::path::Component::CurDir
+            )
+        }) {
+            return None;
+        }
+        self.providers.iter().find(|provider| {
+            let mirror_root = Path::new(&provider.mirror_root_path);
+            path == mirror_root || path.starts_with(mirror_root)
+        })
+    }
+
     pub fn provider_for_source(
         &self,
         source_kind: VaultProviderSourceKind,
@@ -437,5 +452,21 @@ mod tests {
                 .map(|provider| provider.provider_id.as_str()),
             Some("external:fixture")
         );
+        assert_eq!(
+            store
+                .provider_for_local_path(Path::new(
+                    "/app/data/vaults/external/fixture/notes/intro.md",
+                ))
+                .map(|provider| provider.provider_id.as_str()),
+            Some("external:fixture")
+        );
+        assert!(store
+            .provider_for_local_path(Path::new(
+                "/app/data/vaults/external/fixture-other/intro.md",
+            ))
+            .is_none());
+        assert!(store
+            .provider_for_local_path(Path::new("/app/data/vaults/external/fixture/../outside.md",))
+            .is_none());
     }
 }

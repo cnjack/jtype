@@ -728,18 +728,23 @@ fn write_back_android_external_vault(
         .lock()
         .map_err(|_| "External vault operation lock is unavailable".to_string())?;
 
-    let descriptor = refresh_android_provider_access(
-        &app,
-        read_vault_provider_store(&app)?,
-        &provider_id,
-    )?;
+    write_back_android_external_vault_locked(&app, &provider_id)
+}
+
+#[cfg(target_os = "android")]
+fn write_back_android_external_vault_locked(
+    app: &AppHandle,
+    provider_id: &str,
+) -> Result<ExternalVaultWriteBackResult, String> {
+    let descriptor =
+        refresh_android_provider_access(app, read_vault_provider_store(app)?, provider_id)?;
     if descriptor.access_state != vault_provider::VaultProviderAccessState::Ready {
         return Err("External vault access is not ready for write-back".to_string());
     }
 
-    let mut store = read_vault_provider_store(&app)?;
+    let mut store = read_vault_provider_store(app)?;
     let mut provider = store
-        .provider(&provider_id)
+        .provider(provider_id)
         .cloned()
         .ok_or_else(|| format!("Unknown vault provider: {provider_id}"))?;
     if provider.source_kind != vault_provider::VaultProviderSourceKind::AndroidSafTree {
@@ -749,7 +754,7 @@ fn write_back_android_external_vault(
         return Err("The external vault source is read-only".to_string());
     }
 
-    let mirror_root = validated_android_mirror_root(&app, &provider)?;
+    let mirror_root = validated_android_mirror_root(app, &provider)?;
     vault_reconcile::recover_interrupted_reconcile(&mirror_root)?;
     let previous_journal = vault_reconcile::load_write_back_journal(&mirror_root)?;
     if previous_journal
@@ -760,22 +765,15 @@ fn write_back_android_external_vault(
     }
 
     let (source_snapshot, source_snapshot_cleanup) =
-        materialize_android_source_snapshot(&app, &provider, &mirror_root)?;
+        materialize_android_source_snapshot(app, &provider, &mirror_root)?;
     let source_manifest = vault_reconcile::build_manifest(&source_snapshot)?;
     let mirror_manifest = vault_reconcile::build_manifest(&mirror_root)?;
     let baseline = vault_reconcile::load_baseline(&mirror_root)?;
-    let baseline = vault_reconcile::trusted_baseline(
-        baseline.as_ref(),
-        provider.source_revision.as_deref(),
-    );
-    let pull_plan = vault_reconcile::plan_reconcile(
-        baseline,
-        &source_manifest,
-        &mirror_manifest,
-    );
-    let pulled_before_write = pull_plan.pulled_files()
-        + pull_plan.pulled_directories()
-        + pull_plan.deleted_entries();
+    let baseline =
+        vault_reconcile::trusted_baseline(baseline.as_ref(), provider.source_revision.as_deref());
+    let pull_plan = vault_reconcile::plan_reconcile(baseline, &source_manifest, &mirror_manifest);
+    let pulled_before_write =
+        pull_plan.pulled_files() + pull_plan.pulled_directories() + pull_plan.deleted_entries();
     if !pull_plan.conflicts.is_empty() {
         return Ok(ExternalVaultWriteBackResult {
             provider: provider.descriptor(),
@@ -818,7 +816,7 @@ fn write_back_android_external_vault(
         provider.source_revision = Some(mirror_manifest.revision);
         let descriptor = provider.descriptor();
         store.upsert(provider);
-        write_vault_provider_store(&app, &store)?;
+        write_vault_provider_store(app, &store)?;
         vault_reconcile::clear_write_back_journal(&mirror_root)?;
         return Ok(ExternalVaultWriteBackResult {
             provider: descriptor,
@@ -840,7 +838,7 @@ fn write_back_android_external_vault(
     let now = current_unix_timestamp()?;
     let journal = vault_reconcile::WriteBackJournal {
         version: vault_reconcile::WRITE_BACK_JOURNAL_VERSION,
-        provider_id: provider_id.clone(),
+        provider_id: provider_id.to_string(),
         source_revision_before: source_manifest.revision.clone(),
         target_revision: mirror_manifest.revision.clone(),
         operations: write_back_plan.operations.clone(),
@@ -877,7 +875,7 @@ fn write_back_android_external_vault(
 
     drop(source_snapshot_cleanup);
     let (verified_source_snapshot, _verified_source_cleanup) =
-        materialize_android_source_snapshot(&app, &provider, &mirror_root)?;
+        materialize_android_source_snapshot(app, &provider, &mirror_root)?;
     let verified_source_manifest = vault_reconcile::build_manifest(&verified_source_snapshot)?;
     if verified_source_manifest.entries != mirror_manifest.entries {
         return Err("External vault write-back failed its manifest verification".to_string());
@@ -888,7 +886,7 @@ fn write_back_android_external_vault(
     provider.source_revision = Some(verified_source_manifest.revision);
     let descriptor = provider.descriptor();
     store.upsert(provider);
-    write_vault_provider_store(&app, &store)?;
+    write_vault_provider_store(app, &store)?;
     vault_reconcile::clear_write_back_journal(&mirror_root)?;
 
     Ok(ExternalVaultWriteBackResult {
@@ -939,14 +937,76 @@ fn write_back_android_external_vault(
     Err("Android external vault write-back is only available on Android".to_string())
 }
 
+#[cfg(target_os = "android")]
+/// Runs the existing local filesystem mutation unchanged, but serializes the
+/// mirror mutation and its SAF write-back as one JType operation. Source health
+/// is checked before local state changes; source content is compared only after
+/// the mutation so a stale editor save still produces a three-way conflict.
+fn with_external_vault_mutation<T>(
+    app: &AppHandle,
+    local_path: &Path,
+    mutation: impl FnOnce() -> Result<T, String>,
+) -> Result<T, String> {
+    let store = read_vault_provider_store(app)?;
+    let Some((provider_id, mirror_root)) =
+        store.provider_for_local_path(local_path).map(|provider| {
+            (
+                provider.provider_id.clone(),
+                PathBuf::from(&provider.mirror_root_path),
+            )
+        })
+    else {
+        return mutation();
+    };
+
+    let state = app.state::<AppState>();
+    let _mutation_guard = state
+        .external_vault_reconcile
+        .lock()
+        .map_err(|_| "External vault operation lock is unavailable".to_string())?;
+    vault_reconcile::recover_interrupted_reconcile(&mirror_root)?;
+    let descriptor = refresh_android_provider_access(app, store, &provider_id)?;
+    if descriptor.access_state != vault_provider::VaultProviderAccessState::Ready {
+        return Err("External vault access is not ready for mutation".to_string());
+    }
+    let refreshed_store = read_vault_provider_store(app)?;
+    if refreshed_store
+        .provider(&provider_id)
+        .is_some_and(|provider| provider.source_read_only)
+    {
+        return Err("The external vault source is read-only".to_string());
+    }
+
+    let value = mutation()?;
+    let result = write_back_android_external_vault_locked(app, &provider_id)?;
+    if result.status == vault_reconcile::WriteBackStatus::Conflict {
+        let conflicts =
+            serde_json::to_string(&result.conflicts).map_err(|error| error.to_string())?;
+        return Err(format!(
+            "External vault mutation is pending conflict resolution: {conflicts}"
+        ));
+    }
+    Ok(value)
+}
+
+#[cfg(not(target_os = "android"))]
+fn with_external_vault_mutation<T>(
+    _app: &AppHandle,
+    _local_path: &Path,
+    mutation: impl FnOnce() -> Result<T, String>,
+) -> Result<T, String> {
+    mutation()
+}
+
 #[tauri::command]
 fn read_markdown_file(path: String) -> Result<String, String> {
     workspace::read_markdown(&PathBuf::from(path))
 }
 
 #[tauri::command]
-fn write_markdown_file(path: String, content: String) -> Result<(), String> {
-    workspace::write_markdown(&PathBuf::from(path), &content)
+fn write_markdown_file(app: AppHandle, path: String, content: String) -> Result<(), String> {
+    let path = PathBuf::from(path);
+    with_external_vault_mutation(&app, &path, || workspace::write_markdown(&path, &content))
 }
 
 #[tauri::command]
@@ -1057,13 +1117,15 @@ fn safe_mobile_share_name(candidate: &str, mime_type: &str) -> String {
 }
 
 #[tauri::command]
-fn write_binary_file(path: String, content: Vec<u8>) -> Result<(), String> {
+fn write_binary_file(app: AppHandle, path: String, content: Vec<u8>) -> Result<(), String> {
     let path = PathBuf::from(path);
-    // Pasted images land in an `assets/` dir that may not exist yet.
-    if let Some(parent) = path.parent() {
-        fs::create_dir_all(parent).map_err(|error| error.to_string())?;
-    }
-    fs::write(path, content).map_err(|error| error.to_string())
+    with_external_vault_mutation(&app, &path, || {
+        // Pasted images land in an `assets/` dir that may not exist yet.
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent).map_err(|error| error.to_string())?;
+        }
+        fs::write(&path, content).map_err(|error| error.to_string())
+    })
 }
 
 #[tauri::command]
@@ -1085,12 +1147,15 @@ fn detect_vault_root(path: String) -> Option<String> {
 
 #[tauri::command]
 fn create_workspace_entry(
+    app: AppHandle,
     root_path: String,
     relative_path: String,
     kind: EntryKind,
 ) -> Result<WorkspaceSnapshot, String> {
     let root = PathBuf::from(root_path);
-    workspace::create_entry(&root, &relative_path, kind)?;
+    with_external_vault_mutation(&app, &root, || {
+        workspace::create_entry(&root, &relative_path, kind)
+    })?;
     workspace::open_workspace(&root)
 }
 
@@ -1138,16 +1203,19 @@ fn import_external_paths(
     target_folder: String,
 ) -> Result<(WorkspaceSnapshot, Vec<String>), String> {
     let root = PathBuf::from(root_path);
-    let mut imported = Vec::new();
-    for source in &source_paths {
-        let prepared = prepare_external_source(&app, source)?;
-        let result = workspace::import_external_path(&root, &prepared.path, &target_folder);
-        if let Some(cleanup_dir) = prepared.cleanup_dir {
-            let _ = fs::remove_dir_all(cleanup_dir);
+    let imported = with_external_vault_mutation(&app, &root, || {
+        let mut imported = Vec::new();
+        for source in &source_paths {
+            let prepared = prepare_external_source(&app, source)?;
+            let result = workspace::import_external_path(&root, &prepared.path, &target_folder);
+            if let Some(cleanup_dir) = prepared.cleanup_dir {
+                let _ = fs::remove_dir_all(cleanup_dir);
+            }
+            let relative = result?;
+            imported.push(relative);
         }
-        let relative = result?;
-        imported.push(relative);
-    }
+        Ok(imported)
+    })?;
     let snapshot = workspace::open_workspace(&root)?;
     Ok((snapshot, imported))
 }
@@ -1185,31 +1253,37 @@ fn read_text_file(path: String) -> Result<String, String> {
 
 /// Write a diagram/text resource as text, creating parent directories as needed.
 #[tauri::command]
-fn write_text_file(path: String, content: String) -> Result<(), String> {
-    workspace::write_text(&PathBuf::from(path), &content)
+fn write_text_file(app: AppHandle, path: String, content: String) -> Result<(), String> {
+    let path = PathBuf::from(path);
+    with_external_vault_mutation(&app, &path, || workspace::write_text(&path, &content))
 }
 
 /// Write a `.board` view file (plain text/JSON), creating parent dirs as needed.
 #[tauri::command]
-fn write_board_file(path: String, content: String) -> Result<(), String> {
+fn write_board_file(app: AppHandle, path: String, content: String) -> Result<(), String> {
     let target = PathBuf::from(path);
-    if let Some(parent) = target.parent() {
-        fs::create_dir_all(parent).map_err(|error| error.to_string())?;
-    }
-    fs::write(target, content).map_err(|error| error.to_string())
+    with_external_vault_mutation(&app, &target, || {
+        if let Some(parent) = target.parent() {
+            fs::create_dir_all(parent).map_err(|error| error.to_string())?;
+        }
+        fs::write(&target, content).map_err(|error| error.to_string())
+    })
 }
 
 /// Create a new `.board` file with the given JSON config and return the refreshed workspace.
 #[tauri::command]
 fn create_board(
+    app: AppHandle,
     root_path: String,
     relative_path: String,
     content: String,
 ) -> Result<WorkspaceSnapshot, String> {
     let root = PathBuf::from(&root_path);
-    workspace::create_entry(&root, &relative_path, EntryKind::Board)?;
-    let target = root.join(&relative_path);
-    fs::write(&target, content).map_err(|error| error.to_string())?;
+    with_external_vault_mutation(&app, &root, || {
+        workspace::create_entry(&root, &relative_path, EntryKind::Board)?;
+        let target = root.join(&relative_path);
+        fs::write(&target, content).map_err(|error| error.to_string())
+    })?;
     workspace::open_workspace(&root)
 }
 
@@ -1233,31 +1307,41 @@ fn scan_card_templates(
 
 #[tauri::command]
 fn rename_workspace_entry(
+    app: AppHandle,
     root_path: String,
     from_relative_path: String,
     to_relative_path: String,
 ) -> Result<WorkspaceSnapshot, String> {
     let root = PathBuf::from(root_path);
-    workspace::rename_entry(&root, &from_relative_path, &to_relative_path)?;
+    with_external_vault_mutation(&app, &root, || {
+        workspace::rename_entry(&root, &from_relative_path, &to_relative_path)
+    })?;
     workspace::open_workspace(&root)
 }
 
 #[tauri::command]
 fn delete_workspace_entry(
+    app: AppHandle,
     root_path: String,
     relative_path: String,
 ) -> Result<WorkspaceSnapshot, String> {
     let root = PathBuf::from(root_path);
-    workspace::delete_entry(&root, &relative_path)?;
+    with_external_vault_mutation(&app, &root, || {
+        workspace::delete_entry(&root, &relative_path)
+    })?;
     workspace::open_workspace(&root)
 }
 
 #[tauri::command]
 fn export_static_site(
+    app: AppHandle,
     root_path: String,
     output_relative_path: String,
 ) -> Result<PublishResult, String> {
-    workspace::export_static_site(&PathBuf::from(root_path), &output_relative_path)
+    let root = PathBuf::from(root_path);
+    with_external_vault_mutation(&app, &root, || {
+        workspace::export_static_site(&root, &output_relative_path)
+    })
 }
 
 #[tauri::command]
@@ -1420,13 +1504,26 @@ fn bind_cloud_workspace(
 
 #[tauri::command]
 fn apply_cloud_documents(
+    app: AppHandle,
     root_path: String,
     documents: Vec<CloudSyncDocument>,
     folders: Vec<CloudSyncFolder>,
 ) -> Result<ApplyCloudResult, String> {
     let root = PathBuf::from(root_path);
+    let mut result = with_external_vault_mutation(&app, &root, || {
+        apply_cloud_documents_core(&root, documents, folders)
+    })?;
+    result.workspace = workspace::open_workspace(&root)?;
+    Ok(result)
+}
+
+fn apply_cloud_documents_core(
+    root: &Path,
+    documents: Vec<CloudSyncDocument>,
+    folders: Vec<CloudSyncFolder>,
+) -> Result<ApplyCloudResult, String> {
     for folder in folders {
-        let target = safe_join(&root, &folder.relative_path)?;
+        let target = safe_join(root, &folder.relative_path)?;
         fs::create_dir_all(target).map_err(|error| error.to_string())?;
     }
     let mut written_paths = Vec::new();
@@ -1439,14 +1536,14 @@ fn apply_cloud_documents(
         if !workspace::is_syncable_document_path(&doc_path) {
             continue;
         }
-        let target = safe_join(&root, &document.relative_path)?;
+        let target = safe_join(root, &document.relative_path)?;
         if let Some(parent) = target.parent() {
             fs::create_dir_all(parent).map_err(|error| error.to_string())?;
         }
         fs::write(target, document.content).map_err(|error| error.to_string())?;
         written_paths.push(document.relative_path);
     }
-    let workspace = workspace::open_workspace(&root)?;
+    let workspace = workspace::open_workspace(root)?;
     Ok(ApplyCloudResult {
         workspace,
         written_paths,
@@ -1455,33 +1552,40 @@ fn apply_cloud_documents(
 
 #[tauri::command]
 fn apply_deleted_cloud_folders(
+    app: AppHandle,
     root_path: String,
     folders: Vec<CloudSyncFolder>,
 ) -> Result<WorkspaceSnapshot, String> {
     let root = PathBuf::from(root_path);
-    let mut folders = folders;
-    folders.sort_by(|left, right| right.relative_path.cmp(&left.relative_path));
-    for folder in folders {
-        let target = safe_join(&root, &folder.relative_path)?;
-        if target.is_dir()
-            && fs::read_dir(&target)
-                .map_err(|error| error.to_string())?
-                .next()
-                .is_none()
-        {
-            fs::remove_dir(&target).map_err(|error| error.to_string())?;
+    with_external_vault_mutation(&app, &root, || {
+        let mut folders = folders;
+        folders.sort_by(|left, right| right.relative_path.cmp(&left.relative_path));
+        for folder in folders {
+            let target = safe_join(&root, &folder.relative_path)?;
+            if target.is_dir()
+                && fs::read_dir(&target)
+                    .map_err(|error| error.to_string())?
+                    .next()
+                    .is_none()
+            {
+                fs::remove_dir(&target).map_err(|error| error.to_string())?;
+            }
         }
-    }
+        Ok(())
+    })?;
     workspace::open_workspace(&root)
 }
 
 #[tauri::command]
 fn trash_workspace_entry(
+    app: AppHandle,
     root_path: String,
     relative_path: String,
 ) -> Result<WorkspaceSnapshot, String> {
     let root = PathBuf::from(root_path);
-    workspace::trash_entry(&root, &relative_path)?;
+    with_external_vault_mutation(&app, &root, || {
+        workspace::trash_entry(&root, &relative_path)
+    })?;
     workspace::open_workspace(&root)
 }
 
@@ -1492,11 +1596,14 @@ fn list_workspace_trash(root_path: String) -> Result<Vec<TrashItemInfo>, String>
 
 #[tauri::command]
 fn restore_workspace_trash(
+    app: AppHandle,
     root_path: String,
     trash_id: String,
 ) -> Result<WorkspaceSnapshot, String> {
     let root = PathBuf::from(root_path);
-    workspace::restore_from_trash(&root, &trash_id)?;
+    with_external_vault_mutation(&app, &root, || {
+        workspace::restore_from_trash(&root, &trash_id).map(|_| ())
+    })?;
     workspace::open_workspace(&root)
 }
 
@@ -1718,46 +1825,58 @@ fn path_to_string(path: &Path) -> String {
 
 #[tauri::command]
 fn create_workspace_folder(
+    app: AppHandle,
     root_path: String,
     folder_relative_path: String,
 ) -> Result<WorkspaceSnapshot, String> {
     let root = PathBuf::from(root_path);
-    workspace::create_folder(&root, &folder_relative_path)?;
+    with_external_vault_mutation(&app, &root, || {
+        workspace::create_folder(&root, &folder_relative_path)
+    })?;
     workspace::open_workspace(&root)
 }
 
 #[tauri::command]
 fn rename_workspace_folder(
+    app: AppHandle,
     root_path: String,
     from_relative_path: String,
     to_relative_path: String,
 ) -> Result<(WorkspaceSnapshot, Vec<String>), String> {
     let root = PathBuf::from(root_path);
-    let impacted = workspace::rename_folder(&root, &from_relative_path, &to_relative_path)?;
+    let impacted = with_external_vault_mutation(&app, &root, || {
+        workspace::rename_folder(&root, &from_relative_path, &to_relative_path)
+    })?;
     let snapshot = workspace::open_workspace(&root)?;
     Ok((snapshot, impacted))
 }
 
 #[tauri::command]
 fn move_workspace_folder(
+    app: AppHandle,
     root_path: String,
     from_relative_path: String,
     to_relative_path: String,
 ) -> Result<(WorkspaceSnapshot, Vec<String>), String> {
     let root = PathBuf::from(root_path);
-    let impacted = workspace::move_folder(&root, &from_relative_path, &to_relative_path)?;
+    let impacted = with_external_vault_mutation(&app, &root, || {
+        workspace::move_folder(&root, &from_relative_path, &to_relative_path)
+    })?;
     let snapshot = workspace::open_workspace(&root)?;
     Ok((snapshot, impacted))
 }
 
 #[tauri::command]
 fn delete_workspace_folder(
+    app: AppHandle,
     root_path: String,
     folder_relative_path: String,
     soft_delete: bool,
 ) -> Result<(WorkspaceSnapshot, Vec<String>), String> {
     let root = PathBuf::from(root_path);
-    let impacted = workspace::delete_folder(&root, &folder_relative_path, soft_delete)?;
+    let impacted = with_external_vault_mutation(&app, &root, || {
+        workspace::delete_folder(&root, &folder_relative_path, soft_delete)
+    })?;
     let snapshot = workspace::open_workspace(&root)?;
     Ok((snapshot, impacted))
 }
@@ -2194,8 +2313,8 @@ mod tests {
         let dir = tempdir().unwrap();
         let root = dir.path().to_string_lossy().to_string();
 
-        let result = apply_cloud_documents(
-            root,
+        let result = apply_cloud_documents_core(
+            Path::new(&root),
             vec![
                 doc("note.md", "# Note"),
                 doc("23232.board", "{\"id\":\"b\",\"columns\":[]}"),
@@ -2224,8 +2343,8 @@ mod tests {
         let dir = tempdir().unwrap();
         let root = dir.path().to_string_lossy().to_string();
 
-        let result = apply_cloud_documents(
-            root,
+        let result = apply_cloud_documents_core(
+            Path::new(&root),
             vec![doc("note.md", "# Note"), doc("photo.png", "binary")],
             vec![],
         )
