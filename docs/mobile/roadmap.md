@@ -2,7 +2,7 @@
 
 > 最后更新：2026-07-18  
 > Feature branch：`codex/mobile-app`  
-> 当前阶段：Phase 2D — 系统集成与可靠性；系统分享、recovery、无障碍、共享触控交互、键盘辅助栏与 5,000 文档大 vault 基准已完成工程 gate，继续大内容/弱网、通知与真实设备终验
+> 当前阶段：Phase 2D — 系统集成与可靠性；系统分享、recovery、无障碍、共享触控交互、键盘辅助栏、5,000 文档大 vault 与大 Markdown/附件/1,200-card Board 双模拟器 gate 已完成，继续 physical low-memory、native on-demand、弱网、通知与真实设备终验
 > 状态说明：`[ ]` 未开始、`[~]` 进行中、`[x]` 已完成；只有附上真实测试证据后才能标记完成。
 
 ## 目标
@@ -171,7 +171,7 @@
 1. **2A Provider contract（约 3–5 天）**：先冻结 provider identity、capability、mirror metadata、reconcile plan 和错误模型；现有 app-private filesystem 成为第一个 provider 实现，UI/AppState/commands 不改调用语义。
 2. **2B Android SAF（约 1–2 周）**：目录选择、persistable tree URI、mirror 初次导入、双向增量 reconcile、权限丢失重新授权；Android 模拟器逐段留截图与报告。
 3. **2C iOS folder provider（已完成工程与 Simulator gate）**：folder picker、security-scoped bookmark、访问生命周期、mirror reconcile、覆盖安装容器迁移和 shared editor write-back 已通过；失效重新授权与第三方 Files provider 保留到 physical iPhone 终验。
-4. **2D 系统集成与可靠性（约 1–2 周）**：share target、pending OAuth 冷恢复、无障碍、草稿恢复、大 vault/弱网测试；5,000 文档共享索引和渐进渲染已通过，继续大内容、native on-demand、弱网与双平台真实设备 gate。
+4. **2D 系统集成与可靠性（约 1–2 周）**：share target、pending OAuth 冷恢复、无障碍、草稿恢复、大 vault/弱网测试；5,000 文档共享索引以及大 Markdown/附件/1,200-card Board 渐进渲染已通过双模拟器 gate，继续 physical low-memory、native on-demand、弱网与双平台真实设备 gate。
 
 每个增量继续复用 desktop `Sidebar`、`VaultHome`、`EditorShell`、Document Info、Board、commands 和 sync model。provider 差异只能进入 Rust/provider adapter 与 canonical capability，不允许出现第二套 mobile 文件树或编辑器。
 
@@ -203,7 +203,7 @@
 ### 2.4 大 vault 性能与可靠性
 
 - [~] 共享 workspace index、Sidebar/Quick Open bounded exact-first search、每级 160 行渐进树 window 已在 5,000 文档 Android/iOS 模拟器和 2,500 文档 Desktop E2E 中通过；原生 `WorkspaceSnapshot` / external source 的按需枚举与 materialization 仍待完成（证据：`docs/mobile/reports/phase-2-large-vault.md`，实现：`85dee2f`）
-- [ ] 大 Markdown、Mermaid、KaTeX、附件和 Board 的内存/渲染测试
+- [~] 大 Markdown、Mermaid、KaTeX、23 张 3072×3072 附件和 1,200-card Board 已完成共享渐进渲染、完整模型尾部搜索、Desktop E2E 与 Android/iOS Simulator gate；physical device 的 memory warning、峰值 RSS 和后台恢复仍待完成（证据：`docs/mobile/reports/phase-2-large-content.md`，实现：`4cdf48d`）
 - [ ] sync batching、重试、幂等和可观测错误报告
 - [ ] 真实设备弱网、离线、磁盘不足、权限变化与进程终止测试
 
@@ -214,9 +214,10 @@
 - [~] Android/iOS share smoke flow 与 OAuth deep-link 已通过；通知、universal/app links 和通知/深链文档定位待完成
 - [x] 5,000 文档大 vault 基准达到预先记录阈值：Android native 131 ms / shared index 24.9 ms，iOS native 48 ms，首批树 window 160；双平台均精确搜索并打开尾部文档（证据：`docs/mobile/reports/phase-2-large-vault.md`）
 - [x] 当前 2D large-vault 增量的 desktop build、web build、jtype-core 38/38、Tauri Rust 28/28、unit 50/50、app E2E 50/50、Android APK 与 iOS archive 全部通过；双端 5,000 文档 Maestro flow 通过；后续 Phase 2 增量继续重复完整 gate
+- [x] 当前 2D large-content 增量的 desktop/web build、jtype-core 38/38、Tauri Rust 28/28、unit 50/50、app E2E 51/51、Android universal APK 与 iOS simulator archive 全部通过；双端大 Markdown 与 1,200-card Board 共四条 Maestro flow 通过（证据：`docs/mobile/reports/phase-2-large-content.md`）
 - [ ] 双平台模拟器与至少一台真实设备截图/录像证据已保存
-- [~] `docs/mobile/reports/phase-2.md` 已记录 2A、2B、2C、2D recovery、系统分享、无障碍、触控交互和大 vault 结果；细节见 `phase-2-ios-external-vault.md`、`phase-2-mobile-recovery.md`、`phase-2-share-import.md`、`phase-2-accessibility.md`、`phase-2-interactions.md`、`phase-2-large-vault.md`，后续持续更新到 Phase 2 终验
-- [~] tracking 已记录当前 Phase 2 commit hashes（最新实现 `85dee2f`）；后续增量继续追加
+- [~] `docs/mobile/reports/phase-2.md` 已记录 2A、2B、2C、2D recovery、系统分享、无障碍、触控交互、大 vault 与大内容结果；细节见 `phase-2-ios-external-vault.md`、`phase-2-mobile-recovery.md`、`phase-2-share-import.md`、`phase-2-accessibility.md`、`phase-2-interactions.md`、`phase-2-large-vault.md`、`phase-2-large-content.md`，后续持续更新到 Phase 2 终验
+- [~] tracking 已记录当前 Phase 2 commit hashes（最新实现 `4cdf48d`）；后续增量继续追加
 
 ## Phase 3 — Store readiness
 
@@ -285,6 +286,7 @@
 | 2026-07-18 | 2.2 / 2D | `409919c` | 共享 UI 无障碍语义、Android/iOS 动态字体、键盘焦点、对比度与 WebView 原生 undo/redo | `docs/mobile/reports/phase-2-accessibility.md` |
 | 2026-07-18 | 2.2 / 2D | `7e65195` | 共享 Sidebar/Board 触控 action、Android/iOS native haptic adapter 与复用编辑命令的键盘辅助栏 | `docs/mobile/reports/phase-2-interactions.md` |
 | 2026-07-18 | 2.4 / 2D | `85dee2f` | 共享 workspace index、bounded search、160 行渐进树 window 与 Android/iOS 5,000 文档性能 gate | `docs/mobile/reports/phase-2-large-vault.md` |
+| 2026-07-18 | 2.4 / 2D | `4cdf48d` | 共享 Markdown/diagram/attachment 与 1,200-card Board 渐进渲染、完整模型搜索和 mobile visual viewport 兼容 | `docs/mobile/reports/phase-2-large-content.md` |
 
 ## 当前环境审计（2026-07-18）
 

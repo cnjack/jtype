@@ -4,9 +4,9 @@
 
 Feature branch：`codex/mobile-app`
 
-当前 app code commit：`85dee2f`
+当前 app code commit：`4cdf48d`
 
-本报告状态：进行中；2A provider contract、2B Android SAF 与 2C iOS security-scoped provider 的工程/Simulator gate 已完成。2D 已完成 app-private 草稿冷恢复、Keystore/Keychain pending OAuth 冷恢复、Android share target / iOS Share Extension、模拟器无障碍、共享触控交互与键盘辅助栏，以及 5,000 文档大 vault 的共享索引、bounded search 与树渐进渲染 gate；Android/iOS 双模拟器均已精确搜索并打开尾部文档。大 Markdown/Board、弱网、通知和其他 physical-device gate 继续进行。iOS external provider 已通过系统目录选择、native-only bookmark、首次镜像、覆盖安装后的容器迁移、冷启动恢复和 shared editor write-back；physical iPhone 的 bookmark 失效/重新授权仍保留在最终真实设备 gate。
+本报告状态：进行中；2A provider contract、2B Android SAF 与 2C iOS security-scoped provider 的工程/Simulator gate 已完成。2D 已完成 app-private 草稿冷恢复、Keystore/Keychain pending OAuth 冷恢复、Android share target / iOS Share Extension、模拟器无障碍、共享触控交互与键盘辅助栏、5,000 文档大 vault，以及 353,355-character Markdown / Mermaid / KaTeX / 23 张大附件 / 1,200-card Board 的共享渐进渲染 gate。弱网、通知、native on-demand 和 physical low-memory/device gate 继续进行。iOS external provider 已通过系统目录选择、native-only bookmark、首次镜像、覆盖安装后的容器迁移、冷启动恢复和 shared editor write-back；physical iPhone 的 bookmark 失效/重新授权仍保留在最终真实设备 gate。
 
 ## 本增量结论
 
@@ -19,6 +19,8 @@ Android SAF 没有新增 mobile-only 产品页：native picker 与 opaque tree U
 触控交互同样没有复制产品 UI：Sidebar 与 Board 的长按、滑动和 selection 复用现有 action callbacks；Editor 键盘辅助栏复用现有格式化/插入命令和 native undo history。平台兼容层只负责手势输入、visual viewport keyboard inset 与 Android/iOS native haptic，desktop 的右键、拖拽和快捷键路径保持不变。
 
 大 vault 性能也在同一产品层收口：一个 WeakMap 缓存的 workspace index 由 Sidebar、VaultHome、Quick Open、Editor wikilink 和 filesystem link impact 共用；每级文件树只挂载 160 个 sibling，并围绕 active path 定位。Android/iOS 没有新增 mobile-only 文档列表或搜索页，也没有复用 web dashboard、landing page 或 help/docs website。
+
+大内容渲染继续沿用同一边界：共享 Preview 首批挂载 240 个 Markdown block，Mermaid 与 vault-relative 大图按可见性加载；Board 每列首批 80 张，Table/Agenda/Swimlane 首批 160 张，但搜索、计数、filter 与依赖关系仍使用完整模型。Android/iOS 没有新增 mobile-only Preview 或 Board；PDF/export 显式渲染完整文档。
 
 本增量建立的边界包括：
 
@@ -495,6 +497,7 @@ E2E 现在以完整中文 locale 在 390×844 viewport 验证：content panel �
 - `409919c`：共享 UI accessibility 语义、键盘焦点、contrast/reduced-motion、Android WebView font scale、iOS Dynamic Type 与 native undo/redo history。
 - `7e65195`：共享 Sidebar/Board 长按、滑动与 selection callback，Android/iOS native haptic adapter，以及复用同一编辑命令的键盘辅助栏。
 - `85dee2f`：共享 workspace index、bounded exact-first search、每级 160 行渐进树 window、原生 debug 性能日志，以及 Android/iOS 5,000 文档夹具和 Maestro flow。
+- `4cdf48d`：共享 Markdown/diagram/attachment 与 Board 渐进挂载、完整模型搜索、mobile visual viewport 兼容，以及双平台大内容夹具和 Maestro flow。
 
 ## 2D 草稿与 pending OAuth 冷恢复
 
@@ -526,14 +529,20 @@ Sidebar、VaultHome、Quick Open、Editor wikilink 与 filesystem link impact �
 
 Android API 36 的 5,003 篇实际 workspace（5,000 夹具 + 原有 3 篇）原生打开为 131 ms、共享索引 24.9 ms；iPhone 17 Pro Simulator 的 5,001 篇 workspace 原生打开为 48 ms。双端都完成精确搜索 `performance-note-04999.md` 并通过同一个 EditorShell 读取唯一正文。Desktop 2,500 文档 E2E 为 795 ms，20,000 文档索引单测为 27.62 ms。完整阈值、夹具、日志、截图和剩余 native on-demand 边界见 [`phase-2-large-vault.md`](phase-2-large-vault.md)。
 
+## 2D 大 Markdown、附件与大 Board
+
+共享 Preview 现在对 353,355-character / 1,826-block fixture 首批只挂载 240 block；KaTeX 位于首批内容，Mermaid 和 23 张 3072×3072 vault 图片在接近 Preview viewport 时才渲染/读取。Board 的 1,200 张卡片仍进入同一完整 view model，但 Board 首批 DOM 为每列 80、合计 240，Table/Agenda/Swimlane 首批 160；尾部搜索在 Desktop 与双模拟器均精确命中。
+
+Android 最终包实测 workspace open 201 ms、shared index 23.2 ms、Preview 首批渲染 107 ms。iPhone 17 Pro / iOS 26.5 最终 archive 完成 Documents → large Markdown → Preview → scroll，以及 Quick Open → 1,200-card Board → 搜索 01197 的完整 flow。验证同时修复 touch toolbar action 排序、compact Board 搜索顺序、Preview 大图宽度和 iOS Dynamic Type 下 layout/visual viewport 不一致的问题；所有修复都落在 shared root/container 或 runtime capability，没有第二套移动 UI。完整阈值、自动化、截图和 physical low-memory 剩余边界见 [`phase-2-large-content.md`](phase-2-large-content.md)。
+
 ## 自动化与构建结果
 
 | 验证 | 结果 |
 | --- | --- |
 | `npm run build` | PASS |
 | `npm run build --prefix services/jtype-web/frontend` | PASS |
-| `npm run test:unit` | PASS，50/50；新增 5,000/20,000 文档索引、bounded search、wikilink 与 active window 回归 |
-| `npx playwright test tests/e2e/app.spec.ts` | PASS，50/50；包含 mobile accessibility、focus、contrast、reduced-motion、shortcut、undo/redo、触控 action callback、keyboard accessory 与 2,500 文档渐进树/搜索/Quick Open 回归 |
+| `npm run test:unit` | PASS，50/50；包含 5,000/20,000 文档索引、bounded search、wikilink 与 active window 回归 |
+| `npx playwright test tests/e2e/app.spec.ts` | PASS，51/51；包含 mobile accessibility/interaction、大 vault，以及 353,355-character Preview、KaTeX、Mermaid、lazy attachment、1,200-card Board 与尾部搜索回归 |
 | `cargo test --manifest-path services/jtype-core/Cargo.toml` | PASS，38/38 |
 | `cargo test --manifest-path src-tauri/Cargo.toml` | PASS，28/28；新增 source conflict subtree 原子替换测试 |
 | `cargo check --manifest-path plugins/mobile-import/Cargo.toml` | PASS |
@@ -568,18 +577,20 @@ Android API 36 的 5,003 篇实际 workspace（5,000 夹具 + 原有 3 篇）原
 | iOS keyboard accessory accessibility surface / long-press and swipe injection | PASS；XCUITest 未把注入事件转发给 WKWebView，callback、按钮激活与 haptic 待 physical iPhone |
 | Android 5,000 文档 cold open / 精确搜索 / 尾部文档 shared EditorShell | PASS；native 131 ms、shared index 24.9 ms、Maestro 28.59 s（含 driver/assertion） |
 | iOS 5,000 文档 cold open / 精确搜索 / 尾部文档 shared EditorShell | PASS；native 48 ms、Maestro 18.08 s（含 driver/assertion） |
+| Android 大 Markdown / Mermaid / KaTeX / 23 张大图 / 1,200-card Board | PASS；Preview 240/1,826 block 107 ms，尾部卡片 01197 精确可见 |
+| iOS 大 Markdown / 大图 / 1,200-card Board | PASS；最终 archive 四条共享操作链路与 visual viewport 截图通过 |
 
 Android debug APK：
 
 - `src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk`
-- 199,564,812 bytes（aarch64 target gate）
-- SHA-256 `de9e948206fb747d0c517e5d60e378be3d9f81a524aa0b629fd6ad3f02dac9f4`
+- 740,663,642 bytes（四 ABI universal debug gate）
+- SHA-256 `d4916852dedcc03cf1400bab38b97e1bd72bb5d4c1887909613049915913d410`
 
 iOS archive：
 
 - `src-tauri/gen/apple/build/jtype_iOS.xcarchive`
 - no-sign simulator archive；包含 `JType.app/PlugIns/JType Share.appex`
-- app binary 106,874,360 bytes；SHA-256 `bc554d6e045563909553bdcdaaddd6dd5e577c0fac9a6d7a62610452bbad6733`
+- app binary 106,874,360 bytes；SHA-256 `492b4bceeb5cc4b3528f569f1440681b43cd9f90cbfdd9eb8abe93147d5e53e2`
 
 截图 SHA-256：
 
@@ -611,13 +622,17 @@ fa339e2158ccb3a4677c020a65f25cbd3b9b2542e7a82e3f5e867823e8cf2ce0  android-large-
 81217b8d0a30aa75a24041a541449e0cfe11da7a2f9e1bbd0ac423c24442e72b  android-large-vault-editor.png
 5b0e44318c09d378284e4be2e32769c6ebb851dd4c4ad938946a3674adbd394f  ios-large-vault-search.png
 84ea191ffcac29e313cb8c89855c3edbcddfe70324cf3c70076715e1d0e6ef32  ios-large-vault-editor.png
+e7a42b28950fcacb1fa4b443be54d6521bdec5efd05858870a90bcedfd075522  android-large-content-preview.png
+8fc2525e14ace87183b7ccc5e2f917451d309aeaf336ee80487b7db8eb5a6cce  ios-large-content-preview.png
+794e892fa2bc0a9781035213081fc4318563b4e6cab44e6a1de3c3041cc9f115  android-large-board.png
+29002f6767ae88bb6df6af1535e6363395f87eceb248e9004dfb9f805d65e7a5  ios-large-board.png
 ```
 
 ## 下一增量：2D 性能、可靠性与系统通知
 
-2A、2B、2C 与 2D recovery/share-import/accessibility/touch interaction/5,000-document vault 的工程 gate 已收口。下一段继续保持 desktop/shared product surface，处理：
+2A、2B、2C 与 2D recovery/share-import/accessibility/touch interaction/5,000-document vault/大内容渐进渲染的工程 gate 已收口。下一段继续保持 desktop/shared product surface，处理：
 
-1. 大 Markdown、Mermaid、KaTeX、附件、Board 的低内存/渲染 gate，以及 external provider native on-demand materialization。
+1. physical device 的大 Markdown/附件/Board 低内存与峰值 RSS gate，以及 external provider native on-demand materialization。
 2. 弱网、sync batching、重试、幂等和系统分享的大文件/进程终止矩阵。
 3. APNs/FCM 通知与通知/深链的 cloud workspace、vault、文档定位。
 4. physical iPhone 的 gesture/haptic/VoiceOver 与双端真实设备最终 gate。
