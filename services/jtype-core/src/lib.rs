@@ -61,6 +61,32 @@ pub struct WorkspaceEntryPage {
 
 pub const MAX_WORKSPACE_PAGE_SIZE: usize = 500;
 
+/// Which existing Desktop search surface is requesting native vault results.
+/// The result nodes still use the canonical shared `FileTreeNode` shape.
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum WorkspaceEntrySearchScope {
+    Documents,
+    QuickOpen,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkspaceEntrySearchResult {
+    pub entries: Vec<FileTreeNode>,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkspaceLinkImpact {
+    pub relative_path: String,
+    pub path: String,
+    pub line: usize,
+    pub content: String,
+}
+
+pub const MAX_WORKSPACE_SEARCH_RESULTS: usize = 100;
+
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct PublishResult {
@@ -379,6 +405,155 @@ pub fn read_workspace_entry_page(
         total_entries,
         next_cursor: (end_index < total_entries).then(|| end_index.to_string()),
     })
+}
+
+/// Search the native vault without first serializing a complete recursive
+/// workspace snapshot. Results keep the same depth-first order as the Desktop
+/// `WorkspaceIndex`; Quick Open also keeps exact substring matches ahead of
+/// fuzzy subsequence matches.
+pub fn search_workspace_entries(
+    root: &Path,
+    query: &str,
+    folder_filter: &str,
+    scope: WorkspaceEntrySearchScope,
+    limit: usize,
+) -> Result<WorkspaceEntrySearchResult, String> {
+    validate_workspace_query_root(root)?;
+    if limit == 0 || limit > MAX_WORKSPACE_SEARCH_RESULTS {
+        return Err(format!(
+            "Workspace search limit must be between 1 and {MAX_WORKSPACE_SEARCH_RESULTS}."
+        ));
+    }
+
+    let normalized_query = query.trim().to_lowercase();
+    let normalized_folder = folder_filter.trim().to_lowercase();
+    let mut exact_matches = Vec::new();
+    let mut fuzzy_matches = Vec::new();
+
+    visit_visible_tree_entries(root, root, &mut |node| {
+        let searchable = match scope {
+            WorkspaceEntrySearchScope::Documents => node.kind == EntryKind::Markdown,
+            WorkspaceEntrySearchScope::QuickOpen => {
+                matches!(node.kind, EntryKind::Markdown | EntryKind::Board)
+            }
+        };
+        if !searchable {
+            return Ok(false);
+        }
+
+        let parent_path = workspace_parent_path(&node.relative_path).to_lowercase();
+        if !normalized_folder.is_empty() && !parent_path.contains(&normalized_folder) {
+            return Ok(false);
+        }
+        let search_text = format!("{} {}", node.name, node.relative_path).to_lowercase();
+
+        if normalized_query.is_empty() {
+            exact_matches.push(node.clone());
+            return Ok(exact_matches.len() == limit);
+        }
+        if search_text.contains(&normalized_query) {
+            exact_matches.push(node.clone());
+            return Ok(exact_matches.len() == limit);
+        }
+        if scope == WorkspaceEntrySearchScope::QuickOpen
+            && fuzzy_matches.len() < limit
+            && fuzzy_subsequence_match(&search_text, &normalized_query)
+        {
+            fuzzy_matches.push(node.clone());
+        }
+        Ok(false)
+    })?;
+
+    if exact_matches.len() < limit {
+        let remaining = limit - exact_matches.len();
+        exact_matches.extend(fuzzy_matches.into_iter().take(remaining));
+    }
+    Ok(WorkspaceEntrySearchResult {
+        entries: exact_matches,
+    })
+}
+
+/// Resolve one exact vault-relative path into the canonical shallow tree-node
+/// shape. `None` means the path is missing or is not visible in the Desktop
+/// tree; invalid/excluded paths remain hard errors.
+pub fn resolve_workspace_entry(
+    root: &Path,
+    relative_path: &str,
+) -> Result<Option<FileTreeNode>, String> {
+    validate_workspace_query_root(root)?;
+    validate_visible_workspace_path(relative_path)?;
+    let path = safe_join(root, relative_path)?;
+    if !path.exists() {
+        return Ok(None);
+    }
+    file_tree_node_shallow(root, &path)
+}
+
+/// Resolve a wikilink with the same precedence as the shared Desktop index:
+/// exact relative stem first, then the first basename stem in tree order.
+pub fn resolve_workspace_wiki_target(
+    root: &Path,
+    target: &str,
+) -> Result<Option<FileTreeNode>, String> {
+    validate_workspace_query_root(root)?;
+    let normalized_target = normalize_markdown_stem(target);
+    if normalized_target.is_empty() {
+        return Ok(None);
+    }
+
+    let mut exact_match = None;
+    let mut basename_match = None;
+    visit_visible_tree_entries(root, root, &mut |node| {
+        if node.kind != EntryKind::Markdown {
+            return Ok(false);
+        }
+        if normalize_markdown_stem(&node.relative_path) == normalized_target {
+            exact_match = Some(node.clone());
+            return Ok(true);
+        }
+        if basename_match.is_none() && normalize_markdown_stem(&node.name) == normalized_target {
+            basename_match = Some(node.clone());
+        }
+        Ok(false)
+    })?;
+    Ok(exact_match.or(basename_match))
+}
+
+/// Find every Markdown document that links to a target path. One impact is
+/// returned per document (at its first matching line), matching the rename UI's
+/// document count and avoiding repeated file content for duplicate links.
+pub fn find_workspace_link_impacts(
+    root: &Path,
+    target_relative_path: &str,
+) -> Result<Vec<WorkspaceLinkImpact>, String> {
+    validate_workspace_query_root(root)?;
+    validate_visible_workspace_path(target_relative_path)?;
+    let normalized_target = normalize_link_path(target_relative_path);
+    let target_name = link_basename(target_relative_path);
+    let mut impacts = Vec::new();
+
+    visit_visible_tree_entries(root, root, &mut |node| {
+        if node.kind != EntryKind::Markdown {
+            return Ok(false);
+        }
+        let Ok(content) = fs::read_to_string(&node.path) else {
+            return Ok(false);
+        };
+        if let Some(line) = first_matching_markdown_link_line(
+            &content,
+            &normalized_target,
+            target_name,
+        ) {
+            impacts.push(WorkspaceLinkImpact {
+                relative_path: node.relative_path.clone(),
+                path: node.path.clone(),
+                line,
+                content,
+            });
+        }
+        Ok(false)
+    })?;
+    Ok(impacts)
 }
 
 pub fn create_entry(root: &Path, relative_path: &str, kind: EntryKind) -> Result<(), String> {
@@ -1081,6 +1256,182 @@ fn read_children(root: &Path, current: &Path) -> Result<Vec<FileTreeNode>, Strin
         node.children = children;
     }
     Ok(nodes)
+}
+
+fn validate_workspace_query_root(root: &Path) -> Result<(), String> {
+    if root.is_dir() {
+        Ok(())
+    } else {
+        Err("Workspace path must be a directory.".to_string())
+    }
+}
+
+fn is_root_metadata_path(relative_path: &str) -> bool {
+    relative_path == ".jtype" || relative_path.starts_with(".jtype/")
+}
+
+fn validate_visible_workspace_path(relative_path: &str) -> Result<(), String> {
+    if relative_path.trim().is_empty() || relative_path == "." {
+        return Err("Workspace entry path must not be empty.".to_string());
+    }
+    validate_workspace_page_parent(relative_path)?;
+    let normalized = path_to_string(Path::new(relative_path));
+    if is_root_metadata_path(normalized.trim_start_matches("./")) {
+        return Err("Workspace entry path is excluded from the tree.".to_string());
+    }
+    Ok(())
+}
+
+fn file_tree_node_shallow(root: &Path, path: &Path) -> Result<Option<FileTreeNode>, String> {
+    let relative = path.strip_prefix(root).map_err(|error| error.to_string())?;
+    let relative_path = path_to_string(relative);
+    if is_root_metadata_path(&relative_path) {
+        return Ok(None);
+    }
+    let Some(name) = path.file_name().and_then(|value| value.to_str()) else {
+        return Ok(None);
+    };
+    let kind = if path.is_dir() {
+        EntryKind::Folder
+    } else if let Some(kind) = visible_tree_file_kind(path) {
+        kind
+    } else {
+        return Ok(None);
+    };
+    Ok(Some(FileTreeNode {
+        name: name.to_string(),
+        path: path_to_string(path),
+        relative_path,
+        kind,
+        children: Vec::new(),
+    }))
+}
+
+/// Visit visible nodes in the same sorted, depth-first order produced by
+/// `open_workspace`. Returning `true` from the visitor stops the walk early.
+fn visit_visible_tree_entries<F>(
+    root: &Path,
+    current: &Path,
+    visitor: &mut F,
+) -> Result<bool, String>
+where
+    F: FnMut(&FileTreeNode) -> Result<bool, String>,
+{
+    let mut nodes = read_children_shallow(root, current)?;
+    sort_nodes(&mut nodes);
+    for node in nodes {
+        if is_root_metadata_path(&node.relative_path) {
+            continue;
+        }
+        let is_folder = node.kind == EntryKind::Folder;
+        if visitor(&node)? {
+            return Ok(true);
+        }
+        if is_folder && visit_visible_tree_entries(root, Path::new(&node.path), visitor)? {
+            return Ok(true);
+        }
+    }
+    Ok(false)
+}
+
+fn workspace_parent_path(relative_path: &str) -> &str {
+    relative_path
+        .rfind('/')
+        .map(|index| &relative_path[..index])
+        .unwrap_or("")
+}
+
+fn fuzzy_subsequence_match(value: &str, query: &str) -> bool {
+    if query.is_empty() {
+        return true;
+    }
+    let mut value_chars = value.chars();
+    query
+        .chars()
+        .all(|query_char| value_chars.by_ref().any(|value_char| value_char == query_char))
+}
+
+fn normalize_markdown_stem(value: &str) -> String {
+    let mut normalized = value.trim().replace('\\', "/");
+    if let Some(stripped) = normalized.strip_prefix("./") {
+        normalized = stripped.to_string();
+    }
+    let lower = normalized.to_lowercase();
+    for extension in [".markdown", ".mdown", ".mkd", ".md"] {
+        if lower.ends_with(extension) {
+            normalized.truncate(normalized.len() - extension.len());
+            break;
+        }
+    }
+    normalized.to_lowercase()
+}
+
+fn normalize_link_path(value: &str) -> String {
+    value.replace('\\', "/")
+}
+
+fn link_basename(value: &str) -> &str {
+    value
+        .rsplit(['/', '\\'])
+        .next()
+        .unwrap_or(value)
+}
+
+fn markdown_link_targets(line: &str) -> Vec<&str> {
+    let mut targets = Vec::new();
+    let mut cursor = 0;
+    while let Some(open_offset) = line[cursor..].find('[') {
+        let open = cursor + open_offset;
+        let label_start = open + 1;
+        let Some(label_end_offset) = line[label_start..].find(']') else {
+            break;
+        };
+        let label_end = label_start + label_end_offset;
+        if label_end == label_start || !line[label_end..].starts_with("](") {
+            cursor = open + 1;
+            continue;
+        }
+        let target_start = label_end + 2;
+        let Some(target_end_offset) = line[target_start..].find(')') else {
+            cursor = open + 1;
+            continue;
+        };
+        let target_end = target_start + target_end_offset;
+        if target_end > target_start {
+            targets.push(&line[target_start..target_end]);
+        }
+        cursor = target_end + 1;
+    }
+
+    cursor = 0;
+    while let Some(open_offset) = line[cursor..].find("[[") {
+        let target_start = cursor + open_offset + 2;
+        let Some(target_end_offset) = line[target_start..].find("]]") else {
+            break;
+        };
+        let target_end = target_start + target_end_offset;
+        if target_end > target_start && !line[target_start..target_end].contains(']') {
+            targets.push(&line[target_start..target_end]);
+        }
+        cursor = target_end + 2;
+    }
+    targets
+}
+
+fn first_matching_markdown_link_line(
+    content: &str,
+    normalized_target: &str,
+    target_name: &str,
+) -> Option<usize> {
+    content.split('\n').enumerate().find_map(|(line_number, line)| {
+        markdown_link_targets(line)
+            .into_iter()
+            .any(|target| {
+                normalize_link_path(target) == normalized_target
+                    || link_basename(target) == target_name
+            })
+            .then_some(line_number)
+    })
 }
 
 fn validate_workspace_page_parent(relative_path: &str) -> Result<(), String> {
@@ -2393,6 +2744,193 @@ mod tests {
         assert!(read_workspace_entry_page(root, "", Some("999"), 10)
             .unwrap_err()
             .contains("stale"));
+    }
+
+    #[test]
+    fn native_workspace_search_matches_desktop_scope_order_and_bounds() {
+        let dir = tempdir().unwrap();
+        let root = dir.path();
+        fs::create_dir_all(root.join("a")).unwrap();
+        fs::create_dir_all(root.join("bulk")).unwrap();
+        fs::create_dir_all(root.join("z")).unwrap();
+        fs::create_dir_all(root.join("target")).unwrap();
+        fs::write(root.join("a/a-l-p-h-a.md"), "# Fuzzy").unwrap();
+        fs::write(root.join("z/alpha.board"), "{}").unwrap();
+        fs::write(root.join("z/exact-alpha.md"), "# Exact").unwrap();
+        fs::write(root.join("z/alpha.mmd"), "graph TD").unwrap();
+        fs::write(root.join("target/ignored-match.md"), "# Ignored").unwrap();
+        for index in 0..130 {
+            fs::write(
+                root.join("bulk").join(format!("match-{index:03}.md")),
+                format!("# Match {index}"),
+            )
+            .unwrap();
+        }
+        open_workspace(root).unwrap();
+        fs::write(root.join(".jtype/secret-match.md"), "# Secret").unwrap();
+
+        let documents = search_workspace_entries(
+            root,
+            "alpha",
+            "",
+            WorkspaceEntrySearchScope::Documents,
+            10,
+        )
+        .unwrap();
+        assert_eq!(
+            documents
+                .entries
+                .iter()
+                .map(|node| node.relative_path.as_str())
+                .collect::<Vec<_>>(),
+            vec!["z/exact-alpha.md"]
+        );
+
+        let quick_open = search_workspace_entries(
+            root,
+            "alpha",
+            "",
+            WorkspaceEntrySearchScope::QuickOpen,
+            10,
+        )
+        .unwrap();
+        assert_eq!(
+            quick_open
+                .entries
+                .iter()
+                .map(|node| node.relative_path.as_str())
+                .collect::<Vec<_>>(),
+            vec!["z/alpha.board", "z/exact-alpha.md", "a/a-l-p-h-a.md"]
+        );
+        assert!(quick_open.entries.iter().all(|node| node.children.is_empty()));
+
+        let filtered = search_workspace_entries(
+            root,
+            "",
+            "z",
+            WorkspaceEntrySearchScope::QuickOpen,
+            10,
+        )
+        .unwrap();
+        assert_eq!(
+            filtered
+                .entries
+                .iter()
+                .map(|node| node.relative_path.as_str())
+                .collect::<Vec<_>>(),
+            vec!["z/alpha.board", "z/exact-alpha.md"]
+        );
+
+        let bounded = search_workspace_entries(
+            root,
+            "match",
+            "bulk",
+            WorkspaceEntrySearchScope::Documents,
+            MAX_WORKSPACE_SEARCH_RESULTS,
+        )
+        .unwrap();
+        assert_eq!(bounded.entries.len(), MAX_WORKSPACE_SEARCH_RESULTS);
+        assert_eq!(bounded.entries[0].relative_path, "bulk/match-000.md");
+        assert_eq!(bounded.entries[99].relative_path, "bulk/match-099.md");
+        assert!(bounded
+            .entries
+            .iter()
+            .all(|node| !node.relative_path.starts_with(".jtype/")
+                && !node.relative_path.starts_with("target/")));
+
+        assert!(search_workspace_entries(
+            root,
+            "",
+            "",
+            WorkspaceEntrySearchScope::Documents,
+            0,
+        )
+        .unwrap_err()
+        .contains("between 1 and"));
+        assert!(search_workspace_entries(
+            root,
+            "",
+            "",
+            WorkspaceEntrySearchScope::Documents,
+            MAX_WORKSPACE_SEARCH_RESULTS + 1,
+        )
+        .unwrap_err()
+        .contains("between 1 and"));
+    }
+
+    #[test]
+    fn native_workspace_resolvers_find_unloaded_paths_and_keep_wiki_precedence() {
+        let dir = tempdir().unwrap();
+        let root = dir.path();
+        fs::create_dir_all(root.join("a")).unwrap();
+        fs::create_dir_all(root.join("b/deep")).unwrap();
+        fs::write(root.join("a/guide.md"), "# First Guide").unwrap();
+        fs::write(root.join("b/guide.md"), "# Exact Guide").unwrap();
+        fs::write(root.join("b/deep/note.md"), "# Deep").unwrap();
+        fs::write(root.join("unsupported.txt"), "hidden").unwrap();
+        open_workspace(root).unwrap();
+
+        let deep = resolve_workspace_entry(root, "b/deep/note.md")
+            .unwrap()
+            .unwrap();
+        assert_eq!(deep.kind, EntryKind::Markdown);
+        assert_eq!(deep.relative_path, "b/deep/note.md");
+        assert!(deep.children.is_empty());
+
+        let folder = resolve_workspace_entry(root, "b/deep").unwrap().unwrap();
+        assert_eq!(folder.kind, EntryKind::Folder);
+        assert!(folder.children.is_empty());
+        assert!(resolve_workspace_entry(root, "missing.md").unwrap().is_none());
+        assert!(resolve_workspace_entry(root, "unsupported.txt").unwrap().is_none());
+        assert!(resolve_workspace_entry(root, "../outside.md")
+            .unwrap_err()
+            .contains("escape"));
+        assert!(resolve_workspace_entry(root, ".jtype/workspace.json")
+            .unwrap_err()
+            .contains("excluded"));
+
+        let exact = resolve_workspace_wiki_target(root, "b/guide").unwrap().unwrap();
+        assert_eq!(exact.relative_path, "b/guide.md");
+        let basename = resolve_workspace_wiki_target(root, "guide.md").unwrap().unwrap();
+        assert_eq!(basename.relative_path, "a/guide.md");
+        assert!(resolve_workspace_wiki_target(root, "missing").unwrap().is_none());
+    }
+
+    #[test]
+    fn native_link_impact_scan_includes_nested_documents_and_skips_metadata() {
+        let dir = tempdir().unwrap();
+        let root = dir.path();
+        fs::create_dir_all(root.join("docs")).unwrap();
+        fs::create_dir_all(root.join("notes/nested")).unwrap();
+        fs::write(root.join("docs/guide.md"), "# Guide").unwrap();
+        fs::write(
+            root.join("notes/inline.md"),
+            "# Inline\n\n[Guide](docs/guide.md) and [Again](guide.md)",
+        )
+        .unwrap();
+        fs::write(
+            root.join("notes/nested/wiki.md"),
+            "# Wiki\n[[guide.md]]",
+        )
+        .unwrap();
+        fs::write(root.join("notes/unrelated.md"), "[Other](other.md)").unwrap();
+        open_workspace(root).unwrap();
+        fs::write(
+            root.join(".jtype/secret.md"),
+            "[Secret](docs/guide.md)",
+        )
+        .unwrap();
+
+        let impacts = find_workspace_link_impacts(root, "docs/guide.md").unwrap();
+        assert_eq!(impacts.len(), 2);
+        assert_eq!(impacts[0].relative_path, "notes/nested/wiki.md");
+        assert_eq!(impacts[0].line, 1);
+        assert_eq!(impacts[1].relative_path, "notes/inline.md");
+        assert_eq!(impacts[1].line, 2);
+        assert!(impacts.iter().all(|impact| !impact.relative_path.starts_with(".jtype/")));
+        assert!(find_workspace_link_impacts(root, "../outside.md")
+            .unwrap_err()
+            .contains("escape"));
     }
 
     #[test]

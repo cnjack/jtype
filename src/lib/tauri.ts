@@ -1,8 +1,12 @@
 import { invoke } from "@tauri-apps/api/core";
 import { isTauriRuntime } from "./utils";
 import type {
+  FileTreeNode,
   WorkspaceSnapshot,
   WorkspaceEntryPage,
+  WorkspaceEntrySearchResult,
+  WorkspaceEntrySearchScope,
+  WorkspaceLinkImpact,
   PublishResult,
   AiIndexResult,
   ValidationResult,
@@ -93,6 +97,33 @@ export const tauri = {
       relativePath,
       cursor,
       pageSize,
+    });
+  },
+  searchWorkspaceEntries(
+    rootPath: string,
+    query: string,
+    folderFilter: string,
+    scope: WorkspaceEntrySearchScope,
+    limit: number,
+  ) {
+    return invoke<WorkspaceEntrySearchResult>("search_workspace_entries", {
+      rootPath,
+      query,
+      folderFilter,
+      scope,
+      limit,
+    });
+  },
+  resolveWorkspaceEntry(rootPath: string, relativePath: string) {
+    return invoke<FileTreeNode | null>("resolve_workspace_entry", { rootPath, relativePath });
+  },
+  resolveWorkspaceWikiTarget(rootPath: string, target: string) {
+    return invoke<FileTreeNode | null>("resolve_workspace_wiki_target", { rootPath, target });
+  },
+  findWorkspaceLinkImpacts(rootPath: string, targetRelativePath: string) {
+    return invoke<WorkspaceLinkImpact[]>("find_workspace_link_impacts", {
+      rootPath,
+      targetRelativePath,
     });
   },
   openDefaultVault() {

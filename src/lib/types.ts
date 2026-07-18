@@ -99,6 +99,19 @@ export type WorkspaceEntryPage = {
   nextCursor: string | null;
 };
 
+export type WorkspaceEntrySearchScope = "documents" | "quickOpen";
+
+export type WorkspaceEntrySearchResult = {
+  entries: FileTreeNode[];
+};
+
+export type WorkspaceLinkImpact = {
+  relativePath: string;
+  path: string;
+  line: number;
+  content: string;
+};
+
 export type VaultProviderKind = "appPrivate" | "localDirectory" | "externalMirror";
 export type VaultProviderAccessState =
   | "ready"

@@ -38,7 +38,7 @@ use tauri_plugin_secure_storage::SecureStorageExt;
 use workspace::{
     AiIndexResult, AssetSyncState, EntryKind, FolderContentsSummary, PublishResult, SyncBaseEntry,
     SyncDocument, SyncFolder, TrashItemInfo, TrashMetadata, ValidationResult, WorkspaceEntryPage,
-    WorkspaceSnapshot,
+    WorkspaceEntrySearchResult, WorkspaceEntrySearchScope, WorkspaceLinkImpact, WorkspaceSnapshot,
 };
 
 struct WatcherState {
@@ -1915,6 +1915,56 @@ fn read_workspace_entry_page(
     workspace::read_workspace_entry_page(&root, &relative_path, cursor.as_deref(), page_size)
 }
 
+/// Native query adapter for shared Desktop search surfaces once a mobile vault
+/// is hydrated page-by-page. Desktop continues using its complete in-memory
+/// `WorkspaceIndex`; both paths return the same `FileTreeNode` contract.
+#[tauri::command]
+fn search_workspace_entries(
+    app: AppHandle,
+    root_path: String,
+    query: String,
+    folder_filter: String,
+    scope: WorkspaceEntrySearchScope,
+    limit: usize,
+) -> Result<WorkspaceEntrySearchResult, String> {
+    let root = PathBuf::from(root_path);
+    let _provider = describe_provider_for_root(&app, &root)?;
+    workspace::search_workspace_entries(&root, &query, &folder_filter, scope, limit)
+}
+
+#[tauri::command]
+fn resolve_workspace_entry(
+    app: AppHandle,
+    root_path: String,
+    relative_path: String,
+) -> Result<Option<workspace::FileTreeNode>, String> {
+    let root = PathBuf::from(root_path);
+    let _provider = describe_provider_for_root(&app, &root)?;
+    workspace::resolve_workspace_entry(&root, &relative_path)
+}
+
+#[tauri::command]
+fn resolve_workspace_wiki_target(
+    app: AppHandle,
+    root_path: String,
+    target: String,
+) -> Result<Option<workspace::FileTreeNode>, String> {
+    let root = PathBuf::from(root_path);
+    let _provider = describe_provider_for_root(&app, &root)?;
+    workspace::resolve_workspace_wiki_target(&root, &target)
+}
+
+#[tauri::command]
+fn find_workspace_link_impacts(
+    app: AppHandle,
+    root_path: String,
+    target_relative_path: String,
+) -> Result<Vec<WorkspaceLinkImpact>, String> {
+    let root = PathBuf::from(root_path);
+    let _provider = describe_provider_for_root(&app, &root)?;
+    workspace::find_workspace_link_impacts(&root, &target_relative_path)
+}
+
 #[tauri::command]
 fn detect_vault_root(path: String) -> Option<String> {
     workspace::detect_vault_root(&PathBuf::from(path)).map(|p| path_to_string(&p))
@@ -3107,6 +3157,10 @@ pub fn run() {
             read_binary_file,
             open_workspace,
             read_workspace_entry_page,
+            search_workspace_entries,
+            resolve_workspace_entry,
+            resolve_workspace_wiki_target,
+            find_workspace_link_impacts,
             detect_vault_root,
             create_workspace_entry,
             import_external_paths,
