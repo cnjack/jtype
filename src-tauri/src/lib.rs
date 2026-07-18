@@ -548,6 +548,12 @@ struct ExternalVaultReconcileResult {
     deleted_entries: u64,
     pending_local_changes: u64,
     conflicts: Vec<vault_reconcile::ReconcileConflict>,
+    scanned_entries: u64,
+    scanned_files: u64,
+    scanned_bytes: u64,
+    scan_elapsed_ms: u64,
+    materialized_files: u64,
+    materialized_bytes: u64,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -734,20 +740,101 @@ fn external_source_snapshot_path(mirror_root: &Path) -> Result<PathBuf, String> 
 }
 
 #[cfg(mobile)]
-fn materialize_external_source_snapshot(
+struct ExternalSourceScan {
+    manifest: vault_reconcile::VaultManifest,
+    entries: u64,
+    files: u64,
+    bytes: u64,
+    elapsed_ms: u64,
+}
+
+#[cfg(mobile)]
+fn scan_external_source_manifest(
+    app: &AppHandle,
+    provider: &vault_provider::ExternalVaultProviderRecord,
+) -> Result<ExternalSourceScan, String> {
+    let scanned = app
+        .mobile_import()
+        .scan_directory(provider.opaque_source_reference.clone())
+        .map_err(|error| error.to_string())?;
+    let entries = scanned.entries.len() as u64;
+    if entries != scanned.files.saturating_add(scanned.directories) {
+        return Err("External vault native scan returned inconsistent entry counts".to_string());
+    }
+    let native_entries = scanned.entries.into_iter().map(|entry| {
+        let kind = match entry.kind {
+            tauri_plugin_mobile_import::DirectoryManifestEntryKind::Directory => {
+                vault_reconcile::ManifestEntryKind::Directory
+            }
+            tauri_plugin_mobile_import::DirectoryManifestEntryKind::File => {
+                vault_reconcile::ManifestEntryKind::File
+            }
+        };
+        (
+            entry.relative_path,
+            vault_reconcile::ManifestEntry {
+                kind,
+                bytes: entry.bytes,
+                content_hash: entry.content_hash,
+            },
+        )
+    });
+    let manifest = vault_reconcile::VaultManifest::from_native_entries(native_entries)?;
+    #[cfg(debug_assertions)]
+    eprintln!(
+        "[JTypePerformance] external_source_scan provider={} entries={} files={} bytes={} elapsed_ms={}",
+        provider.provider_id, entries, scanned.files, scanned.bytes, scanned.elapsed_ms
+    );
+    Ok(ExternalSourceScan {
+        manifest,
+        entries,
+        files: scanned.files,
+        bytes: scanned.bytes,
+        elapsed_ms: scanned.elapsed_ms,
+    })
+}
+
+#[cfg(mobile)]
+struct MaterializedExternalSourcePaths {
+    root: PathBuf,
+    _cleanup: RemoveDirectoryOnDrop,
+    files: u64,
+    bytes: u64,
+}
+
+#[cfg(mobile)]
+fn materialize_external_source_paths(
     app: &AppHandle,
     provider: &vault_provider::ExternalVaultProviderRecord,
     mirror_root: &Path,
-) -> Result<(PathBuf, RemoveDirectoryOnDrop), String> {
+    relative_paths: Vec<String>,
+) -> Result<MaterializedExternalSourcePaths, String> {
     let source_snapshot = external_source_snapshot_path(mirror_root)?;
-    app.mobile_import()
-        .mirror_directory(
+    let requested_paths = relative_paths.len();
+    let materialized = app
+        .mobile_import()
+        .materialize_directory_entries(
             provider.opaque_source_reference.clone(),
             path_to_string(&source_snapshot),
+            relative_paths,
         )
         .map_err(|error| error.to_string())?;
     let cleanup = RemoveDirectoryOnDrop(source_snapshot.clone());
-    Ok((source_snapshot, cleanup))
+    #[cfg(debug_assertions)]
+    eprintln!(
+        "[JTypePerformance] external_source_materialize provider={} requested_paths={} files={} directories={} bytes={}",
+        provider.provider_id,
+        requested_paths,
+        materialized.files,
+        materialized.directories,
+        materialized.bytes
+    );
+    Ok(MaterializedExternalSourcePaths {
+        root: source_snapshot,
+        _cleanup: cleanup,
+        files: materialized.files,
+        bytes: materialized.bytes,
+    })
 }
 
 #[cfg(mobile)]
@@ -968,17 +1055,15 @@ fn reconcile_external_vault_locked(
         );
     }
 
-    let (source_snapshot, _source_snapshot_cleanup) =
-        materialize_external_source_snapshot(&app, &provider, &mirror_root)?;
-
-    let source_manifest = vault_reconcile::build_manifest(&source_snapshot)?;
+    let source_scan = scan_external_source_manifest(&app, &provider)?;
+    let source_manifest = &source_scan.manifest;
     let mirror_manifest = vault_reconcile::build_manifest(&mirror_root)?;
     let baseline = vault_reconcile::load_baseline(&mirror_root)?;
     let baseline =
         vault_reconcile::trusted_baseline(baseline.as_ref(), provider.source_revision.as_deref());
-    let plan = vault_reconcile::plan_reconcile(baseline, &source_manifest, &mirror_manifest);
-    let status = plan.status(&source_manifest);
-    let pending_local_changes = plan.pending_local_changes(&source_manifest);
+    let plan = vault_reconcile::plan_reconcile(baseline, source_manifest, &mirror_manifest);
+    let status = plan.status(source_manifest);
+    let pending_local_changes = plan.pending_local_changes(source_manifest);
 
     if !plan.conflicts.is_empty() {
         return Ok(ExternalVaultReconcileResult {
@@ -990,20 +1075,35 @@ fn reconcile_external_vault_locked(
             deleted_entries: 0,
             pending_local_changes,
             conflicts: plan.conflicts,
+            scanned_entries: source_scan.entries,
+            scanned_files: source_scan.files,
+            scanned_bytes: source_scan.bytes,
+            scan_elapsed_ms: source_scan.elapsed_ms,
+            materialized_files: 0,
+            materialized_bytes: 0,
         });
     }
 
     let pulled_files = plan.pulled_files();
     let pulled_directories = plan.pulled_directories();
     let deleted_entries = plan.deleted_entries();
-    if plan.has_operations() {
-        vault_reconcile::apply_reconcile_plan(&mirror_root, &source_snapshot, &plan)?;
-    }
-    vault_reconcile::save_baseline(&mirror_root, &source_manifest)?;
+    let (materialized_files, materialized_bytes) = if plan.has_operations() {
+        let materialized = materialize_external_source_paths(
+            &app,
+            &provider,
+            &mirror_root,
+            plan.source_materialization_paths(),
+        )?;
+        vault_reconcile::apply_reconcile_plan(&mirror_root, &materialized.root, &plan)?;
+        (materialized.files, materialized.bytes)
+    } else {
+        (0, 0)
+    };
+    vault_reconcile::save_baseline(&mirror_root, source_manifest)?;
 
     provider.access_state = vault_provider::VaultProviderAccessState::Ready;
     provider.last_reconciled_at = Some(current_unix_timestamp()?);
-    provider.source_revision = Some(source_manifest.revision);
+    provider.source_revision = Some(source_manifest.revision.clone());
     let descriptor = provider.descriptor();
     store.upsert(provider);
     write_vault_provider_store(&app, &store)?;
@@ -1017,6 +1117,12 @@ fn reconcile_external_vault_locked(
         deleted_entries,
         pending_local_changes,
         conflicts: Vec::new(),
+        scanned_entries: source_scan.entries,
+        scanned_files: source_scan.files,
+        scanned_bytes: source_scan.bytes,
+        scan_elapsed_ms: source_scan.elapsed_ms,
+        materialized_files,
+        materialized_bytes,
     })
 }
 
@@ -1076,14 +1182,13 @@ fn write_back_external_vault_locked(
         return Err("External vault write-back journal belongs to another provider".to_string());
     }
 
-    let (source_snapshot, source_snapshot_cleanup) =
-        materialize_external_source_snapshot(app, &provider, &mirror_root)?;
-    let source_manifest = vault_reconcile::build_manifest(&source_snapshot)?;
+    let source_scan = scan_external_source_manifest(app, &provider)?;
+    let source_manifest = &source_scan.manifest;
     let mirror_manifest = vault_reconcile::build_manifest(&mirror_root)?;
     let baseline = vault_reconcile::load_baseline(&mirror_root)?;
     let baseline =
         vault_reconcile::trusted_baseline(baseline.as_ref(), provider.source_revision.as_deref());
-    let pull_plan = vault_reconcile::plan_reconcile(baseline, &source_manifest, &mirror_manifest);
+    let pull_plan = vault_reconcile::plan_reconcile(baseline, source_manifest, &mirror_manifest);
     let pulled_before_write =
         pull_plan.pulled_files() + pull_plan.pulled_directories() + pull_plan.deleted_entries();
     if !pull_plan.conflicts.is_empty() {
@@ -1101,11 +1206,17 @@ fn write_back_external_vault_locked(
         });
     }
     if pull_plan.has_operations() {
-        vault_reconcile::apply_reconcile_plan(&mirror_root, &source_snapshot, &pull_plan)?;
+        let materialized = materialize_external_source_paths(
+            app,
+            &provider,
+            &mirror_root,
+            pull_plan.source_materialization_paths(),
+        )?;
+        vault_reconcile::apply_reconcile_plan(&mirror_root, &materialized.root, &pull_plan)?;
     }
 
     let mirror_manifest = vault_reconcile::build_manifest(&mirror_root)?;
-    let write_back_plan = vault_reconcile::plan_write_back(&source_manifest, &mirror_manifest);
+    let write_back_plan = vault_reconcile::plan_write_back(source_manifest, &mirror_manifest);
     if !write_back_plan.conflicts.is_empty() {
         vault_reconcile::commit_local_mutation(&mirror_root)?;
         return Ok(ExternalVaultWriteBackResult {
@@ -1218,10 +1329,8 @@ fn write_back_external_vault_locked(
     if let Some(progress) = &operation_progress {
         progress.verifying();
     }
-    drop(source_snapshot_cleanup);
-    let (verified_source_snapshot, _verified_source_cleanup) =
-        materialize_external_source_snapshot(app, &provider, &mirror_root)?;
-    let verified_source_manifest = vault_reconcile::build_manifest(&verified_source_snapshot)?;
+    let verified_source_scan = scan_external_source_manifest(app, &provider)?;
+    let verified_source_manifest = verified_source_scan.manifest;
     if verified_source_manifest.entries != mirror_manifest.entries {
         return Err("External vault write-back failed its manifest verification".to_string());
     }
@@ -1308,16 +1417,15 @@ fn resolve_external_vault_conflict_blocking(
         );
     }
 
-    let (source_snapshot, source_snapshot_cleanup) =
-        materialize_external_source_snapshot(&app, &provider, &mirror_root)?;
-    let source_manifest = vault_reconcile::build_manifest(&source_snapshot)?;
+    let source_scan = scan_external_source_manifest(&app, &provider)?;
+    let source_manifest = &source_scan.manifest;
     let mirror_manifest = vault_reconcile::build_manifest(&mirror_root)?;
     let baseline = vault_reconcile::load_baseline(&mirror_root)?;
     let baseline =
         vault_reconcile::trusted_baseline(baseline.as_ref(), provider.source_revision.as_deref());
     let reconcile_plan =
-        vault_reconcile::plan_reconcile(baseline, &source_manifest, &mirror_manifest);
-    let write_back_plan = vault_reconcile::plan_write_back(&source_manifest, &mirror_manifest);
+        vault_reconcile::plan_reconcile(baseline, source_manifest, &mirror_manifest);
+    let write_back_plan = vault_reconcile::plan_write_back(source_manifest, &mirror_manifest);
     let is_current_conflict = reconcile_plan
         .conflicts
         .iter()
@@ -1329,9 +1437,15 @@ fn resolve_external_vault_conflict_blocking(
 
     match resolution {
         ExternalVaultConflictResolution::UseSource => {
+            let materialized = materialize_external_source_paths(
+                &app,
+                &provider,
+                &mirror_root,
+                source_manifest.materialization_paths_for_subtree(&relative_path),
+            )?;
             vault_reconcile::apply_source_conflict_resolution(
                 &mirror_root,
-                &source_snapshot,
+                &materialized.root,
                 &relative_path,
             )?;
         }
@@ -1402,10 +1516,7 @@ fn resolve_external_vault_conflict_blocking(
                 ));
             }
 
-            drop(source_snapshot_cleanup);
-            let (verified_source, _verified_source_cleanup) =
-                materialize_external_source_snapshot(&app, &provider, &mirror_root)?;
-            let verified_source_manifest = vault_reconcile::build_manifest(&verified_source)?;
+            let verified_source_manifest = scan_external_source_manifest(&app, &provider)?.manifest;
             let verified_mirror_manifest = vault_reconcile::build_manifest(&mirror_root)?;
             if verified_source_manifest.entries.get(&relative_path)
                 != verified_mirror_manifest.entries.get(&relative_path)

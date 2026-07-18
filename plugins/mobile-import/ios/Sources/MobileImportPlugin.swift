@@ -1,4 +1,5 @@
 import Foundation
+import CryptoKit
 import Tauri
 import UIKit
 import UniformTypeIdentifiers
@@ -15,6 +16,16 @@ private class DirectoryAccessArgs: Decodable {
 private class MirrorDirectoryArgs: Decodable {
   let sourceReference: String
   let mirrorRootPath: String
+}
+
+private class DirectoryScanArgs: Decodable {
+  let sourceReference: String
+}
+
+private class MaterializeDirectoryEntriesArgs: Decodable {
+  let sourceReference: String
+  let destinationRootPath: String
+  let relativePaths: [String]
 }
 
 private class DirectoryChangeArgs: Decodable {
@@ -280,6 +291,118 @@ class MobileImportPlugin: Plugin, UIDocumentPickerDelegate {
           try? FileManager.default.removeItem(at: stage)
         }
         invoke.reject("Unable to import the selected vault: \(error.localizedDescription)")
+      }
+    }
+  }
+
+  @objc public func scanDirectory(_ invoke: Invoke) throws {
+    let args = try invoke.parseArgs(DirectoryScanArgs.self)
+    DispatchQueue.global(qos: .userInitiated).async {
+      do {
+        let startedAt = DispatchTime.now().uptimeNanoseconds
+        let scoped = try self.resolveDirectory(args.sourceReference)
+        defer { self.stopAccessing(scoped) }
+        try self.validateReadableDirectory(scoped.url)
+
+        var entries: [[String: Any]] = []
+        var stats = MirrorStats()
+        try self.scanDirectoryChildren(
+          source: scoped.url,
+          parentRelativePath: "",
+          entries: &entries,
+          stats: &stats,
+          depth: 0
+        )
+        let elapsed = (DispatchTime.now().uptimeNanoseconds - startedAt) / 1_000_000
+        invoke.resolve([
+          "entries": entries,
+          "files": stats.files,
+          "directories": stats.directories,
+          "bytes": stats.bytes,
+          "elapsedMs": elapsed,
+        ])
+      } catch {
+        invoke.reject("Unable to scan the external vault: \(error.localizedDescription)")
+      }
+    }
+  }
+
+  @objc public func materializeDirectoryEntries(_ invoke: Invoke) throws {
+    let args = try invoke.parseArgs(MaterializeDirectoryEntriesArgs.self)
+    DispatchQueue.global(qos: .userInitiated).async {
+      var destinationRoot: URL?
+      do {
+        let scoped = try self.resolveDirectory(args.sourceReference)
+        defer { self.stopAccessing(scoped) }
+        try self.validateReadableDirectory(scoped.url)
+
+        let destination = try self.validatedMirrorRoot(args.destinationRootPath, mustExist: false)
+        destinationRoot = destination
+        let fileManager = FileManager.default
+        guard !fileManager.fileExists(atPath: destination.path) else {
+          throw NSError(
+            domain: "MobileImportPlugin",
+            code: 17,
+            userInfo: [NSLocalizedDescriptionKey: "The materialization destination already exists"]
+          )
+        }
+        try fileManager.createDirectory(at: destination, withIntermediateDirectories: false)
+
+        let relativePaths = Array(Set(args.relativePaths)).sorted { first, second in
+          let firstDepth = first.split(separator: "/", omittingEmptySubsequences: false).count
+          let secondDepth = second.split(separator: "/", omittingEmptySubsequences: false).count
+          return firstDepth == secondDepth ? first < second : firstDepth < secondDepth
+        }
+        guard relativePaths.count <= 50_000 else {
+          throw NSError(
+            domain: "MobileImportPlugin",
+            code: 18,
+            userInfo: [NSLocalizedDescriptionKey: "Too many external vault paths were requested"]
+          )
+        }
+
+        var files: UInt64 = 0
+        var directories: UInt64 = 0
+        var bytes: UInt64 = 0
+        for relativePath in relativePaths {
+          _ = try self.validatedRelativeSegments(relativePath)
+          let source = scoped.url.appendingPathComponent(relativePath).standardizedFileURL
+          guard self.isDescendant(source, of: scoped.url) else {
+            throw MobileImportError.unsafePath
+          }
+          var isDirectory: ObjCBool = false
+          guard fileManager.fileExists(atPath: source.path, isDirectory: &isDirectory) else {
+            throw NSError(
+              domain: "MobileImportPlugin",
+              code: 19,
+              userInfo: [NSLocalizedDescriptionKey: "External vault path changed during materialization: \(relativePath)"]
+            )
+          }
+          let target = destination.appendingPathComponent(
+            relativePath,
+            isDirectory: isDirectory.boolValue
+          ).standardizedFileURL
+          guard self.isDescendant(target, of: destination) else {
+            throw MobileImportError.unsafePath
+          }
+          if isDirectory.boolValue {
+            try fileManager.createDirectory(at: target, withIntermediateDirectories: true)
+            directories += 1
+          } else {
+            try fileManager.createDirectory(
+              at: target.deletingLastPathComponent(),
+              withIntermediateDirectories: true
+            )
+            bytes += try self.copyFileStream(from: source, to: target)
+            files += 1
+          }
+        }
+        invoke.resolve(["files": files, "directories": directories, "bytes": bytes])
+      } catch {
+        if let destinationRoot {
+          try? FileManager.default.removeItem(at: destinationRoot)
+        }
+        invoke.reject("Unable to materialize external vault entries: \(error.localizedDescription)")
       }
     }
   }
@@ -691,6 +814,102 @@ class MobileImportPlugin: Plugin, UIDocumentPickerDelegate {
         }
       }
     }
+  }
+
+  private func scanDirectoryChildren(
+    source: URL,
+    parentRelativePath: String,
+    entries: inout [[String: Any]],
+    stats: inout MirrorStats,
+    depth: Int
+  ) throws {
+    guard depth <= 64 else {
+      throw NSError(
+        domain: "MobileImportPlugin",
+        code: 20,
+        userInfo: [NSLocalizedDescriptionKey: "The selected vault exceeds the maximum folder depth"]
+      )
+    }
+    let keys: Set<URLResourceKey> = [.isDirectoryKey, .isSymbolicLinkKey]
+    let children = try FileManager.default.contentsOfDirectory(
+      at: source,
+      includingPropertiesForKeys: Array(keys),
+      options: []
+    ).sorted { $0.lastPathComponent.localizedStandardCompare($1.lastPathComponent) == .orderedAscending }
+    var names = Set<String>()
+    for child in children {
+      let name = safeFileName(child.lastPathComponent)
+      guard name == child.lastPathComponent, names.insert(name).inserted else {
+        throw MobileImportError.unsafePath
+      }
+      let values = try child.resourceValues(forKeys: keys)
+      guard values.isSymbolicLink != true else {
+        throw NSError(
+          domain: "MobileImportPlugin",
+          code: 21,
+          userInfo: [NSLocalizedDescriptionKey: "Symbolic links can not enter the vault manifest"]
+        )
+      }
+      if values.isDirectory == true, Self.reservedDirectories.contains(name.lowercased()) {
+        continue
+      }
+      stats.entries += 1
+      guard stats.entries <= 50_000 else {
+        throw NSError(
+          domain: "MobileImportPlugin",
+          code: 22,
+          userInfo: [NSLocalizedDescriptionKey: "The selected vault contains too many entries"]
+        )
+      }
+      let relativePath = parentRelativePath.isEmpty ? name : "\(parentRelativePath)/\(name)"
+      if values.isDirectory == true {
+        entries.append([
+          "relativePath": relativePath,
+          "kind": "directory",
+          "bytes": UInt64(0),
+        ])
+        stats.directories += 1
+        try scanDirectoryChildren(
+          source: child,
+          parentRelativePath: relativePath,
+          entries: &entries,
+          stats: &stats,
+          depth: depth + 1
+        )
+      } else {
+        let result = try hashFileContent(child)
+        entries.append([
+          "relativePath": relativePath,
+          "kind": "file",
+          "bytes": result.bytes,
+          "contentHash": result.hash,
+        ])
+        stats.files += 1
+        stats.bytes += result.bytes
+      }
+    }
+  }
+
+  private func hashFileContent(_ source: URL) throws -> (bytes: UInt64, hash: String) {
+    guard let input = InputStream(url: source) else {
+      throw CocoaError(.fileReadUnknown)
+    }
+    input.open()
+    defer { input.close() }
+    var hasher = SHA256()
+    var total: UInt64 = 0
+    var buffer = [UInt8](repeating: 0, count: 64 * 1024)
+    while true {
+      let read = input.read(&buffer, maxLength: buffer.count)
+      if read < 0 {
+        throw input.streamError ?? CocoaError(.fileReadUnknown)
+      }
+      if read == 0 { break }
+      hasher.update(data: Data(buffer[0..<read]))
+      total += UInt64(read)
+    }
+    let hash = hasher.finalize().map { String(format: "%02x", $0) }.joined()
+    return (total, hash)
   }
 
   private func copyFileStream(from source: URL, to target: URL) throws -> UInt64 {

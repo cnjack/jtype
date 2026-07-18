@@ -79,6 +79,58 @@ pub struct MirroredDirectory {
     pub source_revision: String,
 }
 
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DirectoryScanRequest {
+    pub source_reference: String,
+}
+
+#[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum DirectoryManifestEntryKind {
+    Directory,
+    File,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct DirectoryManifestEntry {
+    pub relative_path: String,
+    pub kind: DirectoryManifestEntryKind,
+    pub bytes: u64,
+    #[serde(default)]
+    pub content_hash: Option<String>,
+}
+
+/// A content-addressed source view. Native code reads the provider stream to
+/// hash files but does not copy them into app-private storage; Rust decides
+/// which changed paths must be materialized after building the reconcile plan.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DirectoryScanResult {
+    pub entries: Vec<DirectoryManifestEntry>,
+    pub files: u64,
+    pub directories: u64,
+    pub bytes: u64,
+    pub elapsed_ms: u64,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MaterializeDirectoryEntriesRequest {
+    pub source_reference: String,
+    pub destination_root_path: String,
+    pub relative_paths: Vec<String>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MaterializedDirectoryEntries {
+    pub files: u64,
+    pub directories: u64,
+    pub bytes: u64,
+}
+
 #[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub enum DirectoryChangeKind {

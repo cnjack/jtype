@@ -96,6 +96,40 @@ impl<R: Runtime> MobileImport<R> {
     }
 
     #[cfg(any(target_os = "android", target_os = "ios"))]
+    pub fn scan_directory(
+        &self,
+        source_reference: impl Into<String>,
+    ) -> crate::Result<DirectoryScanResult> {
+        self.0
+            .run_mobile_plugin(
+                "scanDirectory",
+                DirectoryScanRequest {
+                    source_reference: source_reference.into(),
+                },
+            )
+            .map_err(Into::into)
+    }
+
+    #[cfg(any(target_os = "android", target_os = "ios"))]
+    pub fn materialize_directory_entries(
+        &self,
+        source_reference: impl Into<String>,
+        destination_root_path: impl Into<String>,
+        relative_paths: Vec<String>,
+    ) -> crate::Result<MaterializedDirectoryEntries> {
+        self.0
+            .run_mobile_plugin(
+                "materializeDirectoryEntries",
+                MaterializeDirectoryEntriesRequest {
+                    source_reference: source_reference.into(),
+                    destination_root_path: destination_root_path.into(),
+                    relative_paths,
+                },
+            )
+            .map_err(Into::into)
+    }
+
+    #[cfg(any(target_os = "android", target_os = "ios"))]
     pub fn apply_directory_change(
         &self,
         source_reference: impl Into<String>,

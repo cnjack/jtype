@@ -20,6 +20,7 @@ import app.tauri.plugin.JSObject
 import app.tauri.plugin.Plugin
 import java.io.File
 import java.io.InputStream
+import java.security.MessageDigest
 import java.util.Locale
 import java.util.UUID
 
@@ -32,6 +33,18 @@ class MaterializeArgs {
 class MirrorDirectoryArgs {
     lateinit var sourceReference: String
     lateinit var mirrorRootPath: String
+}
+
+@InvokeArg
+class DirectoryScanArgs {
+    lateinit var sourceReference: String
+}
+
+@InvokeArg
+class MaterializeDirectoryEntriesArgs {
+    lateinit var sourceReference: String
+    lateinit var destinationRootPath: String
+    var relativePaths: Array<String> = emptyArray()
 }
 
 @InvokeArg
@@ -71,6 +84,27 @@ private data class MirrorStats(
     var bytes: Long = 0,
     var latestModified: Long = 0,
     var entries: Long = 0,
+)
+
+private data class SourceManifestEntry(
+    val relativePath: String,
+    val kind: String,
+    val bytes: Long,
+    val contentHash: String?,
+)
+
+private data class SourceScanStats(
+    var files: Long = 0,
+    var directories: Long = 0,
+    var bytes: Long = 0,
+    var entries: Long = 0,
+)
+
+private data class ScanDocumentNode(
+    val documentId: String,
+    val displayName: String,
+    val mimeType: String,
+    val flags: Int,
 )
 
 @TauriPlugin
@@ -284,6 +318,140 @@ class MobileImportPlugin(private val activity: Activity) : Plugin(activity) {
                 )
             } catch (error: Exception) {
                 invoke.reject("Unable to import the selected vault: ${error.message}")
+            }
+        }.start()
+    }
+
+    @Command
+    fun scanDirectory(invoke: Invoke) {
+        val args = try {
+            invoke.parseArgs(DirectoryScanArgs::class.java)
+        } catch (error: Exception) {
+            invoke.reject("Invalid external vault scan request: ${error.message}")
+            return
+        }
+
+        Thread {
+            try {
+                val startedAt = System.nanoTime()
+                val treeUri = Uri.parse(args.sourceReference)
+                check(treeUri.scheme == "content") { "External vault source must be a content URI" }
+                val permission = activity.contentResolver.persistedUriPermissions
+                    .firstOrNull { it.uri == treeUri }
+                    ?: error("Authorization for the selected folder is no longer available")
+                check(permission.isReadPermission) { "The selected folder is not readable" }
+
+                val entries = mutableListOf<SourceManifestEntry>()
+                val stats = SourceScanStats()
+                scanChildren(
+                    treeUri,
+                    DocumentsContract.getTreeDocumentId(treeUri),
+                    "",
+                    entries,
+                    stats,
+                    0,
+                )
+                val jsonEntries = entries.map { entry ->
+                    JSObject()
+                        .put("relativePath", entry.relativePath)
+                        .put("kind", entry.kind)
+                        .put("bytes", entry.bytes)
+                        .put("contentHash", entry.contentHash)
+                }
+                invoke.resolve(
+                    JSObject()
+                        .put("entries", JSArray(jsonEntries))
+                        .put("files", stats.files)
+                        .put("directories", stats.directories)
+                        .put("bytes", stats.bytes)
+                        .put("elapsedMs", (System.nanoTime() - startedAt) / 1_000_000L),
+                )
+            } catch (error: Exception) {
+                invoke.reject("Unable to scan the external vault: ${error.message}")
+            }
+        }.start()
+    }
+
+    @Command
+    fun materializeDirectoryEntries(invoke: Invoke) {
+        val args = try {
+            invoke.parseArgs(MaterializeDirectoryEntriesArgs::class.java)
+        } catch (error: Exception) {
+            invoke.reject("Invalid external vault materialization request: ${error.message}")
+            return
+        }
+
+        Thread {
+            var destinationRoot: File? = null
+            try {
+                val treeUri = Uri.parse(args.sourceReference)
+                check(treeUri.scheme == "content") { "External vault source must be a content URI" }
+                val permission = activity.contentResolver.persistedUriPermissions
+                    .firstOrNull { it.uri == treeUri }
+                    ?: error("Authorization for the selected folder is no longer available")
+                check(permission.isReadPermission) { "The selected folder is not readable" }
+
+                val dataRoot = File(activity.applicationInfo.dataDir).canonicalFile
+                val externalRoot = File(dataRoot, "vaults/external").canonicalFile
+                destinationRoot = File(args.destinationRootPath).canonicalFile
+                check(destinationRoot.path.startsWith(externalRoot.path + File.separator)) {
+                    "External vault materialization must stay in app-private storage"
+                }
+                check(!destinationRoot.exists()) { "The materialization destination already exists" }
+                check(destinationRoot.mkdirs()) { "Could not create the materialization destination" }
+
+                val relativePaths = args.relativePaths.toList().distinct()
+                check(relativePaths.size <= MAX_ENTRIES) { "Too many external vault paths were requested" }
+                val rootDocumentId = DocumentsContract.getTreeDocumentId(treeUri)
+                val rootMetadata = rootMetadata(treeUri)
+                val root = DocumentNode(
+                    documentId = rootDocumentId,
+                    displayName = rootMetadata.first,
+                    mimeType = Document.MIME_TYPE_DIR,
+                    flags = rootMetadata.second,
+                )
+                var files = 0L
+                var directories = 0L
+                var bytes = 0L
+                for (relativePath in relativePaths.sortedWith(compareBy({ it.count { char -> char == '/' } }, { it }))) {
+                    val segments = validatedRelativeSegments(relativePath)
+                    val source = resolveDocumentPath(treeUri, root, segments)
+                        ?: error("External vault path changed during materialization: $relativePath")
+                    val target = File(destinationRoot, relativePath).canonicalFile
+                    check(target.path.startsWith(destinationRoot.path + File.separator)) {
+                        "External vault materialization path is unsafe"
+                    }
+                    if (source.mimeType == Document.MIME_TYPE_DIR) {
+                        check(target.mkdirs() || target.isDirectory) {
+                            "Could not materialize directory $relativePath"
+                        }
+                        directories += 1
+                        continue
+                    }
+                    check(source.flags and Document.FLAG_VIRTUAL_DOCUMENT == 0) {
+                        "Virtual document $relativePath can not be materialized"
+                    }
+                    val parent = target.parentFile ?: error("Materialized file has no parent")
+                    check(parent.mkdirs() || parent.isDirectory) {
+                        "Could not create the materialized file parent"
+                    }
+                    val documentUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, source.documentId)
+                    val copiedBytes = activity.contentResolver.openInputStream(documentUri).use { input ->
+                        checkNotNull(input) { "Document $relativePath can not be opened" }
+                        target.outputStream().use { output -> input.copyTo(output) }
+                    }
+                    files += 1
+                    bytes += copiedBytes
+                }
+                invoke.resolve(
+                    JSObject()
+                        .put("files", files)
+                        .put("directories", directories)
+                        .put("bytes", bytes),
+                )
+            } catch (error: Exception) {
+                destinationRoot?.deleteRecursively()
+                invoke.reject("Unable to materialize external vault entries: ${error.message}")
             }
         }.start()
     }
@@ -827,6 +995,85 @@ class MobileImportPlugin(private val activity: Activity) : Plugin(activity) {
             stats.files += 1
             stats.bytes += copiedBytes
         }
+    }
+
+    private fun scanChildren(
+        treeUri: Uri,
+        parentDocumentId: String,
+        parentRelativePath: String,
+        entries: MutableList<SourceManifestEntry>,
+        stats: SourceScanStats,
+        depth: Int,
+    ) {
+        check(depth <= MAX_DEPTH) { "The selected vault exceeds the maximum folder depth" }
+        val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(treeUri, parentDocumentId)
+        val projection = arrayOf(
+            Document.COLUMN_DOCUMENT_ID,
+            Document.COLUMN_DISPLAY_NAME,
+            Document.COLUMN_MIME_TYPE,
+            Document.COLUMN_FLAGS,
+        )
+        val children = mutableListOf<ScanDocumentNode>()
+        activity.contentResolver.query(childrenUri, projection, null, null, null)?.use { cursor ->
+            val idIndex = cursor.getColumnIndexOrThrow(Document.COLUMN_DOCUMENT_ID)
+            val nameIndex = cursor.getColumnIndexOrThrow(Document.COLUMN_DISPLAY_NAME)
+            val mimeIndex = cursor.getColumnIndexOrThrow(Document.COLUMN_MIME_TYPE)
+            val flagsIndex = cursor.getColumnIndex(Document.COLUMN_FLAGS)
+            while (cursor.moveToNext()) {
+                children += ScanDocumentNode(
+                    documentId = cursor.getString(idIndex),
+                    displayName = cursor.getString(nameIndex),
+                    mimeType = cursor.getString(mimeIndex),
+                    flags = if (flagsIndex >= 0 && !cursor.isNull(flagsIndex)) cursor.getInt(flagsIndex) else 0,
+                )
+            }
+        } ?: error("The selected folder can not be enumerated")
+
+        val names = mutableSetOf<String>()
+        for (child in children.sortedBy { it.displayName.lowercase(Locale.ROOT) }) {
+            val name = safeFileName(child.displayName)
+            check(name == child.displayName && names.add(name)) {
+                "The selected folder contains an unsafe or duplicate file name"
+            }
+            if (child.mimeType == Document.MIME_TYPE_DIR && name.lowercase(Locale.ROOT) in RESERVED_DIRECTORIES) {
+                continue
+            }
+            stats.entries += 1
+            check(stats.entries <= MAX_ENTRIES) { "The selected vault contains too many entries" }
+            val relativePath = if (parentRelativePath.isEmpty()) name else "$parentRelativePath/$name"
+            if (child.mimeType == Document.MIME_TYPE_DIR) {
+                entries += SourceManifestEntry(relativePath, "directory", 0, null)
+                stats.directories += 1
+                scanChildren(treeUri, child.documentId, relativePath, entries, stats, depth + 1)
+                continue
+            }
+            check(child.flags and Document.FLAG_VIRTUAL_DOCUMENT == 0) {
+                "Virtual document $relativePath can not enter the vault manifest"
+            }
+            val documentUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, child.documentId)
+            val (bytes, contentHash) = hashDocument(documentUri, relativePath)
+            entries += SourceManifestEntry(relativePath, "file", bytes, contentHash)
+            stats.files += 1
+            stats.bytes += bytes
+        }
+    }
+
+    private fun hashDocument(documentUri: Uri, relativePath: String): Pair<Long, String> {
+        val digest = MessageDigest.getInstance("SHA-256")
+        var bytes = 0L
+        activity.contentResolver.openInputStream(documentUri).use { input ->
+            checkNotNull(input) { "Document $relativePath can not be opened" }
+            val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+            while (true) {
+                val count = input.read(buffer)
+                if (count < 0) break
+                if (count == 0) continue
+                digest.update(buffer, 0, count)
+                bytes += count
+            }
+        }
+        val contentHash = digest.digest().joinToString("") { byte -> "%02x".format(byte.toInt() and 0xff) }
+        return bytes to contentHash
     }
 
     private fun safeFileName(candidate: String?): String {

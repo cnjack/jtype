@@ -372,8 +372,8 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
           message: result.status === "conflict"
             ? "External vault has changes that need your choice."
             : result.status === "pulled"
-              ? `External vault updated: ${result.pulledFiles} files pulled.`
-              : "External vault is up to date.",
+              ? `External vault updated: ${result.pulledFiles} files pulled after scanning ${result.scannedEntries} entries; materialized ${result.materializedFiles} files.`
+              : `External vault is up to date. Scanned ${result.scannedEntries} entries without materializing files.`,
         });
       }
     } catch (error) {

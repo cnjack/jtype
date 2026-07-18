@@ -180,6 +180,12 @@ export type ExternalVaultReconcileResult = {
   deletedEntries: number;
   pendingLocalChanges: number;
   conflicts: ExternalVaultReconcileConflict[];
+  scannedEntries: number;
+  scannedFiles: number;
+  scannedBytes: number;
+  scanElapsedMs: number;
+  materializedFiles: number;
+  materializedBytes: number;
 };
 
 export type ExternalVaultWriteBackStatus =

@@ -456,6 +456,12 @@ test.beforeEach(async ({ page }) => {
               deletedEntries: 0,
               pendingLocalChanges: 0,
               conflicts,
+              scannedEntries: 5001,
+              scannedFiles: 5000,
+              scannedBytes: 128000,
+              scanElapsedMs: 218,
+              materializedFiles: 0,
+              materializedBytes: 0,
             };
           }
           if (cmd === "resolve_external_vault_conflict") {
@@ -1414,6 +1420,10 @@ test("opens an Android SAF vault through the shared desktop vault action", async
   await page.getByRole("button", { name: "Local only" }).click();
   await expect(page.locator("#vault-home-external-note")).toBeVisible();
   await expect(page.getByRole("button", { name: "New Document" }).first()).toBeEnabled();
+  await page.getByRole("button", { name: "Check external changes" }).click();
+  await expect(page.locator("#operation-log")).toContainText(
+    "Scanned 5001 entries without materializing files.",
+  );
 
   await page.evaluate(() => {
     window.__EMIT_TAURI_EVENT__("vault-provider-operation-progress", {

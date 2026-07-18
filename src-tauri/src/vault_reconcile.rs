@@ -49,6 +49,83 @@ impl VaultManifest {
             entries,
         }
     }
+
+    pub(crate) fn from_native_entries(
+        native_entries: impl IntoIterator<Item = (String, ManifestEntry)>,
+    ) -> Result<Self, String> {
+        let mut entries = BTreeMap::new();
+        for (relative_path, entry) in native_entries {
+            if entries.len() >= MAX_ENTRIES {
+                return Err("The external vault contains too many entries".to_string());
+            }
+            validate_native_manifest_entry(&relative_path, &entry)?;
+            if entries.insert(relative_path.clone(), entry).is_some() {
+                return Err(format!(
+                    "The external vault contains a duplicate path: {relative_path}"
+                ));
+            }
+        }
+        Ok(Self::from_entries(entries))
+    }
+
+    pub(crate) fn materialization_paths_for_subtree(&self, relative_path: &str) -> Vec<String> {
+        let prefix = format!("{relative_path}/");
+        self.entries
+            .keys()
+            .filter(|path| path.as_str() == relative_path || path.starts_with(&prefix))
+            .cloned()
+            .collect()
+    }
+}
+
+fn validate_native_manifest_entry(
+    relative_path: &str,
+    entry: &ManifestEntry,
+) -> Result<(), String> {
+    if relative_path.is_empty() || relative_path.contains('\\') || relative_path.starts_with('/') {
+        return Err("External vault manifest path is invalid".to_string());
+    }
+    let parts = relative_path.split('/').collect::<Vec<_>>();
+    if parts.len() > MAX_DEPTH + 1
+        || parts
+            .iter()
+            .any(|part| part.is_empty() || *part == "." || *part == "..")
+    {
+        return Err("External vault manifest path is unsafe".to_string());
+    }
+    for (index, part) in parts.iter().enumerate() {
+        let is_directory_segment = index + 1 < parts.len()
+            || (index + 1 == parts.len() && entry.kind == ManifestEntryKind::Directory);
+        if is_directory_segment
+            && RESERVED_DIRECTORIES
+                .iter()
+                .any(|reserved| part.eq_ignore_ascii_case(reserved))
+        {
+            return Err(
+                "Reserved directories can not enter an external vault manifest".to_string(),
+            );
+        }
+    }
+    match entry.kind {
+        ManifestEntryKind::Directory if entry.bytes != 0 || entry.content_hash.is_some() => {
+            Err("External vault directory manifest metadata is invalid".to_string())
+        }
+        ManifestEntryKind::File => {
+            let hash = entry
+                .content_hash
+                .as_deref()
+                .ok_or_else(|| "External vault file hash is missing".to_string())?;
+            if hash.len() != 64
+                || !hash
+                    .bytes()
+                    .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+            {
+                return Err("External vault file hash is invalid".to_string());
+            }
+            Ok(())
+        }
+        ManifestEntryKind::Directory => Ok(()),
+    }
 }
 
 #[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
@@ -161,6 +238,14 @@ pub(crate) struct WriteBackJournal {
 impl ReconcilePlan {
     pub fn has_operations(&self) -> bool {
         !self.operations.is_empty()
+    }
+
+    pub(crate) fn source_materialization_paths(&self) -> Vec<String> {
+        self.operations
+            .iter()
+            .filter(|operation| operation.source.is_some())
+            .map(|operation| operation.relative_path.clone())
+            .collect()
     }
 
     pub fn status(&self, source: &VaultManifest) -> ReconcileStatus {
@@ -1033,6 +1118,31 @@ mod tests {
     }
 
     #[test]
+    fn native_manifest_entries_keep_the_canonical_revision_and_reject_unsafe_paths() {
+        let root = tempfile::tempdir().unwrap();
+        write(root.path(), "intro.md", "hello");
+        write(root.path(), "guides/setup.md", "setup");
+        let filesystem = build_manifest(root.path()).unwrap();
+        let native = VaultManifest::from_native_entries(filesystem.entries.clone()).unwrap();
+        assert_eq!(native, filesystem);
+
+        let file = ManifestEntry {
+            kind: ManifestEntryKind::File,
+            bytes: 5,
+            content_hash: Some("a".repeat(64)),
+        };
+        assert!(VaultManifest::from_native_entries(vec![(
+            "../escape.md".to_string(),
+            file.clone()
+        )])
+        .is_err());
+        assert!(
+            VaultManifest::from_native_entries(vec![(".jtype/private.md".to_string(), file,)])
+                .is_err()
+        );
+    }
+
+    #[test]
     fn reconcile_pulls_only_source_changes_when_mirror_matches_baseline() {
         let fixture = tempfile::tempdir().unwrap();
         let baseline_root = fixture.path().join("baseline");
@@ -1058,6 +1168,18 @@ mod tests {
         assert_eq!(plan.pulled_directories(), 1);
         assert_eq!(plan.deleted_entries(), 1);
         assert_eq!(plan.pending_local_changes(&source), 0);
+        assert_eq!(
+            plan.source_materialization_paths(),
+            vec![
+                "guides".to_string(),
+                "guides/setup.md".to_string(),
+                "intro.md".to_string(),
+            ]
+        );
+        assert_eq!(
+            source.materialization_paths_for_subtree("guides"),
+            vec!["guides".to_string(), "guides/setup.md".to_string()]
+        );
     }
 
     #[test]
