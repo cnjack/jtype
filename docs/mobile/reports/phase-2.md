@@ -4,15 +4,15 @@
 
 Feature branch：`codex/mobile-app`
 
-当前 app code commit：`231a2dc`
+当前 app code commit：`99a7d39`
 
-本报告状态：进行中；2A provider contract 已完成。2B 已完成 Android SAF 系统目录选择、persistable permission、native-only provider record、首次原子镜像、permission health、目录失效检测、重新授权、内容哈希 baseline、安全 pull reconcile、冲突阻断和冷启动恢复。Android write-back / 正式 UI 与 iOS security-scoped folder provider 尚未实现。
+本报告状态：进行中；2A provider contract 已完成。2B 已完成 Android SAF 系统目录选择、persistable permission、native-only provider record、首次原子镜像、permission health、目录失效检测、重新授权、内容哈希 baseline、安全 pull reconcile、冲突阻断、冷启动恢复，以及带 mutation journal 的原生受控 write-back。shared workbench mutation routing、正式 write capability/UI 与 iOS security-scoped folder provider 尚未完成。
 
 ## 本增量结论
 
 现有 app-private vault 已成为第一个 `VaultProvider` 实现。共享 React 产品层仍使用同一套 `AppState`、commands、`Sidebar`、`VaultHome`、`EditorShell`、Document Info、Board 和相对路径模型；移动端没有新增另一套文件树、编辑器或预览。
 
-Android SAF 的实现同样没有新增 mobile 产品 UI：native picker 与 opaque tree URI 被封装在 Android/Rust provider adapter 内，选中的目录先镜像到 app-private root，再返回现有 `WorkspaceSnapshot`。正式入口保持关闭，直到 write-back 与冲突恢复 UI 完成；因此用户当前不会误以为对 mirror 的编辑已经写回外部来源。permission health、重新授权与安全 pull 已经进入 provider adapter，且继续复用同一 provider identity、mirror 与 workspace state。
+Android SAF 的实现同样没有新增 mobile 产品 UI：native picker 与 opaque tree URI 被封装在 Android/Rust provider adapter 内，选中的目录先镜像到 app-private root，再返回现有 `WorkspaceSnapshot`。permission health、重新授权、安全 pull 与受控 write-back 已经进入 provider adapter，并继续复用同一 provider identity、mirror 与 workspace state。正式入口仍保持关闭，直到 shared write/create/rename/delete commands 全部完成 provider routing 与冲突恢复 UI；因此用户当前不会误以为尚未接线的常规 mirror 编辑已经写回外部来源。
 
 本增量建立的边界包括：
 
@@ -43,7 +43,7 @@ Android provider store 使用 app config 目录内的 `vault-providers.json`，�
 
 ### Rust contract
 
-六条 provider 单测覆盖：
+七条 provider 单测覆盖：
 
 1. mobile 默认库解析为 `appPrivate` / `direct`。
 2. desktop/local directory provider ID 跨解析保持稳定。
@@ -51,8 +51,9 @@ Android provider store 使用 app config 目录内的 `vault-providers.json`，�
 4. 缺省 store JSON 迁移到 schema version 1。
 5. Android/iOS source kind 与 opaque source reference 共同生成稳定、隔离的 external provider ID。
 6. provider store 能幂等 upsert，并按 source 或 mirror root 恢复记录。
+7. schema 1 的旧 external record 缺少 `sourceReadOnly` 时安全迁移为 source 只读，不会在升级后意外开放写入。
 
-本轮 `cargo test --manifest-path src-tauri/Cargo.toml` 结果为 20/20，其中 provider tests 6/6、reconcile tests 9/9。
+本轮 `cargo test --manifest-path src-tauri/Cargo.toml` 结果为 24/24，其中 provider tests 7/7、reconcile/write-back tests 12/12。
 
 ### Android Emulator：2A app-private contract
 
@@ -148,7 +149,7 @@ ready -> sourceUnavailable -> ready
 content://com.android.externalstorage.documents/tree/primary%3ADocuments%2FJTypeExternal0718Moved3 [prefix]
 ```
 
-WebView 的 reauthorize 响应和后续 descriptor 仍不包含 `content://`、`opaqueSourceReference` 或其他原生授权材料。精确卸载只用于可恢复的测试 app 数据夹具；外部 source fixture 被保留，供下一增量的 reconcile 测试继续使用。
+WebView 的 reauthorize 响应和后续 descriptor 仍不包含 `content://`、`opaqueSourceReference` 或其他原生授权材料。精确卸载只用于可恢复的测试 app 数据夹具；外部 source fixture 被保留，供后续 reconcile/write-back 测试继续使用。
 
 ### Android Emulator：2B 内容哈希 baseline、安全 pull 与冲突阻断
 
@@ -204,13 +205,60 @@ conflicts           [{ relativePath: "intro.md", reason: "bothModified" }]
 
 最后精确构造事务中断状态：force-stop app，将 active mirror 改名为固定 `.41922042f61ba816.reconcile-backup`，确认 active path 不存在后冷启动 `231a2dc`。第一次 `describe_vault_provider` 自动恢复 backup，紧接着 `open_workspace` 返回完整树；最终只剩 active mirror，backup/staging 均不存在。该恢复 hook 与 reconcile 共用同一操作锁，open 不会撞上正在进行的原子切换。
 
-Rust reconcile tests 9/9 覆盖：内容 hash / reserved metadata 排除、source-only pull、both-modified conflict、父目录删除与本地子项冲突、无 baseline bootstrap guard、record revision trust、原子 mirror swap、进程中断 backup 恢复、排除目录不被递归删除。
+原安全 pull 增量的 Rust reconcile tests 9/9 覆盖：内容 hash / reserved metadata 排除、source-only pull、both-modified conflict、父目录删除与本地子项冲突、无 baseline bootstrap guard、record revision trust、原子 mirror swap、进程中断 backup 恢复、排除目录不被递归删除。
+
+### Android Emulator：2B mutation journal 与受控 write-back
+
+环境：`JType_API_36_1`，Android 16 / API 36，arm64，1080×2424；app code commit `99a7d39`。测试 provider 为 `external:41922042f61ba816`，source 为 Documents provider 中的 `JTypeExternal0718Moved3`，mirror 为 app-private `vaults/external/41922042f61ba816`。
+
+本增量把 Android SAF 的真实 source 可写性与产品层有效 capability 分开保存：native access health 确认 persisted tree grant 具有 read/write permission，并在 record 中记录 `sourceReadOnly=false`；有效 `readOnly` 仍为 `true`，所以 WebView descriptor 的 `canWrite/canCreate/canRename/canDelete` 继续全部为 `false`。这允许先验证 provider adapter，而不让尚未接入 provider routing 的共享 command 提前写 mirror。
+
+受控 write-back 每次都在同一 external operation lock 内执行：
+
+1. 重新检查 persisted permission 与 source root health。
+2. materialize source，并以 baseline/source/mirror 三方规则先 pull 不冲突的 source-only 变化。
+3. 按“浅层目录创建 → 文件 upsert → 深层优先删除”生成确定性 operation plan；file/directory 类型替换直接返回 `unsafeTypeChange`，不执行 source mutation。
+4. 在 `.jtype/external-vault-writeback.json` 原子写入 versioned journal 后，逐条调用 Android `DocumentsContract`；每条操作都验证 provider 的 create/write/delete flags、app-private mirror 边界、相对路径深度与 reserved directory。
+5. 再次 materialize source，要求 source 与 mirror manifest 完全相等，之后才推进 baseline/provider revision 并清除 journal。
+
+rename 使用幂等的“新路径 create/write + 旧路径 delete”计划。创建与删除均允许重试：已存在且类型一致的目录、已删除的条目不会导致重试失败；文件通过 `openOutputStream(..., "rwt")` 覆盖写入。
+
+第一次真实事务在首条 `upsertDirectory` 前暴露了一个 Kotlin nullable bug：`findChild` 把“query 成功但目标子项不存在”误判成“目录无法枚举”。此时 source 尚未修改，但完整 journal 已先落盘。修复并覆盖安装 APK、冷启动后，同一事务从 journal 状态安全重试，实际返回：
+
+```text
+status              written
+writtenFiles        3
+createdDirectories  1
+deletedEntries      2
+pulledBeforeWrite   0
+pendingJournal      false
+conflicts           []
+```
+
+覆盖的 mirror-only 变化包括：编辑 `intro.md`、创建 `drafts/local.md`、删除空目录 `guides`，以及把 `research/renamed.md` 重命名为 `research/moved.md`。回写后 source 与 mirror 三份文件的逐文件 SHA-256 完全相同，旧路径和旧目录均不存在，journal 已清除。force-stop / cold launch 后重复执行返回 `unchanged`，所有计数为 0。
+
+随后增加一个 source-only `source-only.md`，同时在 mirror 修改另一路径的 `intro.md`。write-back 先安全 pull 1 个 source-only 文件，再写入 1 个本地文件，返回 `pulledBeforeWrite=1`、`writtenFiles=1`，最终 source/mirror 再次完全一致。对同一个 `intro.md` 分别制造 source 与 mirror 的不同修改时，write-back 返回：
+
+```text
+status              conflict
+writtenFiles        0
+pendingJournal      false
+conflicts           [{ relativePath: "intro.md", reason: "bothModified" }]
+```
+
+冲突前后 source 与 mirror 各自 SHA-256 不变，没有创建 journal，也没有推进 baseline。将两边显式收敛到同一内容后，命令返回 `unchanged` 并安全更新 baseline。
+
+因为正式 external-vault UI 与 write capability 仍关闭，以下截图使用明确标注的 test-only audit overlay 汇总上述真实 IPC 与文件系统结果；overlay 通过 WebView debugging 注入，不属于 shipping interface 或源码：
+
+![Android SAF write-back audit](assets/phase-2/android-saf-writeback.png)
+
+本轮新增三条 Rust tests：write-back plan 的 create/write/deep-delete 排序、file/directory 类型变化阻断、journal 原子 round-trip/clear。加上旧 record 的 `sourceReadOnly=true` 安全迁移测试，本轮 Rust 总结果为 24/24。
 
 本增量有意保持以下限制：
 
 - 正式 external vault UI capability 仍关闭；系统 picker 只通过调试 IPC 验证。
-- mirror 仍是只读 provider；常规写入、创建、重命名和删除尚未路由回 SAF source，descriptor 对这些 capability 继续返回 `false`。
-- source 内容变化检测、安全 pull、删除/rename 与冲突阻断已经实现；双向 write-back、冲突选择/合并与 mutation journal 尚未实现。
+- mirror 对产品层仍是只读 provider；原生受控 write-back 与 journal 已验证，但常规 shared workbench 写入、创建、重命名和删除尚未逐条路由到 provider adapter，descriptor 对这些 capability 继续返回 `false`。
+- source 内容变化检测、安全 pull、受控双向 write-back、删除/rename、journal retry 与冲突阻断已经实现；部分 native mutation 后的强制进程终止、权限在事务中途撤销、磁盘不足，以及正式冲突选择/合并 UI 仍待后续 2B 增量。
 - 当前每次 reconcile 仍完整枚举并 materialize source 到短期 app-private snapshot，再按 manifest delta 更新 mirror；真正的按需 source materialization 与大 vault 性能优化留在 2D。
 - permission health、replacement tree 重新授权与 pull command 已完成，但正式 UI 提示/入口要在 write-back 行为稳定后才接入复用的 Welcome/VaultHome action callback。
 
@@ -244,6 +292,7 @@ E2E 现在以完整中文 locale 在 390×844 viewport 验证：content panel �
 - `0b69f16`：Android SAF permission health、`authorizationRequired` / `sourceUnavailable` 状态恢复、replacement tree 重新授权与旧 grant 释放。
 - `f9537f2`：SHA-256 manifest baseline、三方 reconcile plan、原子安全 pull、delete/rename 与 conflict guard。
 - `231a2dc`：external describe/open 在事务中断后先恢复 mirror backup，再返回 provider/workspace。
+- `99a7d39`：Android SAF create/write/delete adapter、确定性 write-back plan、versioned mutation journal、source-first conflict guard 与 manifest verification。
 
 ## 自动化与构建结果
 
@@ -252,7 +301,7 @@ E2E 现在以完整中文 locale 在 390×844 viewport 验证：content panel �
 | `npm run build` | PASS |
 | `npm run test:unit` | PASS，47/47 |
 | `npx playwright test tests/e2e/app.spec.ts` | PASS，42/42 |
-| `cargo test --manifest-path src-tauri/Cargo.toml` | PASS，20/20；provider 6/6，reconcile 9/9 |
+| `cargo test --manifest-path src-tauri/Cargo.toml` | PASS，24/24；provider 7/7，reconcile/write-back 12/12 |
 | `cargo check --manifest-path plugins/mobile-import/Cargo.toml` | PASS |
 | `cargo fmt --manifest-path plugins/mobile-import/Cargo.toml --check` | PASS |
 | `pnpm tauri android build --debug --target aarch64 --apk --ci` | PASS |
@@ -260,14 +309,15 @@ E2E 现在以完整中文 locale 在 390×844 viewport 验证：content panel �
 | Android persisted permission loss / source move / replacement reauthorization / old grant release | PASS |
 | Android baseline bootstrap / source edit-create-delete / rename / both-modified conflict / cold restore / cleanup | PASS |
 | Android interrupted mirror transaction → cold describe/open backup recovery | PASS |
-| `pnpm tauri ios build --debug --target aarch64-sim --no-sign --archive-only --ci` | PASS；Android reconcile 增量未开启 iOS capability |
+| Android journal retry / edit-create-delete-rename write-back / cold idempotency / source-only concurrent merge / both-modified guard | PASS；正式 write capability 保持关闭 |
+| `pnpm tauri ios build --debug --target aarch64-sim --no-sign --archive-only --ci` | PASS；Android write-back 增量未开启 iOS capability |
 | iOS clean install / Maestro default vault flow / localized shell | PASS（2A contract 增量；本次只重跑 compile gate） |
 
 Android debug APK：
 
 - `src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk`
-- 374,307,155 bytes
-- SHA-256 `538ac39ec2d77eb2162f17381b669622c99a8626ed622f543a5ceebd9eb82b23`
+- 374,927,691 bytes
+- SHA-256 `2863cf7b25b4a8ef789c418d568724ca873ebc205d67652b0698b7b0826a89d9`
 
 iOS archive：
 
@@ -282,16 +332,17 @@ iOS archive：
 d0c3678bbb8ae7c24e69044f53a501ac52a6c66a924da3263a76a4f7edee0055  provider-contract-ios.png
 fab1577c4ac914eb86df29678fbbc6310af83dc4c8db9346ca8a5f8bb5113c66  android-saf-initial-import.png
 12aed07f2bcc35c8a59f006b695444ef94b279fe5168db99738e85f351b68dc2  android-saf-reconcile-conflict.png
+6cceee423e1a312798695d2934ec963957f775110b727a4534ab0fc9c4c836f0  android-saf-writeback.png
 ```
 
-## 下一增量：2B Android SAF mutation routing 与受控 write-back
+## 下一增量：2B shared mutation routing 与 capability 开放
 
 下一段继续按已冻结的 contract 实现：
 
-1. 让 shared workbench 的 write/create/rename/delete command 先解析 provider，并为 external mirror 记录确定性的 pending mutation，而不是直接把本地成功误认为 source 已写入。
-2. 在 Android native adapter 实现受控 create/write/rename/delete，并以 mutation journal + idempotency 保证中断后可重试。
-3. write-back 前再次比较 baseline/source/mirror；source 已被其他 app 修改时复用当前 conflict contract 阻止覆盖。
-4. 完成部分失败、磁盘不足、权限中途失效与进程终止恢复测试后，逐项开启 descriptor 的 write/create/rename/delete capability。
-5. 双向闭环稳定后，再把入口、reconcile 状态和重新授权提示接入复用的 Welcome/VaultHome/EditorShell callbacks。
+1. 让 shared workbench 的 write/create/rename/delete command 先解析 provider，并在 external mirror mutation 成功后调用当前 write-back transaction，而不是把本地 mirror 成功直接当成 source 已写入。
+2. 保持 shared React action callback、WorkspaceSnapshot 与相对路径 contract 不变；provider 差异只进入 Rust command routing，不在 EditorShell/Sidebar/Board 内加入 SAF 分支。
+3. 对每类 shared mutation 增加 source 并发修改、部分 native mutation 后进程终止、权限中途失效与磁盘不足恢复测试。
+4. 只有上述路径全部闭环后，才逐项把 descriptor 的 write/create/rename/delete capability 从 `false` 打开。
+5. capability 开放后，把 external vault 入口、reconcile 状态、重新授权与冲突提示接入复用的 Welcome/VaultHome/EditorShell callbacks。
 
 iOS security-scoped bookmark 会在 Android SAF contract 与 reconcile 行为稳定后复用同一 store、descriptor 和 mirror 状态机。
