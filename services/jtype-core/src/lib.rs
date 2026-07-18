@@ -8,6 +8,9 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
+#[cfg(debug_assertions)]
+use std::time::Instant;
+
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub enum EntryKind {
@@ -252,6 +255,8 @@ pub fn detect_vault_root(file_path: &Path) -> Option<PathBuf> {
 }
 
 pub fn open_workspace(root: &Path) -> Result<WorkspaceSnapshot, String> {
+    #[cfg(debug_assertions)]
+    let started_at = Instant::now();
     if !root.is_dir() {
         return Err("Workspace path must be a directory.".to_string());
     }
@@ -268,6 +273,17 @@ pub fn open_workspace(root: &Path) -> Result<WorkspaceSnapshot, String> {
             .unwrap_or("Workspace")
             .to_string()
     };
+
+    #[cfg(debug_assertions)]
+    {
+        let (nodes, documents) = workspace_entry_counts(&entries);
+        if documents >= 1_000 {
+            eprintln!(
+                "[JTypePerformance] workspace_open nodes={nodes} documents={documents} elapsed_ms={}",
+                started_at.elapsed().as_millis()
+            );
+        }
+    }
 
     Ok(WorkspaceSnapshot {
         root_path: path_to_string(root),
@@ -979,6 +995,21 @@ fn sort_nodes(nodes: &mut [FileTreeNode]) {
             .cmp(&kind_rank(&b.kind))
             .then_with(|| a.name.to_lowercase().cmp(&b.name.to_lowercase()))
     });
+}
+
+#[cfg(debug_assertions)]
+fn workspace_entry_counts(nodes: &[FileTreeNode]) -> (usize, usize) {
+    let mut node_count = 0;
+    let mut document_count = 0;
+    let mut stack: Vec<&FileTreeNode> = nodes.iter().collect();
+    while let Some(node) = stack.pop() {
+        node_count += 1;
+        if node.kind == EntryKind::Markdown {
+            document_count += 1;
+        }
+        stack.extend(node.children.iter());
+    }
+    (node_count, document_count)
 }
 
 pub fn safe_join(root: &Path, relative_path: &str) -> Result<PathBuf, String> {

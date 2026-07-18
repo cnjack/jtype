@@ -1,0 +1,12 @@
+appId: net.jcode.jtype
+---
+- launchApp:
+    clearState: false
+- assertVisible: "Documents"
+- assertVisible: ".*documents"
+- tapOn: "Documents"
+- tapOn: "Search files..."
+- inputText: "performance-note-04999"
+- assertVisible: ".*performance-note-04999.md.*"
+- tapOn: ".*performance-note-04999.md.*"
+- assertVisible: "(?s).*Shared desktop/mobile large vault fixture 04999.*"

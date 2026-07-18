@@ -1486,6 +1486,10 @@ msgstr "設定"
 msgid "Show in Explorer"
 msgstr "エクスプローラーで表示"
 
+#: src/components/sidebar/Sidebar.tsx
+msgid "Show more"
+msgstr "さらに表示"
+
 #: src/components/editor/FindBar.tsx
 msgid "Show replace"
 msgstr ""

@@ -2,9 +2,9 @@ import { Trans, Plural } from "@lingui/react/macro";
 import { useMemo } from "react";
 import { isCurrentVaultReadOnly, useAppDispatch, useAppState } from "../../app/AppState";
 import { useFileSystem } from "../../hooks";
-import { markdownNodes } from "../../lib/utils";
 import { appStorage } from "../../lib/storage";
 import { basename } from "../../lib/utils";
+import { workspaceIndexFor } from "../../lib/workspaceIndex";
 import { SyncPromptDialog } from "../modals/SyncPromptDialog";
 import { useRuntimeCapabilities } from "../../app/RuntimeCapabilities";
 
@@ -13,7 +13,7 @@ export function VaultHome() {
   const dispatch = useAppDispatch();
   const fs = useFileSystem();
   const capabilities = useRuntimeCapabilities();
-  const documents = useMemo(() => markdownNodes(state.workspace?.entries ?? []), [state.workspace]);
+  const documents = workspaceIndexFor(state.workspace?.entries).documents;
   const recentItems = useMemo(() => readRecentItems(), [state.currentPath]);
   const recentDocs = recentItems.filter((item) => item.kind === "file").slice(0, 4);
   const vaultName = state.workspace?.name ?? "Vault";

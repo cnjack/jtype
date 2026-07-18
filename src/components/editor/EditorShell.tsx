@@ -7,7 +7,8 @@ import { isCurrentVaultReadOnly, useAppDispatch, useAppState } from "../../app/A
 import { useFileSystem } from "../../hooks";
 import { renderMarkdownToHtml, renderToContainer } from "@shared/lib/markdown";
 import { parseFrontmatter, writeFrontmatter } from "@shared/lib/frontmatter";
-import { basename, escapeHtml, isTauriRuntime, markdownNodes, normalizePath } from "../../lib/utils";
+import { basename, escapeHtml, isTauriRuntime, normalizePath } from "../../lib/utils";
+import { findMarkdownByWikiTarget, workspaceIndexFor } from "../../lib/workspaceIndex";
 import { useCommandsList } from "../../app/App";
 import { addMarkdownTableColumn, addMarkdownTableRow, formatMarkdownTable, insertAtCursor, insertBlockAtSafeCursor, insertOrEditTable } from "../../hooks/useCommands";
 import { useEagerSync } from "../../hooks/useEagerSync";
@@ -537,12 +538,7 @@ export function EditorShell() {
     if (wikilink) {
       event.preventDefault();
       const target = wikilink.getAttribute("data-wikilink") ?? "";
-      const norm = target.replace(/\.(md|markdown|mdown|mkd)$/i, "").toLowerCase();
-      const node = markdownNodes(state.workspace?.entries).find((n) => {
-        const base = n.name.replace(/\.(md|markdown|mdown|mkd)$/i, "").toLowerCase();
-        const rel = n.relativePath.replace(/\.(md|markdown|mdown|mkd)$/i, "").toLowerCase();
-        return base === norm || rel === norm;
-      });
+      const node = findMarkdownByWikiTarget(workspaceIndexFor(state.workspace?.entries), target);
       if (node) void fs.openMarkdownFile(node.path, node.relativePath);
       else dispatch({ type: "SET_STATUS", message: t`No note named "${target}".` });
       return;

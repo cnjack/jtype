@@ -1,9 +1,8 @@
-import { useMemo } from "react";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useAppDispatch, useAppState } from "../../app/AppState";
 import { useFileSystem } from "../../hooks";
-import { fuzzyMatch } from "@shared/lib/utils";
+import { searchQuickOpen, workspaceIndexFor } from "../../lib/workspaceIndex";
 import { PaletteModal } from "./PaletteModal";
 
 export function QuickSwitcher() {
@@ -11,10 +10,7 @@ export function QuickSwitcher() {
   const dispatch = useAppDispatch();
   const fs = useFileSystem();
 
-  const allNodes = useMemo(() => {
-    if (!state.workspace?.entries) return [];
-    return flattenOpenableNodes(state.workspace.entries);
-  }, [state.workspace]);
+  const workspaceIndex = workspaceIndexFor(state.workspace?.entries);
 
   return (
     <PaletteModal
@@ -39,15 +35,7 @@ export function QuickSwitcher() {
           q = "";
         }
 
-        const results = allNodes
-          .filter((node) => {
-            if (folderFilter) {
-              const parentPath = node.relativePath?.replace(/\/[^/]+$/, "") ?? "";
-              if (!parentPath.toLowerCase().includes(folderFilter)) return false;
-            }
-            return !q || fuzzyMatch(`${node.name} ${node.relativePath}`, q);
-          })
-          .slice(0, 40);
+        const results = searchQuickOpen(workspaceIndex, q, folderFilter, 40);
 
         if (results.length === 0 && q) {
           return (
@@ -60,37 +48,32 @@ export function QuickSwitcher() {
           );
         }
 
-        return results.map((node) => (
-          <button
-            key={node.path}
-            type="button"
-            className="command-row"
-            onClick={() => {
-              dispatch({ type: "SET_QUICK_SWITCHER", open: false });
-              if (node.kind === "board") {
-                dispatch({ type: "SELECT_TREE_NODE", node });
-              } else {
-                fs.openMarkdownFile(node.path, node.relativePath);
-              }
-            }}
-          >
-            <span className="min-w-0">
-              <span className="block font-semibold">{node.name}</span>
-              <span className="block truncate text-xs text-stone-500">{node.relativePath}</span>
-            </span>
-            <span className="text-xs text-stone-500"><Trans>Open</Trans></span>
-          </button>
-        ));
+        return (
+          <div data-index-size={workspaceIndex.quickOpenable.length} data-result-count={results.length}>
+            {results.map((node) => (
+              <button
+                key={node.path}
+                type="button"
+                className="command-row"
+                onClick={() => {
+                  dispatch({ type: "SET_QUICK_SWITCHER", open: false });
+                  if (node.kind === "board") {
+                    dispatch({ type: "SELECT_TREE_NODE", node });
+                  } else {
+                    fs.openMarkdownFile(node.path, node.relativePath);
+                  }
+                }}
+              >
+                <span className="min-w-0">
+                  <span className="block font-semibold">{node.name}</span>
+                  <span className="block truncate text-xs text-stone-500">{node.relativePath}</span>
+                </span>
+                <span className="text-xs text-stone-500"><Trans>Open</Trans></span>
+              </button>
+            ))}
+          </div>
+        );
       }}
     </PaletteModal>
   );
-}
-
-function flattenOpenableNodes(entries: import("../../lib/types").FileTreeNode[]): import("../../lib/types").FileTreeNode[] {
-  const result: import("../../lib/types").FileTreeNode[] = [];
-  for (const node of entries) {
-    if (node.kind === "markdown" || node.kind === "board") result.push(node);
-    if (node.children) result.push(...flattenOpenableNodes(node.children));
-  }
-  return result;
 }

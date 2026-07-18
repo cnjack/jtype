@@ -2,9 +2,14 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { isCurrentVaultReadOnly, useAppDispatch, useAppState } from "../../app/AppState";
 import { useFileSystem, useMobileInteraction, useTouchActionGesture } from "../../hooks";
-import { markdownNodes } from "../../lib/utils";
 import { tauri } from "../../lib/tauri";
 import { appStorage } from "../../lib/storage";
+import {
+  progressiveTreeWindow,
+  searchWorkspaceDocuments,
+  TREE_RENDER_BATCH_SIZE,
+  workspaceIndexFor,
+} from "../../lib/workspaceIndex";
 import type { EntryKind, FileTreeNode, LocalTrashItem, RecentItem, TrashMetadataItem } from "../../lib/types";
 import { useCallback, useEffect, useState, useMemo, type ReactNode } from "react";
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle, Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/react";
@@ -74,7 +79,8 @@ export function Sidebar() {
   const activeCloudBinding = currentVaultSettings?.cloudSyncEnabled === false ? null : currentBinding;
   const isCloudViewer = activeCloudBinding?.workspaceRole === "viewer" || isCurrentVaultReadOnly(state);
   const workspaceName = activeCloudBinding?.workspaceName || state.workspace?.name || t`No vault`;
-  const docCount = state.workspace ? markdownNodes(state.workspace.entries).length : 0;
+  const workspaceIndex = workspaceIndexFor(state.workspace?.entries);
+  const docCount = workspaceIndex.documents.length;
 
   return (
     <aside id="workspace-sidebar" className="flex min-h-0 flex-col bg-transparent">
@@ -220,6 +226,7 @@ function ExplorerPanel() {
   const fs = useFileSystem();
   const prompt = usePrompt();
   const capabilities = useRuntimeCapabilities();
+  const performHaptic = useMobileInteraction();
   const [query, setQuery] = useState("");
   const [contextMenu, setContextMenu] = useState<{ node: FileTreeNode; x: number; y: number } | null>(null);
   const [trashItems, setTrashItems] = useState<LocalTrashItem[]>([]);
@@ -252,20 +259,11 @@ function ExplorerPanel() {
     }
   }, [state.workspace?.rootPath]);
 
-  const allFolderPaths = useMemo(() => {
-    if (!state.workspace) return new Set<string>();
-    const paths = new Set<string>();
-    const walk = (nodes: FileTreeNode[]) => {
-      for (const n of nodes) {
-        if (n.kind === "folder" && n.name !== ".jtype") {
-          paths.add(n.relativePath);
-          walk(n.children);
-        }
-      }
-    };
-    walk(state.workspace.entries);
-    return paths;
-  }, [state.workspace]);
+  const workspaceIndex = workspaceIndexFor(state.workspace?.entries);
+  const allFolderPaths = useMemo(
+    () => new Set(workspaceIndex.folders.map((node) => node.relativePath)),
+    [workspaceIndex],
+  );
 
   const allExpanded = allFolderPaths.size > 0 && allFolderPaths.size === state.expandedFolders.size;
 
@@ -305,9 +303,35 @@ function ExplorerPanel() {
 
   const filteredResults = useMemo(() => {
     if (!query) return null;
-    const nodes = markdownNodes(state.workspace?.entries ?? []);
-    return nodes.filter((n) => `${n.name} ${n.relativePath}`.toLowerCase().includes(query.toLowerCase())).slice(0, 30);
-  }, [state.workspace, query]);
+    return searchWorkspaceDocuments(workspaceIndex, query, 30);
+  }, [workspaceIndex, query]);
+
+  const showNodeMenu = useCallback((node: FileTreeNode, x: number, y: number) => {
+    setContextMenu({ node, x, y });
+  }, []);
+
+  const rootTreeNodes = useMemo(
+    () => groupBoardsWithFolders(
+      (state.workspace?.entries ?? []).filter((node) => node.relativePath !== ".jtype"),
+    ),
+    [state.workspace?.entries],
+  );
+
+  const openNode = useCallback((node: FileTreeNode) => {
+    if (node.kind === "folder") {
+      dispatch({ type: "TOGGLE_EXPAND_FOLDER", folderPath: node.relativePath });
+    } else if (node.kind === "markdown") {
+      void fs.openMarkdownFile(node.path, node.relativePath);
+    } else if (node.kind === "diagram") {
+      void fs.openDiagramFile(node.path, node.relativePath);
+    } else {
+      dispatch({ type: "SELECT_TREE_NODE", node });
+    }
+  }, [dispatch, fs]);
+
+  const toggleNode = useCallback((relativePath: string) => {
+    dispatch({ type: "TOGGLE_EXPAND_FOLDER", folderPath: relativePath });
+  }, [dispatch]);
 
   const loadTrash = useCallback(async () => {
     const items = await fs.listTrash();
@@ -375,7 +399,13 @@ function ExplorerPanel() {
       </div>
 
       {filteredResults ? (
-        <div className="mt-3 space-y-1">
+        <div
+          id="workspace-search-results"
+          className="mt-3 space-y-1"
+          data-index-size={workspaceIndex.documents.length}
+          data-index-build-ms={workspaceIndex.buildDurationMs}
+          data-result-count={filteredResults.length}
+        >
           {filteredResults.length === 0 ? (
             <p className="text-xs text-stone-500"><Trans>No matches.</Trans></p>
           ) : (
@@ -452,18 +482,21 @@ function ExplorerPanel() {
                     <p className="mt-1 text-sm text-stone-500"><Trans>Create your first Markdown note.</Trans></p>
                   </div>
                 ) : (
-                  <ul className="space-y-1">
-                    {groupBoardsWithFolders(state.workspace.entries).map((node) => (
-                      <TreeNode
-                        key={node.path}
-                        node={node}
-                        depth={0}
-                        onContextMenu={(selectedNode, x, y) => setContextMenu({ node: selectedNode, x, y })}
-                        onActionMenu={(selectedNode, x, y) => setContextMenu({ node: selectedNode, x, y })}
-                        onDrop={(target, source) => handleDrop(target, source)}
-                      />
-                    ))}
-                  </ul>
+                  <TreeNodeList
+                    key={state.workspace.rootPath}
+                    id="workspace-tree-list"
+                    nodes={rootTreeNodes}
+                    depth={0}
+                    activePath={state.currentRelativePath}
+                    expandedPaths={state.expandedFolders}
+                    touchPrimary={capabilities.isTouchPrimary}
+                    onOpen={openNode}
+                    onToggle={toggleNode}
+                    onTouchFeedback={performHaptic}
+                    onContextMenu={showNodeMenu}
+                    onActionMenu={showNodeMenu}
+                    onDrop={handleDrop}
+                  />
                 )}
               </>
             )}
@@ -771,31 +804,92 @@ function groupBoardsWithFolders(entries: FileTreeNode[]): FileTreeNode[] {
   return out;
 }
 
-function TreeNode({
-  node,
-  depth,
-  onContextMenu,
-  onActionMenu,
-  onDrop,
-}: {
-  node: FileTreeNode;
+type TreeNodeListProps = {
+  id?: string;
+  nodes: FileTreeNode[];
   depth: number;
+  activePath: string;
+  expandedPaths: Set<string>;
+  touchPrimary: boolean;
+  onOpen: (node: FileTreeNode) => void;
+  onToggle: (relativePath: string) => void;
+  onTouchFeedback: ReturnType<typeof useMobileInteraction>;
   onContextMenu: (node: FileTreeNode, x: number, y: number) => void;
   onActionMenu: (node: FileTreeNode, x: number, y: number) => void;
   onDrop: (targetFolder: string, sourceRelativePath: string) => void;
-}) {
-  const state = useAppState();
-  const fs = useFileSystem();
-  const dispatch = useAppDispatch();
-  const capabilities = useRuntimeCapabilities();
-  const performHaptic = useMobileInteraction();
+};
+
+function TreeNodeList({ id, nodes, depth, activePath, ...callbacks }: TreeNodeListProps) {
+  const [requestedCount, setRequestedCount] = useState(TREE_RENDER_BATCH_SIZE);
+  const windowRange = useMemo(
+    () => progressiveTreeWindow(nodes, requestedCount, activePath),
+    [activePath, nodes, requestedCount],
+  );
+  const renderedCount = windowRange.end - windowRange.start;
+  const beforeCount = windowRange.start;
+  const afterCount = nodes.length - windowRange.end;
+  const showMore = () => setRequestedCount((count) => count + TREE_RENDER_BATCH_SIZE);
+
+  return (
+    <ul
+      id={id}
+      className={depth === 0 ? "space-y-1" : "mt-0.5 space-y-0.5"}
+      data-total-items={nodes.length}
+      data-rendered-items={renderedCount}
+      data-window-start={windowRange.start}
+      data-window-end={windowRange.end}
+    >
+      {beforeCount > 0 && (
+        <li>
+          <button
+            type="button"
+            className="tree-button justify-center text-xs font-semibold text-[#006f6b]"
+            onClick={showMore}
+          >
+            <span><Trans>Show more</Trans></span>
+            <span className="rounded-full bg-[#e8f6f2] px-2 py-0.5 tabular-nums">{beforeCount}</span>
+          </button>
+        </li>
+      )}
+      {nodes.slice(windowRange.start, windowRange.end).map((node) => (
+        <TreeNode key={node.path} node={node} depth={depth} activePath={activePath} {...callbacks} />
+      ))}
+      {afterCount > 0 && (
+        <li>
+          <button
+            type="button"
+            className="tree-button justify-center text-xs font-semibold text-[#006f6b]"
+            onClick={showMore}
+          >
+            <span><Trans>Show more</Trans></span>
+            <span className="rounded-full bg-[#e8f6f2] px-2 py-0.5 tabular-nums">{afterCount}</span>
+          </button>
+        </li>
+      )}
+    </ul>
+  );
+}
+
+function TreeNode({
+  node,
+  depth,
+  activePath,
+  expandedPaths,
+  touchPrimary,
+  onOpen,
+  onToggle,
+  onTouchFeedback,
+  onContextMenu,
+  onActionMenu,
+  onDrop,
+}: Omit<TreeNodeListProps, "id" | "nodes"> & { node: FileTreeNode }) {
   const [dragOver, setDragOver] = useState(false);
 
-  const isActive = node.relativePath === state.currentRelativePath;
+  const isActive = node.relativePath === activePath;
   const isFolder = node.kind === "folder";
   // A board with merged card children is expandable too (chevron toggles, row opens it).
   const isExpandable = isFolder || (node.kind === "board" && node.children.length > 0);
-  const isExpanded = isExpandable && state.expandedFolders.has(node.relativePath);
+  const isExpanded = isExpandable && expandedPaths.has(node.relativePath);
   const NodeIcon = isFolder
     ? FolderIcon
     : node.kind === "board"
@@ -811,11 +905,11 @@ function TreeNode({
   const openTouchActions = useCallback((target: HTMLElement) => {
     if (!hasTouchActions) return;
     const rect = target.getBoundingClientRect();
-    void performHaptic("impact");
+    void onTouchFeedback("impact");
     onActionMenu(node, rect.left, rect.bottom);
-  }, [hasTouchActions, node, onActionMenu, performHaptic]);
+  }, [hasTouchActions, node, onActionMenu, onTouchFeedback]);
   const touchGesture = useTouchActionGesture({
-    enabled: capabilities.isTouchPrimary && hasTouchActions,
+    enabled: touchPrimary && hasTouchActions,
     onLongPress: openTouchActions,
     onSwipeLeft: openTouchActions,
   });
@@ -826,11 +920,11 @@ function TreeNode({
     <li className="relative">
       <button
         type="button"
-        className={`tree-button ${capabilities.isTouchPrimary ? "min-h-11 touch-pan-y pr-12 [-webkit-touch-callout:none]" : ""} ${isActive ? "tree-button-active" : ""} ${dragOver ? "ring-2 ring-[#008884]/40 bg-[#e8f6f2]" : ""}`}
+        className={`tree-button ${touchPrimary ? "min-h-11 touch-pan-y pr-12 [-webkit-touch-callout:none]" : ""} ${isActive ? "tree-button-active" : ""} ${dragOver ? "ring-2 ring-[#008884]/40 bg-[#e8f6f2]" : ""}`}
         style={{ paddingLeft: `${0.5 + depth * 0.75}rem` }}
         aria-expanded={isExpandable ? isExpanded : undefined}
         aria-current={isActive ? "page" : undefined}
-        draggable={!capabilities.isTouchPrimary}
+        draggable={!touchPrimary}
         {...touchGesture}
         onDragStart={(e) => {
           e.dataTransfer.setData("text/plain", node.relativePath);
@@ -853,20 +947,12 @@ function TreeNode({
           }
         }}
         onClick={() => {
-          if (isFolder) {
-            dispatch({ type: "TOGGLE_EXPAND_FOLDER", folderPath: node.relativePath });
-          } else if (node.kind === "markdown") {
-            fs.openMarkdownFile(node.path, node.relativePath);
-          } else if (node.kind === "diagram") {
-            fs.openDiagramFile(node.path, node.relativePath);
-          } else {
-            dispatch({ type: "SELECT_TREE_NODE", node });
-          }
+          onOpen(node);
         }}
         onContextMenu={(e) => {
           e.preventDefault();
           e.stopPropagation();
-          if (capabilities.isTouchPrimary) {
+          if (touchPrimary) {
             // iOS WebKit may collapse a system/XCUITest long-press into a
             // contextmenu event without exposing the preceding pointer stream.
             // Route it to the same mobile sheet as our gesture recognizer.
@@ -881,7 +967,7 @@ function TreeNode({
             className="shrink-0 cursor-pointer text-[#8a9691]"
             onClick={(e) => {
               e.stopPropagation();
-              dispatch({ type: "TOGGLE_EXPAND_FOLDER", folderPath: node.relativePath });
+              onToggle(node.relativePath);
             }}
           >
             {isExpanded ? <ChevronDownIcon className="h-3.5 w-3.5" /> : <ChevronRightIcon className="h-3.5 w-3.5" />}
@@ -892,7 +978,7 @@ function TreeNode({
         </span>
         <span className={`truncate ${isFolder ? "font-semibold text-[#4b5753]" : ""}`}>{node.name}</span>
       </button>
-      {capabilities.isTouchPrimary && (node.kind === "folder" || node.kind === "markdown" || node.kind === "board") && (
+      {touchPrimary && (node.kind === "folder" || node.kind === "markdown" || node.kind === "board") && (
         <button
           type="button"
           aria-label={t`Actions for ${node.name}`}
@@ -906,11 +992,19 @@ function TreeNode({
         </button>
       )}
       {isExpandable && isExpanded && node.children.length > 0 && (
-        <ul className="mt-0.5 space-y-0.5">
-          {groupBoardsWithFolders(node.children).map((child) => (
-            <TreeNode key={child.path} node={child} depth={depth + 1} onContextMenu={onContextMenu} onActionMenu={onActionMenu} onDrop={onDrop} />
-          ))}
-        </ul>
+        <TreeNodeList
+          nodes={groupBoardsWithFolders(node.children)}
+          depth={depth + 1}
+          activePath={activePath}
+          expandedPaths={expandedPaths}
+          touchPrimary={touchPrimary}
+          onOpen={onOpen}
+          onToggle={onToggle}
+          onTouchFeedback={onTouchFeedback}
+          onContextMenu={onContextMenu}
+          onActionMenu={onActionMenu}
+          onDrop={onDrop}
+        />
       )}
     </li>
   );

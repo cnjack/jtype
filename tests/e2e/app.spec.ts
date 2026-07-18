@@ -30,6 +30,7 @@ declare global {
     __LAST_SHARE_PDF_ARGS__?: Record<string, unknown>;
     __LAST_BINARY_WRITE_ARGS__?: Record<string, unknown>;
     __HAPTIC_STYLES__: string[];
+    __E2E_INSTALL_LARGE_VAULT__?: (count?: number) => void;
     __INITIAL_EXTERNAL_SOURCES_JSON__?: string;
     __INITIAL_DEEP_LINKS__?: string[] | null;
     __LAST_OPEN_URL__?: string;
@@ -144,6 +145,21 @@ test.beforeEach(async ({ page }) => {
         },
       );
     };
+    const installLargeVaultFixture = (count = 2_500) => {
+      for (let index = 0; index < count; index += 1) {
+        const name = `performance-note-${String(index).padStart(5, "0")}.md`;
+        const path = `C:/workspace/${name}`;
+        if (files[path] !== undefined) continue;
+        files[path] = `# Performance note ${index}\n\nLarge vault fixture ${index}.`;
+        workspace.entries.push({
+          name,
+          path,
+          relativePath: name,
+          kind: "markdown",
+          children: [],
+        });
+      }
+    };
     const scanBoardFixture = (boardId: string) =>
       Object.entries(files)
         .filter(([path, content]) => path.endsWith(".md") && content.includes(`board: ${boardId}`))
@@ -199,6 +215,7 @@ test.beforeEach(async ({ page }) => {
         },
       },
       __E2E_INSTALL_BOARD__: installBoardFixture,
+      __E2E_INSTALL_LARGE_VAULT__: installLargeVaultFixture,
       __EMIT_TAURI_EVENT__: (event: string, payload: unknown) => {
         let invoked = 0;
         for (const [id, subscription] of eventSubscriptions) {
@@ -2080,6 +2097,41 @@ test("uses quick switcher to open a workspace document", async ({ page }) => {
   await page.locator("#quick-results").getByRole("button", { name: /setup\.md/ }).click();
 
   await expect(page.getByLabel("Markdown editor")).toHaveValue("# Setup\n\nInstall and run.");
+});
+
+test("indexes and progressively renders a 2,500-document vault", async ({ page }) => {
+  await page.evaluate(() => window.__E2E_INSTALL_LARGE_VAULT__?.(2_500));
+  await openWorkspace(page);
+
+  const tree = page.locator("#workspace-tree-list");
+  await expect(tree).toHaveAttribute("data-total-items", "2502");
+  await expect(tree).toHaveAttribute("data-rendered-items", String(160));
+  await expect(tree.getByRole("button", { name: /Show more/ })).toBeVisible();
+
+  await tree.getByRole("button", { name: /Show more/ }).click();
+  await expect(tree).toHaveAttribute("data-rendered-items", String(320));
+
+  await page.getByPlaceholder("Search files...").fill("performance-note-02499");
+  const searchResults = page.locator("#workspace-search-results");
+  await expect(searchResults).toHaveAttribute("data-index-size", "2502");
+  await expect(searchResults).toHaveAttribute("data-result-count", "1");
+  await searchResults.getByRole("button", { name: /performance-note-02499\.md/ }).click();
+  await expect(page.getByLabel("Markdown editor")).toHaveValue(/Large vault fixture 2499/);
+  await page.getByPlaceholder("Search files...").fill("");
+
+  // Selecting a row beyond the initial batch keeps a bounded window mounted
+  // instead of materializing all 2,500 preceding DOM rows.
+  await expect(tree).toHaveAttribute("data-rendered-items", String(160));
+  await expect(tree).toHaveAttribute("data-window-end", "2502");
+  await expect(tree.getByRole("button", { name: /performance-note-02499\.md/ })).toHaveAttribute("aria-current", "page");
+
+  await page.locator("header").getByRole("button", { name: "Quick open" }).click();
+  await page.getByLabel("Open or create Document").fill("performance-note-02498");
+  const quickResults = page.locator("#quick-results");
+  await expect(quickResults.locator("[data-index-size]"))
+    .toHaveAttribute("data-index-size", "2502");
+  await quickResults.getByRole("button", { name: /performance-note-02498\.md/ }).click();
+  await expect(page.getByLabel("Markdown editor")).toHaveValue(/Large vault fixture 2498/);
 });
 
 test("edits frontmatter properties and shows outline", async ({ page }) => {

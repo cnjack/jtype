@@ -11,7 +11,8 @@ import { basename, isMarkdownPath, relativePathFromWorkspace, normalizePath } fr
 import { isEditableResourcePath, isDiagramTextPath, isViewableAssetPath } from "@shared/lib/fileTypes";
 import { writeFrontmatter, titleFromMarkdown } from "@shared/lib/frontmatter";
 import type { RecentItem, FileTreeNode, BoardConfig, ExternalVaultConflictResolution } from "../lib/types";
-import { markdownNodes, extractMarkdownLinks } from "../lib/utils";
+import { extractMarkdownLinks } from "../lib/utils";
+import { workspaceIndexFor } from "../lib/workspaceIndex";
 import { appStorage } from "../lib/storage";
 import type { AICommandProposal } from "../lib/aiCommands";
 import { useRuntimeCapabilities } from "../app/RuntimeCapabilities";
@@ -1070,7 +1071,7 @@ export function useFileSystem(onAfterSave?: () => Promise<void> | void) {
     if (!state.workspace) return [];
     const targetName = basename(targetRelativePath);
     const impacts: Array<{ relativePath: string; path: string; line: number; content: string }> = [];
-    for (const node of markdownNodes(state.workspace.entries)) {
+    for (const node of workspaceIndexFor(state.workspace.entries).documents) {
       try {
         const content = node.path === state.currentPath ? state.editorContent : await tauri.readFile(node.path);
         const links = extractMarkdownLinks(content);

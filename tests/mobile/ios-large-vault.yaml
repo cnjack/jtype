@@ -1,0 +1,13 @@
+appId: net.jcode.jtype
+---
+- launchApp:
+    clearState: false
+- assertVisible: "Documents|文档"
+- tapOn: "Documents|文档"
+- waitForAnimationToEnd
+- tapOn: "Search files.*|搜索文件.*"
+- eraseText: 64
+- inputText: "performance-note-04999"
+- assertVisible: ".*performance-note-04999.md.*"
+- tapOn: ".*performance-note-04999.md.*"
+- assertVisible: "(?s).*Shared desktop/mobile large vault fixture 04999.*"

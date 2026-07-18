@@ -1486,6 +1486,10 @@ msgstr "设置"
 msgid "Show in Explorer"
 msgstr "在资源管理器中显示"
 
+#: src/components/sidebar/Sidebar.tsx
+msgid "Show more"
+msgstr "显示更多"
+
 #: src/components/editor/FindBar.tsx
 msgid "Show replace"
 msgstr "显示替换"
