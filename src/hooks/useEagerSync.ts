@@ -5,6 +5,7 @@ import { httpRequest } from "@shared/lib/http";
 import { sha256Hex } from "../lib/utils";
 import { parseSyncConflicts } from "../lib/types";
 import { useRuntimeCapabilities } from "../app/RuntimeCapabilities";
+import { createSyncRunId, requestWithSyncRetry } from "../lib/syncTransport";
 
 export function useEagerSync() {
   const dispatch = useAppDispatch();
@@ -42,9 +43,9 @@ export function useEagerSync() {
       const baseHash = base != null ? await sha256Hex(base) : undefined;
 
       try {
-        const response = await httpRequest(
-          `${serviceUrl}/api/v1/workspaces/${binding.workspaceId}/sync/push`,
-          {
+        const requestId = `${createSyncRunId()}:eager`;
+        const response = await requestWithSyncRetry(
+          () => httpRequest(`${serviceUrl}/api/v1/workspaces/${binding.workspaceId}/sync/push`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -54,6 +55,7 @@ export function useEagerSync() {
               ...(state.cloudProfile?.deviceId ? { "x-device-id": state.cloudProfile.deviceId } : {}),
             },
             body: JSON.stringify({
+              requestId,
               deviceId: state.cloudProfile?.deviceId ?? capabilities.clientType,
               documents: [
                 {
@@ -67,7 +69,7 @@ export function useEagerSync() {
               deletedPaths: [] as Array<{ relativePath: string }>,
               trashOperations: [] as Array<Record<string, unknown>>,
             }),
-          },
+          }),
         );
         if (!response.ok) return;
         const pushData = (await response.json()) as {
@@ -115,6 +117,7 @@ export function useEagerSync() {
       state.vaultSettings,
       state.cloudProfile,
       state.serviceUrl,
+      state.wsSessionId,
       capabilities.clientType,
       dispatch,
     ],

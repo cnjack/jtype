@@ -457,3 +457,173 @@ async fn repeated_stale_push_reuses_open_conflict_and_resolution_clears_legacy_d
     .expect("remaining open conflict count");
     assert_eq!(remaining_open, 0);
 }
+
+#[tokio::test]
+async fn repeated_request_id_returns_cached_response_without_duplicate_version() {
+    let (app, pool) = common::setup().await;
+    let (token, _) = common::register_user(app.clone(), &common::uid()).await;
+    let ws_id = common::create_workspace(app.clone(), &token, &common::wname()).await;
+    let relative_path = format!(
+        "idempotent-{}.md",
+        &uuid::Uuid::new_v4().simple().to_string()[..8]
+    );
+    let payload = json!({
+        "requestId": "sync-run-1:0001",
+        "deviceId": "mobile-idempotency-test",
+        "documents": [{
+            "relativePath": relative_path,
+            "title": "Idempotent",
+            "content": "# Written once"
+        }]
+    });
+
+    let (first_status, first_body) = common::req(
+        app.clone(),
+        "POST",
+        &format!("/api/v1/workspaces/{ws_id}/sync/push"),
+        Some(&token),
+        Some(payload.clone()),
+    )
+    .await;
+    let (replay_status, replay_body) = common::req(
+        app,
+        "POST",
+        &format!("/api/v1/workspaces/{ws_id}/sync/push"),
+        Some(&token),
+        Some(payload),
+    )
+    .await;
+
+    assert_eq!(first_status, StatusCode::OK, "first push: {first_body}");
+    assert_eq!(
+        replay_status,
+        StatusCode::OK,
+        "replayed push: {replay_body}"
+    );
+    assert_eq!(
+        replay_body, first_body,
+        "a replay should return the cached response"
+    );
+
+    let version_count: i64 = sqlx::query_scalar(
+        r#"SELECT COUNT(*) FROM document_versions v
+           JOIN documents d ON d.id = v.document_id
+           WHERE v.workspace_id = ? AND d.relative_path = ?"#,
+    )
+    .bind(&ws_id)
+    .bind(&relative_path)
+    .fetch_one(&pool)
+    .await
+    .expect("version count");
+    assert_eq!(
+        version_count, 1,
+        "the replay must not create another version"
+    );
+}
+
+#[tokio::test]
+async fn concurrent_request_id_replay_waits_for_one_cached_response() {
+    let (app, pool) = common::setup().await;
+    let (token, _) = common::register_user(app.clone(), &common::uid()).await;
+    let ws_id = common::create_workspace(app.clone(), &token, &common::wname()).await;
+    let prefix = format!(
+        "concurrent-idempotent-{}",
+        &uuid::Uuid::new_v4().simple().to_string()[..8]
+    );
+    let documents = (0..50)
+        .map(|index| {
+            json!({
+                "relativePath": format!("{prefix}-{index:02}.md"),
+                "title": format!("Concurrent {index}"),
+                "content": format!("# Written once {index}")
+            })
+        })
+        .collect::<Vec<_>>();
+    let payload = json!({
+        "requestId": "sync-concurrent:0001",
+        "deviceId": "mobile-concurrent-idempotency-test",
+        "documents": documents
+    });
+    let endpoint = format!("/api/v1/workspaces/{ws_id}/sync/push");
+
+    let first = common::req(
+        app.clone(),
+        "POST",
+        &endpoint,
+        Some(&token),
+        Some(payload.clone()),
+    );
+    let second = common::req(app, "POST", &endpoint, Some(&token), Some(payload));
+    let ((first_status, first_body), (second_status, second_body)) = tokio::join!(first, second);
+
+    assert_eq!(first_status, StatusCode::OK, "first push: {first_body}");
+    assert_eq!(
+        second_status,
+        StatusCode::OK,
+        "concurrent replay: {second_body}"
+    );
+    assert_eq!(
+        second_body, first_body,
+        "both handlers should return the cached response"
+    );
+
+    let version_count: i64 = sqlx::query_scalar(
+        r#"SELECT COUNT(*) FROM document_versions v
+           JOIN documents d ON d.id = v.document_id
+           WHERE v.workspace_id = ? AND d.relative_path LIKE ?"#,
+    )
+    .bind(&ws_id)
+    .bind(format!("{prefix}-%"))
+    .fetch_one(&pool)
+    .await
+    .expect("version count");
+    assert_eq!(
+        version_count, 50,
+        "concurrent replay must apply each document once"
+    );
+}
+
+#[tokio::test]
+async fn request_id_reuse_with_different_payload_is_rejected() {
+    let (app, _pool) = common::setup().await;
+    let (token, _) = common::register_user(app.clone(), &common::uid()).await;
+    let ws_id = common::create_workspace(app.clone(), &token, &common::wname()).await;
+    let path = format!(
+        "collision-{}.md",
+        &uuid::Uuid::new_v4().simple().to_string()[..8]
+    );
+    let first = json!({
+        "requestId": "sync-collision:0001",
+        "deviceId": "mobile-collision-test",
+        "documents": [{ "relativePath": path, "content": "first" }]
+    });
+    let second = json!({
+        "requestId": "sync-collision:0001",
+        "deviceId": "mobile-collision-test",
+        "documents": [{ "relativePath": path, "content": "different" }]
+    });
+
+    let (first_status, first_body) = common::req(
+        app.clone(),
+        "POST",
+        &format!("/api/v1/workspaces/{ws_id}/sync/push"),
+        Some(&token),
+        Some(first),
+    )
+    .await;
+    let (second_status, second_body) = common::req(
+        app,
+        "POST",
+        &format!("/api/v1/workspaces/{ws_id}/sync/push"),
+        Some(&token),
+        Some(second),
+    )
+    .await;
+
+    assert_eq!(first_status, StatusCode::OK, "first push: {first_body}");
+    assert_eq!(second_status, StatusCode::BAD_REQUEST);
+    assert!(second_body["error"]
+        .as_str()
+        .unwrap_or_default()
+        .contains("different sync payload"));
+}

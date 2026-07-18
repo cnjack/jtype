@@ -86,6 +86,10 @@ pub async fn push(
         &["owner", "admin", "editor"],
     )
     .await?;
+    let idempotency = sync_push_idempotency(&state.pool, &workspace_id, &payload).await?;
+    if let Some(cached) = idempotency.as_ref().and_then(|item| item.cached.clone()) {
+        return Ok(Json(cached));
+    }
     let mut accepted = 0;
     let mut conflicts = Vec::new();
     let device_id = payload.device_id.clone();
@@ -239,14 +243,177 @@ pub async fn push(
             .unwrap_or(0);
         upsert_sync_cursor(&state.pool, &workspace_id, device_id, next_clock).await?;
     }
-    Ok(Json(SyncPushResponse {
+    let response = SyncPushResponse {
         workspace_id,
         accepted,
         folders,
         documents: push_docs,
         deleted_paths,
         conflicts,
+    };
+    let response = match idempotency {
+        Some(item) => store_or_load_sync_push_response(&state.pool, item, &response).await?,
+        None => response,
+    };
+    Ok(Json(response))
+}
+
+struct SyncPushIdempotency {
+    workspace_id: String,
+    device_id: String,
+    request_id: String,
+    payload_hash: String,
+    cached: Option<SyncPushResponse>,
+}
+
+async fn sync_push_idempotency(
+    pool: &sqlx::Pool<sqlx::MySql>,
+    workspace_id: &str,
+    payload: &SyncPushRequest,
+) -> Result<Option<SyncPushIdempotency>, AppError> {
+    let Some(request_id) = payload.request_id.as_deref() else {
+        return Ok(None);
+    };
+    let Some(device_id) = payload.device_id.as_deref() else {
+        return Err(AppError::BadRequest(
+            "deviceId is required when requestId is provided".to_string(),
+        ));
+    };
+    let request_id = request_id.trim();
+    let device_id = device_id.trim();
+    if request_id.is_empty() || request_id.len() > 128 {
+        return Err(AppError::BadRequest(
+            "requestId must contain 1 to 128 characters".to_string(),
+        ));
+    }
+    if device_id.is_empty() || device_id.len() > 128 {
+        return Err(AppError::BadRequest(
+            "deviceId must contain 1 to 128 characters".to_string(),
+        ));
+    }
+    let serialized = serde_json::to_string(payload)
+        .map_err(|error| AppError::Server(format!("could not hash sync push payload: {error}")))?;
+    let payload_hash = sha256_hex(&serialized);
+    let inserted = sqlx::query(
+        r#"INSERT IGNORE INTO sync_push_requests
+           (workspace_id, device_id, request_id, payload_hash, response_json)
+           VALUES (?, ?, ?, ?, NULL)"#,
+    )
+    .bind(workspace_id)
+    .bind(device_id)
+    .bind(request_id)
+    .bind(&payload_hash)
+    .execute(pool)
+    .await?
+    .rows_affected()
+        == 1;
+    let cached = if inserted {
+        None
+    } else {
+        // An identical request can arrive while the first handler is still
+        // executing (for example, after an impatient proxy retry). Wait for
+        // that handler to publish its response instead of applying the batch
+        // twice. A genuinely stalled reservation remains retryable as a 5xx.
+        let mut cached = None;
+        for attempt in 0..40 {
+            let row = sqlx::query(
+                r#"SELECT payload_hash, response_json FROM sync_push_requests
+                   WHERE workspace_id = ? AND device_id = ? AND request_id = ?"#,
+            )
+            .bind(workspace_id)
+            .bind(device_id)
+            .bind(request_id)
+            .fetch_one(pool)
+            .await?;
+            let stored_hash: String = row.try_get("payload_hash")?;
+            if stored_hash != payload_hash {
+                return Err(AppError::BadRequest(
+                    "requestId was already used for a different sync payload".to_string(),
+                ));
+            }
+            let response_json: Option<String> = row.try_get("response_json")?;
+            if let Some(response_json) = response_json {
+                cached = Some(serde_json::from_str(&response_json).map_err(|error| {
+                    AppError::Server(format!("could not read cached sync push response: {error}"))
+                })?);
+                break;
+            }
+            if attempt < 39 {
+                tokio::time::sleep(std::time::Duration::from_millis(25)).await;
+            }
+        }
+        if cached.is_none() {
+            return Err(AppError::Server(
+                "matching sync request is still in progress".to_string(),
+            ));
+        }
+        cached
+    };
+    Ok(Some(SyncPushIdempotency {
+        workspace_id: workspace_id.to_string(),
+        device_id: device_id.to_string(),
+        request_id: request_id.to_string(),
+        payload_hash,
+        cached,
     }))
+}
+
+async fn store_or_load_sync_push_response(
+    pool: &sqlx::Pool<sqlx::MySql>,
+    item: SyncPushIdempotency,
+    response: &SyncPushResponse,
+) -> Result<SyncPushResponse, AppError> {
+    let response_json = serde_json::to_string(response).map_err(|error| {
+        AppError::Server(format!("could not cache sync push response: {error}"))
+    })?;
+    let updated = sqlx::query(
+        r#"UPDATE sync_push_requests SET response_json = ?
+           WHERE workspace_id = ? AND device_id = ? AND request_id = ?
+             AND payload_hash = ? AND response_json IS NULL"#,
+    )
+    .bind(&response_json)
+    .bind(&item.workspace_id)
+    .bind(&item.device_id)
+    .bind(&item.request_id)
+    .bind(&item.payload_hash)
+    .execute(pool)
+    .await?
+    .rows_affected();
+    if updated != 1 {
+        return Err(AppError::Server(
+            "could not finalize sync request reservation".to_string(),
+        ));
+    }
+
+    let row = sqlx::query(
+        r#"SELECT payload_hash, response_json FROM sync_push_requests
+           WHERE workspace_id = ? AND device_id = ? AND request_id = ?"#,
+    )
+    .bind(&item.workspace_id)
+    .bind(&item.device_id)
+    .bind(&item.request_id)
+    .fetch_one(pool)
+    .await?;
+    let stored_hash: String = row.try_get("payload_hash")?;
+    if stored_hash != item.payload_hash {
+        return Err(AppError::BadRequest(
+            "requestId was already used for a different sync payload".to_string(),
+        ));
+    }
+    let stored_json: Option<String> = row.try_get("response_json")?;
+    let stored_json = stored_json
+        .ok_or_else(|| AppError::Server("sync request reservation has no response".to_string()))?;
+    let stored_response = serde_json::from_str(&stored_json).map_err(|error| {
+        AppError::Server(format!("could not read cached sync push response: {error}"))
+    })?;
+
+    // Bound the dedupe store without putting cleanup on the correctness path.
+    let _ = sqlx::query(
+        "DELETE FROM sync_push_requests WHERE response_json IS NOT NULL AND created_at < CURRENT_TIMESTAMP - INTERVAL 7 DAY LIMIT 256",
+    )
+    .execute(pool)
+    .await;
+    Ok(stored_response)
 }
 
 pub async fn list_conflicts(

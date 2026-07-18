@@ -241,7 +241,7 @@ pub struct InviteListItem {
 
 // ── Documents ──
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CloudSaveDocumentRequest {
     pub relative_path: String,
@@ -251,7 +251,7 @@ pub struct CloudSaveDocumentRequest {
     pub base_content: Option<String>,
 }
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct CloudDocument {
     pub relative_path: String,
@@ -281,13 +281,13 @@ pub struct CreateFolderRequest {
     pub relative_path: String,
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct SyncFolderInput {
     pub relative_path: String,
 }
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct FolderListItem {
     pub id: String,
@@ -343,15 +343,16 @@ pub struct SyncPullRequest {
     pub since_trash_event_clock: Option<i64>,
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct DeletedFolderInput {
     pub relative_path: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SyncPushRequest {
+    pub request_id: Option<String>,
     pub device_id: Option<String>,
     #[serde(default)]
     pub folders: Vec<SyncFolderInput>,
@@ -364,13 +365,13 @@ pub struct SyncPushRequest {
     pub trash_operations: Vec<TrashOperation>,
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct DeletedPathInput {
     pub relative_path: String,
 }
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct SyncConflict {
     pub conflict_id: String,
@@ -394,14 +395,14 @@ pub struct SyncPullResponse {
     pub trash: Option<TrashSyncData>,
 }
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct DeletedPath {
     pub relative_path: String,
     pub deleted_clock: i64,
 }
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct SyncPushDocument {
     #[serde(flatten)]
@@ -409,7 +410,7 @@ pub struct SyncPushDocument {
     pub merge_status: String,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct SyncPushResponse {
     pub workspace_id: String,
@@ -541,7 +542,7 @@ pub struct TrashSyncItem {
     pub deleted_clock: i64,
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(tag = "type")]
 pub enum TrashOperation {
     #[serde(rename = "restore")]

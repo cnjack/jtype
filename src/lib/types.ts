@@ -370,6 +370,24 @@ export type SyncPushDocument = CloudDocument & {
   mergeStatus: MergeStatus;
 };
 
+export type SyncPushDocumentInput = {
+  relativePath: string;
+  title: string;
+  content: string;
+  baseContentHash?: string;
+  baseContent?: string;
+};
+
+export type SyncPushRequest = {
+  requestId: string;
+  deviceId: string;
+  folders: SyncFolder[];
+  documents: SyncPushDocumentInput[];
+  deletedPaths: DeletedPathInput[];
+  deletedFolders: SyncFolder[];
+  trashOperations: PendingTrashOp[];
+};
+
 export type SyncPushResponse = {
   workspaceId: string;
   accepted: number;

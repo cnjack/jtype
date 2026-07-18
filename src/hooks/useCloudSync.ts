@@ -6,16 +6,12 @@ import { httpRequest } from "@shared/lib/http";
 import { syncsAsDocument } from "@shared/lib/fileTypes";
 import { sha256Hex, sha256HexBytes } from "../lib/utils";
 import { markCloudWrite, markCloudWriteBatch } from "../lib/cloudWriteHashes";
-import type { AuthResponse, CloudProfile, VaultBinding, CloudDocument, CloudFolder, CloudWorkspace, DeletedFolder, DeletedPath, DeletedPathInput, EntryKind, MobilePendingOAuth, OAuthDeviceStartResponse, SyncPushDocument, SyncPushResponse, TrashSyncPayload, VaultSettings, BlobManifestEntry } from "../lib/types";
+import type { AuthResponse, CloudProfile, VaultBinding, CloudDocument, CloudFolder, CloudWorkspace, DeletedFolder, DeletedPath, DeletedPathInput, EntryKind, MobilePendingOAuth, OAuthDeviceStartResponse, PendingTrashOp, SyncPushDocument, SyncPushResponse, TrashSyncPayload, VaultSettings, BlobManifestEntry } from "../lib/types";
 import { parseSyncConflicts } from "../lib/types";
+import { createSyncPushBatches, createSyncRunId, postSyncPush, requestWithSyncRetry } from "../lib/syncTransport";
 import { useRuntimeCapabilities } from "../app/RuntimeCapabilities";
 import { MOBILE_OAUTH_CALLBACK_URL } from "@shared/lib/mobileOAuth";
 import { registerMobileOAuthReturnHandler } from "../lib/mobileOAuthReturn";
-
-type TrashOperationPayload =
-  | { type: "restore"; trashId: string }
-  | { type: "permanent_delete"; trashId: string }
-  | { type: "empty_trash" };
 
 type PullOnlyOptions = {
   full?: boolean;
@@ -484,16 +480,13 @@ export function useCloudSync({ recoverMobileOAuth = false }: { recoverMobileOAut
         // 2. Load sync bases (last synced content per document) for three-way merge
         let syncBases: Record<string, string> = {};
         let syncFolderBases: string[] = [];
-        let trashOperations: Array<{ type: string; trashId?: string }> = [];
+        let trashOperations: PendingTrashOp[] = [];
         if (tauri.isAvailable) {
           try { syncBases = await tauri.loadSyncBases(state.workspace.rootPath); } catch { /* first sync */ }
           try { syncFolderBases = await tauri.loadSyncFolderBases(state.workspace.rootPath); } catch { /* first sync */ }
           try {
             const trashMetadata = await tauri.loadTrashMetadata(state.workspace.rootPath);
-            trashOperations = trashMetadata.pendingTrashOps.map((op) => ({
-              type: op.type,
-              ...(op.type !== "empty_trash" ? { trashId: (op as { trashId: string }).trashId } : {}),
-            }));
+            trashOperations = [...trashMetadata.pendingTrashOps];
           } catch { /* no pending trash ops */ }
         }
 
@@ -556,35 +549,74 @@ export function useCloudSync({ recoverMobileOAuth = false }: { recoverMobileOAut
           remoteDeletedPaths: [...remoteDeletedPaths],
         });
 
-        const push = await httpRequest(`${getServiceUrl()}/api/v1/workspaces/${binding.workspaceId}/sync/push`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${state.syncToken}`,
-            "x-client-type": capabilities.clientType,
-            ...(state.wsSessionId ? { "x-session-id": state.wsSessionId } : {}),
-            ...(state.cloudProfile?.deviceId ? { "x-device-id": state.cloudProfile.deviceId } : {}),
-          },
-          body: JSON.stringify({
-            deviceId: state.cloudProfile?.deviceId ?? capabilities.clientType,
-            folders: foldersForPush,
-            documents: pushDocs,
-            deletedPaths,
-            deletedFolders: locallyDeletedFolders.map((relativePath) => ({ relativePath })),
-            trashOperations,
-          }),
-        });
-        if (push.status === 403 || push.status === 404) {
-          await handleWorkspaceAccessLoss(binding, push.status);
-          dispatch({ type: "SET_SYNC_STATUS", status: "idle" });
-          if (options.propagateError) {
-            throw new Error(`Cloud workspace sync failed (${push.status}).`);
+        const deviceId = state.cloudProfile?.deviceId ?? capabilities.clientType;
+        const pushUrl = `${getServiceUrl()}/api/v1/workspaces/${binding.workspaceId}/sync/push`;
+        const pushHeaders = {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${state.syncToken}`,
+          "x-client-type": capabilities.clientType,
+          ...(state.wsSessionId ? { "x-session-id": state.wsSessionId } : {}),
+          ...(state.cloudProfile?.deviceId ? { "x-device-id": state.cloudProfile.deviceId } : {}),
+        };
+        const pushBatches = createSyncPushBatches({
+          deviceId,
+          folders: foldersForPush,
+          documents: pushDocs,
+          deletedPaths,
+          deletedFolders: locallyDeletedFolders.map((relativePath) => ({ relativePath })),
+          trashOperations,
+        }, createSyncRunId());
+        const pushData: SyncPushResponse = {
+          workspaceId: binding.workspaceId,
+          accepted: 0,
+          folders: [],
+          documents: [],
+          deletedPaths: [],
+          conflicts: [],
+        };
+        for (const [batchIndex, batch] of pushBatches.entries()) {
+          const batchLabel = `${batchIndex + 1}/${pushBatches.length}`;
+          if (pushBatches.length > 1) {
+            dispatch({ type: "SET_STATUS", message: `Syncing batch ${batchLabel}…` });
           }
-          return;
+          let push: Response;
+          try {
+            push = await requestWithSyncRetry(
+              () => postSyncPush(pushUrl, pushHeaders, batch),
+              {
+                onRetry: ({ attempt, maxAttempts, status }) => {
+                  const cause = status ? `HTTP ${status}` : "network unavailable";
+                  dispatch({
+                    type: "SET_STATUS",
+                    message: `Sync interrupted (${cause}). Retrying batch ${batchLabel}, attempt ${attempt}/${maxAttempts}…`,
+                  });
+                },
+              },
+            );
+          } catch (error) {
+            throw new Error(`Sync batch ${batchLabel} failed after 3 attempts: ${String(error)}`);
+          }
+          if (push.status === 403 || push.status === 404) {
+            await handleWorkspaceAccessLoss(binding, push.status);
+            dispatch({ type: "SET_SYNC_STATUS", status: "idle" });
+            if (options.propagateError) {
+              throw new Error(`Cloud workspace sync failed (${push.status}).`);
+            }
+            return;
+          }
+          if (!push.ok) {
+            throw new Error(`Sync batch ${batchLabel} failed after 3 attempts (HTTP ${push.status}): ${await push.text()}`);
+          }
+          const batchData = (await push.json()) as SyncPushResponse;
+          pushData.accepted += batchData.accepted;
+          pushData.folders = batchData.folders ?? pushData.folders;
+          pushData.documents.push(...batchData.documents);
+          pushData.deletedPaths?.push(...(batchData.deletedPaths ?? []));
+          const knownConflictIds = new Set(pushData.conflicts.map((conflict) => conflict.conflictId));
+          pushData.conflicts.push(...batchData.conflicts.filter((conflict) => !knownConflictIds.has(conflict.conflictId)));
         }
-        if (!push.ok) throw new Error(await push.text());
-        const pushData = (await push.json()) as SyncPushResponse;
         console.log(`[sync:${syncId}] ▶ PUSH RESPONSE`, {
+          batches: pushBatches.length,
           accepted: pushData.accepted,
           documents: pushData.documents.map((d) => `${d.relativePath}:${d.mergeStatus}`),
           serverDeletedPaths: pushData.deletedPaths?.map((d) => d.relativePath) ?? [],
@@ -643,7 +675,8 @@ export function useCloudSync({ recoverMobileOAuth = false }: { recoverMobileOAut
 
         const deleteCount = pushData.deletedPaths?.length ?? 0;
         const deletionText = deleteCount > 0 ? ` ${deleteCount} moved to cloud trash.` : "";
-        dispatch({ type: "SET_STATUS", message: `Synced ${pushData.accepted} change(s) with cloud workspace ${binding.workspaceName}.${deletionText}` });
+        const batchingText = pushBatches.length > 1 ? ` in ${pushBatches.length} batches` : "";
+        dispatch({ type: "SET_STATUS", message: `Synced ${pushData.accepted} change(s)${batchingText} with cloud workspace ${binding.workspaceName}.${deletionText}` });
         dispatch({ type: "SET_SYNC_STATUS", status: "idle", success: true });
 
         if (options.skipRelativePath) {
@@ -719,24 +752,42 @@ export function useCloudSync({ recoverMobileOAuth = false }: { recoverMobileOAut
       locallyDeletedCount: locallyDeletedPaths.size,
       reason: options.reason,
     });
-    const response = await httpRequest(`${getServiceUrl()}/api/v1/workspaces/${binding.workspaceId}/sync/pull`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${state.syncToken}`,
-        "x-client-type": capabilities.clientType,
-      },
-      body: JSON.stringify({
-        sinceClock,
-        deviceId: state.cloudProfile?.deviceId ?? capabilities.clientType,
-        sinceTrashEventClock: trashClock,
-      }),
-    });
+    let response: Response;
+    try {
+      response = await requestWithSyncRetry(
+        () => httpRequest(`${getServiceUrl()}/api/v1/workspaces/${binding.workspaceId}/sync/pull`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${state.syncToken}`,
+            "x-client-type": capabilities.clientType,
+          },
+          body: JSON.stringify({
+            sinceClock,
+            deviceId: state.cloudProfile?.deviceId ?? capabilities.clientType,
+            sinceTrashEventClock: trashClock,
+          }),
+        }),
+        {
+          onRetry: ({ attempt, maxAttempts, status }) => {
+            const cause = status ? `HTTP ${status}` : "network unavailable";
+            dispatch({
+              type: "SET_STATUS",
+              message: `Cloud update interrupted (${cause}). Retrying attempt ${attempt}/${maxAttempts}…`,
+            });
+          },
+        },
+      );
+    } catch (error) {
+      throw new Error(`Cloud update failed after 3 attempts: ${String(error)}`);
+    }
     if (response.status === 403 || response.status === 404) {
       await handleWorkspaceAccessLoss(binding, response.status);
       return { deletedPaths: [], deletedFolders: [], documentPaths: [], receivedDocumentPaths: [] };
     }
-    if (!response.ok) throw new Error(await response.text());
+    if (!response.ok) {
+      throw new Error(`Cloud update failed after 3 attempts (HTTP ${response.status}): ${await response.text()}`);
+    }
     const pullData = (await response.json()) as {
       folders?: CloudFolder[];
       deletedFolders?: DeletedFolder[];
@@ -863,7 +914,7 @@ export function useCloudSync({ recoverMobileOAuth = false }: { recoverMobileOAut
         const trashMetadata = await tauri.loadTrashMetadata(state.workspace.rootPath);
         const pendingTrashIds = new Set(
           trashMetadata.pendingTrashOps
-            .filter((op): op is Extract<TrashOperationPayload, { trashId: string }> => op.type !== "empty_trash")
+            .filter((op): op is Extract<PendingTrashOp, { trashId: string }> => op.type !== "empty_trash")
             .map((op) => op.trashId)
         );
         const hasPendingEmptyTrash = trashMetadata.pendingTrashOps.some((op) => op.type === "empty_trash");
@@ -1339,8 +1390,12 @@ export function useCloudSync({ recoverMobileOAuth = false }: { recoverMobileOAut
       return;
     }
     console.log("[pullOnly] proceeding with pull, binding:", binding.workspaceId);
+    // Every pull path must protect local edits, including the incremental pull
+    // fired when a WebSocket reconnects before mobile lifecycle recovery. If
+    // bases are only loaded for a manually requested full pull, an old cloud
+    // echo can overwrite a document that was saved locally while offline.
     let syncBases: Record<string, string> | undefined;
-    if (options.full && tauri.isAvailable) {
+    if (tauri.isAvailable) {
       try {
         syncBases = await tauri.loadSyncBases(state.workspace.rootPath);
       } catch {

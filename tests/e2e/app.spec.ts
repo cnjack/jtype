@@ -4,6 +4,10 @@ declare global {
   interface Window {
     __E2E_FS__: Record<string, string>;
     __SYNC_REQUESTS__: unknown[];
+    __SYNC_PUSH_ATTEMPTS__: Array<Record<string, unknown>>;
+    __SYNC_PUSH_FAILURES_REMAINING__: number;
+    __SYNC_PULL_ATTEMPTS__: number;
+    __SYNC_PULL_FAILURES_REMAINING__: number;
     __SYNC_BASES__: Record<string, string>;
     __SYNC_FOLDER_BASES__: string[];
     __SYNC_PUSH_ERROR__: string | null;
@@ -273,6 +277,10 @@ test.beforeEach(async ({ page }) => {
       isTauri: true,
       __E2E_FS__: files,
       __SYNC_REQUESTS__: [],
+      __SYNC_PUSH_ATTEMPTS__: [],
+      __SYNC_PUSH_FAILURES_REMAINING__: 0,
+      __SYNC_PULL_ATTEMPTS__: 0,
+      __SYNC_PULL_FAILURES_REMAINING__: 0,
       __SYNC_BASES__: {},
       __SYNC_FOLDER_BASES__: [],
       __SYNC_PUSH_ERROR__: null,
@@ -836,43 +844,42 @@ test.beforeEach(async ({ page }) => {
         );
       }
       if (url.includes("/sync/pull")) {
+        window.__SYNC_PULL_ATTEMPTS__ += 1;
+        if (window.__SYNC_PULL_FAILURES_REMAINING__ > 0) {
+          window.__SYNC_PULL_FAILURES_REMAINING__ -= 1;
+          return new Response("temporary pull outage", { status: 503 });
+        }
         return new Response(
           JSON.stringify({ workspaceId: "workspace-e2e", documents: [], deletedPaths: [], conflicts: [] }),
           { status: 200, headers: { "Content-Type": "application/json" } },
         );
       }
       if (url.includes("/sync/push")) {
+        const pushBody = JSON.parse(String(init?.body)) as Record<string, unknown>;
+        window.__SYNC_PUSH_ATTEMPTS__.push(pushBody);
+        if (window.__SYNC_PUSH_FAILURES_REMAINING__ > 0) {
+          window.__SYNC_PUSH_FAILURES_REMAINING__ -= 1;
+          return new Response("temporary sync outage", { status: 503 });
+        }
         if (window.__SYNC_PUSH_ERROR__) {
           return new Response(window.__SYNC_PUSH_ERROR__, { status: 500 });
         }
-        window.__SYNC_REQUESTS__.push(JSON.parse(String(init?.body)));
+        window.__SYNC_REQUESTS__.push(pushBody);
         window.__SYNC_CLIENT_TYPES__.push(new Headers(init?.headers).get("x-client-type"));
+        const requestDocuments = (pushBody.documents ?? []) as Array<Record<string, unknown>>;
         return new Response(
           JSON.stringify({
             workspaceId: "workspace-e2e",
-            accepted: 2,
-            documents: [
-              {
-                relativePath: "intro.md",
-                title: "Intro",
-                status: "published",
-                content: "# Intro\n\nHello from workspace.",
-                contentHash: "abc123",
-                versionId: "v1",
-                updatedClock: 1,
-                mergeStatus: "accepted",
-              },
-              {
-                relativePath: "guides/setup.md",
-                title: "Setup",
-                status: "published",
-                content: "# Setup\n\nInstall and run.",
-                contentHash: "def456",
-                versionId: "v2",
-                updatedClock: 2,
-                mergeStatus: "accepted",
-              },
-            ],
+            accepted: requestDocuments.length,
+            documents: requestDocuments.map((document, index) => ({
+              ...document,
+              status: "published",
+              contentHash: `hash-${index}`,
+              versionId: `version-${index}`,
+              updatedClock: index + 1,
+              mergeStatus: "accepted",
+            })),
+            deletedPaths: [],
             conflicts: [],
           }),
           { status: 200, headers: { "Content-Type": "application/json" } },
@@ -2054,6 +2061,156 @@ test("coalesces mobile network and foreground recovery while restarting its webs
   await page.waitForTimeout(100);
   expect(await page.evaluate(() => window.__START_LISTENER_CALLS__.length)).toBe(afterResumeStarts);
   expect(await page.evaluate(() => window.__SYNC_REQUESTS__.length)).toBe(afterResumeSyncs);
+});
+
+test("preserves a saved offline edit when websocket reconnect pulls an older cloud copy", async ({ page }) => {
+  const defaultVaultPath = "C:/Users/Jack/Documents/.jtype";
+  await page.addInitScript((vaultPath) => {
+    window.__RUNTIME_CAPABILITIES__ = {
+      platform: "android",
+      clientType: "mobile",
+      isMobile: true,
+      isTouchPrimary: true,
+      prefersCompactLayout: true,
+      supportsWindowDrag: false,
+      supportsUpdater: false,
+      supportsProcessRestart: false,
+      supportsCliInstall: false,
+      supportsFileDrop: false,
+      supportsExternalVault: false,
+      usesAppPrivateVault: true,
+    };
+    window.__CLOUD_PROFILE__ = {
+      serverUrl: "http://localhost:13345",
+      username: "jack",
+      siteUrl: "http://localhost:8080/u/jack/workspace",
+      token: "test-token",
+      deviceId: "mobile-reconnect-local-edit",
+    };
+    window.__VAULT_BINDINGS__ = [{
+      workspaceId: "workspace-e2e",
+      workspaceName: "workspace",
+      workspaceSlug: "workspace",
+      workspaceRole: "owner",
+      localVaultPath: vaultPath,
+      lastPulledClock: 0,
+    }];
+    window.__VAULT_SETTINGS__[vaultPath] = {
+      cloudSyncEnabled: true,
+      syncPromptDismissedAt: new Date().toISOString(),
+      syncDisabledPermanently: false,
+    };
+  }, defaultVaultPath);
+  await page.reload();
+  await page.locator("#welcome-default-vault").click();
+  await expect(page.locator("#vault-home")).toBeVisible();
+  await page.evaluate(() => {
+    const base = "# Intro\n\nHello from workspace.";
+    window.__SYNC_BASES__["intro.md"] = base;
+    window.__E2E_FS__["C:/workspace/intro.md"] = `${base}\n\nSaved locally while offline.`;
+    const originalFetch = window.fetch;
+    window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      if (url.includes("/sync/pull")) {
+        window.__SYNC_PULL_ATTEMPTS__ += 1;
+        return new Response(JSON.stringify({
+          workspaceId: "workspace-e2e",
+          documents: [{
+            relativePath: "intro.md",
+            title: "Intro",
+            status: "published",
+            content: base,
+            contentHash: "cloud-old-hash",
+            versionId: "cloud-old-version",
+            updatedClock: 1,
+          }],
+          deletedPaths: [],
+          conflicts: [],
+        }), { status: 200, headers: { "Content-Type": "application/json" } });
+      }
+      return originalFetch(input, init);
+    };
+  });
+
+  expect(await page.evaluate(() => window.__EMIT_TAURI_EVENT__("cloud:ws-connected", null))).toBeGreaterThan(0);
+  await page.waitForTimeout(100);
+  expect(await page.evaluate(() => window.__EMIT_TAURI_EVENT__("cloud:ws-connected", null))).toBeGreaterThan(0);
+  await expect.poll(() => page.evaluate(() => window.__SYNC_PULL_ATTEMPTS__)).toBeGreaterThan(0);
+
+  expect(await page.evaluate(() => window.__E2E_FS__["C:/workspace/intro.md"]))
+    .toBe("# Intro\n\nHello from workspace.\n\nSaved locally while offline.");
+  expect(await page.evaluate(() => window.__SYNC_BASES__["intro.md"]))
+    .toBe("# Intro\n\nHello from workspace.");
+});
+
+test("batches and retries the shared sync transport on mobile", async ({ page }) => {
+  const defaultVaultPath = "C:/Users/Jack/Documents/.jtype";
+  await page.addInitScript((vaultPath) => {
+    window.__RUNTIME_CAPABILITIES__ = {
+      platform: "android",
+      clientType: "mobile",
+      isMobile: true,
+      isTouchPrimary: true,
+      prefersCompactLayout: true,
+      supportsWindowDrag: false,
+      supportsUpdater: false,
+      supportsProcessRestart: false,
+      supportsCliInstall: false,
+      supportsFileDrop: false,
+      supportsExternalVault: false,
+      usesAppPrivateVault: true,
+    };
+    window.__CLOUD_PROFILE__ = {
+      serverUrl: "http://localhost:13345",
+      username: "jack",
+      siteUrl: "http://localhost:8080/u/jack/workspace",
+      token: "test-token",
+      deviceId: "mobile-batch-device",
+    };
+    window.__VAULT_BINDINGS__ = [{
+      workspaceId: "workspace-e2e",
+      workspaceName: "workspace",
+      workspaceSlug: "workspace",
+      workspaceRole: "owner",
+      localVaultPath: vaultPath,
+      lastPulledClock: 0,
+    }];
+    window.__VAULT_SETTINGS__[vaultPath] = {
+      cloudSyncEnabled: true,
+      syncPromptDismissedAt: new Date().toISOString(),
+      syncDisabledPermanently: false,
+    };
+  }, defaultVaultPath);
+  await page.reload();
+  await page.evaluate(() => window.__E2E_INSTALL_LARGE_VAULT__?.(120));
+  await page.locator("#welcome-default-vault").click();
+  await openProfileSettings(page);
+  await page.evaluate(() => {
+    window.__SYNC_REQUESTS__ = [];
+    window.__SYNC_PUSH_ATTEMPTS__ = [];
+    window.__SYNC_PUSH_FAILURES_REMAINING__ = 1;
+    window.__SYNC_PULL_ATTEMPTS__ = 0;
+    window.__SYNC_PULL_FAILURES_REMAINING__ = 1;
+  });
+
+  await page.locator("#account-sync").click();
+  await expect(page.locator("#operation-log")).toContainText("in 3 batches", { timeout: 10_000 });
+
+  const result = await page.evaluate(() => ({
+    attempts: window.__SYNC_PUSH_ATTEMPTS__,
+    successes: window.__SYNC_REQUESTS__,
+    pullAttempts: window.__SYNC_PULL_ATTEMPTS__,
+  }));
+  expect(result.pullAttempts).toBe(2);
+  expect(result.attempts).toHaveLength(4);
+  expect(result.successes).toHaveLength(3);
+  expect(result.attempts[0].requestId).toBe(result.attempts[1].requestId);
+  expect(new Set(result.successes.map((request) => request.requestId)).size).toBe(3);
+  for (const request of result.successes) {
+    const operationCount = ["folders", "documents", "deletedPaths", "deletedFolders", "trashOperations"]
+      .reduce((total, key) => total + ((request[key] as unknown[] | undefined)?.length ?? 0), 0);
+    expect(operationCount).toBeLessThanOrEqual(50);
+  }
 });
 
 test("keeps desktop websocket lifecycle unchanged by page visibility and online events", async ({ page }) => {

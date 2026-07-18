@@ -152,6 +152,18 @@ fn all_migrations() -> Vec<Migration> {
             up: include_str!("../../migrations/0024_mobile_document_source.up.sql"),
             down: include_str!("../../migrations/0024_mobile_document_source.down.sql"),
         },
+        Migration {
+            version: 25,
+            name: "sync_push_idempotency",
+            up: include_str!("../../migrations/0025_sync_push_idempotency.up.sql"),
+            down: include_str!("../../migrations/0025_sync_push_idempotency.down.sql"),
+        },
+        Migration {
+            version: 26,
+            name: "sync_push_reservation",
+            up: include_str!("../../migrations/0026_sync_push_reservation.up.sql"),
+            down: include_str!("../../migrations/0026_sync_push_reservation.down.sql"),
+        },
     ]
 }
 
