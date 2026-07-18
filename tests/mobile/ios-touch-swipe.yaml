@@ -1,0 +1,14 @@
+appId: net.jcode.jtype
+---
+- launchApp:
+    clearState: false
+- tapOn: "文档"
+- swipe:
+    from:
+      text: ".*\\.md"
+      index: 0
+    direction: LEFT
+    duration: 450
+# XCUITest 26 does not forward this injected swipe into the WebKit JS stream.
+# Android native automation and shared E2E cover the callback; iOS
+# physical-device gestures remain a release gate.

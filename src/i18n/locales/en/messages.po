@@ -125,6 +125,11 @@ msgstr "Account"
 msgid "Account service URL"
 msgstr "Account service URL"
 
+#. placeholder {0}: state.syncUsername
+#: src/components/layout/Header.tsx
+msgid "Account: {0}"
+msgstr "Account: {0}"
+
 #. placeholder {0}: contextMenu.node.name
 #. placeholder {0}: node.name
 #: src/components/sidebar/Sidebar.tsx
@@ -625,6 +630,10 @@ msgstr "Disconnect workspace"
 msgid "Dismiss"
 msgstr "Dismiss"
 
+#: src/components/editor/EditorShell.tsx
+msgid "Dismiss keyboard"
+msgstr "Dismiss keyboard"
+
 #: src/components/editor/SlashMenu.tsx
 msgid "Divider"
 msgstr "Divider"
@@ -899,6 +908,10 @@ msgid "Installed"
 msgstr "Installed"
 
 #: src/components/editor/EditorShell.tsx
+msgid "Italic"
+msgstr "Italic"
+
+#: src/components/editor/EditorShell.tsx
 msgid "Italic - Ctrl+I"
 msgstr "Italic - Ctrl+I"
 
@@ -914,6 +927,10 @@ msgstr "Keep device folder version"
 msgid "Keep JType version"
 msgstr "Keep JType version"
 
+#: src/components/editor/EditorShell.tsx
+msgid "Keyboard formatting"
+msgstr "Keyboard formatting"
+
 #: src/components/layout/Header.tsx
 msgid "Language"
 msgstr "Language"
@@ -927,6 +944,10 @@ msgstr "Later"
 #: src/components/editor/EditorShell.tsx
 msgid "line {0}"
 msgstr "line {0}"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Link"
+msgstr "Link"
 
 #: src/components/editor/EditorShell.tsx
 msgid "Link - Ctrl+K"
@@ -1021,6 +1042,7 @@ msgstr "New board"
 #~ msgid "New column name"
 #~ msgstr "New column name"
 
+#: src/components/layout/Header.tsx
 #: src/components/modals/NewResourceDialog.tsx
 #: src/components/sidebar/Sidebar.tsx
 msgid "New document"
@@ -1333,6 +1355,10 @@ msgstr "Read-only"
 #: src/components/layout/WelcomeScreen.tsx
 msgid "Recent"
 msgstr "Recent"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Redo"
+msgstr "Redo"
 
 #: src/components/BoardView.tsx
 #~ msgid "Refresh"
@@ -1701,6 +1727,10 @@ msgstr "Trash"
 #: src/components/modals/CommandPalette.tsx
 msgid "Unavailable"
 msgstr "Unavailable"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Undo"
+msgstr "Undo"
 
 #: src/components/modals/AccountDialog.tsx
 msgid "Uninstall jtype CLI"

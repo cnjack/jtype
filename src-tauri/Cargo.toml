@@ -47,6 +47,7 @@ tokio-tungstenite = { version = "0.24", features = ["native-tls"] }
 tokio-tungstenite = { version = "0.24", features = ["rustls-tls-webpki-roots"] }
 tauri-plugin-mobile-import = { path = "../plugins/mobile-import" }
 tauri-plugin-mobile-share = { path = "../plugins/mobile-share" }
+tauri-plugin-mobile-interaction = { path = "../plugins/mobile-interaction" }
 tauri-plugin-secure-storage = { path = "../plugins/secure-storage" }
 tauri-plugin-deep-link = "2"
 

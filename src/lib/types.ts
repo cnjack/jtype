@@ -504,6 +504,7 @@ export type AppCommand = {
 
 export type RuntimePlatform = "desktop" | "android" | "ios";
 export type RuntimeClientType = "desktop" | "mobile";
+export type HapticStyle = "selection" | "impact" | "success" | "warning";
 
 export type AppLifecycleState = "active" | "background";
 

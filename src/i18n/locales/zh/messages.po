@@ -123,6 +123,11 @@ msgstr "账户"
 msgid "Account service URL"
 msgstr "账户服务 URL"
 
+#. placeholder {0}: state.syncUsername
+#: src/components/layout/Header.tsx
+msgid "Account: {0}"
+msgstr ""
+
 #. placeholder {0}: contextMenu.node.name
 #. placeholder {0}: node.name
 #: src/components/sidebar/Sidebar.tsx
@@ -596,6 +601,10 @@ msgstr "断开工作区"
 msgid "Dismiss"
 msgstr "关闭"
 
+#: src/components/editor/EditorShell.tsx
+msgid "Dismiss keyboard"
+msgstr "关闭键盘"
+
 #: src/components/editor/SlashMenu.tsx
 msgid "Divider"
 msgstr "分隔线"
@@ -858,6 +867,10 @@ msgid "Installed"
 msgstr "已安装"
 
 #: src/components/editor/EditorShell.tsx
+msgid "Italic"
+msgstr ""
+
+#: src/components/editor/EditorShell.tsx
 msgid "Italic - Ctrl+I"
 msgstr "斜体 - Ctrl+I"
 
@@ -873,6 +886,10 @@ msgstr "保留设备目录版本"
 msgid "Keep JType version"
 msgstr "保留 JType 版本"
 
+#: src/components/editor/EditorShell.tsx
+msgid "Keyboard formatting"
+msgstr "键盘格式工具栏"
+
 #: src/components/layout/Header.tsx
 msgid "Language"
 msgstr "语言"
@@ -886,6 +903,10 @@ msgstr "稍后"
 #: src/components/editor/EditorShell.tsx
 msgid "line {0}"
 msgstr "第 {0} 行"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Link"
+msgstr ""
 
 #: src/components/editor/EditorShell.tsx
 msgid "Link - Ctrl+K"
@@ -977,6 +998,7 @@ msgstr "新建看板"
 #~ msgid "New column name"
 #~ msgstr "新列名称"
 
+#: src/components/layout/Header.tsx
 #: src/components/modals/NewResourceDialog.tsx
 #: src/components/sidebar/Sidebar.tsx
 msgid "New document"
@@ -1276,6 +1298,10 @@ msgstr "只读"
 #: src/components/layout/WelcomeScreen.tsx
 msgid "Recent"
 msgstr "最近"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Redo"
+msgstr "重做"
 
 #~ msgid "Refresh"
 #~ msgstr "刷新"
@@ -1625,6 +1651,10 @@ msgstr "回收站"
 #: src/components/modals/CommandPalette.tsx
 msgid "Unavailable"
 msgstr "不可用"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Undo"
+msgstr "撤销"
 
 #: src/components/modals/AccountDialog.tsx
 msgid "Uninstall jtype CLI"

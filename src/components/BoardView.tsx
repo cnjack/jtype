@@ -22,6 +22,7 @@ import { tauri } from "../lib/tauri";
 import { basename, normalizePath } from "../lib/utils";
 import type { BoardConfig, BoardCard, CardTemplate } from "../lib/types";
 import { useRuntimeCapabilities } from "../app/RuntimeCapabilities";
+import { useMobileInteraction } from "../hooks/useMobileInteraction";
 
 function rand(): string {
   return Math.random().toString(36).slice(2, 6);
@@ -36,6 +37,7 @@ export function BoardView({ boardPath, boardRelativePath }: { boardPath: string;
   const state = useAppState();
   const dispatch = useAppDispatch();
   const capabilities = useRuntimeCapabilities();
+  const performHaptic = useMobileInteraction();
   const fs = useFileSystem();
   const prompt = usePrompt();
   const confirm = useConfirm();
@@ -506,6 +508,7 @@ export function BoardView({ boardPath, boardRelativePath }: { boardPath: string;
       peekComponent={BoardPeek}
       compact={capabilities.prefersCompactLayout}
       touchOptimized={capabilities.isTouchPrimary}
+      onTouchFeedback={(style) => { void performHaptic(style); }}
     />
   );
 }

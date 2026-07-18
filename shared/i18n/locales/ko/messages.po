@@ -56,6 +56,7 @@ msgid "Accept local"
 msgstr "로컈 수낙"
 
 #. placeholder {0}: card.title
+#. placeholder {0}: col.name || t`Unassigned`
 #: ../../../shared/components/board/BoardSurface.tsx
 msgid "Actions for {0}"
 msgstr ""
@@ -180,6 +181,11 @@ msgstr "클라우드 (원격)"
 msgid "Code"
 msgstr "코드"
 
+#. placeholder {0}: col.name || t`Unassigned`
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Collapse {0}"
+msgstr "{0} 접기"
+
 #: ../../../shared/components/board/BoardSurface.tsx
 msgid "Collapse column"
 msgstr "열 접기"
@@ -280,6 +286,14 @@ msgstr ""
 #: ../../../shared/components/board/BoardPeek.tsx
 msgid "edited"
 msgstr ""
+
+#: ../../../shared/components/EditorToolbar.tsx
+msgid "Editor formatting"
+msgstr "편집기 서식"
+
+#: ../../../shared/components/ViewModeToggle.tsx
+msgid "Editor view"
+msgstr "편집기 보기"
 
 #: ../../../shared/components/board/BoardSurface.tsx
 msgid "Exit fullscreen"

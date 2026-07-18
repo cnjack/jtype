@@ -29,6 +29,7 @@ declare global {
     __LAST_SHARE_ARGS__?: Record<string, unknown>;
     __LAST_SHARE_PDF_ARGS__?: Record<string, unknown>;
     __LAST_BINARY_WRITE_ARGS__?: Record<string, unknown>;
+    __HAPTIC_STYLES__: string[];
     __INITIAL_EXTERNAL_SOURCES_JSON__?: string;
     __INITIAL_DEEP_LINKS__?: string[] | null;
     __LAST_OPEN_URL__?: string;
@@ -188,6 +189,7 @@ test.beforeEach(async ({ page }) => {
       __SYNC_CLIENT_TYPES__: [],
       __START_LISTENER_CALLS__: [],
       __STOP_LISTENER_CALLS__: 0,
+      __HAPTIC_STYLES__: [],
       __OAUTH_POLL_PENDING__: false,
       __VAULT_SETTINGS__: {
         "C:/workspace": {
@@ -253,6 +255,10 @@ test.beforeEach(async ({ page }) => {
           }
           if (cmd === "initial_open_paths") {
             return JSON.parse((window as unknown as { __INITIAL_OPEN_PATHS_JSON__?: string }).__INITIAL_OPEN_PATHS_JSON__ ?? "[]");
+          }
+          if (cmd === "perform_haptic") {
+            window.__HAPTIC_STYLES__.push(String(args.style));
+            return true;
           }
           if (cmd === "initial_external_file_sources") {
             const sources = JSON.parse(window.__INITIAL_EXTERNAL_SOURCES_JSON__ ?? "[]");
@@ -1102,6 +1108,122 @@ test("exposes accessible shared controls and hardware keyboard actions on mobile
   await expect(editor).toHaveValue("# Intro\n\nHello from workspace.");
   await page.keyboard.press("Meta+Shift+Z");
   await expect(editor).toHaveValue("**# Intro\n\nHello from workspace.**");
+});
+
+test("reuses desktop actions for mobile hold, swipe, selection and keyboard accessory", async ({ page }) => {
+  test.setTimeout(45_000);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(() => {
+    window.__RUNTIME_CAPABILITIES__ = {
+      platform: "android",
+      clientType: "mobile",
+      isMobile: true,
+      isTouchPrimary: true,
+      prefersCompactLayout: true,
+      supportsWindowDrag: false,
+      supportsUpdater: false,
+      supportsProcessRestart: false,
+      supportsCliInstall: false,
+      supportsFileDrop: false,
+      supportsExternalVault: false,
+      usesAppPrivateVault: true,
+    };
+  });
+  await page.reload();
+  await page.evaluate(() => window.__E2E_INSTALL_BOARD__?.());
+  await page.locator("#welcome-default-vault").click();
+  await page.getByRole("button", { name: "Local only" }).click();
+
+  await page.locator("#mobile-navigation-button").click();
+  const introRow = page.locator("#mobile-vault-navigation").getByRole("button", { name: "intro.md", exact: true });
+  const introBounds = await introRow.boundingBox();
+  expect(introBounds).not.toBeNull();
+  const introY = (introBounds?.y ?? 0) + (introBounds?.height ?? 0) / 2;
+  await introRow.dispatchEvent("pointerdown", {
+    pointerId: 41,
+    pointerType: "touch",
+    isPrimary: true,
+    button: 0,
+    clientX: (introBounds?.x ?? 0) + 220,
+    clientY: introY,
+  });
+  await page.waitForTimeout(560);
+  await expect(page.locator("#mobile-file-actions")).toBeVisible();
+  await expect.poll(() => page.evaluate(() => window.__HAPTIC_STYLES__)).toContain("impact");
+  await page.keyboard.press("Escape");
+  await expect(page.locator("#mobile-file-actions")).toBeHidden();
+
+  await introRow.dispatchEvent("pointerdown", {
+    pointerId: 42,
+    pointerType: "touch",
+    isPrimary: true,
+    button: 0,
+    clientX: (introBounds?.x ?? 0) + 260,
+    clientY: introY,
+  });
+  await introRow.dispatchEvent("pointermove", {
+    pointerId: 42,
+    pointerType: "touch",
+    isPrimary: true,
+    button: 0,
+    clientX: (introBounds?.x ?? 0) + 180,
+    clientY: introY + 2,
+  });
+  await expect(page.locator("#mobile-file-actions")).toBeVisible();
+  await page.locator("#mobile-file-actions").getByRole("button", { name: "Open" }).click();
+
+  const editor = page.getByLabel("Markdown editor");
+  await editor.focus();
+  const accessory = page.getByRole("toolbar", { name: "Keyboard formatting" });
+  await expect(accessory).toBeVisible();
+  await editor.evaluate((element: HTMLTextAreaElement) => element.setSelectionRange(0, element.value.length));
+  await accessory.getByRole("button", { name: "Bold" }).click();
+  await expect(editor).toHaveValue("**# Intro\n\nHello from workspace.**");
+  await accessory.getByRole("button", { name: "Undo" }).click();
+  await expect(editor).toHaveValue("# Intro\n\nHello from workspace.");
+  await accessory.getByRole("button", { name: "Redo" }).click();
+  await expect(editor).toHaveValue("**# Intro\n\nHello from workspace.**");
+  await expect.poll(() => page.evaluate(() => window.__HAPTIC_STYLES__.filter((style) => style === "selection").length)).toBeGreaterThanOrEqual(3);
+  await accessory.getByRole("button", { name: "Dismiss keyboard" }).click();
+  await expect(accessory).toBeHidden();
+
+  await page.locator("#mobile-navigation-button").click();
+  await page.locator("#mobile-vault-navigation").getByRole("button", { name: "team.board", exact: true }).click();
+  const card = page.locator('[data-card-id="C:/workspace/team/plan-release.md"]');
+  await expect(card).toBeVisible();
+  const cardBounds = await card.boundingBox();
+  expect(cardBounds).not.toBeNull();
+  const cardX = (cardBounds?.x ?? 0) + 120;
+  const cardY = (cardBounds?.y ?? 0) + 40;
+  await card.dispatchEvent("pointerdown", {
+    pointerId: 43,
+    pointerType: "touch",
+    isPrimary: true,
+    button: 0,
+    clientX: cardX,
+    clientY: cardY,
+  });
+  await page.waitForTimeout(560);
+  await expect(page.getByText("1 selected", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Clear selection" }).click();
+
+  await card.dispatchEvent("pointerdown", {
+    pointerId: 44,
+    pointerType: "touch",
+    isPrimary: true,
+    button: 0,
+    clientX: cardX + 80,
+    clientY: cardY,
+  });
+  await card.dispatchEvent("pointermove", {
+    pointerId: 44,
+    pointerType: "touch",
+    isPrimary: true,
+    button: 0,
+    clientX: cardX,
+    clientY: cardY + 2,
+  });
+  await expect(page.getByLabel("Move Plan release to Done")).toBeVisible();
 });
 
 test("opens an Android SAF vault through the shared desktop vault action", async ({ page }) => {

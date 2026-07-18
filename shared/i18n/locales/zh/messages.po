@@ -56,6 +56,7 @@ msgid "Accept local"
 msgstr "接受本地"
 
 #. placeholder {0}: card.title
+#. placeholder {0}: col.name || t`Unassigned`
 #: ../../../shared/components/board/BoardSurface.tsx
 msgid "Actions for {0}"
 msgstr "{0} 的操作"
@@ -180,6 +181,11 @@ msgstr "云端（远程）"
 msgid "Code"
 msgstr "代码"
 
+#. placeholder {0}: col.name || t`Unassigned`
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Collapse {0}"
+msgstr "收起 {0}"
+
 #: ../../../shared/components/board/BoardSurface.tsx
 msgid "Collapse column"
 msgstr "折叠列"
@@ -280,6 +286,14 @@ msgstr "编辑评论"
 #: ../../../shared/components/board/BoardPeek.tsx
 msgid "edited"
 msgstr "已编辑"
+
+#: ../../../shared/components/EditorToolbar.tsx
+msgid "Editor formatting"
+msgstr "编辑器格式工具栏"
+
+#: ../../../shared/components/ViewModeToggle.tsx
+msgid "Editor view"
+msgstr "编辑器视图"
 
 #: ../../../shared/components/board/BoardSurface.tsx
 msgid "Exit fullscreen"

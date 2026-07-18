@@ -158,4 +158,7 @@ export type BoardSurfaceProps = {
    * targets. Pointer drag is replaced by the explicit move actions when true.
    */
   touchOptimized?: boolean;
+  /** Optional native feedback supplied by the platform shell. The shared
+   * board never imports a native API; it only reports semantic touch moments. */
+  onTouchFeedback?: (style: "selection" | "impact") => void;
 };

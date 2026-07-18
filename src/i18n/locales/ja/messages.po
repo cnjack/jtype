@@ -123,6 +123,11 @@ msgstr "アカウント"
 msgid "Account service URL"
 msgstr "アカウントサービス URL"
 
+#. placeholder {0}: state.syncUsername
+#: src/components/layout/Header.tsx
+msgid "Account: {0}"
+msgstr ""
+
 #. placeholder {0}: contextMenu.node.name
 #. placeholder {0}: node.name
 #: src/components/sidebar/Sidebar.tsx
@@ -596,6 +601,10 @@ msgstr "ワークスペースを切断"
 msgid "Dismiss"
 msgstr ""
 
+#: src/components/editor/EditorShell.tsx
+msgid "Dismiss keyboard"
+msgstr "キーボードを閉じる"
+
 #: src/components/editor/SlashMenu.tsx
 msgid "Divider"
 msgstr ""
@@ -858,6 +867,10 @@ msgid "Installed"
 msgstr "インストール済み"
 
 #: src/components/editor/EditorShell.tsx
+msgid "Italic"
+msgstr ""
+
+#: src/components/editor/EditorShell.tsx
 msgid "Italic - Ctrl+I"
 msgstr "斜体 - Ctrl+I"
 
@@ -873,6 +886,10 @@ msgstr "デバイスフォルダーのバージョンを保持"
 msgid "Keep JType version"
 msgstr "JType のバージョンを保持"
 
+#: src/components/editor/EditorShell.tsx
+msgid "Keyboard formatting"
+msgstr "キーボード書式設定"
+
 #: src/components/layout/Header.tsx
 msgid "Language"
 msgstr "言語"
@@ -886,6 +903,10 @@ msgstr "後で"
 #: src/components/editor/EditorShell.tsx
 msgid "line {0}"
 msgstr "{0} 行目"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Link"
+msgstr ""
 
 #: src/components/editor/EditorShell.tsx
 msgid "Link - Ctrl+K"
@@ -977,6 +998,7 @@ msgstr "新規ボード"
 #~ msgid "New column name"
 #~ msgstr ""
 
+#: src/components/layout/Header.tsx
 #: src/components/modals/NewResourceDialog.tsx
 #: src/components/sidebar/Sidebar.tsx
 msgid "New document"
@@ -1276,6 +1298,10 @@ msgstr "読み取り専用"
 #: src/components/layout/WelcomeScreen.tsx
 msgid "Recent"
 msgstr "最近"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Redo"
+msgstr "やり直す"
 
 #~ msgid "Refresh"
 #~ msgstr ""
@@ -1625,6 +1651,10 @@ msgstr "ゴミ箱"
 #: src/components/modals/CommandPalette.tsx
 msgid "Unavailable"
 msgstr "利用不可"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Undo"
+msgstr "元に戻す"
 
 #: src/components/modals/AccountDialog.tsx
 msgid "Uninstall jtype CLI"

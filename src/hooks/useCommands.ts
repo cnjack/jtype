@@ -230,6 +230,24 @@ export function useCommands(fs: ReturnType<typeof import("./useFileSystem").useF
       run: () => dispatch({ type: "SET_FINDBAR", open: true }),
     },
     {
+      id: "editor.undo",
+      title: "Undo editor change",
+      shortcut: "Ctrl+Z",
+      scope: ["editor"],
+      isEnabled: () => state.currentKind === "markdown" && !isCloudViewer,
+      disabledReason: () => isCloudViewer ? "Viewer access is read-only" : "Open a Markdown file",
+      run: () => runEditorHistory("undo"),
+    },
+    {
+      id: "editor.redo",
+      title: "Redo editor change",
+      shortcut: "Ctrl+Shift+Z",
+      scope: ["editor"],
+      isEnabled: () => state.currentKind === "markdown" && !isCloudViewer,
+      disabledReason: () => isCloudViewer ? "Viewer access is read-only" : "Open a Markdown file",
+      run: () => runEditorHistory("redo"),
+    },
+    {
       id: "editor.bold",
       title: "Bold selection",
       shortcut: "Ctrl+B",
@@ -304,6 +322,21 @@ export function useCommands(fs: ReturnType<typeof import("./useFileSystem").useF
 
 function getEditor(): HTMLTextAreaElement | null {
   return document.querySelector<HTMLTextAreaElement>("#editor");
+}
+
+function runEditorHistory(action: "undo" | "redo") {
+  const editor = getEditor();
+  if (!editor) return;
+  editor.focus();
+  try {
+    // The editor and all shared formatting commands use the WebView's native
+    // editing history, so accessory buttons and hardware shortcuts converge on
+    // the same stack without maintaining a parallel React undo model.
+    document.execCommand(action);
+  } catch {
+    // A WebView without native history support keeps the current content. The
+    // command remains non-destructive and hardware typing is unaffected.
+  }
 }
 
 function replaceEditorRange(
@@ -539,4 +572,4 @@ export function addMarkdownTableColumn() {
   formatMarkdownTable();
 }
 
-export { insertAtCursor, insertBlockAtSafeCursor, addMarkdownTableRow as addTableRowBelow, insertOrEditTable, formatMarkdownTable, wrapSelection };
+export { insertAtCursor, insertBlockAtSafeCursor, addMarkdownTableRow as addTableRowBelow, insertOrEditTable, formatMarkdownTable, wrapSelection, runEditorHistory };

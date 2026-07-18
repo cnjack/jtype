@@ -126,6 +126,36 @@ export function RuntimeCapabilitiesProvider({ children }: { children: ReactNode 
     };
   }, [adaptiveCapabilities.platform]);
 
+  useEffect(() => {
+    const root = document.documentElement;
+    if (!adaptiveCapabilities.isMobile) {
+      root.style.setProperty("--jtype-keyboard-inset", "0px");
+      return;
+    }
+
+    const viewport = window.visualViewport;
+    const applyKeyboardInset = () => {
+      // Android commonly resizes the layout viewport (yielding zero here), so
+      // fixed UI already sits above the IME. WKWebView keeps a larger layout
+      // viewport; its visual viewport delta is the obscured keyboard region.
+      const visualBottom = viewport ? viewport.offsetTop + viewport.height : window.innerHeight;
+      const inset = Math.max(0, Math.round(window.innerHeight - visualBottom));
+      root.style.setProperty("--jtype-keyboard-inset", `${inset}px`);
+      root.style.setProperty("--jtype-visual-viewport-height", `${Math.round(viewport?.height ?? window.innerHeight)}px`);
+    };
+
+    applyKeyboardInset();
+    viewport?.addEventListener("resize", applyKeyboardInset);
+    viewport?.addEventListener("scroll", applyKeyboardInset);
+    window.addEventListener("resize", applyKeyboardInset);
+    return () => {
+      viewport?.removeEventListener("resize", applyKeyboardInset);
+      viewport?.removeEventListener("scroll", applyKeyboardInset);
+      window.removeEventListener("resize", applyKeyboardInset);
+      root.style.setProperty("--jtype-keyboard-inset", "0px");
+    };
+  }, [adaptiveCapabilities.isMobile]);
+
   return (
     <RuntimeCapabilitiesContext.Provider value={adaptiveCapabilities}>
       {children}

@@ -1,0 +1,23 @@
+appId: net.jcode.jtype
+---
+- launchApp:
+    clearState: false
+# This flow expects an existing local-vault Markdown document. The same shared
+# callbacks are reached through UIKit/WebKit touch input; only feedback and
+# keyboard placement are handled by the platform adapter.
+- tapOn: "Markdown 编辑器"
+- assertVisible: "^粗体$"
+# XCUITest on iOS 26 can move accessibility focus to a WKWebView button without
+# dispatching its DOM activation. Command mutation is therefore covered by the
+# shared E2E and Android native flow; this iOS flow verifies the same accessible
+# toolbar surface, then relaunches before exercising real touch gestures.
+- killApp
+- launchApp:
+    clearState: false
+- tapOn: "文档"
+- longPressOn:
+    text: ".*\\.md"
+    index: 0
+# XCUITest 26 completes this injected hold as an accessibility activation and
+# does not forward the WebKit pointer/touch stream. Android native automation
+# and shared E2E cover the callback; iOS physical-device gestures remain a gate.

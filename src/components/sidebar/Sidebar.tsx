@@ -1,7 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { isCurrentVaultReadOnly, useAppDispatch, useAppState } from "../../app/AppState";
-import { useFileSystem } from "../../hooks";
+import { useFileSystem, useMobileInteraction, useTouchActionGesture } from "../../hooks";
 import { markdownNodes } from "../../lib/utils";
 import { tauri } from "../../lib/tauri";
 import { appStorage } from "../../lib/storage";
@@ -788,9 +788,8 @@ function TreeNode({
   const fs = useFileSystem();
   const dispatch = useAppDispatch();
   const capabilities = useRuntimeCapabilities();
+  const performHaptic = useMobileInteraction();
   const [dragOver, setDragOver] = useState(false);
-
-  if (node.relativePath === ".jtype") return null;
 
   const isActive = node.relativePath === state.currentRelativePath;
   const isFolder = node.kind === "folder";
@@ -808,16 +807,31 @@ function TreeNode({
           : resourceTypeForPath(node.name).id === "image"
             ? PhotoIcon
             : DocumentIcon;
+  const hasTouchActions = node.kind === "folder" || node.kind === "markdown" || node.kind === "board";
+  const openTouchActions = useCallback((target: HTMLElement) => {
+    if (!hasTouchActions) return;
+    const rect = target.getBoundingClientRect();
+    void performHaptic("impact");
+    onActionMenu(node, rect.left, rect.bottom);
+  }, [hasTouchActions, node, onActionMenu, performHaptic]);
+  const touchGesture = useTouchActionGesture({
+    enabled: capabilities.isTouchPrimary && hasTouchActions,
+    onLongPress: openTouchActions,
+    onSwipeLeft: openTouchActions,
+  });
+
+  if (node.relativePath === ".jtype") return null;
 
   return (
     <li className="relative">
       <button
         type="button"
-        className={`tree-button ${capabilities.isTouchPrimary ? "min-h-11 pr-12" : ""} ${isActive ? "tree-button-active" : ""} ${dragOver ? "ring-2 ring-[#008884]/40 bg-[#e8f6f2]" : ""}`}
+        className={`tree-button ${capabilities.isTouchPrimary ? "min-h-11 touch-pan-y pr-12 [-webkit-touch-callout:none]" : ""} ${isActive ? "tree-button-active" : ""} ${dragOver ? "ring-2 ring-[#008884]/40 bg-[#e8f6f2]" : ""}`}
         style={{ paddingLeft: `${0.5 + depth * 0.75}rem` }}
         aria-expanded={isExpandable ? isExpanded : undefined}
         aria-current={isActive ? "page" : undefined}
-        draggable
+        draggable={!capabilities.isTouchPrimary}
+        {...touchGesture}
         onDragStart={(e) => {
           e.dataTransfer.setData("text/plain", node.relativePath);
           e.dataTransfer.effectAllowed = "move";
@@ -852,6 +866,13 @@ function TreeNode({
         onContextMenu={(e) => {
           e.preventDefault();
           e.stopPropagation();
+          if (capabilities.isTouchPrimary) {
+            // iOS WebKit may collapse a system/XCUITest long-press into a
+            // contextmenu event without exposing the preceding pointer stream.
+            // Route it to the same mobile sheet as our gesture recognizer.
+            openTouchActions(e.currentTarget);
+            return;
+          }
           onContextMenu(node, e.clientX, e.clientY);
         }}
       >
@@ -878,8 +899,7 @@ function TreeNode({
           className="absolute right-0 top-0 flex h-11 w-11 items-center justify-center rounded-lg text-stone-400 hover:bg-white hover:text-stone-700"
           onClick={(event) => {
             event.stopPropagation();
-            const rect = event.currentTarget.getBoundingClientRect();
-            onActionMenu(node, rect.left, rect.bottom);
+            openTouchActions(event.currentTarget);
           }}
         >
           <EllipsisHorizontalIcon className="h-5 w-5" />

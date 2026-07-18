@@ -56,6 +56,7 @@ msgid "Accept local"
 msgstr "Accept local"
 
 #. placeholder {0}: card.title
+#. placeholder {0}: col.name || t`Unassigned`
 #: ../../../shared/components/board/BoardSurface.tsx
 msgid "Actions for {0}"
 msgstr "Actions for {0}"
@@ -180,6 +181,11 @@ msgstr "Cloud (remote)"
 msgid "Code"
 msgstr "Code"
 
+#. placeholder {0}: col.name || t`Unassigned`
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Collapse {0}"
+msgstr "Collapse {0}"
+
 #: ../../../shared/components/board/BoardSurface.tsx
 msgid "Collapse column"
 msgstr "Collapse column"
@@ -280,6 +286,14 @@ msgstr "Edit comment"
 #: ../../../shared/components/board/BoardPeek.tsx
 msgid "edited"
 msgstr "edited"
+
+#: ../../../shared/components/EditorToolbar.tsx
+msgid "Editor formatting"
+msgstr "Editor formatting"
+
+#: ../../../shared/components/ViewModeToggle.tsx
+msgid "Editor view"
+msgstr "Editor view"
 
 #: ../../../shared/components/board/BoardSurface.tsx
 msgid "Exit fullscreen"

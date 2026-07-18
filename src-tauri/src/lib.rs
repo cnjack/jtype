@@ -29,6 +29,8 @@ use tauri::{AppHandle, Emitter};
 #[cfg(mobile)]
 use tauri_plugin_mobile_import::MobileImportExt;
 #[cfg(mobile)]
+use tauri_plugin_mobile_interaction::{HapticStyle, MobileInteractionExt};
+#[cfg(mobile)]
 use tauri_plugin_mobile_share::MobileShareExt;
 #[cfg(mobile)]
 use tauri_plugin_secure_storage::SecureStorageExt;
@@ -97,6 +99,31 @@ fn runtime_capabilities() -> RuntimeCapabilities {
         supports_file_drop: !is_mobile,
         supports_external_vault: true,
         uses_app_private_vault: is_mobile,
+    }
+}
+
+#[tauri::command]
+fn perform_haptic(app: AppHandle, style: String) -> Result<bool, String> {
+    #[cfg(mobile)]
+    {
+        let style = match style.as_str() {
+            "selection" => HapticStyle::Selection,
+            "impact" => HapticStyle::Impact,
+            "success" => HapticStyle::Success,
+            "warning" => HapticStyle::Warning,
+            _ => return Err(format!("Unsupported haptic style: {style}")),
+        };
+        return app
+            .mobile_interaction()
+            .perform_haptic(style)
+            .map(|result| result.performed)
+            .map_err(|error| error.to_string());
+    }
+
+    #[cfg(desktop)]
+    {
+        let _ = (app, style);
+        Ok(false)
     }
 }
 
@@ -2904,6 +2931,7 @@ pub fn run() {
         builder = builder
             .plugin(tauri_plugin_deep_link::init())
             .plugin(tauri_plugin_mobile_import::init())
+            .plugin(tauri_plugin_mobile_interaction::init())
             .plugin(tauri_plugin_mobile_share::init())
             .plugin(tauri_plugin_secure_storage::init());
     }
@@ -2919,6 +2947,7 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             runtime_capabilities,
+            perform_haptic,
             initial_open_paths,
             initial_external_file_sources,
             default_vault_path,

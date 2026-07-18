@@ -1,0 +1,3 @@
+[default]
+description = "The mobile-interaction adapter is called only from JType Rust commands."
+permissions = []

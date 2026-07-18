@@ -95,6 +95,7 @@ export function BoardSurface({
   portalClassName,
   compact = false,
   touchOptimized = false,
+  onTouchFeedback,
 }: BoardSurfaceProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [multiSel, setMultiSel] = useState<Set<string>>(new Set());
@@ -112,8 +113,17 @@ export function BoardSurface({
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [draggingCol, setDraggingCol] = useState<string | null>(null);
   const [dragPos, setDragPos] = useState<{ x: number; y: number } | null>(null);
-  const cardDrag = useRef<{ id: string; startX: number; startY: number; moved: boolean } | null>(null);
+  const cardDrag = useRef<{
+    id: string;
+    startX: number;
+    startY: number;
+    moved: boolean;
+    cancelled: boolean;
+    consumed: boolean;
+    longPressTimer?: number;
+  } | null>(null);
   const colDrag = useRef<{ key: string; startX: number; startY: number; moved: boolean } | null>(null);
+  const cardMenuButtons = useRef<Map<string, HTMLButtonElement>>(new Map());
 
   const groupKey: BoardGroupKey = config.groupBy ?? "status";
   const editableColumns = groupKey === "status";
@@ -143,6 +153,10 @@ export function BoardSurface({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [multiSel.size]);
+
+  useEffect(() => () => {
+    if (cardDrag.current?.longPressTimer) window.clearTimeout(cardDrag.current.longPressTimer);
+  }, []);
 
   const columns = useMemo(
     () => effectiveColumns(config, cards, groupKey, t`Unassigned`),
@@ -209,7 +223,30 @@ export function BoardSurface({
 
   const onCardPointerDown = (e: ReactPointerEvent, card: BoardViewCard) => {
     if (e.button !== 0) return;
-    cardDrag.current = { id: card.id, startX: e.clientX, startY: e.clientY, moved: false };
+    const pointerState = {
+      id: card.id,
+      startX: e.clientX,
+      startY: e.clientY,
+      moved: false,
+      cancelled: false,
+      consumed: false,
+      longPressTimer: undefined as number | undefined,
+    };
+    if (touchOptimized && !readOnly) {
+      pointerState.longPressTimer = window.setTimeout(() => {
+        const active = cardDrag.current;
+        if (!active || active.id !== card.id || active.moved || active.cancelled || active.consumed) return;
+        active.consumed = true;
+        setMultiSel((selection) => {
+          const next = new Set(selection);
+          if (next.has(card.id)) next.delete(card.id);
+          else next.add(card.id);
+          return next;
+        });
+        onTouchFeedback?.("selection");
+      }, 450);
+    }
+    cardDrag.current = pointerState;
     try {
       (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     } catch {
@@ -217,9 +254,28 @@ export function BoardSurface({
     }
   };
   const onCardPointerMove = (e: ReactPointerEvent, card: BoardViewCard) => {
-    if (readOnly || touchOptimized) return; // tap-to-open only; drag never starts
     const d = cardDrag.current;
     if (!d || d.id !== card.id) return;
+    if (touchOptimized) {
+      const dx = e.clientX - d.startX;
+      const dy = e.clientY - d.startY;
+      if (Math.abs(dx) > 12 || Math.abs(dy) > 12) {
+        if (d.longPressTimer) window.clearTimeout(d.longPressTimer);
+        d.longPressTimer = undefined;
+      }
+      if (!d.consumed && !readOnly && dx <= -56 && Math.abs(dx) > Math.abs(dy) * 1.25) {
+        d.consumed = true;
+        d.cancelled = true;
+        onTouchFeedback?.("impact");
+        cardMenuButtons.current.get(card.id)?.click();
+      } else if (Math.abs(dy) > 12) {
+        // A vertical pan belongs to the native column scroller and must never
+        // turn into a card open when the finger lifts.
+        d.cancelled = true;
+      }
+      return;
+    }
+    if (readOnly) return;
     if (!d.moved) {
       if (Math.abs(e.clientX - d.startX) < 4 && Math.abs(e.clientY - d.startY) < 4) return;
       d.moved = true;
@@ -231,6 +287,7 @@ export function BoardSurface({
   const onCardPointerUp = (e: ReactPointerEvent, card: BoardViewCard) => {
     const d = cardDrag.current;
     cardDrag.current = null;
+    if (d?.longPressTimer) window.clearTimeout(d.longPressTimer);
     try {
       (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
     } catch {
@@ -239,12 +296,15 @@ export function BoardSurface({
     setDraggingId(null);
     setDragPos(null);
     setDropTarget(null);
+    if (d?.consumed || d?.cancelled) {
+      return;
+    }
     if (d?.moved) {
       const target = hitTestCard(e.clientX, e.clientY);
       if (target) void actions.moveCard(card.id, target.col, target.index);
     } else if (d) {
       // Cmd/Ctrl-click toggles multi-selection instead of opening the peek.
-      if ((e.metaKey || e.ctrlKey) && !readOnly) {
+      if ((e.metaKey || e.ctrlKey || (touchOptimized && multiSel.size > 0)) && !readOnly) {
         setMultiSel((s) => {
           const next = new Set(s);
           if (next.has(card.id)) next.delete(card.id);
@@ -740,6 +800,7 @@ export function BoardSurface({
                             onPointerMove={(e) => onCardPointerMove(e, card)}
                             onPointerUp={(e) => onCardPointerUp(e, card)}
                             onPointerCancel={() => {
+                              if (cardDrag.current?.longPressTimer) window.clearTimeout(cardDrag.current.longPressTimer);
                               cardDrag.current = null;
                               setDraggingId(null);
                               setDragPos(null);
@@ -748,7 +809,7 @@ export function BoardSurface({
                             onKeyDown={(e) => {
                               if (e.key === "Enter") openCard(card);
                             }}
-                            className={`group relative block w-full cursor-pointer select-none rounded-lg bg-white p-2.5 text-left shadow-sm transition hover:ring-brand/30 ${touchOptimized ? "touch-manipulation" : "touch-none"} ${
+                            className={`group relative block w-full cursor-pointer select-none rounded-lg bg-white p-2.5 text-left shadow-sm transition hover:ring-brand/30 ${touchOptimized ? "touch-pan-y [-webkit-touch-callout:none]" : "touch-none"} ${
                               draggingId === card.id ? "opacity-40" : ""
                             } ${
                               multiSel.has(card.id)
@@ -767,6 +828,10 @@ export function BoardSurface({
                             >
                               <Menu as="div">
                                 <MenuButton
+                                  ref={(element) => {
+                                    if (element) cardMenuButtons.current.set(card.id, element);
+                                    else cardMenuButtons.current.delete(card.id);
+                                  }}
                                   aria-label={t`Actions for ${card.title}`}
                                   className={`rounded text-stone-400 hover:bg-stone-100 hover:text-stone-600 ${touchOptimized ? "flex min-h-11 min-w-11 items-center justify-center" : "p-0.5"}`}
                                 >
@@ -1044,7 +1109,7 @@ export function BoardSurface({
       </div>
 
       {multiSel.size > 0 && !readOnly && (
-        <div className="absolute bottom-4 left-1/2 z-40 flex -translate-x-1/2 items-center gap-2 rounded-xl border border-black/[0.08] bg-white/95 px-3 py-2 shadow-xl backdrop-blur">
+        <div className={`absolute z-40 flex items-center gap-2 overflow-x-auto rounded-xl border border-black/[0.08] bg-white/95 px-3 py-2 shadow-xl backdrop-blur ${touchOptimized ? "bottom-[max(1rem,env(safe-area-inset-bottom))] left-3 right-3" : "bottom-4 left-1/2 -translate-x-1/2"}`}>
           <span className="text-xs font-medium text-stone-600">
             <Trans>{multiSel.size} selected</Trans>
           </span>

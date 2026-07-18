@@ -26,6 +26,7 @@ import type {
   ExternalVaultWriteBackResult,
   MobilePendingOAuth,
   MobileDraftRecovery,
+  HapticStyle,
 } from "./types";
 
 export const tauri = {
@@ -34,6 +35,9 @@ export const tauri = {
   },
   appReady() {
     return invoke<void>("app_ready");
+  },
+  performHaptic(style: HapticStyle) {
+    return invoke<boolean>("perform_haptic", { style });
   },
   readFile(path: string) {
     return invoke<string>("read_markdown_file", { path });

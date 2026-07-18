@@ -1,0 +1,28 @@
+appId: net.jcode.jtype
+---
+- launchApp:
+    clearState: false
+# This flow expects an existing local-vault Markdown document, matching the
+# other stateful accessibility flows. It exercises the shared editor command
+# and sidebar action callbacks through Android touch input.
+- tapOn: "Markdown editor"
+- assertVisible: "^Bold$"
+- tapOn: "^Bold$"
+- assertVisible: "(?s).*bold text.*"
+- tapOn: "^Undo$"
+- assertNotVisible: "(?s).*bold text.*"
+- tapOn: "Dismiss keyboard"
+- tapOn: "Documents"
+- longPressOn:
+    text: ".*\\.md"
+    index: 0
+- assertVisible: "Actions for .*\\.md"
+- tapOn:
+    point: "90%,20%"
+- swipe:
+    from:
+      text: ".*\\.md"
+      index: 0
+    direction: LEFT
+    duration: 450
+- assertVisible: "Actions for .*\\.md"

@@ -9,5 +9,7 @@ export { useAppLifecycle } from "./useAppLifecycle";
 export { useMobileSyncRecovery } from "./useMobileSyncRecovery";
 export { useMobileOAuthDeepLink } from "./useMobileOAuthDeepLink";
 export { useMobileDraftRecovery } from "./useMobileDraftRecovery";
+export { useMobileInteraction } from "./useMobileInteraction";
+export { useTouchActionGesture } from "./useTouchActionGesture";
 export type { MobileSyncRecoveryReason } from "./useMobileSyncRecovery";
 export type { CommandDef } from "./useCommands";

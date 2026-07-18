@@ -20,6 +20,7 @@ import { FindBar } from "./FindBar";
 import { SlashMenu } from "./SlashMenu";
 import { ZoomIndicator } from "./ZoomIndicator";
 import { useRuntimeCapabilities } from "../../app/RuntimeCapabilities";
+import { useMobileInteraction } from "../../hooks/useMobileInteraction";
 
 /** Build read-only HTML for an inline ```jtype-board``` embed in a document preview. */
 function renderBoardEmbedHtml(config: BoardConfig, cards: BoardCard[]): string {
@@ -62,6 +63,9 @@ import {
   DocumentTextIcon,
   LinkSlashIcon,
   PrinterIcon,
+  ArrowUturnLeftIcon,
+  ArrowUturnRightIcon,
+  ChevronDownIcon,
 } from "@heroicons/react/24/outline";
 
 const IMAGE_MIME: Record<string, string> = {
@@ -235,7 +239,9 @@ export function EditorShell() {
   const previewTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const compactPanelInitializedRef = useRef(false);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
+  const [editorFocused, setEditorFocused] = useState(false);
   const [publishState, setPublishState] = useState<PublishStatusResponse | null>(null);
+  const performHaptic = useMobileInteraction();
   const { tooltip: floatingTooltip, tooltipProps } = useFloatingTooltip();
 
   // In-page shortcuts: find (Cmd+F / Cmd+G) and zoom (Cmd+/- / Cmd+0). These
@@ -504,11 +510,20 @@ export function EditorShell() {
     if (cmd && cmd.isEnabled()) cmd.run();
   }, [commands]);
 
+  const runAccessoryCommand = useCallback((id: string) => {
+    void performHaptic("selection");
+    runCommand(id);
+    window.requestAnimationFrame(() => editorRef.current?.focus());
+  }, [performHaptic, runCommand]);
+
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
+    // Keep the OS text-selection/copy callout on touch devices. Desktop still
+    // receives the existing JType editor context menu.
+    if (capabilities.isTouchPrimary) return;
     e.preventDefault();
     if (isCloudViewer) return;
     setContextMenu({ x: e.clientX, y: e.clientY });
-  }, [isCloudViewer]);
+  }, [capabilities.isTouchPrimary, isCloudViewer]);
 
   useEffect(() => {
     if (!contextMenu) return;
@@ -1033,6 +1048,8 @@ export function EditorShell() {
             placeholder={t`Open or drop a Markdown file to start editing.`}
             disabled={!isMarkdown}
             readOnly={isCloudViewer}
+            onFocus={() => setEditorFocused(true)}
+            onBlur={() => setEditorFocused(false)}
             onInput={handleInput}
             onPaste={handleEditorPaste}
             onContextMenu={handleContextMenu}
@@ -1097,6 +1114,47 @@ export function EditorShell() {
         </div>
       </Dialog>
 
+      {capabilities.isTouchPrimary && compactWorkbench && editorFocused && canEditMarkdown && effectiveEditorMode !== "preview" && (
+        <div
+          id="mobile-editor-accessory"
+          role="toolbar"
+          aria-label={t`Keyboard formatting`}
+          className="fixed left-1/2 z-[90] flex max-w-[calc(100vw-1rem)] -translate-x-1/2 items-center gap-1 overflow-x-auto rounded-2xl border border-black/[0.08] bg-white/95 p-1.5 shadow-2xl shadow-stone-950/20 backdrop-blur-xl"
+          style={{ bottom: "calc(var(--jtype-keyboard-inset, 0px) + max(0.5rem, env(safe-area-inset-bottom)))" }}
+        >
+          <MobileAccessoryButton label={t`Undo`} shortcut="Control+Z Meta+Z" onClick={() => runAccessoryCommand("editor.undo")}>
+            <ArrowUturnLeftIcon className="h-4 w-4" />
+          </MobileAccessoryButton>
+          <MobileAccessoryButton label={t`Redo`} shortcut="Control+Shift+Z Meta+Shift+Z" onClick={() => runAccessoryCommand("editor.redo")}>
+            <ArrowUturnRightIcon className="h-4 w-4" />
+          </MobileAccessoryButton>
+          <span className="mx-0.5 h-6 w-px shrink-0 bg-stone-200" aria-hidden />
+          <MobileAccessoryButton label={t`Bold`} shortcut="Control+B Meta+B" onClick={() => runAccessoryCommand("editor.bold")}>
+            <BoldIcon className="h-4 w-4" />
+          </MobileAccessoryButton>
+          <MobileAccessoryButton label={t`Italic`} shortcut="Control+I Meta+I" onClick={() => runAccessoryCommand("editor.italic")}>
+            <ItalicIcon className="h-4 w-4" />
+          </MobileAccessoryButton>
+          <MobileAccessoryButton label={t`Link`} shortcut="Control+K Meta+K" onClick={() => runAccessoryCommand("editor.link")}>
+            <LinkIcon className="h-4 w-4" />
+          </MobileAccessoryButton>
+          <MobileAccessoryButton label={t`Task list`} onClick={() => runAccessoryCommand("insert.task")}>
+            <ClipboardDocumentListIcon className="h-4 w-4" />
+          </MobileAccessoryButton>
+          <span className="mx-0.5 h-6 w-px shrink-0 bg-stone-200" aria-hidden />
+          <MobileAccessoryButton
+            label={t`Dismiss keyboard`}
+            onClick={() => {
+              void performHaptic("selection");
+              setEditorFocused(false);
+              editorRef.current?.blur();
+            }}
+          >
+            <ChevronDownIcon className="h-4 w-4" />
+          </MobileAccessoryButton>
+        </div>
+      )}
+
       {contextMenu && (
         <div
           role="menu"
@@ -1130,6 +1188,55 @@ function EditorToolbarButton({ title, disabled, runCommand, command, tooltipProp
       aria-keyshortcuts={command === "editor.bold" ? "Control+B Meta+B" : command === "editor.italic" ? "Control+I Meta+I" : command === "editor.link" ? "Control+K Meta+K" : command === "insert.table" ? "Control+Shift+T Meta+Shift+T" : undefined}
       {...tooltipProps}
       onClick={() => { if (!disabled) runCommand(command); }}
+    >
+      {children}
+    </button>
+  );
+}
+
+function MobileAccessoryButton({
+  label,
+  shortcut,
+  onClick,
+  children,
+}: {
+  label: string;
+  shortcut?: string;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  const activationLockRef = useRef(false);
+  const activateOnce = useCallback(() => {
+    if (activationLockRef.current) return;
+    activationLockRef.current = true;
+    onClick();
+    window.setTimeout(() => {
+      activationLockRef.current = false;
+    }, 300);
+  }, [onClick]);
+
+  return (
+    <button
+      type="button"
+      className="flex h-11 min-w-11 shrink-0 items-center justify-center rounded-xl text-stone-600 transition hover:bg-brand-soft hover:text-brand-dark active:bg-brand-soft"
+      aria-label={label}
+      aria-keyshortcuts={shortcut}
+      title={label}
+      onPointerDown={(event) => {
+        if (event.pointerType !== "mouse") event.preventDefault();
+      }}
+      onPointerUp={(event) => {
+        if (event.pointerType === "mouse") return;
+        event.preventDefault();
+        activateOnce();
+      }}
+      onTouchEnd={(event) => {
+        event.preventDefault();
+        activateOnce();
+      }}
+      onMouseDown={(event) => event.preventDefault()}
+      onMouseUp={activateOnce}
+      onClick={activateOnce}
     >
       {children}
     </button>

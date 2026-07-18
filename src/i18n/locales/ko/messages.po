@@ -123,6 +123,11 @@ msgstr "계정"
 msgid "Account service URL"
 msgstr "계정 서비스 URL"
 
+#. placeholder {0}: state.syncUsername
+#: src/components/layout/Header.tsx
+msgid "Account: {0}"
+msgstr ""
+
 #. placeholder {0}: contextMenu.node.name
 #. placeholder {0}: node.name
 #: src/components/sidebar/Sidebar.tsx
@@ -596,6 +601,10 @@ msgstr "워크스페이스 연결 끊기"
 msgid "Dismiss"
 msgstr ""
 
+#: src/components/editor/EditorShell.tsx
+msgid "Dismiss keyboard"
+msgstr "키보드 닫기"
+
 #: src/components/editor/SlashMenu.tsx
 msgid "Divider"
 msgstr ""
@@ -858,6 +867,10 @@ msgid "Installed"
 msgstr "설치됨"
 
 #: src/components/editor/EditorShell.tsx
+msgid "Italic"
+msgstr ""
+
+#: src/components/editor/EditorShell.tsx
 msgid "Italic - Ctrl+I"
 msgstr "기울임꼴 - Ctrl+I"
 
@@ -873,6 +886,10 @@ msgstr "기기 폴더 버전 유지"
 msgid "Keep JType version"
 msgstr "JType 버전 유지"
 
+#: src/components/editor/EditorShell.tsx
+msgid "Keyboard formatting"
+msgstr "키보드 서식"
+
 #: src/components/layout/Header.tsx
 msgid "Language"
 msgstr "언어"
@@ -886,6 +903,10 @@ msgstr "나중에"
 #: src/components/editor/EditorShell.tsx
 msgid "line {0}"
 msgstr "{0}번째 줄"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Link"
+msgstr ""
 
 #: src/components/editor/EditorShell.tsx
 msgid "Link - Ctrl+K"
@@ -977,6 +998,7 @@ msgstr "새 보드"
 #~ msgid "New column name"
 #~ msgstr ""
 
+#: src/components/layout/Header.tsx
 #: src/components/modals/NewResourceDialog.tsx
 #: src/components/sidebar/Sidebar.tsx
 msgid "New document"
@@ -1276,6 +1298,10 @@ msgstr "읽기 전용"
 #: src/components/layout/WelcomeScreen.tsx
 msgid "Recent"
 msgstr "최근"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Redo"
+msgstr "다시 실행"
 
 #~ msgid "Refresh"
 #~ msgstr ""
@@ -1625,6 +1651,10 @@ msgstr "휴지통"
 #: src/components/modals/CommandPalette.tsx
 msgid "Unavailable"
 msgstr "사용 불가"
+
+#: src/components/editor/EditorShell.tsx
+msgid "Undo"
+msgstr "실행 취소"
 
 #: src/components/modals/AccountDialog.tsx
 msgid "Uninstall jtype CLI"
