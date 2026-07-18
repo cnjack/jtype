@@ -1,6 +1,7 @@
 package net.jcode.jtype.mobileimport
 
 import android.app.Activity
+import android.content.pm.ApplicationInfo
 import android.content.Intent
 import android.net.Uri
 import android.provider.DocumentsContract
@@ -44,6 +45,17 @@ class DirectoryChangeArgs {
     lateinit var kind: String
 }
 
+@InvokeArg
+class DebugDirectoryFaultArgs {
+    var failAfterOperations: Long = 0
+    lateinit var kind: String
+}
+
+private data class DebugDirectoryFault(
+    var remainingOperations: Long,
+    val kind: String,
+)
+
 private data class DocumentNode(
     val documentId: String,
     val displayName: String,
@@ -61,6 +73,8 @@ private data class MirrorStats(
 
 @TauriPlugin
 class MobileImportPlugin(private val activity: Activity) : Plugin(activity) {
+    private var debugDirectoryFault: DebugDirectoryFault? = null
+
     @Command
     fun selectDirectory(invoke: Invoke) {
         try {
@@ -264,6 +278,7 @@ class MobileImportPlugin(private val activity: Activity) : Plugin(activity) {
                 check(permission.isReadPermission && permission.isWritePermission) {
                     "The selected folder is not writable"
                 }
+                applyDebugDirectoryFaultIfNeeded(treeUri)
 
                 val dataRoot = File(activity.applicationInfo.dataDir).canonicalFile
                 val externalRoot = File(dataRoot, "vaults/external").canonicalFile
@@ -348,6 +363,36 @@ class MobileImportPlugin(private val activity: Activity) : Plugin(activity) {
     }
 
     @Command
+    fun configureDebugDirectoryFault(invoke: Invoke) {
+        val args = try {
+            invoke.parseArgs(DebugDirectoryFaultArgs::class.java)
+        } catch (error: Exception) {
+            invoke.reject("Invalid external vault debug fault request: ${error.message}")
+            return
+        }
+
+        try {
+            check(activity.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0) {
+                "External vault fault injection is unavailable in release builds"
+            }
+            check(args.failAfterOperations >= 0) { "The debug fault operation count is invalid" }
+            synchronized(this) {
+                debugDirectoryFault = when (args.kind) {
+                    "clear" -> null
+                    "permissionRevoked", "diskFull" -> DebugDirectoryFault(
+                        remainingOperations = args.failAfterOperations,
+                        kind = args.kind,
+                    )
+                    else -> error("Unsupported external vault debug fault")
+                }
+            }
+            invoke.resolve(JSObject().put("configured", args.kind != "clear"))
+        } catch (error: Exception) {
+            invoke.reject("Unable to configure the external vault debug fault: ${error.message}")
+        }
+    }
+
+    @Command
     fun materialize(invoke: Invoke) {
         val args = try {
             invoke.parseArgs(MaterializeArgs::class.java)
@@ -392,6 +437,37 @@ class MobileImportPlugin(private val activity: Activity) : Plugin(activity) {
             "file" -> File(uri.path ?: error("The selected file URL has no path")).inputStream()
             else -> File(source).inputStream()
         }
+
+    private fun applyDebugDirectoryFaultIfNeeded(treeUri: Uri) {
+        val fault = synchronized(this) {
+            val configured = debugDirectoryFault ?: return
+            if (configured.remainingOperations > 0) {
+                configured.remainingOperations -= 1
+                return
+            }
+            debugDirectoryFault = null
+            configured
+        }
+        when (fault.kind) {
+            "permissionRevoked" -> {
+                val persisted = activity.contentResolver.persistedUriPermissions
+                    .firstOrNull { it.uri == treeUri }
+                if (persisted != null) {
+                    var flags = 0
+                    if (persisted.isReadPermission) {
+                        flags = flags or Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    }
+                    if (persisted.isWritePermission) {
+                        flags = flags or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                    }
+                    activity.contentResolver.releasePersistableUriPermission(treeUri, flags)
+                }
+                throw SecurityException("Persisted directory access was revoked by a debug fault")
+            }
+            "diskFull" -> throw java.io.IOException("No space left on device (debug fault)")
+            else -> error("Unsupported external vault debug fault")
+        }
+    }
 
     private fun queryDisplayName(uri: Uri): String? {
         val projection = arrayOf(OpenableColumns.DISPLAY_NAME)

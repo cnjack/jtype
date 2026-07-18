@@ -109,4 +109,21 @@ impl<R: Runtime> MobileImport<R> {
             )
             .map_err(Into::into)
     }
+
+    #[cfg(target_os = "android")]
+    pub fn configure_debug_directory_fault(
+        &self,
+        fail_after_operations: u64,
+        kind: DebugDirectoryFaultKind,
+    ) -> crate::Result<DebugDirectoryFaultConfiguration> {
+        self.0
+            .run_mobile_plugin(
+                "configureDebugDirectoryFault",
+                DebugDirectoryFaultRequest {
+                    fail_after_operations,
+                    kind,
+                },
+            )
+            .map_err(Into::into)
+    }
 }

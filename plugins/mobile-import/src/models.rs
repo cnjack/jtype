@@ -90,3 +90,26 @@ pub struct AppliedDirectoryChange {
     pub changed: bool,
     pub bytes: u64,
 }
+
+/// Debug-build-only fault modes used to exercise Android SAF recovery with a
+/// real DocumentsProvider. Release builds reject configuration requests.
+#[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum DebugDirectoryFaultKind {
+    PermissionRevoked,
+    DiskFull,
+    Clear,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DebugDirectoryFaultRequest {
+    pub fail_after_operations: u64,
+    pub kind: DebugDirectoryFaultKind,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DebugDirectoryFaultConfiguration {
+    pub configured: bool,
+}

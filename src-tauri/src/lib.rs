@@ -863,14 +863,30 @@ fn write_back_android_external_vault_locked(
                 tauri_plugin_mobile_import::DirectoryChangeKind::Delete
             }
         };
-        app.mobile_import()
-            .apply_directory_change(
-                provider.opaque_source_reference.clone(),
-                path_to_string(&mirror_root),
-                operation.relative_path.clone(),
-                kind,
-            )
-            .map_err(|error| error.to_string())?;
+        if let Err(error) = app.mobile_import().apply_directory_change(
+            provider.opaque_source_reference.clone(),
+            path_to_string(&mirror_root),
+            operation.relative_path.clone(),
+            kind,
+        ) {
+            let access = refresh_android_provider_access(
+                app,
+                read_vault_provider_store(app)?,
+                provider_id,
+            );
+            let recovery = match access {
+                Ok(descriptor)
+                    if descriptor.access_state
+                        != vault_provider::VaultProviderAccessState::Ready =>
+                {
+                    "restore external vault access, then retry"
+                }
+                _ => "retry the operation",
+            };
+            return Err(format!(
+                "External vault write-back was interrupted; the pending journal was retained. It is safe to {recovery}: {error}"
+            ));
+        }
     }
 
     drop(source_snapshot_cleanup);
@@ -935,6 +951,36 @@ fn write_back_android_external_vault(
     _provider_id: String,
 ) -> Result<ExternalVaultWriteBackResult, String> {
     Err("Android external vault write-back is only available on Android".to_string())
+}
+
+#[tauri::command]
+fn configure_android_external_vault_debug_fault(
+    app: AppHandle,
+    fail_after_operations: u64,
+    kind: String,
+) -> Result<bool, String> {
+    #[cfg(all(target_os = "android", debug_assertions))]
+    {
+        let kind = match kind.as_str() {
+            "permissionRevoked" => {
+                tauri_plugin_mobile_import::DebugDirectoryFaultKind::PermissionRevoked
+            }
+            "diskFull" => tauri_plugin_mobile_import::DebugDirectoryFaultKind::DiskFull,
+            "clear" => tauri_plugin_mobile_import::DebugDirectoryFaultKind::Clear,
+            _ => return Err("Unsupported external vault debug fault".to_string()),
+        };
+        return app
+            .mobile_import()
+            .configure_debug_directory_fault(fail_after_operations, kind)
+            .map(|configuration| configuration.configured)
+            .map_err(|error| error.to_string());
+    }
+
+    #[cfg(not(all(target_os = "android", debug_assertions)))]
+    {
+        let _ = (app, fail_after_operations, kind);
+        Err("External vault fault injection is only available in Android debug builds".to_string())
+    }
 }
 
 #[cfg(target_os = "android")]
@@ -2119,6 +2165,7 @@ pub fn run() {
             reauthorize_android_external_vault,
             reconcile_android_external_vault,
             write_back_android_external_vault,
+            configure_android_external_vault_debug_fault,
             open_default_vault,
             read_markdown_file,
             write_markdown_file,
