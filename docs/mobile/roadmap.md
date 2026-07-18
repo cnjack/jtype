@@ -178,11 +178,11 @@
 ### 2.1 External vault provider
 
 - [x] 定义 `VaultBackend` / `VaultProvider` descriptor、identity、access state、capability 与 versioned native record 边界；现有 app-private/local vault 已通过 provider resolver 打开，UI、AppState、commands、相对路径和 sync document model 不变（证据：`docs/mobile/reports/phase-2.md`，实现：`002fd18`）
-- [~] Android Storage Access Framework：系统目录选择、persistable URI permission、递归枚举、原子首次 mirror、幂等重复选择、permission health、目录失效检测、重新授权、旧 grant 释放与冷启动恢复已完成；source reconcile、写入、重命名和删除待后续 2B 增量（证据：`docs/mobile/reports/phase-2.md`，实现：`18fbeb8`、`0b69f16`）
+- [~] Android Storage Access Framework：系统目录选择、persistable permission、原子首次 mirror、permission health、重新授权、SHA-256 baseline、三方安全 pull、delete/rename、both-modified conflict guard 与中断后 open recovery 已完成；source write-back、mutation journal 与正式 UI 待后续 2B 增量（证据：`docs/mobile/reports/phase-2.md`，实现：`18fbeb8`、`0b69f16`、`f9537f2`、`231a2dc`）
 - [ ] iOS folder picker：security-scoped bookmark、权限恢复、失效后的重新授权
-- [~] external directory ↔ app-private mirror 的 record、storage mode 与 capability contract 已建立；Android native record 持久化与首次导入已完成，reconcile、冲突、删除规则及 iOS 实现待 2B/2C 完成
+- [~] external directory ↔ app-private mirror 的 record、storage mode 与 capability contract 已建立；Android native record、首次导入、内容 baseline、安全 pull、delete/rename 和 conflict guard 已完成，双向 write-back 与 iOS 实现待 2B/2C 完成
 - [ ] 当 mirror 被证明不足时，再将 provider 扩展为零拷贝访问；不在 UI 层分叉
-- [~] Android external provider 已能检测权限丢失/目录移动并保持同一 provider identity 完成重新授权；正式复用 UI 提示与“其他 app 修改文件”的 reconcile/冲突恢复待完成，iOS 待 2C
+- [~] Android external provider 已能检测权限丢失/目录移动、保持同一 provider identity 重新授权，并在其他 app 修改文件后安全 pull 或阻断双边冲突；正式复用 UI 提示/冲突选择与 iOS 实现待完成
 
 ### 2.2 移动交互完善
 
@@ -268,6 +268,8 @@
 | 2026-07-18 | 2.1 / 2A | `002fd18` | 建立 provider identity、descriptor、capability、native-only external record 与 app-private provider resolver | `docs/mobile/reports/phase-2.md` |
 | 2026-07-18 | 2.1 / 2B | `18fbeb8` | Android SAF picker、persistable permission、native-only record、原子首次 mirror、幂等重复选择与冷启动恢复 | `docs/mobile/reports/phase-2.md` |
 | 2026-07-18 | 2.1 / 2B | `0b69f16` | Android SAF permission health、目录失效检测、同 provider 重新授权与旧 grant 释放 | `docs/mobile/reports/phase-2.md` |
+| 2026-07-18 | 2.1 / 2B | `f9537f2` | Android SAF SHA-256 baseline、三方安全 pull、原子 mirror 切换、delete/rename 与 conflict guard | `docs/mobile/reports/phase-2.md` |
+| 2026-07-18 | 2.1 / 2B | `231a2dc` | external describe/open 在事务中断后恢复 mirror backup | `docs/mobile/reports/phase-2.md` |
 | 2026-07-18 | 2.2 / shell | `232222c` | 约束共享 Welcome 内容在窄屏和本地化文案下的宽度 | `docs/mobile/reports/phase-2.md` |
 | 2026-07-18 | 2.2 / shell | `309aebb` | 将共享 App shell Grid 列固定为 `minmax(0, 1fr)`，增加完整中文 locale overflow 回归 | `docs/mobile/reports/phase-2.md` |
 

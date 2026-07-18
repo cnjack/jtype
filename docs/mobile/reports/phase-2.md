@@ -4,15 +4,15 @@
 
 Feature branch：`codex/mobile-app`
 
-当前 app code commit：`0b69f16`
+当前 app code commit：`231a2dc`
 
-本报告状态：进行中；2A provider contract 已完成。2B 已完成 Android SAF 系统目录选择、persistable permission、native-only provider record、首次原子镜像、permission health、目录失效检测、重新授权和冷启动恢复。Android reconcile/write-back 与 iOS security-scoped folder provider 尚未实现。
+本报告状态：进行中；2A provider contract 已完成。2B 已完成 Android SAF 系统目录选择、persistable permission、native-only provider record、首次原子镜像、permission health、目录失效检测、重新授权、内容哈希 baseline、安全 pull reconcile、冲突阻断和冷启动恢复。Android write-back / 正式 UI 与 iOS security-scoped folder provider 尚未实现。
 
 ## 本增量结论
 
 现有 app-private vault 已成为第一个 `VaultProvider` 实现。共享 React 产品层仍使用同一套 `AppState`、commands、`Sidebar`、`VaultHome`、`EditorShell`、Document Info、Board 和相对路径模型；移动端没有新增另一套文件树、编辑器或预览。
 
-Android SAF 的实现同样没有新增 mobile 产品 UI：native picker 与 opaque tree URI 被封装在 Android/Rust provider adapter 内，选中的目录先镜像到 app-private root，再返回现有 `WorkspaceSnapshot`。正式入口保持关闭，直到 reconcile 和 write-back 完成；因此用户当前不会误以为对 mirror 的编辑已经写回外部来源。permission health 与重新授权已经进入 provider adapter，且继续复用同一 provider identity、mirror 与 workspace state。
+Android SAF 的实现同样没有新增 mobile 产品 UI：native picker 与 opaque tree URI 被封装在 Android/Rust provider adapter 内，选中的目录先镜像到 app-private root，再返回现有 `WorkspaceSnapshot`。正式入口保持关闭，直到 write-back 与冲突恢复 UI 完成；因此用户当前不会误以为对 mirror 的编辑已经写回外部来源。permission health、重新授权与安全 pull 已经进入 provider adapter，且继续复用同一 provider identity、mirror 与 workspace state。
 
 本增量建立的边界包括：
 
@@ -52,7 +52,7 @@ Android provider store 使用 app config 目录内的 `vault-providers.json`，�
 5. Android/iOS source kind 与 opaque source reference 共同生成稳定、隔离的 external provider ID。
 6. provider store 能幂等 upsert，并按 source 或 mirror root 恢复记录。
 
-本轮 `cargo test --manifest-path src-tauri/Cargo.toml` 结果为 11/11，其中 provider tests 6/6。
+本轮 `cargo test --manifest-path src-tauri/Cargo.toml` 结果为 20/20，其中 provider tests 6/6、reconcile tests 9/9。
 
 ### Android Emulator：2A app-private contract
 
@@ -150,12 +150,69 @@ content://com.android.externalstorage.documents/tree/primary%3ADocuments%2FJType
 
 WebView 的 reauthorize 响应和后续 descriptor 仍不包含 `content://`、`opaqueSourceReference` 或其他原生授权材料。精确卸载只用于可恢复的测试 app 数据夹具；外部 source fixture 被保留，供下一增量的 reconcile 测试继续使用。
 
+### Android Emulator：2B 内容哈希 baseline、安全 pull 与冲突阻断
+
+环境：`JType_API_36_1`，Android 16 / API 36，arm64，1080×2424；reconcile app code commit `f9537f2`，open recovery fix `231a2dc`。
+
+reconcile 使用 source / last-reconciled baseline / mirror 三方比较，file equality 以 SHA-256 内容哈希与字节数为准，directory rename 明确定义为旧路径删除 + 新路径创建：
+
+- baseline 缺失且 source 与 mirror 完全相同：只建立 baseline，不修改 mirror。
+- source 已变、mirror 仍等于 baseline：允许 pull 对应路径。
+- mirror 已变、source 仍等于 baseline：保留本地变化并报告 pending local changes。
+- source 与 mirror 均变化且结果不同：整次事务返回 conflict，不推进 baseline，不修改 mirror。
+- source 删除/替换父目录但其下有本地变化：阻止事务；manifest 排除的本地目录也不会被递归删除吞掉。
+- replacement tree 重新授权清空 record revision 后，旧 baseline 不再可信；只有新 source 与 mirror 完全一致时才能重新建立 baseline。
+
+初次对已有 provider 执行 reconcile，真实返回：
+
+```text
+status              baselineEstablished
+pulledFiles         0
+pulledDirectories   0
+deletedEntries      0
+pendingLocalChanges 0
+conflicts           []
+```
+
+随后直接在 Android Documents source 中执行三类外部变化：修改 `intro.md`、新增 `research/remote.md`、删除 `guides/setup.md`。第二次 reconcile 返回：
+
+```text
+status              pulled
+pulledFiles         2
+pulledDirectories   1
+deletedEntries      1
+pendingLocalChanges 0
+conflicts           []
+```
+
+mirror 内容与 source 一致，原 `.jtype/workspace.json` / publish metadata 保留，且 `vaults/external` 下没有遗留 `.reconciling`、`.reconcile-backup` 或 `.source-snapshot-*`。实现先复制现有 mirror 到 staging，在 staging 中应用 path delta 并重新计算 manifest；校验通过后才执行 mirror → backup、staging → mirror 的可恢复切换。若进程在两次 rename 之间终止，下一次 external describe/open/reconcile 会恢复 backup。
+
+冲突测试分别把 source 与 mirror 的 `intro.md` 改成不同内容。返回值为：
+
+```text
+status              conflict
+pulledFiles         0
+pendingLocalChanges 1
+conflicts           [{ relativePath: "intro.md", reason: "bothModified" }]
+```
+
+测试前后的 provider store SHA-256 完全相同，mirror 保留本地内容，baseline revision 没有推进；force-stop / cold launch 后同一个 conflict 再次被确定性识别。因为正式 external-vault UI 尚未开放，以下截图使用明确标注的 test-only audit overlay 呈现真实 cold-start IPC 结果；它不是产品 UI，截图后已通过冷启动清除：
+
+![Android SAF reconcile conflict audit](assets/phase-2/android-saf-reconcile-conflict.png)
+
+将 source 与 mirror 收敛到相同内容后，reconcile 返回 `unchanged` / 0 pending / 0 conflict 并安全推进 baseline。随后把 source 的 `research/remote.md` rename 为 `research/renamed.md`，真实结果为 `pulledFiles=1`、`deletedEntries=1`，mirror 与 `WorkspaceSnapshot` 均只保留新路径。安装最终 APK 并再次 cold launch 后，reconcile 返回 `unchanged`，provider ID、mirror root、baseline 与唯一 persisted tree grant 都保持稳定。
+
+最后精确构造事务中断状态：force-stop app，将 active mirror 改名为固定 `.41922042f61ba816.reconcile-backup`，确认 active path 不存在后冷启动 `231a2dc`。第一次 `describe_vault_provider` 自动恢复 backup，紧接着 `open_workspace` 返回完整树；最终只剩 active mirror，backup/staging 均不存在。该恢复 hook 与 reconcile 共用同一操作锁，open 不会撞上正在进行的原子切换。
+
+Rust reconcile tests 9/9 覆盖：内容 hash / reserved metadata 排除、source-only pull、both-modified conflict、父目录删除与本地子项冲突、无 baseline bootstrap guard、record revision trust、原子 mirror swap、进程中断 backup 恢复、排除目录不被递归删除。
+
 本增量有意保持以下限制：
 
 - 正式 external vault UI capability 仍关闭；系统 picker 只通过调试 IPC 验证。
-- mirror 是只读 provider；常规写入、创建、重命名和删除尚未路由回 SAF source。
-- source 内容变化检测、双向 reconcile、删除/冲突规则尚未实现。
-- permission health 与 replacement tree 重新授权已完成，但正式 UI 提示/入口要在 reconcile 行为稳定后才接入复用的 Welcome/VaultHome action callback。
+- mirror 仍是只读 provider；常规写入、创建、重命名和删除尚未路由回 SAF source，descriptor 对这些 capability 继续返回 `false`。
+- source 内容变化检测、安全 pull、删除/rename 与冲突阻断已经实现；双向 write-back、冲突选择/合并与 mutation journal 尚未实现。
+- 当前每次 reconcile 仍完整枚举并 materialize source 到短期 app-private snapshot，再按 manifest delta 更新 mirror；真正的按需 source materialization 与大 vault 性能优化留在 2D。
+- permission health、replacement tree 重新授权与 pull command 已完成，但正式 UI 提示/入口要在 write-back 行为稳定后才接入复用的 Welcome/VaultHome action callback。
 
 ### iPhone Simulator
 
@@ -185,6 +242,8 @@ E2E 现在以完整中文 locale 在 390×844 viewport 验证：content panel �
 - `309aebb`：修复真正根因——共享 App shell 隐式 Grid 列宽，并增加完整中文 locale 回归。
 - `18fbeb8`：Android SAF picker、persistable permission、native provider record、原子首次 mirror 与冷启动恢复。
 - `0b69f16`：Android SAF permission health、`authorizationRequired` / `sourceUnavailable` 状态恢复、replacement tree 重新授权与旧 grant 释放。
+- `f9537f2`：SHA-256 manifest baseline、三方 reconcile plan、原子安全 pull、delete/rename 与 conflict guard。
+- `231a2dc`：external describe/open 在事务中断后先恢复 mirror backup，再返回 provider/workspace。
 
 ## 自动化与构建结果
 
@@ -193,20 +252,22 @@ E2E 现在以完整中文 locale 在 390×844 viewport 验证：content panel �
 | `npm run build` | PASS |
 | `npm run test:unit` | PASS，47/47 |
 | `npx playwright test tests/e2e/app.spec.ts` | PASS，42/42 |
-| `cargo test --manifest-path src-tauri/Cargo.toml` | PASS，11/11；provider 6/6 |
+| `cargo test --manifest-path src-tauri/Cargo.toml` | PASS，20/20；provider 6/6，reconcile 9/9 |
 | `cargo check --manifest-path plugins/mobile-import/Cargo.toml` | PASS |
 | `cargo fmt --manifest-path plugins/mobile-import/Cargo.toml --check` | PASS |
 | `pnpm tauri android build --debug --target aarch64 --apk --ci` | PASS |
 | Android SAF picker / initial mirror / persisted permission / idempotent reselect / cold restore | PASS |
 | Android persisted permission loss / source move / replacement reauthorization / old grant release | PASS |
-| `pnpm tauri ios build --debug --target aarch64-sim --no-sign --archive-only --ci` | PASS（2A contract 增量；本次 Android-only commit 未改 iOS 路径） |
-| iOS clean install / Maestro default vault flow / localized shell | PASS（2A contract 增量） |
+| Android baseline bootstrap / source edit-create-delete / rename / both-modified conflict / cold restore / cleanup | PASS |
+| Android interrupted mirror transaction → cold describe/open backup recovery | PASS |
+| `pnpm tauri ios build --debug --target aarch64-sim --no-sign --archive-only --ci` | PASS；Android reconcile 增量未开启 iOS capability |
+| iOS clean install / Maestro default vault flow / localized shell | PASS（2A contract 增量；本次只重跑 compile gate） |
 
 Android debug APK：
 
 - `src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk`
-- 372,252,363 bytes
-- SHA-256 `8fd87f86ab38db2314b5e1c072b785704efb590aec30905890b4234f10c1d5b9`
+- 374,307,155 bytes
+- SHA-256 `538ac39ec2d77eb2162f17381b669622c99a8626ed622f543a5ceebd9eb82b23`
 
 iOS archive：
 
@@ -220,16 +281,17 @@ iOS archive：
 4ca09fcf784119fb175202638907e2dec1a0bc8c7fd6da10652111b6b5c1e64c  provider-contract-android.png
 d0c3678bbb8ae7c24e69044f53a501ac52a6c66a924da3263a76a4f7edee0055  provider-contract-ios.png
 fab1577c4ac914eb86df29678fbbc6310af83dc4c8db9346ca8a5f8bb5113c66  android-saf-initial-import.png
+12aed07f2bcc35c8a59f006b695444ef94b279fe5168db99738e85f351b68dc2  android-saf-reconcile-conflict.png
 ```
 
-## 下一增量：2B Android SAF reconcile 与受控 write-back
+## 下一增量：2B Android SAF mutation routing 与受控 write-back
 
 下一段继续按已冻结的 contract 实现：
 
-1. 冻结 source、mirror、last-reconciled 三方比较规则，以及创建、修改、删除、rename 和内容冲突的确定性 plan。
-2. 先实现只读 pull/reconcile，验证外部 app 修改不会被静默覆盖，并持久化 source revision / last reconcile metadata。
-3. 再实现受控 write-back，并按真实能力逐项开启 write/create/rename/delete descriptor capability。
-4. 覆盖中断、部分失败、目录移动、权限中途失效和原子恢复测试。
-5. reconcile 与冲突恢复全部通过后，再将入口和重新授权提示接入复用的 Welcome/VaultHome action callback。
+1. 让 shared workbench 的 write/create/rename/delete command 先解析 provider，并为 external mirror 记录确定性的 pending mutation，而不是直接把本地成功误认为 source 已写入。
+2. 在 Android native adapter 实现受控 create/write/rename/delete，并以 mutation journal + idempotency 保证中断后可重试。
+3. write-back 前再次比较 baseline/source/mirror；source 已被其他 app 修改时复用当前 conflict contract 阻止覆盖。
+4. 完成部分失败、磁盘不足、权限中途失效与进程终止恢复测试后，逐项开启 descriptor 的 write/create/rename/delete capability。
+5. 双向闭环稳定后，再把入口、reconcile 状态和重新授权提示接入复用的 Welcome/VaultHome/EditorShell callbacks。
 
 iOS security-scoped bookmark 会在 Android SAF contract 与 reconcile 行为稳定后复用同一 store、descriptor 和 mirror 状态机。
