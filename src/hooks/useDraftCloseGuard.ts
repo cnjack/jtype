@@ -7,8 +7,9 @@ import { tauri } from "../lib/tauri";
 
 /**
  * Intercept the main window's close button while an in-memory draft with real
- * content is open. Drafts are never persisted, so without this guard a user
- * could lose their work by accidentally closing the window.
+ * content is open. Desktop drafts are memory-only, while mobile's private
+ * recovery record is a crash fallback rather than an explicit save. The guard
+ * still prevents an intentional close from silently discarding work.
  *
  * Uses Tauri's native `onCloseRequested` (synchronous close cycle) + the native
  * `ask()` dialog — the React `useConfirm` provider can't survive the close

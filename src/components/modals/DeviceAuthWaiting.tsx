@@ -48,9 +48,10 @@ interface DeviceAuthWaitingProps {
   startedAt: number | null;
   onCancel: () => void;
   onReopenBrowser: () => void;
+  onStartAgain: () => void;
 }
 
-export function DeviceAuthWaiting({ userCode, startedAt, onCancel, onReopenBrowser }: DeviceAuthWaitingProps) {
+export function DeviceAuthWaiting({ userCode, startedAt, onCancel, onReopenBrowser, onStartAgain }: DeviceAuthWaitingProps) {
   const { remaining, expired, progress } = useCountdown(startedAt);
   const [copied, setCopied] = useState(false);
 
@@ -147,7 +148,7 @@ export function DeviceAuthWaiting({ userCode, startedAt, onCancel, onReopenBrows
 
       {expired && (
         <div className="mt-4 flex justify-center">
-          <button className="toolbar-button toolbar-button-primary" type="button" onClick={onReopenBrowser}>
+          <button className="toolbar-button toolbar-button-primary" type="button" onClick={onStartAgain}>
             <ComputerDesktopIcon className="h-4 w-4" />
             <Trans>Start again</Trans>
           </button>

@@ -1,0 +1,27 @@
+appId: net.jcode.jtype
+---
+- launchApp:
+    clearState: true
+- assertVisible: "使用默认库"
+- tapOn: "使用默认库"
+- assertVisible: "仅本地"
+- tapOn: "仅本地"
+- assertVisible: "库已就绪"
+- tapOn:
+    text: "新建文档"
+    index: 0
+- assertVisible: "放弃草稿"
+- tapOn: "Markdown 编辑器"
+- inputText: "Recovered mobile draft"
+- assertVisible: "Recovered mobile draft"
+- killApp
+- launchApp
+- assertVisible: "Recovered mobile draft"
+- assertVisible: "放弃草稿"
+- tapOn: "放弃草稿"
+- tapOn: "确定"
+- assertNotVisible: "Recovered mobile draft"
+- killApp
+- launchApp
+- assertNotVisible: "Recovered mobile draft"
+- assertVisible: "库已就绪"

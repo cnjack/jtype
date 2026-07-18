@@ -1,6 +1,6 @@
 import React, { useReducer, useCallback, useEffect, useRef, useState, createContext, useContext } from "react";
 import { appReducer, initialState, AppStateContext, AppDispatchContext } from "./AppState";
-import { useFileSystem, useCloudSync, useKeyboardShortcuts, useCommands, useDraftCloseGuard, useMobileOAuthDeepLink, useMobileSyncRecovery } from "../hooks";
+import { useFileSystem, useCloudSync, useKeyboardShortcuts, useCommands, useDraftCloseGuard, useMobileDraftRecovery, useMobileOAuthDeepLink, useMobileSyncRecovery } from "../hooks";
 import type { MobileSyncRecoveryReason } from "../hooks";
 import { usePeriodicSync } from "../hooks/usePeriodicSync";
 import { useCloudEvents } from "../hooks/useCloudEvents";
@@ -25,6 +25,7 @@ import { PromptDialogProvider } from "@shared/components/PromptDialogContext";
 import { AppVersion } from "@shared/components";
 import { isTauriRuntime, relativePathFromWorkspace } from "../lib/utils";
 import { isDiagramTextPath } from "@shared/lib/fileTypes";
+import type { MobileDraftRecovery } from "../lib/types";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { RuntimeCapabilitiesProvider, useRuntimeCapabilities } from "./RuntimeCapabilities";
@@ -85,7 +86,8 @@ function SidebarResizeHandle({ width, onResize }: { width: number; onResize: (w:
 function AppContent() {
   const { state, dispatch } = useApp();
   const capabilities = useRuntimeCapabilities();
-  const sync = useCloudSync();
+  const [mobileDraftRecoveryReady, setMobileDraftRecoveryReady] = useState(false);
+  const sync = useCloudSync({ recoverMobileOAuth: true });
   useMobileOAuthDeepLink();
   const autoSync = useCallback(async () => {
     const vaultSettings = state.workspace ? state.vaultSettings[state.workspace.rootPath] : undefined;
@@ -101,6 +103,14 @@ function AppContent() {
     }
   }, [state.workspace, state.syncToken, state.vaultBindings, state.vaultSettings, state.currentRelativePath, state.currentPath, state.currentKind, state.isDirty, sync, dispatch]);
   const fs = useFileSystem(autoSync);
+  useMobileDraftRecovery({
+    enabled: capabilities.isMobile,
+    ready: mobileDraftRecoveryReady,
+    isDraft: state.isDraft,
+    isDirty: state.isDirty,
+    content: state.editorContent,
+    workspacePath: state.workspace?.rootPath ?? null,
+  });
   const openMarkdownFileRef = useRef(fs.openMarkdownFile);
   openMarkdownFileRef.current = fs.openMarkdownFile;
   const importExternalSourcesRef = useRef(fs.importExternalSources);
@@ -467,10 +477,11 @@ function AppContent() {
 
         let lastWorkspacePath = state.lastWorkspacePath;
         let lastFilePath = state.lastFilePath;
+        let currentDefaultVault = "";
         if (capabilities.usesAppPrivateVault) {
           try {
             const { migrateAppPrivateVaultStorage } = await import("../lib/mobilePrivateVault");
-            const currentDefaultVault = await tauri.defaultVaultPath();
+            currentDefaultVault = await tauri.defaultVaultPath();
             const migrated = migrateAppPrivateVaultStorage(currentDefaultVault);
             lastWorkspacePath = migrated.workspacePath;
             lastFilePath = migrated.filePath;
@@ -490,6 +501,22 @@ function AppContent() {
           }
         }
 
+        let pendingDraft: MobileDraftRecovery | null = null;
+        if (capabilities.isMobile) {
+          try {
+            pendingDraft = await tauri.loadMobileDraftRecovery();
+            if (pendingDraft?.workspacePath && currentDefaultVault) {
+              const { rebaseAppPrivateVaultPath } = await import("../lib/mobilePrivateVault");
+              pendingDraft = {
+                ...pendingDraft,
+                workspacePath: rebaseAppPrivateVaultPath(pendingDraft.workspacePath, currentDefaultVault),
+              };
+            }
+          } catch (error) {
+            dispatch({ type: "SET_STATUS", message: `Unable to restore mobile draft: ${String(error)}` });
+          }
+        }
+
         let targetFile: string | null = null;
         let externalSources: string[] = [];
         try {
@@ -504,6 +531,12 @@ function AppContent() {
           await fs.importExternalSources(externalSources);
         } else if (targetFile) {
           fs.openMarkdownFile(targetFile);
+        } else if (pendingDraft?.content) {
+          if (pendingDraft.workspacePath) await fs.openWorkspace(pendingDraft.workspacePath);
+          else if (capabilities.usesAppPrivateVault) await fs.openDefaultVault();
+          dispatch({ type: "NEW_DRAFT" });
+          dispatch({ type: "SET_EDITOR_CONTENT", content: pendingDraft.content, sync: true });
+          dispatch({ type: "SET_STATUS", message: "Recovered an unsaved mobile draft." });
         } else if (lastWorkspacePath) {
           await fs.openWorkspace(lastWorkspacePath);
           if (lastFilePath) {
@@ -516,9 +549,10 @@ function AppContent() {
           if (isDiagramTextPath(lastFilePath)) fs.openDiagramFile(lastFilePath);
           else fs.openMarkdownFile(lastFilePath);
         }
-      })();
+      })().finally(() => setMobileDraftRecoveryReady(true));
     } else {
       dispatch({ type: "SET_STATUS", message: "Browser preview mode. Run `npm run tauri dev` for desktop file access." });
+      setMobileDraftRecoveryReady(true);
     }
   }, []);
 

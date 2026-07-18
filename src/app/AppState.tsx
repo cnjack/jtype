@@ -34,8 +34,9 @@ export interface AppState {
   originalContent: string;
   editorContent: string;
   isDirty: boolean;
-  // Draft mode: an in-memory untitled document with no disk path yet.
-  // Created via Cmd/Ctrl+N; saved through a "save as" flow (NEW_DRAFT/COMMIT_DRAFT).
+  // Draft mode: an untitled document with no vault path yet. Mobile keeps one
+  // app-private recovery record outside the reducer; save-as still promotes it
+  // through the normal NEW_DRAFT/COMMIT_DRAFT flow.
   isDraft: boolean;
   isLoading: boolean;
   workspace: WorkspaceSnapshot | null;
@@ -110,9 +111,9 @@ export type AppAction =
   | { type: "SET_EDITOR_CONTENT"; content: string; sync?: boolean }
   | { type: "SAVE_FILE" }
   | { type: "CLEAR_DOCUMENT" }
-  // Draft lifecycle: NEW_DRAFT creates an in-memory untitled document (no disk
-  // path, never written to appStorage). COMMIT_DRAFT promotes a draft to a real
-  // file once the user picks a path via "save as". DISCARD_DRAFT drops the draft.
+  // Draft lifecycle: NEW_DRAFT creates an untitled document with no disk path
+  // or lastFilePath. COMMIT_DRAFT promotes it after save-as; DISCARD_DRAFT drops
+  // it. The mobile recovery hook persists content outside reducer/appStorage.
   | { type: "NEW_DRAFT" }
   | { type: "COMMIT_DRAFT"; path: string; relativePath: string }
   | { type: "DISCARD_DRAFT" }
@@ -332,9 +333,8 @@ export function appReducer(state: AppState, action: AppAction): AppState {
       // Single-draft semantics: if a draft is already open, keep it (this just
       // refocuses the editor instead of wiping what the user typed).
       if (state.isDraft) return state;
-      // In-memory untitled document. No disk path, no appStorage writes —
-      // drafts must never be persisted as lastFilePath (that would make the
-      // app try to re-open a non-existent path on next launch).
+      // Untitled document with no disk path or appStorage lastFilePath. Mobile
+      // crash recovery is handled separately and never masquerades as a file.
       return {
         ...state,
         currentPath: "",

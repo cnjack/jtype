@@ -24,6 +24,8 @@ import type {
   ExternalVaultConflictResolutionResult,
   ExternalVaultReconcileResult,
   ExternalVaultWriteBackResult,
+  MobilePendingOAuth,
+  MobileDraftRecovery,
 } from "./types";
 
 export const tauri = {
@@ -147,6 +149,24 @@ export const tauri = {
   },
   saveCloudProfile(profile: CloudProfile) {
     return invoke<CloudProfile>("save_cloud_profile", { profile });
+  },
+  saveMobilePendingOAuth(pending: MobilePendingOAuth) {
+    return invoke<MobilePendingOAuth>("save_mobile_pending_oauth", { pending });
+  },
+  loadMobilePendingOAuth() {
+    return invoke<MobilePendingOAuth | null>("load_mobile_pending_oauth");
+  },
+  clearMobilePendingOAuth() {
+    return invoke<void>("clear_mobile_pending_oauth");
+  },
+  saveMobileDraftRecovery(draft: MobileDraftRecovery) {
+    return invoke<MobileDraftRecovery>("save_mobile_draft_recovery", { draft });
+  },
+  loadMobileDraftRecovery() {
+    return invoke<MobileDraftRecovery | null>("load_mobile_draft_recovery");
+  },
+  clearMobileDraftRecovery() {
+    return invoke<void>("clear_mobile_draft_recovery");
   },
   listVaultBindings() {
     return invoke<VaultBinding[]>("list_vault_bindings");

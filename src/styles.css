@@ -98,7 +98,6 @@
 .single-file-mode #workspace-sidebar,
 .workspace-mode #welcome-screen,
 .single-file-mode #welcome-screen,
-.app-empty #sync-panel-button,
 .single-file-mode #sync-panel-button,
 .single-file-mode #document-panel {
   display: none;

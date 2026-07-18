@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useAppDispatch, useAppState } from "../../app/AppState";
+import { isCurrentVaultReadOnly, useAppDispatch, useAppState } from "../../app/AppState";
 import { useFileSystem, useCloudSync } from "../../hooks";
 import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/react";
 import {
@@ -13,6 +13,7 @@ import {
   HomeIcon,
   XMarkIcon,
   Bars3Icon,
+  DocumentPlusIcon,
 } from "@heroicons/react/24/outline";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
@@ -71,6 +72,8 @@ export function Header({ onOpenMobileNavigation }: HeaderProps) {
     : null;
   const currentVaultSettings = state.workspace ? state.vaultSettings[state.workspace.rootPath] : undefined;
   const cloudSyncEnabled = Boolean(currentBinding && currentVaultSettings?.cloudSyncEnabled !== false);
+  const isCloudViewer = Boolean(currentBinding?.workspaceRole === "viewer" && cloudSyncEnabled);
+  const isVaultReadOnly = isCurrentVaultReadOnly(state);
 
   const userInitial = (state.syncUsername || "A").charAt(0).toUpperCase();
 
@@ -117,6 +120,18 @@ export function Header({ onOpenMobileNavigation }: HeaderProps) {
             >
               <MagnifyingGlassIcon className="h-4 w-4" />
             </button>
+            {capabilities.isMobile && !isCloudViewer && (
+              <button
+                id="mobile-new-draft-button"
+                className="toolbar-button aspect-square px-0"
+                type="button"
+                title={t`New document`}
+                disabled={isVaultReadOnly}
+                onClick={() => dispatch({ type: "NEW_DRAFT" })}
+              >
+                <DocumentPlusIcon className="h-4 w-4" />
+              </button>
+            )}
           </>
         )}
         {isSingleFile && (

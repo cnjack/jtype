@@ -306,6 +306,19 @@ export type OAuthDeviceStartResponse = {
   verificationUrl: string;
 };
 
+export type MobilePendingOAuth = OAuthDeviceStartResponse & {
+  serviceUrl: string;
+  deviceId: string;
+  startedAt: number;
+};
+
+export type MobileDraftRecovery = {
+  version: 1;
+  content: string;
+  workspacePath: string | null;
+  updatedAt: number;
+};
+
 export type CloudDocument = {
   relativePath: string;
   title: string;

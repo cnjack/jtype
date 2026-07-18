@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useAppDispatch, useAppState } from "../app/AppState";
 import { tauri } from "../lib/tauri";
@@ -6,7 +6,7 @@ import { httpRequest } from "@shared/lib/http";
 import { syncsAsDocument } from "@shared/lib/fileTypes";
 import { sha256Hex, sha256HexBytes } from "../lib/utils";
 import { markCloudWrite, markCloudWriteBatch } from "../lib/cloudWriteHashes";
-import type { AuthResponse, CloudProfile, VaultBinding, CloudDocument, CloudFolder, CloudWorkspace, DeletedFolder, DeletedPath, DeletedPathInput, EntryKind, OAuthDeviceStartResponse, SyncPushDocument, SyncPushResponse, TrashSyncPayload, VaultSettings, BlobManifestEntry } from "../lib/types";
+import type { AuthResponse, CloudProfile, VaultBinding, CloudDocument, CloudFolder, CloudWorkspace, DeletedFolder, DeletedPath, DeletedPathInput, EntryKind, MobilePendingOAuth, OAuthDeviceStartResponse, SyncPushDocument, SyncPushResponse, TrashSyncPayload, VaultSettings, BlobManifestEntry } from "../lib/types";
 import { parseSyncConflicts } from "../lib/types";
 import { useRuntimeCapabilities } from "../app/RuntimeCapabilities";
 import { MOBILE_OAUTH_CALLBACK_URL } from "@shared/lib/mobileOAuth";
@@ -37,12 +37,19 @@ const cloudEnabledSettings: VaultSettings = {
   syncDisabledPermanently: false,
 };
 
-export function useCloudSync() {
+const MOBILE_OAUTH_EXPIRY_MS = 10 * 60 * 1000;
+// AccountDialog and App both consume this hook. Keep the native device flow a
+// process-wide singleton so either surface can cancel the one active poller.
+let activeDevicePollingStop: (() => void) | null = null;
+
+export function useCloudSync({ recoverMobileOAuth = false }: { recoverMobileOAuth?: boolean } = {}) {
   const dispatch = useAppDispatch();
   const state = useAppState();
   const capabilities = useRuntimeCapabilities();
   const pollTimerRef = useRef<number | null>(null);
   const oauthReturnCleanupRef = useRef<(() => void) | null>(null);
+  const pendingOAuthRef = useRef<MobilePendingOAuth | null>(null);
+  const oauthRecoveryAttemptedRef = useRef(false);
 
   const getServiceUrl = useCallback(() => {
     return (state.serviceUrl || state.cloudProfile?.serverUrl || "http://localhost:13345").trim().replace(/\/$/, "");
@@ -57,118 +64,228 @@ export function useCloudSync() {
     oauthReturnCleanupRef.current = null;
   }, []);
 
+  const clearPendingOAuth = useCallback(async () => {
+    pendingOAuthRef.current = null;
+    if (capabilities.isMobile && tauri.isAvailable) {
+      await tauri.clearMobilePendingOAuth();
+    }
+  }, [capabilities.isMobile]);
+
+  const startDevicePolling = useCallback((pending: MobilePendingOAuth, recovered = false) => {
+    activeDevicePollingStop?.();
+    stopDevicePolling();
+    pendingOAuthRef.current = pending;
+    dispatch({
+      type: "SET_OAUTH",
+      deviceCode: pending.deviceCode,
+      userCode: pending.userCode,
+      startedAt: pending.startedAt,
+    });
+    dispatch({
+      type: "SET_STATUS",
+      message: recovered
+        ? `Resumed browser authorization. Use code ${pending.userCode}.`
+        : `Browser authorization opened. Use code ${pending.userCode}.`,
+    });
+
+    let pollInFlight = false;
+    let finished = false;
+    const finishPolling = () => {
+      finished = true;
+      stopDevicePolling();
+      if (activeDevicePollingStop === finishPolling) activeDevicePollingStop = null;
+    };
+    activeDevicePollingStop = finishPolling;
+    const pollDeviceCode = async () => {
+      if (pollInFlight || finished) return;
+      if (Date.now() - pending.startedAt >= MOBILE_OAUTH_EXPIRY_MS) {
+        finishPolling();
+        await clearPendingOAuth().catch(() => undefined);
+        dispatch({ type: "CLEAR_OAUTH" });
+        dispatch({ type: "SET_STATUS", message: "Browser authorization expired. Start again to connect." });
+        return;
+      }
+
+      pollInFlight = true;
+      try {
+        const pollResponse = await httpRequest(`${pending.serviceUrl}/api/oauth/device/poll`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ deviceCode: pending.deviceCode }),
+        });
+        // Cancel/start-again may have won while the request was in flight.
+        // Never let that stale response reconnect the account.
+        if (finished) return;
+        if (pollResponse.ok) {
+          let auth: AuthResponse;
+          let profile: CloudProfile;
+          try {
+            auth = (await pollResponse.json()) as AuthResponse;
+            profile = {
+              serverUrl: pending.serviceUrl,
+              username: auth.username,
+              siteUrl: auth.siteUrl,
+              token: auth.token,
+              deviceId: pending.deviceId,
+            };
+            // Persist the credential before exposing a connected session. A
+            // Keychain/Keystore failure must not leave an in-memory login that
+            // silently disappears on the next cold launch.
+            if (tauri.isAvailable) await tauri.saveCloudProfile(profile);
+          } catch (error) {
+            finishPolling();
+            await clearPendingOAuth().catch(() => undefined);
+            dispatch({ type: "CLEAR_OAUTH" });
+            dispatch({
+              type: "SET_STATUS",
+              message: `Authorization completed, but the session could not be stored: ${String(error)}`,
+            });
+            return;
+          }
+          if (finished) return;
+          finishPolling();
+          dispatch({ type: "SET_SYNC_SESSION", token: auth.token, username: auth.username, siteUrl: auth.siteUrl, profile });
+          await clearPendingOAuth().catch(() => undefined);
+          dispatch({ type: "SET_STATUS", message: `Connected as ${auth.username}.` });
+          try {
+            const wsResp = await httpRequest(`${pending.serviceUrl}/api/v1/workspaces`, {
+              headers: { Authorization: `Bearer ${auth.token}` },
+            });
+            if (wsResp.ok) {
+              const wsResult = (await wsResp.json()) as { workspaces: CloudWorkspace[] };
+              dispatch({ type: "SET_CLOUD_WORKSPACES", workspaces: wsResult.workspaces });
+            }
+          } catch { /* non-critical */ }
+          return;
+        }
+
+        const errText = await pollResponse.text();
+        if (errText.includes("authorization pending")) return;
+        if (pollResponse.status >= 500) {
+          dispatch({ type: "SET_STATUS", message: "Authorization check will retry when the service is available." });
+          return;
+        }
+        finishPolling();
+        await clearPendingOAuth().catch(() => undefined);
+        dispatch({ type: "CLEAR_OAUTH" });
+        dispatch({ type: "SET_STATUS", message: `Authorization failed: ${errText}` });
+      } catch {
+        // Network loss is recoverable while the device code remains valid. The
+        // encrypted pending record lets a process restart continue the flow.
+        dispatch({ type: "SET_STATUS", message: "Authorization check is offline and will retry." });
+      } finally {
+        pollInFlight = false;
+      }
+    };
+
+    if (capabilities.isMobile) {
+      oauthReturnCleanupRef.current = registerMobileOAuthReturnHandler(() => {
+        void pollDeviceCode();
+      });
+    }
+    pollTimerRef.current = window.setInterval(() => void pollDeviceCode(), 1000);
+    void pollDeviceCode();
+  }, [capabilities.isMobile, clearPendingOAuth, dispatch, stopDevicePolling]);
+
   const startBrowserOAuth = useCallback(async () => {
     try {
       dispatch({ type: "SET_LOADING", isLoading: true });
       const serviceUrl = getServiceUrl();
+      const deviceId = state.cloudProfile?.deviceId ?? capabilities.clientType;
       const response = await httpRequest(`${serviceUrl}/api/oauth/device/start`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          deviceId: state.cloudProfile?.deviceId ?? capabilities.clientType,
+          deviceId,
           ...(capabilities.isMobile ? { returnUrl: MOBILE_OAUTH_CALLBACK_URL } : {}),
         }),
       });
       if (!response.ok) throw new Error(await response.text());
       const start = (await response.json()) as OAuthDeviceStartResponse;
-      dispatch({ type: "SET_OAUTH", deviceCode: start.deviceCode, userCode: start.userCode, startedAt: Date.now() });
-      dispatch({ type: "SET_STATUS", message: `Browser authorization opened. Use code ${start.userCode}.` });
-
-      stopDevicePolling();
-      let pollInFlight = false;
-      let finished = false;
-      const pollDeviceCode = async () => {
-        if (pollInFlight || finished) return;
-        pollInFlight = true;
-        try {
-          const pollResponse = await httpRequest(`${serviceUrl}/api/oauth/device/poll`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ deviceCode: start.deviceCode }),
-          });
-          if (pollResponse.ok) {
-            finished = true;
-            const auth = (await pollResponse.json()) as AuthResponse;
-            stopDevicePolling();
-            const profile: CloudProfile = {
-              serverUrl: serviceUrl,
-              username: auth.username,
-              siteUrl: auth.siteUrl,
-              token: auth.token,
-              deviceId: state.cloudProfile?.deviceId ?? "",
-            };
-            dispatch({ type: "SET_SYNC_SESSION", token: auth.token, username: auth.username, siteUrl: auth.siteUrl, profile });
-            if (tauri.isAvailable) await tauri.saveCloudProfile(profile);
-            dispatch({ type: "SET_STATUS", message: `Connected as ${auth.username}.` });
-            stopDevicePolling();
-            try {
-              const wsResp = await httpRequest(`${serviceUrl}/api/v1/workspaces`, {
-                headers: { Authorization: `Bearer ${auth.token}` },
-              });
-              if (wsResp.ok) {
-                const wsResult = (await wsResp.json()) as { workspaces: CloudWorkspace[] };
-                dispatch({ type: "SET_CLOUD_WORKSPACES", workspaces: wsResult.workspaces });
-              }
-            } catch { /* non-critical */ }
-            return;
-          }
-          const errText = await pollResponse.text();
-          if (errText.includes("authorization pending")) return;
-          finished = true;
-          stopDevicePolling();
-          dispatch({ type: "CLEAR_OAUTH" });
-          dispatch({ type: "SET_STATUS", message: `Authorization failed: ${errText}` });
-        } catch (error) {
-          finished = true;
-          stopDevicePolling();
-          dispatch({ type: "CLEAR_OAUTH" });
-          dispatch({ type: "SET_STATUS", message: String(error) });
-        } finally {
-          pollInFlight = false;
-        }
+      const pending: MobilePendingOAuth = {
+        ...start,
+        serviceUrl,
+        deviceId,
+        startedAt: Date.now(),
       };
-
-      if (capabilities.isMobile) {
-        oauthReturnCleanupRef.current = registerMobileOAuthReturnHandler(() => {
-          void pollDeviceCode();
-        });
+      if (capabilities.isMobile && tauri.isAvailable) {
+        // Persist before leaving JType for the browser. A killed process can
+        // then restore the code and resume polling after the deep-link return.
+        await tauri.saveMobilePendingOAuth(pending);
       }
-      pollTimerRef.current = window.setInterval(() => void pollDeviceCode(), 1000);
+      startDevicePolling(pending);
       if (tauri.isAvailable) await openUrl(start.verificationUrl);
     } catch (error) {
       dispatch({ type: "SET_STATUS", message: String(error) });
     } finally {
       dispatch({ type: "SET_LOADING", isLoading: false });
     }
-  }, [capabilities.clientType, dispatch, getServiceUrl, state.cloudProfile, stopDevicePolling]);
+  }, [capabilities.clientType, capabilities.isMobile, dispatch, getServiceUrl, startDevicePolling, state.cloudProfile?.deviceId]);
+
+  useEffect(() => {
+    // Wait for the native cloud profile load so a recovered authorization can
+    // not be overwritten by the startup profile dispatch racing it.
+    if (!recoverMobileOAuth || !capabilities.isMobile || !tauri.isAvailable || !state.cloudProfile || oauthRecoveryAttemptedRef.current) return;
+    oauthRecoveryAttemptedRef.current = true;
+    void tauri.loadMobilePendingOAuth()
+      .then(async (pending) => {
+        if (!pending) return;
+        if (Date.now() - pending.startedAt >= MOBILE_OAUTH_EXPIRY_MS) {
+          await clearPendingOAuth().catch(() => undefined);
+          dispatch({ type: "CLEAR_OAUTH" });
+          dispatch({ type: "SET_STATUS", message: "Previous browser authorization expired." });
+          return;
+        }
+        startDevicePolling(pending, true);
+      })
+      .catch((error) => {
+        dispatch({ type: "SET_STATUS", message: `Unable to restore browser authorization: ${String(error)}` });
+      });
+  }, [capabilities.isMobile, clearPendingOAuth, dispatch, recoverMobileOAuth, startDevicePolling, state.cloudProfile]);
 
   // Cancel an in-progress browser authorization: stop polling and clear OAuth state.
   const cancelBrowserOAuth = useCallback(async () => {
+    activeDevicePollingStop?.();
+    activeDevicePollingStop = null;
     stopDevicePolling();
     dispatch({ type: "CLEAR_OAUTH" });
     dispatch({ type: "SET_STATUS", message: "Browser authorization canceled." });
-  }, [dispatch, stopDevicePolling]);
+    // Update the dialog immediately; secure-store deletion can finish without
+    // making the user wait on native Keychain/Keystore I/O.
+    await clearPendingOAuth().catch(() => undefined);
+  }, [clearPendingOAuth, dispatch, stopDevicePolling]);
 
   // Reopen the browser at the device authorization page using the current user code.
   // The code is unchanged; this just re-opens the same verification URL.
   const reopenBrowser = useCallback(async () => {
     if (!state.oauthUserCode) return;
-    const url = new URL(`${getServiceUrl()}/oauth/device`);
-    url.searchParams.set("code", state.oauthUserCode);
-    if (capabilities.isMobile) url.searchParams.set("return_to", MOBILE_OAUTH_CALLBACK_URL);
+    let pendingUrl = pendingOAuthRef.current?.verificationUrl;
+    if (!pendingUrl && capabilities.isMobile && tauri.isAvailable) {
+      try {
+        pendingUrl = (await tauri.loadMobilePendingOAuth())?.verificationUrl;
+      } catch { /* fall back to the current service URL */ }
+    }
+    const url = new URL(pendingUrl ?? `${getServiceUrl()}/oauth/device`);
+    if (!pendingUrl) {
+      url.searchParams.set("code", state.oauthUserCode);
+      if (capabilities.isMobile) url.searchParams.set("return_to", MOBILE_OAUTH_CALLBACK_URL);
+    }
     if (tauri.isAvailable) {
       try { await openUrl(url.toString()); } catch { /* ignore opener errors */ }
     }
   }, [capabilities.isMobile, getServiceUrl, state.oauthUserCode]);
 
   const disconnectAccount = useCallback(async () => {
+    activeDevicePollingStop?.();
+    activeDevicePollingStop = null;
     stopDevicePolling();
+    await clearPendingOAuth().catch(() => undefined);
     dispatch({ type: "DISCONNECT_ACCOUNT" });
     if (tauri.isAvailable) {
       try { await tauri.saveCloudProfile({ serverUrl: state.serviceUrl, username: "", siteUrl: "", token: "", deviceId: state.cloudProfile?.deviceId ?? "" }); } catch { /* ignore */ }
     }
     dispatch({ type: "SET_STATUS", message: "Disconnected from cloud account." });
-  }, [dispatch, stopDevicePolling, state.serviceUrl, state.cloudProfile]);
+  }, [clearPendingOAuth, dispatch, stopDevicePolling, state.serviceUrl, state.cloudProfile]);
 
   const refreshCloudWorkspaces = useCallback(async () => {
     try {

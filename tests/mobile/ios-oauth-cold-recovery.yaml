@@ -1,0 +1,41 @@
+appId: net.jcode.jtype
+---
+- launchApp:
+    clearState: true
+- tapOn: "使用默认库"
+- tapOn: "仅本地"
+- assertVisible: "库已就绪"
+- tapOn: "A"
+- tapOn: "个人资料"
+- runFlow:
+    when:
+      visible: "等待网页确认"
+    commands:
+      - tapOn: "取消"
+- runFlow:
+    when:
+      visible: "断开连接"
+    commands:
+      - tapOn: "断开连接"
+- assertVisible: "在浏览器中连接"
+- tapOn:
+    text: "在浏览器中连接"
+    index: 1
+- assertVisible: "授权设备"
+- launchApp
+- tapOn: "A"
+- tapOn: "个人资料"
+- assertVisible: "等待网页确认"
+- killApp
+- launchApp
+- tapOn: "A"
+- tapOn: "个人资料"
+- assertVisible: "等待网页确认"
+- tapOn: "取消"
+- assertNotVisible: "等待网页确认"
+- killApp
+- launchApp
+- tapOn: "A"
+- tapOn: "个人资料"
+- assertVisible: "在浏览器中连接"
+- assertNotVisible: "等待网页确认"

@@ -1,0 +1,28 @@
+appId: net.jcode.jtype
+---
+- launchApp:
+    clearState: true
+- tapOn: "Use default vault"
+- tapOn: "Local only"
+- assertVisible: "Vault ready"
+- tapOn: "Sign in"
+- tapOn: "Profile"
+- assertVisible: "Connect in browser"
+- tapOn: "Connect in browser"
+- launchApp
+- tapOn: "Sign in"
+- tapOn: "Profile"
+- assertVisible: "Waiting for web confirmation"
+- killApp
+- launchApp
+- tapOn: "Sign in"
+- tapOn: "Profile"
+- assertVisible: "Waiting for web confirmation"
+- tapOn: "Cancel"
+- assertNotVisible: "Waiting for web confirmation"
+- killApp
+- launchApp
+- tapOn: "Sign in"
+- tapOn: "Profile"
+- assertVisible: "Connect in browser"
+- assertNotVisible: "Waiting for web confirmation"

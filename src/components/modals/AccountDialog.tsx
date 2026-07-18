@@ -141,14 +141,8 @@ export function AccountDialog() {
                   userCode={state.oauthUserCode}
                   startedAt={state.oauthStartedAt}
                   onCancel={() => sync.cancelBrowserOAuth()}
-                  onReopenBrowser={() => {
-                    // If expired, start a fresh flow (new code); otherwise just reopen the same URL.
-                    if (!state.oauthStartedAt) {
-                      sync.startBrowserOAuth();
-                    } else {
-                      sync.reopenBrowser();
-                    }
-                  }}
+                  onReopenBrowser={() => sync.reopenBrowser()}
+                  onStartAgain={() => sync.startBrowserOAuth()}
                 />
               ) : (
                 <section className="max-w-2xl">

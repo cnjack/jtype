@@ -112,6 +112,33 @@ struct CloudProfile {
 
 #[cfg(mobile)]
 const MOBILE_CLOUD_TOKEN_KEY: &str = "cloud-profile-token";
+#[cfg(mobile)]
+const MOBILE_PENDING_OAUTH_KEY: &str = "pending-device-oauth";
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+struct MobilePendingOAuth {
+    service_url: String,
+    device_id: String,
+    device_code: String,
+    user_code: String,
+    verification_url: String,
+    started_at: u64,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+struct MobileDraftRecovery {
+    version: u32,
+    content: String,
+    workspace_path: Option<String>,
+    updated_at: u64,
+}
+
+#[cfg(mobile)]
+const MOBILE_DRAFT_RECOVERY_VERSION: u32 = 1;
+#[cfg(mobile)]
+const MOBILE_DRAFT_RECOVERY_MAX_BYTES: usize = 10 * 1024 * 1024;
 
 fn normalize_cloud_profile(mut profile: CloudProfile) -> CloudProfile {
     if profile.server_url.trim().is_empty() {
@@ -2037,6 +2064,145 @@ fn save_cloud_profile(app: AppHandle, profile: CloudProfile) -> Result<CloudProf
 }
 
 #[tauri::command]
+fn save_mobile_pending_oauth(
+    app: AppHandle,
+    pending: MobilePendingOAuth,
+) -> Result<MobilePendingOAuth, String> {
+    #[cfg(mobile)]
+    {
+        let encoded = serde_json::to_string(&pending).map_err(|error| error.to_string())?;
+        app.secure_storage()
+            .set_secret(MOBILE_PENDING_OAUTH_KEY, encoded)
+            .map_err(|error| error.to_string())?;
+        return Ok(pending);
+    }
+
+    #[cfg(desktop)]
+    {
+        let _ = (app, pending);
+        Err("Pending OAuth secure storage is only available on mobile".to_string())
+    }
+}
+
+#[tauri::command]
+fn load_mobile_pending_oauth(app: AppHandle) -> Result<Option<MobilePendingOAuth>, String> {
+    #[cfg(mobile)]
+    {
+        return app
+            .secure_storage()
+            .get_secret(MOBILE_PENDING_OAUTH_KEY)
+            .map_err(|error| error.to_string())?
+            .value
+            .map(|encoded| serde_json::from_str(&encoded).map_err(|error| error.to_string()))
+            .transpose();
+    }
+
+    #[cfg(desktop)]
+    {
+        let _ = app;
+        Ok(None)
+    }
+}
+
+#[tauri::command]
+fn clear_mobile_pending_oauth(app: AppHandle) -> Result<(), String> {
+    #[cfg(mobile)]
+    {
+        app.secure_storage()
+            .delete_secret(MOBILE_PENDING_OAUTH_KEY)
+            .map_err(|error| error.to_string())?;
+    }
+
+    #[cfg(desktop)]
+    let _ = app;
+    Ok(())
+}
+
+#[cfg(mobile)]
+fn mobile_draft_recovery_file(app: &AppHandle) -> Result<PathBuf, String> {
+    app.path()
+        .app_data_dir()
+        .map(|directory| directory.join("mobile-draft-recovery.json"))
+        .map_err(|error| error.to_string())
+}
+
+#[tauri::command]
+fn save_mobile_draft_recovery(
+    app: AppHandle,
+    draft: MobileDraftRecovery,
+) -> Result<MobileDraftRecovery, String> {
+    #[cfg(mobile)]
+    {
+        if draft.version != MOBILE_DRAFT_RECOVERY_VERSION {
+            return Err("Unsupported mobile draft recovery version".to_string());
+        }
+        if draft.content.len() > MOBILE_DRAFT_RECOVERY_MAX_BYTES {
+            return Err("Mobile draft exceeds the 10 MB recovery limit".to_string());
+        }
+        if draft
+            .workspace_path
+            .as_ref()
+            .is_some_and(|path| path.len() > 4096)
+        {
+            return Err("Mobile draft workspace path is too long".to_string());
+        }
+        write_json_atomic(&mobile_draft_recovery_file(&app)?, &draft)?;
+        return Ok(draft);
+    }
+
+    #[cfg(desktop)]
+    {
+        let _ = (app, draft);
+        Err("Draft recovery storage is only available on mobile".to_string())
+    }
+}
+
+#[tauri::command]
+fn load_mobile_draft_recovery(app: AppHandle) -> Result<Option<MobileDraftRecovery>, String> {
+    #[cfg(mobile)]
+    {
+        let file = mobile_draft_recovery_file(&app)?;
+        if !file.exists() {
+            return Ok(None);
+        }
+        let content = fs::read_to_string(file).map_err(|error| error.to_string())?;
+        let draft: MobileDraftRecovery =
+            serde_json::from_str(&content).map_err(|error| error.to_string())?;
+        if draft.version != MOBILE_DRAFT_RECOVERY_VERSION
+            || draft.content.len() > MOBILE_DRAFT_RECOVERY_MAX_BYTES
+            || draft
+                .workspace_path
+                .as_ref()
+                .is_some_and(|path| path.len() > 4096)
+        {
+            return Err("Mobile draft recovery record is invalid".to_string());
+        }
+        return Ok(Some(draft));
+    }
+
+    #[cfg(desktop)]
+    {
+        let _ = app;
+        Ok(None)
+    }
+}
+
+#[tauri::command]
+fn clear_mobile_draft_recovery(app: AppHandle) -> Result<(), String> {
+    #[cfg(mobile)]
+    {
+        let file = mobile_draft_recovery_file(&app)?;
+        if file.exists() {
+            fs::remove_file(file).map_err(|error| error.to_string())?;
+        }
+    }
+
+    #[cfg(desktop)]
+    let _ = app;
+    Ok(())
+}
+
+#[tauri::command]
 fn list_vault_bindings(app: AppHandle) -> Result<Vec<VaultBinding>, String> {
     Ok(read_binding_store(&app)?.bindings)
 }
@@ -2385,6 +2551,30 @@ fn write_json<T: Serialize>(path: &Path, value: &T) -> Result<(), String> {
     }
     let json = serde_json::to_string_pretty(value).map_err(|error| error.to_string())?;
     fs::write(path, json).map_err(|error| error.to_string())
+}
+
+#[cfg(mobile)]
+fn write_json_atomic<T: Serialize>(path: &Path, value: &T) -> Result<(), String> {
+    let parent = path
+        .parent()
+        .ok_or_else(|| "JSON store has no parent directory".to_string())?;
+    fs::create_dir_all(parent).map_err(|error| error.to_string())?;
+    let nonce = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_err(|error| error.to_string())?
+        .as_nanos();
+    let file_name = path
+        .file_name()
+        .and_then(|name| name.to_str())
+        .unwrap_or("store.json");
+    let temporary = parent.join(format!(".{file_name}.tmp-{nonce}"));
+    let json = serde_json::to_string_pretty(value).map_err(|error| error.to_string())?;
+    fs::write(&temporary, json).map_err(|error| error.to_string())?;
+    if let Err(error) = fs::rename(&temporary, path) {
+        let _ = fs::remove_file(&temporary);
+        return Err(error.to_string());
+    }
+    Ok(())
 }
 
 fn device_id() -> String {
@@ -2755,6 +2945,12 @@ pub fn run() {
             load_sync_folder_bases,
             load_cloud_profile,
             save_cloud_profile,
+            save_mobile_pending_oauth,
+            load_mobile_pending_oauth,
+            clear_mobile_pending_oauth,
+            save_mobile_draft_recovery,
+            load_mobile_draft_recovery,
+            clear_mobile_draft_recovery,
             list_vault_bindings,
             bind_cloud_workspace,
             apply_cloud_documents,

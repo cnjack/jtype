@@ -246,6 +246,30 @@ test.beforeEach(async ({ page }) => {
             return window.__CLOUD_PROFILE__ ?? { serverUrl: "http://localhost:13345", username: "", siteUrl: "", token: "", deviceId: "dev_e2e" };
           }
           if (cmd === "save_cloud_profile") return args.profile;
+          if (cmd === "save_mobile_pending_oauth") {
+            window.sessionStorage.setItem("jtype-e2e-pending-oauth", JSON.stringify(args.pending));
+            return args.pending;
+          }
+          if (cmd === "load_mobile_pending_oauth") {
+            const pending = window.sessionStorage.getItem("jtype-e2e-pending-oauth");
+            return pending ? JSON.parse(pending) : null;
+          }
+          if (cmd === "clear_mobile_pending_oauth") {
+            window.sessionStorage.removeItem("jtype-e2e-pending-oauth");
+            return null;
+          }
+          if (cmd === "save_mobile_draft_recovery") {
+            window.sessionStorage.setItem("jtype-e2e-mobile-draft", JSON.stringify(args.draft));
+            return args.draft;
+          }
+          if (cmd === "load_mobile_draft_recovery") {
+            const draft = window.sessionStorage.getItem("jtype-e2e-mobile-draft");
+            return draft ? JSON.parse(draft) : null;
+          }
+          if (cmd === "clear_mobile_draft_recovery") {
+            window.sessionStorage.removeItem("jtype-e2e-mobile-draft");
+            return null;
+          }
           if (cmd === "list_vault_bindings") return window.__VAULT_BINDINGS__;
           if (cmd === "bind_cloud_workspace") {
             const binding = args.binding as { workspaceId: string; localVaultPath: string };
@@ -864,6 +888,7 @@ test("adapts the shared welcome screen to app-private mobile storage", async ({ 
   await expect(page.locator("html")).toHaveAttribute("data-jtype-platform", "ios");
   await expect(page.locator("html")).toHaveAttribute("lang", "zh-Hans");
   await expect(page.locator("#welcome-private-vault-note")).toBeVisible();
+  await expect(page.locator("#sync-panel-button")).toBeVisible();
   await expect(page.locator("#welcome-open-folder")).toBeHidden();
   await expect(page.locator("#welcome-open-markdown")).toBeHidden();
   await expect(page.getByText("~/Documents/Jtype Vaullt")).toBeHidden();
@@ -1476,6 +1501,66 @@ test("returns mobile browser authorization through the registered deep link", as
   });
   expect(callbackListeners).toBeGreaterThan(0);
   await expect(page.locator("#operation-log")).toContainText("Connected as jack", { timeout: 5000 });
+});
+
+test("restores encrypted mobile browser authorization after a cold reload", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__RUNTIME_CAPABILITIES__ = {
+      platform: "ios",
+      clientType: "mobile",
+      isMobile: true,
+      isTouchPrimary: true,
+      prefersCompactLayout: true,
+      supportsWindowDrag: false,
+      supportsUpdater: false,
+      supportsProcessRestart: false,
+      supportsCliInstall: false,
+      supportsFileDrop: false,
+      supportsExternalVault: true,
+      usesAppPrivateVault: true,
+    };
+    window.__OAUTH_POLL_PENDING__ = true;
+  });
+  await page.reload();
+  await page.locator("#welcome-default-vault").click();
+  await page.getByRole("button", { name: "Local only" }).click();
+  await page.getByRole("button", { name: "Local vault mode" }).click();
+  await page.getByRole("button", { name: "Profile", exact: true }).click();
+  await page.getByRole("button", { name: "Connect in browser" }).click();
+  await expect(page.getByText(/Waiting for browser authorization/)).toBeVisible();
+  await expect.poll(() => page.evaluate(() => {
+    const encoded = window.sessionStorage.getItem("jtype-e2e-pending-oauth");
+    if (!encoded) return null;
+    const pending = JSON.parse(encoded) as { deviceCode: string; deviceId: string; serviceUrl: string };
+    return {
+      deviceCode: pending.deviceCode,
+      deviceId: pending.deviceId,
+      serviceUrl: pending.serviceUrl,
+    };
+  })).toEqual({
+    deviceCode: "device-e2e",
+    deviceId: "dev_e2e",
+    serviceUrl: "http://localhost:13345",
+  });
+
+  // A full WebView reload models process/UI loss while the native secure-store
+  // record survives. No new device code should be requested.
+  await page.reload();
+  await expect(page.locator("#operation-log")).toContainText("Resumed browser authorization", { timeout: 5000 });
+  await page.locator("#welcome-default-vault").click();
+  await page.getByRole("button", { name: "Local only" }).click();
+  await page.getByRole("button", { name: "Local vault mode" }).click();
+  await page.getByRole("button", { name: "Profile", exact: true }).click();
+  await expect(page.getByText(/Waiting for browser authorization/)).toBeVisible();
+  await expect(page.getByText("123456", { exact: true })).toBeVisible();
+
+  const callbackListeners = await page.evaluate(() => {
+    window.__OAUTH_POLL_PENDING__ = false;
+    return window.__EMIT_TAURI_EVENT__("deep-link://new-url", ["jtype://oauth/complete"]);
+  });
+  expect(callbackListeners).toBeGreaterThan(0);
+  await expect(page.locator("#operation-log")).toContainText("Connected as jack", { timeout: 5000 });
+  await expect.poll(() => page.evaluate(() => window.sessionStorage.getItem("jtype-e2e-pending-oauth"))).toBeNull();
 });
 
 test("identifies shared cloud sync and websocket traffic as mobile", async ({ page }) => {
@@ -2308,6 +2393,72 @@ test("draft is dirty after editing and can be discarded", async ({ page }) => {
   await page.getByRole("button", { name: "OK", exact: true }).click();
   // After discarding we return to the welcome screen.
   await expect(page.locator("#welcome-screen")).toBeVisible();
+});
+
+test("recovers one unsaved mobile draft after a cold reload and clears it on discard", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "userAgent", {
+      value: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)",
+      configurable: true,
+    });
+    window.__RUNTIME_CAPABILITIES__ = {
+      platform: "ios",
+      clientType: "mobile",
+      isMobile: true,
+      isTouchPrimary: true,
+      prefersCompactLayout: true,
+      supportsWindowDrag: false,
+      supportsUpdater: false,
+      supportsProcessRestart: false,
+      supportsCliInstall: false,
+      supportsFileDrop: false,
+      supportsExternalVault: true,
+      usesAppPrivateVault: true,
+    };
+  });
+  await page.reload();
+  await page.locator("#welcome-default-vault").click();
+  await page.getByRole("button", { name: "Local only" }).click();
+  await page.locator("header").getByRole("button", { name: "New document" }).click();
+  await page.getByLabel("Markdown editor").fill("# Recovered mobile draft\n\nStill here after a process restart.");
+
+  await expect.poll(() => page.evaluate(() => {
+    const encoded = window.sessionStorage.getItem("jtype-e2e-mobile-draft");
+    if (!encoded) return null;
+    const draft = JSON.parse(encoded) as { content: string; workspacePath: string | null; version: number };
+    return {
+      content: draft.content,
+      hasWorkspace: Boolean(draft.workspacePath),
+      version: draft.version,
+    };
+  })).toEqual({
+    content: "# Recovered mobile draft\n\nStill here after a process restart.",
+    hasWorkspace: true,
+    version: 1,
+  });
+
+  // Removing all text clears the older native snapshot, so a cold launch can
+  // never resurrect content the user deliberately deleted.
+  await page.getByLabel("Markdown editor").fill("");
+  await expect.poll(() => page.evaluate(() => window.sessionStorage.getItem("jtype-e2e-mobile-draft"))).toBeNull();
+  await page.getByLabel("Markdown editor").fill("# Recovered mobile draft\n\nStill here after a process restart.");
+  await expect.poll(() => page.evaluate(() => window.sessionStorage.getItem("jtype-e2e-mobile-draft"))).not.toBeNull();
+
+  // The native app-private record survives WebView/process loss. It restores
+  // through the same shared draft/editor state and never creates a fake path.
+  await page.reload();
+  await expect(page.getByLabel("Markdown editor")).toHaveValue(
+    "# Recovered mobile draft\n\nStill here after a process restart.",
+  );
+  await expect(page.locator("#operation-log")).toContainText("Recovered an unsaved mobile draft");
+  await expect(page.locator("#app-context-title")).toHaveText("Untitled");
+  expect(await page.evaluate(() => JSON.parse(window.localStorage.getItem("jtype.lastFilePath") ?? '""'))).toBe("");
+
+  await page.getByRole("button", { name: "Discard draft" }).click();
+  await page.getByRole("button", { name: "OK", exact: true }).click();
+  await expect(page.locator("#vault-home")).toBeVisible();
+  await expect.poll(() => page.evaluate(() => window.sessionStorage.getItem("jtype-e2e-mobile-draft"))).toBeNull();
 });
 
 test("saves a draft to the vault via the name dialog", async ({ page }) => {

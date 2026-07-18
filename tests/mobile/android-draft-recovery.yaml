@@ -1,0 +1,27 @@
+appId: net.jcode.jtype
+---
+- launchApp:
+    clearState: true
+- assertVisible: "Use default vault"
+- tapOn: "Use default vault"
+- assertVisible: "Local only"
+- tapOn: "Local only"
+- assertVisible: "Vault ready"
+- tapOn:
+    text: "New document"
+    index: 0
+- assertVisible: "Discard draft"
+- tapOn: "Markdown editor"
+- inputText: "Recovered Android draft"
+- assertVisible: "Recovered Android draft"
+- killApp
+- launchApp
+- assertVisible: "Recovered Android draft"
+- assertVisible: "Discard draft"
+- tapOn: "Discard draft"
+- tapOn: "OK"
+- assertNotVisible: "Recovered Android draft"
+- killApp
+- launchApp
+- assertNotVisible: "Recovered Android draft"
+- assertVisible: "Vault ready"
