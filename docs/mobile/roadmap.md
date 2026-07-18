@@ -2,7 +2,7 @@
 
 > 最后更新：2026-07-18  
 > Feature branch：`codex/mobile-app`  
-> 当前阶段：Phase 2D — 系统集成与可靠性；2A/2B/2C 工程与 Simulator gate 已完成
+> 当前阶段：Phase 2D — 系统集成与可靠性；系统分享入口与 recovery gate 已完成，继续无障碍、性能与真实设备终验
 > 状态说明：`[ ]` 未开始、`[~]` 进行中、`[x]` 已完成；只有附上真实测试证据后才能标记完成。
 
 ## 目标
@@ -196,7 +196,7 @@
 ### 2.3 系统入口与后台能力
 
 - [~] 固定自有 OAuth deep link 与 pending OAuth 冷启动恢复已接入；universal/app links 和文档定位待完成
-- [ ] Android share target / iOS share extension 将 Markdown、文本或文件导入 vault
+- [x] Android share target / iOS share extension 已把 Markdown、纯文本、URL 和文件接入现有 vault import 与 desktop/shared editor；cold/warm Android 和 Safari → iOS extension → JType 闭环均通过（证据：`docs/mobile/reports/phase-2-share-import.md`，实现：`ce9239b`）
 - [ ] APNs/FCM 通知用于协作变化提示；后台只做系统允许的有限刷新
 - [ ] 通知/深链进入后定位到正确 cloud workspace、vault 和文档
 
@@ -211,12 +211,12 @@
 
 - [~] Android 外部 vault 全链路已通过；iOS Simulator 已通过选择、重启/覆盖安装恢复和 shared editor 写回，physical iPhone 权限失效恢复待完成
 - [~] Android 外部 app 修改文件后的真实 reconcile/conflict 已通过；iOS 复用同一 Rust plan 与共享 dialog，并有 contract/E2E 覆盖，真实 Files provider 双边冲突留到 physical iPhone gate
-- [ ] share/deep-link/notification smoke flow 通过
+- [~] Android/iOS share smoke flow 与 OAuth deep-link 已通过；通知、universal/app links 和通知/深链文档定位待完成
 - [ ] 大 vault 基准达到报告中预先记录的阈值
-- [x] 当前 2D recovery 增量的 desktop build、Rust 28/28、unit 47/47、app E2E 46/46 全部通过；后续 Phase 2 增量继续重复完整 gate
+- [x] 当前 2D share-import 增量的 desktop build、Rust 28/28、unit 47/47、app E2E 47/47、Android APK 与 iOS archive 全部通过；后续 Phase 2 增量继续重复完整 gate
 - [ ] 双平台模拟器与至少一台真实设备截图/录像证据已保存
-- [~] `docs/mobile/reports/phase-2.md` 已记录 2A、2B 与 2C Simulator 结果，iOS 细节见 `docs/mobile/reports/phase-2-ios-external-vault.md`；后续持续更新到 Phase 2 终验
-- [~] tracking 已记录当前 Phase 2 commit hashes；后续增量继续追加
+- [~] `docs/mobile/reports/phase-2.md` 已记录 2A、2B、2C、2D recovery 与系统分享结果；细节见 `phase-2-ios-external-vault.md`、`phase-2-mobile-recovery.md`、`phase-2-share-import.md`，后续持续更新到 Phase 2 终验
+- [~] tracking 已记录当前 Phase 2 commit hashes（最新 `ce9239b`）；后续增量继续追加
 
 ## Phase 3 — Store readiness
 

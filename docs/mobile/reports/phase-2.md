@@ -4,15 +4,17 @@
 
 Feature branch：`codex/mobile-app`
 
-当前 app code commit：`49dea60`
+当前 app code commit：`ce9239b`
 
-本报告状态：进行中；2A provider contract、2B Android SAF 与 2C iOS security-scoped provider 的工程/Simulator gate 已完成。2D 已完成 app-private 草稿冷恢复与 Keystore/Keychain pending OAuth 冷恢复；系统分享入口、无障碍、大 vault/弱网和 physical-device gate 继续进行。iOS external provider 已通过系统目录选择、native-only bookmark、首次镜像、覆盖安装后的容器迁移、冷启动恢复和 shared editor write-back；physical iPhone 的 bookmark 失效/重新授权仍保留在最终真实设备 gate。
+本报告状态：进行中；2A provider contract、2B Android SAF 与 2C iOS security-scoped provider 的工程/Simulator gate 已完成。2D 已完成 app-private 草稿冷恢复、Keystore/Keychain pending OAuth 冷恢复，以及 Android share target / iOS Share Extension；无障碍、大 vault/弱网和 physical-device gate 继续进行。iOS external provider 已通过系统目录选择、native-only bookmark、首次镜像、覆盖安装后的容器迁移、冷启动恢复和 shared editor write-back；physical iPhone 的 bookmark 失效/重新授权仍保留在最终真实设备 gate。
 
 ## 本增量结论
 
 现有 app-private vault 已成为第一个 `VaultProvider` 实现。共享 React 产品层仍使用同一套 `AppState`、commands、`Sidebar`、`VaultHome`、`EditorShell`、Document Info、Board 和相对路径模型；移动端没有新增另一套文件树、编辑器或预览。
 
 Android SAF 没有新增 mobile-only 产品页：native picker 与 opaque tree URI 被封装在 Android/Rust provider adapter 内，选中的目录先镜像到 app-private root，再返回现有 `WorkspaceSnapshot`。正式入口复用 Welcome / Sidebar 原有的 Open vault action；打开后继续使用同一套 `VaultHome`、文件树、编辑器、预览、Document Info、Board 和 commands。共享壳层只增加 provider status banner 与 Headless UI 冲突 dialog，用于展示目录名、访问状态、pending write-back、冲突数量、重新授权/检查动作和逐路径版本选择。
+
+系统分享也遵守相同边界：Android Intent 与 iOS Share Extension 只负责捕获、暂存和唤醒，Rust 将来源交给现有 `importExternalSources`，最终仍由同一套 vault provider routing 和 `EditorShell` 呈现；移动端没有 landing page、docs website、share inbox 页面或独立编辑器。
 
 本增量建立的边界包括：
 
@@ -485,12 +487,19 @@ E2E 现在以完整中文 locale 在 390×844 viewport 验证：content panel �
 - `f0e3443`：在共享 provider banner 中显示 SAF 批量 write-back/verification 进度，并将大批量共享 mutation 移到 blocking worker，保持 desktop IPC contract 不变。
 - `2e52c8b`：iOS security-scoped folder provider、mobile external command 泛化、container path rebase、shared editor iOS focus 修复与 native picker smoke flow。
 - `49dea60`：单一 untitled draft 的 app-private 原子 snapshot、双平台 cold recovery，以及 Keystore/Keychain pending OAuth、单一 poll owner、expiry/retry/cancel 清理。
+- `ce9239b`：Android cold/warm `ACTION_SEND`、iOS Share Extension / App Group inbox，以及复用现有 vault import 和 shared editor 的单一 drain 链路。
 
 ## 2D 草稿与 pending OAuth 冷恢复
 
 移动端仍使用 desktop/shared `NEW_DRAFT`、`EditorShell`、Account Dialog、device OAuth 和 cloud profile。兼容层只补充 app lifecycle 与原生持久化：一份 dirty untitled draft 写入 app-private 原子 snapshot；device OAuth pending record 在打开浏览器前写入 Android Keystore 或 iOS Keychain。显式系统打开/分享目标优先于 draft，draft 又优先于 last-opened document。
 
 Android API 36 与 signed iPhone 17 Pro Simulator / iOS 26.5 均完成连续 process-kill gate：draft 在 cold launch 后恢复并在 Discard 后永久清理；OAuth 在两次 cold launch 后仍恢复 waiting，Cancel 后再冷启动回到 Connect in browser。完整安全边界、自动化和截图见 [`phase-2-mobile-recovery.md`](phase-2-mobile-recovery.md)。
+
+## 2D Android / iOS 系统分享导入
+
+Android manifest 注册 `ACTION_SEND` / `ACTION_SEND_MULTIPLE`，native plugin 同时捕获 cold Activity Intent 与 warm `onNewIntent`，支持文本、Markdown、图片、PDF 和通用文件，并通过 plugin event、lifecycle 和 startup drain 接入同一 Rust command。iOS 使用嵌入主 app 的 `JType Share` extension，把完整 request 原子写入 App Group，再由主 app 移入可恢复的 app-cache inbox。两端最终都调用现有 `useFileSystem.importExternalSources`，没有新增 mobile-only share 页面、文件树或编辑器。
+
+Android API 36 已完成 cold text、warm text 和真实 MediaStore `content://` 文件的系统分享选择器 gate；signed iPhone 17 Pro Simulator / iOS 26.5 已完成 Safari → Share Sheet → JType extension → 主 app → shared Markdown editor。完整实现、安全边界、自动化和截图见 [`phase-2-share-import.md`](phase-2-share-import.md)。
 
 ## 自动化与构建结果
 
@@ -499,7 +508,7 @@ Android API 36 与 signed iPhone 17 Pro Simulator / iOS 26.5 均完成连续 pro
 | `npm run build` | PASS |
 | `npm run build --prefix services/jtype-web/frontend` | PASS |
 | `npm run test:unit` | PASS，47/47 |
-| `npx playwright test tests/e2e/app.spec.ts` | PASS，44/44 |
+| `npx playwright test tests/e2e/app.spec.ts` | PASS，47/47；包含 warm native share event drain |
 | `cargo test --manifest-path src-tauri/Cargo.toml` | PASS，28/28；新增 source conflict subtree 原子替换测试 |
 | `cargo check --manifest-path plugins/mobile-import/Cargo.toml` | PASS |
 | `cargo fmt --manifest-path plugins/mobile-import/Cargo.toml --check` | PASS |
@@ -522,17 +531,19 @@ Android API 36 与 signed iPhone 17 Pro Simulator / iOS 26.5 均完成连续 pro
 | `cargo check --release --manifest-path src-tauri/Cargo.toml` | PASS；release `debug_assertions=false` 分支不暴露 fault 配置 |
 | `pnpm tauri ios build --debug --target aarch64-sim --no-sign --archive-only --ci` | PASS；security-scoped external provider 编译通过 |
 | iOS clean picker / initial mirror / cold restore / container migration / shared editor write-back | PASS；Files source 与 mirror 收敛 |
+| Android cold text / warm text / real MediaStore file system share | PASS；均进入现有 default vault 和 shared editor |
+| iOS Safari → Share Extension → App Group inbox → JType shared editor | PASS；archive 内含 `JType Share.appex` |
 
 Android debug APK：
 
 - `src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk`
-- 198,968,021 bytes（aarch64 target gate）
-- SHA-256 `4c0c1160f29bbaa19475c1f8b863da0f1416b937fb7763b60cf871e2c45fecb0`
+- 391,574,771 bytes（aarch64 target gate）
+- SHA-256 `e29aa54eba153daedd43ea140a3ab30dba6f2c80a7c94e8633baac4fce2cf16b`
 
 iOS archive：
 
 - `src-tauri/gen/apple/build/jtype_iOS.xcarchive`
-- no-sign simulator archive，约 100 MB
+- no-sign simulator archive，约 529 MB；包含 `JType.app/PlugIns/JType Share.appex`
 
 截图 SHA-256：
 
@@ -551,14 +562,16 @@ d7ca9b5f30658ff8d135cbff757c36c0c7ca2bfc33231246ac9830176f5cff0f  android-saf-lo
 857ba5a38d37dad57fb28dbc38d6cbd3717d2bed4dc56c0f9dca8fde31a9f5f0  android-saf-conflict-dialog.png
 efaf0b4b082cda9833811b3cdc5071b2f96ae26487a72f406be74207e947e4de  android-saf-batch-progress.png
 c213478f4fe7e1bde3d85447c08b9793b4559dc36de2cd40b80c065572bf876f  ios-security-scoped-shared-editor.png
+63924e4d2368e9ee5a923e4862177eac1d3dd5ac4fd199557e99156ab53cb85a  android-share-import.png
+c1f67c690aa47c066d80a10b52eae6d609cf494dabfd2e8987583a93e458633d  ios-share-import.png
 ```
 
-## 下一增量：2D 系统入口、无障碍与可靠性
+## 下一增量：2D 无障碍、性能与可靠性
 
-2A、2B、2C 与 2D recovery 的工程/Simulator gate 已收口。下一段继续保持 desktop/shared product surface，处理：
+2A、2B、2C 与 2D recovery/share-import 的工程/Simulator gate 已收口。下一段继续保持 desktop/shared product surface，处理：
 
-1. Android share target 与 iOS share extension，把 Markdown、纯文本和文件导入用户选择的 vault。
-2. VoiceOver/TalkBack、动态字体、对比度、键盘 accessory 与硬件快捷键。
-3. 低内存、大 vault、弱网与最终真实设备 gate。
+1. VoiceOver/TalkBack、动态字体、对比度、键盘 accessory 与硬件快捷键。
+2. 低内存、大 vault、弱网、系统分享的大文件/进程终止矩阵。
+3. 通知与通知/深链定位，以及最终真实设备 gate。
 
 physical iPhone 上的 bookmark 失效/重新授权、iCloud/第三方 Files provider 行为与 signed build 继续作为 Phase 2 最终验收项，不用 Simulator 结果替代。
