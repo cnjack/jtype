@@ -456,6 +456,26 @@ pub(crate) fn trusted_baseline<'a>(
     baseline.filter(|manifest| recorded_revision == Some(manifest.revision.as_str()))
 }
 
+/// The external mirror lives in app-private storage and every product-content
+/// mutation is guarded by the local-mutation marker/write-back journal. At a
+/// stable point, a trusted baseline that still exactly matches the freshly
+/// hashed source therefore also describes the mirror. Reusing it avoids a
+/// second full content hash of the app-private tree without trusting provider
+/// timestamps or weakening source-change detection.
+pub(crate) fn reusable_stable_mirror_baseline<'a>(
+    baseline: Option<&'a VaultManifest>,
+    recorded_revision: Option<&str>,
+    source: &VaultManifest,
+    active_local_mutation: bool,
+    pending_write_back: bool,
+) -> Option<&'a VaultManifest> {
+    if active_local_mutation || pending_write_back {
+        return None;
+    }
+    trusted_baseline(baseline, recorded_revision)
+        .filter(|manifest| manifest.entries == source.entries)
+}
+
 pub(crate) fn save_baseline(root: &Path, manifest: &VaultManifest) -> Result<(), String> {
     let metadata_dir = root.join(".jtype");
     fs::create_dir_all(&metadata_dir).map_err(|error| error.to_string())?;
@@ -1297,6 +1317,58 @@ mod tests {
         assert!(trusted_baseline(Some(&baseline), Some(&baseline.revision)).is_some());
         assert!(trusted_baseline(Some(&baseline), Some("stale-revision")).is_none());
         assert!(trusted_baseline(Some(&baseline), None).is_none());
+    }
+
+    #[test]
+    fn stable_mirror_baseline_reuse_requires_exact_source_and_no_pending_mutation() {
+        let baseline_root = tempfile::tempdir().unwrap();
+        write(baseline_root.path(), "intro.md", "base");
+        let baseline = build_manifest(baseline_root.path()).unwrap();
+
+        let changed_root = tempfile::tempdir().unwrap();
+        write(changed_root.path(), "intro.md", "changed");
+        let changed = build_manifest(changed_root.path()).unwrap();
+
+        assert!(reusable_stable_mirror_baseline(
+            Some(&baseline),
+            Some(&baseline.revision),
+            &baseline,
+            false,
+            false,
+        )
+        .is_some());
+        assert!(reusable_stable_mirror_baseline(
+            Some(&baseline),
+            Some(&baseline.revision),
+            &changed,
+            false,
+            false,
+        )
+        .is_none());
+        assert!(reusable_stable_mirror_baseline(
+            Some(&baseline),
+            Some("stale-revision"),
+            &baseline,
+            false,
+            false,
+        )
+        .is_none());
+        assert!(reusable_stable_mirror_baseline(
+            Some(&baseline),
+            Some(&baseline.revision),
+            &baseline,
+            true,
+            false,
+        )
+        .is_none());
+        assert!(reusable_stable_mirror_baseline(
+            Some(&baseline),
+            Some(&baseline.revision),
+            &baseline,
+            false,
+            true,
+        )
+        .is_none());
     }
 
     #[test]

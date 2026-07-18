@@ -1085,8 +1085,45 @@ fn reconcile_external_vault_locked(
 
     let source_scan = scan_external_source_manifest(&app, &provider)?;
     let source_manifest = &source_scan.manifest;
-    let mirror_manifest = vault_reconcile::build_manifest(&mirror_root)?;
     let baseline = vault_reconcile::load_baseline(&mirror_root)?;
+    if vault_reconcile::reusable_stable_mirror_baseline(
+        baseline.as_ref(),
+        provider.source_revision.as_deref(),
+        source_manifest,
+        false,
+        false,
+    )
+    .is_some()
+    {
+        #[cfg(debug_assertions)]
+        eprintln!(
+            "[JTypePerformance] external_mirror_manifest_reuse provider={} operation=reconcile entries={}",
+            provider.provider_id, source_scan.entries
+        );
+        provider.access_state = vault_provider::VaultProviderAccessState::Ready;
+        provider.last_reconciled_at = Some(current_unix_timestamp()?);
+        provider.source_revision = Some(source_manifest.revision.clone());
+        let descriptor = provider.descriptor();
+        store.upsert(provider);
+        write_vault_provider_store(&app, &store)?;
+        return Ok(ExternalVaultReconcileResult {
+            provider: descriptor,
+            workspace: workspace::open_workspace(&mirror_root)?,
+            status: vault_reconcile::ReconcileStatus::Unchanged,
+            pulled_files: 0,
+            pulled_directories: 0,
+            deleted_entries: 0,
+            pending_local_changes: 0,
+            conflicts: Vec::new(),
+            scanned_entries: source_scan.entries,
+            scanned_files: source_scan.files,
+            scanned_bytes: source_scan.bytes,
+            scan_elapsed_ms: source_scan.elapsed_ms,
+            materialized_files: 0,
+            materialized_bytes: 0,
+        });
+    }
+    let mirror_manifest = vault_reconcile::build_manifest(&mirror_root)?;
     let baseline =
         vault_reconcile::trusted_baseline(baseline.as_ref(), provider.source_revision.as_deref());
     let plan = vault_reconcile::plan_reconcile(baseline, source_manifest, &mirror_manifest);
@@ -1212,8 +1249,41 @@ fn write_back_external_vault_locked(
 
     let source_scan = scan_external_source_manifest(app, &provider)?;
     let source_manifest = &source_scan.manifest;
-    let mirror_manifest = vault_reconcile::build_manifest(&mirror_root)?;
     let baseline = vault_reconcile::load_baseline(&mirror_root)?;
+    if vault_reconcile::reusable_stable_mirror_baseline(
+        baseline.as_ref(),
+        provider.source_revision.as_deref(),
+        source_manifest,
+        preserve_active_local_mutation,
+        previous_journal.is_some(),
+    )
+    .is_some()
+    {
+        #[cfg(debug_assertions)]
+        eprintln!(
+            "[JTypePerformance] external_mirror_manifest_reuse provider={} operation=write_back entries={}",
+            provider.provider_id, source_scan.entries
+        );
+        provider.last_reconciled_at = Some(current_unix_timestamp()?);
+        provider.source_revision = Some(source_manifest.revision.clone());
+        let descriptor = provider.descriptor();
+        store.upsert(provider);
+        write_vault_provider_store(app, &store)?;
+        vault_reconcile::commit_local_mutation(&mirror_root)?;
+        vault_reconcile::clear_write_back_journal(&mirror_root)?;
+        return Ok(ExternalVaultWriteBackResult {
+            provider: descriptor,
+            workspace: workspace::open_workspace(&mirror_root)?,
+            status: vault_reconcile::WriteBackStatus::Unchanged,
+            written_files: 0,
+            created_directories: 0,
+            deleted_entries: 0,
+            pulled_before_write: 0,
+            pending_journal: false,
+            conflicts: Vec::new(),
+        });
+    }
+    let mirror_manifest = vault_reconcile::build_manifest(&mirror_root)?;
     let baseline =
         vault_reconcile::trusted_baseline(baseline.as_ref(), provider.source_revision.as_deref());
     let pull_plan = vault_reconcile::plan_reconcile(baseline, source_manifest, &mirror_manifest);
@@ -1968,12 +2038,7 @@ async fn read_workspace_entry_page(
             .workspace_entry_pages
             .lock()
             .map_err(|_| "Workspace page cache is unavailable.".to_string())?;
-        page_cache.read_workspace_entry_page(
-            &root,
-            &relative_path,
-            cursor.as_deref(),
-            page_size,
-        )
+        page_cache.read_workspace_entry_page(&root, &relative_path, cursor.as_deref(), page_size)
     })
     .await
     .map_err(|error| format!("Workspace page worker failed: {error}"))?

@@ -4,6 +4,11 @@ appId: net.jcode.jtype
     clearState: false
 - runFlow:
     when:
+      visible: "^仅本地$|^Keep local$"
+    commands:
+      - tapOn: "^仅本地$|^Keep local$"
+- runFlow:
+    when:
       visible: "^关闭$|^Close$"
     commands:
       - tapOn: "^关闭$|^Close$"
