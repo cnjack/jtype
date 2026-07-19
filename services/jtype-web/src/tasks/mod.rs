@@ -4,7 +4,8 @@
 //!   - `cleanup_trash`: hourly, deletes rows from `document_trash`
 //!     whose `expires_at < NOW()`.
 //!   - `webhook_delivery`: every 10s, signs + POSTs due webhook deliveries.
-//!   - `mobile_push_delivery`: sends due collaboration hints through FCM/APNs.
+//!   - `mobile_push_delivery`: maintains the private hint queue and sends due
+//!     collaboration hints through configured FCM/APNs transports.
 //!
 //! All tasks spawned from `lib.rs::run_from_env`.
 

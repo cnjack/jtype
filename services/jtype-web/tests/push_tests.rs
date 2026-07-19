@@ -254,7 +254,7 @@ async fn document_changes_enqueue_only_other_members_and_coalesce_pending_path_u
     )
     .await;
     let latest = common::save_doc(
-        app,
+        app.clone(),
         &owner_auth,
         &workspace_id,
         "shared/transport.md",
@@ -286,4 +286,53 @@ async fn document_changes_enqueue_only_other_members_and_coalesce_pending_path_u
         latest["updatedClock"].as_i64().unwrap()
     );
     assert_eq!(rows[0].try_get::<String, _>("status").unwrap(), "pending");
+
+    sqlx::query(
+        "UPDATE mobile_push_deliveries SET created_at = DATE_SUB(NOW(), INTERVAL 5 HOUR) WHERE workspace_id = ?",
+    )
+    .bind(&workspace_id)
+    .execute(&pool)
+    .await
+    .unwrap();
+    let maintenance = jtype_web::tasks::mobile_push_delivery::maintain_once(&pool)
+        .await
+        .unwrap();
+    assert_eq!(maintenance.removed_expired, 1);
+    let remaining: i64 =
+        sqlx::query_scalar("SELECT COUNT(*) FROM mobile_push_deliveries WHERE workspace_id = ?")
+            .bind(&workspace_id)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+    assert_eq!(remaining, 0, "expired hints are removed without a provider");
+
+    common::save_doc(
+        app,
+        &owner_auth,
+        &workspace_id,
+        "shared/transport.md",
+        "# Membership changed",
+    )
+    .await;
+    sqlx::query(
+        r#"DELETE m FROM workspace_members m
+           JOIN users u ON u.id = m.user_id
+           WHERE m.workspace_id = ? AND u.username = ?"#,
+    )
+    .bind(&workspace_id)
+    .bind(&member_name)
+    .execute(&pool)
+    .await
+    .unwrap();
+    let maintenance = jtype_web::tasks::mobile_push_delivery::maintain_once(&pool)
+        .await
+        .unwrap();
+    assert_eq!(maintenance.removed_inactive, 1);
+    let remaining: i64 =
+        sqlx::query_scalar("SELECT COUNT(*) FROM mobile_push_deliveries WHERE workspace_id = ?")
+            .bind(&workspace_id)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+    assert_eq!(remaining, 0, "revoked members retain no queued routes");
 }

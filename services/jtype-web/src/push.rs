@@ -16,6 +16,7 @@ use crate::{db::models::CloudDocument, util::sha256_hex};
 
 pub const PUSH_ROUTE_ORIGIN: &str = "https://jtype.nightc.com";
 pub const PUSH_ROUTE_PATH: &str = "/open/document";
+const PUSH_COLLAPSE_ID: &str = "jtype-collaboration";
 const FCM_SCOPE: &str = "https://www.googleapis.com/auth/firebase.messaging";
 const FCM_TOKEN_AUDIENCE: &str = "https://oauth2.googleapis.com/token";
 const FCM_TOKEN_ENDPOINT: &str = "https://oauth2.googleapis.com/token";
@@ -70,6 +71,7 @@ impl CollaborationPush {
                     "routeUrl": route_url,
                 },
                 "android": {
+                    "collapse_key": PUSH_COLLAPSE_ID,
                     "priority": "HIGH",
                     "ttl": "3600s",
                 }
@@ -454,7 +456,11 @@ impl PushTransport {
                 .header("apns-topic", &config.topic)
                 .header("apns-push-type", "alert")
                 .header("apns-priority", "10")
-                .header("apns-expiration", "0")
+                .header(
+                    "apns-expiration",
+                    now_secs().saturating_add(3600).to_string(),
+                )
+                .header("apns-collapse-id", PUSH_COLLAPSE_ID)
                 .json(&payload)
                 .send()
                 .await;
@@ -945,6 +951,11 @@ mod tests {
             push.fcm_message("firebase-installation-id").unwrap()["message"]["data"]["routeUrl"],
             route
         );
+        assert_eq!(
+            push.fcm_message("firebase-installation-id").unwrap()["message"]["android"]
+                ["collapse_key"],
+            PUSH_COLLAPSE_ID
+        );
         assert_eq!(push.apns_payload().unwrap()["jtypeRoute"], route);
     }
 
@@ -1087,6 +1098,13 @@ mod tests {
         assert_eq!(headers["authorization"], "Bearer apns-provider-token");
         assert_eq!(headers["apns-topic"], "net.jcode.jtype");
         assert_eq!(headers["apns-push-type"], "alert");
+        assert_eq!(headers["apns-collapse-id"], PUSH_COLLAPSE_ID);
+        assert!(headers["apns-expiration"]
+            .to_str()
+            .unwrap()
+            .parse::<u64>()
+            .unwrap()
+            > now_secs());
         assert_eq!(payload["jtypeRoute"], push().canonical_route_url().unwrap());
     }
 }

@@ -11,8 +11,9 @@ use crate::push::{CollaborationPush, DeliveryDisposition, PushTransport};
 
 const TICK_SECS: u64 = 10;
 const BATCH: i64 = 40;
+const DELIVERY_RETENTION_HOURS: i64 = 4;
 
-pub fn spawn(pool: Pool<MySql>, transport: PushTransport) {
+pub fn spawn(pool: Pool<MySql>, transport: Option<PushTransport>) {
     let running = Arc::new(AtomicBool::new(false));
     tokio::spawn(async move {
         let mut interval = tokio::time::interval(std::time::Duration::from_secs(TICK_SECS));
@@ -22,7 +23,7 @@ pub fn spawn(pool: Pool<MySql>, transport: PushTransport) {
             if running.swap(true, Ordering::SeqCst) {
                 continue;
             }
-            if let Err(error) = run_once(&pool, &transport).await {
+            if let Err(error) = run_once(&pool, transport.as_ref()).await {
                 eprintln!("mobile push delivery tick failed: {error}");
             }
             running.store(false, Ordering::SeqCst);
@@ -32,28 +33,20 @@ pub fn spawn(pool: Pool<MySql>, transport: PushTransport) {
 
 /// Claim and process one due batch. Conditional claims make this safe across
 /// multiple jtype-web processes; stale claims are recovered after five minutes.
-pub async fn run_once(pool: &Pool<MySql>, transport: &PushTransport) -> Result<u64, sqlx::Error> {
-    sqlx::query(
-        r#"UPDATE mobile_push_deliveries
-           SET status = 'failed', next_retry_at = NOW()
-           WHERE status = 'processing'
-             AND updated_at < DATE_SUB(NOW(), INTERVAL 5 MINUTE)"#,
-    )
-    .execute(pool)
-    .await?;
-
-    // Membership is checked again at delivery time. Revoked members never
-    // receive a queued route, even if their registration still exists.
-    sqlx::query(
-        r#"DELETE d FROM mobile_push_deliveries d
-           JOIN mobile_push_registrations r ON r.id = d.registration_id
-           LEFT JOIN workspace_members m
-             ON m.user_id = r.user_id AND m.workspace_id = d.workspace_id
-            AND m.status = 'active'
-           WHERE m.user_id IS NULL"#,
-    )
-    .execute(pool)
-    .await?;
+pub async fn run_once(
+    pool: &Pool<MySql>,
+    transport: Option<&PushTransport>,
+) -> Result<u64, sqlx::Error> {
+    let maintenance = maintain_once(pool).await?;
+    if maintenance.total() > 0 {
+        println!(
+            "mobile push maintenance: recovered={}, inactive={}, expired={}",
+            maintenance.recovered, maintenance.removed_inactive, maintenance.removed_expired
+        );
+    }
+    let Some(transport) = transport else {
+        return Ok(0);
+    };
 
     let rows = sqlx::query(
         r#"SELECT d.id, d.registration_id, d.workspace_id, d.relative_path,
@@ -120,6 +113,68 @@ pub async fn run_once(pool: &Pool<MySql>, transport: &PushTransport) -> Result<u
         attempted += 1;
     }
     Ok(attempted)
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct MaintenanceSummary {
+    pub recovered: u64,
+    pub removed_inactive: u64,
+    pub removed_expired: u64,
+}
+
+impl MaintenanceSummary {
+    fn total(self) -> u64 {
+        self.recovered
+            .saturating_add(self.removed_inactive)
+            .saturating_add(self.removed_expired)
+    }
+}
+
+/// Privacy and pressure maintenance runs even when no provider credentials are
+/// configured. It never logs identifiers, routes, workspace IDs, or copy.
+pub async fn maintain_once(pool: &Pool<MySql>) -> Result<MaintenanceSummary, sqlx::Error> {
+    let recovered = sqlx::query(
+        r#"UPDATE mobile_push_deliveries
+           SET status = 'failed', next_retry_at = NOW()
+           WHERE status = 'processing'
+             AND updated_at < DATE_SUB(NOW(), INTERVAL 5 MINUTE)"#,
+    )
+    .execute(pool)
+    .await?
+    .rows_affected();
+
+    // Membership is checked again at delivery time. Revoked members never
+    // receive a queued route, even if their registration still exists.
+    let removed_inactive = sqlx::query(
+        r#"DELETE d FROM mobile_push_deliveries d
+           JOIN mobile_push_registrations r ON r.id = d.registration_id
+           LEFT JOIN workspace_members m
+             ON m.user_id = r.user_id AND m.workspace_id = d.workspace_id
+            AND m.status = 'active'
+           WHERE m.user_id IS NULL"#,
+    )
+    .execute(pool)
+    .await?
+    .rows_affected();
+
+    // Provider hints are freshness signals, not durable user records. Remove
+    // expired unclaimed/dead rows after four hours. A live processing claim is
+    // preserved until the stale-claim recovery above makes it safe to delete.
+    let removed_expired = sqlx::query(
+        r#"DELETE FROM mobile_push_deliveries
+           WHERE status <> 'processing'
+             AND created_at < DATE_SUB(NOW(), INTERVAL ? HOUR)"#,
+    )
+    .bind(DELIVERY_RETENTION_HOURS)
+    .execute(pool)
+    .await?
+    .rows_affected();
+
+    Ok(MaintenanceSummary {
+        recovered,
+        removed_inactive,
+        removed_expired,
+    })
 }
 
 async fn apply_disposition(

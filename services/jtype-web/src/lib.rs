@@ -105,9 +105,7 @@ pub async fn run_from_env() -> Result<(), AppError> {
     println!("jtype-web listening on http://{}", bind_addr);
     // Spawn periodic trash cleanup plus durable outbound delivery workers.
     tasks::webhook_delivery::spawn(pool.clone());
-    if let Some(transport) = push::PushTransport::from_env() {
-        tasks::mobile_push_delivery::spawn(pool.clone(), transport);
-    }
+    tasks::mobile_push_delivery::spawn(pool.clone(), push::PushTransport::from_env());
     tasks::cleanup_trash::spawn(pool);
     axum::serve(listener, app)
         .await
