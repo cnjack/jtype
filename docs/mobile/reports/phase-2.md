@@ -4,7 +4,7 @@
 
 Feature branch：`codex/mobile-app`
 
-当前 app code commit：`e132c0f`
+当前 app code commit：`c14571a`
 
 当前 iOS provider gate commit：`264db8a`
 
@@ -12,7 +12,9 @@ Feature branch：`codex/mobile-app`
 
 当前 external mirror reuse commit：`a374204`
 
-本报告状态：进行中；2A provider contract、2B Android SAF 与 2C iOS security-scoped provider 的工程/Simulator gate 已完成。2D 已完成 app-private 草稿冷恢复、Keystore/Keychain pending OAuth 冷恢复、Android share target / iOS Share Extension、模拟器无障碍、共享触控交互与键盘辅助栏、5,000 文档大 vault、大 Markdown/附件/1,200-card Board 渐进渲染、sync reliability、本地原生通知文档定位、HTTPS universal/app-link 工程契约、APNs device-token / FCM FID registration contract，以及 mobile partial `WorkspaceSnapshot`、shared loaded-first/native-fallback resolver 与 folder hydration。Android partial 5,008-entry cold open、IPC/snapshot、RSS 和尾部打开，以及 iOS clean static archive 的 5,406-entry partial cold open、unloaded tail cold restore 均已通过；双端交互式第二页使用有界 shallow cache，native hit 均为 0 ms。external reconcile/write-back 已改为 native full scan + plan-driven source materialization；Android SAF 与 iOS local Files provider 的原生复测均通过。`a374204` 在 source 完整 SHA-256 与可信 baseline 完全一致、无 mutation/journal 时复用 baseline，消除 unchanged 稳定状态的第二次 app-private mirror full hash；Android/iOS Simulator 均命中，Android changed/restored source 仍精确走 1-file materialization。`799358c` 增加严格 HTTPS route、Android autoVerify、iOS associated-domain 和 Axum fail-closed association endpoint；当前生产域名尚未部署 JSON association，真实 signing/physical verified link 继续 blocked。`e132c0f` 新增 native provider identifier 注册、authenticated registration/rotation/logout API 与 provider payload builder，并完成 iOS injected remote banner 点击和 Android 缺配置 fail-closed gate；真实 provider credential transport 与 physical delivery 不宣称完成。Android Studio 已把 `arm64` 设为唯一默认 product flavor。`c63aac3` 新增 fail-closed physical-device preflight，当前真实报告正确排除 Emulator/Simulator，并因 0 真机、0 Apple Development identity 和未配置 team 保持 blocked。真实设备弱网、provider transport、provider-native streaming、source full-hash 优化、双平台 physical low-memory/performance、physical bookmark 生命周期与真机终验继续进行。
+当前 push refresh recovery commit：`c14571a`
+
+本报告状态：进行中；2A provider contract、2B Android SAF 与 2C iOS security-scoped provider 的工程/Simulator gate 已完成。2D 已完成 app-private 草稿冷恢复、Keystore/Keychain pending OAuth 冷恢复、Android share target / iOS Share Extension、模拟器无障碍、共享触控交互与键盘辅助栏、5,000 文档大 vault、大 Markdown/附件/1,200-card Board 渐进渲染、sync reliability、本地原生通知文档定位、HTTPS universal/app-link 工程契约、APNs device-token / FCM FID registration contract，以及 mobile partial `WorkspaceSnapshot`、shared loaded-first/native-fallback resolver 与 folder hydration。Android partial 5,008-entry cold open、IPC/snapshot、RSS 和尾部打开，以及 iOS clean static archive 的 5,406-entry partial cold open、unloaded tail cold restore 均已通过；双端交互式第二页使用有界 shallow cache，native hit 均为 0 ms。external reconcile/write-back 已改为 native full scan + plan-driven source materialization；Android SAF 与 iOS local Files provider 的原生复测均通过。`a374204` 在 source 完整 SHA-256 与可信 baseline 完全一致、无 mutation/journal 时复用 baseline，消除 unchanged 稳定状态的第二次 app-private mirror full hash；Android/iOS Simulator 均命中，Android changed/restored source 仍精确走 1-file materialization。`799358c` 增加严格 HTTPS route、Android autoVerify、iOS associated-domain 和 Axum fail-closed association endpoint；当前生产域名尚未部署 JSON association，真实 signing/physical verified link 继续 blocked。remote push 已由 `e132c0f` 注册 contract、`611dbcd` durable outbox/credential transport、`948ecf6` collapse/TTL/retention 和 `c14571a` native durable hint → shared sync recovery 连续完成工程 gate；真实 provider credentials/network、release signing 与 physical background/terminated delivery 不宣称完成。Android Studio 已把 `arm64` 设为唯一默认 product flavor。`c63aac3` 新增 fail-closed physical-device preflight，当前真实报告正确排除 Emulator/Simulator，并因 0 真机、0 Apple Development identity 和未配置 team 保持 blocked。真实设备弱网、provider-native streaming、source full-hash 优化、双平台 physical low-memory/performance、physical bookmark 生命周期与真机终验继续进行。
 
 ## 本增量结论
 
@@ -563,13 +565,17 @@ Android API 36 与 iPhone 17 Pro / iOS 26.5 在 Axum 服务关闭期间均能通
 
 Android API 36 已显示真实系统通知，并在点击后定位到绑定 vault 的 `performance-note-00001.md` 和共用 EditorShell。官方 adapter 在 Android 实机模拟器回调中给出 `notification: null`，实现以固定 collaboration notification ID 和读取即删除的 canonical-route fallback 兼容；iOS payload 缺少 `extra` 时走同一边界。route 拒绝凭据、fragment、未知/重复参数、路径 traversal 与 reserved metadata segment。
 
-iPhone 17 Pro / iOS 26.5 Simulator 同样显示真实系统横幅，点击后消费一次性 canonical route fallback，并使用共用 EditorShell 打开 `Performance note 00001`；fallback localStorage 记录数随后为 `0`。Tauri notification `2.3.3` 的 iOS `Schedule.at()` 会把 ISO `Z` 按本地时间 literal 解析；兼容层在 JavaScript 中等待 2.5 秒、确保 WKWebView 首次 paint 完成后，再调用 iOS 前台立即呈现，Android 继续使用 native 2.5 秒 schedule。fresh-install 白屏通过提交级二分定位到 `ff21f86`，并由 `999dc11` 修复；route、状态和 UI 仍完全共用。后续 `e132c0f` 已补齐 provider identifier registration/payload 工程 contract，真实 provider transport 与有限后台刷新继续保留。完整边界、截图、artifact hash 与限制见 [`phase-2-notification-routing.md`](phase-2-notification-routing.md) 与 [`phase-2-unloaded-entry-resolution.md`](phase-2-unloaded-entry-resolution.md)。
+iPhone 17 Pro / iOS 26.5 Simulator 同样显示真实系统横幅，点击后消费一次性 canonical route fallback，并使用共用 EditorShell 打开 `Performance note 00001`；fallback localStorage 记录数随后为 `0`。Tauri notification `2.3.3` 的 iOS `Schedule.at()` 会把 ISO `Z` 按本地时间 literal 解析；兼容层在 JavaScript 中等待 2.5 秒、确保 WKWebView 首次 paint 完成后，再调用 iOS 前台立即呈现，Android 继续使用 native 2.5 秒 schedule。fresh-install 白屏通过提交级二分定位到 `ff21f86`，并由 `999dc11` 修复；route、状态和 UI 仍完全共用。后续 remote provider transport 与有限 refresh-hint recovery 已完成工程/Simulator gate，production credentials 与 physical-device background behavior 继续保留。完整边界、截图、artifact hash 与限制见 [`phase-2-notification-routing.md`](phase-2-notification-routing.md)、[`phase-2-unloaded-entry-resolution.md`](phase-2-unloaded-entry-resolution.md) 与 [`phase-2-push-refresh.md`](phase-2-push-refresh.md)。
 
 ## 2D APNs / FCM remote push registration contract
 
 `e132c0f` 将本地通知的 canonical route/action 边界扩展到 provider remote push：Android 使用 Firebase Installation ID 的 `register()` / `onRegistered()` contract，iOS 使用系统 APNs device-token callback；根 `src/` 只在 authenticated mobile session 中把 identifier 直接提交到 Axum，退出账户时删除对应 registration。Migration `0027`、authenticated registration/list/delete API、rotation/跨用户原子转移和隐藏 identifier response 均已通过 API 测试；FCM data-only `message.fid` 与 APNs `jtypeRoute` payload builder 共用同一严格 HTTPS document route。
 
 iPhone 17 Pro / iOS 26.5 Simulator 已显示 `simctl push` 注入的 remote banner，点击系统默认 action 后从 `iOS provider 001` 打开同一 vault 的 `iOS provider 002`，最终仍为 Desktop 共用 EditorShell。Android API 36 最终 APK 解析 `firebase-messaging 25.1.1`；在未跟踪的 `google-services.json` 缺失时，Firebase 初始化明确失败但 App 365 ms 冷启动并继续显示共用 EditorShell。当前没有连接 FCM HTTP v1/APNs HTTP/2 credential transport，也没有真实 signed physical-device token/delivery 证据；该生产边界仍为 blocked。完整命令、截图、hash、测试矩阵和官方 contract 见 [`phase-2-remote-push.md`](phase-2-remote-push.md)。
+
+后续 `611dbcd` 已接通 active-member durable outbox、固定官方 FCM/APNs credential transport、retry/backoff 与 invalid-registration cleanup；`948ecf6` 增加 provider collapse/一小时 TTL、无凭据 maintenance 与四小时私有 hint retention。两段完整边界见 [`phase-2-provider-transport.md`](phase-2-provider-transport.md) 与 [`phase-2-push-retention.md`](phase-2-push-retention.md)。
+
+`c14571a` 把 remote hint 的设备端生命周期收口到共用产品层：Android/iOS native adapter 只原子保存一个 content-free pending bit，根 `src/` 的 `useMobileSyncRecovery` consume/coalesce 后调用既有 Desktop/mobile shared listener restart 与 cloud sync。iOS visible APNs payload 同时携带 `content-available=1` 和 `remote-notification` background mode，但系统 callback 仍是 best-effort；没有在 Kotlin/Swift 复制 token、vault pull、conflict 或 provider write。unit 86/86、app E2E 56/56、web 316/316、双平台最终 artifact 与 foreground/background notification banner 均通过；physical background/terminated behavior 仍 blocked。完整证据见 [`phase-2-push-refresh.md`](phase-2-push-refresh.md)。
 
 ## 2D Universal / Android App Links
 
@@ -619,12 +625,12 @@ Rust core 现在可以在不先构造完整 recursive snapshot 的前提下查�
 | --- | --- |
 | `npm run build` | PASS |
 | `npm run build --prefix services/jtype-web/frontend` | PASS |
-| `npm run test:unit` | PASS，85/85；包含 workspace partial/cache、app-link、APNs/FCM native/provider contract 与无 WebView persistence 回归 |
+| `npm run test:unit` | PASS，86/86；包含 workspace partial/cache、app-link、APNs/FCM native/provider/refresh contract 与无 WebView persistence 回归 |
 | `npx playwright test tests/e2e/app.spec.ts` | PASS，56/56；包含 405-document partial bootstrap/paging/tail Quick Open、mobile 三批 retry、cold document deep link 与 native notification tap fallback |
 | `npm run test:web` | PASS，27/27 |
 | `cargo test --manifest-path services/jtype-core/Cargo.toml` | PASS，46/46；包含 partial workspace completeness/root page、cache hit/mutation invalidation/LRU bound、405-document shallow pagination、未加载 entry exact/fuzzy search、path/wikilink resolve 与 nested link impact guard |
 | `cargo test --manifest-path src-tauri/Cargo.toml` | PASS，30/30；包含 provider recovery 与 mobile private-vault rebase |
-| `cargo test --manifest-path services/jtype-web/Cargo.toml --lib` | PASS，66/66；包含 FCM/APNs canonical payload 与 route guard |
+| `cargo test --manifest-path services/jtype-web/Cargo.toml --lib` | PASS，71/71；包含 FCM/APNs canonical payload、visible `content-available` 与 route guard |
 | `cargo test --manifest-path services/jtype-web/Cargo.toml --test push_tests` | PASS，3/3；注册、rotation、跨用户转移、identifier 隐藏与注销 |
 | `cargo check --manifest-path services/jtype-web/Cargo.toml` | PASS |
 | `cargo check --manifest-path plugins/mobile-import/Cargo.toml` | PASS |
@@ -680,18 +686,19 @@ Rust core 现在可以在不先构造完整 recursive snapshot 的前提下查�
 | Android HTTPS route / domain verification | 显式 HTTPS Intent → shared EditorShell PASS；production `assetlinks.json` 未部署，auto verification BLOCKED |
 | iOS Universal Link / fallback | entitlement/static config 与 custom fallback → shared EditorShell PASS；production AASA + signed association BLOCKED |
 | APNs/FCM registration contract | PASS；iOS injected remote banner → system tap → target shared EditorShell，Android 缺 Firebase config fail closed；真实 provider transport/physical delivery BLOCKED |
+| Push refresh-hint lifecycle | PASS；native content-free bit、shared consume/coalescing、Android/iOS final artifact 与系统 banner；真实 credentials/physical background delivery BLOCKED |
 
 Android debug APK：
 
 - `src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk`
-- 401,200,600 bytes（当前 `e132c0f` remote-push gate build）
-- SHA-256 `1113d9b73326b858a9a3137ae0d60fa60b24d6349616a97993fdb1332fbd0e9b`
+- 760,747,128 bytes（当前 `c14571a` universal push-refresh gate build）
+- SHA-256 `97a94349efd60b1b8d0d9effb54b68f5de3df6a06ec6d93c7db04b1be99b3b92`
 
 iOS archive：
 
 - `src-tauri/gen/apple/build/jtype_iOS.xcarchive`
 - no-sign simulator archive；包含 `JType.app/PlugIns/JType Share.appex`
-- app binary 109,481,352 bytes；SHA-256 `4b3ace2ede1780af294779b00d43bf80ce215fcfdf75d29ba9fed69f3992906d`
+- app binary 109,503,560 bytes；SHA-256 `6642c1ab1f73015f3b980965a10afa225e7636409d3fa7f4e8e7952ca6be7468`
 
 截图 SHA-256：
 
@@ -767,7 +774,7 @@ f4647f3baf19b0d02a5edac52b99f1734a23cf75005b83dfab6dc1cfa2ee26e1  ios-universal-
 
 1. Android/iOS external provider 120-file `1 changed / 0 changed`、stable mirror baseline reuse、shared loaded-first/native-fallback resolver、mobile partial `WorkspaceSnapshot`、folder page loading、按打开读取正文、Android 5,008-entry 与 iOS clean-static 5,406-entry cold/第二页 Simulator gate 已完成。下一步在双平台 physical-device fixture 记录交互式连续分页/搜索、source scan/total reconcile、peak RSS/memory warning、iPhone bookmark 生命周期；source full-hash 优化与 provider-native streaming 仍需保持离线/冲突正确性。
 2. physical device 弱网、网络切换、低存储，以及系统分享大文件/进程终止矩阵。
-3. 接入 APNs/FCM token/服务端投递与有限后台刷新；将已完成的 association endpoints 以真实 Team ID/release certificate 发布，并完成 signed Android/iOS physical-device verified-link gate。
+3. APNs/FCM token、durable outbox、credential transport、retention 与 native hint → shared sync recovery 工程链已完成；下一步配置真实 credentials，在 signed physical devices 验证 provider network、background/terminated callback、tap/resume fallback，并将 association endpoints 以真实 Team ID/release certificate 发布完成 verified-link gate。
 4. physical iPhone 的 gesture/haptic/VoiceOver 与双端真实设备最终 gate；先运行 `pnpm mobile:device:preflight`，只有 READY 才进入真机证据矩阵。
 
 Android Studio 默认 arm64 的配置缺口已由 `cc2ec80` 关闭；宿主解锁后可补工具栏 **Run app** 可视录屏，但不再需要 ABI 代码变更。

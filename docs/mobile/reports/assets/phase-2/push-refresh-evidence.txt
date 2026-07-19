@@ -1,0 +1,46 @@
+JType Phase 2 push refresh-hint evidence
+Date: 2026-07-19 (Asia/Shanghai)
+
+Shared UI and sync recovery
+- pnpm test:unit: PASS (86/86)
+- npx playwright test tests/e2e/app.spec.ts: PASS (56/56)
+- Final targeted recovery rerun: PASS (1/1)
+- Push hints bypass the lifecycle cooldown, coalesce while sync is running, and invoke the existing shared sync path.
+- No document content, document path, cloud token, or provider token is persisted in the native pending-refresh bit.
+
+Backend and native regression
+- cargo test --manifest-path src-tauri/Cargo.toml: PASS (30/30)
+- cargo test --manifest-path services/jtype-core/Cargo.toml: PASS (46/46)
+- cargo test --manifest-path services/jtype-web/Cargo.toml: PASS (71 library + 245 integration = 316/316)
+- cargo check --manifest-path services/jtype-web/Cargo.toml: PASS
+- docker compose config --quiet: PASS
+
+Android
+- pnpm mobile:android:verify-studio-variant: PASS (arm64 default)
+- pnpm mobile:android:build --debug: PASS after stopping a stale Gradle daemon and rerunning the same command
+- Emulator: emulator-5554, Android API 36, arm64
+- Cold launch: PASS, TotalTime 360 ms, no AndroidRuntime fatal entry
+- APK: 760747128 bytes
+  sha256 97a94349efd60b1b8d0d9effb54b68f5de3df6a06ec6d93c7db04b1be99b3b92
+- AAB: 234753864 bytes
+  sha256 3d99ae3883a1edc1a6008ecf3f034e895f8cf92e8114be335e6ca45d0256228a
+- Shared UI screenshot sha256 20222bdb06afafd96dc04729862c24b7935a8da69cb410cb2783ca624a1918a0
+
+iOS
+- pnpm mobile:ios:build:simulator-static: PASS
+- Simulator: iPhone 17 Pro, iOS 26.5
+- Final archive reinstalled and launched: PASS, PID 75764, no immediate crash
+- Final simulator executable: 109503560 bytes
+  sha256 6642c1ab1f73015f3b980965a10afa225e7636409d3fa7f4e8e7952ca6be7468
+- A canonical visible notification with content-available=1 was accepted in foreground and while the app was backgrounded.
+- Final background delivery displayed the system banner and kept the process alive. iOS does not guarantee that a visible alert also receives background callback time; the final sandbox read was already false and is not treated as independent proof of a callback because the active shared listener can immediately drain the bit.
+- Native persistence/event shape and the enabled-cloud-sync consume-and-clear path are covered by the contract test and Playwright. Production background execution remains a physical-device gate.
+- Background-banner screenshot sha256 1f117308fd2ef0fc4e2ac68d830fbd764f8b28750de0e55220b14441f8771039
+- Foreground-banner screenshot sha256 134690465b6efbcc023de59110a28d6b38119a43a1604d5a4ed6a99a30cac891
+- Final shared-UI screenshot sha256 5bf4cb07b2fc8a03aca4398572277d5a34f3e30094a6686d8d88424bda652fad
+- APNs simulator payload sha256 a53b3f628b546d94ae83442f8d3a760b5da6fe3d1401fbe59510c2d837c1f4c0
+
+Physical-device and production gates
+- pnpm mobile:device:preflight:report: BLOCKED as expected in this environment
+- Detected: 0 physical Android devices, 0 physical iPhones, 0 Apple Development identities, no DEVELOPMENT_TEAM
+- Simulator evidence cannot prove production APNs/FCM credentials, OEM/Doze behavior, iOS throttling/force-quit behavior, or release signing.

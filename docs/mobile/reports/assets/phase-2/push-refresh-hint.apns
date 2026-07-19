@@ -1,0 +1,13 @@
+{
+  "Simulator Target Bundle": "net.jcode.jtype",
+  "aps": {
+    "alert": {
+      "title": "JType collaboration update",
+      "body": "Refresh the shared vault with the latest document changes."
+    },
+    "content-available": 1,
+    "sound": "default",
+    "thread-id": "jtype-collaboration"
+  },
+  "jtypeRoute": "https://jtype.nightc.com/open/document?workspaceId=workspace-e2e&path=guides%2Fsetup.md"
+}
