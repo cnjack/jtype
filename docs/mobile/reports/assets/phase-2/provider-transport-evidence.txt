@@ -1,0 +1,63 @@
+JType Phase 2D provider transport engineering evidence
+Date: 2026-07-19
+Implementation commit: 611dbcd
+
+Scope
+- Durable mobile_push_deliveries outbox and migration 0028
+- Active-member fan-out excluding the actor; latest-path coalescing
+- Fixed official FCM HTTP v1 and APNs development/production transports
+- OAuth/JWT caching, HTTP/2/TLS, retry/backoff, Retry-After and invalid-registration cleanup
+- No mobile-only product UI and no web landing/docs/dashboard content
+- Real provider credentials, production network delivery and physical-device delivery are NOT passed
+
+Automated gates
+- pnpm build: PASS
+- pnpm test:unit: PASS 85/85
+- npx playwright test tests/e2e/app.spec.ts: PASS 56/56
+- cargo test --manifest-path src-tauri/Cargo.toml: PASS 30/30
+- cargo test --manifest-path services/jtype-core/Cargo.toml: PASS 46/46
+- cargo test --manifest-path services/jtype-web/Cargo.toml: PASS 71 lib + 245 integration = 316/316
+- cargo test --manifest-path services/jtype-web/Cargo.toml push::tests: PASS 7/7 after final classifier review
+- cargo test --manifest-path services/jtype-web/Cargo.toml --test push_tests: PASS 4/4
+- cargo check --manifest-path services/jtype-web/Cargo.toml: PASS
+- docker compose config --quiet: PASS
+
+Provider contract gate
+- Mock FCM request: canonical /v1/projects/test-project/messages:send, Bearer auth, message.fid and routeUrl: PASS
+- Mock APNs request: canonical /3/device/{token}, Bearer auth, apns-topic, apns-push-type and jtypeRoute: PASS
+- FCM UNREGISTERED HTTP 404: invalidates registration
+- Generic FCM NOT_FOUND without FcmError: permanent delivery failure, does NOT delete registration
+- FCM/APNs 429/5xx/provider temporary errors: retry with bounded provider delay/backoff
+- APNs invalid/expired/unregistered device reasons: invalidate registration
+- Provider response bodies and credentials are not persisted/logged
+- No real Google/Apple endpoint was called because credentials are absent
+
+Android Emulator gate
+- Device: emulator-5554, arm64, Android API 36
+- Build: pnpm tauri android build --debug --target aarch64 --apk --ci: PASS
+- Install: adb install -r: Success
+- Cold launch: net.jcode.jtype/.MainActivity, 403 ms, PID 18096
+- AndroidRuntime/libc/DEBUG fatal output after launch: none
+- UI: Desktop/shared performance-note-00001.md EditorShell
+
+iOS Simulator gate
+- Device: iPhone 17 Pro Simulator, iOS 26.5
+- UDID: BD64DE20-5397-486C-8899-4B974425A0AD
+- Build: pnpm mobile:ios:build:simulator-static: PASS
+- Static archive binary: 109481352 bytes
+- Launch: net.jcode.jtype, PID 15240
+- App error/fault log in launch window: none
+- UI: Desktop/shared iOS provider 002 EditorShell and existing Files-provider banner
+
+Artifact SHA-256
+- Android APK: a3d11b0de7fc37d50ae9193963fbf3e7a858746cc66f59c1b0a3537b5128b7b8 (401200600 bytes)
+- iOS app binary: 5a44c0095729e10587b95887d1b0593615f92bdc89cdec62585e7d27a6d24bbc (109481352 bytes)
+- Android screenshot: 837d1f8d68c26d5c42b4cf2d9f4bae325b34703b86d61e662bcc0c2531d918fa (136918 bytes)
+- iOS screenshot: 644c1fc5a27719ad80721a04c2e046b13ca7c2fa48d456a9031d21bfb72a3870 (187983 bytes)
+
+Physical preflight
+- pnpm mobile:device:preflight -- --platform all: expected exit 2, BLOCKED
+- Android physical devices: 0; Emulator ignored: 1
+- iOS physical iPhones: 0; booted Simulator ignored: 1
+- Apple Development identities: 0
+- iOS DEVELOPMENT_TEAM configured: no

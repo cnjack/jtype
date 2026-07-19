@@ -2,7 +2,7 @@
 
 > 最后更新：2026-07-19
 > Feature branch：`codex/mobile-app`  
-> 当前阶段：Phase 2D — 系统集成与可靠性；系统分享、recovery、无障碍、共享触控交互、键盘辅助栏、5,000 文档大 vault、大内容/Board、sync reliability、系统通知 → 文档定位，以及 mobile partial workspace runtime/loaded-native fallback/folder hydration 已完成；Android partial 5,008-entry 与 iOS clean-static 5,406-entry cold open/tail restore/交互式第二页已通过，连续 shallow page 的双端 native cache hit 为 0 ms。external reconcile/write-back 已改为 native full scan + plan-driven source materialization，unchanged 稳定状态已复用 trusted baseline 消除重复 mirror full hash；HTTPS universal/app-link 和 APNs device-token / FCM FID 注册、服务端 registration/payload contract 已完成工程及 Simulator gate。Android Studio 已默认选择 arm64 flavor，physical-device preflight 已正确保持当前无真机/无 iOS 签名环境 blocked；继续生产关联部署、provider credential transport、release signing、source full-hash/provider-native streaming、双平台 physical low-memory/performance、真实设备弱网与真机终验
+> 当前阶段：Phase 2D — 系统集成与可靠性；系统分享、recovery、无障碍、共享触控交互、键盘辅助栏、5,000 文档大 vault、大内容/Board、sync reliability、系统通知 → 文档定位，以及 mobile partial workspace runtime/loaded-native fallback/folder hydration 已完成；Android partial 5,008-entry 与 iOS clean-static 5,406-entry cold open/tail restore/交互式第二页已通过，连续 shallow page 的双端 native cache hit 为 0 ms。external reconcile/write-back 已改为 native full scan + plan-driven source materialization，unchanged 稳定状态已复用 trusted baseline 消除重复 mirror full hash；HTTPS universal/app-link、APNs device-token / FCM FID 注册、服务端 durable outbox、FCM/APNs credential transport、重试和 invalid-registration cleanup 已完成工程及 Simulator gate。Android Studio 已默认选择 arm64 flavor，physical-device preflight 已正确保持当前无真机/无 iOS 签名环境 blocked；继续生产关联部署、真实 provider credentials/network delivery、release signing、source full-hash/provider-native streaming、双平台 physical low-memory/performance、真实设备弱网与真机终验
 > 状态说明：`[ ]` 未开始、`[~]` 进行中、`[x]` 已完成；只有附上真实测试证据后才能标记完成。
 
 ## 目标
@@ -171,7 +171,7 @@
 1. **2A Provider contract（约 3–5 天）**：先冻结 provider identity、capability、mirror metadata、reconcile plan 和错误模型；现有 app-private filesystem 成为第一个 provider 实现，UI/AppState/commands 不改调用语义。
 2. **2B Android SAF（约 1–2 周）**：目录选择、persistable tree URI、mirror 初次导入、双向增量 reconcile、权限丢失重新授权；Android 模拟器逐段留截图与报告。
 3. **2C iOS folder provider（已完成工程与 Simulator gate）**：folder picker、security-scoped bookmark、访问生命周期、mirror reconcile、覆盖安装容器迁移和 shared editor write-back 已通过；失效重新授权与第三方 Files provider 保留到 physical iPhone 终验。
-4. **2D 系统集成与可靠性（约 1–2 周）**：share target、pending OAuth 冷恢复、无障碍、草稿恢复、大 vault/弱网测试；5,000 文档共享索引、大 Markdown/附件/1,200-card Board 渐进渲染、sync batching/retry/idempotency/服务中断恢复、双平台原生通知文档定位，以及 APNs device-token / FCM FID 注册和服务端 payload contract 已通过工程/模拟器 gate；external reconcile/write-back 的选择性 source materialization 已完成工程 gate，继续 provider credential transport、真实 provider 复测、physical low-memory、真实设备弱网与双平台真机 gate。
+4. **2D 系统集成与可靠性（约 1–2 周）**：share target、pending OAuth 冷恢复、无障碍、草稿恢复、大 vault/弱网测试；5,000 文档共享索引、大 Markdown/附件/1,200-card Board 渐进渲染、sync batching/retry/idempotency/服务中断恢复、双平台原生通知文档定位，以及 APNs device-token / FCM FID 注册、durable outbox、FCM/APNs credential transport、重试和失效 registration 清理已通过工程/模拟器 gate；external reconcile/write-back 的选择性 source materialization 已完成工程 gate，继续真实 provider credentials/network delivery、physical low-memory、真实设备弱网与双平台真机 gate。
 
 每个增量继续复用 desktop `Sidebar`、`VaultHome`、`EditorShell`、Document Info、Board、commands 和 sync model。provider 差异只能进入 Rust/provider adapter 与 canonical capability，不允许出现第二套 mobile 文件树或编辑器。
 
@@ -198,7 +198,7 @@
 
 - [~] 固定自有 OAuth deep link、pending OAuth 冷启动恢复，以及严格的 custom/HTTPS workspace/path 定位已接入；Android `autoVerify`、iOS associated-domain 和 Axum fail-closed association endpoints 已在 `799358c` 完成。生产域名发布、真实 Team ID/release 证书、signed build 与 physical-device verified association 待完成（证据：`docs/mobile/reports/phase-2-notification-routing.md`、`docs/mobile/reports/phase-2-universal-app-links.md`，实现：`2a1fc09`、`799358c`）
 - [x] Android share target / iOS share extension 已把 Markdown、纯文本、URL 和文件接入现有 vault import 与 desktop/shared editor；cold/warm Android 和 Safari → iOS extension → JType 闭环均通过（证据：`docs/mobile/reports/phase-2-share-import.md`，实现：`ce9239b`）
-- [~] 本地原生协作通知、按需权限、Android channel 与双平台 tap callback 已接入；`e132c0f` 又完成 APNs device-token / FCM FID 注册 adapter、authenticated registration/rotation/logout API、FCM/APNs canonical payload builder、iOS injected remote banner → tap → shared EditorShell，以及 Android 缺 Firebase config fail-closed gate。真实 provider credential transport、invalid-token cleanup、release signing、physical-device delivery 和系统允许的有限后台刷新待完成（证据：`docs/mobile/reports/phase-2-notification-routing.md`、`docs/mobile/reports/phase-2-remote-push.md`，实现：`2a1fc09`、`ff21f86`、`999dc11`、`e132c0f`）
+- [~] 本地原生协作通知、按需权限、Android channel 与双平台 tap callback 已接入；`e132c0f` 完成 APNs device-token / FCM FID 注册 adapter、authenticated registration/rotation/logout API、canonical payload 与 injected notification route；`611dbcd` 继续完成 active-member durable outbox、latest-path coalescing、固定官方 FCM/APNs transport、OAuth/JWT cache、HTTP/2/TLS、Retry-After/指数退避、并发 claim、发送前成员复核和 invalid-registration cleanup。真实 provider credentials/network delivery、release signing、physical-device delivery 和系统允许的有限后台刷新待完成（证据：`docs/mobile/reports/phase-2-notification-routing.md`、`docs/mobile/reports/phase-2-remote-push.md`、`docs/mobile/reports/phase-2-provider-transport.md`，实现：`2a1fc09`、`ff21f86`、`999dc11`、`e132c0f`、`611dbcd`）
 - [x] 通知/深链已通过 vault binding 定位正确 cloud workspace、vault 和文档；Android API 36 与 iOS 26.5 Simulator 原生系统通知 → 点击 → Desktop 共用 EditorShell 闭环，以及最终 artifact cold launch 均通过（证据：`docs/mobile/reports/phase-2-notification-routing.md`、`docs/mobile/reports/phase-2-unloaded-entry-resolution.md`，实现：`2a1fc09`、`ff21f86`、`999dc11`）
 
 ### 2.4 大 vault 性能与可靠性
@@ -213,7 +213,7 @@
 
 - [~] Android 外部 vault 全链路已通过；iOS Simulator 已通过选择、重启/覆盖安装恢复和 shared editor 写回，physical iPhone 权限失效恢复待完成
 - [~] Android 外部 app 修改文件后的真实 reconcile/conflict 已通过；iOS 复用同一 Rust plan 与共享 dialog，并有 contract/E2E 覆盖，真实 Files provider 双边冲突留到 physical iPhone gate
-- [~] Android/iOS share smoke flow、OAuth deep-link、custom/HTTPS canonical 文档 route 与双平台原生通知点击定位已通过；Universal/App Link、APNs/FCM identifier registration 与 provider payload 工程/Simulator gate 已完成，生产 verified association、provider credential transport、release signing 与真实设备矩阵待完成
+- [~] Android/iOS share smoke flow、OAuth deep-link、custom/HTTPS canonical 文档 route 与双平台原生通知点击定位已通过；Universal/App Link、APNs/FCM identifier registration、durable outbox、credential transport、retry 和 invalid-registration cleanup 的工程/Simulator gate 已完成，生产 verified association、真实 provider credentials/network delivery、release signing 与真实设备矩阵待完成
 - [x] 5,000 文档大 vault 基准达到预先记录阈值：Android native 131 ms / shared index 24.9 ms，iOS native 48 ms，首批树 window 160；双平台均精确搜索并打开尾部文档（证据：`docs/mobile/reports/phase-2-large-vault.md`）
 - [x] 当前 2D large-vault 增量的 desktop build、web build、jtype-core 38/38、Tauri Rust 28/28、unit 50/50、app E2E 50/50、Android APK 与 iOS archive 全部通过；双端 5,000 文档 Maestro flow 通过；后续 Phase 2 增量继续重复完整 gate
 - [x] 当前 2D large-content 增量的 desktop/web build、jtype-core 38/38、Tauri Rust 28/28、unit 50/50、app E2E 51/51、Android universal APK 与 iOS simulator archive 全部通过；双端大 Markdown 与 1,200-card Board 共四条 Maestro flow 通过（证据：`docs/mobile/reports/phase-2-large-content.md`）
@@ -227,9 +227,10 @@
 - [x] 当前 stable mirror reuse 增量通过 Tauri 30/30、jtype-core 46/46、unit 78/78、app E2E 56/56、Desktop build、Android aarch64 APK、iOS static archive verifier 与双端 provider Simulator gate；Android changed/restored source 负例保持原 1-file materialize（证据：`docs/mobile/reports/phase-2-mirror-manifest-reuse.md`，实现：`a374204`）
 - [x] 当前 Universal/App Link contract 增量通过 unit 81/81、app E2E 56/56、Tauri 30/30、jtype-core 46/46、web service 63/63 + endpoint integration 2/2、Desktop build、Android APK 与 iOS static archive；Android 显式 HTTPS Intent 和 iOS custom-scheme fallback 均打开共用 EditorShell。生产域名目前仍返回 SPA HTML，signed verified association 与 physical-device gate 明确保留（证据：`docs/mobile/reports/phase-2-universal-app-links.md`，实现：`799358c`）
 - [x] 当前 remote push registration contract 增量通过 unit 85/85、app E2E 56/56、Tauri 30/30、jtype-core 46/46、web service lib 66/66 + push API 3/3、Desktop build、Android final APK 与 iOS static archive；iOS injected remote banner 点击打开目标 shared EditorShell，Android 缺 Firebase config 冷启动 fail closed。真实 APNs/FCM provider transport 与 physical-device delivery 明确保留（证据：`docs/mobile/reports/phase-2-remote-push.md`，实现：`e132c0f`）
+- [x] 当前 provider transport engineering 增量通过 unit 85/85、app E2E 56/56、Tauri 30/30、jtype-core 46/46、web service 316/316、最终 push transport unit 7/7、push API 4/4、Docker config、Desktop build、Android final APK 与 iOS static archive；mock provider 验证最终 URL/header/payload，双端 artifact 继续运行 shared EditorShell。真实凭据、Google/Apple 网络投递、release signing 与 physical-device delivery 明确保留（证据：`docs/mobile/reports/phase-2-provider-transport.md`，实现：`611dbcd`）
 - [~] 双平台模拟器截图已持续保存；Android/iOS physical screenshot/recording 均待真实设备接入后完成，不能用现有 Emulator/Simulator 证据替代
-- [~] `docs/mobile/reports/phase-2.md` 已记录 2A、2B、2C、2D recovery、系统分享、无障碍、触控交互、大 vault、大内容、sync reliability、通知文档定位、remote push registration contract 与 partial workspace runtime；细节见各专项报告，后续持续更新到 Phase 2 终验
-- [~] tracking 已记录当前 Phase 2 commit hashes（最新实现 gate `e132c0f`）；后续增量继续追加
+- [~] `docs/mobile/reports/phase-2.md` 已记录 2A、2B、2C、2D recovery、系统分享、无障碍、触控交互、大 vault、大内容、sync reliability、通知文档定位、remote push registration contract 与 partial workspace runtime；provider transport 见独立专项报告，后续持续更新到 Phase 2 终验
+- [~] tracking 已记录当前 Phase 2 commit hashes（最新实现 gate `611dbcd`）；后续增量继续追加
 
 ## Phase 3 — Store readiness
 
@@ -315,6 +316,8 @@
 | 2026-07-19 | 2.5 / tooling | `c63aac3` | Android/iOS fail-closed physical-device preflight、脱敏 Markdown/JSON 证据、Emulator/Simulator 排除与 signing/team 前置检查 | `docs/mobile/reports/phase-2-physical-device-preflight.md` |
 | 2026-07-19 | 2.4 / 2D | `a374204` | trusted baseline == fresh source 且无 mutation/journal 时跳过 app-private mirror duplicate hash；双端 unchanged 与 Android changed/restored fallback gate | `docs/mobile/reports/phase-2-mirror-manifest-reuse.md` |
 | 2026-07-19 | 2.3 / 2D | `799358c` | 严格 HTTPS 文档 route、Android autoVerify、iOS associated-domain 与 Axum fail-closed well-known association endpoints；生产签名/部署 gate 保留 | `docs/mobile/reports/phase-2-universal-app-links.md` |
+| 2026-07-19 | 2.3 / 2D | `e132c0f` | APNs device-token / FCM FID native registration、authenticated rotation/logout API、canonical payload 与 Simulator notification route gate | `docs/mobile/reports/phase-2-remote-push.md` |
+| 2026-07-19 | 2.3 / 2D | `611dbcd` | active-member durable outbox、FCM HTTP v1/APNs HTTP/2 credential transport、retry/backoff 与 invalid-registration cleanup | `docs/mobile/reports/phase-2-provider-transport.md` |
 
 ## 当前环境审计（2026-07-18）
 
