@@ -3246,6 +3246,9 @@ pub fn run() {
         builder = builder
             .plugin(tauri_plugin_deep_link::init())
             .plugin(tauri_plugin_notification::init())
+            // Loaded after the local-notification plugin so the iOS adapter can
+            // forward local callbacks while owning APNs remote callbacks.
+            .plugin(tauri_plugin_mobile_push::init())
             .plugin(tauri_plugin_mobile_import::init())
             .plugin(tauri_plugin_mobile_interaction::init())
             .plugin(tauri_plugin_mobile_share::init())

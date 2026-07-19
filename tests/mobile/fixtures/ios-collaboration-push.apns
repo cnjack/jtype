@@ -1,0 +1,11 @@
+{
+  "aps": {
+    "alert": {
+      "title": "JType collaboration update",
+      "body": "Open iOS provider 002 in the shared editor."
+    },
+    "sound": "default",
+    "thread-id": "jtype-workspace-ios-app-link-smoke"
+  },
+  "jtypeRoute": "https://jtype.nightc.com/open/document?workspaceId=ios-app-link-smoke&path=JTypeOnDemand20260718%2Fnote-002.md"
+}

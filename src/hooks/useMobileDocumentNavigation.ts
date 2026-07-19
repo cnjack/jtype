@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { isDiagramTextPath } from "@shared/lib/fileTypes";
 import { useAppDispatch, useAppState } from "../app/AppState";
@@ -15,11 +15,13 @@ import {
   consumeLatestMobileCollaborationRoute,
   showMobileCollaborationNotification,
 } from "../lib/mobileNotifications";
+import { onMobilePushNotificationAction, takePendingMobilePushRoute } from "../lib/mobilePush";
 import { workspaceIndexFor } from "../lib/workspaceIndex";
 import { isTauriRuntime } from "../lib/utils";
 import type { FileTreeNode, WorkspaceSnapshot } from "../lib/types";
 import { workspaceSnapshotIsPartial } from "../lib/workspacePagination";
 import { resolveWorkspaceEntry } from "../lib/workspaceResolver";
+import { useAppLifecycle } from "./useAppLifecycle";
 
 type MobileDocumentNavigationOperations = {
   ready: boolean;
@@ -54,9 +56,30 @@ export function useMobileDocumentNavigation({
   const [navigationRevision, setNavigationRevision] = useState(0);
   const operationInFlightRef = useRef(false);
 
-  const queueRoute = (route: MobileDocumentRoute) => {
+  const queueRoute = useCallback((route: MobileDocumentRoute) => {
     setPending({ ...route, pulled: false, nativeResolved: false, resolvedNode: null });
-  };
+  }, []);
+
+  const consumePendingPushRoute = useCallback(() => {
+    if (!capabilities.isMobile || !isTauriRuntime()) return;
+    const consume = () => takePendingMobilePushRoute()
+      .then((routeUrl) => {
+        const route = routeUrl ? parseMobileDocumentRouteUrl(routeUrl) : null;
+        if (route) queueRoute(route);
+      })
+      .catch(() => undefined);
+
+    void consume();
+    // iOS can emit Tauri's resumed event just before the notification center
+    // delegate persists the tapped route. Recheck after that native callback
+    // turn; takePendingRoute is atomic, so duplicate resume signals are safe.
+    window.setTimeout(() => { void consume(); }, 300);
+  }, [capabilities.isMobile, queueRoute]);
+
+  useAppLifecycle({
+    enabled: capabilities.isMobile && isTauriRuntime(),
+    onResume: consumePendingPushRoute,
+  });
 
   useEffect(() => {
     if (!capabilities.isMobile || !isTauriRuntime()) return;
@@ -64,6 +87,7 @@ export function useMobileDocumentNavigation({
     let disposed = false;
     let unlistenDeepLink: (() => void) | null = null;
     let notificationListener: { unregister: () => Promise<void> } | null = null;
+    let pushNotificationListener: { unregister: () => Promise<void> } | null = null;
 
     const handleUrls = async (urls: string[] | null) => {
       for (const candidate of urls ?? []) {
@@ -110,12 +134,27 @@ export function useMobileDocumentNavigation({
       }
     }).catch(() => undefined);
 
+    void onMobilePushNotificationAction((routeUrl) => {
+      const route = parseMobileDocumentRouteUrl(routeUrl);
+      if (route) queueRoute(route);
+    }).then(async (listener) => {
+      pushNotificationListener = listener;
+      const routeUrl = await takePendingMobilePushRoute().catch(() => null);
+      const route = routeUrl ? parseMobileDocumentRouteUrl(routeUrl) : null;
+      if (!disposed && route) queueRoute(route);
+      if (disposed) {
+        await listener.unregister();
+        pushNotificationListener = null;
+      }
+    }).catch(() => undefined);
+
     return () => {
       disposed = true;
       unlistenDeepLink?.();
       void notificationListener?.unregister();
+      void pushNotificationListener?.unregister();
     };
-  }, [capabilities.isMobile, capabilities.platform, dispatch]);
+  }, [capabilities.isMobile, capabilities.platform, dispatch, queueRoute]);
 
   useEffect(() => {
     if (!capabilities.isMobile || !ready || !pending || operationInFlightRef.current) return;

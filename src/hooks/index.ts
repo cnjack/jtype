@@ -10,6 +10,7 @@ export { useMobileSyncRecovery } from "./useMobileSyncRecovery";
 export { useMobileOAuthDeepLink } from "./useMobileOAuthDeepLink";
 export { useMobileDocumentNavigation } from "./useMobileDocumentNavigation";
 export { useMobileDraftRecovery } from "./useMobileDraftRecovery";
+export { useMobilePushRegistration } from "./useMobilePushRegistration";
 export { useMobileInteraction } from "./useMobileInteraction";
 export { useTouchActionGesture } from "./useTouchActionGesture";
 export { useWorkspaceEntrySearch } from "./useWorkspaceEntrySearch";

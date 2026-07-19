@@ -361,6 +361,25 @@ export type MobileDraftRecovery = {
   updatedAt: number;
 };
 
+export type MobilePushRegistration = {
+  available: boolean;
+  platform: "android" | "ios";
+  provider: "fcm" | "apns";
+  environment: "development" | "production";
+  identifierKind?: "fid" | "deviceToken";
+  identifier?: string;
+  reason?:
+    | "missingFirebaseConfiguration"
+    | "registrationInProgress"
+    | "notificationPermissionDenied"
+    | "identifierUnavailable"
+    | string;
+};
+
+export type MobilePushRouteEvent = {
+  routeUrl: string | null;
+};
+
 export type CloudDocument = {
   relativePath: string;
   title: string;

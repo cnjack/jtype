@@ -2186,6 +2186,7 @@ dependencies = [
  "tauri-plugin-fs",
  "tauri-plugin-mobile-import",
  "tauri-plugin-mobile-interaction",
+ "tauri-plugin-mobile-push",
  "tauri-plugin-mobile-share",
  "tauri-plugin-notification",
  "tauri-plugin-opener",
@@ -4775,6 +4776,16 @@ dependencies = [
 
 [[package]]
 name = "tauri-plugin-mobile-interaction"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "tauri",
+ "tauri-plugin",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "tauri-plugin-mobile-push"
 version = "0.1.0"
 dependencies = [
  "serde",

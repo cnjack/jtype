@@ -1,0 +1,6 @@
+appId: net.jcode.jtype
+---
+- tapOn: "^允许$|^Allow$"
+- extendedWaitUntil:
+    visible: ".*iOS provider 001.*"
+    timeout: 10000

@@ -69,3 +69,9 @@ dependencies {
 }
 
 apply(from = "tauri.build.gradle.kts")
+
+// Firebase credentials are release/deployment inputs and never committed.
+// Without them the native adapter compiles but registration fails closed.
+if (file("google-services.json").isFile) {
+    apply(plugin = "com.google.gms.google-services")
+}

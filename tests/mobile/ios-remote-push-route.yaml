@@ -1,0 +1,8 @@
+appId: net.jcode.jtype
+---
+- tapOn:
+    point: "50%,8%"
+- extendedWaitUntil:
+    visible: ".*iOS provider 002.*"
+    timeout: 30000
+- assertVisible: "(?s).*Baseline content.*"

@@ -13,6 +13,7 @@ import { useRuntimeCapabilities } from "../app/RuntimeCapabilities";
 import { MOBILE_OAUTH_CALLBACK_URL } from "@shared/lib/mobileOAuth";
 import { registerMobileOAuthReturnHandler } from "../lib/mobileOAuthReturn";
 import { openWorkspaceForRuntime } from "../lib/workspaceRuntime";
+import { unregisterMobilePushFromServer } from "../lib/mobilePush";
 
 type PullOnlyOptions = {
   full?: boolean;
@@ -277,12 +278,25 @@ export function useCloudSync({ recoverMobileOAuth = false }: { recoverMobileOAut
     activeDevicePollingStop = null;
     stopDevicePolling();
     await clearPendingOAuth().catch(() => undefined);
+    if (
+      capabilities.isMobile
+      && state.cloudProfile?.token
+      && state.cloudProfile.deviceId
+      && (capabilities.platform === "android" || capabilities.platform === "ios")
+    ) {
+      await unregisterMobilePushFromServer({
+        serverUrl: state.cloudProfile.serverUrl || state.serviceUrl,
+        authToken: state.cloudProfile.token,
+        deviceId: state.cloudProfile.deviceId,
+        platform: capabilities.platform,
+      }).catch(() => undefined);
+    }
     dispatch({ type: "DISCONNECT_ACCOUNT" });
     if (tauri.isAvailable) {
       try { await tauri.saveCloudProfile({ serverUrl: state.serviceUrl, username: "", siteUrl: "", token: "", deviceId: state.cloudProfile?.deviceId ?? "" }); } catch { /* ignore */ }
     }
     dispatch({ type: "SET_STATUS", message: "Disconnected from cloud account." });
-  }, [clearPendingOAuth, dispatch, stopDevicePolling, state.serviceUrl, state.cloudProfile]);
+  }, [capabilities.isMobile, capabilities.platform, clearPendingOAuth, dispatch, stopDevicePolling, state.serviceUrl, state.cloudProfile]);
 
   const refreshCloudWorkspaces = useCallback(async () => {
     try {

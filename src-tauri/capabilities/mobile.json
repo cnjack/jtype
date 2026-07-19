@@ -14,6 +14,7 @@
     "fs:allow-read-text-file",
     "mobile-import:allow-registerListener",
     "mobile-import:allow-removeListener",
+    "mobile-push:default",
     "notification:default",
     "opener:default"
   ]

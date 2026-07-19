@@ -7,6 +7,7 @@ pub mod hub;
 pub mod mail;
 pub mod mcp;
 pub mod middleware;
+pub mod push;
 pub mod settings;
 pub mod storage;
 pub mod tasks;
@@ -195,6 +196,14 @@ pub fn build_app_with_app_links(
         .route("/api/me/site", put(handlers::user::update_site_settings))
         .route("/api/me/storage", get(handlers::user::my_storage))
         .route("/api/me/devices", get(handlers::user::my_devices))
+        .route(
+            "/api/me/push-registrations",
+            get(handlers::push::list).put(handlers::push::register),
+        )
+        .route(
+            "/api/me/push-registrations/:platform/:device_id",
+            delete(handlers::push::unregister),
+        )
         .route(
             "/api/me/tokens",
             get(handlers::user::list_tokens).post(handlers::user::create_token),
