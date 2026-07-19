@@ -1,0 +1,62 @@
+JType Phase 2D remote push registration contract evidence
+Date: 2026-07-19
+Implementation commit: e132c0f
+
+Scope
+- Native APNs device-token / FCM FID registration adapters
+- Authenticated registration/list/delete API and migration 0027
+- Canonical provider payload builders
+- Shared Desktop document operation chain on notification tap
+- No mobile-only product UI and no web landing/docs/dashboard content
+- Provider credential transport and physical-device delivery are NOT implemented/passed
+
+Automated gates
+- pnpm build: PASS
+- pnpm test:unit: PASS 85/85
+- npx playwright test tests/e2e/app.spec.ts: PASS 56/56
+- cargo test --manifest-path src-tauri/Cargo.toml: PASS 30/30
+- cargo test --manifest-path services/jtype-core/Cargo.toml: PASS 46/46
+- cargo test --manifest-path services/jtype-web/Cargo.toml --lib: PASS 66/66
+- cargo test --manifest-path services/jtype-web/Cargo.toml --test push_tests: PASS 3/3
+- cargo check --manifest-path services/jtype-web/Cargo.toml: PASS
+
+Android Emulator gate
+- Device: emulator-5554, arm64, Android API 36
+- Final build: pnpm tauri android build --debug --target aarch64 --apk --ci: PASS
+- Final install: adb install -r: Success
+- Cold start: net.jcode.jtype/.MainActivity, 365 ms, PID 17628
+- google-services.json: intentionally absent/untracked
+- logcat: Default FirebaseApp failed to initialize because no default options were found
+- logcat: FirebaseApp initialization unsuccessful
+- fatal exception: none
+- Gradle dependencyInsight: firebase-bom 34.16.0 -> firebase-messaging 25.1.1
+- Package: JTypeFirebaseMessagingService + MESSAGING_EVENT + POST_NOTIFICATIONS present
+- UI: Desktop/shared performance-note-00001.md EditorShell remains usable
+
+iOS Simulator gate
+- Device: iPhone 17 Pro Simulator, iOS 26.5
+- UDID: BD64DE20-5397-486C-8899-4B974425A0AD
+- Build: pnpm mobile:ios:build:simulator-static: PASS
+- Static archive binary bytes: 109481352
+- Notification permission Maestro flow: PASS (Allow)
+- xcrun simctl push net.jcode.jtype ios-collaboration-push.apns: Notification sent
+- System foreground remote banner: visible
+- Maestro system default-action tap: PASS
+- Target: JTypeOnDemand20260718/note-002.md
+- Assertions: iOS provider 002 visible; Baseline content visible
+- Final UI: Desktop/shared EditorShell
+- Test-only fixture rebase: vault binding absolute path updated to current Simulator Data Container after reinstall
+
+Artifact SHA-256
+- Android APK: 1113d9b73326b858a9a3137ae0d60fa60b24d6349616a97993fdb1332fbd0e9b
+- iOS JType binary: 4b3ace2ede1780af294779b00d43bf80ce215fcfdf75d29ba9fed69f3992906d
+- Android screenshot: 4167bab4bcd9d7709acd8c362f1d9e1468b5c8316d9646ff2e0931a6bab98cc6
+- iOS banner screenshot: 2ee8369ee62005c33312c91b5e9ecb4d8569282331f0472d88811ac2c8736c4a
+- iOS route screenshot: 62a4dedc620044f12514a9af2fd1b53a57ac151ad38528764c73ef90b67f4463
+
+Physical preflight
+- pnpm mobile:device:preflight -- --platform all: expected exit 2, BLOCKED
+- Android physical devices: 0; Emulator ignored: 1
+- iOS physical iPhones: 0; booted Simulator ignored: 1
+- Apple Development identities: 0
+- iOS DEVELOPMENT_TEAM configured: no
