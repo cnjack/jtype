@@ -6,7 +6,7 @@ Feature branch：`codex/mobile-app`
 
 实现 commit：`c63aac3`
 
-状态：preflight 工程入口已完成；当前机器没有 Android 真机或 physical iPhone，且缺少 iOS development signing identity/team，因此 Phase 2 真机验收仍为 **BLOCKED**。
+状态：preflight 工程入口已完成；本报告下方保留首次运行时“没有 Android 真机或 physical iPhone”的原始证据。后续 `1d29199` 已在 Xiaomi Android 16 / API 36 / arm64 真机把 Android-only gate 推进为 **READY**，并完成安装、cold launch 与 Launcher icon；iOS signing/physical gate 仍为 **BLOCKED**。最新证据见 [`phase-2-android-physical-install.md`](phase-2-android-physical-install.md)。
 
 ## 目标与边界
 

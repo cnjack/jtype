@@ -4,7 +4,7 @@
 
 Feature branch：`codex/mobile-app`
 
-当前 app code commit：`c14571a`
+当前 app code commit：`1d29199`
 
 当前 iOS provider gate commit：`264db8a`
 
@@ -14,7 +14,9 @@ Feature branch：`codex/mobile-app`
 
 当前 push refresh recovery commit：`c14571a`
 
-本报告状态：进行中；2A provider contract、2B Android SAF 与 2C iOS security-scoped provider 的工程/Simulator gate 已完成。2D 已完成 app-private 草稿冷恢复、Keystore/Keychain pending OAuth 冷恢复、Android share target / iOS Share Extension、模拟器无障碍、共享触控交互与键盘辅助栏、5,000 文档大 vault、大 Markdown/附件/1,200-card Board 渐进渲染、sync reliability、本地原生通知文档定位、HTTPS universal/app-link 工程契约、APNs device-token / FCM FID registration contract，以及 mobile partial `WorkspaceSnapshot`、shared loaded-first/native-fallback resolver 与 folder hydration。Android partial 5,008-entry cold open、IPC/snapshot、RSS 和尾部打开，以及 iOS clean static archive 的 5,406-entry partial cold open、unloaded tail cold restore 均已通过；双端交互式第二页使用有界 shallow cache，native hit 均为 0 ms。external reconcile/write-back 已改为 native full scan + plan-driven source materialization；Android SAF 与 iOS local Files provider 的原生复测均通过。`a374204` 在 source 完整 SHA-256 与可信 baseline 完全一致、无 mutation/journal 时复用 baseline，消除 unchanged 稳定状态的第二次 app-private mirror full hash；Android/iOS Simulator 均命中，Android changed/restored source 仍精确走 1-file materialization。`799358c` 增加严格 HTTPS route、Android autoVerify、iOS associated-domain 和 Axum fail-closed association endpoint；当前生产域名尚未部署 JSON association，真实 signing/physical verified link 继续 blocked。remote push 已由 `e132c0f` 注册 contract、`611dbcd` durable outbox/credential transport、`948ecf6` collapse/TTL/retention 和 `c14571a` native durable hint → shared sync recovery 连续完成工程 gate；真实 provider credentials/network、release signing 与 physical background/terminated delivery 不宣称完成。Android Studio 已把 `arm64` 设为唯一默认 product flavor。`c63aac3` 新增 fail-closed physical-device preflight，当前真实报告正确排除 Emulator/Simulator，并因 0 真机、0 Apple Development identity 和未配置 team 保持 blocked。真实设备弱网、provider-native streaming、source full-hash 优化、双平台 physical low-memory/performance、physical bookmark 生命周期与真机终验继续进行。
+当前 Android physical install/icon commit：`1d29199`
+
+本报告状态：进行中；2A provider contract、2B Android SAF 与 2C iOS security-scoped provider 的工程/Simulator gate 已完成。2D 已完成 app-private 草稿冷恢复、Keystore/Keychain pending OAuth 冷恢复、Android share target / iOS Share Extension、模拟器无障碍、共享触控交互与键盘辅助栏、5,000 文档大 vault、大 Markdown/附件/1,200-card Board 渐进渲染、sync reliability、本地原生通知文档定位、HTTPS universal/app-link 工程契约、APNs device-token / FCM FID registration contract，以及 mobile partial `WorkspaceSnapshot`、shared loaded-first/native-fallback resolver 与 folder hydration。Android partial 5,008-entry cold open、IPC/snapshot、RSS 和尾部打开，以及 iOS clean static archive 的 5,406-entry partial cold open、unloaded tail cold restore 均已通过；双端交互式第二页使用有界 shallow cache，native hit 均为 0 ms。external reconcile/write-back 已改为 native full scan + plan-driven source materialization；Android SAF 与 iOS local Files provider 的原生复测均通过。`a374204` 在 source 完整 SHA-256 与可信 baseline 完全一致、无 mutation/journal 时复用 baseline，消除 unchanged 稳定状态的第二次 app-private mirror full hash；Android/iOS Simulator 均命中，Android changed/restored source 仍精确走 1-file materialization。`799358c` 增加严格 HTTPS route、Android autoVerify、iOS associated-domain 和 Axum fail-closed association endpoint；当前生产域名尚未部署 JSON association，真实 signing/physical verified link 继续 blocked。remote push 已由 `e132c0f` 注册 contract、`611dbcd` durable outbox/credential transport、`948ecf6` collapse/TTL/retention 和 `c14571a` native durable hint → shared sync recovery 连续完成工程 gate；真实 provider credentials/network、release signing 与 physical background/terminated delivery 不宣称完成。Android Studio 已把 `arm64` 设为唯一默认 product flavor。`c63aac3` 新增 fail-closed physical-device preflight；当前 Xiaomi Android 16 / API 36 / arm64 真机已经 READY，并由 `1d29199` 完成 APK 安装、261 ms cold launch、shared UI 和真实 `[JTYPE]` Launcher icon gate。iOS 仍因 0 physical iPhone、0 Apple Development identity 和未配置 team blocked。真实设备弱网、provider-native streaming、source full-hash 优化、双平台 physical low-memory/performance、physical bookmark 生命周期与真机终验继续进行。
 
 ## 本增量结论
 
@@ -619,13 +621,19 @@ Rust core 现在可以在不先构造完整 recursive snapshot 的前提下查�
 
 `a74b43a` 保持同一 Desktop `WorkspaceSnapshot`、Sidebar 和 Show more 操作，只在 Rust/Tauri adapter 增加 32-directory / 50,000-entry 有界 LRU shallow cache。cursor 绑定目录 metadata revision；直接子项变化会让旧 cursor stale，共享 hook 自动 refresh 当前文件夹首屏。partial open/page command 同时移到 background worker，避免目录 I/O 阻塞 iOS WebView 主线程。Android 5,008-entry 与 iOS clean-static 5,406-entry 均通过真实 Maestro 第二页 flow，native 日志都是 `start=160 … cache=hit elapsed_ms=0`。完整设计、测试、artifact 和截图见 [`phase-2-partial-page-cache.md`](phase-2-partial-page-cache.md)。
 
+## 2D Android 真机安装与 launcher icon
+
+`1d29199` 修复 generated Android project 与 canonical JType icon 漂移：5 个 density 的普通/foreground/round PNG、Android 8+ adaptive icon、白色 background resource 与 manifest `roundIcon` 均已同步，新增 unit contract 防止再次退回初始化模板图标。
+
+用户连接的 Xiaomi `25098PN5AC` 运行 Android 16 / API 36，ABI 为 arm64；Android-only physical preflight 为 READY。arm64 debug APK 通过 USB 覆盖安装，显式 cold launch `261 ms`，PID `13142`，共享中文 Welcome/Vault UI 正常且无 `AndroidRuntime` fatal。回到 Xiaomi Launcher 后真实显示新的白底 `[JTYPE]` icon。完整命令、截图、artifact hash 与剩余真机矩阵见 [`phase-2-android-physical-install.md`](phase-2-android-physical-install.md)。
+
 ## 自动化与构建结果
 
 | 验证 | 结果 |
 | --- | --- |
 | `npm run build` | PASS |
 | `npm run build --prefix services/jtype-web/frontend` | PASS |
-| `npm run test:unit` | PASS，86/86；包含 workspace partial/cache、app-link、APNs/FCM native/provider/refresh contract 与无 WebView persistence 回归 |
+| `npm run test:unit` | PASS，87/87；包含 Android generated/canonical icon contract、workspace partial/cache、app-link、APNs/FCM native/provider/refresh contract 与无 WebView persistence 回归 |
 | `npx playwright test tests/e2e/app.spec.ts` | PASS，56/56；包含 405-document partial bootstrap/paging/tail Quick Open、mobile 三批 retry、cold document deep link 与 native notification tap fallback |
 | `npm run test:web` | PASS，27/27 |
 | `cargo test --manifest-path services/jtype-core/Cargo.toml` | PASS，46/46；包含 partial workspace completeness/root page、cache hit/mutation invalidation/LRU bound、405-document shallow pagination、未加载 entry exact/fuzzy search、path/wikilink resolve 与 nested link impact guard |
@@ -675,7 +683,7 @@ Rust core 现在可以在不先构造完整 recursive snapshot 的前提下查�
 | Android 120-file external provider `1 changed / 0 changed` 原生复测 | PASS；SAF picker + shared VaultHome；551 ms / 1 file / 89 bytes，立即复扫 540 ms / 0 materialize |
 | iOS 120-file external provider `1 changed / 0 changed` 原生复测 | PASS；security-scoped Files provider + shared VaultHome；17 ms / 1 file / 72 bytes，立即复扫 16 ms / 0 materialize |
 | Android Studio default arm64 variant / Tauri session build / AVD runtime | PASS；default flavor `arm64`、APK `primaryCpuAbi=arm64-v8a`、shared large-vault Maestro flow 通过 |
-| Physical-device preflight 工程 gate | PASS；strict exit 2 正确保持 blocked：Android 真机 0 / ignored Emulator 1，iPhone 真机 0 / ignored Simulator 1，Apple Development identity 0，team 未配置 |
+| Physical-device preflight 工程 gate | Android READY：Xiaomi Android 16 / API 36 / arm64，JType installed；iOS 仍因 0 physical iPhone、0 Apple Development identity、team 未配置 blocked |
 | Stable external mirror baseline reuse | PASS；双端 unchanged source scan 后复用 trusted baseline、0 materialize；Android changed/restored source 均回退 1-file materialize 并恢复原 SHA |
 | Shared workspace pagination contract | PASS；jtype-core 40/40、Tauri 29/29、unit 63/63、app E2E 55/55、Desktop build 与双平台 mobile build；`3f945c4` contract commit 未启用 runtime，后续已由 `1a92435` 接入 |
 | Unloaded-entry native query contract | PASS；jtype-core 43/43、Tauri 29/29、unit 66/66、app E2E 55/55、Desktop build、双平台 mobile build 与 cold-launch screenshot；`1060d1c` contract commit 未启用 fallback，后续已由 `1a92435` 接入 |
@@ -687,12 +695,13 @@ Rust core 现在可以在不先构造完整 recursive snapshot 的前提下查�
 | iOS Universal Link / fallback | entitlement/static config 与 custom fallback → shared EditorShell PASS；production AASA + signed association BLOCKED |
 | APNs/FCM registration contract | PASS；iOS injected remote banner → system tap → target shared EditorShell，Android 缺 Firebase config fail closed；真实 provider transport/physical delivery BLOCKED |
 | Push refresh-hint lifecycle | PASS；native content-free bit、shared consume/coalescing、Android/iOS final artifact 与系统 banner；真实 credentials/physical background delivery BLOCKED |
+| Android physical install / icon | READY/PASS；Xiaomi Android 16 API 36 arm64，USB install、261 ms cold launch、shared UI 与真实 Launcher `[JTYPE]` icon |
 
 Android debug APK：
 
 - `src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk`
-- 760,747,128 bytes（当前 `c14571a` universal push-refresh gate build）
-- SHA-256 `97a94349efd60b1b8d0d9effb54b68f5de3df6a06ec6d93c7db04b1be99b3b92`
+- 205,915,822 bytes（当前 `1d29199` arm64 physical-install build）
+- SHA-256 `e79f4f8f772302b83503b87ff9ac1b6b986862e7f50dd23c5209eb451a82148e`
 
 iOS archive：
 
