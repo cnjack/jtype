@@ -1,0 +1,68 @@
+JType Phase 2D push pressure and retention evidence
+Date: 2026-07-19
+Implementation commit: 948ecf6
+
+Scope
+- Provider-independent mobile push queue maintenance
+- Four-hour server retention for non-processing refresh hints
+- Immediate cleanup when registration owner loses active workspace membership
+- FCM collapse_key + one-hour ttl
+- APNs apns-collapse-id + one-hour apns-expiration
+- Existing shared resume sync remains the only cloud/vault sync implementation
+- No mobile-only UI and no web landing/docs/dashboard content
+- Real background/provider/physical-device delivery is NOT passed
+
+Automated gates
+- pnpm build: PASS
+- pnpm test:unit: PASS 85/85
+- npx playwright test tests/e2e/app.spec.ts: PASS 56/56
+- cargo test --manifest-path src-tauri/Cargo.toml: PASS 30/30
+- cargo test --manifest-path services/jtype-core/Cargo.toml: PASS 46/46
+- cargo test --manifest-path services/jtype-web/Cargo.toml: PASS 71 lib + 245 integration = 316/316
+- cargo test --manifest-path services/jtype-web/Cargo.toml push::tests: PASS 7/7
+- cargo test --manifest-path services/jtype-web/Cargo.toml --test push_tests: PASS 4/4
+- cargo check --manifest-path services/jtype-web/Cargo.toml: PASS
+- docker compose config --quiet: PASS
+
+Pressure and privacy contract
+- FCM android.collapse_key: jtype-collaboration
+- FCM ttl: 3600s
+- APNs apns-collapse-id: jtype-collaboration
+- APNs apns-expiration: send time + 3600 seconds
+- Server non-processing retention: 4 hours
+- Provider credentials absent: maintenance still runs; network send remains disabled
+- Expired pending hint removal without provider: PASS
+- Revoked member queued-route removal without provider: PASS
+- Live processing claims are not expired; stale claims recover after 5 minutes
+- Maintenance logs only aggregate counts
+
+Android Emulator gate
+- Device: emulator-5554, arm64, Android API 36
+- Build: pnpm tauri android build --debug --target aarch64 --apk --ci: PASS
+- Install: adb install -r: Success
+- Cold launch: net.jcode.jtype/.MainActivity, 304 ms, PID 18294
+- AndroidRuntime/libc/DEBUG fatal output after launch: none
+- UI: Desktop/shared performance-note-00001.md EditorShell
+
+iOS Simulator gate
+- Device: iPhone 17 Pro Simulator, iOS 26.5
+- UDID: BD64DE20-5397-486C-8899-4B974425A0AD
+- Build: pnpm mobile:ios:build:simulator-static: PASS
+- Static archive binary: 109481352 bytes
+- Launch: net.jcode.jtype, PID 55514
+- UI: Desktop/shared iOS provider 002 EditorShell and existing Files-provider banner
+- Known no-sign logs: App Group entitlement unavailable, WebKit diagnostics, future UIScene lifecycle warning
+- Crash: none; process remained alive and rendered product UI
+
+Artifact SHA-256
+- Android APK: d94bdff621eac3f387bb63969e423bd578f3526f423cbc8a5af5fec776820306 (401200600 bytes)
+- iOS app binary: 33d11f3987faa03ab9b93e17f9f10789cce2042402a1ebabac16229b2e46b8ff (109481352 bytes)
+- Android screenshot: d78f0302d6a77b6ddedae83086ddfe45d18b98968cfbc71a7965cee5dcd7c4da (138892 bytes)
+- iOS screenshot: cc6fee351bf2b7563a526bd3ce53d7aff94e0269198c84d94ebe31cb03e8eb19 (187593 bytes)
+
+Physical preflight
+- pnpm mobile:device:preflight -- --platform all: expected exit 2, BLOCKED
+- Android physical devices: 0; Emulator ignored: 1
+- iOS physical iPhones: 0; booted Simulator ignored: 1
+- Apple Development identities: 0
+- iOS DEVELOPMENT_TEAM configured: no

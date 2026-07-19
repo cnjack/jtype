@@ -33,7 +33,7 @@ Migration `0028_mobile_push_deliveries` 保存 registration、cloud workspace、
 4. 不删除 `processing` row，避免和并发 worker claim 相互覆盖；
 5. 用 registration + event key 保证同一文档版本幂等。
 
-通知是“重新拉取最新状态”的 refresh hint，而不是版本 ledger。成功后立即删除 delivery 中的私有相对路径和通知 copy；失效 registration 删除后 cascade 清除该安装全部队列。永久 provider/config/payload 错误保留为 `dead`，同一路径下一次真实更新会将其合并替换。
+通知是“重新拉取最新状态”的 refresh hint，而不是版本 ledger。成功后立即删除 delivery 中的私有相对路径和通知 copy；失效 registration 删除后 cascade 清除该安装全部队列。永久 provider/config/payload 错误保留为 `dead`，同一路径下一次真实更新会将其合并替换。后续 `948ecf6` 又增加 provider-independent maintenance 与四小时 retention，即使没有下一次更新或没有 provider credentials，这些私有 hint 也不会无限期保留；见 [`phase-2-push-retention.md`](phase-2-push-retention.md)。
 
 ## Provider transport
 
