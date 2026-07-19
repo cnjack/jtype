@@ -192,3 +192,98 @@ async fn one_provider_identifier_is_atomically_transferred_to_the_current_user()
         "second-device"
     );
 }
+
+#[tokio::test]
+async fn document_changes_enqueue_only_other_members_and_coalesce_pending_path_updates() {
+    let (app, pool) = common::setup().await;
+    let owner_name = common::uid();
+    let member_name = common::uid();
+    let (owner_auth, _) = common::register_user(app.clone(), &owner_name).await;
+    let (member_auth, _) = common::register_user(app.clone(), &member_name).await;
+    let workspace_id = common::create_workspace(app.clone(), &owner_auth, &common::wname()).await;
+
+    let (status, invite) = common::req(
+        app.clone(),
+        "POST",
+        &format!("/api/v1/workspaces/{workspace_id}/invites"),
+        Some(&owner_auth),
+        Some(json!({ "role": "editor" })),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK, "{invite}");
+    let invite_token = invite["inviteToken"].as_str().unwrap();
+    let (status, body) = common::req(
+        app.clone(),
+        "POST",
+        &format!("/api/v1/workspace-invites/{invite_token}/accept"),
+        Some(&member_auth),
+        None,
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK, "{body}");
+
+    for (auth, device, identifier) in [
+        (&owner_auth, "owner-android", "fid-owner-installation"),
+        (&member_auth, "member-android", "fid-member-installation"),
+    ] {
+        let (status, body) = common::req_with_client_type(
+            app.clone(),
+            "PUT",
+            "/api/me/push-registrations",
+            Some(auth),
+            Some(json!({
+                "deviceId": device,
+                "platform": "android",
+                "provider": "fcm",
+                "environment": "production",
+                "identifierKind": "fid",
+                "identifier": identifier
+            })),
+            "mobile",
+        )
+        .await;
+        assert_eq!(status, StatusCode::OK, "{body}");
+    }
+
+    common::save_doc(
+        app.clone(),
+        &owner_auth,
+        &workspace_id,
+        "shared/transport.md",
+        "# First update",
+    )
+    .await;
+    let latest = common::save_doc(
+        app,
+        &owner_auth,
+        &workspace_id,
+        "shared/transport.md",
+        "# Latest update",
+    )
+    .await;
+
+    let rows = sqlx::query(
+        r#"SELECT r.device_id, d.relative_path, d.document_clock, d.status
+           FROM mobile_push_deliveries d
+           JOIN mobile_push_registrations r ON r.id = d.registration_id
+           WHERE d.workspace_id = ?"#,
+    )
+    .bind(&workspace_id)
+    .fetch_all(&pool)
+    .await
+    .unwrap();
+    assert_eq!(rows.len(), 1, "only the other member's latest hint remains");
+    assert_eq!(
+        rows[0].try_get::<String, _>("device_id").unwrap(),
+        "member-android"
+    );
+    assert_eq!(
+        rows[0].try_get::<String, _>("relative_path").unwrap(),
+        "shared/transport.md"
+    );
+    assert_eq!(
+        rows[0].try_get::<i64, _>("document_clock").unwrap(),
+        latest["updatedClock"].as_i64().unwrap()
+    );
+    assert_eq!(rows[0].try_get::<String, _>("status").unwrap(), "pending");
+}

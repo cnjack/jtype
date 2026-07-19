@@ -48,6 +48,21 @@ services:
       # identities are supplied. Android accepts comma-separated SHA-256 certs.
       JTYPED_APPLE_APP_LINK_TEAM_ID: ${JTYPED_APPLE_APP_LINK_TEAM_ID:-}
       JTYPED_ANDROID_APP_LINK_CERT_SHA256: ${JTYPED_ANDROID_APP_LINK_CERT_SHA256:-}
+      # Mobile collaboration push stays fail-closed unless a complete provider
+      # group is supplied. PEM values may contain escaped `\n` newlines. New
+      # APNs keys are environment-scoped; the shared KEY_ID/PRIVATE_KEY pair is
+      # retained only for older keys that cover both endpoints.
+      JTYPED_FCM_PROJECT_ID: ${JTYPED_FCM_PROJECT_ID:-}
+      JTYPED_FCM_CLIENT_EMAIL: ${JTYPED_FCM_CLIENT_EMAIL:-}
+      JTYPED_FCM_PRIVATE_KEY: ${JTYPED_FCM_PRIVATE_KEY:-}
+      JTYPED_APNS_TEAM_ID: ${JTYPED_APNS_TEAM_ID:-}
+      JTYPED_APNS_TOPIC: ${JTYPED_APNS_TOPIC:-net.jcode.jtype}
+      JTYPED_APNS_DEVELOPMENT_KEY_ID: ${JTYPED_APNS_DEVELOPMENT_KEY_ID:-}
+      JTYPED_APNS_DEVELOPMENT_PRIVATE_KEY: ${JTYPED_APNS_DEVELOPMENT_PRIVATE_KEY:-}
+      JTYPED_APNS_PRODUCTION_KEY_ID: ${JTYPED_APNS_PRODUCTION_KEY_ID:-}
+      JTYPED_APNS_PRODUCTION_PRIVATE_KEY: ${JTYPED_APNS_PRODUCTION_PRIVATE_KEY:-}
+      JTYPED_APNS_KEY_ID: ${JTYPED_APNS_KEY_ID:-}
+      JTYPED_APNS_PRIVATE_KEY: ${JTYPED_APNS_PRIVATE_KEY:-}
       # Durable asset storage via the rustfs (S3-compatible) service. Without
       # these, the web service falls back to its own ephemeral container
       # filesystem and all uploaded images are lost on rebuild.

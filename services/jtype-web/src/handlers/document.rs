@@ -331,6 +331,17 @@ pub async fn save_document_version(
         // Unchanged = a no-op re-save; don't fire on those.
         if !matches!(status, MergeStatus::Unchanged) {
             fire_card_webhook(pool, workspace_id, doc, &user.username, *created).await;
+            if let Err(error) = crate::push::enqueue_document_change(
+                pool,
+                workspace_id,
+                &user.id,
+                &user.username,
+                doc,
+            )
+            .await
+            {
+                eprintln!("mobile push enqueue failed: {error}");
+            }
         }
     }
     Ok(outcome)

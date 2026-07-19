@@ -585,6 +585,17 @@ pub async fn resolve_conflict(
     // `save_document_version` wrapper) does not publish SSE/webhooks itself, so
     // notify those best-effort paths explicitly here.
     crate::handlers::document::fire_card_webhook(&state.pool, &workspace_id, &saved, &user.username, false).await;
+    if let Err(error) = crate::push::enqueue_document_change(
+        &state.pool,
+        &workspace_id,
+        &user.id,
+        &user.username,
+        &saved,
+    )
+    .await
+    {
+        eprintln!("mobile push enqueue failed: {error}");
+    }
 
     // Broadcast the resolved document so other connected clients refresh.
     state

@@ -170,6 +170,12 @@ fn all_migrations() -> Vec<Migration> {
             up: include_str!("../../migrations/0027_mobile_push_registrations.up.sql"),
             down: include_str!("../../migrations/0027_mobile_push_registrations.down.sql"),
         },
+        Migration {
+            version: 28,
+            name: "mobile_push_deliveries",
+            up: include_str!("../../migrations/0028_mobile_push_deliveries.up.sql"),
+            down: include_str!("../../migrations/0028_mobile_push_deliveries.down.sql"),
+        },
     ]
 }
 
