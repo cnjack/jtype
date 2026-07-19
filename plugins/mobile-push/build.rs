@@ -1,6 +1,7 @@
 const COMMANDS: &[&str] = &[
     "registration",
     "takePendingRoute",
+    "takePendingRefresh",
     "registerListener",
     "removeListener",
 ];

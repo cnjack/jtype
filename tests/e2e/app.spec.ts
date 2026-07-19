@@ -40,6 +40,7 @@ declare global {
     __WORKSPACE_QUERY_CALLS__: string[];
     __INITIAL_EXTERNAL_SOURCES_JSON__?: string;
     __INITIAL_DEEP_LINKS__?: string[] | null;
+    __MOBILE_PUSH_REFRESH_PENDING__: boolean;
     __LAST_OPEN_URL__?: string;
     __OAUTH_START_BODY__?: Record<string, unknown>;
     __OAUTH_POLL_PENDING__: boolean;
@@ -341,6 +342,7 @@ test.beforeEach(async ({ page }) => {
       __BINARY_READS__: [],
       __WORKSPACE_QUERY_CALLS__: [],
       __OAUTH_POLL_PENDING__: false,
+      __MOBILE_PUSH_REFRESH_PENDING__: false,
       __VAULT_SETTINGS__: {
         "C:/workspace": {
           cloudSyncEnabled: true,
@@ -622,6 +624,25 @@ test.beforeEach(async ({ page }) => {
           if (cmd === "plugin:notification|remove_listener") {
             pluginSubscriptions.delete(Number(args.channelId));
             return null;
+          }
+          if (cmd === "plugin:mobile-push|register_listener" || cmd === "plugin:mobile-push|registerListener") {
+            const handler = args.handler as { id: number };
+            pluginSubscriptions.set(handler.id, {
+              plugin: "mobile-push",
+              event: String(args.event),
+              handler: handler.id,
+              nextIndex: 0,
+            });
+            return null;
+          }
+          if (cmd === "plugin:mobile-push|remove_listener") {
+            pluginSubscriptions.delete(Number(args.channelId));
+            return null;
+          }
+          if (cmd === "plugin:mobile-push|takePendingRefresh") {
+            const pending = window.__MOBILE_PUSH_REFRESH_PENDING__;
+            window.__MOBILE_PUSH_REFRESH_PENDING__ = false;
+            return { pending };
           }
           if (cmd === "plugin:deep-link|get_current") return window.__INITIAL_DEEP_LINKS__ ?? null;
           if (cmd === "mobile_notification_debug_enabled") return false;
@@ -2367,6 +2388,17 @@ test("coalesces mobile network and foreground recovery while restarting its webs
   await page.waitForTimeout(100);
   expect(await page.evaluate(() => window.__START_LISTENER_CALLS__.length)).toBe(afterResumeStarts);
   expect(await page.evaluate(() => window.__SYNC_REQUESTS__.length)).toBe(afterResumeSyncs);
+
+  await expect.poll(() => page.evaluate(() =>
+    window.__EMIT_TAURI_PLUGIN_EVENT__("mobile-push", "refreshRequested", { pending: false }),
+  )).toBeGreaterThan(0);
+  await page.evaluate(() => {
+    window.__MOBILE_PUSH_REFRESH_PENDING__ = true;
+    window.__EMIT_TAURI_PLUGIN_EVENT__("mobile-push", "refreshRequested", { pending: true });
+  });
+  await expect.poll(() => page.evaluate(() => window.__START_LISTENER_CALLS__.length)).toBeGreaterThan(afterResumeStarts);
+  await expect.poll(() => page.evaluate(() => window.__SYNC_REQUESTS__.length)).toBeGreaterThan(afterResumeSyncs);
+  expect(await page.evaluate(() => window.__MOBILE_PUSH_REFRESH_PENDING__)).toBe(false);
 });
 
 test("preserves a saved offline edit when websocket reconnect pulls an older cloud copy", async ({ page }) => {

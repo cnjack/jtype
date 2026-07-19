@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef } from "react";
+import { onMobilePushRefreshRequested, takePendingMobilePushRefresh } from "../lib/mobilePush";
 import { useAppLifecycle } from "./useAppLifecycle";
 
-export type MobileSyncRecoveryReason = "app-resume" | "network-online";
+export type MobileSyncRecoveryReason = "app-resume" | "network-online" | "push-hint";
 
 type MobileSyncRecoveryOptions = {
   enabled: boolean;
@@ -34,14 +35,16 @@ export function useMobileSyncRecovery({
 
   const recover = useCallback((reason: MobileSyncRecoveryReason) => {
     if (!enabledRef.current) return;
+    const isPushHint = reason === "push-hint";
     if (recoveryInFlightRef.current) {
       // A lifecycle transition that stopped the socket must not be lost behind
-      // an older network recovery. Plain event bursts remain coalesced.
-      if (restartRequiredRef.current) pendingRecoveryRef.current = reason;
+      // an older network recovery. A provider hint is also retained until that
+      // recovery settles; plain lifecycle/network bursts remain coalesced.
+      if (restartRequiredRef.current || isPushHint) pendingRecoveryRef.current = reason;
       return;
     }
     const now = Date.now();
-    if (!restartRequiredRef.current && now - lastRecoveryStartedAtRef.current < cooldownMs) return;
+    if (!restartRequiredRef.current && !isPushHint && now - lastRecoveryStartedAtRef.current < cooldownMs) return;
 
     restartRequiredRef.current = false;
     recoveryInFlightRef.current = true;
@@ -71,7 +74,18 @@ export function useMobileSyncRecovery({
     });
   }, []);
 
-  const resume = useCallback(() => recover("app-resume"), [recover]);
+  const consumePushHint = useCallback((fallbackToResume: boolean) => {
+    void takePendingMobilePushRefresh()
+      .then((pending) => {
+        if (pending) recover("push-hint");
+        else if (fallbackToResume) recover("app-resume");
+      })
+      .catch(() => {
+        if (fallbackToResume) recover("app-resume");
+      });
+  }, [recover]);
+
+  const resume = useCallback(() => consumePushHint(true), [consumePushHint]);
 
   useAppLifecycle({
     enabled,
@@ -85,4 +99,27 @@ export function useMobileSyncRecovery({
     window.addEventListener("online", onOnline);
     return () => window.removeEventListener("online", onOnline);
   }, [enabled, recover]);
+
+  useEffect(() => {
+    if (!enabled) return;
+    let disposed = false;
+    let listener: { unregister: () => Promise<void> } | null = null;
+    void onMobilePushRefreshRequested(() => consumePushHint(false))
+      .then((value) => {
+        if (disposed) void value.unregister();
+        else {
+          listener = value;
+          // Register before draining the durable bit so a hint that arrives
+          // during setup is observed either by the event or this read.
+          consumePushHint(false);
+        }
+      })
+      .catch(() => {
+        if (!disposed) consumePushHint(false);
+      });
+    return () => {
+      disposed = true;
+      void listener?.unregister();
+    };
+  }, [consumePushHint, enabled]);
 }

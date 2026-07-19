@@ -1,8 +1,9 @@
 [default]
-description = "Allows the shared JType app to register native push tokens and consume canonical notification routes."
+description = "Allows the shared JType app to register native push tokens and consume canonical notification routes and refresh hints."
 permissions = [
   "allow-registration",
   "allow-takePendingRoute",
+  "allow-takePendingRefresh",
   "allow-registerListener",
   "allow-removeListener",
 ]

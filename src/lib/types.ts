@@ -380,6 +380,10 @@ export type MobilePushRouteEvent = {
   routeUrl: string | null;
 };
 
+export type MobilePushRefreshEvent = {
+  pending: boolean;
+};
+
 export type CloudDocument = {
   relativePath: string;
   title: string;

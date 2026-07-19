@@ -1,6 +1,6 @@
 import { addPluginListener, invoke, type PluginListener } from "@tauri-apps/api/core";
 import { httpRequest } from "@shared/lib/http";
-import type { MobilePushRegistration, MobilePushRouteEvent } from "./types";
+import type { MobilePushRefreshEvent, MobilePushRegistration, MobilePushRouteEvent } from "./types";
 
 const PLUGIN_NAME = "mobile-push";
 
@@ -11,6 +11,11 @@ export async function requestNativeMobilePushRegistration(): Promise<MobilePushR
 export async function takePendingMobilePushRoute(): Promise<string | null> {
   const result = await invoke<MobilePushRouteEvent>(`plugin:${PLUGIN_NAME}|takePendingRoute`);
   return typeof result.routeUrl === "string" ? result.routeUrl : null;
+}
+
+export async function takePendingMobilePushRefresh(): Promise<boolean> {
+  const result = await invoke<MobilePushRefreshEvent>(`plugin:${PLUGIN_NAME}|takePendingRefresh`);
+  return result.pending === true;
 }
 
 export async function onMobilePushRegistrationChanged(
@@ -24,6 +29,14 @@ export async function onMobilePushNotificationAction(
 ): Promise<PluginListener> {
   return addPluginListener<MobilePushRouteEvent>(PLUGIN_NAME, "notificationAction", (event) => {
     if (typeof event.routeUrl === "string") handler(event.routeUrl);
+  });
+}
+
+export async function onMobilePushRefreshRequested(
+  handler: () => void,
+): Promise<PluginListener> {
+  return addPluginListener<MobilePushRefreshEvent>(PLUGIN_NAME, "refreshRequested", (event) => {
+    if (event.pending === true) handler();
   });
 }
 

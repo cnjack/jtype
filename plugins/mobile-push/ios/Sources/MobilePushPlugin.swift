@@ -8,13 +8,26 @@ import WebKit
 private weak var activeMobilePushPlugin: MobilePushPlugin?
 private var originalDidRegisterImplementation: IMP?
 private var originalDidFailImplementation: IMP?
+private var originalDidReceiveRemoteImplementation: IMP?
+private var didReceiveRemoteHookBlock: AnyObject?
 private var appDelegateHooksInstalled = false
 
 private let didRegisterSelector = NSSelectorFromString("application:didRegisterForRemoteNotificationsWithDeviceToken:")
 private let didFailSelector = NSSelectorFromString("application:didFailToRegisterForRemoteNotificationsWithError:")
+private let didReceiveRemoteSelector = NSSelectorFromString(
+  "application:didReceiveRemoteNotification:fetchCompletionHandler:"
+)
 
 private typealias DidRegisterFunction = @convention(c) (AnyObject, Selector, UIApplication, NSData) -> Void
 private typealias DidFailFunction = @convention(c) (AnyObject, Selector, UIApplication, NSError) -> Void
+private typealias BackgroundFetchCompletion = @convention(block) (UIBackgroundFetchResult) -> Void
+private typealias DidReceiveRemoteFunction = @convention(c) (
+  AnyObject,
+  Selector,
+  UIApplication,
+  NSDictionary,
+  AnyObject
+) -> Void
 
 private func jtypeDidRegister(
   _ delegate: AnyObject,
@@ -62,11 +75,37 @@ private func installAppDelegateHooks() {
   } else {
     class_addMethod(delegateClass, didFailSelector, failImplementation, "v@:@@")
   }
+
+  let receiveBlock: @convention(block) (
+    AnyObject,
+    UIApplication,
+    NSDictionary,
+    BackgroundFetchCompletion
+  ) -> Void = { delegate, application, userInfo, completion in
+    let recorded = activeMobilePushPlugin?.recordBackgroundRefresh(userInfo: userInfo) ?? false
+    if let originalDidReceiveRemoteImplementation {
+      let original = unsafeBitCast(originalDidReceiveRemoteImplementation, to: DidReceiveRemoteFunction.self)
+      original(delegate, didReceiveRemoteSelector, application, userInfo, completion as AnyObject)
+    } else {
+      completion(recorded ? .newData : .noData)
+    }
+  }
+  let receiveBlockObject = receiveBlock as AnyObject
+  didReceiveRemoteHookBlock = receiveBlockObject
+  let receiveImplementation = imp_implementationWithBlock(receiveBlockObject)
+  if let method = class_getInstanceMethod(delegateClass, didReceiveRemoteSelector) {
+    originalDidReceiveRemoteImplementation = method_getImplementation(method)
+    method_setImplementation(method, receiveImplementation)
+  } else {
+    class_addMethod(delegateClass, didReceiveRemoteSelector, receiveImplementation, "v@:@@@?")
+  }
   appDelegateHooksInstalled = true
 }
 
 class MobilePushPlugin: Plugin, UNUserNotificationCenterDelegate {
   private let pendingRouteKey = "jtype.mobilePush.pendingRoute"
+  private let pendingRefreshKey = "jtype.mobilePush.pendingRefresh"
+  private let refreshLock = NSLock()
   private var pendingRegistration: Invoke?
   private weak var upstreamNotificationDelegate: UNUserNotificationCenterDelegate?
 
@@ -116,6 +155,37 @@ class MobilePushPlugin: Plugin, UNUserNotificationCenterDelegate {
     } else {
       invoke.resolve(["routeUrl": NSNull()])
     }
+  }
+
+  @objc public func takePendingRefresh(_ invoke: Invoke) {
+    refreshLock.lock()
+    let pending = UserDefaults.standard.bool(forKey: pendingRefreshKey)
+    UserDefaults.standard.removeObject(forKey: pendingRefreshKey)
+    refreshLock.unlock()
+    invoke.resolve(["pending": pending])
+  }
+
+  private func recordRefresh() {
+    refreshLock.lock()
+    UserDefaults.standard.set(true, forKey: pendingRefreshKey)
+    refreshLock.unlock()
+    let emit: () -> Void = { [weak self] in
+      guard let self else { return }
+      self.trigger("refreshRequested", data: ["pending": true])
+    }
+    if Thread.isMainThread {
+      emit()
+    } else {
+      DispatchQueue.main.async(execute: emit)
+    }
+  }
+
+  fileprivate func recordBackgroundRefresh(userInfo: NSDictionary) -> Bool {
+    guard canonicalRoute(userInfo["jtypeRoute"] as? String) != nil,
+          let aps = userInfo["aps"] as? [String: Any],
+          (aps["content-available"] as? NSNumber)?.intValue == 1 else { return false }
+    recordRefresh()
+    return true
   }
 
   fileprivate func completeRegistration(identifier: Data) {
@@ -194,7 +264,14 @@ class MobilePushPlugin: Plugin, UNUserNotificationCenterDelegate {
       }
       return
     }
-    completionHandler([.banner, .sound, .badge])
+    if remoteRoute(notification) != nil {
+      recordRefresh()
+    }
+    if #available(iOS 14.0, *) {
+      completionHandler([.banner, .sound, .badge])
+    } else {
+      completionHandler([.alert, .sound, .badge])
+    }
   }
 
   public func userNotificationCenter(
@@ -215,6 +292,7 @@ class MobilePushPlugin: Plugin, UNUserNotificationCenterDelegate {
       return
     }
     if let route = remoteRoute(response.notification) {
+      recordRefresh()
       UserDefaults.standard.set(route, forKey: pendingRouteKey)
       trigger("notificationAction", data: ["routeUrl": route])
     }

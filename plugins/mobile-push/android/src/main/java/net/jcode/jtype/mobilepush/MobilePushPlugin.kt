@@ -2,6 +2,7 @@ package net.jcode.jtype.mobilepush
 
 import android.app.Activity
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -30,10 +31,26 @@ class MobilePushPlugin(private val activity: Activity) : Plugin(activity) {
   companion object {
     private const val PREFERENCES_NAME = "net.jcode.jtype.mobilepush"
     private const val PENDING_ROUTE_KEY = "pendingRoute"
+    private const val PENDING_REFRESH_KEY = "pendingRefresh"
+    private val refreshLock = Any()
     private var current = WeakReference<MobilePushPlugin>(null)
 
     internal fun emitRegistrationChanged(identifier: String) {
       current.get()?.completeRegistration(identifier)
+    }
+
+    internal fun recordRefresh(context: Context) {
+      synchronized(refreshLock) {
+        context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
+          .edit()
+          .putBoolean(PENDING_REFRESH_KEY, true)
+          .commit()
+      }
+      current.get()?.let { plugin ->
+        plugin.activity.runOnUiThread {
+          plugin.trigger("refreshRequested", JSObject().apply { put("pending", true) })
+        }
+      }
     }
 
     internal fun registrationPayload(identifier: String): JSObject = JSObject().apply {
@@ -152,5 +169,16 @@ class MobilePushPlugin(private val activity: Activity) : Plugin(activity) {
       intent?.removeExtra(JTypeFirebaseMessagingService.ROUTE_EXTRA)
     }
     invoke.resolve(JSObject().apply { put("routeUrl", route) })
+  }
+
+  @Command
+  fun takePendingRefresh(invoke: Invoke) {
+    val preferences = activity.getSharedPreferences(PREFERENCES_NAME, Activity.MODE_PRIVATE)
+    val pending = synchronized(refreshLock) {
+      val value = preferences.getBoolean(PENDING_REFRESH_KEY, false)
+      preferences.edit().remove(PENDING_REFRESH_KEY).commit()
+      value
+    }
+    invoke.resolve(JSObject().apply { put("pending", pending) })
   }
 }

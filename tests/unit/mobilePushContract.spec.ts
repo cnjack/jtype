@@ -68,3 +68,39 @@ test("frontend adapter sends provider identifiers directly to the authenticated 
   expect(hook).not.toContain("localStorage");
   expect(hook).not.toContain("sessionStorage");
 });
+
+test("native push hints converge on shared mobile sync recovery without owning document state", () => {
+  const androidPlugin = source(
+    "plugins/mobile-push/android/src/main/java/net/jcode/jtype/mobilepush/MobilePushPlugin.kt",
+  );
+  const androidService = source(
+    "plugins/mobile-push/android/src/main/java/net/jcode/jtype/mobilepush/JTypeFirebaseMessagingService.kt",
+  );
+  const iosPlugin = source("plugins/mobile-push/ios/Sources/MobilePushPlugin.swift");
+  const adapter = source("src/lib/mobilePush.ts");
+  const recovery = source("src/hooks/useMobileSyncRecovery.ts");
+  const project = source("src-tauri/gen/apple/project.yml");
+  const apnsProvider = source("services/jtype-web/src/push.rs");
+
+  expect(androidPlugin).toContain("PENDING_REFRESH_KEY");
+  expect(androidPlugin).toContain("takePendingRefresh");
+  expect(androidPlugin).toContain("synchronized(refreshLock)");
+  expect(androidService).toContain("MobilePushPlugin.recordRefresh(this)");
+  expect(androidService).toContain("override fun onDeletedMessages()");
+  expect(iosPlugin).toContain("recordBackgroundRefresh");
+  expect(iosPlugin).toContain('aps["content-available"]');
+  expect(project).toContain("UIBackgroundModes:\n          - remote-notification");
+  expect(apnsProvider).toContain('"content-available": 1');
+  expect(adapter).toContain("takePendingMobilePushRefresh");
+  expect(adapter).toContain('"refreshRequested"');
+  expect(recovery).toContain('recover("push-hint")');
+
+  for (const nativeSource of [androidPlugin, androidService, iosPlugin]) {
+    expect(nativeSource).not.toContain("write_document");
+    expect(nativeSource).not.toContain("sync_cloud_workspace");
+  }
+  expect(adapter).not.toContain("localStorage");
+  expect(adapter).not.toContain("sessionStorage");
+  expect(recovery).not.toContain("localStorage");
+  expect(recovery).not.toContain("sessionStorage");
+});

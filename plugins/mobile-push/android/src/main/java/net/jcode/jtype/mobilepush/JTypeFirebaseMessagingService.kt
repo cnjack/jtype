@@ -26,6 +26,7 @@ class JTypeFirebaseMessagingService : FirebaseMessagingService() {
 
   override fun onMessageReceived(message: RemoteMessage) {
     val route = MobilePushPlugin.canonicalRoute(message.data["routeUrl"]) ?: return
+    MobilePushPlugin.recordRefresh(this)
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
       ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
     ) return
@@ -65,5 +66,9 @@ class JTypeFirebaseMessagingService : FirebaseMessagingService() {
       .setContentIntent(pendingIntent)
       .build()
     manager.notify(NOTIFICATION_ID, notification)
+  }
+
+  override fun onDeletedMessages() {
+    MobilePushPlugin.recordRefresh(this)
   }
 }

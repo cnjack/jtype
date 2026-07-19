@@ -97,6 +97,8 @@ targets:
           - CFBundleURLName: jtype
             CFBundleURLSchemes: [jtype]
         LSSupportsOpeningDocumentsInPlace: false
+        UIBackgroundModes:
+          - remote-notification
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
           NSExceptionDomains:

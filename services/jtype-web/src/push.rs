@@ -87,6 +87,7 @@ impl CollaborationPush {
                     "title": bounded(&self.title, 120),
                     "body": bounded(&self.body, 512),
                 },
+                "content-available": 1,
                 "sound": "default",
                 "thread-id": format!("jtype-workspace-{}", self.workspace_id.trim()),
             },
@@ -957,6 +958,10 @@ mod tests {
             PUSH_COLLAPSE_ID
         );
         assert_eq!(push.apns_payload().unwrap()["jtypeRoute"], route);
+        assert_eq!(
+            push.apns_payload().unwrap()["aps"]["content-available"],
+            1
+        );
     }
 
     #[test]
