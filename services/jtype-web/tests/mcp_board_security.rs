@@ -248,3 +248,95 @@ async fn legacy_mcp_token_is_also_blocked_from_external_rest() {
     .await;
     assert_eq!(status, StatusCode::FORBIDDEN);
 }
+
+/// A pinned board endpoint is the most restrictive surface: it must guide
+/// OAuth-capable clients (via `WWW-Authenticate`) and, by scope containment,
+/// accept broader-scope tokens minted by that flow (`mcp`) as well as `full`
+/// sessions. RBAC still gates per call via the forwarded bearer.
+#[tokio::test]
+async fn pinned_endpoint_guides_oauth_and_accepts_broader_scope_tokens() {
+    use axum::body::Body;
+    use axum::http::Request;
+    use tower::ServiceExt;
+
+    let (app, pool) = common::setup().await;
+    let username = common::uid();
+    let (full_token, _) = common::register_user(app.clone(), &username).await;
+    let workspace_id = common::create_workspace(app.clone(), &full_token, &common::wname()).await;
+    let board_id = format!("b_{}", &common::uid()[..8]);
+    common::save_doc(
+        app.clone(),
+        &full_token,
+        &workspace_id,
+        "pinned.board",
+        &json!({ "id": board_id, "title": "Pinned", "columns": [] }).to_string(),
+    )
+    .await;
+
+    let pinned_url = format!("/mcp/kanban/{workspace_id}/{board_id}");
+    let initialize = json!({
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "initialize",
+        "params": { "protocolVersion": "2025-06-18" }
+    });
+
+    // 1. No token → 401 WITH a WWW-Authenticate header (OAuth guidance), so
+    //    Claude/Cursor/jcode can discover and run the flow against the pin.
+    let request = Request::builder()
+        .method("POST")
+        .uri(&pinned_url)
+        .header("content-type", "application/json")
+        .body(Body::from(serde_json::to_vec(&initialize).unwrap()))
+        .unwrap();
+    let response = app.clone().oneshot(request).await.unwrap();
+    assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+    let www_auth = response
+        .headers()
+        .get("www-authenticate")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("");
+    assert!(
+        www_auth.contains("resource_metadata"),
+        "pinned endpoint must advertise OAuth metadata: got {www_auth:?}"
+    );
+
+    // 2. An `mcp`-scoped token (what the OAuth flow mints) is accepted on the
+    //    pinned endpoint — scope containment lets a broader token in.
+    let user_id: String = sqlx::query_scalar("SELECT id FROM users WHERE username = ?")
+        .bind(&username)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    let mcp_token = jtype_web::handlers::auth::create_scoped_session(
+        &pool,
+        &user_id,
+        "mcp",
+        Some(3600),
+        Some("pinned-acceptance test"),
+    )
+    .await
+    .unwrap();
+    let (status, body) = common::req(
+        app.clone(),
+        "POST",
+        &pinned_url,
+        Some(&mcp_token),
+        Some(initialize.clone()),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK, "mcp token rejected on pin: {body}");
+    assert_eq!(body["result"]["serverInfo"]["name"], "jtype-kanban");
+
+    // 3. A `full` session token is likewise accepted.
+    let (status, body) = common::req(
+        app,
+        "POST",
+        &pinned_url,
+        Some(&full_token),
+        Some(initialize),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK, "full token rejected on pin: {body}");
+    assert_eq!(body["result"]["serverInfo"]["name"], "jtype-kanban");
+}
