@@ -4,11 +4,11 @@ JType 为笔记与看板内置了多个 **MCP endpoint**（Model Context Protoco
 - **通用看板地址：** `https://<你的-jtype-主机>/mcp/kanban`
 - **单看板地址：** 从**看板设置 → MCP access** 生成，格式为 `https://<你的-jtype-主机>/mcp/kanban/<workspace>/<board>`
 - **传输方式：** Streamable HTTP（JSON-RPC）
-- **认证：** 通用 endpoint 使用 OAuth 2.1；单看板 endpoint 使用绑定到该看板的静态 token
+- **认证：** 所有 endpoint 均支持 OAuth 2.1；单看板 endpoint 额外接受绑定到该看板的静态 token
 
 ## 两种连接方式
 
-**OAuth（推荐）。** 对于支持 MCP OAuth 的客户端，把笔记 URL 或通用看板 URL 交给它。客户端会自动发现认证服务器、打开浏览器，你**授权一次**即可连接。无需粘贴任何内容，也不会写入配置文件；两个 URL 会暴露彼此分开的工具目录。
+**OAuth（推荐）。** 对于支持 MCP OAuth 的客户端，把任意 URL（笔记、通用看板或单看板地址）交给它。客户端会自动发现认证服务器、打开浏览器，你**授权一次**即可连接。无需粘贴任何内容，也不会写入配置文件；三个 URL 会暴露彼此分开的工具目录。
 
 **受限令牌（备用）。** 有些客户端只接受静态的 `Authorization` 请求头。对这类客户端，铸造一个受限、会过期、可吊销的令牌并粘贴进去即可。如何选择以及如何创建，参见 [OAuth 与受限令牌](/help/c/ai-mcp/oauth-vs-token)。
 

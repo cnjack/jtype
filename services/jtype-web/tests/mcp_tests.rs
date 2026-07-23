@@ -81,13 +81,16 @@ async fn mcp_requires_auth_with_challenge() {
 }
 
 #[tokio::test]
-async fn pinned_board_auth_failure_does_not_advertise_general_oauth() {
+async fn pinned_board_endpoint_advertises_oauth_for_auto_login() {
     let (app, _pool) = common::setup().await;
     let request_body = serde_json::to_vec(&json!({
         "jsonrpc": "2.0", "id": 1, "method": "initialize"
     }))
     .unwrap();
 
+    // A pinned board URL must advertise the same OAuth resource metadata as the
+    // general endpoint, so OAuth-capable clients (Claude, Cursor, jcode) can
+    // discover and run the flow when connecting directly to a pinned board.
     let pinned = app
         .clone()
         .oneshot(
@@ -101,12 +104,15 @@ async fn pinned_board_auth_failure_does_not_advertise_general_oauth() {
         .await
         .unwrap();
     assert_eq!(pinned.status(), StatusCode::UNAUTHORIZED);
+    let pinned_challenge = pinned
+        .headers()
+        .get(axum::http::header::WWW_AUTHENTICATE)
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("");
     assert!(
-        pinned
-            .headers()
-            .get(axum::http::header::WWW_AUTHENTICATE)
-            .is_none(),
-        "a pinned static-token endpoint must not advertise the general OAuth resource"
+        pinned_challenge.contains("resource_metadata")
+            && pinned_challenge.contains("oauth-protected-resource"),
+        "pinned endpoint must advertise OAuth metadata: got {pinned_challenge:?}"
     );
 
     let general = app
@@ -432,8 +438,9 @@ async fn mcp_pinned_endpoint_enforces_grant_and_rejects_scope_override() {
     let board_token = mint_board_token(app.clone(), &full_token, &workspace_id, &board).await;
     let initialize = json!({"jsonrpc":"2.0","id":1,"method":"initialize"});
 
-    // Full sessions and board tokens for a different URL are both rejected.
-    let (status, _) = mcp_kanban_pinned(
+    // By scope containment, a full session is accepted on the pinned endpoint
+    // (RBAC still gates per call); a board token for a *different* URL is not.
+    let (status, body) = mcp_kanban_pinned(
         app.clone(),
         Some(&full_token),
         &workspace_id,
@@ -441,7 +448,8 @@ async fn mcp_pinned_endpoint_enforces_grant_and_rejects_scope_override() {
         initialize.clone(),
     )
     .await;
-    assert_eq!(status, StatusCode::UNAUTHORIZED);
+    assert_eq!(status, StatusCode::OK, "full token rejected on pin: {body}");
+    assert_eq!(body["result"]["serverInfo"]["name"], "jtype-kanban");
     let (status, _) = mcp_kanban_pinned(
         app.clone(),
         Some(&board_token),

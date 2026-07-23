@@ -132,21 +132,6 @@ fn unauthorized(base: &str) -> Response {
         .into_response()
 }
 
-/// Board-settings credentials are static, resource-bound tokens. Advertising
-/// the general `/mcp` OAuth resource here would send auto-OAuth clients through
-/// a flow that can only mint a general token, which this endpoint must reject.
-fn board_unauthorized() -> Response {
-    (
-        StatusCode::UNAUTHORIZED,
-        Json(json!({
-            "jsonrpc": "2.0",
-            "id": Value::Null,
-            "error": { "code": -32001, "message": "board token required" }
-        })),
-    )
-        .into_response()
-}
-
 fn bearer_from(headers: &HeaderMap) -> Option<String> {
     headers
         .get(header::AUTHORIZATION)
@@ -195,39 +180,37 @@ async fn handle_mcp(
         (Some(workspace_id), Some(board)) => Some((workspace_id, board)),
         _ => None,
     };
-    let is_pinned_board = matches!(kind, ServerKind::Kanban) && complete_pin.is_some();
 
-    // Authenticate the whole endpoint (MCP resource server).
+    // Authenticate the whole endpoint (MCP resource server). Every auth failure
+    // returns the standard 401 challenge with a `WWW-Authenticate` header, so
+    // OAuth-capable clients (Claude, Cursor, jcode) can discover and run the
+    // flow even against a pinned board URL.
     let Some(token) = bearer_from(&headers) else {
-        return if is_pinned_board {
-            board_unauthorized()
-        } else {
-            unauthorized(&st.public_base_url)
-        };
+        return unauthorized(&st.public_base_url);
     };
     let user = match extract_user(&st.pool, &headers).await {
         Ok(user) => user,
-        Err(_) => {
-            return if is_pinned_board {
-                board_unauthorized()
-            } else {
-                unauthorized(&st.public_base_url)
-            }
-        }
+        Err(_) => return unauthorized(&st.public_base_url),
     };
     match (user.scope.as_str(), kind, complete_pin) {
+        // A board-scoped token is valid only on its exact pinned Kanban endpoint,
+        // and only while its grant still matches the live board document.
         ("mcp_kanban_board", ServerKind::Kanban, Some((workspace_id, board))) => {
             if validate_board_grant(&st.pool, &token, workspace_id, board)
                 .await
                 .is_err()
             {
-                return board_unauthorized();
+                return unauthorized(&st.public_base_url);
             }
         }
-        // A board token can only enter its fully pinned Kanban endpoint.
+        // A board-scoped token used anywhere else is out of authority.
         ("mcp_kanban_board", _, _) => return unauthorized(&st.public_base_url),
-        // Conversely, pinned endpoints accept only a matching board token.
-        (_, ServerKind::Kanban, Some(_)) => return board_unauthorized(),
+        // A pinned Kanban endpoint is the *most restrictive* surface, so by
+        // scope containment it also accepts broader-scope tokens (`mcp` from
+        // OAuth, or `full`). Per-call RBAC — enforced by the forwarded bearer
+        // through the API handlers — still gates workspace/board membership.
+        // This lets OAuth-capable clients connect directly to a pinned board
+        // URL; the OAuth flow mints an `mcp` token that this endpoint accepts.
         _ => {}
     }
 

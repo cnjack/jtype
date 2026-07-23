@@ -4,11 +4,11 @@ JType ships built-in **MCP endpoints** (Model Context Protocol) for notes and ka
 - **General kanban URL:** `https://<your-jtype-host>/mcp/kanban`
 - **One-board URL:** generated from **Board settings → MCP access**, in the form `https://<your-jtype-host>/mcp/kanban/<workspace>/<board>`
 - **Transport:** Streamable HTTP (JSON-RPC)
-- **Auth:** OAuth 2.1 for the general endpoint, or a static token bound to one board
+- **Auth:** OAuth 2.1 for all endpoints; the one-board endpoint additionally accepts a static token bound to that board
 
 ## Two ways to connect
 
-**OAuth (recommended).** For clients that speak MCP OAuth, hand them either the notes URL or the general kanban URL. The client discovers the auth server, opens a browser, you **approve once**, and it's connected. Nothing is pasted or stored in a config file. The two URLs expose separate tool catalogs.
+**OAuth (recommended).** For clients that speak MCP OAuth, hand them any URL — notes, general kanban, or the one-board address. The client discovers the auth server, opens a browser, you **approve once**, and it's connected. Nothing is pasted or stored in a config file. The three URLs expose separate tool catalogs.
 
 **Scoped token (fallback).** Some clients only accept a static `Authorization` header. For those, mint a scoped, expiring, revocable token and paste it in. See [OAuth vs scoped token](/help/c/ai-mcp/oauth-vs-token) for how to choose and how to create one.
 
