@@ -1,4 +1,4 @@
-JType 的 MCP 服务器接受两类凭据：浏览器 **OAuth** 流程，或你粘贴进配置文件的**受限访问令牌**。两者授予的权限相同——笔记与看板，从不涉及管理。区别在于凭据如何创建与存放。
+JType 支持浏览器 **OAuth**、通用 **MCP 访问令牌**，以及从看板设置生成、更严格的**单看板 token**。OAuth 与通用 MCP token 代表你的 MCP 账号访问能力；单看板 token 只授予它所绑定的那块看板。
 
 ## 我该用哪种？
 
@@ -14,6 +14,8 @@ JType 的 MCP 服务器接受两类凭据：浏览器 **OAuth** 流程，或你�
 | 有效期 | 90 天 | 你来定（`--ttl-days`） |
 | 适合 | Claude、Cursor | jcode、Cline、通用客户端 |
 
+如果某个自动化只应该看到一块看板，请改用**看板设置 → MCP access**。生成的 90 天 token 只能配合界面显示的固定看板 URL 使用，也不能调用普通 REST API。
+
 ## 铸造一个受限令牌
 
 在命令行中，[登录](/help/c/cli/install-and-login)之后：
@@ -27,7 +29,7 @@ jtype token create --label "jcode" --ttl-days 90
 
 更喜欢网页？打开仪表盘的 **AI Connections** 页面，选择 **Generate token**。
 
-两种途径产出的凭据相同：它带有 `mcp` 范围，因此能管理你的笔记与看板，但**无法**触达管理类端点，也无法铸造更多令牌。
+这些途径生成的是通用 `mcp` 凭据，**无法**触达管理类 endpoint，也无法铸造更多 token。看板设置流程生成的则是 `mcp_kanban_board` 权限，并在服务端记录目标看板。
 
 ## 查看并吊销令牌
 
@@ -43,6 +45,7 @@ jtype token revoke <id>
 ## 安全说明
 
 - **受限。** AI 凭据带有 `mcp` 范围：仅限笔记与看板，从不涉及管理。参见[你的 AI 能做什么](/help/c/ai-mcp/what-ai-can-do)。
+- **可进一步绑定看板。** 看板设置 token 还会绑定到一个不可变的看板 document 与固定 endpoint。
 - **会过期。** OAuth 授权与铸造的令牌都会过期（默认 90 天）。设备授权码 10 分钟过期且仅可使用一次。
 - **可吊销。** 用 `jtype token revoke` 或仪表盘随时作废任意凭据。
 - **PKCE。** OAuth 流程为带 PKCE（S256）的授权码模式，且重定向 URI 必须预先注册——因此被截获的授权码无法被重放。

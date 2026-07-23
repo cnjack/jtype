@@ -212,11 +212,24 @@ async fn pull_rejects_invalid_cursor_and_page_size() {
 }
 
 #[tokio::test]
-async fn mcp_scoped_token_can_pull_but_non_member_cannot() {
+async fn board_scoped_mcp_token_cannot_call_pull_rest_api() {
     let (app, _pool) = common::setup().await;
     let (owner_token, _) = common::register_user(app.clone(), &common::uid()).await;
     let (outsider_token, _) = common::register_user(app.clone(), &common::uid()).await;
     let workspace_id = common::create_workspace(app.clone(), &owner_token, &common::wname()).await;
+    common::save_doc(
+        app.clone(),
+        &owner_token,
+        &workspace_id,
+        "agent.board",
+        &json!({
+            "id": "board-agent",
+            "title": "Agent",
+            "columns": [{ "key": "todo", "name": "Todo" }]
+        })
+        .to_string(),
+    )
+    .await;
     common::save_doc(
         app.clone(),
         &owner_token,
@@ -231,15 +244,14 @@ async fn mcp_scoped_token_can_pull_but_non_member_cannot() {
         "POST",
         "/api/v1/mcp-token",
         Some(&owner_token),
-        Some(json!({})),
+        Some(json!({ "workspaceId": workspace_id, "boardId": "board-agent" })),
     )
     .await;
     assert_eq!(mint_status, StatusCode::OK, "{minted}");
     let mcp_token = minted["token"].as_str().expect("mcp token");
 
     let (status, body) = pull(app.clone(), mcp_token, &workspace_id, "board-agent", 0, 100).await;
-    assert_eq!(status, StatusCode::OK, "{body}");
-    assert_eq!(body["events"].as_array().unwrap().len(), 1);
+    assert_eq!(status, StatusCode::FORBIDDEN, "{body}");
 
     let (status, _) = pull(app, &outsider_token, &workspace_id, "board-agent", 0, 100).await;
     assert_eq!(status, StatusCode::NOT_FOUND);

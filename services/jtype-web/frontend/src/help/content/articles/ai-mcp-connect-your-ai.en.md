@@ -1,14 +1,18 @@
-JType ships a built-in **MCP server** (Model Context Protocol) that exposes your **notes and kanban boards** to AI assistants. Once connected, tools like Claude, Cursor, Cline, or `jcode` can search and read your notes, draft and update documents, and triage your board — using your data, with your permission.
+JType ships built-in **MCP endpoints** (Model Context Protocol) for notes and kanban. Tools like Claude, Cursor, Cline, or `jcode` can work with your Markdown data using the authority you explicitly grant.
 
-- **Server URL:** `https://<your-jtype-host>/mcp` — locally `http://localhost:13345/mcp`
+- **Notes URL:** `https://<your-jtype-host>/mcp`
+- **General kanban URL:** `https://<your-jtype-host>/mcp/kanban`
+- **One-board URL:** generated from **Board settings → MCP access**, in the form `https://<your-jtype-host>/mcp/kanban/<workspace>/<board>`
 - **Transport:** Streamable HTTP (JSON-RPC)
-- **Auth:** OAuth 2.1 (browser, recommended) **or** a scoped access token (fallback)
+- **Auth:** OAuth 2.1 for the general endpoint, or a static token bound to one board
 
 ## Two ways to connect
 
-**OAuth (recommended).** For clients that speak MCP OAuth, you just hand them the server URL. The client discovers the auth server, opens a browser, you **approve once**, and it's connected. Nothing is pasted or stored in a config file, and the access it gets is scoped to notes and kanban only.
+**OAuth (recommended).** For clients that speak MCP OAuth, hand them either the notes URL or the general kanban URL. The client discovers the auth server, opens a browser, you **approve once**, and it's connected. Nothing is pasted or stored in a config file. The two URLs expose separate tool catalogs.
 
 **Scoped token (fallback).** Some clients only accept a static `Authorization` header. For those, mint a scoped, expiring, revocable token and paste it in. See [OAuth vs scoped token](/help/c/ai-mcp/oauth-vs-token) for how to choose and how to create one.
+
+**One-board connection.** Open the board, choose **Board settings → MCP access**, then generate and copy the config shown there. Its token and URL are both enforced for that board: the client cannot discover another workspace or board, override the pin, or reuse the token against REST. `create_card` returns a `documentId` that remains stable while the card exists; the remaining card, content, move, and comment tools use it.
 
 ## Per-client setup
 
@@ -71,15 +75,20 @@ Run `jtype login` first so the bridge has a token. See [Install and log in](/hel
 
 ## Try it
 
-Once connected, ask your assistant:
+With the notes endpoint connected, ask:
 
-> "List my JType workspaces, find notes about the launch, and add a high-priority card 'Draft the launch plan' to my Launch board."
+> "Find notes about the launch and draft a release checklist."
 
-It will chain `list_workspaces` → `search_notes` → `list_boards` → `create_card`.
+With a board-scoped endpoint connected, ask:
+
+> "Create a high-priority card 'Draft the launch plan', add the outline to its Markdown body, and move it to Doing."
+
+The assistant can operate only on the board whose config you copied.
 
 ## Troubleshooting
 
 - **`401 Unauthorized` from `/mcp`** — the token expired or was revoked. Reconnect (OAuth) or create a new token.
+- **A board token gets `401` on `/mcp` or `/mcp/kanban`** — expected. Use the exact pinned URL copied from Board settings.
 - **The client won't OAuth** — use the token method with an `Authorization` header instead.
 - **`jcode mcp list` doesn't show jtype** — check `~/.jcode/config.json` and that the URL is reachable.
 

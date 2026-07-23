@@ -48,4 +48,4 @@ The server can close an idle stream. Reconnect for new live events; use sequence
 
 ## Keep credentials safe
 
-Session and MCP tokens act with your account's access. The board in an MCP address is a starting default, not a permission boundary: the token can reach every board your account can reach. Store tokens and webhook signing secrets in your secret manager, rotate exposed credentials, and give the integration only the workspace access it needs.
+An MCP token generated from **Board settings → MCP access** is bound to that board on the server. It works only at the displayed pinned MCP address, cannot be reused for another board or the REST API, and stops working if the board or your workspace membership is removed. Store tokens and webhook signing secrets in your secret manager and rotate exposed credentials.

@@ -335,11 +335,13 @@ pub async fn resolve_conflict(
         "keep_both" => {
             let sibling_path = conflict_sibling_path(&relative_path);
             let save = CloudSaveDocumentRequest {
+                document_id: None,
                 relative_path: sibling_path,
                 title: None,
                 content: local_content,
                 base_content_hash: None,
                 base_content: None,
+                create_only: false,
             };
             let outcome = crate::handlers::document::save_document_version(
                 &state.pool,
@@ -398,6 +400,7 @@ pub async fn resolve_conflict(
         &content,
         None,
         None,
+        None,
         "system",
     )
     .await?;
@@ -443,7 +446,7 @@ async fn load_documents_since(
     since_clock: i64,
 ) -> Result<Vec<CloudDocument>, AppError> {
     let rows = sqlx::query(
-        r#"SELECT relative_path, title, is_published, content, content_hash,
+        r#"SELECT id, relative_path, title, is_published, content, content_hash,
                   COALESCE(current_version_id, id) AS version_id, updated_clock
            FROM documents WHERE workspace_id = ? AND updated_clock > ?
            ORDER BY relative_path"#,
@@ -455,6 +458,7 @@ async fn load_documents_since(
     rows.into_iter()
         .map(|row| {
             Ok(CloudDocument {
+                document_id: row.try_get("id")?,
                 relative_path: row.try_get("relative_path")?,
                 title: row.try_get("title")?,
                 is_published: row.try_get::<i8, _>("is_published").unwrap_or(0) != 0,

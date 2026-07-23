@@ -17,15 +17,14 @@ type Section = 'webhooks' | 'mcp'
 
 const NAV: { id: Section; label: string; description: string; icon: typeof BoltIcon }[] = [
   { id: 'webhooks', label: 'Webhooks', description: 'Push or resumable pull', icon: BoltIcon },
-  { id: 'mcp', label: 'MCP access', description: 'Agent address · defaults to this board', icon: CommandLineIcon },
+  { id: 'mcp', label: 'MCP access', description: 'Agent access · this board only', icon: CommandLineIcon },
 ]
 
 /**
  * Board-level settings, opened from the gear button in the board header. Mirrors
  * the Workspace Settings modal (left nav + scrollable main). Houses the webhook
- * config (push + durable sequence pull + live SSE) and an MCP address pre-pinned
- * to this board's logical id — the pin is a URL-level default for the agent, not
- * a token-level access boundary; the minted token is a full account credential.
+ * config (push + durable sequence pull + live SSE) and an MCP credential bound
+ * on the server to this board's immutable document id.
  */
 export function BoardSettingsDialog({
   workspaceId,
@@ -86,7 +85,7 @@ export function BoardSettingsDialog({
                 <p className="mt-0.5 text-xs text-zinc-500">
                   {section === 'webhooks'
                     ? 'Notify external services when cards on this board change.'
-                    : 'Give an AI agent a board-scoped starting address — the token itself can reach every board you can.'}
+                    : 'Give an AI agent access to this board only.'}
                 </p>
               </div>
               <button onClick={onClose} className="rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-100" aria-label="Close">
@@ -311,7 +310,7 @@ function PullStream({ workspaceId, board }: { workspaceId: string; board: string
       </div>
       <div className="mb-3 flex items-center gap-2">
         <span className="text-[11px] text-stone-500">Auth</span>
-        <code className="flex-1 truncate rounded-lg bg-stone-100 px-2.5 py-1.5 text-[11px] text-stone-600">Authorization: Bearer &lt;session or MCP token&gt;</code>
+        <code className="flex-1 truncate rounded-lg bg-stone-100 px-2.5 py-1.5 text-[11px] text-stone-600">Authorization: Bearer &lt;login session&gt;</code>
       </div>
       <div className="mb-4 flex items-center gap-2">
         <button onClick={() => void pullOnce()} disabled={pulling} className="inline-flex items-center gap-1.5 rounded-lg bg-brand px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-dark disabled:opacity-60">
@@ -361,24 +360,27 @@ function McpPanel({ workspaceId, board }: { workspaceId: string; board: string |
   const [token, setToken] = useState('')
   const [minting, setMinting] = useState(false)
   const [error, setError] = useState('')
-  // workspace_id/board are path segments on the connection URL itself — the
-  // server reads them and fills them into tool calls that omit them, and
-  // tells the agent about the pin in its `initialize` response. There's no
-  // "defaults" field in the MCP client config schema, so pinning has to live
-  // in the URL, not in extra JSON keys a client would silently ignore.
+  // The workspace + logical board id in the URL must match the immutable board
+  // document grant recorded for the generated token.
   const endpoint = board
     ? `${window.location.origin}/mcp/kanban/${encodeURIComponent(workspaceId)}/${encodeURIComponent(board)}`
     : `${window.location.origin}/mcp/kanban`
 
   const generate = async () => {
     setMinting(true); setError('')
-    try { setToken((await api.mintMcpToken()).token) } catch (e) { setError(String(e)) } finally { setMinting(false) }
+    if (!board) {
+      setError('This board has no id yet — open it once so its board config is saved.')
+      setMinting(false)
+      return
+    }
+    try { setToken((await api.mintMcpToken(workspaceId, board)).token) } catch (e) { setError(String(e)) } finally { setMinting(false) }
   }
 
   const config = JSON.stringify(
     {
       mcpServers: {
         [`jtype-${board ?? 'board'}`]: {
+          type: 'http',
           url: endpoint,
           headers: { Authorization: `Bearer ${token || '<run “Generate token” first>'}` },
         },
@@ -398,7 +400,7 @@ function McpPanel({ workspaceId, board }: { workspaceId: string; board: string |
       <div className="mb-4 flex flex-wrap gap-2">
         <span className="rounded-md bg-brand-soft px-2 py-1 text-[11px] text-brand-dark">workspace {workspaceId.slice(0, 8)}…</span>
         <span className="rounded-md bg-brand-soft px-2 py-1 text-[11px] text-brand-dark">board {board ?? '—'}</span>
-        <span className="rounded-md bg-amber-50 px-2 py-1 text-[11px] text-amber-700">scope: mcp · every board you can access · 90d</span>
+        <span className="rounded-md bg-amber-50 px-2 py-1 text-[11px] text-amber-700">scope: this board only · 90d</span>
       </div>
       <div className="mb-1 flex items-center justify-between">
         <span className="text-[11px] text-stone-500">Copy into your MCP client — workspace + board pre-pinned</span>
@@ -407,17 +409,15 @@ function McpPanel({ workspaceId, board }: { workspaceId: string; board: string |
       <pre className="mb-3 max-h-52 overflow-auto rounded-lg bg-[#0f1715] p-3 font-mono text-[11px] leading-relaxed text-emerald-100">{config}</pre>
       {error && <p className="mb-2 text-[11px] text-red-600">{error}</p>}
       <div className="flex items-center gap-2">
-        <button onClick={() => void generate()} disabled={minting} className="inline-flex items-center gap-1.5 rounded-lg bg-brand px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-dark disabled:opacity-60">
+        <button onClick={() => void generate()} disabled={minting || !board} className="inline-flex items-center gap-1.5 rounded-lg bg-brand px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-dark disabled:opacity-60">
           <CommandLineIcon className="h-3.5 w-3.5" /> {minting ? 'Generating…' : 'Generate MCP token'}
         </button>
         {token && <span className="text-[11px] text-emerald-600">Token minted — copy the config above (shown once).</span>}
       </div>
       <p className="mt-3 text-[11px] text-stone-400">
-        The workspace + board are pinned via path segments on the URL above, not a client-side default — tools
-        (list_cards, create_card, move_card…) fall back to them whenever a call omits workspace_id/board, and the
-        agent is told about the pin on connect. That pin is a convenience default, not an access boundary: the
-        token behind it is your own account credential and works against any workspace/board you can reach,
-        pinned URL or not — treat it like a password, not a scoped API key.
+        This token is bound on the server to this board&apos;s immutable document id. It cannot be used against
+        another board or the ordinary REST API, and access is rechecked when your cloud workspace membership or
+        board changes. Treat the token like a password and revoke it when the client no longer needs access.
       </p>
     </>
   )
