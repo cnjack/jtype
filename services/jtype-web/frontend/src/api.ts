@@ -286,9 +286,18 @@ export const api = {
     request<KanbanEventPullResponse>(
       `/api/v1/workspaces/${workspaceId}/boards/${encodeURIComponent(board)}/events/pull?afterSequence=${afterSequence}&limit=${limit}`,
     ),
-  // Mint a 90-day mcp-scoped token for the board Settings "MCP access" panel.
-  mintMcpToken: () =>
-    request<{ token: string }>(`/api/v1/mcp-token`, { method: 'POST' }),
+  // Mint a 90-day MCP token bound to one immutable board document.
+  mintMcpToken: (workspaceId: string, boardId: string) =>
+    request<{
+      token: string
+      expiresAt: string
+      workspaceId: string
+      boardId: string
+      boardDocumentId: string
+    }>(`/api/v1/mcp-token`, {
+      method: 'POST',
+      body: JSON.stringify({ workspaceId, boardId }),
+    }),
   // Ticket links (OCCSV-3371): per-card number is cloud-indexed, scoped to a workspace.
   allocateTicket: (workspaceId: string, data: { relativePath: string; ticketKey: string }) =>
     request<Ticket>(`/api/v1/workspaces/${workspaceId}/tickets/allocate`, { method: 'POST', body: JSON.stringify(data) }),
@@ -533,6 +542,7 @@ export interface FolderListItem {
 }
 
 export interface CloudDocument {
+  documentId: string
   relativePath: string
   title: string
   isPublished: boolean
@@ -647,11 +657,13 @@ export interface SyncConflictItem {
 }
 
 export interface SaveDocumentRequest {
+  documentId?: string
   relativePath: string
   title?: string
   content: string
   baseContentHash?: string
   baseContent?: string
+  createOnly?: boolean
 }
 
 export interface PublishDocumentResponse {
@@ -774,6 +786,7 @@ export interface UpdateSiteSettings {
 }
 
 export interface SaveDocumentResponse {
+  documentId: string
   relativePath: string
   contentHash: string
   updatedClock: number

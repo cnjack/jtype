@@ -244,16 +244,20 @@ pub struct InviteListItem {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CloudSaveDocumentRequest {
+    pub document_id: Option<String>,
     pub relative_path: String,
     pub title: Option<String>,
     pub content: String,
     pub base_content_hash: Option<String>,
     pub base_content: Option<String>,
+    #[serde(default)]
+    pub create_only: bool,
 }
 
 #[derive(Debug, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct CloudDocument {
+    pub document_id: String,
     pub relative_path: String,
     pub title: String,
     pub is_published: bool,

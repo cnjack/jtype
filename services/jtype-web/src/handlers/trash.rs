@@ -211,6 +211,7 @@ pub async fn restore_trash_item_core(
     .await;
 
     Ok(CloudDocument {
+        document_id,
         relative_path: final_relative_path,
         title,
         is_published: false,

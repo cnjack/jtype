@@ -68,7 +68,7 @@ pub async fn get_document(
     .await?;
 
     let row = sqlx::query(
-        r#"SELECT relative_path, title, is_published, content, content_hash,
+        r#"SELECT id, relative_path, title, is_published, content, content_hash,
                   COALESCE(current_version_id, id) AS version_id, updated_clock
            FROM documents WHERE id = ? AND workspace_id = ?"#,
     )
@@ -79,6 +79,7 @@ pub async fn get_document(
     .ok_or(AppError::NotFound)?;
 
     Ok(Json(CloudDocument {
+        document_id: row.try_get("id")?,
         relative_path: row.try_get("relative_path")?,
         title: row.try_get("title")?,
         is_published: row.try_get::<i8, _>("is_published").unwrap_or(0) != 0,
@@ -227,6 +228,7 @@ pub async fn save_document(
                 .await;
 
             Ok(Json(serde_json::json!({
+                "documentId": doc.document_id,
                 "relativePath": doc.relative_path,
                 "title": doc.title,
                 "content": doc.content,
@@ -450,6 +452,23 @@ async fn save_document_version_inner(
     .fetch_optional(pool)
     .await?;
 
+    if payload.create_only && current.is_some() {
+        return Err(AppError::BadRequest(
+            "document path already exists; retry with another path".to_string(),
+        ));
+    }
+    if let Some(expected_document_id) = payload.document_id.as_deref() {
+        let Some(row) = current.as_ref() else {
+            return Err(AppError::NotFound);
+        };
+        let current_document_id: String = row.try_get("id")?;
+        if current_document_id != expected_document_id {
+            return Err(AppError::BadRequest(
+                "documentId does not match relativePath".to_string(),
+            ));
+        }
+    }
+
     if let Some(row) = current {
         let document_id: String = row.try_get("id")?;
         let cloud_hash: String = row.try_get("content_hash")?;
@@ -475,6 +494,7 @@ async fn save_document_version_inner(
                             &merged,
                             parent_version_id.as_deref(),
                             None,
+                            Some(&cloud_hash),
                             source,
                         )
                         .await?;
@@ -508,15 +528,47 @@ async fn save_document_version_inner(
         }
 
         if cloud_hash == content_hash {
-            let current_clock: i64 = row.try_get("updated_clock")?;
+            // Re-check under a row lock before reporting an unchanged save. A
+            // concurrent writer may have committed after the optimistic read
+            // above; in that case returning the stale document would falsely
+            // claim that the requested content is still current.
+            let mut tx = pool.begin().await?;
+            let confirmed = sqlx::query(
+                r#"SELECT id, content, content_hash, current_version_id, updated_clock
+                   FROM documents
+                   WHERE workspace_id = ? AND relative_path = ?
+                   FOR UPDATE"#,
+            )
+            .bind(workspace_id)
+            .bind(&relative_path)
+            .fetch_optional(&mut *tx)
+            .await?;
+            let Some(confirmed) = confirmed else {
+                return Err(AppError::BadRequest(
+                    "document changed while saving; retry".to_string(),
+                ));
+            };
+            let confirmed_document_id: String = confirmed.try_get("id")?;
+            let confirmed_hash: String = confirmed.try_get("content_hash")?;
+            if confirmed_document_id != document_id || confirmed_hash != content_hash {
+                return Err(AppError::BadRequest(
+                    "document changed while saving; retry".to_string(),
+                ));
+            }
+            let confirmed_content: String = confirmed.try_get("content")?;
+            let confirmed_version_id: Option<String> =
+                confirmed.try_get("current_version_id")?;
+            let current_clock: i64 = confirmed.try_get("updated_clock")?;
+            tx.commit().await?;
             return Ok(SaveDocumentOutcome::Saved(
                 CloudDocument {
+                    document_id,
                     relative_path,
                     title,
                     is_published: false,
-                    content: payload.content,
-                    content_hash,
-                    version_id: parent_version_id.unwrap_or_default(),
+                    content: confirmed_content,
+                    content_hash: confirmed_hash,
+                    version_id: confirmed_version_id.unwrap_or_default(),
                     updated_clock: current_clock,
                 },
                 MergeStatus::Unchanged,
@@ -533,6 +585,7 @@ async fn save_document_version_inner(
             &payload.content,
             parent_version_id.as_deref(),
             None,
+            Some(&cloud_hash),
             source,
         )
         .await?;
@@ -544,15 +597,9 @@ async fn save_document_version_inner(
     let document_id = Uuid::new_v4().to_string();
     let version_id = Uuid::new_v4().to_string();
     let next_clock = next_workspace_clock(&mut tx, workspace_id).await?;
-    sqlx::query(
+    let insert_result = sqlx::query(
         r#"INSERT INTO documents (id, workspace_id, relative_path, title, content_hash, content, updated_clock, current_version_id)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-           ON DUPLICATE KEY UPDATE
-             title = VALUES(title),
-             content_hash = VALUES(content_hash),
-             content = VALUES(content),
-             updated_clock = VALUES(updated_clock),
-             current_version_id = VALUES(current_version_id)"#,
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)"#,
     )
     .bind(&document_id)
     .bind(workspace_id)
@@ -563,7 +610,16 @@ async fn save_document_version_inner(
     .bind(next_clock)
     .bind(&version_id)
     .execute(&mut *tx)
-    .await?;
+    .await;
+    match insert_result {
+        Ok(_) => {}
+        Err(sqlx::Error::Database(error)) if error.is_unique_violation() => {
+            return Err(AppError::BadRequest(
+                "document path already exists; retry with another path".to_string(),
+            ));
+        }
+        Err(error) => return Err(error.into()),
+    }
     insert_document_version(
         &mut tx,
         &version_id,
@@ -578,6 +634,7 @@ async fn save_document_version_inner(
     )
     .await?;
     let doc = CloudDocument {
+        document_id,
         relative_path,
         title,
         is_published: false,
@@ -613,6 +670,7 @@ pub async fn save_merged_document(
     content: &str,
     parent_version_id: Option<&str>,
     base_version_id: Option<&str>,
+    expected_content_hash: Option<&str>,
     source: &str,
 ) -> Result<CloudDocument, AppError> {
     ensure_workspace_budget(pool, workspace_id, relative_path, content).await?;
@@ -620,9 +678,10 @@ pub async fn save_merged_document(
     let mut tx = pool.begin().await?;
     let version_id = Uuid::new_v4().to_string();
     let next_clock = next_workspace_clock(&mut tx, workspace_id).await?;
-    sqlx::query(
+    let updated = sqlx::query(
         r#"UPDATE documents SET title = ?, content_hash = ?, content = ?, updated_clock = ?, current_version_id = ?
-           WHERE id = ? AND workspace_id = ?"#,
+           WHERE id = ? AND workspace_id = ?
+             AND (? IS NULL OR content_hash = ?)"#,
     )
     .bind(title)
     .bind(&content_hash)
@@ -631,8 +690,15 @@ pub async fn save_merged_document(
     .bind(&version_id)
     .bind(document_id)
     .bind(workspace_id)
+    .bind(expected_content_hash)
+    .bind(expected_content_hash)
     .execute(&mut *tx)
     .await?;
+    if updated.rows_affected() == 0 {
+        return Err(AppError::BadRequest(
+            "document changed since it was read; retry".to_string(),
+        ));
+    }
     insert_document_version(
         &mut tx,
         &version_id,
@@ -647,6 +713,7 @@ pub async fn save_merged_document(
     )
     .await?;
     let doc = CloudDocument {
+        document_id: document_id.to_string(),
         relative_path: relative_path.to_string(),
         title: title.to_string(),
         is_published: false,

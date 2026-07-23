@@ -1,4 +1,4 @@
-JType's MCP server accepts two kinds of credential: a browser **OAuth** flow, or a **scoped access token** you paste into a config file. Both grant the same access — notes and kanban, never admin. The difference is how the credential is created and stored.
+JType supports a browser **OAuth** flow, a general **MCP access token**, and a stricter **one-board token** generated from Board settings. OAuth and general MCP tokens represent your MCP account access; a board token grants only the board it names.
 
 ## Which should I use?
 
@@ -14,6 +14,8 @@ JType's MCP server accepts two kinds of credential: a browser **OAuth** flow, or
 | Expiry | 90 days | You choose (`--ttl-days`) |
 | Best for | Claude, Cursor | jcode, Cline, generic |
 
+For an automation that should see only one board, use **Board settings → MCP access** instead. The generated 90-day token works only with the exact pinned board URL shown there and cannot call the ordinary REST API.
+
 ## Mint a scoped token
 
 From the CLI, after [logging in](/help/c/cli/install-and-login):
@@ -27,7 +29,7 @@ The token is printed **once** — copy it immediately and store it somewhere saf
 
 Prefer the web? Open the dashboard's **AI Connections** page and choose **Generate token**.
 
-Both routes produce the same kind of credential: it carries the `mcp` scope, so it can manage your notes and kanban but **cannot** reach admin endpoints or mint more tokens.
+Those routes produce a general `mcp` credential, which cannot reach admin endpoints or mint more tokens. The Board settings flow produces `mcp_kanban_board` authority instead and records the target board server-side.
 
 ## See and revoke tokens
 
@@ -43,6 +45,7 @@ You can do the same from the dashboard's **AI Connections** page. Revoke a token
 ## Security notes
 
 - **Scoped.** AI credentials carry the `mcp` scope: notes and kanban only, never admin. See [What your AI can do](/help/c/ai-mcp/what-ai-can-do).
+- **Board-bound when requested.** A Board settings token is additionally restricted to one immutable board document and its pinned endpoint.
 - **Expiring.** OAuth grants and minted tokens expire (90 days by default). Device approval codes expire in 10 minutes and are single-use.
 - **Revocable.** Kill any credential from `jtype token revoke` or the dashboard.
 - **PKCE.** The OAuth flow is Authorization Code with PKCE (S256), and redirect URIs must be pre-registered — so an intercepted code can't be replayed.

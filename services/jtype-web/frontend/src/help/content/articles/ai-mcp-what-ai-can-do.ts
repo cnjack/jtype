@@ -6,14 +6,14 @@ const article: ArticleMeta = {
   id: 'what-ai-can-do',
   categoryId: 'ai-mcp',
   order: 2,
-  updated: '2026-06-14',
+  updated: '2026-07-23',
   title: {
     en: 'What your AI can do',
     zh: '你的 AI 能做什么',
   },
   summary: {
-    en: 'The 14 MCP tools for notes and kanban, which ones read versus write, and why admin is never exposed to an AI.',
-    zh: '面向笔记与看板的 14 个 MCP 工具，哪些读取、哪些写入，以及为何管理权限从不开放给 AI。',
+    en: 'Note tools and the nine board-scoped MCP tools, including stable document IDs and the enforced board boundary.',
+    zh: '笔记工具与 9 个单看板 MCP 工具，包括稳定 document ID 与服务端强制的看板边界。',
   },
   body: { en, zh },
 }

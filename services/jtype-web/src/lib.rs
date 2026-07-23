@@ -15,6 +15,7 @@ pub mod util;
 use axum::{
     extract::DefaultBodyLimit,
     http::{header, StatusCode, Uri},
+    middleware as axum_middleware,
     response::{Html, IntoResponse, Response},
     routing::{delete, get, patch, post, put},
     Router,
@@ -460,6 +461,10 @@ pub fn build_app(
         )
         // Frontend SPA - catch all other routes
         .fallback(serve_frontend)
+        .layer(axum_middleware::from_fn_with_state(
+            state.pool.clone(),
+            middleware::scope_guard::require_full_scope,
+        ))
         .with_state(state);
 
     // MCP server (Streamable HTTP) + OAuth discovery. MCP tools dispatch

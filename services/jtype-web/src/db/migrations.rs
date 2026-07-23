@@ -146,6 +146,12 @@ fn all_migrations() -> Vec<Migration> {
             up: include_str!("../../migrations/0023_comment_threads.up.sql"),
             down: include_str!("../../migrations/0023_comment_threads.down.sql"),
         },
+        Migration {
+            version: 24,
+            name: "mcp_board_grants",
+            up: include_str!("../../migrations/0024_mcp_board_grants.up.sql"),
+            down: include_str!("../../migrations/0024_mcp_board_grants.down.sql"),
+        },
     ]
 }
 

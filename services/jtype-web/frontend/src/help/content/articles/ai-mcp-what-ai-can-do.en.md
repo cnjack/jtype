@@ -1,4 +1,4 @@
-Once you've [connected an assistant](/help/c/ai-mcp/connect-your-ai), it can reach exactly **14 tools** — seven for notes and seven for kanban. Nothing else. The tools map onto the same actions you can take yourself in the app, and every write respects your role in the workspace.
+Once you've [connected an assistant](/help/c/ai-mcp/connect-your-ai), the tools it sees depend on the endpoint you connect. The notes endpoint exposes note tools; a board-scoped endpoint generated from Board settings exposes exactly **nine tools for that board**. Every write respects your role in the cloud workspace.
 
 ## Notes tools
 
@@ -11,24 +11,29 @@ Once you've [connected an assistant](/help/c/ai-mcp/connect-your-ai), it can rea
 | `create_note` | writes | Creates a new note at a path. |
 | `update_note` | writes | Replaces a note's content. |
 | `append_note` | writes | Adds content to the end of a note. |
+| `list_members` | reads | Lists cloud workspace members. |
 
 Read tools return plain Markdown, so the assistant sees your notes exactly as they are on disk.
 
-## Kanban tools
+## Board-scoped kanban tools
 
 | Tool | Reads or writes | What it does |
 |---|---|---|
-| `list_boards` | reads | Lists boards in a workspace. |
-| `get_board` | reads | Returns a board with its columns, cards, and labels. |
+| `get_board` | reads | Returns the pinned board and its cards. |
 | `list_cards` | reads | Lists cards on a board, optionally in one column. |
-| `list_members` | reads | Lists workspace members (to resolve assignees). |
-| `create_card` | writes | Creates a card with title, description, priority, assignee. |
-| `update_card` | writes | Edits a card's title, description, priority, or assignee. |
+| `get_card` | reads | Gets one card by its `documentId`. |
+| `create_card` | writes | Creates a card and returns its `documentId` (stable while the card exists). |
+| `update_card` | writes | Edits title, Markdown body, status, priority, assignee, due date, or parent by `documentId`. |
 | `move_card` | writes | Moves a card to another column or position. |
+| `list_card_comments` | reads | Lists the comment threads on a card. |
+| `comment_card` | writes | Adds a comment or reply to a card. |
+| `resolve_card_comment` | writes | Resolves or reopens a comment thread. |
+
+The endpoint URL and token are both pinned to one board. These schemas contain no workspace, board, or path override. A card created by `create_card` returns `documentId` immediately, and all later card-content operations use that ID.
 
 ## What AI can never do
 
-The tokens an assistant uses are **mcp-scoped** — notes and kanban only. **Admin actions are never available to an AI token.** That means an assistant cannot:
+Board-settings tokens are scoped to **one board only** and are accepted only by its pinned MCP endpoint. They cannot be used against another board or the ordinary REST API. **Admin actions are never available to an AI token.** That means an assistant cannot:
 
 - add or remove workspace members, or change anyone's role;
 - delete a workspace or change its settings;

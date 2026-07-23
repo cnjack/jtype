@@ -27,7 +27,9 @@ use sqlx::{MySql, Pool};
 use tower::ServiceExt;
 
 use crate::error::AppError;
+use crate::handlers::mcp_token::validate_board_grant;
 use crate::middleware::auth::extract_user;
+use crate::middleware::scope_guard::InternalMcpDispatch;
 
 /// Latest MCP protocol revision this server speaks.
 pub const PROTOCOL_VERSION: &str = "2025-06-18";
@@ -52,9 +54,9 @@ enum ServerKind {
 
 /// `workspace_id` / `board` pinned onto the connection via the path (see the
 /// board Settings "MCP access" panel, which mints a
-/// `/mcp/kanban/{workspace_id}/{board}` URL). When present, tool calls that
-/// omit these args are filled in from here, and `initialize` tells the agent
-/// it doesn't need to discover them.
+/// `/mcp/kanban/{workspace_id}/{board}` URL). A pin is an enforced authority
+/// boundary: the token must carry the matching grant, and pinned tools never
+/// accept workspace/board arguments from the caller.
 #[derive(Clone, Default)]
 struct Pinned {
     workspace_id: Option<String>,
@@ -65,7 +67,10 @@ struct Pinned {
 pub fn router(state: McpState) -> Router {
     Router::new()
         .route("/mcp", post(handle_notes).get(mcp_get).delete(mcp_delete))
-        .route("/mcp/kanban", post(handle_kanban).get(mcp_get).delete(mcp_delete))
+        .route(
+            "/mcp/kanban",
+            post(handle_kanban).get(mcp_get).delete(mcp_delete),
+        )
         .route(
             "/mcp/kanban/:workspace_id/:board",
             post(handle_kanban_pinned).get(mcp_get).delete(mcp_delete),
@@ -97,7 +102,11 @@ pub fn router(state: McpState) -> Router {
 
 /// `GET /mcp` — we do not offer a server-initiated SSE stream.
 async fn mcp_get() -> Response {
-    (StatusCode::METHOD_NOT_ALLOWED, "GET not supported; POST JSON-RPC to /mcp").into_response()
+    (
+        StatusCode::METHOD_NOT_ALLOWED,
+        "GET not supported; POST JSON-RPC to /mcp",
+    )
+        .into_response()
 }
 
 /// `DELETE /mcp` — stateless server, nothing to tear down.
@@ -118,6 +127,21 @@ fn unauthorized(base: &str) -> Response {
             "jsonrpc": "2.0",
             "id": Value::Null,
             "error": { "code": -32001, "message": "authentication required" }
+        })),
+    )
+        .into_response()
+}
+
+/// Board-settings credentials are static, resource-bound tokens. Advertising
+/// the general `/mcp` OAuth resource here would send auto-OAuth clients through
+/// a flow that can only mint a general token, which this endpoint must reject.
+fn board_unauthorized() -> Response {
+    (
+        StatusCode::UNAUTHORIZED,
+        Json(json!({
+            "jsonrpc": "2.0",
+            "id": Value::Null,
+            "error": { "code": -32001, "message": "board token required" }
         })),
     )
         .into_response()
@@ -167,12 +191,44 @@ async fn handle_mcp(
     headers: HeaderMap,
     body: Bytes,
 ) -> Response {
+    let complete_pin = match (&pinned.workspace_id, &pinned.board) {
+        (Some(workspace_id), Some(board)) => Some((workspace_id, board)),
+        _ => None,
+    };
+    let is_pinned_board = matches!(kind, ServerKind::Kanban) && complete_pin.is_some();
+
     // Authenticate the whole endpoint (MCP resource server).
     let Some(token) = bearer_from(&headers) else {
-        return unauthorized(&st.public_base_url);
+        return if is_pinned_board {
+            board_unauthorized()
+        } else {
+            unauthorized(&st.public_base_url)
+        };
     };
-    if extract_user(&st.pool, &headers).await.is_err() {
-        return unauthorized(&st.public_base_url);
+    let user = match extract_user(&st.pool, &headers).await {
+        Ok(user) => user,
+        Err(_) => {
+            return if is_pinned_board {
+                board_unauthorized()
+            } else {
+                unauthorized(&st.public_base_url)
+            }
+        }
+    };
+    match (user.scope.as_str(), kind, complete_pin) {
+        ("mcp_kanban_board", ServerKind::Kanban, Some((workspace_id, board))) => {
+            if validate_board_grant(&st.pool, &token, workspace_id, board)
+                .await
+                .is_err()
+            {
+                return board_unauthorized();
+            }
+        }
+        // A board token can only enter its fully pinned Kanban endpoint.
+        ("mcp_kanban_board", _, _) => return unauthorized(&st.public_base_url),
+        // Conversely, pinned endpoints accept only a matching board token.
+        (_, ServerKind::Kanban, Some(_)) => return board_unauthorized(),
+        _ => {}
     }
 
     let parsed: Value = match serde_json::from_slice(&body) {
@@ -207,7 +263,13 @@ async fn handle_mcp(
 }
 
 /// Dispatch a single JSON-RPC message. Returns `None` for notifications.
-async fn dispatch(kind: ServerKind, pinned: &Pinned, st: &McpState, token: &str, msg: Value) -> Option<Value> {
+async fn dispatch(
+    kind: ServerKind,
+    pinned: &Pinned,
+    st: &McpState,
+    token: &str,
+    msg: Value,
+) -> Option<Value> {
     // A non-object message (bare scalar / nested array) is an Invalid Request.
     if !msg.is_object() {
         return Some(err(Value::Null, -32600, "invalid request"));
@@ -235,8 +297,8 @@ async fn dispatch(kind: ServerKind, pinned: &Pinned, st: &McpState, token: &str,
                         (Some(ws), Some(board)) => format!(
                             "JType kanban boards — document-backed (.board views over .md card-notes). \
                              This connection is pinned to workspace_id \"{ws}\" and board \"{board}\" — \
-                             pass those values to tools directly, no need to call list_workspaces/list_boards first \
-                             (you may still override them per-call)."
+                             every tool is restricted to that board. Workspace and board arguments are intentionally \
+                             absent and cannot be overridden."
                         ),
                         _ => "JType kanban boards — document-backed (.board views over .md card-notes). Call list_workspaces for a workspace_id, then list_boards, then the card tools.".to_string(),
                     },
@@ -256,6 +318,9 @@ async fn dispatch(kind: ServerKind, pinned: &Pinned, st: &McpState, token: &str,
         "tools/list" => {
             let tools = match kind {
                 ServerKind::Notes => tools::catalog(),
+                ServerKind::Kanban if pinned.workspace_id.is_some() && pinned.board.is_some() => {
+                    kanban_tools::pinned_catalog()
+                }
                 ServerKind::Kanban => kanban_tools::catalog(),
             };
             Some(ok(id, json!({ "tools": tools })))
@@ -266,18 +331,15 @@ async fn dispatch(kind: ServerKind, pinned: &Pinned, st: &McpState, token: &str,
                 .and_then(|n| n.as_str())
                 .unwrap_or("")
                 .to_string();
-            let mut args = params.get("arguments").cloned().unwrap_or(json!({}));
-            if let (ServerKind::Kanban, Value::Object(map)) = (kind, &mut args) {
-                if let Some(ws) = &pinned.workspace_id {
-                    map.entry("workspace_id").or_insert_with(|| json!(ws));
-                }
-                if let Some(board) = &pinned.board {
-                    map.entry("board").or_insert_with(|| json!(board));
-                }
-            }
+            let args = params.get("arguments").cloned().unwrap_or(json!({}));
             let result = match kind {
                 ServerKind::Notes => tools::call(st, token, &name, args).await,
-                ServerKind::Kanban => kanban_tools::call(st, token, &name, args).await,
+                ServerKind::Kanban => match (&pinned.workspace_id, &pinned.board) {
+                    (Some(workspace_id), Some(board)) => {
+                        kanban_tools::call_pinned(st, token, workspace_id, board, &name, args).await
+                    }
+                    _ => kanban_tools::call(st, token, &name, args).await,
+                },
             };
             Some(ok(id, result))
         }
@@ -315,7 +377,7 @@ pub(crate) async fn call_api(
         Some(v) => serde_json::to_vec(v).map_err(|e| AppError::Server(e.to_string()))?,
         None => Vec::new(),
     };
-    let request = axum::http::Request::builder()
+    let mut request = axum::http::Request::builder()
         .method(method)
         .uri(uri)
         .header(header::CONTENT_TYPE, "application/json")
@@ -324,6 +386,7 @@ pub(crate) async fn call_api(
         .header("x-client-type", "web")
         .body(Body::from(body_bytes))
         .map_err(|e| AppError::Server(e.to_string()))?;
+    request.extensions_mut().insert(InternalMcpDispatch);
 
     let response = api
         .clone()

@@ -1,6 +1,7 @@
 mod common;
 use axum::http::StatusCode;
 use serde_json::json;
+use std::time::Duration;
 
 // 1. Save a new document — assert 200 + CloudDocument fields present
 #[tokio::test]
@@ -10,7 +11,7 @@ async fn save_document_creates_new() {
     let ws_id = common::create_workspace(app.clone(), &token, &common::wname()).await;
 
     let (status, body) = common::req(
-        app,
+        app.clone(),
         "POST",
         &format!("/api/v1/workspaces/{ws_id}/documents/save"),
         Some(&token),
@@ -19,6 +20,7 @@ async fn save_document_creates_new() {
     .await;
 
     assert_eq!(status, StatusCode::OK);
+    assert!(!body["documentId"].as_str().unwrap_or("").is_empty());
     assert_eq!(body["relativePath"].as_str().unwrap(), "notes.md");
     assert!(!body["versionId"].as_str().unwrap_or("").is_empty());
     assert!(!body["contentHash"].as_str().unwrap_or("").is_empty());
@@ -32,10 +34,15 @@ async fn save_document_updates_existing() {
     let (token, _) = common::register_user(app.clone(), &common::uid()).await;
     let ws_id = common::create_workspace(app.clone(), &token, &common::wname()).await;
 
-    common::save_doc(app.clone(), &token, &ws_id, "update.md", "original content").await;
+    let created =
+        common::save_doc(app.clone(), &token, &ws_id, "update.md", "original content").await;
+    let document_id = created["documentId"]
+        .as_str()
+        .expect("create response documentId")
+        .to_string();
 
     let (status, body) = common::req(
-        app,
+        app.clone(),
         "POST",
         &format!("/api/v1/workspaces/{ws_id}/documents/save"),
         Some(&token),
@@ -44,8 +51,206 @@ async fn save_document_updates_existing() {
     .await;
 
     assert_eq!(status, StatusCode::OK);
+    assert_eq!(body["documentId"], document_id);
     assert_eq!(body["relativePath"].as_str().unwrap(), "update.md");
     assert_eq!(body["content"].as_str().unwrap(), "updated content");
+
+    let (status, unchanged) = common::req(
+        app.clone(),
+        "POST",
+        &format!("/api/v1/workspaces/{ws_id}/documents/save"),
+        Some(&token),
+        Some(json!({ "relativePath": "update.md", "content": "updated content" })),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(unchanged["documentId"], document_id);
+    assert_eq!(unchanged["mergeStatus"], "unchanged");
+}
+
+#[tokio::test]
+async fn save_document_id_guard_and_create_only_prevent_wrong_overwrite() {
+    let (app, _pool) = common::setup().await;
+    let (token, _) = common::register_user(app.clone(), &common::uid()).await;
+    let ws_id = common::create_workspace(app.clone(), &token, &common::wname()).await;
+    let created = common::save_doc(app.clone(), &token, &ws_id, "guarded.md", "original").await;
+    let document_id = created["documentId"].as_str().unwrap();
+
+    let (status, _) = common::req(
+        app.clone(),
+        "POST",
+        &format!("/api/v1/workspaces/{ws_id}/documents/save"),
+        Some(&token),
+        Some(json!({
+            "documentId": "not-the-document-id",
+            "relativePath": "guarded.md",
+            "content": "must not overwrite"
+        })),
+    )
+    .await;
+    assert_eq!(status, StatusCode::BAD_REQUEST);
+
+    let (status, _) = common::req(
+        app.clone(),
+        "POST",
+        &format!("/api/v1/workspaces/{ws_id}/documents/save"),
+        Some(&token),
+        Some(json!({
+            "relativePath": "guarded.md",
+            "content": "must not overwrite either",
+            "createOnly": true
+        })),
+    )
+    .await;
+    assert_eq!(status, StatusCode::BAD_REQUEST);
+
+    let (status, current) = common::req(
+        app,
+        "GET",
+        &format!("/api/v1/workspaces/{ws_id}/documents/{document_id}"),
+        Some(&token),
+        None,
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(current["content"], "original");
+}
+
+#[tokio::test]
+async fn concurrent_saves_with_same_base_hash_do_not_silently_overwrite() {
+    let (app, _pool) = common::setup().await;
+    let (token, _) = common::register_user(app.clone(), &common::uid()).await;
+    let ws_id = common::create_workspace(app.clone(), &token, &common::wname()).await;
+    let created = common::save_doc(app.clone(), &token, &ws_id, "race.md", "original").await;
+    let document_id = created["documentId"].as_str().unwrap().to_string();
+    let base_hash = created["contentHash"].as_str().unwrap().to_string();
+    let endpoint = format!("/api/v1/workspaces/{ws_id}/documents/save");
+
+    let first = common::req(
+        app.clone(),
+        "POST",
+        &endpoint,
+        Some(&token),
+        Some(json!({
+            "documentId": document_id,
+            "relativePath": "race.md",
+            "content": "first writer",
+            "baseContentHash": base_hash
+        })),
+    );
+    let second = common::req(
+        app.clone(),
+        "POST",
+        &endpoint,
+        Some(&token),
+        Some(json!({
+            "documentId": document_id,
+            "relativePath": "race.md",
+            "content": "second writer",
+            "baseContentHash": base_hash
+        })),
+    );
+    let ((first_status, first_body), (second_status, second_body)) =
+        tokio::join!(first, second);
+
+    let statuses = [first_status, second_status];
+    assert_eq!(
+        statuses
+            .iter()
+            .filter(|status| **status == StatusCode::OK)
+            .count(),
+        1,
+        "exactly one writer must win: first={first_body}, second={second_body}"
+    );
+    assert_eq!(
+        statuses
+            .iter()
+            .filter(|status| **status == StatusCode::BAD_REQUEST)
+            .count(),
+        1,
+        "stale writer must be rejected: first={first_body}, second={second_body}"
+    );
+
+    let (status, current) = common::req(
+        app,
+        "GET",
+        &format!("/api/v1/workspaces/{ws_id}/documents/{document_id}"),
+        Some(&token),
+        None,
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    assert!(
+        matches!(
+            current["content"].as_str(),
+            Some("first writer") | Some("second writer")
+        ),
+        "unexpected final content: {current}"
+    );
+}
+
+#[tokio::test]
+async fn unchanged_save_rechecks_after_a_concurrent_commit() {
+    let (app, pool) = common::setup().await;
+    let (token, _) = common::register_user(app.clone(), &common::uid()).await;
+    let ws_id = common::create_workspace(app.clone(), &token, &common::wname()).await;
+    let created = common::save_doc(app.clone(), &token, &ws_id, "noop-race.md", "original").await;
+    let document_id = created["documentId"].as_str().unwrap().to_string();
+    let base_hash = created["contentHash"].as_str().unwrap().to_string();
+
+    // Hold the row so the unchanged request can perform its optimistic read
+    // but must wait at the final locked current-state check.
+    let mut writer = pool.begin().await.unwrap();
+    sqlx::query("SELECT id FROM documents WHERE id = ? FOR UPDATE")
+        .bind(&document_id)
+        .fetch_one(&mut *writer)
+        .await
+        .unwrap();
+
+    let request_app = app.clone();
+    let request_token = token.clone();
+    let request_ws_id = ws_id.clone();
+    let request_document_id = document_id.clone();
+    let unchanged = tokio::spawn(async move {
+        common::req(
+            request_app,
+            "POST",
+            &format!("/api/v1/workspaces/{request_ws_id}/documents/save"),
+            Some(&request_token),
+            Some(json!({
+                "documentId": request_document_id,
+                "relativePath": "noop-race.md",
+                "content": "original",
+                "baseContentHash": base_hash
+            })),
+        )
+        .await
+    });
+
+    tokio::time::sleep(Duration::from_millis(200)).await;
+    assert!(
+        !unchanged.is_finished(),
+        "unchanged save must wait for its locked current-state check"
+    );
+
+    sqlx::query(
+        "UPDATE documents SET content = ?, content_hash = ? WHERE id = ? AND workspace_id = ?",
+    )
+    .bind("concurrent content")
+    .bind("concurrent-content-hash")
+    .bind(&document_id)
+    .bind(&ws_id)
+    .execute(&mut *writer)
+    .await
+    .unwrap();
+    writer.commit().await.unwrap();
+
+    let (status, body) = unchanged.await.unwrap();
+    assert_eq!(
+        status,
+        StatusCode::BAD_REQUEST,
+        "stale unchanged response must be rejected: {body}"
+    );
 }
 
 // 3. Title extracted from H1 when not provided
@@ -215,6 +420,7 @@ async fn get_document_success() {
     .await;
 
     assert_eq!(status, StatusCode::OK);
+    assert_eq!(body["documentId"], doc_id);
     assert_eq!(body["relativePath"].as_str().unwrap(), "fetch.md");
     assert_eq!(body["content"].as_str().unwrap(), "# Fetch Me");
 }

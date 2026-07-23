@@ -193,6 +193,7 @@ export type OAuthDeviceStartResponse = {
 };
 
 export type CloudDocument = {
+  documentId: string;
   relativePath: string;
   title: string;
   status: string;
@@ -374,4 +375,3 @@ export type AppCommand = {
   disabledReason?: () => string | undefined;
   run: () => Promise<void> | void;
 };
-

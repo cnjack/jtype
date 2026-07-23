@@ -1,14 +1,18 @@
-JType 内置了一个 **MCP 服务器**（Model Context Protocol），它把你的**笔记与看板**开放给 AI 助手。连接之后，Claude、Cursor、Cline 或 `jcode` 这类工具就能搜索和阅读你的笔记、起草和更新文档、梳理你的看板——使用你的数据，并经你授权。
+JType 为笔记与看板内置了多个 **MCP endpoint**（Model Context Protocol）。Claude、Cursor、Cline 或 `jcode` 可以在你明确授予的权限范围内处理 Markdown 数据。
 
-- **服务器地址：** `https://<你的-jtype-主机>/mcp`——本地为 `http://localhost:13345/mcp`
+- **笔记地址：** `https://<你的-jtype-主机>/mcp`
+- **通用看板地址：** `https://<你的-jtype-主机>/mcp/kanban`
+- **单看板地址：** 从**看板设置 → MCP access** 生成，格式为 `https://<你的-jtype-主机>/mcp/kanban/<workspace>/<board>`
 - **传输方式：** Streamable HTTP（JSON-RPC）
-- **认证：** OAuth 2.1（浏览器方式，推荐）**或**受限访问令牌（备用）
+- **认证：** 通用 endpoint 使用 OAuth 2.1；单看板 endpoint 使用绑定到该看板的静态 token
 
 ## 两种连接方式
 
-**OAuth（推荐）。** 对于支持 MCP OAuth 的客户端，你只需把服务器地址交给它。客户端会自动发现认证服务器、打开浏览器，你**授权一次**即可连接。无需粘贴任何内容、也不会写入配置文件，而且它获得的权限仅限于笔记与看板。
+**OAuth（推荐）。** 对于支持 MCP OAuth 的客户端，把笔记 URL 或通用看板 URL 交给它。客户端会自动发现认证服务器、打开浏览器，你**授权一次**即可连接。无需粘贴任何内容，也不会写入配置文件；两个 URL 会暴露彼此分开的工具目录。
 
 **受限令牌（备用）。** 有些客户端只接受静态的 `Authorization` 请求头。对这类客户端，铸造一个受限、会过期、可吊销的令牌并粘贴进去即可。如何选择以及如何创建，参见 [OAuth 与受限令牌](/help/c/ai-mcp/oauth-vs-token)。
+
+**单看板连接。** 打开看板，进入**看板设置 → MCP access**，生成 token 并复制界面给出的配置。token 与 URL 都会在服务端固定到该看板：客户端无法发现其他 workspace/board、覆盖 pin，或把 token 改用于 REST。`create_card` 会返回在卡片存续期间稳定的 `documentId`，后续卡片读取、正文编辑、移动和评论工具都使用这个 ID。
 
 ## 各客户端的配置
 
@@ -71,15 +75,20 @@ claude mcp add --transport http jtype https://<你的-jtype-主机>/mcp
 
 ## 试一试
 
-连接成功后，对你的助手说：
+连接笔记 endpoint 后，可以说：
 
-> “列出我的 JType 工作区，找出关于发布的笔记，并在我的 Launch 看板中添加一张高优先级卡片‘起草发布计划’。”
+> “找出关于发布的笔记，并起草一份发布检查清单。”
 
-它会依次调用 `list_workspaces` → `search_notes` → `list_boards` → `create_card`。
+连接单看板 endpoint 后，可以说：
+
+> “创建一张高优先级卡片‘起草发布计划’，把提纲写进 Markdown 正文，然后移到 Doing。”
+
+助手只能操作你复制配置时所在的那块看板。
 
 ## 疑难排查
 
 - **`/mcp` 返回 `401 Unauthorized`**——令牌已过期或被吊销。重新连接（OAuth）或创建一个新令牌。
+- **看板 token 访问 `/mcp` 或 `/mcp/kanban` 返回 `401`**——这是预期行为；请使用看板设置中复制的完整固定 URL。
 - **客户端无法走 OAuth**——改用带 `Authorization` 请求头的令牌方式。
 - **`jcode mcp list` 看不到 jtype**——检查 `~/.jcode/config.json`，并确认地址可达。
 
