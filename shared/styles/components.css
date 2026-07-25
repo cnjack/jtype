@@ -230,7 +230,7 @@
 
   /* --- AuthCard (login + device oauth shell) --- */
   .auth-card {
-    @apply w-full max-w-sm rounded-2xl border border-black/[0.06] bg-white p-8 shadow-sm shadow-emerald-950/5;
+    @apply w-full max-w-md rounded-2xl border border-black/[0.06] bg-white p-12 shadow-sm shadow-emerald-950/5;
   }
   .auth-card-head {
     @apply flex flex-col items-center text-center;
