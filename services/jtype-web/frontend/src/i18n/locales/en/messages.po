@@ -2655,3 +2655,47 @@ msgstr "Your rendered document will appear here."
 #: src/components/SiteThemePanel.tsx
 msgid "Your theme"
 msgstr "Your theme"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Access approved. You can return to the app that requested access."
+msgstr "Access approved. You can return to the app that requested access."
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Allow access"
+msgstr "Allow access"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Allow full access"
+msgstr "Allow full access"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Authorization request not found"
+msgstr "Authorization request not found"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Full account access"
+msgstr "Full account access"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Read and manage your documents and kanban boards."
+msgstr "Read and manage your documents and kanban boards."
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Read, create, update, and delete documents and kanban cards"
+msgstr "Read, create, update, and delete documents and kanban cards"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "requests access to your JType account."
+msgstr "requests access to your JType account."
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Review and approve an app requesting access to JType"
+msgstr "Review and approve an app requesting access to JType"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Use your workspace and administrator permissions"
+msgstr "Use your workspace and administrator permissions"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "View and manage all cloud workspaces you can access"
+msgstr "View and manage all cloud workspaces you can access"

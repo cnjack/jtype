@@ -3,6 +3,7 @@ import { t } from '@lingui/core/macro'
 import { Trans } from '@lingui/react/macro'
 import { useSearchParams } from 'react-router-dom'
 import { api, setToken, setStoredUsername, getStoredUsername } from '../api'
+import type { DeviceRequest } from '../api'
 import { AuthCard, JTypeWordmark, OTPInput } from '@shared/components'
 import {
   ComputerDesktopIcon,
@@ -23,6 +24,7 @@ export function DeviceOAuth() {
   const [status, setStatus] = useState('')
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
+  const [request, setRequest] = useState<DeviceRequest | null>(null)
 
   useEffect(() => {
     const token = localStorage.getItem('jtype.token')
@@ -50,7 +52,8 @@ export function DeviceOAuth() {
       setStoredUsername(res.username)
       setIsLoggedIn(true)
       setLoggedInName(res.username)
-      setStatus(t`Signed in. Ready to authorize device.`)
+      // Keep status empty so the consent-details effect runs after login.
+      setStatus('')
     } catch (err) {
       setError(err instanceof Error ? err.message : t`Authentication failed`)
     } finally {
@@ -64,7 +67,7 @@ export function DeviceOAuth() {
     setLoading(true)
     try {
       await api.approveDevice(userCode)
-      setStatus(t`Device authorized! You can return to the JType desktop app.`)
+      setStatus(t`Access approved. You can return to the app that requested access.`)
     } catch (err) {
       setError(err instanceof Error ? err.message : t`Authorization failed`)
     } finally {
@@ -72,14 +75,31 @@ export function DeviceOAuth() {
     }
   }
 
-  // Auto-submit when all 6 digits are filled AND user is already logged in.
+  // Full-scope authorization is never automatic. Resolve the verified client
+  // identity and requested scope, then require an explicit Allow click.
   const codeComplete = userCode.replace(/\D/g, '').length === 6
   useEffect(() => {
-    if (codeComplete && isLoggedIn && !loading && !status) {
-      void handleApprove()
+    if (!codeComplete || !isLoggedIn || status) {
+      setRequest(null)
+      return
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [codeComplete, isLoggedIn])
+    let cancelled = false
+    setError('')
+    void api.getDeviceRequest(userCode).then(
+      (value) => {
+        if (!cancelled) setRequest(value)
+      },
+      (err) => {
+        if (!cancelled) {
+          setRequest(null)
+          setError(err instanceof Error ? err.message : t`Authorization request not found`)
+        }
+      },
+    )
+    return () => {
+      cancelled = true
+    }
+  }, [codeComplete, isLoggedIn, status, userCode])
 
   const copyCode = () => {
     if (!userCode) return
@@ -96,7 +116,7 @@ export function DeviceOAuth() {
   return (
     <AuthCard
       title={t`Authorize device`}
-      subtitle={t`Enter the code shown in your JType desktop app`}
+      subtitle={t`Review and approve an app requesting access to JType`}
       icon={icon}
       footer={
         <p className="mt-5 text-center text-xs text-stone-400">
@@ -108,7 +128,7 @@ export function DeviceOAuth() {
       <OTPInput
         value={userCode}
         onChange={setUserCode}
-        onComplete={(v) => { /* auto-submit handled by effect above */ void v }}
+        onComplete={(v) => { void v }}
         error={!!error}
         autoFocus
         ariaLabel={t`Device code`}
@@ -132,6 +152,30 @@ export function DeviceOAuth() {
               <Trans>Signed in as <b className="text-stone-800">{loggedInName}</b></Trans>
             </div>
 
+            {request && !status && (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-stone-700">
+                <p className="font-semibold text-stone-900">
+                  {request.clientName} <Trans>requests access to your JType account.</Trans>
+                </p>
+                {request.scope === 'full' ? (
+                  <>
+                    <p className="mt-2 font-semibold text-amber-800">
+                      <Trans>Full account access</Trans>
+                    </p>
+                    <ul className="mt-1 list-disc space-y-1 pl-5 text-xs leading-5 text-stone-600">
+                      <li><Trans>View and manage all cloud workspaces you can access</Trans></li>
+                      <li><Trans>Read, create, update, and delete documents and kanban cards</Trans></li>
+                      <li><Trans>Use your workspace and administrator permissions</Trans></li>
+                    </ul>
+                  </>
+                ) : (
+                  <p className="mt-2 text-xs text-stone-600">
+                    <Trans>Read and manage your documents and kanban boards.</Trans>
+                  </p>
+                )}
+              </div>
+            )}
+
             {status && (
               <p className="flex items-start gap-2 rounded-lg bg-brand-soft px-3 py-2 text-sm text-brand-dark">
                 <CheckCircleIcon className="mt-0.5 h-4 w-4 shrink-0" />
@@ -147,11 +191,15 @@ export function DeviceOAuth() {
 
             <button
               onClick={handleApprove}
-              disabled={loading || !codeComplete}
+              disabled={loading || !codeComplete || !request}
               className="toolbar-button toolbar-button-primary h-10 justify-center disabled:opacity-50"
             >
               {loading && <ArrowPathIcon className="h-4 w-4 animate-spin" />}
-              {loading ? t`Authorizing...` : t`Authorize device`}
+              {loading
+                ? t`Authorizing...`
+                : request?.scope === 'full'
+                  ? t`Allow full access`
+                  : t`Allow access`}
             </button>
           </div>
         ) : (

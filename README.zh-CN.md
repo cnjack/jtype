@@ -260,6 +260,7 @@ cargo test --manifest-path services/jtype-web/Cargo.toml --lib
 ## 文档
 
 - [Connect your AI](docs/connect-your-ai.md) —— Claude / Cursor / Cline / jcode 的 MCP 接入
+- [jcode Cloud 全权限 OAuth](docs/jcode-cloud-oauth.md) —— 受信客户端配置、用户同意与安全边界
 - [AI 集成设计](internal-docs/ai-integration/README.md) —— MCP + CLI + Skills
 - [REST API 参考](docs/api/README.md) —— 文档、文件夹、同步、成员、workspace、回收站
 - [架构概览](AGENTS.md) · [设计笔记](DESIGN.md)

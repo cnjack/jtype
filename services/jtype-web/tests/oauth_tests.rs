@@ -236,3 +236,86 @@ async fn device_poll_consumed() {
     .await;
     assert_eq!(second_poll_status, StatusCode::NOT_FOUND);
 }
+
+#[tokio::test]
+async fn mcp_device_code_cannot_be_exchanged_by_desktop_poll() {
+    let (app, _pool) = common::setup().await;
+    let request = axum::http::Request::builder()
+        .method("POST")
+        .uri("/api/oauth/device_authorization")
+        .header("content-type", "application/x-www-form-urlencoded")
+        .body(axum::body::Body::from("client_id=mcp"))
+        .unwrap();
+    let response = tower::ServiceExt::oneshot(app.clone(), request)
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    let bytes = axum::body::to_bytes(response.into_body(), 1024 * 1024)
+        .await
+        .unwrap();
+    let started: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+    let device_code = started["device_code"].as_str().unwrap().to_string();
+    let user_code = started["user_code"].as_str().unwrap().to_string();
+
+    let username = common::uid();
+    let (user_token, _) = common::register_user(app.clone(), &username).await;
+    let (status, _) = common::req(
+        app.clone(),
+        "POST",
+        "/api/oauth/device/approve",
+        Some(&user_token),
+        Some(json!({ "userCode": user_code })),
+    )
+    .await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
+
+    let (status, _) = common::req(
+        app,
+        "POST",
+        "/api/oauth/device/poll",
+        None,
+        Some(json!({ "deviceCode": device_code })),
+    )
+    .await;
+    assert_eq!(status, StatusCode::NOT_FOUND);
+}
+
+#[tokio::test]
+async fn desktop_device_code_cannot_be_exchanged_by_mcp_token_endpoint() {
+    let (app, _pool) = common::setup().await;
+    let (start_status, start_body) = common::req(
+        app.clone(),
+        "POST",
+        "/api/oauth/device/start",
+        None,
+        Some(json!({ "deviceId": "desktop-cross-flow" })),
+    )
+    .await;
+    assert_eq!(start_status, StatusCode::OK);
+    let device_code = start_body["deviceCode"].as_str().unwrap();
+    let user_code = start_body["userCode"].as_str().unwrap();
+
+    let username = common::uid();
+    let (user_token, _) = common::register_user(app.clone(), &username).await;
+    let (approve_status, _) = common::req(
+        app.clone(),
+        "POST",
+        "/api/oauth/device/approve",
+        Some(&user_token),
+        Some(json!({ "userCode": user_code })),
+    )
+    .await;
+    assert_eq!(approve_status, StatusCode::NO_CONTENT);
+
+    let body = format!(
+        "grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Adevice_code&device_code={device_code}"
+    );
+    let request = axum::http::Request::builder()
+        .method("POST")
+        .uri("/api/oauth/token")
+        .header("content-type", "application/x-www-form-urlencoded")
+        .body(axum::body::Body::from(body))
+        .unwrap();
+    let response = tower::ServiceExt::oneshot(app, request).await.unwrap();
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+}

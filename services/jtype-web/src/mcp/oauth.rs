@@ -241,22 +241,55 @@ async fn lookup_client(st: &McpState, client_id: &str, redirect_uri: &str) -> Re
 #[serde(default)]
 pub struct DeviceAuthorizationRequest {
     pub client_id: Option<String>,
+    pub client_secret: Option<String>,
     pub scope: Option<String>,
 }
 
 pub async fn device_authorization(
     State(st): State<McpState>,
-    Form(_req): Form<DeviceAuthorizationRequest>,
+    Form(req): Form<DeviceAuthorizationRequest>,
 ) -> Result<Json<Value>, AppError> {
+    let requested_scope = req
+        .scope
+        .as_deref()
+        .filter(|v| !v.is_empty())
+        .unwrap_or("mcp");
+    let (client_id, client_name) = match requested_scope {
+        "mcp" => (
+            req.client_id
+                .unwrap_or_else(|| "public-mcp-client".to_string()),
+            "MCP client".to_string(),
+        ),
+        "full" => {
+            let trusted = st
+                .trusted_full_oauth_client
+                .as_ref()
+                .ok_or_else(|| oauth_error("invalid_client"))?;
+            let supplied_id = req.client_id.as_deref().unwrap_or("");
+            let supplied_secret = req.client_secret.as_deref().unwrap_or("");
+            if supplied_id != trusted.client_id
+                || sha256_hex(supplied_secret) != sha256_hex(&trusted.client_secret)
+            {
+                return Err(oauth_error("invalid_client"));
+            }
+            (trusted.client_id.clone(), trusted.client_name.clone())
+        }
+        _ => return Err(oauth_error("invalid_scope")),
+    };
+
     let device_code = random_token();
     let user_code = short_user_code();
     let device_code_hash = sha256_hex(&device_code);
     sqlx::query(
-        r#"INSERT INTO oauth_device_codes (device_code_hash, user_code, expires_at)
-           VALUES (?, ?, DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 10 MINUTE))"#,
+        r#"INSERT INTO oauth_device_codes
+           (device_code_hash, user_code, grant_kind, requested_scope, client_id, client_name, expires_at)
+           VALUES (?, ?, 'oauth_device', ?, ?, ?, DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 10 MINUTE))"#,
     )
     .bind(device_code_hash)
     .bind(&user_code)
+    .bind(requested_scope)
+    .bind(client_id)
+    .bind(client_name)
     .execute(&st.pool)
     .await?;
 
@@ -285,6 +318,7 @@ pub struct TokenRequest {
     pub redirect_uri: Option<String>,
     pub code_verifier: Option<String>,
     pub client_id: Option<String>,
+    pub client_secret: Option<String>,
 }
 
 pub async fn token(
@@ -313,37 +347,10 @@ async fn token_device(st: &McpState, req: TokenRequest) -> Result<Json<Value>, A
     };
     let device_code_hash = sha256_hex(&device_code);
 
-    // Atomic claim: consume only an approved, unexpired, unconsumed code (closes
-    // the TOCTOU window where two concurrent polls could each mint a token).
-    let claim = sqlx::query(
-        r#"UPDATE oauth_device_codes SET consumed_at = CURRENT_TIMESTAMP
-           WHERE device_code_hash = ? AND consumed_at IS NULL AND user_id IS NOT NULL
-             AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP)"#,
-    )
-    .bind(&device_code_hash)
-    .execute(&st.pool)
-    .await?;
-
-    if claim.rows_affected() == 1 {
-        let user_id: String =
-            sqlx::query_scalar("SELECT user_id FROM oauth_device_codes WHERE device_code_hash = ?")
-                .bind(&device_code_hash)
-                .fetch_one(&st.pool)
-                .await?;
-        let token = create_scoped_session(
-            &st.pool,
-            &user_id,
-            "mcp",
-            Some(MCP_TOKEN_TTL_SECS),
-            Some("MCP (device)"),
-        )
-        .await?;
-        return Ok(token_response(token, "mcp"));
-    }
-
-    // Not claimed — report why.
-    let row = sqlx::query(
-        r#"SELECT user_id,
+    // Read the immutable grant binding before consuming the code. A full grant
+    // is confidential-client only and must authenticate again at exchange.
+    let grant = sqlx::query(
+        r#"SELECT user_id, grant_kind, requested_scope, client_id, client_name,
                   (expires_at IS NOT NULL AND expires_at <= CURRENT_TIMESTAMP) AS expired,
                   (consumed_at IS NOT NULL) AS consumed
            FROM oauth_device_codes WHERE device_code_hash = ?"#,
@@ -351,16 +358,69 @@ async fn token_device(st: &McpState, req: TokenRequest) -> Result<Json<Value>, A
     .bind(&device_code_hash)
     .fetch_optional(&st.pool)
     .await?;
-    let Some(row) = row else {
+    let Some(grant) = grant else {
         return Err(oauth_error("invalid_grant"));
     };
-    if row.try_get::<i64, _>("consumed").unwrap_or(0) != 0 {
+    let grant_kind: String = grant.try_get("grant_kind")?;
+    if grant_kind != "oauth_device" {
         return Err(oauth_error("invalid_grant"));
     }
-    if row.try_get::<i64, _>("expired").unwrap_or(0) != 0 {
+    let scope: String = grant.try_get("requested_scope")?;
+    let client_name: Option<String> = grant.try_get("client_name")?;
+    if scope == "full" {
+        let trusted = st
+            .trusted_full_oauth_client
+            .as_ref()
+            .ok_or_else(|| oauth_error("invalid_client"))?;
+        let stored_id: Option<String> = grant.try_get("client_id")?;
+        if req.client_id.as_deref() != Some(trusted.client_id.as_str())
+            || stored_id.as_deref() != Some(trusted.client_id.as_str())
+            || sha256_hex(req.client_secret.as_deref().unwrap_or(""))
+                != sha256_hex(&trusted.client_secret)
+        {
+            return Err(oauth_error("invalid_client"));
+        }
+    }
+
+    // Atomic claim: consume only an approved, unexpired, unconsumed code (closes
+    // the TOCTOU window where two concurrent polls could each mint a token).
+    let claim = sqlx::query(
+        r#"UPDATE oauth_device_codes SET consumed_at = CURRENT_TIMESTAMP
+           WHERE device_code_hash = ? AND grant_kind = 'oauth_device'
+             AND requested_scope = ?
+             AND consumed_at IS NULL AND user_id IS NOT NULL
+             AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP)"#,
+    )
+    .bind(&device_code_hash)
+    .bind(&scope)
+    .execute(&st.pool)
+    .await?;
+
+    if claim.rows_affected() == 1 {
+        let user_id: String = grant.try_get("user_id")?;
+        let token = create_scoped_session(
+            &st.pool,
+            &user_id,
+            &scope,
+            Some(MCP_TOKEN_TTL_SECS),
+            Some(client_name.as_deref().unwrap_or("OAuth device")),
+        )
+        .await?;
+        return Ok(token_response(token, &scope));
+    }
+
+    // Not claimed — report why.
+    if grant.try_get::<i64, _>("consumed").unwrap_or(0) != 0 {
+        return Err(oauth_error("invalid_grant"));
+    }
+    if grant.try_get::<i64, _>("expired").unwrap_or(0) != 0 {
         return Err(oauth_error("expired_token"));
     }
-    if row.try_get::<Option<String>, _>("user_id").unwrap_or(None).is_none() {
+    if grant
+        .try_get::<Option<String>, _>("user_id")
+        .unwrap_or(None)
+        .is_none()
+    {
         return Err(oauth_error("authorization_pending"));
     }
     Err(oauth_error("invalid_grant"))

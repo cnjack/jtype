@@ -1,4 +1,9 @@
-use axum::{extract::State, http::HeaderMap, Json};
+use axum::{
+    extract::{Query, State},
+    http::HeaderMap,
+    Json,
+};
+use serde::{Deserialize, Serialize};
 use sqlx::Row;
 
 use crate::db::models::*;
@@ -18,8 +23,10 @@ pub async fn start(
     let user_code = short_user_code();
     let device_code_hash = sha256_hex(&device_code);
     sqlx::query(
-        r#"INSERT INTO oauth_device_codes (device_code_hash, user_code, expires_at)
-           VALUES (?, ?, DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 10 MINUTE))"#,
+        r#"INSERT INTO oauth_device_codes
+           (device_code_hash, user_code, grant_kind, requested_scope, client_id, client_name, expires_at)
+           VALUES (?, ?, 'desktop', 'full', 'jtype-desktop', 'JType Desktop',
+                   DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 10 MINUTE))"#,
     )
     .bind(device_code_hash)
     .bind(&user_code)
@@ -33,6 +40,48 @@ pub async fn start(
             user_code
         ),
         user_code,
+    }))
+}
+
+#[derive(Deserialize)]
+pub struct DeviceRequestQuery {
+    pub code: String,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DeviceRequestView {
+    pub client_name: String,
+    pub scope: String,
+    pub expires_at: Option<String>,
+}
+
+/// Return the verified client identity and requested scope for a device code.
+/// The consent page calls this only after authenticating the approving user.
+pub async fn request_details(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Query(query): Query<DeviceRequestQuery>,
+) -> Result<Json<DeviceRequestView>, AppError> {
+    let _ = extract_user(&state.pool, &headers).await?;
+    let user_code = query.code.trim().to_ascii_uppercase();
+    let row = sqlx::query(
+        r#"SELECT client_name, requested_scope,
+                  DATE_FORMAT(expires_at, '%Y-%m-%dT%H:%i:%sZ') AS expires_at
+           FROM oauth_device_codes
+           WHERE user_code = ? AND approved_at IS NULL AND consumed_at IS NULL
+             AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP)"#,
+    )
+    .bind(user_code)
+    .fetch_optional(&state.pool)
+    .await?
+    .ok_or(AppError::NotFound)?;
+    Ok(Json(DeviceRequestView {
+        client_name: row
+            .try_get::<Option<String>, _>("client_name")?
+            .unwrap_or_else(|| "Unknown client".to_string()),
+        scope: row.try_get("requested_scope")?,
+        expires_at: row.try_get("expires_at")?,
     }))
 }
 
@@ -69,7 +118,9 @@ pub async fn poll(
     // each mint a session token (TOCTOU). Only a successful claim issues a token.
     let claim = sqlx::query(
         r#"UPDATE oauth_device_codes SET consumed_at = CURRENT_TIMESTAMP
-           WHERE device_code_hash = ? AND consumed_at IS NULL AND user_id IS NOT NULL
+           WHERE device_code_hash = ? AND grant_kind = 'desktop'
+             AND requested_scope = 'full'
+             AND consumed_at IS NULL AND user_id IS NOT NULL
              AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP)"#,
     )
     .bind(&device_code_hash)

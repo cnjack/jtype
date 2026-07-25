@@ -324,6 +324,10 @@ export const api = {
     }),
 
   // Device OAuth
+  getDeviceRequest: (userCode: string) =>
+    request<DeviceRequest>(
+      `/api/oauth/device/request?code=${encodeURIComponent(userCode)}`,
+    ),
   approveDevice: (userCode: string) =>
     request<void>('/api/oauth/device/approve', { method: 'POST', body: JSON.stringify({ userCode }) }),
 
@@ -346,6 +350,12 @@ export interface AuthResponse {
   username: string
   siteUrl: string
   role: string
+}
+
+export interface DeviceRequest {
+  clientName: string
+  scope: 'full' | 'mcp' | string
+  expiresAt?: string
 }
 
 export interface ProfileResponse {

@@ -61,6 +61,16 @@ env:
   JTYPED_BIND_ADDR: "0.0.0.0:13345"
   JTYPED_PUBLIC_BASE_URL: "http://localhost:13345"
 
+# Optional confidential client for jcode Cloud. Enabling this allows that
+# first-party client to request a user-approved `full` token. The secret must be
+# supplied through an existing Kubernetes Secret, never committed to values.
+jcodeCloudOAuth:
+  enabled: false
+  clientId: "jcode-cloud"
+  clientName: "jcode Cloud"
+  existingSecret: ""
+  secretKey: "client-secret"
+
 # 使用已有的数据库连接字符串（优先级高于 mysql 配置）
 # 如果设置了这个，会忽略 mysql.host/port/database/user/password
 databaseUrl: ""

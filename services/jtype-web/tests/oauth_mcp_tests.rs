@@ -21,7 +21,9 @@ async fn form_post(app: Router, uri: &str, body: &str) -> (StatusCode, Value) {
         .unwrap();
     let response = app.oneshot(request).await.unwrap();
     let status = response.status();
-    let bytes = axum::body::to_bytes(response.into_body(), 1024 * 1024).await.unwrap();
+    let bytes = axum::body::to_bytes(response.into_body(), 1024 * 1024)
+        .await
+        .unwrap();
     let json = if bytes.is_empty() {
         Value::Null
     } else {
@@ -63,7 +65,10 @@ async fn authorization_server_metadata_advertises_device_grant() {
         .as_str()
         .unwrap()
         .ends_with("/api/oauth/device_authorization"));
-    assert!(body["token_endpoint"].as_str().unwrap().ends_with("/api/oauth/token"));
+    assert!(body["token_endpoint"]
+        .as_str()
+        .unwrap()
+        .ends_with("/api/oauth/token"));
     let grants = body["grant_types_supported"].as_array().unwrap();
     assert!(grants
         .iter()
@@ -75,17 +80,27 @@ async fn device_grant_full_flow_mints_mcp_token() {
     let (app, _pool) = common::setup().await;
 
     // 1. Start device authorization (RFC 8628 §3.1).
-    let (status, body) = form_post(app.clone(), "/api/oauth/device_authorization", "client_id=mcp").await;
+    let (status, body) = form_post(
+        app.clone(),
+        "/api/oauth/device_authorization",
+        "client_id=mcp",
+    )
+    .await;
     assert_eq!(status, StatusCode::OK, "device_authorization: {body}");
     let device_code = body["device_code"].as_str().unwrap().to_string();
     let user_code = body["user_code"].as_str().unwrap().to_string();
-    assert!(body["verification_uri_complete"].as_str().unwrap().contains(&user_code));
+    assert!(body["verification_uri_complete"]
+        .as_str()
+        .unwrap()
+        .contains(&user_code));
 
     // 2. Polling before approval → 400 authorization_pending.
     let (status, body) = form_post(
         app.clone(),
         "/api/oauth/token",
-        &format!("grant_type=urn:ietf:params:oauth:grant-type:device_code&device_code={device_code}"),
+        &format!(
+            "grant_type=urn:ietf:params:oauth:grant-type:device_code&device_code={device_code}"
+        ),
     )
     .await;
     assert_eq!(status, StatusCode::BAD_REQUEST);
@@ -108,7 +123,9 @@ async fn device_grant_full_flow_mints_mcp_token() {
     let (status, body) = form_post(
         app.clone(),
         "/api/oauth/token",
-        &format!("grant_type=urn:ietf:params:oauth:grant-type:device_code&device_code={device_code}"),
+        &format!(
+            "grant_type=urn:ietf:params:oauth:grant-type:device_code&device_code={device_code}"
+        ),
     )
     .await;
     assert_eq!(status, StatusCode::OK, "token: {body}");
@@ -145,4 +162,95 @@ async fn token_rejects_bad_grant_and_unknown_code() {
     .await;
     assert_eq!(status, StatusCode::BAD_REQUEST);
     assert_eq!(body["error"], "invalid_grant");
+}
+
+#[tokio::test]
+async fn trusted_device_grant_mints_full_token_after_explicit_approval() {
+    let (app, _pool) = common::setup_with_trusted_full_oauth().await;
+    let start_form = "client_id=jcode-cloud&client_secret=test-full-client-secret&scope=full";
+    let (status, started) =
+        form_post(app.clone(), "/api/oauth/device_authorization", start_form).await;
+    assert_eq!(status, StatusCode::OK, "{started}");
+    let device_code = started["device_code"].as_str().unwrap().to_string();
+    let user_code = started["user_code"].as_str().unwrap().to_string();
+
+    let username = common::uid();
+    let (login_token, _) = common::register_user(app.clone(), &username).await;
+    let (status, details) = common::req(
+        app.clone(),
+        "GET",
+        &format!("/api/oauth/device/request?code={user_code}"),
+        Some(&login_token),
+        None,
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK, "{details}");
+    assert_eq!(details["clientName"], "jcode Cloud");
+    assert_eq!(details["scope"], "full");
+
+    let (status, _) = common::req(
+        app.clone(),
+        "POST",
+        "/api/oauth/device/approve",
+        Some(&login_token),
+        Some(json!({ "userCode": user_code })),
+    )
+    .await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
+
+    let exchange = format!(
+        "grant_type=urn:ietf:params:oauth:grant-type:device_code&device_code={device_code}&client_id=jcode-cloud&client_secret=test-full-client-secret"
+    );
+    let (status, token) = form_post(app.clone(), "/api/oauth/token", &exchange).await;
+    assert_eq!(status, StatusCode::OK, "{token}");
+    assert_eq!(token["scope"], "full");
+    let access_token = token["access_token"].as_str().unwrap();
+
+    let (status, _) = common::req(app, "GET", "/api/v1/workspaces", Some(access_token), None).await;
+    assert_eq!(status, StatusCode::OK);
+}
+
+#[tokio::test]
+async fn full_device_grant_requires_trusted_client_at_start_and_exchange() {
+    let (app, _pool) = common::setup_with_trusted_full_oauth().await;
+    let (status, body) = form_post(
+        app.clone(),
+        "/api/oauth/device_authorization",
+        "client_id=jcode-cloud&client_secret=wrong&scope=full",
+    )
+    .await;
+    assert_eq!(status, StatusCode::BAD_REQUEST, "{body}");
+    assert_eq!(body["error"], "invalid_client");
+
+    let (status, started) = form_post(
+        app.clone(),
+        "/api/oauth/device_authorization",
+        "client_id=jcode-cloud&client_secret=test-full-client-secret&scope=full",
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK, "{started}");
+    let device_code = started["device_code"].as_str().unwrap().to_string();
+    let user_code = started["user_code"].as_str().unwrap().to_string();
+    let username = common::uid();
+    let (login_token, _) = common::register_user(app.clone(), &username).await;
+    let (status, _) = common::req(
+        app.clone(),
+        "POST",
+        "/api/oauth/device/approve",
+        Some(&login_token),
+        Some(json!({ "userCode": user_code })),
+    )
+    .await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
+
+    let (status, body) = form_post(
+        app,
+        "/api/oauth/token",
+        &format!(
+            "grant_type=urn:ietf:params:oauth:grant-type:device_code&device_code={device_code}&client_id=jcode-cloud&client_secret=wrong"
+        ),
+    )
+    .await;
+    assert_eq!(status, StatusCode::BAD_REQUEST, "{body}");
+    assert_eq!(body["error"], "invalid_client");
 }

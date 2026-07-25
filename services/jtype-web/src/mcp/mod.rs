@@ -41,6 +41,7 @@ pub struct McpState {
     pub api: Router,
     pub pool: Pool<MySql>,
     pub public_base_url: String,
+    pub trusted_full_oauth_client: Option<crate::TrustedFullOAuthClient>,
 }
 
 /// Which tool surface an MCP endpoint exposes. Notes and kanban are mounted as

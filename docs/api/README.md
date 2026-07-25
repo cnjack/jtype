@@ -32,7 +32,7 @@
 | Domain | Endpoints |
 |--------|-----------|
 | Auth | `POST /api/register`, `POST /api/login`, `GET /api/me` |
-| Device OAuth | `POST /api/oauth/device/start`, `/approve`, `/poll` |
+| Device OAuth | `POST /api/oauth/device/start`, `GET /api/oauth/device/request`, `POST /api/oauth/device/approve`, `/poll` |
 | User Profile | `GET/PUT /api/me/profile`, `PUT /api/me/site`, `GET /api/me/storage`, `GET /api/me/devices` |
 | Admin | `GET/PUT /api/admin/users`, `GET /api/admin/workspaces`, `/domains`, `/stats` |
 | Domains | `GET/POST/PUT /api/v1/domains`, verify, certificate |
