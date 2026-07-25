@@ -51,6 +51,22 @@ pub async fn setup_with_hub() -> (Router, Pool<MySql>, jtype_web::hub::Connectio
     (app, pool, hub)
 }
 
+pub async fn setup_with_trusted_full_oauth() -> (Router, Pool<MySql>) {
+    let pool = setup_db().await;
+    let (app, _hub) = jtype_web::build_app_with_trusted_oauth(
+        pool.clone(),
+        "http://localhost:13345".to_string(),
+        jtype_web::storage::in_memory(),
+        None,
+        Some(jtype_web::TrustedFullOAuthClient {
+            client_id: "jcode-cloud".to_string(),
+            client_name: "jcode Cloud".to_string(),
+            client_secret: "test-full-client-secret".to_string(),
+        }),
+    );
+    (app, pool)
+}
+
 // ── Unique name helpers ───────────────────────────────────────────────────────
 
 /// Generate a unique username safe for MySQL (alpha, <= 30 chars).

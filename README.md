@@ -267,6 +267,7 @@ cargo test --manifest-path services/jtype-web/Cargo.toml --lib
 ## Documentation
 
 - [Connect your AI](docs/connect-your-ai.md) — MCP setup for Claude / Cursor / Cline / jcode
+- [jcode Cloud full-access OAuth](docs/jcode-cloud-oauth.md) — trusted client setup, consent, and security boundaries
 - [AI integration design](internal-docs/ai-integration/README.md) — MCP + CLI + Skills
 - [REST API reference](docs/api/README.md) — documents, folders, sync, members, workspaces, trash
 - [Architecture overview](AGENTS.md) · [Design notes](DESIGN.md)

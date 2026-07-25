@@ -20,6 +20,17 @@ mysql:
 env:
   JTYPED_PUBLIC_BASE_URL: "https://your-domain.com"
 
+# 可选：允许 jcode Cloud 在用户明确同意后取得 full scope。
+# 先创建 Secret：
+# kubectl -n default create secret generic jtype-jcode-oauth \
+#   --from-literal=client-secret='<same-random-secret-used-by-jcode-cloud>'
+jcodeCloudOAuth:
+  enabled: false
+  clientId: "jcode-cloud"
+  clientName: "jcode Cloud"
+  existingSecret: "jtype-jcode-oauth"
+  secretKey: "client-secret"
+
 # 启用 Ingress
 ingress:
   enabled: true

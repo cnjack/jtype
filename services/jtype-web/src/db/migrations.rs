@@ -152,6 +152,12 @@ fn all_migrations() -> Vec<Migration> {
             up: include_str!("../../migrations/0024_mcp_board_grants.up.sql"),
             down: include_str!("../../migrations/0024_mcp_board_grants.down.sql"),
         },
+        Migration {
+            version: 29,
+            name: "oauth_device_scope",
+            up: include_str!("../../migrations/0029_oauth_device_scope.up.sql"),
+            down: include_str!("../../migrations/0029_oauth_device_scope.down.sql"),
+        },
     ]
 }
 

@@ -36,6 +36,31 @@ pub struct AppState {
     pub mailer: mail::SharedMailer,
 }
 
+/// One confidential first-party client allowed to request a full-scope device
+/// token. Public MCP clients remain limited to `mcp`.
+#[derive(Clone)]
+pub struct TrustedFullOAuthClient {
+    pub client_id: String,
+    pub client_name: String,
+    pub client_secret: String,
+}
+
+impl TrustedFullOAuthClient {
+    fn from_env() -> Option<Self> {
+        let client_secret = env::var("JTYPED_JCLOUD_OAUTH_CLIENT_SECRET").ok()?;
+        if client_secret.trim().is_empty() {
+            return None;
+        }
+        Some(Self {
+            client_id: env::var("JTYPED_JCLOUD_OAUTH_CLIENT_ID")
+                .unwrap_or_else(|_| "jcode-cloud".to_string()),
+            client_name: env::var("JTYPED_JCLOUD_OAUTH_CLIENT_NAME")
+                .unwrap_or_else(|_| "jcode Cloud".to_string()),
+            client_secret,
+        })
+    }
+}
+
 impl AppState {
     /// Current object-store handle. The read lock is held only long enough to
     /// clone the inner `Arc` out — never across `.await` — so storage swaps
@@ -90,7 +115,13 @@ pub async fn run_from_env() -> Result<(), AppError> {
     // SMTP config resolves DB (admin UI) → env (`JTYPED_SMTP_*`) → default.
     let smtp_cfg = settings::load_smtp_config(&pool).await?;
     let mailer = mail::from_config(&smtp_cfg);
-    let (app, _hub) = build_app(pool.clone(), public_base_url, storage, mailer);
+    let (app, _hub) = build_app_with_trusted_oauth(
+        pool.clone(),
+        public_base_url,
+        storage,
+        mailer,
+        TrustedFullOAuthClient::from_env(),
+    );
     let listener = tokio::net::TcpListener::bind(&bind_addr)
         .await
         .map_err(|e| AppError::Server(e.to_string()))?;
@@ -124,6 +155,17 @@ pub fn build_app(
     public_base_url: String,
     storage: storage::DynStore,
     mailer: Option<mail::Mailer>,
+) -> (Router, hub::ConnectionHub) {
+    build_app_with_trusted_oauth(pool, public_base_url, storage, mailer, None)
+}
+
+/// Core builder variant used by production and auth integration tests.
+pub fn build_app_with_trusted_oauth(
+    pool: Pool<MySql>,
+    public_base_url: String,
+    storage: storage::DynStore,
+    mailer: Option<mail::Mailer>,
+    trusted_full_oauth_client: Option<TrustedFullOAuthClient>,
 ) -> (Router, hub::ConnectionHub) {
     let hub = hub::ConnectionHub::new();
     let cleanup_hub = hub.clone();
@@ -194,6 +236,10 @@ pub fn build_app(
         )
         // OAuth device flow
         .route("/api/oauth/device/start", post(handlers::oauth::start))
+        .route(
+            "/api/oauth/device/request",
+            get(handlers::oauth::request_details),
+        )
         .route("/api/oauth/device/approve", post(handlers::oauth::approve))
         .route("/api/oauth/device/poll", post(handlers::oauth::poll))
         // Email verification + password reset (via SMTP)
@@ -473,6 +519,7 @@ pub fn build_app(
         api: api.clone(),
         pool: pool_for_mcp,
         public_base_url: public_base_url_for_mcp,
+        trusted_full_oauth_client,
     });
 
     let app = mcp.merge(api).layer(

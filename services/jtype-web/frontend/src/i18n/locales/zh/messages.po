@@ -2626,3 +2626,47 @@ msgstr "渲染后的文档将显示在此处。"
 #: src/components/SiteThemePanel.tsx
 msgid "Your theme"
 msgstr "你的主题"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Access approved. You can return to the app that requested access."
+msgstr "已批准访问。你可以返回请求访问的应用。"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Allow access"
+msgstr "允许访问"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Allow full access"
+msgstr "允许全部访问"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Authorization request not found"
+msgstr "找不到授权请求"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Full account access"
+msgstr "完整账户访问权限"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Read and manage your documents and kanban boards."
+msgstr "读取和管理你的文档与看板。"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Read, create, update, and delete documents and kanban cards"
+msgstr "读取、创建、更新和删除文档及看板卡片"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "requests access to your JType account."
+msgstr "请求访问你的 JType 账户。"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Review and approve an app requesting access to JType"
+msgstr "查看并批准请求访问 JType 的应用"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Use your workspace and administrator permissions"
+msgstr "使用你现有的工作区与管理员权限"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "View and manage all cloud workspaces you can access"
+msgstr "查看并管理你有权访问的所有云端工作区"
