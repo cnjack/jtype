@@ -2,8 +2,9 @@
 // the embed's equivalent of WebBoardView's load/save logic
 // (services/jtype-web/frontend/src/pages/WebBoardView.tsx), kept in pure
 // functions so the mapping is unit-testable without a component tree.
-import { parseFrontmatter, writeFrontmatter } from '@shared/lib/frontmatter'
+import { parseFrontmatter } from '@shared/lib/frontmatter'
 import {
+  applyBoardCardPatch,
   bodyExcerpt,
   countTasks,
   parseAttachments,
@@ -11,29 +12,17 @@ import {
   parseTagList,
   pickCustomFields,
   resolveTags,
-  serializeAttachments,
-  serializeLinks,
+  normalizeGroupBy,
+  normalizeSwimlaneBy,
   type BoardViewCard,
   type BoardViewConfig,
+  type BoardDocumentConfig,
 } from '@shared/lib/board'
 import type { JTypeBoardDataClient, JTypeCloudDocument } from './client'
 import { JTypeBoardError, resolveBoardDoc } from './resolveBoard'
 
 /** Shape of the `.board` JSON config document (mirrors WebBoardView). */
-export type BoardConfigJSON = {
-  id: string
-  title: string
-  groupBy?: string
-  columns: { key: string; name: string; color?: string | null; limit?: number | null }[]
-  doneColumn?: string
-  colorColumns?: boolean
-  viewType?: 'board' | 'table' | 'calendar'
-  calendarMode?: 'month' | 'agenda'
-  fields?: { key: string; label: string; type?: 'text' | 'number' | 'date' }[]
-  labels?: { label: string; color?: string | null }[]
-  ticketKey?: string
-  swimlaneBy?: 'status' | 'priority' | 'assignee'
-}
+export type BoardConfigJSON = BoardDocumentConfig
 
 export type CardMeta = { id: string; relativePath: string; content: string; contentHash: string }
 
@@ -59,8 +48,10 @@ export function toViewConfig(config: BoardConfigJSON, boardDir: string): BoardVi
     fields: config.fields,
     labels: config.labels,
     ticketKey: config.ticketKey,
-    swimlaneBy: config.swimlaneBy as BoardViewConfig['swimlaneBy'],
-    groupBy: (config.groupBy as BoardViewConfig['groupBy']) || 'status',
+    swimlaneBy: normalizeSwimlaneBy(config.swimlaneBy),
+    swimlanes: config.swimlanes,
+    swimlaneMigration: config.swimlaneMigration,
+    groupBy: normalizeGroupBy(config.groupBy),
   }
 }
 
@@ -80,6 +71,7 @@ export function cardFromDoc(
     icon: fm.data.icon || null,
     priority: fm.data.priority || null,
     assignee: fm.data.assignee || null,
+    swimlaneKey: fm.data.swimlane || null,
     due: fm.data.due || null,
     tags: resolveTags(fm.data.tags ? parseTagList(fm.data.tags) : [], config.labels),
     notes: fm.body,
@@ -91,6 +83,7 @@ export function cardFromDoc(
     blockedBy: fm.data.blocked_by ? parseLinks(fm.data.blocked_by) : [],
     blocks: fm.data.blocks ? parseLinks(fm.data.blocks) : [],
     relates: fm.data.relates ? parseLinks(fm.data.relates) : [],
+    parent: fm.data.parent ? (parseLinks(fm.data.parent)[0] ?? null) : null,
   }
 }
 
@@ -99,22 +92,7 @@ export function cardFromDoc(
  * document content (same field mapping as WebBoardView's updateCard).
  */
 export function applyCardPatch(content: string, patch: Partial<BoardViewCard>): string {
-  const { data, body } = parseFrontmatter(content)
-  const next = { ...data }
-  if (patch.title !== undefined) next.title = patch.title
-  if (patch.columnKey !== undefined) next.status = patch.columnKey
-  if (patch.priority !== undefined) next.priority = patch.priority ?? ''
-  if (patch.assignee !== undefined) next.assignee = patch.assignee ?? ''
-  if (patch.due !== undefined) next.due = patch.due ?? ''
-  if (patch.icon !== undefined) next.icon = patch.icon ?? ''
-  if (patch.tags !== undefined) next.tags = patch.tags.map((t) => t.label).join(', ')
-  if (patch.attachments !== undefined) next.attachments = serializeAttachments(patch.attachments)
-  if (patch.custom !== undefined) for (const [k, v] of Object.entries(patch.custom)) next[k] = v ?? ''
-  if (patch.blockedBy !== undefined) next.blocked_by = serializeLinks(patch.blockedBy)
-  if (patch.blocks !== undefined) next.blocks = serializeLinks(patch.blocks)
-  if (patch.relates !== undefined) next.relates = serializeLinks(patch.relates)
-  const newBody = patch.notes !== undefined ? patch.notes : body
-  return writeFrontmatter(newBody, next)
+  return applyBoardCardPatch(content, patch)
 }
 
 /** View-preference keys a read-only embed may adjust locally (never persisted). */

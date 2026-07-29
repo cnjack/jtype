@@ -18,646 +18,1013 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
+#. placeholder {0}: lane.name
+#. placeholder {1}: to + 1
+#. placeholder {2}: lanes.length
+#: shared/components/board/SwimlaneManagerDialog.tsx
+msgid "{0} moved to position {1} of {2}."
+msgstr ""
+
 #. placeholder {0}: prog.done
 #. placeholder {1}: prog.total
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "{0} of {1} sub-cards done"
 msgstr ""
 
 #. placeholder {0}: multiSel.size
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "{0} selected"
 msgstr ""
 
-#: ../../../shared/components/ConflictResolver.tsx
+#: shared/components/board/SwimlaneDeleteDialog.tsx
+msgid "{cardCount} card(s) currently use this swimlane."
+msgstr ""
+
+#: shared/components/board/SwimlaneManagerDialog.tsx
+msgid "{danglingCount} card(s) refer to deleted swimlanes."
+msgstr ""
+
+#: shared/components/board/BoardSwimlanes.tsx
+msgid "{missingCount} card(s) refer to deleted swimlanes."
+msgstr ""
+
+#: shared/components/ConflictResolver.tsx
 msgid "← Back to list"
 msgstr "← 목록으로"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "+ Add field"
 msgstr ""
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "+ Add sub-card"
 msgstr ""
 
 #. placeholder {0}: conflicts.length
 #. placeholder {1}: conflicts.length > 1 ? "s" : ""
-#: ../../../shared/components/ConflictResolver.tsx
+#: shared/components/ConflictResolver.tsx
 msgid "⚠ {0} Conflict{1} to Resolve"
 msgstr "⚠ 해결할 충돌 {0}건{1}"
 
-#: ../../../shared/components/ConflictResolver.tsx
+#: shared/components/ConflictResolver.tsx
 msgid "Accept cloud"
 msgstr "클라우드 수낙"
 
-#: ../../../shared/components/ConflictResolver.tsx
+#: shared/components/ConflictResolver.tsx
 msgid "Accept local"
 msgstr "로컈 수낙"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#. placeholder {0}: col.name
+#. placeholder {0}: column.name
+#. placeholder {0}: lane.name
+#: shared/components/board/BoardSwimlanes.tsx
+#: shared/components/board/StatusManagerDialog.tsx
+#: shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Actions for {0}"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
 msgid "Activity"
+msgstr ""
+
+#: shared/components/board/BoardSwimlanes.tsx
+#: shared/components/board/StatusManagerDialog.tsx
+#: shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Add"
 msgstr ""
 
 #: shared/components/board/BoardPeek.tsx
 #~ msgid "Add a comment…"
 #~ msgstr ""
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Add a comment… (Markdown supported)"
 msgstr ""
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Add column"
 msgstr "열 추가"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Add details..."
 msgstr "세부정보 추가..."
 
-#: ../../../shared/components/board/controls.tsx
+#: shared/components/board/controls.tsx
 msgid "Add labels"
 msgstr "라벨 추가"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Add reaction"
 msgstr ""
 
-#: ../../../shared/components/board/BoardCalendar.tsx
+#: shared/components/board/BoardSwimlanes.tsx
+msgid "Add stable horizontal groups that stay visible even when they have no "
+"cards."
+msgstr ""
+
+#: shared/components/board/BoardSwimlanes.tsx
+#: shared/components/board/StatusManagerDialog.tsx
+msgid "Add status"
+msgstr ""
+
+#: shared/components/board/BoardSwimlanes.tsx
+#: shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Add swimlane"
+msgstr ""
+
+#: shared/components/board/BoardCalendar.tsx
 msgid "Agenda"
 msgstr ""
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Archived"
 msgstr ""
 
-#: ../../../shared/components/board/BoardPeek.tsx
-#: ../../../shared/components/board/BoardSurface.tsx
-#: ../../../shared/components/board/BoardTable.tsx
+#: shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSwimlanes.tsx
+#: shared/components/board/BoardTable.tsx
 msgid "Assignee"
 msgstr "담당자"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Attachments"
 msgstr ""
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Blank card"
 msgstr "빈 카드"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Blocked by"
 msgstr ""
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Blocked by {blockedCount} unfinished card(s)"
 msgstr ""
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Blocks"
 msgstr ""
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Board"
 msgstr "보드"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Board settings"
 msgstr ""
 
-#: ../../../shared/components/EditorToolbar.tsx
+#: shared/components/EditorToolbar.tsx
 msgid "Bold"
 msgstr "굵게"
 
-#: ../../../shared/components/EditorToolbar.tsx
+#: shared/components/EditorToolbar.tsx
 msgid "Bold (Ctrl+B)"
 msgstr "굵게 (Ctrl+B)"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Calendar"
 msgstr ""
 
-#: ../../../shared/components/board/BoardPeek.tsx
-#: ../../../shared/components/ConfirmDialog.tsx
-#: ../../../shared/components/PromptDialog.tsx
+#: shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardSwimlanes.tsx
+#: shared/components/board/SwimlaneConversionDialog.tsx
+#: shared/components/board/SwimlaneDeleteDialog.tsx
+#: shared/components/board/SwimlaneManagerDialog.tsx
+#: shared/components/ConfirmDialog.tsx
+#: shared/components/PromptDialog.tsx
 msgid "Cancel"
 msgstr "취소"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Card"
 msgstr "카드"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Card title (Enter to add, Esc to cancel)"
 msgstr "카드 제목 (Enter로 추가, Esc로 취소)"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSwimlanes.tsx
+#: shared/components/board/SwimlaneConversionDialog.tsx
+#: shared/components/board/SwimlaneManagerDialog.tsx
 msgid "cards"
 msgstr "개 카드"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Change color"
+msgstr ""
+
+#: shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Changes save automatically."
+msgstr ""
+
+#: shared/components/board/SwimlaneDeleteDialog.tsx
+msgid "Choose another swimlane, then update the cards first."
+msgstr ""
+
+#: shared/components/board/BoardSurface.tsx
 msgid "Clear filter"
 msgstr "필터 지우기"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Clear selection"
 msgstr ""
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
+#: shared/components/board/StatusManagerDialog.tsx
+#: shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Close"
 msgstr "닫기"
 
-#: ../../../shared/components/ConflictResolver.tsx
+#: shared/components/ConflictResolver.tsx
 msgid "Cloud (remote)"
 msgstr "클라우드 (원격)"
 
-#: ../../../shared/components/EditorToolbar.tsx
+#: shared/components/EditorToolbar.tsx
 msgid "Code"
 msgstr "코드"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Collapse column"
 msgstr "열 접기"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Collapse resolved thread"
 msgstr ""
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSwimlanes.tsx
+#: shared/components/board/StatusManagerDialog.tsx
 msgid "Color"
 msgstr "색상"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Color columns"
 msgstr "색상 열"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Column name"
 msgstr "열 이름"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "comma, separated"
 msgstr "쉼표로 구분"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Comment"
 msgstr ""
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Comments"
 msgstr ""
 
-#: ../../../shared/components/ConfirmDialog.tsx
+#: shared/components/ConfirmDialog.tsx
 msgid "Confirm"
 msgstr "확인"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSwimlanes.tsx
+#: shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Copied"
+msgstr ""
+
+#: shared/components/board/BoardSwimlanes.tsx
+#: shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Copy"
+msgstr ""
+
+#: shared/components/board/BoardSwimlanes.tsx
+#: shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Copy lane ID"
+msgstr ""
+
+#: shared/components/board/BoardSurface.tsx
 msgid "Copy link"
 msgstr "링크 복사"
 
-#: ../../../shared/components/viewers/SwaggerView.tsx
+#: shared/components/viewers/SwaggerView.tsx
 msgid "Could not render this API specification."
 msgstr "이 API 명세를 렌더링할 수 없습니다."
 
-#: ../../../shared/components/viewers/DrawioView.tsx
+#: shared/components/viewers/DrawioView.tsx
 msgid "Could not render this Draw.io diagram."
 msgstr "이 Draw.io 다이어그램을 렌더링할 수 없습니다."
 
-#: ../../../shared/components/viewers/PdfView.tsx
+#: shared/components/viewers/PdfView.tsx
 msgid "Could not render this PDF."
 msgstr "이 PDF를 렌더링할 수 없습니다."
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/SwimlaneConversionDialog.tsx
+msgid "Create editable swimlanes"
+msgstr ""
+
+#: shared/components/board/BoardSwimlanes.tsx
+msgid "Create your first swimlane"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
 msgid "Created"
 msgstr ""
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSwimlanes.tsx
+msgid "Custom"
+msgstr ""
+
+#: shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSwimlanes.tsx
+#: shared/components/board/StatusManagerDialog.tsx
+#: shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Delete"
 msgstr "삭제"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#. placeholder {0}: lane.name
+#: shared/components/board/SwimlaneDeleteDialog.tsx
+msgid "Delete \"{0}\"?"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
 msgid "Delete card"
 msgstr "카드 삭제"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Delete comment"
 msgstr ""
 
-#: ../../../shared/components/viewers/MermaidView.tsx
+#: shared/components/board/SwimlaneDeleteDialog.tsx
+msgid "Delete only the swimlane. Card references remain recoverable."
+msgstr ""
+
+#: shared/components/board/SwimlaneDeleteDialog.tsx
+msgid "Delete swimlane"
+msgstr ""
+
+#: shared/components/board/BoardSwimlanes.tsx
+#: shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Details"
+msgstr ""
+
+#: shared/components/viewers/MermaidView.tsx
 msgid "Diagram error"
 msgstr "다이어그램 오류"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/SwimlaneDeleteDialog.tsx
+msgid "Do not close this dialog."
+msgstr ""
+
+#: shared/components/board/StatusManagerDialog.tsx
+#: shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Done"
+msgstr ""
+
+#: shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSwimlanes.tsx
+#: shared/components/board/StatusManagerDialog.tsx
 msgid "Done column"
 msgstr "완료 열"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Drag to reorder"
+msgstr ""
+
+#: shared/components/board/BoardSurface.tsx
 msgid "Drag to resize"
 msgstr "드래그하여 크기 조정"
 
-#: ../../../shared/components/viewers/DrawioView.tsx
+#: shared/components/viewers/DrawioView.tsx
 msgid "Draw.io diagram"
 msgstr "Draw.io 다이어그램"
 
-#: ../../../shared/components/board/BoardPeek.tsx
-#: ../../../shared/components/board/BoardTable.tsx
+#: shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardTable.tsx
 msgid "Due"
 msgstr "마감"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Duplicate"
 msgstr "복제"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#. placeholder {0}: issue.key
+#: shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Duplicate lane ID \"{0}\". The first definition is used."
+msgstr ""
+
+#. placeholder {0}: issue.name
+#: shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Duplicate swimlane name \"{0}\". Names should be unique."
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
 msgid "Edit comment"
 msgstr ""
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "edited"
 msgstr ""
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Exit fullscreen"
 msgstr "전체 화면 종료"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Expand column"
 msgstr "열 펼치기"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Filter"
 msgstr "필터"
 
-#: ../../../shared/components/viewers/MermaidView.tsx
+#: shared/components/viewers/MermaidView.tsx
 msgid "flowchart TD\n"
 "  A[Start] --> B[End]"
 msgstr "flowchart TD\n"
 "  A[시작] --> B[끝]"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Fullscreen"
 msgstr "전체 화면"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Group: Assignee"
 msgstr "그룹: 담당자"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Group: Priority"
 msgstr "그룹: 우선순위"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Group: Status"
 msgstr "그룹: 상태"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Horizontal groups for this board. Names can change; card mapping stays "
+"attached."
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
 msgid "Icon"
 msgstr "아이콘"
 
-#: ../../../shared/components/EditorToolbar.tsx
+#: shared/components/EditorToolbar.tsx
 msgid "Inline Code"
 msgstr "인라인 코드"
 
-#: ../../../shared/components/EditorToolbar.tsx
+#: shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Issues"
+msgstr ""
+
+#: shared/components/EditorToolbar.tsx
 msgid "Italic"
 msgstr "기울임꼴"
 
-#: ../../../shared/components/EditorToolbar.tsx
+#: shared/components/EditorToolbar.tsx
 msgid "Italic (Ctrl+I)"
 msgstr "기울임꼴 (Ctrl+I)"
 
-#: ../../../shared/components/EditorToolbar.tsx
+#: shared/components/board/SwimlaneConversionDialog.tsx
+msgid "JType will create independent swimlanes from the current assignee rows. "
+"Card assignee values will stay unchanged."
+msgstr ""
+
+#: shared/components/board/SwimlaneConversionDialog.tsx
+msgid "JType will create independent swimlanes from the current priority rows. "
+"Card priority values will stay unchanged."
+msgstr ""
+
+#: shared/components/board/SwimlaneConversionDialog.tsx
+msgid "JType will reuse the existing lane IDs and continue unfinished card "
+"updates."
+msgstr ""
+
+#: shared/components/board/SwimlaneDeleteDialog.tsx
+msgid "Keep cards in Unassigned"
+msgstr ""
+
+#: shared/components/board/BoardSwimlanes.tsx
+#: shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Lane details"
+msgstr ""
+
+#: shared/components/board/BoardSwimlanes.tsx
+#: shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Lane ID"
+msgstr ""
+
+#: shared/components/EditorToolbar.tsx
 msgid "Link"
 msgstr "링크"
 
-#: ../../../shared/components/EditorToolbar.tsx
+#: shared/components/EditorToolbar.tsx
 msgid "Link (Ctrl+K)"
 msgstr "링크 (Ctrl+K)"
 
-#: ../../../shared/components/ConflictResolver.tsx
+#: shared/components/ConflictResolver.tsx
 msgid "Local (yours)"
 msgstr "로컈 (내 것)"
 
-#: ../../../shared/components/viewers/MermaidView.tsx
+#: shared/components/board/SwimlaneConversionDialog.tsx
+msgid "Make assignee swimlanes editable?"
+msgstr ""
+
+#: shared/components/board/SwimlaneConversionDialog.tsx
+msgid "Make priority swimlanes editable?"
+msgstr ""
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Make swimlanes editable"
+msgstr ""
+
+#: shared/components/board/BoardSurface.tsx
+#: shared/components/board/StatusManagerDialog.tsx
+msgid "Manage statuses"
+msgstr ""
+
+#: shared/components/board/BoardSurface.tsx
+#: shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Manage swimlanes"
+msgstr ""
+
+#: shared/components/viewers/MermaidView.tsx
 msgid "Mermaid diagram"
 msgstr "Mermaid 다이어그램"
 
-#: ../../../shared/components/viewers/MermaidView.tsx
+#: shared/components/viewers/MermaidView.tsx
 msgid "Mermaid source"
 msgstr "Mermaid 소스"
 
-#: ../../../shared/components/board/BoardCalendar.tsx
+#: shared/components/board/BoardCalendar.tsx
 msgid "Month"
 msgstr ""
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/SwimlaneDeleteDialog.tsx
+msgid "Move cards and delete"
+msgstr ""
+
+#: shared/components/board/SwimlaneDeleteDialog.tsx
+msgid "Move cards before deleting"
+msgstr ""
+
+#: shared/components/board/BoardSwimlanes.tsx
+#: shared/components/board/StatusManagerDialog.tsx
+#: shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Move down"
+msgstr ""
+
+#: shared/components/board/BoardSwimlanes.tsx
+msgid "Move left"
+msgstr ""
+
+#: shared/components/board/BoardSwimlanes.tsx
+msgid "Move right"
+msgstr ""
+
+#: shared/components/board/BoardSwimlanes.tsx
+#: shared/components/board/StatusManagerDialog.tsx
+#: shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Move up"
+msgstr ""
+
+#: shared/components/board/SwimlaneDeleteDialog.tsx
+msgid "Moving cards…"
+msgstr ""
+
+#: shared/components/board/BoardSwimlanes.tsx
+#: shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Name"
+msgstr ""
+
+#: shared/components/board/BoardSurface.tsx
 msgid "New card"
 msgstr "새 카드"
 
-#: ../../../shared/components/board/BoardCalendar.tsx
+#: shared/components/board/BoardCalendar.tsx
 msgid "Next month"
 msgstr ""
 
-#: ../../../shared/components/board/BoardCalendar.tsx
-#: ../../../shared/components/board/BoardSwimlanes.tsx
-#: ../../../shared/components/board/BoardTable.tsx
+#: shared/components/board/SwimlaneConversionDialog.tsx
+msgid "No assigned values to convert."
+msgstr ""
+
+#: shared/components/board/BoardCalendar.tsx
+#: shared/components/board/BoardTable.tsx
 msgid "No cards"
 msgstr "카드 없음"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSwimlanes.tsx
+#: shared/components/board/StatusManagerDialog.tsx
+#: shared/components/board/SwimlaneManagerDialog.tsx
 msgid "No color"
 msgstr "색상 없음"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "No comments yet"
 msgstr ""
 
-#: ../../../shared/components/board/controls.tsx
+#: shared/components/board/controls.tsx
 msgid "No icon"
 msgstr "아이콘 없음"
 
-#: ../../../shared/components/board/controls.tsx
+#: shared/components/board/controls.tsx
 msgid "No labels"
 msgstr "라벨 없음"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Notes"
 msgstr "노트"
 
-#: ../../../shared/components/ConfirmDialog.tsx
-#: ../../../shared/components/PromptDialog.tsx
+#: shared/components/ConfirmDialog.tsx
+#: shared/components/PromptDialog.tsx
 msgid "OK"
 msgstr "확인"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Open in editor"
 msgstr "에디터에서 열기"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Open in full editor"
 msgstr "전체 에디터에서 열기"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Open sub-card"
 msgstr ""
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Parent"
 msgstr ""
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Paste a URL or path"
 msgstr ""
 
-#: ../../../shared/components/viewers/PdfView.tsx
+#: shared/components/viewers/PdfView.tsx
 msgid "PDF document"
 msgstr "PDF 문서"
 
-#: ../../../shared/components/PromptDialog.tsx
+#: shared/components/PromptDialog.tsx
 msgid "Please enter a value."
 msgstr "값을 입력해 주세요."
 
-#: ../../../shared/components/board/BoardPeek.tsx
-#: ../../../shared/components/ViewModeToggle.tsx
+#: shared/components/board/BoardPeek.tsx
+#: shared/components/ViewModeToggle.tsx
 msgid "Preview"
 msgstr "미리보기"
 
-#: ../../../shared/components/board/BoardCalendar.tsx
+#: shared/components/board/BoardCalendar.tsx
 msgid "Previous month"
 msgstr ""
 
-#: ../../../shared/components/board/BoardPeek.tsx
-#: ../../../shared/components/board/BoardSurface.tsx
-#: ../../../shared/components/board/BoardTable.tsx
+#: shared/components/board/BoardSurface.tsx
+msgid "Previous swimlane missing"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSwimlanes.tsx
+#: shared/components/board/BoardTable.tsx
 msgid "Priority"
 msgstr "우선순위"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Priority…"
 msgstr ""
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "React"
 msgstr ""
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/SwimlaneDeleteDialog.tsx
+msgid "Recommended"
+msgstr ""
+
+#: shared/components/board/BoardSurface.tsx
 msgid "Refresh"
 msgstr "새로고침"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Relates"
 msgstr ""
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Remove"
 msgstr ""
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Remove your reaction"
 msgstr ""
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSwimlanes.tsx
+#: shared/components/board/StatusManagerDialog.tsx
+#: shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Rename"
 msgstr "이름 변경"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#. placeholder {0}: lane.name
+#: shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Reorder {0}"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
 msgid "Reply"
 msgstr ""
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Reply…"
 msgstr ""
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Resolve thread"
 msgstr ""
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Resolved"
 msgstr ""
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Restored"
 msgstr ""
 
-#: ../../../shared/components/ConflictResolver.tsx
+#: shared/components/ConflictResolver.tsx
 msgid "Result (editable)"
 msgstr "결과 (편집 가능)"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/SwimlaneConversionDialog.tsx
+msgid "Resume conversion"
+msgstr ""
+
+#: shared/components/board/SwimlaneConversionDialog.tsx
+msgid "Resume swimlane conversion?"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
 msgid "Save"
 msgstr ""
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Save as template"
 msgstr "템플릿으로 저장"
 
-#: ../../../shared/components/ConflictResolver.tsx
+#: shared/components/ConflictResolver.tsx
 msgid "Save merged result"
 msgstr "병합 결과 저장"
 
-#: ../../../shared/components/ConflictResolver.tsx
+#: shared/components/board/SwimlaneManagerDialog.tsx
+#: shared/components/ConflictResolver.tsx
 msgid "Saving…"
 msgstr "저장 중…"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Search cards"
 msgstr "카드 검색"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSwimlanes.tsx
+#: shared/components/board/StatusManagerDialog.tsx
 msgid "Set as done column"
 msgstr "완료 열로 설정"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Set priority"
 msgstr ""
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Set status"
 msgstr ""
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSwimlanes.tsx
+#: shared/components/board/StatusManagerDialog.tsx
 msgid "Set WIP limit"
 msgstr "WIP 한도 설정"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Show affected cards"
+msgstr ""
+
+#: shared/components/board/BoardSwimlanes.tsx
+msgid "Show cards with missing swimlanes"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
 msgid "Show resolved thread"
 msgstr ""
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Someone"
 msgstr ""
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Sort: Due"
 msgstr "정렬: 마감"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Sort: Manual"
 msgstr "정렬: 수동"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Sort: Priority"
 msgstr "정렬: 우선순위"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Sort: Title"
 msgstr "정렬: 제목"
 
-#: ../../../shared/components/ViewModeToggle.tsx
+#: shared/components/ViewModeToggle.tsx
 msgid "Split"
 msgstr "스플릿"
 
-#: ../../../shared/components/board/BoardPeek.tsx
-#: ../../../shared/components/board/BoardTable.tsx
+#: shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardSwimlanes.tsx
+#: shared/components/board/BoardTable.tsx
 msgid "Status"
 msgstr "상태"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSwimlanes.tsx
+#: shared/components/board/StatusManagerDialog.tsx
+msgid "Status actions"
+msgstr ""
+
+#: shared/components/board/StatusManagerDialog.tsx
+msgid "Status columns stay available when they are used as columns or "
+"swimlanes."
+msgstr ""
+
+#: shared/components/board/BoardSwimlanes.tsx
+#: shared/components/board/StatusManagerDialog.tsx
+msgid "Status name"
+msgstr ""
+
+#: shared/components/board/BoardSurface.tsx
 msgid "Status…"
 msgstr ""
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/StatusManagerDialog.tsx
+msgid "Statuses"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
 msgid "Sub-cards"
 msgstr ""
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardSwimlanes.tsx
+msgid "Swimlane"
+msgstr ""
+
+#: shared/components/board/BoardSwimlanes.tsx
+#: shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Swimlane actions"
+msgstr ""
+
+#: shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Swimlane color"
+msgstr ""
+
+#: shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Swimlane name"
+msgstr ""
+
+#: shared/components/board/BoardSurface.tsx
 msgid "Swimlane: Assignee"
 msgstr ""
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
+msgid "Swimlane: Custom"
+msgstr ""
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Swimlane: Missing"
+msgstr ""
+
+#: shared/components/board/BoardSurface.tsx
 msgid "Swimlane: None"
 msgstr ""
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Swimlane: Priority"
 msgstr ""
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Swimlane: Status"
 msgstr ""
 
-#: ../../../shared/components/board/BoardSurface.tsx
-#: ../../../shared/components/EditorToolbar.tsx
+#: shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Swimlanes"
+msgstr ""
+
+#: shared/components/board/SwimlaneConversionDialog.tsx
+msgid "Swimlanes to create"
+msgstr ""
+
+#: shared/components/board/BoardSurface.tsx
+#: shared/components/EditorToolbar.tsx
 msgid "Table"
 msgstr "테이블"
 
-#: ../../../shared/components/board/BoardPeek.tsx
-#: ../../../shared/components/board/BoardSurface.tsx
-#: ../../../shared/components/board/BoardTable.tsx
+#: shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardTable.tsx
 msgid "Tags"
 msgstr "태그"
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "Templates"
 msgstr "템플릿"
 
-#: ../../../shared/components/viewers/DiagramView.tsx
+#: shared/components/board/SwimlaneDeleteDialog.tsx
+msgid "This empty swimlane will be removed from the board."
+msgstr ""
+
+#: shared/components/viewers/DiagramView.tsx
 msgid "This file type can not be previewed yet."
 msgstr "이 파일 형식은 아직 미리볼 수 없습니다."
 
-#: ../../../shared/components/board/BoardTable.tsx
+#: shared/components/board/BoardTable.tsx
 msgid "Title"
 msgstr "제목"
 
-#: ../../../shared/components/board/BoardCalendar.tsx
+#: shared/components/board/BoardCalendar.tsx
 msgid "Today"
 msgstr ""
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
+#: shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Unassigned"
 msgstr "미할당"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Unresolve thread"
 msgstr ""
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "unsafe"
 msgstr ""
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Unsafe link blocked: {url}"
 msgstr ""
 
-#: ../../../shared/components/board/BoardCalendar.tsx
+#: shared/components/board/BoardCalendar.tsx
 msgid "Unscheduled"
 msgstr ""
 
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSwimlanes.tsx
+#: shared/components/board/StatusManagerDialog.tsx
 msgid "Unset done column"
 msgstr "완료 열 해제"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Untitled card"
 msgstr "제목 없는 카드"
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Updated"
 msgstr ""
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/SwimlaneConversionDialog.tsx
+msgid "Updating cards…"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
 msgid "Upload"
 msgstr ""
 
-#: ../../../shared/components/board/BoardPeek.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Uploading…"
 msgstr ""
 
-#: ../../../shared/components/ConflictResolver.tsx
+#: shared/components/ConflictResolver.tsx
 msgid "Use this"
 msgstr "이것 사용"
 
+#: shared/components/board/BoardSwimlanes.tsx
+#: shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Used by"
+msgstr ""
+
+#. placeholder {0}: column.limit
+#: shared/components/board/StatusManagerDialog.tsx
+msgid "WIP {0}"
+msgstr ""
+
 #. placeholder {0}: col.limit
-#: ../../../shared/components/board/BoardSurface.tsx
+#: shared/components/board/BoardSurface.tsx
 msgid "WIP limit {0}"
 msgstr "WIP 한도 {0}"
 
-#: ../../../shared/components/board/BoardPeek.tsx
-#: ../../../shared/components/ViewModeToggle.tsx
+#: shared/components/board/SwimlaneConversionDialog.tsx
+#: shared/components/board/SwimlaneDeleteDialog.tsx
+msgid "Working…"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
+#: shared/components/ViewModeToggle.tsx
 msgid "Write"
 msgstr "작성"
 
-#: ../../../shared/components/viewers/MermaidView.tsx
+#: shared/components/viewers/MermaidView.tsx
 msgid "Write Mermaid syntax to see the diagram."
 msgstr "Mermaid 구문을 작성하면 다이어그램이 표시됩니다."

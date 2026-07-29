@@ -15,6 +15,14 @@ export type BoardActions = {
   createCard: (columnKey: string, title: string) => Promise<string | void> | string | void;
   /** Apply a partial edit to a card (status/priority/assignee/due/tags/icon/title/notes). */
   updateCard: (cardId: string, patch: Partial<BoardViewCard>) => Promise<void> | void;
+  /**
+   * Apply several card patches and refresh once. Used by swimlane conversion
+   * and move-before-delete so adapters can preserve optimistic-lock metadata.
+   */
+  updateCards?: (
+    updates: Array<{ cardId: string; patch: Partial<BoardViewCard> }>,
+    onProgress?: (completed: number, total: number) => void,
+  ) => Promise<void> | void;
   deleteCard: (card: BoardViewCard) => Promise<void> | void;
   /** Bulk delete with a single confirmation (multi-select toolbar). Omit to
    *  hide the bulk Delete action. */
@@ -39,7 +47,14 @@ export type BoardActions = {
   refresh?: () => Promise<void> | void;
 };
 
-export type BoardOption = { value: string; label: string };
+export type BoardOption = {
+  value: string;
+  label: string;
+  /** Optional categorical dot shown before the label. */
+  color?: string | null;
+  /** Marks a recoverable but invalid/missing current value. */
+  warning?: boolean;
+};
 
 /**
  * Props of the card side peek. Lives here (not in BoardPeek.tsx) so the surface
@@ -50,6 +65,10 @@ export type BoardOption = { value: string; label: string };
 export type BoardPeekProps = {
   card: BoardViewCard;
   statusOptions: BoardOption[];
+  /** Custom swimlane definitions; omit to hide the field. */
+  swimlaneOptions?: BoardOption[];
+  /** Keep the mapping visible but immutable during a multi-document migration. */
+  swimlaneDisabled?: boolean;
   assigneeOptions?: BoardOption[];
   tagOptions?: BoardTag[];
   /** Board-level custom field definitions to render as editable inputs. */

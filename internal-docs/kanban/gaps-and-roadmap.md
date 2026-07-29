@@ -39,7 +39,7 @@
 | **B2** | **活动 / 变更历史** | 🟢 绿灯·待设计 | M | 可考虑复用文档同步的 `updated_clock`/`edited_by` 派生,而非新表 |
 | **B3** | **附件** | 🟢 绿灯·待设计 | M | 复用桌面 blob 通道 + web UUID 资产存储;以 markdown 链接挂在卡片正文 |
 | **C1** | **删除 / 合并列** | 🟢 绿灯·待设计 | S | 文件看板=改 `.board` columns + 迁移卡片 `status`;DB 看板=补 DELETE column 端点([`lib.rs:321-380`](services/jtype-web/src/lib.rs#L321) 现无) |
-| **C4** | **泳道 / 二维分组** | 🟢 绿灯·待设计 | M | 纯前端,扩 `BoardSurface` 的 `groupBy`;对两套看板自动生效 |
+| **C4** | **泳道 / 二维分组** | ✅ 可编辑泳道已实现 | M | 可持久化泳道、稳定 key、增删改、卡片映射与可恢复转换见 [`swimlane-management-design.md`](./swimlane-management-design.md) |
 | **C5** | **卡片自定义字段** | 🟢 绿灯·待设计 | M | 文件看板=任意 frontmatter key + 在 `.board` 声明展示字段;`properties_extra` 仅 DB 看板 |
 | D3 | agent 工作证据载体 | ⏸️ 搁置到 jcode | — | 见 agent-orchestration-design |
 | D4 | 状态机语义 MCP 动作 | ⏸️ 搁置到 jcode | — | 同上 |
