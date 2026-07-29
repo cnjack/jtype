@@ -136,9 +136,11 @@ export function BoardSurface({
   const [conversionProgress, setConversionProgress] = useState<{ completed: number; total: number } | null>(null);
   const [conversionError, setConversionError] = useState("");
   const [conversionPass, setConversionPass] = useState(0);
+  const [customLaneMutationPending, setCustomLaneMutationPending] = useState(false);
   const cardDrag = useRef<{ id: string; startX: number; startY: number; moved: boolean } | null>(null);
   const colDrag = useRef<{ key: string; startX: number; startY: number; moved: boolean } | null>(null);
   const conversionStepBusy = useRef(false);
+  const conversionAttemptRef = useRef<{ signature: string; writes: number } | null>(null);
   const customLaneMutationBusy = useRef(false);
 
   const groupKey: BoardGroupKey = config.groupBy ?? "status";
@@ -232,6 +234,7 @@ export function BoardSurface({
   const startConversion = async () => {
     if (conversionRequested) return;
     setConversionError("");
+    conversionAttemptRef.current = null;
     const existingMarker =
       config.swimlaneMigration?.source === conversionSource
         ? config.swimlaneMigration
@@ -322,6 +325,7 @@ export function BoardSurface({
           }
         }
         if (markerChanged) {
+          conversionAttemptRef.current = null;
           await actions.setConfig({
             swimlanes: definitions,
             swimlaneMigration: { ...marker, mapping },
@@ -338,6 +342,18 @@ export function BoardSurface({
             : [];
         });
         if (updates.length > 0) {
+          const signature = updates
+            .map((update) => `${update.cardId}:${String(update.patch.swimlaneKey ?? "")}`)
+            .sort()
+            .join("\n");
+          const previousAttempt = conversionAttemptRef.current;
+          if (previousAttempt?.signature === signature && previousAttempt.writes >= 2) {
+            throw new Error(t`Conversion stopped because card updates did not persist. Refresh and try again.`);
+          }
+          conversionAttemptRef.current = {
+            signature,
+            writes: previousAttempt?.signature === signature ? previousAttempt.writes + 1 : 1,
+          };
           setConversionProgress({ completed: 0, total: updates.length });
           await updateManyCards(updates, (completed, total) =>
             setConversionProgress({ completed, total }),
@@ -350,11 +366,13 @@ export function BoardSurface({
           swimlaneBy: "custom",
           swimlaneMigration: undefined,
         });
+        conversionAttemptRef.current = null;
         setConversionRequested(false);
         setConversionProgress(null);
         setConversionOpen(false);
       } catch (error) {
         setConversionError(error instanceof Error ? error.message : String(error));
+        setConversionProgress(null);
         setConversionRequested(false);
       } finally {
         conversionStepBusy.current = false;
@@ -399,17 +417,20 @@ export function BoardSurface({
     if (!lane) return;
     definitions.splice(to, 0, lane);
     customLaneMutationBusy.current = true;
+    setCustomLaneMutationPending(true);
     void Promise.resolve(actions.setConfig({ swimlanes: definitions }))
       .catch(() => {
         // Platform adapter surfaces the save failure.
       })
       .finally(() => {
         customLaneMutationBusy.current = false;
+        setCustomLaneMutationPending(false);
       });
   };
   const setCustomLaneColor = (laneKey: string, color: string | null) => {
     if (customLaneMutationBusy.current) return;
     customLaneMutationBusy.current = true;
+    setCustomLaneMutationPending(true);
     void Promise.resolve(
       actions.setConfig({
         swimlanes: (config.swimlanes ?? []).map((lane) =>
@@ -422,6 +443,7 @@ export function BoardSurface({
       })
       .finally(() => {
         customLaneMutationBusy.current = false;
+        setCustomLaneMutationPending(false);
       });
   };
   const showMissingSwimlanes = () => {
@@ -910,6 +932,7 @@ export function BoardSurface({
             selectedId={selected?.id}
             actions={actions}
             readOnly={readOnly || conversionRequested}
+            customLaneMutationPending={customLaneMutationPending}
             portalClassName={portalClassName}
             onSelect={openCard}
             onOpenManager={() => setSwimlaneManagerOpen(true)}

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { I18nProvider } from "@lingui/react";
 import { BoardPeek, BoardSurface, type BoardActions } from "@shared/components/board";
@@ -13,9 +13,15 @@ import "../../src/styles.css";
 
 declare global {
   interface Window {
+    __BOARD_TEST_DROP_UPDATES__?: boolean;
     __BOARD_TEST_STATE__?: {
       config: BoardViewConfig;
       cards: BoardViewCard[];
+      actions: Array<{
+        type: "setConfig" | "updateCards";
+        swimlaneKeys?: string[];
+        cardIds?: string[];
+      }>;
     };
   }
 }
@@ -79,13 +85,24 @@ const initialCards: BoardViewCard[] = [
 function Harness() {
   const [config, setConfig] = useState<BoardViewConfig>(initialConfig);
   const [cards, setCards] = useState<BoardViewCard[]>(initialCards);
+  const actionLog = useRef<
+    Array<{
+      type: "setConfig" | "updateCards";
+      swimlaneKeys?: string[];
+      cardIds?: string[];
+    }>
+  >([]);
 
-  window.__BOARD_TEST_STATE__ = { config, cards };
+  window.__BOARD_TEST_STATE__ = { config, cards, actions: actionLog.current };
 
   const actions = useMemo<BoardActions>(
     () => ({
       setConfig: async (patch) => {
         await Promise.resolve();
+        actionLog.current.push({
+          type: "setConfig",
+          swimlaneKeys: patch.swimlanes?.map((lane) => lane.key),
+        });
         setConfig((current) => ({ ...current, ...patch }));
       },
       createCard: async (columnKey, title) => {
@@ -111,6 +128,14 @@ function Harness() {
         );
       },
       updateCards: async (updates, onProgress) => {
+        actionLog.current.push({
+          type: "updateCards",
+          cardIds: updates.map((update) => update.cardId),
+        });
+        if (window.__BOARD_TEST_DROP_UPDATES__) {
+          onProgress?.(updates.length, updates.length);
+          return;
+        }
         let completed = 0;
         for (const update of updates) {
           await Promise.resolve();

@@ -11,6 +11,7 @@ import {
   type BoardViewCard,
   type BoardViewConfig,
 } from "../../shared/lib/board";
+import { parseFrontmatter } from "../../shared/lib/frontmatter";
 
 // Pure-logic acceptance for C4 swimlanes: the 2-D board view buckets cards into
 // laneValue → columnValue → cards, which partitionSwimlanes computes.
@@ -96,6 +97,26 @@ test("card patch serializes and clears the stable swimlane frontmatter key", () 
   const assigned = applyBoardCardPatch(original, { swimlaneKey: "lane_platform_12345678" });
   expect(assigned).toContain("swimlane: lane_platform_12345678");
   expect(applyBoardCardPatch(assigned, { swimlaneKey: null })).not.toContain("swimlane:");
+});
+
+test("custom fields cannot overwrite canonical card frontmatter", () => {
+  const original = "---\ntitle: Card\nstatus: todo\nswimlane: lane_old\n---\n\nBody";
+  const patched = applyBoardCardPatch(original, {
+    title: "Updated",
+    columnKey: "doing",
+    swimlaneKey: "lane_new",
+    custom: {
+      title: "Overridden",
+      status: "done",
+      swimlane: "lane_wrong",
+      effort: "5",
+    },
+  });
+  const { data } = parseFrontmatter(patched);
+  expect(data.title).toBe("Updated");
+  expect(data.status).toBe("doing");
+  expect(data.swimlane).toBe("lane_new");
+  expect(data.effort).toBe("5");
 });
 
 test("swimlane names are trimmed, bounded, and case-insensitively unique", () => {

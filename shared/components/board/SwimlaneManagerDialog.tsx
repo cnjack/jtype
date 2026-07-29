@@ -6,7 +6,7 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import { t } from "@lingui/core/macro";
-import { Trans } from "@lingui/react/macro";
+import { Plural, Trans } from "@lingui/react/macro";
 import {
   Dialog,
   DialogBackdrop,
@@ -24,10 +24,8 @@ import {
   ArrowDownIcon,
   ArrowUpIcon,
   Bars3Icon,
-  ClipboardDocumentIcon,
   EllipsisHorizontalIcon,
   ExclamationTriangleIcon,
-  InformationCircleIcon,
   PencilIcon,
   PlusIcon,
   TrashIcon,
@@ -41,6 +39,7 @@ import {
   type BoardSwimlane,
   type BoardViewCard,
 } from "../../lib/board";
+import { LaneDetailsPopover } from "./LaneDetailsPopover";
 import type { BoardOption } from "./types";
 import {
   SwimlaneDeleteDialog,
@@ -83,7 +82,6 @@ export function SwimlaneManagerDialog({
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [deleteError, setDeleteError] = useState("");
   const [deleteProgress, setDeleteProgress] = useState<{ completed: number; total: number } | null>(null);
-  const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [announcement, setAnnouncement] = useState("");
   const dragRef = useRef<{ key: string; x: number; y: number; moved: boolean } | null>(null);
   const [draggingKey, setDraggingKey] = useState<string | null>(null);
@@ -336,7 +334,7 @@ export function SwimlaneManagerDialog({
                   const error = rowError?.key === lane.key ? rowError.message : null;
                   return (
                     <li
-                      key={`${lane.key}-${index}`}
+                      key={lane.key}
                       data-swimlane-row={lane.key}
                       className={`rounded-xl transition ${draggingKey === lane.key ? "opacity-50" : ""}`}
                     >
@@ -434,22 +432,21 @@ export function SwimlaneManagerDialog({
                         )}
 
                         <span className="shrink-0 tabular-nums text-[11px] text-brand-gray">
-                          {counts.get(lane.key) ?? 0} <Trans>cards</Trans>
+                          <Plural value={counts.get(lane.key) ?? 0} one="# card" other="# cards" />
                         </span>
 
-                        <Popover className="relative shrink-0">
-                          <Menu>
-                            <MenuButton
-                              title={t`Swimlane actions`}
-                              aria-label={t`Actions for ${lane.name}`}
-                              className="flex h-9 w-9 items-center justify-center rounded-lg text-stone-400 opacity-100 hover:bg-white hover:text-stone-600 md:opacity-0 md:group-hover:opacity-100 md:data-[open]:opacity-100"
-                            >
-                              <EllipsisHorizontalIcon className="h-4 w-4" />
-                            </MenuButton>
-                            <MenuItems
-                              anchor="bottom end"
-                              className={`z-50 w-48 rounded-xl border border-line bg-white py-1 text-xs shadow-lg shadow-emerald-950/10 [--anchor-gap:4px] focus:outline-none${portal}`}
-                            >
+                        <Menu as="div" className="relative shrink-0">
+                          <MenuButton
+                            title={t`Swimlane actions`}
+                            aria-label={t`Actions for ${lane.name}`}
+                            className="flex h-9 w-9 items-center justify-center rounded-lg text-stone-400 opacity-100 hover:bg-white hover:text-stone-600 md:opacity-0 md:group-hover:opacity-100 md:data-[open]:opacity-100"
+                          >
+                            <EllipsisHorizontalIcon className="h-4 w-4" />
+                          </MenuButton>
+                          <MenuItems
+                            anchor="bottom end"
+                            className={`z-50 w-48 rounded-xl border border-line bg-white py-1 text-xs shadow-lg shadow-emerald-950/10 [--anchor-gap:4px] focus:outline-none${portal}`}
+                          >
                               <MenuItem>
                                 <button
                                   type="button"
@@ -484,12 +481,6 @@ export function SwimlaneManagerDialog({
                                   <Trans>Move down</Trans>
                                 </button>
                               </MenuItem>
-                              <MenuItem>
-                                <PopoverButton className="flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 data-[focus]:bg-stone-100">
-                                  <InformationCircleIcon className="h-3.5 w-3.5" />
-                                  <Trans>Details</Trans>
-                                </PopoverButton>
-                              </MenuItem>
                               <div className="my-1 border-t border-line" />
                               <MenuItem>
                                 <button
@@ -505,55 +496,14 @@ export function SwimlaneManagerDialog({
                                   <Trans>Delete</Trans>
                                 </button>
                               </MenuItem>
-                            </MenuItems>
-                          </Menu>
-                          <PopoverPanel
-                            anchor="bottom end"
-                            className={`z-50 w-80 rounded-xl border border-line bg-white p-4 shadow-lg shadow-emerald-950/10 [--anchor-gap:4px] focus:outline-none${portal}`}
-                          >
-                            <div className="flex items-center gap-2">
-                              <InformationCircleIcon className="h-4 w-4 text-brand-dark" />
-                              <p className="text-xs font-semibold text-stone-800">
-                                <Trans>Lane details</Trans>
-                              </p>
-                            </div>
-                            <dl className="mt-3 grid grid-cols-[64px_minmax(0,1fr)] items-center gap-x-2 gap-y-2 text-[11px]">
-                              <dt className="text-brand-gray">
-                                <Trans>Name</Trans>
-                              </dt>
-                              <dd className="truncate font-medium text-stone-700">{lane.name}</dd>
-                              <dt className="text-brand-gray">
-                                <Trans>Lane ID</Trans>
-                              </dt>
-                              <dd className="flex min-w-0 items-center gap-1.5">
-                                <code className="min-w-0 flex-1 truncate rounded bg-stone-100 px-1.5 py-1 text-[10px] text-stone-600">
-                                  {lane.key}
-                                </code>
-                                <button
-                                  type="button"
-                                  title={t`Copy lane ID`}
-                                  aria-label={t`Copy lane ID`}
-                                  onClick={() => {
-                                    void navigator.clipboard?.writeText(lane.key).then(() => {
-                                      setCopiedKey(lane.key);
-                                      window.setTimeout(() => setCopiedKey(null), 1600);
-                                    });
-                                  }}
-                                  className="inline-flex h-7 items-center gap-1 rounded-lg border border-stone-200 px-2 text-[10px] font-medium text-brand-dark hover:border-brand/30"
-                                >
-                                  <ClipboardDocumentIcon className="h-3.5 w-3.5" />
-                                  {copiedKey === lane.key ? t`Copied` : t`Copy`}
-                                </button>
-                              </dd>
-                              <dt className="text-brand-gray">
-                                <Trans>Used by</Trans>
-                              </dt>
-                              <dd className="tabular-nums text-stone-700">
-                                {counts.get(lane.key) ?? 0} <Trans>cards</Trans>
-                              </dd>
-                            </dl>
-                          </PopoverPanel>
-                        </Popover>
+                          </MenuItems>
+                        </Menu>
+                        <LaneDetailsPopover
+                          lane={lane}
+                          cardCount={counts.get(lane.key) ?? 0}
+                          portalClassName={portalClassName}
+                          buttonClassName="flex h-9 w-9 items-center justify-center rounded-lg text-stone-400 opacity-100 hover:bg-white hover:text-stone-600 md:opacity-0 md:group-hover:opacity-100 md:data-[open]:opacity-100"
+                        />
                       </div>
                       {error && (
                         <div className="mx-2 mb-1 flex items-center gap-1.5 rounded-lg bg-amber-50 px-2 py-1.5 text-[11px] text-amber-800" role="alert">

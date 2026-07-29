@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
@@ -41,11 +41,20 @@ export function SwimlaneDeleteDialog({
 }) {
   const [mode, setMode] = useState<"keep" | "move">("keep");
   const [targetKey, setTargetKey] = useState("");
+  const previousLaneKey = useRef<string | null>(null);
+  const hasTargets = targets.length > 0;
 
   useEffect(() => {
-    setMode("keep");
-    setTargetKey(targets[0]?.value ?? "");
-  }, [lane?.key]);
+    const laneKey = lane?.key ?? null;
+    const laneChanged = previousLaneKey.current !== laneKey;
+    previousLaneKey.current = laneKey;
+    if (laneChanged) setMode("keep");
+    setTargetKey((current) =>
+      laneChanged || !targets.some((target) => target.value === current)
+        ? targets[0]?.value ?? ""
+        : current,
+    );
+  }, [lane?.key, targets]);
 
   const portal = portalClassName ? ` ${portalClassName}` : "";
   const close = () => {
@@ -107,19 +116,19 @@ export function SwimlaneDeleteDialog({
                         <span className="mt-1 block text-[11px] leading-4 text-brand-gray">
                           <Trans>Choose another swimlane, then update the cards first.</Trans>
                         </span>
-                        <span className="mt-2 block" onClick={(event) => event.stopPropagation()}>
-                          <ListboxSelect
-                            value={targetKey}
-                            options={targets}
-                            onChange={(value) => {
-                              setMode("move");
-                              setTargetKey(value);
-                            }}
-                          />
-                        </span>
                       </span>
                     </Radio>
                   </RadioGroup>
+                )}
+                {hasTargets && (
+                  <div className="mt-2 pl-7">
+                    <ListboxSelect
+                      value={targetKey}
+                      options={targets}
+                      disabled={mode !== "move"}
+                      onChange={setTargetKey}
+                    />
+                  </div>
                 )}
 
                 {progress && (

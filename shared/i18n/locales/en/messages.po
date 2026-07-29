@@ -18,6 +18,13 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
+#. placeholder {0}: counts.get(lane.key) ?? 0
+#. placeholder {0}: row.cardCount
+#: shared/components/board/SwimlaneConversionDialog.tsx
+#: shared/components/board/SwimlaneManagerDialog.tsx
+msgid "{0, plural, one {# card} other {# cards}}"
+msgstr "{0, plural, one {# card} other {# cards}}"
+
 #. placeholder {0}: lane.name
 #. placeholder {1}: to + 1
 #. placeholder {2}: lanes.length
@@ -36,6 +43,10 @@ msgstr "{0} of {1} sub-cards done"
 msgid "{0} selected"
 msgstr "{0} selected"
 
+#: shared/components/board/LaneDetailsPopover.tsx
+msgid "{cardCount, plural, one {# card} other {# cards}}"
+msgstr "{cardCount, plural, one {# card} other {# cards}}"
+
 #: shared/components/board/SwimlaneDeleteDialog.tsx
 msgid "{cardCount} card(s) currently use this swimlane."
 msgstr "{cardCount} card(s) currently use this swimlane."
@@ -47,6 +58,10 @@ msgstr "{danglingCount} card(s) refer to deleted swimlanes."
 #: shared/components/board/BoardSwimlanes.tsx
 msgid "{missingCount} card(s) refer to deleted swimlanes."
 msgstr "{missingCount} card(s) refer to deleted swimlanes."
+
+#: shared/components/board/BoardSwimlanes.tsx
+msgid "{total, plural, one {# card} other {# cards}}"
+msgstr "{total, plural, one {# card} other {# cards}}"
 
 #: shared/components/ConflictResolver.tsx
 msgid "← Back to list"
@@ -74,11 +89,10 @@ msgstr "Accept cloud"
 msgid "Accept local"
 msgstr "Accept local"
 
-#. placeholder {0}: col.name
 #. placeholder {0}: column.name
 #. placeholder {0}: lane.name
 #: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusManagerDialog.tsx
+#: shared/components/board/StatusActionsMenu.tsx
 #: shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Actions for {0}"
 msgstr "Actions for {0}"
@@ -207,9 +221,6 @@ msgid "Card title (Enter to add, Esc to cancel)"
 msgstr "Card title (Enter to add, Esc to cancel)"
 
 #: shared/components/board/BoardSurface.tsx
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/SwimlaneConversionDialog.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
 msgid "cards"
 msgstr "cards"
 
@@ -257,7 +268,7 @@ msgstr "Collapse resolved thread"
 
 #: shared/components/board/BoardSurface.tsx
 #: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusManagerDialog.tsx
+#: shared/components/board/StatusActionsMenu.tsx
 msgid "Color"
 msgstr "Color"
 
@@ -285,18 +296,25 @@ msgstr "Comments"
 msgid "Confirm"
 msgstr "Confirm"
 
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: shared/components/board/BoardSurface.tsx
+msgid "Conversion stopped because card updates did not persist. Refresh and try "
+"again."
+msgstr "Conversion stopped because card updates did not persist. Refresh and "
+"try again."
+
+#: shared/components/board/LaneDetailsPopover.tsx
 msgid "Copied"
 msgstr "Copied"
 
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: shared/components/board/LaneDetailsPopover.tsx
 msgid "Copy"
 msgstr "Copy"
 
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: shared/components/board/LaneDetailsPopover.tsx
+msgid "Copy failed."
+msgstr "Copy failed."
+
+#: shared/components/board/LaneDetailsPopover.tsx
 msgid "Copy lane ID"
 msgstr "Copy lane ID"
 
@@ -334,7 +352,7 @@ msgstr "Custom"
 
 #: shared/components/board/BoardSurface.tsx
 #: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusManagerDialog.tsx
+#: shared/components/board/StatusActionsMenu.tsx
 #: shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Delete"
 msgstr "Delete"
@@ -362,8 +380,8 @@ msgstr "Delete swimlane"
 
 #: shared/components/board/BoardSwimlanes.tsx
 #: shared/components/board/SwimlaneManagerDialog.tsx
-msgid "Details"
-msgstr "Details"
+#~ msgid "Details"
+#~ msgstr "Details"
 
 #: shared/components/viewers/MermaidView.tsx
 msgid "Diagram error"
@@ -505,13 +523,16 @@ msgstr "JType will reuse the existing lane IDs and continue unfinished card "
 msgid "Keep cards in Unassigned"
 msgstr "Keep cards in Unassigned"
 
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: shared/components/board/LaneDetailsPopover.tsx
 msgid "Lane details"
 msgstr "Lane details"
 
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#. placeholder {0}: lane.name
+#: shared/components/board/LaneDetailsPopover.tsx
+msgid "Lane details for {0}"
+msgstr "Lane details for {0}"
+
+#: shared/components/board/LaneDetailsPopover.tsx
 msgid "Lane ID"
 msgstr "Lane ID"
 
@@ -570,21 +591,21 @@ msgid "Move cards before deleting"
 msgstr "Move cards before deleting"
 
 #: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusManagerDialog.tsx
+#: shared/components/board/StatusActionsMenu.tsx
 #: shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Move down"
 msgstr "Move down"
 
-#: shared/components/board/BoardSwimlanes.tsx
+#: shared/components/board/StatusActionsMenu.tsx
 msgid "Move left"
 msgstr "Move left"
 
-#: shared/components/board/BoardSwimlanes.tsx
+#: shared/components/board/StatusActionsMenu.tsx
 msgid "Move right"
 msgstr "Move right"
 
 #: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusManagerDialog.tsx
+#: shared/components/board/StatusActionsMenu.tsx
 #: shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Move up"
 msgstr "Move up"
@@ -593,8 +614,7 @@ msgstr "Move up"
 msgid "Moving cards…"
 msgstr "Moving cards…"
 
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: shared/components/board/LaneDetailsPopover.tsx
 msgid "Name"
 msgstr "Name"
 
@@ -617,7 +637,7 @@ msgstr "No cards"
 
 #: shared/components/board/BoardSurface.tsx
 #: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusManagerDialog.tsx
+#: shared/components/board/StatusActionsMenu.tsx
 #: shared/components/board/SwimlaneManagerDialog.tsx
 msgid "No color"
 msgstr "No color"
@@ -721,7 +741,7 @@ msgstr "Remove your reaction"
 
 #: shared/components/board/BoardSurface.tsx
 #: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusManagerDialog.tsx
+#: shared/components/board/StatusActionsMenu.tsx
 #: shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Rename"
 msgstr "Rename"
@@ -785,8 +805,7 @@ msgid "Search cards"
 msgstr "Search cards"
 
 #: shared/components/board/BoardSurface.tsx
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusManagerDialog.tsx
+#: shared/components/board/StatusActionsMenu.tsx
 msgid "Set as done column"
 msgstr "Set as done column"
 
@@ -799,8 +818,7 @@ msgid "Set status"
 msgstr "Set status"
 
 #: shared/components/board/BoardSurface.tsx
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusManagerDialog.tsx
+#: shared/components/board/StatusActionsMenu.tsx
 msgid "Set WIP limit"
 msgstr "Set WIP limit"
 
@@ -846,8 +864,7 @@ msgstr "Split"
 msgid "Status"
 msgstr "Status"
 
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusManagerDialog.tsx
+#: shared/components/board/StatusActionsMenu.tsx
 msgid "Status actions"
 msgstr "Status actions"
 
@@ -977,8 +994,7 @@ msgid "Unscheduled"
 msgstr "Unscheduled"
 
 #: shared/components/board/BoardSurface.tsx
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusManagerDialog.tsx
+#: shared/components/board/StatusActionsMenu.tsx
 msgid "Unset done column"
 msgstr "Unset done column"
 
@@ -1006,8 +1022,7 @@ msgstr "Uploading…"
 msgid "Use this"
 msgstr "Use this"
 
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: shared/components/board/LaneDetailsPopover.tsx
 msgid "Used by"
 msgstr "Used by"
 

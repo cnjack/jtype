@@ -6561,8 +6561,28 @@ function Ed({ title: t, titleId: n, ...r }, i) {
 }
 var Dd = /*#__PURE__*/ e.forwardRef(Ed);
 //#endregion
-//#region ../../node_modules/.pnpm/@heroicons+react@2.2.0_react@19.2.7/node_modules/@heroicons/react/24/outline/esm/ArrowPathIcon.js
+//#region ../../node_modules/.pnpm/@heroicons+react@2.2.0_react@19.2.7/node_modules/@heroicons/react/24/outline/esm/ArrowLeftIcon.js
 function Od({ title: t, titleId: n, ...r }, i) {
+	return /*#__PURE__*/ e.createElement("svg", Object.assign({
+		xmlns: "http://www.w3.org/2000/svg",
+		fill: "none",
+		viewBox: "0 0 24 24",
+		strokeWidth: 1.5,
+		stroke: "currentColor",
+		"aria-hidden": "true",
+		"data-slot": "icon",
+		ref: i,
+		"aria-labelledby": n
+	}, r), t ? /*#__PURE__*/ e.createElement("title", { id: n }, t) : null, /*#__PURE__*/ e.createElement("path", {
+		strokeLinecap: "round",
+		strokeLinejoin: "round",
+		d: "M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"
+	}));
+}
+var kd = /*#__PURE__*/ e.forwardRef(Od);
+//#endregion
+//#region ../../node_modules/.pnpm/@heroicons+react@2.2.0_react@19.2.7/node_modules/@heroicons/react/24/outline/esm/ArrowPathIcon.js
+function Ad({ title: t, titleId: n, ...r }, i) {
 	return /*#__PURE__*/ e.createElement("svg", Object.assign({
 		xmlns: "http://www.w3.org/2000/svg",
 		fill: "none",
@@ -6579,10 +6599,30 @@ function Od({ title: t, titleId: n, ...r }, i) {
 		d: "M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"
 	}));
 }
-var kd = /*#__PURE__*/ e.forwardRef(Od);
+var jd = /*#__PURE__*/ e.forwardRef(Ad);
+//#endregion
+//#region ../../node_modules/.pnpm/@heroicons+react@2.2.0_react@19.2.7/node_modules/@heroicons/react/24/outline/esm/ArrowRightIcon.js
+function Md({ title: t, titleId: n, ...r }, i) {
+	return /*#__PURE__*/ e.createElement("svg", Object.assign({
+		xmlns: "http://www.w3.org/2000/svg",
+		fill: "none",
+		viewBox: "0 0 24 24",
+		strokeWidth: 1.5,
+		stroke: "currentColor",
+		"aria-hidden": "true",
+		"data-slot": "icon",
+		ref: i,
+		"aria-labelledby": n
+	}, r), t ? /*#__PURE__*/ e.createElement("title", { id: n }, t) : null, /*#__PURE__*/ e.createElement("path", {
+		strokeLinecap: "round",
+		strokeLinejoin: "round",
+		d: "M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"
+	}));
+}
+var Nd = /*#__PURE__*/ e.forwardRef(Md);
 //#endregion
 //#region ../../node_modules/.pnpm/@heroicons+react@2.2.0_react@19.2.7/node_modules/@heroicons/react/24/outline/esm/ArrowUpIcon.js
-function Ad({ title: t, titleId: n, ...r }, i) {
+function Pd({ title: t, titleId: n, ...r }, i) {
 	return /*#__PURE__*/ e.createElement("svg", Object.assign({
 		xmlns: "http://www.w3.org/2000/svg",
 		fill: "none",
@@ -6599,10 +6639,10 @@ function Ad({ title: t, titleId: n, ...r }, i) {
 		d: "M4.5 10.5 12 3m0 0 7.5 7.5M12 3v18"
 	}));
 }
-var jd = /*#__PURE__*/ e.forwardRef(Ad);
+var Fd = /*#__PURE__*/ e.forwardRef(Pd);
 //#endregion
 //#region ../../node_modules/.pnpm/@heroicons+react@2.2.0_react@19.2.7/node_modules/@heroicons/react/24/outline/esm/ArrowsPointingInIcon.js
-function Md({ title: t, titleId: n, ...r }, i) {
+function Id({ title: t, titleId: n, ...r }, i) {
 	return /*#__PURE__*/ e.createElement("svg", Object.assign({
 		xmlns: "http://www.w3.org/2000/svg",
 		fill: "none",
@@ -6619,10 +6659,10 @@ function Md({ title: t, titleId: n, ...r }, i) {
 		d: "M9 9V4.5M9 9H4.5M9 9 3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5 5.25 5.25"
 	}));
 }
-var Nd = /*#__PURE__*/ e.forwardRef(Md);
+var Ld = /*#__PURE__*/ e.forwardRef(Id);
 //#endregion
 //#region ../../node_modules/.pnpm/@heroicons+react@2.2.0_react@19.2.7/node_modules/@heroicons/react/24/outline/esm/ArrowsPointingOutIcon.js
-function Pd({ title: t, titleId: n, ...r }, i) {
+function Rd({ title: t, titleId: n, ...r }, i) {
 	return /*#__PURE__*/ e.createElement("svg", Object.assign({
 		xmlns: "http://www.w3.org/2000/svg",
 		fill: "none",
@@ -6639,10 +6679,10 @@ function Pd({ title: t, titleId: n, ...r }, i) {
 		d: "M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15"
 	}));
 }
-var Fd = /*#__PURE__*/ e.forwardRef(Pd);
+var zd = /*#__PURE__*/ e.forwardRef(Rd);
 //#endregion
 //#region ../../node_modules/.pnpm/@heroicons+react@2.2.0_react@19.2.7/node_modules/@heroicons/react/24/outline/esm/Bars3Icon.js
-function Id({ title: t, titleId: n, ...r }, i) {
+function Bd({ title: t, titleId: n, ...r }, i) {
 	return /*#__PURE__*/ e.createElement("svg", Object.assign({
 		xmlns: "http://www.w3.org/2000/svg",
 		fill: "none",
@@ -6659,10 +6699,10 @@ function Id({ title: t, titleId: n, ...r }, i) {
 		d: "M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
 	}));
 }
-var Ld = /*#__PURE__*/ e.forwardRef(Id);
+var Vd = /*#__PURE__*/ e.forwardRef(Bd);
 //#endregion
 //#region ../../node_modules/.pnpm/@heroicons+react@2.2.0_react@19.2.7/node_modules/@heroicons/react/24/outline/esm/BarsArrowDownIcon.js
-function Rd({ title: t, titleId: n, ...r }, i) {
+function Hd({ title: t, titleId: n, ...r }, i) {
 	return /*#__PURE__*/ e.createElement("svg", Object.assign({
 		xmlns: "http://www.w3.org/2000/svg",
 		fill: "none",
@@ -6679,10 +6719,10 @@ function Rd({ title: t, titleId: n, ...r }, i) {
 		d: "M3 4.5h14.25M3 9h9.75M3 13.5h9.75m4.5-4.5v12m0 0-3.75-3.75M17.25 21 21 17.25"
 	}));
 }
-var zd = /*#__PURE__*/ e.forwardRef(Rd);
+var Ud = /*#__PURE__*/ e.forwardRef(Hd);
 //#endregion
 //#region ../../node_modules/.pnpm/@heroicons+react@2.2.0_react@19.2.7/node_modules/@heroicons/react/24/outline/esm/BookmarkIcon.js
-function Bd({ title: t, titleId: n, ...r }, i) {
+function Wd({ title: t, titleId: n, ...r }, i) {
 	return /*#__PURE__*/ e.createElement("svg", Object.assign({
 		xmlns: "http://www.w3.org/2000/svg",
 		fill: "none",
@@ -6699,10 +6739,10 @@ function Bd({ title: t, titleId: n, ...r }, i) {
 		d: "M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"
 	}));
 }
-var Vd = /*#__PURE__*/ e.forwardRef(Bd);
+var Gd = /*#__PURE__*/ e.forwardRef(Wd);
 //#endregion
 //#region ../../node_modules/.pnpm/@heroicons+react@2.2.0_react@19.2.7/node_modules/@heroicons/react/24/outline/esm/CalendarDaysIcon.js
-function Hd({ title: t, titleId: n, ...r }, i) {
+function Kd({ title: t, titleId: n, ...r }, i) {
 	return /*#__PURE__*/ e.createElement("svg", Object.assign({
 		xmlns: "http://www.w3.org/2000/svg",
 		fill: "none",
@@ -6719,10 +6759,10 @@ function Hd({ title: t, titleId: n, ...r }, i) {
 		d: "M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z"
 	}));
 }
-var Ud = /*#__PURE__*/ e.forwardRef(Hd);
+var qd = /*#__PURE__*/ e.forwardRef(Kd);
 //#endregion
 //#region ../../node_modules/.pnpm/@heroicons+react@2.2.0_react@19.2.7/node_modules/@heroicons/react/24/outline/esm/CheckCircleIcon.js
-function Wd({ title: t, titleId: n, ...r }, i) {
+function Jd({ title: t, titleId: n, ...r }, i) {
 	return /*#__PURE__*/ e.createElement("svg", Object.assign({
 		xmlns: "http://www.w3.org/2000/svg",
 		fill: "none",
@@ -6739,10 +6779,10 @@ function Wd({ title: t, titleId: n, ...r }, i) {
 		d: "M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
 	}));
 }
-var Gd = /*#__PURE__*/ e.forwardRef(Wd);
+var Yd = /*#__PURE__*/ e.forwardRef(Jd);
 //#endregion
 //#region ../../node_modules/.pnpm/@heroicons+react@2.2.0_react@19.2.7/node_modules/@heroicons/react/24/outline/esm/CheckIcon.js
-function Kd({ title: t, titleId: n, ...r }, i) {
+function Xd({ title: t, titleId: n, ...r }, i) {
 	return /*#__PURE__*/ e.createElement("svg", Object.assign({
 		xmlns: "http://www.w3.org/2000/svg",
 		fill: "none",
@@ -6759,10 +6799,10 @@ function Kd({ title: t, titleId: n, ...r }, i) {
 		d: "m4.5 12.75 6 6 9-13.5"
 	}));
 }
-var qd = /*#__PURE__*/ e.forwardRef(Kd);
+var Zd = /*#__PURE__*/ e.forwardRef(Xd);
 //#endregion
 //#region ../../node_modules/.pnpm/@heroicons+react@2.2.0_react@19.2.7/node_modules/@heroicons/react/24/outline/esm/ChevronLeftIcon.js
-function Jd({ title: t, titleId: n, ...r }, i) {
+function Qd({ title: t, titleId: n, ...r }, i) {
 	return /*#__PURE__*/ e.createElement("svg", Object.assign({
 		xmlns: "http://www.w3.org/2000/svg",
 		fill: "none",
@@ -6779,10 +6819,10 @@ function Jd({ title: t, titleId: n, ...r }, i) {
 		d: "M15.75 19.5 8.25 12l7.5-7.5"
 	}));
 }
-var Yd = /*#__PURE__*/ e.forwardRef(Jd);
+var $d = /*#__PURE__*/ e.forwardRef(Qd);
 //#endregion
 //#region ../../node_modules/.pnpm/@heroicons+react@2.2.0_react@19.2.7/node_modules/@heroicons/react/24/outline/esm/ChevronRightIcon.js
-function Xd({ title: t, titleId: n, ...r }, i) {
+function ef({ title: t, titleId: n, ...r }, i) {
 	return /*#__PURE__*/ e.createElement("svg", Object.assign({
 		xmlns: "http://www.w3.org/2000/svg",
 		fill: "none",
@@ -6799,10 +6839,10 @@ function Xd({ title: t, titleId: n, ...r }, i) {
 		d: "m8.25 4.5 7.5 7.5-7.5 7.5"
 	}));
 }
-var Zd = /*#__PURE__*/ e.forwardRef(Xd);
+var tf = /*#__PURE__*/ e.forwardRef(ef);
 //#endregion
 //#region ../../node_modules/.pnpm/@heroicons+react@2.2.0_react@19.2.7/node_modules/@heroicons/react/24/outline/esm/ChevronUpDownIcon.js
-function Qd({ title: t, titleId: n, ...r }, i) {
+function nf({ title: t, titleId: n, ...r }, i) {
 	return /*#__PURE__*/ e.createElement("svg", Object.assign({
 		xmlns: "http://www.w3.org/2000/svg",
 		fill: "none",
@@ -6819,10 +6859,10 @@ function Qd({ title: t, titleId: n, ...r }, i) {
 		d: "M8.25 15 12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9"
 	}));
 }
-var $d = /*#__PURE__*/ e.forwardRef(Qd);
+var rf = /*#__PURE__*/ e.forwardRef(nf);
 //#endregion
 //#region ../../node_modules/.pnpm/@heroicons+react@2.2.0_react@19.2.7/node_modules/@heroicons/react/24/outline/esm/ClipboardDocumentIcon.js
-function ef({ title: t, titleId: n, ...r }, i) {
+function af({ title: t, titleId: n, ...r }, i) {
 	return /*#__PURE__*/ e.createElement("svg", Object.assign({
 		xmlns: "http://www.w3.org/2000/svg",
 		fill: "none",
@@ -6839,10 +6879,10 @@ function ef({ title: t, titleId: n, ...r }, i) {
 		d: "M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.373-.03.748-.057 1.123-.08M15.75 18H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08M15.75 18.75v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5A3.375 3.375 0 0 0 6.375 7.5H5.25m11.9-3.664A2.251 2.251 0 0 0 15 2.25h-1.5a2.251 2.251 0 0 0-2.15 1.586m5.8 0c.065.21.1.433.1.664v.75h-6V4.5c0-.231.035-.454.1-.664M6.75 7.5H4.875c-.621 0-1.125.504-1.125 1.125v12c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V16.5a9 9 0 0 0-9-9Z"
 	}));
 }
-var tf = /*#__PURE__*/ e.forwardRef(ef);
+var of = /*#__PURE__*/ e.forwardRef(af);
 //#endregion
 //#region ../../node_modules/.pnpm/@heroicons+react@2.2.0_react@19.2.7/node_modules/@heroicons/react/24/outline/esm/Cog6ToothIcon.js
-function nf({ title: t, titleId: n, ...r }, i) {
+function sf({ title: t, titleId: n, ...r }, i) {
 	return /*#__PURE__*/ e.createElement("svg", Object.assign({
 		xmlns: "http://www.w3.org/2000/svg",
 		fill: "none",
@@ -6863,10 +6903,10 @@ function nf({ title: t, titleId: n, ...r }, i) {
 		d: "M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
 	}));
 }
-var rf = /*#__PURE__*/ e.forwardRef(nf);
+var cf = /*#__PURE__*/ e.forwardRef(sf);
 //#endregion
 //#region ../../node_modules/.pnpm/@heroicons+react@2.2.0_react@19.2.7/node_modules/@heroicons/react/24/outline/esm/DocumentDuplicateIcon.js
-function af({ title: t, titleId: n, ...r }, i) {
+function lf({ title: t, titleId: n, ...r }, i) {
 	return /*#__PURE__*/ e.createElement("svg", Object.assign({
 		xmlns: "http://www.w3.org/2000/svg",
 		fill: "none",
@@ -6883,10 +6923,10 @@ function af({ title: t, titleId: n, ...r }, i) {
 		d: "M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75"
 	}));
 }
-var of = /*#__PURE__*/ e.forwardRef(af);
+var uf = /*#__PURE__*/ e.forwardRef(lf);
 //#endregion
 //#region ../../node_modules/.pnpm/@heroicons+react@2.2.0_react@19.2.7/node_modules/@heroicons/react/24/outline/esm/EllipsisHorizontalIcon.js
-function sf({ title: t, titleId: n, ...r }, i) {
+function df({ title: t, titleId: n, ...r }, i) {
 	return /*#__PURE__*/ e.createElement("svg", Object.assign({
 		xmlns: "http://www.w3.org/2000/svg",
 		fill: "none",
@@ -6903,10 +6943,10 @@ function sf({ title: t, titleId: n, ...r }, i) {
 		d: "M6.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM12.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM18.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"
 	}));
 }
-var cf = /*#__PURE__*/ e.forwardRef(sf);
+var ff = /*#__PURE__*/ e.forwardRef(df);
 //#endregion
 //#region ../../node_modules/.pnpm/@heroicons+react@2.2.0_react@19.2.7/node_modules/@heroicons/react/24/outline/esm/ExclamationTriangleIcon.js
-function lf({ title: t, titleId: n, ...r }, i) {
+function pf({ title: t, titleId: n, ...r }, i) {
 	return /*#__PURE__*/ e.createElement("svg", Object.assign({
 		xmlns: "http://www.w3.org/2000/svg",
 		fill: "none",
@@ -6923,10 +6963,10 @@ function lf({ title: t, titleId: n, ...r }, i) {
 		d: "M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"
 	}));
 }
-var uf = /*#__PURE__*/ e.forwardRef(lf);
+var mf = /*#__PURE__*/ e.forwardRef(pf);
 //#endregion
 //#region ../../node_modules/.pnpm/@heroicons+react@2.2.0_react@19.2.7/node_modules/@heroicons/react/24/outline/esm/FunnelIcon.js
-function df({ title: t, titleId: n, ...r }, i) {
+function hf({ title: t, titleId: n, ...r }, i) {
 	return /*#__PURE__*/ e.createElement("svg", Object.assign({
 		xmlns: "http://www.w3.org/2000/svg",
 		fill: "none",
@@ -6943,10 +6983,10 @@ function df({ title: t, titleId: n, ...r }, i) {
 		d: "M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z"
 	}));
 }
-var ff = /*#__PURE__*/ e.forwardRef(df);
+var gf = /*#__PURE__*/ e.forwardRef(hf);
 //#endregion
 //#region ../../node_modules/.pnpm/@heroicons+react@2.2.0_react@19.2.7/node_modules/@heroicons/react/24/outline/esm/InformationCircleIcon.js
-function pf({ title: t, titleId: n, ...r }, i) {
+function _f({ title: t, titleId: n, ...r }, i) {
 	return /*#__PURE__*/ e.createElement("svg", Object.assign({
 		xmlns: "http://www.w3.org/2000/svg",
 		fill: "none",
@@ -6963,10 +7003,10 @@ function pf({ title: t, titleId: n, ...r }, i) {
 		d: "m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"
 	}));
 }
-var mf = /*#__PURE__*/ e.forwardRef(pf);
+var vf = /*#__PURE__*/ e.forwardRef(_f);
 //#endregion
 //#region ../../node_modules/.pnpm/@heroicons+react@2.2.0_react@19.2.7/node_modules/@heroicons/react/24/outline/esm/LinkIcon.js
-function hf({ title: t, titleId: n, ...r }, i) {
+function yf({ title: t, titleId: n, ...r }, i) {
 	return /*#__PURE__*/ e.createElement("svg", Object.assign({
 		xmlns: "http://www.w3.org/2000/svg",
 		fill: "none",
@@ -6983,10 +7023,10 @@ function hf({ title: t, titleId: n, ...r }, i) {
 		d: "M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244"
 	}));
 }
-var gf = /*#__PURE__*/ e.forwardRef(hf);
+var bf = /*#__PURE__*/ e.forwardRef(yf);
 //#endregion
 //#region ../../node_modules/.pnpm/@heroicons+react@2.2.0_react@19.2.7/node_modules/@heroicons/react/24/outline/esm/LockClosedIcon.js
-function _f({ title: t, titleId: n, ...r }, i) {
+function xf({ title: t, titleId: n, ...r }, i) {
 	return /*#__PURE__*/ e.createElement("svg", Object.assign({
 		xmlns: "http://www.w3.org/2000/svg",
 		fill: "none",
@@ -7003,10 +7043,10 @@ function _f({ title: t, titleId: n, ...r }, i) {
 		d: "M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"
 	}));
 }
-var vf = /*#__PURE__*/ e.forwardRef(_f);
+var Sf = /*#__PURE__*/ e.forwardRef(xf);
 //#endregion
 //#region ../../node_modules/.pnpm/@heroicons+react@2.2.0_react@19.2.7/node_modules/@heroicons/react/24/outline/esm/MagnifyingGlassIcon.js
-function yf({ title: t, titleId: n, ...r }, i) {
+function Cf({ title: t, titleId: n, ...r }, i) {
 	return /*#__PURE__*/ e.createElement("svg", Object.assign({
 		xmlns: "http://www.w3.org/2000/svg",
 		fill: "none",
@@ -7023,10 +7063,10 @@ function yf({ title: t, titleId: n, ...r }, i) {
 		d: "m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
 	}));
 }
-var bf = /*#__PURE__*/ e.forwardRef(yf);
+var wf = /*#__PURE__*/ e.forwardRef(Cf);
 //#endregion
 //#region ../../node_modules/.pnpm/@heroicons+react@2.2.0_react@19.2.7/node_modules/@heroicons/react/24/outline/esm/PencilIcon.js
-function xf({ title: t, titleId: n, ...r }, i) {
+function Tf({ title: t, titleId: n, ...r }, i) {
 	return /*#__PURE__*/ e.createElement("svg", Object.assign({
 		xmlns: "http://www.w3.org/2000/svg",
 		fill: "none",
@@ -7043,10 +7083,10 @@ function xf({ title: t, titleId: n, ...r }, i) {
 		d: "m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125"
 	}));
 }
-var Sf = /*#__PURE__*/ e.forwardRef(xf);
+var Ef = /*#__PURE__*/ e.forwardRef(Tf);
 //#endregion
 //#region ../../node_modules/.pnpm/@heroicons+react@2.2.0_react@19.2.7/node_modules/@heroicons/react/24/outline/esm/PlusIcon.js
-function Cf({ title: t, titleId: n, ...r }, i) {
+function Df({ title: t, titleId: n, ...r }, i) {
 	return /*#__PURE__*/ e.createElement("svg", Object.assign({
 		xmlns: "http://www.w3.org/2000/svg",
 		fill: "none",
@@ -7063,10 +7103,10 @@ function Cf({ title: t, titleId: n, ...r }, i) {
 		d: "M12 4.5v15m7.5-7.5h-15"
 	}));
 }
-var wf = /*#__PURE__*/ e.forwardRef(Cf);
+var Of = /*#__PURE__*/ e.forwardRef(Df);
 //#endregion
 //#region ../../node_modules/.pnpm/@heroicons+react@2.2.0_react@19.2.7/node_modules/@heroicons/react/24/outline/esm/RectangleGroupIcon.js
-function Tf({ title: t, titleId: n, ...r }, i) {
+function kf({ title: t, titleId: n, ...r }, i) {
 	return /*#__PURE__*/ e.createElement("svg", Object.assign({
 		xmlns: "http://www.w3.org/2000/svg",
 		fill: "none",
@@ -7083,10 +7123,10 @@ function Tf({ title: t, titleId: n, ...r }, i) {
 		d: "M2.25 7.125C2.25 6.504 2.754 6 3.375 6h6c.621 0 1.125.504 1.125 1.125v3.75c0 .621-.504 1.125-1.125 1.125h-6a1.125 1.125 0 0 1-1.125-1.125v-3.75ZM14.25 8.625c0-.621.504-1.125 1.125-1.125h5.25c.621 0 1.125.504 1.125 1.125v8.25c0 .621-.504 1.125-1.125 1.125h-5.25a1.125 1.125 0 0 1-1.125-1.125v-8.25ZM3.75 16.125c0-.621.504-1.125 1.125-1.125h5.25c.621 0 1.125.504 1.125 1.125v2.25c0 .621-.504 1.125-1.125 1.125h-5.25a1.125 1.125 0 0 1-1.125-1.125v-2.25Z"
 	}));
 }
-var Ef = /*#__PURE__*/ e.forwardRef(Tf);
+var Af = /*#__PURE__*/ e.forwardRef(kf);
 //#endregion
 //#region ../../node_modules/.pnpm/@heroicons+react@2.2.0_react@19.2.7/node_modules/@heroicons/react/24/outline/esm/Squares2X2Icon.js
-function Df({ title: t, titleId: n, ...r }, i) {
+function jf({ title: t, titleId: n, ...r }, i) {
 	return /*#__PURE__*/ e.createElement("svg", Object.assign({
 		xmlns: "http://www.w3.org/2000/svg",
 		fill: "none",
@@ -7103,10 +7143,10 @@ function Df({ title: t, titleId: n, ...r }, i) {
 		d: "M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z"
 	}));
 }
-var Of = /*#__PURE__*/ e.forwardRef(Df);
+var Mf = /*#__PURE__*/ e.forwardRef(jf);
 //#endregion
 //#region ../../node_modules/.pnpm/@heroicons+react@2.2.0_react@19.2.7/node_modules/@heroicons/react/24/outline/esm/TableCellsIcon.js
-function kf({ title: t, titleId: n, ...r }, i) {
+function Nf({ title: t, titleId: n, ...r }, i) {
 	return /*#__PURE__*/ e.createElement("svg", Object.assign({
 		xmlns: "http://www.w3.org/2000/svg",
 		fill: "none",
@@ -7123,10 +7163,10 @@ function kf({ title: t, titleId: n, ...r }, i) {
 		d: "M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 0 1-1.125-1.125M3.375 19.5h7.5c.621 0 1.125-.504 1.125-1.125m-9.75 0V5.625m0 12.75v-1.5c0-.621.504-1.125 1.125-1.125m18.375 2.625V5.625m0 12.75c0 .621-.504 1.125-1.125 1.125m1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125m0 3.75h-7.5A1.125 1.125 0 0 1 12 18.375m9.75-12.75c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125m19.5 0v1.5c0 .621-.504 1.125-1.125 1.125M2.25 5.625v1.5c0 .621.504 1.125 1.125 1.125m0 0h17.25m-17.25 0h7.5c.621 0 1.125.504 1.125 1.125M3.375 8.25c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125m17.25-3.75h-7.5c-.621 0-1.125.504-1.125 1.125m8.625-1.125c.621 0 1.125.504 1.125 1.125v1.5c0 .621-.504 1.125-1.125 1.125m-17.25 0h7.5m-7.5 0c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125M12 10.875v-1.5m0 1.5c0 .621-.504 1.125-1.125 1.125M12 10.875c0 .621.504 1.125 1.125 1.125m-2.25 0c.621 0 1.125.504 1.125 1.125M13.125 12h7.5m-7.5 0c-.621 0-1.125.504-1.125 1.125M20.625 12c.621 0 1.125.504 1.125 1.125v1.5c0 .621-.504 1.125-1.125 1.125m-17.25 0h7.5M12 14.625v-1.5m0 1.5c0 .621-.504 1.125-1.125 1.125M12 14.625c0 .621.504 1.125 1.125 1.125m-2.25 0c.621 0 1.125.504 1.125 1.125m0 1.5v-1.5m0 0c0-.621.504-1.125 1.125-1.125m0 0h7.5"
 	}));
 }
-var Af = /*#__PURE__*/ e.forwardRef(kf);
+var Pf = /*#__PURE__*/ e.forwardRef(Nf);
 //#endregion
 //#region ../../node_modules/.pnpm/@heroicons+react@2.2.0_react@19.2.7/node_modules/@heroicons/react/24/outline/esm/TagIcon.js
-function jf({ title: t, titleId: n, ...r }, i) {
+function Ff({ title: t, titleId: n, ...r }, i) {
 	return /*#__PURE__*/ e.createElement("svg", Object.assign({
 		xmlns: "http://www.w3.org/2000/svg",
 		fill: "none",
@@ -7147,10 +7187,10 @@ function jf({ title: t, titleId: n, ...r }, i) {
 		d: "M6 6h.008v.008H6V6Z"
 	}));
 }
-var Mf = /*#__PURE__*/ e.forwardRef(jf);
+var If = /*#__PURE__*/ e.forwardRef(Ff);
 //#endregion
 //#region ../../node_modules/.pnpm/@heroicons+react@2.2.0_react@19.2.7/node_modules/@heroicons/react/24/outline/esm/TrashIcon.js
-function Nf({ title: t, titleId: n, ...r }, i) {
+function Lf({ title: t, titleId: n, ...r }, i) {
 	return /*#__PURE__*/ e.createElement("svg", Object.assign({
 		xmlns: "http://www.w3.org/2000/svg",
 		fill: "none",
@@ -7167,10 +7207,10 @@ function Nf({ title: t, titleId: n, ...r }, i) {
 		d: "m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
 	}));
 }
-var Pf = /*#__PURE__*/ e.forwardRef(Nf);
+var Rf = /*#__PURE__*/ e.forwardRef(Lf);
 //#endregion
 //#region ../../node_modules/.pnpm/@heroicons+react@2.2.0_react@19.2.7/node_modules/@heroicons/react/24/outline/esm/UserIcon.js
-function Ff({ title: t, titleId: n, ...r }, i) {
+function zf({ title: t, titleId: n, ...r }, i) {
 	return /*#__PURE__*/ e.createElement("svg", Object.assign({
 		xmlns: "http://www.w3.org/2000/svg",
 		fill: "none",
@@ -7187,10 +7227,10 @@ function Ff({ title: t, titleId: n, ...r }, i) {
 		d: "M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"
 	}));
 }
-var If = /*#__PURE__*/ e.forwardRef(Ff);
+var Bf = /*#__PURE__*/ e.forwardRef(zf);
 //#endregion
 //#region ../../node_modules/.pnpm/@heroicons+react@2.2.0_react@19.2.7/node_modules/@heroicons/react/24/outline/esm/ViewColumnsIcon.js
-function Lf({ title: t, titleId: n, ...r }, i) {
+function Vf({ title: t, titleId: n, ...r }, i) {
 	return /*#__PURE__*/ e.createElement("svg", Object.assign({
 		xmlns: "http://www.w3.org/2000/svg",
 		fill: "none",
@@ -7207,10 +7247,10 @@ function Lf({ title: t, titleId: n, ...r }, i) {
 		d: "M9 4.5v15m6-15v15m-10.875 0h15.75c.621 0 1.125-.504 1.125-1.125V5.625c0-.621-.504-1.125-1.125-1.125H4.125C3.504 4.5 3 5.004 3 5.625v12.75c0 .621.504 1.125 1.125 1.125Z"
 	}));
 }
-var Rf = /*#__PURE__*/ e.forwardRef(Lf);
+var Hf = /*#__PURE__*/ e.forwardRef(Vf);
 //#endregion
 //#region ../../node_modules/.pnpm/@heroicons+react@2.2.0_react@19.2.7/node_modules/@heroicons/react/24/outline/esm/XMarkIcon.js
-function zf({ title: t, titleId: n, ...r }, i) {
+function Uf({ title: t, titleId: n, ...r }, i) {
 	return /*#__PURE__*/ e.createElement("svg", Object.assign({
 		xmlns: "http://www.w3.org/2000/svg",
 		fill: "none",
@@ -7227,10 +7267,10 @@ function zf({ title: t, titleId: n, ...r }, i) {
 		d: "M6 18 18 6M6 6l12 12"
 	}));
 }
-var Bf = /*#__PURE__*/ e.forwardRef(zf);
+var Wf = /*#__PURE__*/ e.forwardRef(Uf);
 //#endregion
 //#region ../../shared/lib/frontmatter.ts
-function Vf(e) {
+function Gf(e) {
 	if (!e.startsWith("---\n") && !e.startsWith("---\r\n")) return {
 		data: {},
 		body: e,
@@ -7256,8 +7296,8 @@ function Vf(e) {
 		hasFrontmatter: !0
 	};
 }
-function Hf(e, t) {
-	let n = Vf(e), r = {
+function Kf(e, t) {
+	let n = Gf(e), r = {
 		...n.data,
 		...t
 	};
@@ -7265,18 +7305,44 @@ function Hf(e, t) {
 }
 //#endregion
 //#region ../../shared/lib/board.ts
-function Uf(e) {
+function qf(e) {
 	return e.split(",").map((e) => e.trim()).filter(Boolean);
 }
-function Wf(e) {
+function Jf(e) {
 	return e.join(", ");
 }
-function Gf(e, t) {
-	let { data: n, body: r } = Vf(e), i = { ...n };
-	if (t.title !== void 0 && (i.title = t.title), t.columnKey !== void 0 && (i.status = t.columnKey), t.priority !== void 0 && (i.priority = t.priority ?? ""), t.assignee !== void 0 && (i.assignee = t.assignee ?? ""), t.swimlaneKey !== void 0 && (i.swimlane = t.swimlaneKey ?? ""), t.due !== void 0 && (i.due = t.due ?? ""), t.icon !== void 0 && (i.icon = t.icon ?? ""), t.tags !== void 0 && (i.tags = t.tags.map((e) => e.label).join(", ")), t.attachments !== void 0 && (i.attachments = Wf(t.attachments)), t.custom !== void 0) for (let [e, n] of Object.entries(t.custom)) i[e] = n ?? "";
-	return t.blockedBy !== void 0 && (i.blocked_by = sp(t.blockedBy)), t.blocks !== void 0 && (i.blocks = sp(t.blocks)), t.relates !== void 0 && (i.relates = sp(t.relates)), t.parent !== void 0 && (i.parent = t.parent ? sp([t.parent]) : ""), Hf(t.notes === void 0 ? r : t.notes, i);
+var Yf = /* @__PURE__ */ new Set([
+	"id",
+	"board",
+	"ticket",
+	"title",
+	"status",
+	"columnKey",
+	"position",
+	"priority",
+	"assignee",
+	"swimlane",
+	"swimlaneKey",
+	"due",
+	"icon",
+	"tags",
+	"attachments",
+	"notes",
+	"taskDone",
+	"taskTotal",
+	"excerpt",
+	"blocked_by",
+	"blockedBy",
+	"blocks",
+	"relates",
+	"parent"
+]);
+function Xf(e, t) {
+	let { data: n, body: r } = Gf(e), i = { ...n };
+	if (t.title !== void 0 && (i.title = t.title), t.columnKey !== void 0 && (i.status = t.columnKey), t.priority !== void 0 && (i.priority = t.priority ?? ""), t.assignee !== void 0 && (i.assignee = t.assignee ?? ""), t.swimlaneKey !== void 0 && (i.swimlane = t.swimlaneKey ?? ""), t.due !== void 0 && (i.due = t.due ?? ""), t.icon !== void 0 && (i.icon = t.icon ?? ""), t.tags !== void 0 && (i.tags = t.tags.map((e) => e.label).join(", ")), t.attachments !== void 0 && (i.attachments = Jf(t.attachments)), t.custom !== void 0) for (let [e, n] of Object.entries(t.custom)) Yf.has(e) || (i[e] = n ?? "");
+	return t.blockedBy !== void 0 && (i.blocked_by = fp(t.blockedBy)), t.blocks !== void 0 && (i.blocks = fp(t.blocks)), t.relates !== void 0 && (i.relates = fp(t.relates)), t.parent !== void 0 && (i.parent = t.parent ? fp([t.parent]) : ""), Kf(t.notes === void 0 ? r : t.notes, i);
 }
-function Kf(e) {
+function Zf(e) {
 	let t = e.split(/[\\/]/).pop() || e;
 	try {
 		return decodeURIComponent(t.split("?")[0] || t);
@@ -7284,7 +7350,7 @@ function Kf(e) {
 		return t;
 	}
 }
-function qf(e) {
+function Qf(e) {
 	let t = e.trim();
 	if (!t) return !1;
 	let n = /^([a-z][a-z0-9+.-]*):/i.exec(t);
@@ -7292,7 +7358,7 @@ function qf(e) {
 	let r = n[1].toLowerCase();
 	return r === "http" || r === "https";
 }
-function Jf(e, t) {
+function $f(e, t) {
 	let n = {};
 	if (!e || !t) return n;
 	for (let r of t) {
@@ -7301,24 +7367,24 @@ function Jf(e, t) {
 	}
 	return n;
 }
-var Yf = [
+var ep = [
 	"urgent",
 	"high",
 	"medium",
 	"low",
 	"none"
-], Xf = {
+], tp = {
 	urgent: 0,
 	high: 1,
 	medium: 2,
 	low: 3,
 	none: 4
-}, Zf = {
+}, np = {
 	urgent: "bg-red-100 text-red-700",
 	high: "bg-amber-100 text-amber-700",
 	medium: "bg-sky-100 text-sky-700",
 	low: "bg-stone-100 text-stone-500"
-}, Qf = [
+}, rp = [
 	"#ef4444",
 	"#f59e0b",
 	"#eab308",
@@ -7328,7 +7394,7 @@ var Yf = [
 	"#a855f7",
 	"#ec4899",
 	"#78716c"
-], $f = [
+], ip = [
 	"title",
 	"board",
 	"status",
@@ -7345,7 +7411,7 @@ var Yf = [
 	"attachments",
 	"parent"
 ];
-function ep(e) {
+function ap(e) {
 	let t = 0, n = 0;
 	for (let r of e.split("\n")) {
 		let e = r.replace(/^\s+/, "").match(/^[-*+] \[([ xX])\]/);
@@ -7356,17 +7422,17 @@ function ep(e) {
 		total: n
 	};
 }
-function tp(e) {
+function op(e) {
 	for (let t of e.split("\n")) {
 		let e = t.trim().replace(/^[#>\-*+\s]+/, "").replace(/^\[[ xX]\]\s*/, "").trim();
 		if (e) return e.length > 120 ? `${e.slice(0, 120)}…` : e;
 	}
 	return null;
 }
-function np(e) {
+function sp(e) {
 	return e.trim().replace(/^\[|\]$/g, "").split(",").map((e) => e.trim().replace(/^#/, "")).filter(Boolean);
 }
-var rp = [
+var cp = [
 	"#ef4444",
 	"#f59e0b",
 	"#eab308",
@@ -7378,29 +7444,29 @@ var rp = [
 	"#ec4899",
 	"#78716c"
 ];
-function ip(e) {
+function lp(e) {
 	let t = 0;
 	for (let n = 0; n < e.length; n++) t = Math.imul(t, 31) + e.charCodeAt(n) >>> 0;
-	return rp[t % rp.length];
+	return cp[t % cp.length];
 }
-function ap(e, t) {
+function up(e, t) {
 	return e.map((e) => ({
 		label: e,
-		color: t?.find((t) => t.label === e)?.color ?? ip(e)
+		color: t?.find((t) => t.label === e)?.color ?? lp(e)
 	}));
 }
-function op(e) {
+function dp(e) {
 	return e.split(",").map((e) => e.trim().replace(/^\[\[/, "").replace(/\]\]$/, "").trim()).filter(Boolean);
 }
-function sp(e) {
+function fp(e) {
 	return e.map((e) => `[[${e}]]`).join(", ");
 }
-function cp(e) {
+function pp(e) {
 	return (e.id.split(/[\\/]/).pop() ?? e.id).replace(/\.md$/i, "");
 }
-function lp(e, t) {
+function mp(e, t) {
 	let n = t || "done", r = /* @__PURE__ */ new Map();
-	for (let t of e) r.set(cp(t), t);
+	for (let t of e) r.set(pp(t), t);
 	let i = (e) => !!e && e.columnKey !== n, a = /* @__PURE__ */ new Map(), o = (e, t) => {
 		let n = a.get(e);
 		n || a.set(e, n = /* @__PURE__ */ new Set()), n.add(t.id);
@@ -7417,9 +7483,9 @@ function lp(e, t) {
 	for (let [e, t] of a) s.set(e, t.size);
 	return s;
 }
-function up(e) {
+function hp(e) {
 	let t = /* @__PURE__ */ new Map();
-	for (let n of e) t.set(cp(n), n);
+	for (let n of e) t.set(pp(n), n);
 	let n = /* @__PURE__ */ new Map();
 	for (let r of e) {
 		if (!r.parent) continue;
@@ -7430,47 +7496,47 @@ function up(e) {
 	}
 	return n;
 }
-function dp(e, t) {
+function gp(e, t) {
 	let n = t || "done";
 	return {
 		done: e.filter((e) => e.columnKey === n).length,
 		total: e.length
 	};
 }
-function fp() {
+function _p() {
 	let e = /* @__PURE__ */ new Date();
 	return `${e.getFullYear()}-${String(e.getMonth() + 1).padStart(2, "0")}-${String(e.getDate()).padStart(2, "0")}`;
 }
-function pp(e) {
+function vp(e) {
 	return e.toLowerCase().replace(/[^a-z0-9一-龥]+/g, "-").replace(/^-+|-+$/g, "") || "item";
 }
-var mp = /* @__PURE__ */ new Set([
+var yp = /* @__PURE__ */ new Set([
 	"status",
 	"priority",
 	"assignee"
 ]);
-function hp(e) {
-	return typeof e == "string" && mp.has(e) ? e : "status";
+function bp(e) {
+	return typeof e == "string" && yp.has(e) ? e : "status";
 }
-function gp(e) {
-	return e === "custom" ? "custom" : typeof e == "string" && mp.has(e) ? e : void 0;
+function xp(e) {
+	return e === "custom" ? "custom" : typeof e == "string" && yp.has(e) ? e : void 0;
 }
-function _p(e, t = []) {
-	let n = new Set(t), r = `lane_${pp(e).replace(/-/g, "_")}`;
+function Sp(e, t = []) {
+	let n = new Set(t), r = `lane_${vp(e).replace(/-/g, "_")}`;
 	for (let e = 0; e < 20; e += 1) {
 		let e = `${r}_${typeof globalThis.crypto?.randomUUID == "function" ? globalThis.crypto.randomUUID().replace(/-/g, "").slice(0, 8) : Math.random().toString(36).slice(2, 10).padEnd(8, "0")}`;
 		if (!n.has(e)) return e;
 	}
 	return `${r}_${Date.now().toString(36)}`;
 }
-function vp(e, t, n) {
+function Cp(e, t, n) {
 	let r = e.trim();
 	return r ? r.length > 80 ? "Swimlane names can be at most 80 characters." : t.some((e) => e.key !== n && e.name.trim().toLocaleLowerCase() === r.toLocaleLowerCase()) ? "Swimlane names must be unique on this board." : null : "Swimlane name is required.";
 }
-function yp(e) {
+function wp(e) {
 	return e.swimlaneKey || "";
 }
-function bp(e, t) {
+function Tp(e, t) {
 	let n = [], r = e.swimlanes ?? [], i = /* @__PURE__ */ new Set(), a = /* @__PURE__ */ new Set(), o = /* @__PURE__ */ new Map(), s = /* @__PURE__ */ new Set();
 	for (let e of r) {
 		i.has(e.key) ? a.add(e.key) : i.add(e.key);
@@ -7487,7 +7553,7 @@ function bp(e, t) {
 	});
 	let c = /* @__PURE__ */ new Map();
 	for (let e of t) {
-		let t = yp(e);
+		let t = wp(e);
 		t && !i.has(t) && c.set(t, (c.get(t) ?? 0) + 1);
 	}
 	for (let [e, t] of c) n.push({
@@ -7497,28 +7563,28 @@ function bp(e, t) {
 	});
 	return n;
 }
-function xp(e, t) {
-	return t === "custom" ? yp(e) : t === "priority" ? e.priority || "none" : t === "assignee" ? e.assignee || "" : e.columnKey || "";
+function Ep(e, t) {
+	return t === "custom" ? wp(e) : t === "priority" ? e.priority || "none" : t === "assignee" ? e.assignee || "" : e.columnKey || "";
 }
-function Sp(e, t, n, r) {
+function Dp(e, t, n, r) {
 	if (n === "status") return e.columns;
-	if (n === "priority") return Yf.map((e) => ({
+	if (n === "priority") return ep.map((e) => ({
 		key: e,
 		name: e === "none" ? r : `${e.charAt(0).toUpperCase()}${e.slice(1)}`
 	}));
 	let i = /* @__PURE__ */ new Set();
-	for (let e of t) i.add(xp(e, n));
+	for (let e of t) i.add(Ep(e, n));
 	return [...i].sort((e, t) => e === "" ? 1 : t === "" ? -1 : e.localeCompare(t)).map((e) => ({
 		key: e,
 		name: e || r
 	}));
 }
-function Cp(e, t) {
+function Op(e, t) {
 	let n = e.swimlaneKey;
 	return !!n && !(t ?? []).some((e) => e.key === n);
 }
-function wp(e, t, n, r) {
-	if (n !== "custom") return Sp(e, t, n, r);
+function kp(e, t, n, r) {
+	if (n !== "custom") return Dp(e, t, n, r);
 	let i = /* @__PURE__ */ new Set(), a = (e.swimlanes ?? []).filter((e) => i.has(e.key) ? !1 : (i.add(e.key), !0)), o = new Set(a.map((e) => e.key)), s = t.some((e) => !e.swimlaneKey || !o.has(e.swimlaneKey));
 	return [...a.map((e) => ({
 		key: e.key,
@@ -7529,64 +7595,64 @@ function wp(e, t, n, r) {
 		name: r
 	}] : []];
 }
-function Tp(e, t, n, r) {
+function Ap(e, t, n, r) {
 	let i = /* @__PURE__ */ new Map(), a = n === "custom" ? new Set((r ?? []).map((e) => e.key)) : null;
 	for (let r of e) {
-		let e = xp(r, n), o = n === "custom" && (!e || !a?.has(e)) ? "" : e, s = xp(r, t), c = i.get(o);
+		let e = Ep(r, n), o = n === "custom" && (!e || !a?.has(e)) ? "" : e, s = Ep(r, t), c = i.get(o);
 		c || i.set(o, c = /* @__PURE__ */ new Map());
 		let l = c.get(s);
 		l || c.set(s, l = []), l.push(r);
 	}
 	return i;
 }
-function Ep(e, t, n) {
-	return t ? t.prop === "swimlaneIssue" ? Cp(e, n?.swimlanes) : t.prop === "priority" ? (e.priority || "none") === t.value : t.prop === "assignee" ? (e.assignee || "") === t.value : t.prop !== "tag" || e.tags.some((e) => e.label === t.value) : !0;
+function jp(e, t, n) {
+	return t ? t.prop === "swimlaneIssue" ? Op(e, n?.swimlanes) : t.prop === "priority" ? (e.priority || "none") === t.value : t.prop === "assignee" ? (e.assignee || "") === t.value : t.prop !== "tag" || e.tags.some((e) => e.label === t.value) : !0;
 }
-function Dp(e, t) {
+function Mp(e, t) {
 	return !!(e.title.toLowerCase().includes(t) || e.ticket && e.ticket.toLowerCase().includes(t) || e.assignee && e.assignee.toLowerCase().includes(t) || e.tags.some((e) => e.label.toLowerCase().includes(t)) || e.notes && e.notes.toLowerCase().includes(t) || !e.notes && e.excerpt && e.excerpt.toLowerCase().includes(t));
 }
-function Op(e, t, n, r) {
+function Np(e, t, n, r) {
 	let i = t.trim().toLowerCase();
-	return e.filter((e) => i && !Dp(e, i) ? !1 : Ep(e, n, r));
+	return e.filter((e) => i && !Mp(e, i) ? !1 : jp(e, n, r));
 }
-function kp(e, t) {
+function Pp(e, t) {
 	let n = [...e];
-	return t === "due" ? n.sort((e, t) => (e.due || "9999-99-99").localeCompare(t.due || "9999-99-99")) : t === "priority" ? n.sort((e, t) => (Xf[e.priority || "none"] ?? 5) - (Xf[t.priority || "none"] ?? 5)) : t === "title" ? n.sort((e, t) => e.title.localeCompare(t.title)) : n.sort((e, t) => e.position - t.position), n;
+	return t === "due" ? n.sort((e, t) => (e.due || "9999-99-99").localeCompare(t.due || "9999-99-99")) : t === "priority" ? n.sort((e, t) => (tp[e.priority || "none"] ?? 5) - (tp[t.priority || "none"] ?? 5)) : t === "title" ? n.sort((e, t) => e.title.localeCompare(t.title)) : n.sort((e, t) => e.position - t.position), n;
 }
-function Ap(e) {
+function Fp(e) {
 	return `${e.getFullYear()}-${String(e.getMonth() + 1).padStart(2, "0")}-${String(e.getDate()).padStart(2, "0")}`;
 }
-function jp(e) {
+function Ip(e) {
 	return !!e && /^\d{4}-\d{2}-\d{2}$/.test(e);
 }
-function Mp() {
-	return fp().slice(0, 7);
+function Lp() {
+	return _p().slice(0, 7);
 }
-function Np(e, t) {
+function Rp(e, t) {
 	let [n, r] = e.split("-"), i = new Date(Number(n), Number(r) - 1 + t, 1);
 	return `${i.getFullYear()}-${String(i.getMonth() + 1).padStart(2, "0")}`;
 }
-function Pp(e) {
+function zp(e) {
 	let t = /* @__PURE__ */ new Map();
 	for (let n of e) {
-		if (!jp(n.due)) continue;
+		if (!Ip(n.due)) continue;
 		let e = t.get(n.due);
 		e ? e.push(n) : t.set(n.due, [n]);
 	}
 	return t;
 }
-function Fp(e, t = 0) {
+function Bp(e, t = 0) {
 	let [n, r] = e.split("-"), i = Number(n), a = Number(r), o = (new Date(i, a - 1, 1).getDay() - t + 7) % 7, s = new Date(i, a - 1, 1 - o), c = [];
 	for (let e = 0; e < 6; e++) {
 		let t = [];
-		for (let n = 0; n < 7; n++) t.push(Ap(new Date(s.getFullYear(), s.getMonth(), s.getDate() + e * 7 + n)));
+		for (let n = 0; n < 7; n++) t.push(Fp(new Date(s.getFullYear(), s.getMonth(), s.getDate() + e * 7 + n)));
 		c.push(t);
 	}
 	return c;
 }
 //#endregion
 //#region ../../shared/components/board/BoardTable.tsx
-function Ip({ cards: e, statusName: t, today: n, doneKey: r, selectedId: i, onSelect: a }) {
+function Vp({ cards: e, statusName: t, today: n, doneKey: r, selectedId: i, onSelect: a }) {
 	let o = "px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-brand-gray", s = "px-3 py-2 align-middle", c = /* @__PURE__ */ S("span", {
 		className: "text-stone-300",
 		children: "—"
@@ -7650,7 +7716,7 @@ function Ip({ cards: e, statusName: t, today: n, doneKey: r, selectedId: i, onSe
 									(e.taskTotal ?? 0) > 0 && /* @__PURE__ */ C("span", {
 										className: `inline-flex items-center gap-0.5 rounded px-1 text-[11px] font-medium ${e.taskDone === e.taskTotal ? "bg-emerald-50 text-emerald-600" : "bg-stone-100 text-stone-500"}`,
 										children: [
-											/* @__PURE__ */ S(Gd, { className: "h-3 w-3" }),
+											/* @__PURE__ */ S(Yd, { className: "h-3 w-3" }),
 											e.taskDone,
 											"/",
 											e.taskTotal
@@ -7666,7 +7732,7 @@ function Ip({ cards: e, statusName: t, today: n, doneKey: r, selectedId: i, onSe
 						/* @__PURE__ */ S("td", {
 							className: s,
 							children: e.priority && e.priority !== "none" ? /* @__PURE__ */ S("span", {
-								className: `rounded px-1.5 py-0.5 text-[11px] font-medium ${Zf[e.priority] ?? "bg-stone-100 text-stone-500"}`,
+								className: `rounded px-1.5 py-0.5 text-[11px] font-medium ${np[e.priority] ?? "bg-stone-100 text-stone-500"}`,
 								children: e.priority
 							}) : c
 						}),
@@ -7674,14 +7740,14 @@ function Ip({ cards: e, statusName: t, today: n, doneKey: r, selectedId: i, onSe
 							className: `${s} text-stone-600`,
 							children: e.assignee ? /* @__PURE__ */ C("span", {
 								className: "inline-flex items-center gap-1",
-								children: [/* @__PURE__ */ S(If, { className: "h-3.5 w-3.5 text-brand-gray" }), e.assignee]
+								children: [/* @__PURE__ */ S(Bf, { className: "h-3.5 w-3.5 text-brand-gray" }), e.assignee]
 							}) : c
 						}),
 						/* @__PURE__ */ S("td", {
 							className: s,
 							children: e.due ? /* @__PURE__ */ C("span", {
 								className: `inline-flex items-center gap-1 ${o ? "font-medium text-red-600" : "text-stone-600"}`,
-								children: [/* @__PURE__ */ S(Ud, { className: "h-3.5 w-3.5" }), e.due]
+								children: [/* @__PURE__ */ S(qd, { className: "h-3.5 w-3.5" }), e.due]
 							}) : c
 						}),
 						/* @__PURE__ */ S("td", {
@@ -7691,7 +7757,7 @@ function Ip({ cards: e, statusName: t, today: n, doneKey: r, selectedId: i, onSe
 								children: e.tags.map((e) => /* @__PURE__ */ C("span", {
 									className: "inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[11px] text-brand-dark",
 									style: { backgroundColor: e.color ? `${e.color}22` : void 0 },
-									children: [/* @__PURE__ */ S(Mf, { className: "h-3 w-3" }), e.label]
+									children: [/* @__PURE__ */ S(If, { className: "h-3 w-3" }), e.label]
 								}, e.label))
 							}) : c
 						})
@@ -7707,9 +7773,9 @@ function Ip({ cards: e, statusName: t, today: n, doneKey: r, selectedId: i, onSe
 }
 //#endregion
 //#region ../../shared/components/board/BoardCalendar.tsx
-var Lp = Array.from({ length: 7 }, (e, t) => new Date(2023, 0, 1 + t).toLocaleDateString(void 0, { weekday: "short" }));
-function Rp({ cards: e, today: t, doneKey: n, mode: r, onModeChange: i, selectedId: a, onSelect: o }) {
-	let [s, c] = y(() => Mp()), l = Pp(e), [u, d] = s.split("-"), f = new Date(Number(u), Number(d) - 1, 1).toLocaleDateString(void 0, {
+var Hp = Array.from({ length: 7 }, (e, t) => new Date(2023, 0, 1 + t).toLocaleDateString(void 0, { weekday: "short" }));
+function Up({ cards: e, today: t, doneKey: n, mode: r, onModeChange: i, selectedId: a, onSelect: o }) {
+	let [s, c] = y(() => Lp()), l = zp(e), [u, d] = s.split("-"), f = new Date(Number(u), Number(d) - 1, 1).toLocaleDateString(void 0, {
 		year: "numeric",
 		month: "long"
 	}), p = (e) => !!e.due && e.due < t && e.columnKey !== n, m = "inline-flex h-7 w-7 items-center justify-center rounded-md border border-stone-200 text-stone-500 hover:border-brand/40 hover:text-brand-dark", h = (e) => `rounded-md px-2 py-1 text-xs font-medium ${r === e ? "bg-brand-soft text-brand-dark" : "text-stone-500 hover:text-brand-dark"}`, g = (e, t) => {
@@ -7720,7 +7786,7 @@ function Rp({ cards: e, today: t, doneKey: n, mode: r, onModeChange: i, selected
 			title: e.title,
 			className: `flex w-full items-center gap-1 rounded px-1 py-0.5 text-left text-[11px] transition-colors ${a === e.id ? "bg-brand-soft/60" : "bg-stone-100/70 hover:bg-brand-soft/40"} ${n ? "text-red-600" : "text-stone-700"}`,
 			children: [
-				e.priority && e.priority !== "none" && /* @__PURE__ */ S("span", { className: `h-1.5 w-1.5 shrink-0 rounded-full ${Zf[e.priority]?.split(" ")[0] ?? "bg-stone-300"}` }),
+				e.priority && e.priority !== "none" && /* @__PURE__ */ S("span", { className: `h-1.5 w-1.5 shrink-0 rounded-full ${np[e.priority]?.split(" ")[0] ?? "bg-stone-300"}` }),
 				e.icon && /* @__PURE__ */ S("span", {
 					className: "shrink-0",
 					children: e.icon
@@ -7732,7 +7798,7 @@ function Rp({ cards: e, today: t, doneKey: n, mode: r, onModeChange: i, selected
 				!t && (e.taskTotal ?? 0) > 0 && /* @__PURE__ */ C("span", {
 					className: "ml-auto inline-flex shrink-0 items-center gap-0.5 text-[10px] text-stone-400",
 					children: [
-						/* @__PURE__ */ S(Gd, { className: "h-2.5 w-2.5" }),
+						/* @__PURE__ */ S(Yd, { className: "h-2.5 w-2.5" }),
 						e.taskDone,
 						"/",
 						e.taskTotal
@@ -7748,16 +7814,16 @@ function Rp({ cards: e, today: t, doneKey: n, mode: r, onModeChange: i, selected
 				className: m,
 				title: B._({ id: "1xwZj_" }),
 				"aria-label": B._({ id: "1xwZj_" }),
-				onClick: () => c((e) => Np(e, -1)),
-				children: /* @__PURE__ */ S(Yd, { className: "h-4 w-4" })
+				onClick: () => c((e) => Rp(e, -1)),
+				children: /* @__PURE__ */ S($d, { className: "h-4 w-4" })
 			}),
 			/* @__PURE__ */ S("button", {
 				type: "button",
 				className: m,
 				title: B._({ id: "g8JmSC" }),
 				"aria-label": B._({ id: "g8JmSC" }),
-				onClick: () => c((e) => Np(e, 1)),
-				children: /* @__PURE__ */ S(Zd, { className: "h-4 w-4" })
+				onClick: () => c((e) => Rp(e, 1)),
+				children: /* @__PURE__ */ S(tf, { className: "h-4 w-4" })
 			}),
 			/* @__PURE__ */ S("span", {
 				className: "min-w-[8rem] text-sm font-medium text-brand-dark",
@@ -7766,7 +7832,7 @@ function Rp({ cards: e, today: t, doneKey: n, mode: r, onModeChange: i, selected
 			/* @__PURE__ */ S("button", {
 				type: "button",
 				className: "rounded-md border border-stone-200 px-2 py-1 text-xs text-stone-600 hover:border-brand/40 hover:text-brand-dark",
-				onClick: () => c(Mp()),
+				onClick: () => c(Lp()),
 				children: /* @__PURE__ */ S(L, { id: "ecUA8p" })
 			})
 		] }), /* @__PURE__ */ C("div", {
@@ -7785,7 +7851,7 @@ function Rp({ cards: e, today: t, doneKey: n, mode: r, onModeChange: i, selected
 		})]
 	});
 	if (r === "agenda") {
-		let n = kp(e, "due"), r = n.filter((e) => jp(e.due)), i = n.filter((e) => !jp(e.due)), a = "";
+		let n = Pp(e, "due"), r = n.filter((e) => Ip(e.due)), i = n.filter((e) => !Ip(e.due)), a = "";
 		return /* @__PURE__ */ C("div", {
 			className: "flex min-h-0 flex-1 flex-col",
 			children: [_, /* @__PURE__ */ C("div", {
@@ -7819,14 +7885,14 @@ function Rp({ cards: e, today: t, doneKey: n, mode: r, onModeChange: i, selected
 			})]
 		});
 	}
-	let v = Fp(s);
+	let v = Bp(s);
 	return /* @__PURE__ */ C("div", {
 		className: "flex min-h-0 flex-1 flex-col",
 		children: [
 			_,
 			/* @__PURE__ */ S("div", {
 				className: "grid grid-cols-7 border-b border-black/[0.04] bg-[#fbfdfb]",
-				children: Lp.map((e) => /* @__PURE__ */ S("div", {
+				children: Hp.map((e) => /* @__PURE__ */ S("div", {
 					className: "px-2 py-1 text-center text-[11px] font-medium uppercase tracking-wide text-brand-gray",
 					children: e
 				}, e))
@@ -7854,232 +7920,41 @@ function Rp({ cards: e, today: t, doneKey: n, mode: r, onModeChange: i, selected
 	});
 }
 //#endregion
-//#region ../../shared/components/board/BoardSwimlanes.tsx
-function zp({ cards: e, columns: t, lanes: r, config: i, groupKey: a, swimlaneKey: o, sortBy: s, today: c, doneKey: l, selectedId: u, actions: d, readOnly: f, portalClassName: p, onSelect: m, onOpenManager: h, onManageLane: g, onMoveCustomLane: _, onSetCustomLaneColor: v, onShowMissing: b }) {
-	let [w, T] = y(!1), [E, D] = y(""), [O, k] = y(null), A = p ? ` ${p}` : "", j = Tp(e, a, o, i.swimlanes), M = { gridTemplateColumns: `9rem repeat(${Math.max(t.length, 1)}, minmax(15rem, 1fr))` }, N = (i.swimlanes ?? []).filter((e, t, n) => n.findIndex((t) => t.key === e.key) === t), P = new Map(N.map((e) => [e.key, e])), F = o === "custom" ? e.filter((e) => !!e.swimlaneKey && !P.has(e.swimlaneKey)).length : 0, I = (e) => {
-		let t = j.get(e);
-		return t ? [...t.values()].reduce((e, t) => e + t.length, 0) : 0;
-	}, ee = r.filter((e) => e.key !== "" || I(e.key) > 0), R = (e) => {
-		let t = e.due && e.due < c && e.columnKey !== l;
-		return /* @__PURE__ */ C("button", {
-			type: "button",
-			onClick: () => m(e),
-			title: e.title,
-			"data-card-id": e.id,
-			className: `block w-full rounded-lg bg-white p-2 text-left text-sm shadow-sm ring-1 transition hover:ring-brand/30 focus:outline-none focus:ring-2 focus:ring-brand/40 ${u === e.id ? "ring-brand/60" : "ring-black/[0.04]"}`,
+//#region ../../shared/components/board/LaneDetailsPopover.tsx
+function Wp({ lane: e, cardCount: t, portalClassName: n, buttonClassName: r = "flex h-8 w-8 items-center justify-center rounded-lg text-stone-400 hover:bg-white hover:text-stone-600" }) {
+	let [i, a] = y("idle"), o = v(null), s = n ? ` ${n}` : "";
+	f(() => {
+		a("idle");
+	}, [e.key]), f(() => () => {
+		o.current != null && window.clearTimeout(o.current);
+	}, []);
+	let c = async () => {
+		try {
+			if (!navigator.clipboard) throw Error("Clipboard unavailable");
+			await navigator.clipboard.writeText(e.key), a("copied"), o.current != null && window.clearTimeout(o.current), o.current = window.setTimeout(() => a("idle"), 1600);
+		} catch {
+			a("error");
+		}
+	};
+	return /* @__PURE__ */ C(od, {
+		className: "relative shrink-0",
+		children: [/* @__PURE__ */ S(td, {
+			title: B._({ id: "rRubBJ" }),
+			"aria-label": B._({
+				id: "Th4mIx",
+				values: { 0: e.name }
+			}),
+			className: r,
+			children: /* @__PURE__ */ S(vf, { className: "h-4 w-4" })
+		}), /* @__PURE__ */ C(id, {
+			anchor: "bottom end",
+			className: `z-50 w-80 rounded-xl border border-line bg-white p-4 shadow-lg shadow-emerald-950/10 [--anchor-gap:4px] focus:outline-none${s}`,
 			children: [
-				e.ticket && /* @__PURE__ */ S("span", {
-					className: "mb-0.5 inline-block rounded bg-stone-100 px-1 py-0.5 font-mono text-[10px] font-medium tracking-tight text-stone-500",
-					children: e.ticket
-				}),
-				/* @__PURE__ */ C("span", {
-					className: "block truncate text-stone-800",
-					children: [e.icon && /* @__PURE__ */ S("span", {
-						className: "mr-1",
-						children: e.icon
-					}), e.title]
-				}),
-				(e.priority && e.priority !== "none" || e.due || (e.taskTotal ?? 0) > 0) && /* @__PURE__ */ C("span", {
-					className: "mt-1 flex flex-wrap items-center gap-1.5",
-					children: [
-						e.priority && e.priority !== "none" && /* @__PURE__ */ S("span", {
-							className: `rounded px-1.5 py-0.5 text-[11px] font-medium ${Zf[e.priority] ?? "bg-stone-100 text-stone-500"}`,
-							children: e.priority
-						}),
-						(e.taskTotal ?? 0) > 0 && /* @__PURE__ */ C("span", {
-							className: `inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[11px] font-medium ${e.taskDone === e.taskTotal ? "bg-emerald-50 text-emerald-600" : "bg-stone-100 text-stone-500"}`,
-							children: [
-								/* @__PURE__ */ S(Gd, { className: "h-3 w-3" }),
-								e.taskDone,
-								"/",
-								e.taskTotal
-							]
-						}),
-						e.due && /* @__PURE__ */ C("span", {
-							className: `inline-flex items-center gap-0.5 text-[11px] ${t ? "font-medium text-red-600" : "text-brand-gray"}`,
-							children: [/* @__PURE__ */ S(Ud, { className: "h-3 w-3" }), e.due]
-						})
-					]
-				})
-			]
-		}, e.id);
-	}, te = (e, n) => {
-		let r = l === e.key, i = d.renameColumn || d.toggleDoneColumn || d.setColumnLimit || d.setColumnColor || d.deleteColumn;
-		return f || !i ? null : /* @__PURE__ */ C(Du, {
-			as: "div",
-			className: "relative shrink-0",
-			children: [/* @__PURE__ */ S(Su, {
-				title: B._({ id: "YHjvGb" }),
-				"aria-label": B._({
-					id: "RlLl3G",
-					values: { 0: e.name }
-				}),
-				className: "flex h-8 w-8 items-center justify-center rounded-lg text-stone-400 hover:bg-white hover:text-stone-600",
-				children: /* @__PURE__ */ S(cf, { className: "h-4 w-4" })
-			}), /* @__PURE__ */ C(Cu, {
-				anchor: "bottom end",
-				className: `z-50 w-48 rounded-xl border border-line bg-white py-1 text-xs shadow-lg shadow-emerald-950/10 [--anchor-gap:4px] focus:outline-none${A}`,
-				children: [
-					d.renameColumn && /* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
-						type: "button",
-						onClick: () => void d.renameColumn?.(e.key),
-						className: "flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 data-[focus]:bg-stone-100",
-						children: [/* @__PURE__ */ S(Sf, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "2wxgft" })]
-					}) }),
-					d.reorderColumns && /* @__PURE__ */ C(x, { children: [/* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
-						type: "button",
-						disabled: n === 0,
-						"aria-disabled": n === 0,
-						onClick: () => {
-							let r = t[n - 1];
-							r && d.reorderColumns?.(e.key, r.key);
-						},
-						className: "flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 aria-disabled:opacity-40 data-[focus]:bg-stone-100",
-						children: [/* @__PURE__ */ S(jd, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "iSLA_r" })]
-					}) }), /* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
-						type: "button",
-						disabled: n === t.length - 1,
-						"aria-disabled": n === t.length - 1,
-						onClick: () => {
-							let r = t[n + 1];
-							r && d.reorderColumns?.(e.key, r.key);
-						},
-						className: "flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 aria-disabled:opacity-40 data-[focus]:bg-stone-100",
-						children: [/* @__PURE__ */ S(Dd, { className: "h-3.5 w-3.5 -rotate-90" }), /* @__PURE__ */ S(L, { id: "Ubl2by" })]
-					}) })] }),
-					d.toggleDoneColumn && /* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
-						type: "button",
-						onClick: () => void d.toggleDoneColumn?.(e.key),
-						className: "flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 data-[focus]:bg-stone-100",
-						children: [/* @__PURE__ */ S(Gd, { className: "h-3.5 w-3.5" }), r ? /* @__PURE__ */ S(L, { id: "G4qrLy" }) : /* @__PURE__ */ S(L, { id: "wtw-au" })]
-					}) }),
-					d.setColumnLimit && /* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
-						type: "button",
-						onClick: () => void d.setColumnLimit?.(e.key),
-						className: "flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 data-[focus]:bg-stone-100",
-						children: [/* @__PURE__ */ S(ff, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "Iw6WJa" })]
-					}) }),
-					d.setColumnColor && /* @__PURE__ */ C(x, { children: [/* @__PURE__ */ S("div", { className: "my-1 border-t border-line" }), /* @__PURE__ */ C("div", {
-						className: "px-3 py-2",
-						children: [/* @__PURE__ */ S("span", {
-							className: "text-[11px] text-brand-gray",
-							children: /* @__PURE__ */ S(L, { id: "jZlrte" })
-						}), /* @__PURE__ */ C("div", {
-							className: "mt-2 flex flex-wrap gap-2",
-							children: [Qf.map((t) => /* @__PURE__ */ S("button", {
-								type: "button",
-								onClick: () => void d.setColumnColor?.(e.key, t),
-								title: t,
-								className: `h-5 w-5 rounded-full ring-1 ring-black/10 ${e.color === t ? "ring-2 ring-brand ring-offset-2" : ""}`,
-								style: { backgroundColor: t }
-							}, t)), /* @__PURE__ */ S("button", {
-								type: "button",
-								title: B._({ id: "H_SQFv" }),
-								onClick: () => void d.setColumnColor?.(e.key, null),
-								className: "flex h-5 w-5 items-center justify-center rounded-full bg-white ring-1 ring-black/10",
-								children: /* @__PURE__ */ S(Bf, { className: "h-3 w-3 text-stone-400" })
-							})]
-						})]
-					})] }),
-					d.deleteColumn && /* @__PURE__ */ C(x, { children: [/* @__PURE__ */ S("div", { className: "my-1 border-t border-line" }), /* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
-						type: "button",
-						disabled: t.length <= 1,
-						"aria-disabled": t.length <= 1,
-						onClick: () => {
-							t.length > 1 && d.deleteColumn?.(e.key);
-						},
-						className: "flex w-full items-center gap-2 px-3 py-2 text-left text-red-600 aria-disabled:opacity-40 data-[focus]:bg-red-50",
-						children: [/* @__PURE__ */ S(Pf, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "cnGeoo" })]
-					}) })] })
-				]
-			})]
-		});
-	}, z = (e, t) => {
-		let n = P.get(e.key);
-		return !n || f ? null : /* @__PURE__ */ C(od, {
-			className: "relative shrink-0",
-			children: [/* @__PURE__ */ C(Du, { children: [/* @__PURE__ */ S(Su, {
-				title: B._({ id: "DGEEOQ" }),
-				"aria-label": B._({
-					id: "RlLl3G",
-					values: { 0: e.name }
-				}),
-				className: "flex h-8 w-8 items-center justify-center rounded-lg text-stone-400 hover:bg-white hover:text-stone-600",
-				children: /* @__PURE__ */ S(cf, { className: "h-4 w-4" })
-			}), /* @__PURE__ */ C(Cu, {
-				anchor: "bottom end",
-				className: `z-50 w-48 rounded-xl border border-line bg-white py-1 text-xs shadow-lg shadow-emerald-950/10 [--anchor-gap:4px] focus:outline-none${A}`,
-				children: [
-					/* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
-						type: "button",
-						onClick: () => g({
-							laneKey: e.key,
-							action: "rename"
-						}),
-						className: "flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 data-[focus]:bg-stone-100",
-						children: [/* @__PURE__ */ S(Sf, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "2wxgft" })]
-					}) }),
-					/* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
-						type: "button",
-						disabled: t === 0,
-						"aria-disabled": t === 0,
-						onClick: () => _(e.key, -1),
-						className: "flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 aria-disabled:opacity-40 data-[focus]:bg-stone-100",
-						children: [/* @__PURE__ */ S(jd, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "QyioBP" })]
-					}) }),
-					/* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
-						type: "button",
-						disabled: t === N.length - 1,
-						"aria-disabled": t === N.length - 1,
-						onClick: () => _(e.key, 1),
-						className: "flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 aria-disabled:opacity-40 data-[focus]:bg-stone-100",
-						children: [/* @__PURE__ */ S(Dd, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "3Ib6FN" })]
-					}) }),
-					/* @__PURE__ */ S("div", { className: "my-1 border-t border-line" }),
-					/* @__PURE__ */ C("div", {
-						className: "px-3 py-2",
-						children: [/* @__PURE__ */ S("span", {
-							className: "text-[11px] text-brand-gray",
-							children: /* @__PURE__ */ S(L, { id: "jZlrte" })
-						}), /* @__PURE__ */ C("div", {
-							className: "mt-2 flex flex-wrap gap-2",
-							children: [Qf.map((t) => /* @__PURE__ */ S("button", {
-								type: "button",
-								onClick: () => v(e.key, t),
-								title: t,
-								className: `h-5 w-5 rounded-full ring-1 ring-black/10 ${n.color === t ? "ring-2 ring-brand ring-offset-2" : ""}`,
-								style: { backgroundColor: t }
-							}, t)), /* @__PURE__ */ S("button", {
-								type: "button",
-								title: B._({ id: "H_SQFv" }),
-								onClick: () => v(e.key, null),
-								className: "flex h-5 w-5 items-center justify-center rounded-full bg-white ring-1 ring-black/10",
-								children: /* @__PURE__ */ S(Bf, { className: "h-3 w-3 text-stone-400" })
-							})]
-						})]
-					}),
-					/* @__PURE__ */ S($, { children: /* @__PURE__ */ C(td, {
-						className: "flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 data-[focus]:bg-stone-100",
-						children: [/* @__PURE__ */ S(mf, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "URmyfc" })]
-					}) }),
-					/* @__PURE__ */ S("div", { className: "my-1 border-t border-line" }),
-					/* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
-						type: "button",
-						onClick: () => g({
-							laneKey: e.key,
-							action: "delete"
-						}),
-						className: "flex w-full items-center gap-2 px-3 py-2 text-left text-red-600 data-[focus]:bg-red-50",
-						children: [/* @__PURE__ */ S(Pf, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "cnGeoo" })]
-					}) })
-				]
-			})] }), /* @__PURE__ */ C(id, {
-				anchor: "bottom end",
-				className: `z-50 w-80 rounded-xl border border-line bg-white p-4 shadow-lg shadow-emerald-950/10 [--anchor-gap:4px] focus:outline-none${A}`,
-				children: [/* @__PURE__ */ C("p", {
+				/* @__PURE__ */ C("p", {
 					className: "flex items-center gap-2 text-xs font-semibold text-stone-800",
-					children: [/* @__PURE__ */ S(mf, { className: "h-4 w-4 text-brand-dark" }), /* @__PURE__ */ S(L, { id: "rRubBJ" })]
-				}), /* @__PURE__ */ C("dl", {
+					children: [/* @__PURE__ */ S(vf, { className: "h-4 w-4 text-brand-dark" }), /* @__PURE__ */ S(L, { id: "rRubBJ" })]
+				}),
+				/* @__PURE__ */ C("dl", {
 					className: "mt-3 grid grid-cols-[64px_minmax(0,1fr)] items-center gap-x-2 gap-y-2 text-[11px]",
 					children: [
 						/* @__PURE__ */ S("dt", {
@@ -8103,40 +7978,277 @@ function zp({ cards: e, columns: t, lanes: r, config: i, groupKey: a, swimlaneKe
 								type: "button",
 								title: B._({ id: "qpGDiV" }),
 								"aria-label": B._({ id: "qpGDiV" }),
-								onClick: () => {
-									navigator.clipboard?.writeText(e.key).then(() => {
-										k(e.key), window.setTimeout(() => k(null), 1600);
-									});
-								},
+								onClick: () => void c(),
 								className: "inline-flex h-7 items-center gap-1 rounded-lg border border-stone-200 px-2 text-[10px] font-medium text-brand-dark hover:border-brand/30",
-								children: [/* @__PURE__ */ S(tf, { className: "h-3.5 w-3.5" }), O === e.key ? B._({ id: "6V3Ea3" }) : B._({ id: "he3ygx" })]
+								children: [/* @__PURE__ */ S(of, { className: "h-3.5 w-3.5" }), i === "copied" ? B._({ id: "6V3Ea3" }) : B._({ id: "he3ygx" })]
 							})]
 						}),
 						/* @__PURE__ */ S("dt", {
 							className: "text-brand-gray",
 							children: /* @__PURE__ */ S(L, { id: "xUOPoQ" })
 						}),
-						/* @__PURE__ */ C("dd", {
+						/* @__PURE__ */ S("dd", {
 							className: "tabular-nums text-stone-700",
-							children: [
-								I(e.key),
-								" ",
-								/* @__PURE__ */ S(L, { id: "sCzmvQ" })
-							]
+							children: /* @__PURE__ */ S(L, {
+								id: "tF-_sn",
+								values: { cardCount: t }
+							})
 						})
 					]
-				})]
+				}),
+				i === "error" && /* @__PURE__ */ S("p", {
+					className: "mt-3 text-[11px] text-red-600",
+					role: "alert",
+					children: /* @__PURE__ */ S(L, { id: "vfYjJ_" })
+				})
+			]
+		})]
+	});
+}
+//#endregion
+//#region ../../shared/components/board/StatusActionsMenu.tsx
+function Gp({ column: e, siblings: t, actions: n, doneKey: r, orientation: i, portalClassName: a, buttonClassName: o = "flex h-8 w-8 items-center justify-center rounded-lg text-stone-400 hover:bg-white hover:text-stone-600" }) {
+	let s = t.findIndex((t) => t.key === e.key), c = r === e.key;
+	if (!(n.renameColumn || n.reorderColumns || n.toggleDoneColumn || n.setColumnLimit || n.setColumnColor || n.deleteColumn)) return null;
+	let l = a ? ` ${a}` : "", u = s > 0 ? t[s - 1] : void 0, d = s >= 0 && s < t.length - 1 ? t[s + 1] : void 0;
+	return /* @__PURE__ */ C(Du, {
+		as: "div",
+		className: "relative shrink-0",
+		children: [/* @__PURE__ */ S(Su, {
+			title: B._({ id: "YHjvGb" }),
+			"aria-label": B._({
+				id: "RlLl3G",
+				values: { 0: e.name }
+			}),
+			className: o,
+			children: /* @__PURE__ */ S(ff, { className: "h-4 w-4" })
+		}), /* @__PURE__ */ C(Cu, {
+			anchor: "bottom end",
+			className: `z-50 w-48 rounded-xl border border-line bg-white py-1 text-xs shadow-lg shadow-emerald-950/10 [--anchor-gap:4px] focus:outline-none${l}`,
+			children: [
+				n.renameColumn && /* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
+					type: "button",
+					onClick: () => void n.renameColumn?.(e.key),
+					className: "flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 data-[focus]:bg-stone-100",
+					children: [/* @__PURE__ */ S(Ef, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "2wxgft" })]
+				}) }),
+				n.reorderColumns && /* @__PURE__ */ C(x, { children: [/* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
+					type: "button",
+					disabled: !u,
+					"aria-disabled": !u,
+					onClick: () => {
+						u && n.reorderColumns?.(e.key, u.key);
+					},
+					className: "flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 aria-disabled:opacity-40 data-[focus]:bg-stone-100",
+					children: [S(i === "horizontal" ? kd : Fd, { className: "h-3.5 w-3.5" }), i === "horizontal" ? /* @__PURE__ */ S(L, { id: "iSLA_r" }) : /* @__PURE__ */ S(L, { id: "QyioBP" })]
+				}) }), /* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
+					type: "button",
+					disabled: !d,
+					"aria-disabled": !d,
+					onClick: () => {
+						d && n.reorderColumns?.(e.key, d.key);
+					},
+					className: "flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 aria-disabled:opacity-40 data-[focus]:bg-stone-100",
+					children: [S(i === "horizontal" ? Nd : Dd, { className: "h-3.5 w-3.5" }), i === "horizontal" ? /* @__PURE__ */ S(L, { id: "Ubl2by" }) : /* @__PURE__ */ S(L, { id: "3Ib6FN" })]
+				}) })] }),
+				n.toggleDoneColumn && /* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
+					type: "button",
+					onClick: () => void n.toggleDoneColumn?.(e.key),
+					className: "flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 data-[focus]:bg-stone-100",
+					children: [/* @__PURE__ */ S(Yd, { className: "h-3.5 w-3.5" }), c ? /* @__PURE__ */ S(L, { id: "G4qrLy" }) : /* @__PURE__ */ S(L, { id: "wtw-au" })]
+				}) }),
+				n.setColumnLimit && /* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
+					type: "button",
+					onClick: () => void n.setColumnLimit?.(e.key),
+					className: "flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 data-[focus]:bg-stone-100",
+					children: [/* @__PURE__ */ S(gf, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "Iw6WJa" })]
+				}) }),
+				n.setColumnColor && /* @__PURE__ */ C(x, { children: [/* @__PURE__ */ S("div", { className: "my-1 border-t border-line" }), /* @__PURE__ */ C("div", {
+					className: "px-3 py-2",
+					children: [/* @__PURE__ */ S("span", {
+						className: "text-[11px] text-brand-gray",
+						children: /* @__PURE__ */ S(L, { id: "jZlrte" })
+					}), /* @__PURE__ */ C("div", {
+						className: "mt-2 flex flex-wrap gap-2",
+						children: [rp.map((t) => /* @__PURE__ */ S("button", {
+							type: "button",
+							onClick: () => void n.setColumnColor?.(e.key, t),
+							title: t,
+							className: `h-5 w-5 rounded-full ring-1 ring-black/10 ${e.color === t ? "ring-2 ring-brand ring-offset-2" : ""}`,
+							style: { backgroundColor: t }
+						}, t)), /* @__PURE__ */ S("button", {
+							type: "button",
+							title: B._({ id: "H_SQFv" }),
+							onClick: () => void n.setColumnColor?.(e.key, null),
+							className: "flex h-5 w-5 items-center justify-center rounded-full bg-white ring-1 ring-black/10",
+							children: /* @__PURE__ */ S(Wf, { className: "h-3 w-3 text-stone-400" })
+						})]
+					})]
+				})] }),
+				n.deleteColumn && /* @__PURE__ */ C(x, { children: [/* @__PURE__ */ S("div", { className: "my-1 border-t border-line" }), /* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
+					type: "button",
+					disabled: t.length <= 1,
+					"aria-disabled": t.length <= 1,
+					onClick: () => {
+						t.length > 1 && n.deleteColumn?.(e.key);
+					},
+					className: "flex w-full items-center gap-2 px-3 py-2 text-left text-red-600 aria-disabled:opacity-40 data-[focus]:bg-red-50",
+					children: [/* @__PURE__ */ S(Rf, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "cnGeoo" })]
+				}) })] })
+			]
+		})]
+	});
+}
+//#endregion
+//#region ../../shared/components/board/BoardSwimlanes.tsx
+function Kp({ cards: e, columns: t, lanes: r, config: i, groupKey: a, swimlaneKey: o, sortBy: s, today: c, doneKey: l, selectedId: u, actions: d, readOnly: f, customLaneMutationPending: p, portalClassName: m, onSelect: h, onOpenManager: _, onManageLane: v, onMoveCustomLane: b, onSetCustomLaneColor: x, onShowMissing: w }) {
+	let [T, E] = y(!1), [D, O] = y(""), k = m ? ` ${m}` : "", A = g(() => Ap(e, a, o, i.swimlanes), [
+		e,
+		i.swimlanes,
+		a,
+		o
+	]), j = { gridTemplateColumns: `9rem repeat(${Math.max(t.length, 1)}, minmax(15rem, 1fr))` }, M = g(() => (i.swimlanes ?? []).filter((e, t, n) => n.findIndex((t) => t.key === e.key) === t), [i.swimlanes]), N = g(() => new Map(M.map((e) => [e.key, e])), [M]), P = o === "custom" ? e.filter((e) => !!e.swimlaneKey && !N.has(e.swimlaneKey)).length : 0, F = g(() => {
+		let e = /* @__PURE__ */ new Map();
+		for (let [t, n] of A) e.set(t, [...n.values()].reduce((e, t) => e + t.length, 0));
+		return e;
+	}, [A]), I = g(() => {
+		let e = new Map(t.map((e) => [e.key, 0]));
+		for (let t of A.values()) for (let [n, r] of t) e.has(n) && e.set(n, (e.get(n) ?? 0) + r.length);
+		return e;
+	}, [t, A]), ee = (e) => F.get(e) ?? 0, R = r.filter((e) => e.key !== "" || ee(e.key) > 0), te = (e) => {
+		let t = e.due && e.due < c && e.columnKey !== l;
+		return /* @__PURE__ */ C("button", {
+			type: "button",
+			onClick: () => h(e),
+			title: e.title,
+			"data-card-id": e.id,
+			className: `block w-full rounded-lg bg-white p-2 text-left text-sm shadow-sm ring-1 transition hover:ring-brand/30 focus:outline-none focus:ring-2 focus:ring-brand/40 ${u === e.id ? "ring-brand/60" : "ring-black/[0.04]"}`,
+			children: [
+				e.ticket && /* @__PURE__ */ S("span", {
+					className: "mb-0.5 inline-block rounded bg-stone-100 px-1 py-0.5 font-mono text-[10px] font-medium tracking-tight text-stone-500",
+					children: e.ticket
+				}),
+				/* @__PURE__ */ C("span", {
+					className: "block truncate text-stone-800",
+					children: [e.icon && /* @__PURE__ */ S("span", {
+						className: "mr-1",
+						children: e.icon
+					}), e.title]
+				}),
+				(e.priority && e.priority !== "none" || e.due || (e.taskTotal ?? 0) > 0) && /* @__PURE__ */ C("span", {
+					className: "mt-1 flex flex-wrap items-center gap-1.5",
+					children: [
+						e.priority && e.priority !== "none" && /* @__PURE__ */ S("span", {
+							className: `rounded px-1.5 py-0.5 text-[11px] font-medium ${np[e.priority] ?? "bg-stone-100 text-stone-500"}`,
+							children: e.priority
+						}),
+						(e.taskTotal ?? 0) > 0 && /* @__PURE__ */ C("span", {
+							className: `inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[11px] font-medium ${e.taskDone === e.taskTotal ? "bg-emerald-50 text-emerald-600" : "bg-stone-100 text-stone-500"}`,
+							children: [
+								/* @__PURE__ */ S(Yd, { className: "h-3 w-3" }),
+								e.taskDone,
+								"/",
+								e.taskTotal
+							]
+						}),
+						e.due && /* @__PURE__ */ C("span", {
+							className: `inline-flex items-center gap-0.5 text-[11px] ${t ? "font-medium text-red-600" : "text-brand-gray"}`,
+							children: [/* @__PURE__ */ S(qd, { className: "h-3 w-3" }), e.due]
+						})
+					]
+				})
+			]
+		}, e.id);
+	}, z = (e, t) => {
+		let n = N.get(e.key);
+		return !n || f ? null : /* @__PURE__ */ C(Du, {
+			as: "div",
+			className: "relative shrink-0",
+			children: [/* @__PURE__ */ S(Su, {
+				disabled: p,
+				title: B._({ id: "DGEEOQ" }),
+				"aria-label": B._({
+					id: "RlLl3G",
+					values: { 0: e.name }
+				}),
+				className: "flex h-8 w-8 items-center justify-center rounded-lg text-stone-400 hover:bg-white hover:text-stone-600 disabled:cursor-wait disabled:opacity-40",
+				children: /* @__PURE__ */ S(ff, { className: "h-4 w-4" })
+			}), /* @__PURE__ */ C(Cu, {
+				anchor: "bottom end",
+				className: `z-50 w-48 rounded-xl border border-line bg-white py-1 text-xs shadow-lg shadow-emerald-950/10 [--anchor-gap:4px] focus:outline-none${k}`,
+				children: [
+					/* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
+						type: "button",
+						onClick: () => v({
+							laneKey: e.key,
+							action: "rename"
+						}),
+						className: "flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 data-[focus]:bg-stone-100",
+						children: [/* @__PURE__ */ S(Ef, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "2wxgft" })]
+					}) }),
+					/* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
+						type: "button",
+						disabled: t === 0 || p,
+						"aria-disabled": t === 0 || p,
+						onClick: () => b(e.key, -1),
+						className: "flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 aria-disabled:opacity-40 data-[focus]:bg-stone-100",
+						children: [/* @__PURE__ */ S(Fd, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "QyioBP" })]
+					}) }),
+					/* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
+						type: "button",
+						disabled: t === M.length - 1 || p,
+						"aria-disabled": t === M.length - 1 || p,
+						onClick: () => b(e.key, 1),
+						className: "flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 aria-disabled:opacity-40 data-[focus]:bg-stone-100",
+						children: [/* @__PURE__ */ S(Dd, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "3Ib6FN" })]
+					}) }),
+					/* @__PURE__ */ S("div", { className: "my-1 border-t border-line" }),
+					/* @__PURE__ */ C("div", {
+						className: "px-3 py-2",
+						children: [/* @__PURE__ */ S("span", {
+							className: "text-[11px] text-brand-gray",
+							children: /* @__PURE__ */ S(L, { id: "jZlrte" })
+						}), /* @__PURE__ */ C("div", {
+							className: "mt-2 flex flex-wrap gap-2",
+							children: [rp.map((t) => /* @__PURE__ */ S("button", {
+								type: "button",
+								disabled: p,
+								onClick: () => x(e.key, t),
+								title: t,
+								className: `h-5 w-5 rounded-full ring-1 ring-black/10 disabled:cursor-wait disabled:opacity-40 ${n.color === t ? "ring-2 ring-brand ring-offset-2" : ""}`,
+								style: { backgroundColor: t }
+							}, t)), /* @__PURE__ */ S("button", {
+								type: "button",
+								disabled: p,
+								title: B._({ id: "H_SQFv" }),
+								onClick: () => x(e.key, null),
+								className: "flex h-5 w-5 items-center justify-center rounded-full bg-white ring-1 ring-black/10 disabled:cursor-wait disabled:opacity-40",
+								children: /* @__PURE__ */ S(Wf, { className: "h-3 w-3 text-stone-400" })
+							})]
+						})]
+					}),
+					/* @__PURE__ */ S("div", { className: "my-1 border-t border-line" }),
+					/* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
+						type: "button",
+						onClick: () => v({
+							laneKey: e.key,
+							action: "delete"
+						}),
+						className: "flex w-full items-center gap-2 px-3 py-2 text-left text-red-600 data-[focus]:bg-red-50",
+						children: [/* @__PURE__ */ S(Rf, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "cnGeoo" })]
+					}) })
+				]
 			})]
 		});
 	};
-	return o === "custom" && N.length === 0 ? /* @__PURE__ */ S("div", {
+	return o === "custom" && M.length === 0 ? /* @__PURE__ */ S("div", {
 		className: "flex min-h-0 flex-1 items-center justify-center overflow-auto bg-stone-50 p-6",
 		children: /* @__PURE__ */ C("section", {
 			className: "w-full max-w-md rounded-2xl bg-white px-8 py-10 text-center shadow-lg shadow-emerald-950/10 ring-1 ring-black/[0.05]",
 			children: [
 				/* @__PURE__ */ S("span", {
 					className: "mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-brand-soft text-brand-dark",
-					children: /* @__PURE__ */ S(Ef, { className: "h-5 w-5" })
+					children: /* @__PURE__ */ S(Af, { className: "h-5 w-5" })
 				}),
 				/* @__PURE__ */ S("h2", {
 					className: "mt-4 text-base font-semibold tracking-tight text-stone-900",
@@ -8148,9 +8260,9 @@ function zp({ cards: e, columns: t, lanes: r, config: i, groupKey: a, swimlaneKe
 				}),
 				!f && /* @__PURE__ */ C("button", {
 					type: "button",
-					onClick: h,
+					onClick: _,
 					className: "mt-5 inline-flex min-h-10 items-center gap-1.5 rounded-lg bg-brand-dark px-3 text-xs font-semibold text-white hover:bg-brand",
-					children: [/* @__PURE__ */ S(wf, { className: "h-4 w-4" }), /* @__PURE__ */ S(L, { id: "KCszT6" })]
+					children: [/* @__PURE__ */ S(Of, { className: "h-4 w-4" }), /* @__PURE__ */ S(L, { id: "KCszT6" })]
 				})
 			]
 		})
@@ -8159,7 +8271,7 @@ function zp({ cards: e, columns: t, lanes: r, config: i, groupKey: a, swimlaneKe
 		"data-swimlane-scrollport": !0,
 		children: /* @__PURE__ */ C("div", {
 			className: "grid min-w-max items-stretch gap-2",
-			style: M,
+			style: j,
 			children: [
 				/* @__PURE__ */ C("div", {
 					className: "sticky left-0 top-0 z-30 flex h-10 items-center gap-2 rounded-xl border border-line bg-white px-3 shadow-sm",
@@ -8174,50 +8286,57 @@ function zp({ cards: e, columns: t, lanes: r, config: i, groupKey: a, swimlaneKe
 						})]
 					}), a === "status" && d.addColumn && !f && /* @__PURE__ */ S("button", {
 						type: "button",
-						onClick: () => T(!0),
+						onClick: () => E(!0),
 						title: B._({ id: "1nUGn5" }),
 						"aria-label": B._({ id: "1nUGn5" }),
 						className: "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-brand-dark hover:bg-brand-soft",
-						children: /* @__PURE__ */ S(wf, { className: "h-4 w-4" })
+						children: /* @__PURE__ */ S(Of, { className: "h-4 w-4" })
 					})]
 				}),
-				t.map((t, n) => {
-					let r = e.filter((e) => a === "status" ? e.columnKey === t.key : a === "priority" ? (e.priority || "none") === t.key : (e.assignee || "") === t.key).length, i = t.limit != null && r > t.limit;
+				t.map((e) => {
+					let n = I.get(e.key) ?? 0, r = e.limit != null && n > e.limit;
 					return /* @__PURE__ */ C("div", {
 						className: "sticky top-0 z-20 flex h-10 items-center gap-2 rounded-xl border border-line bg-white px-3 shadow-sm",
-						style: t.color ? { boxShadow: `inset 0 2px 0 ${t.color}` } : void 0,
+						style: e.color ? { boxShadow: `inset 0 2px 0 ${e.color}` } : void 0,
 						children: [
 							/* @__PURE__ */ S("span", {
 								className: "min-w-0 flex-1 truncate text-xs font-semibold text-stone-700",
-								children: t.name
+								children: e.name
 							}),
-							l === t.key && a === "status" && /* @__PURE__ */ S(Gd, {
+							l === e.key && a === "status" && /* @__PURE__ */ S(Yd, {
 								className: "h-3.5 w-3.5 shrink-0 text-emerald-500",
 								title: B._({ id: "_5CsXX" })
 							}),
 							/* @__PURE__ */ C("span", {
-								className: `shrink-0 rounded-full px-1.5 py-0.5 text-[10px] tabular-nums ${i ? "bg-red-100 font-semibold text-red-600" : "bg-stone-100 text-brand-gray"}`,
-								children: [r, t.limit == null ? "" : `/${t.limit}`]
+								className: `shrink-0 rounded-full px-1.5 py-0.5 text-[10px] tabular-nums ${r ? "bg-red-100 font-semibold text-red-600" : "bg-stone-100 text-brand-gray"}`,
+								children: [n, e.limit == null ? "" : `/${e.limit}`]
 							}),
-							a === "status" && te(t, n)
+							a === "status" && !f && /* @__PURE__ */ S(Gp, {
+								column: e,
+								siblings: t,
+								actions: d,
+								doneKey: l,
+								orientation: "horizontal",
+								portalClassName: m
+							})
 						]
-					}, `head-${t.key}`);
+					}, `head-${e.key}`);
 				}),
-				w && /* @__PURE__ */ C("form", {
+				T && /* @__PURE__ */ C("form", {
 					className: "sticky left-0 z-10 col-span-full flex min-h-11 items-center gap-2 rounded-xl border border-brand/20 bg-brand-soft/30 px-3",
 					onSubmit: (e) => {
 						e.preventDefault();
-						let t = E.trim();
-						t && (T(!1), D(""), d.addColumn?.(t));
+						let t = D.trim();
+						t && (E(!1), O(""), d.addColumn?.(t));
 					},
 					children: [
-						/* @__PURE__ */ S(wf, { className: "h-4 w-4 text-brand-dark" }),
+						/* @__PURE__ */ S(Of, { className: "h-4 w-4 text-brand-dark" }),
 						/* @__PURE__ */ S("input", {
 							autoFocus: !0,
-							value: E,
-							onChange: (e) => D(e.target.value),
+							value: D,
+							onChange: (e) => O(e.target.value),
 							onKeyDown: (e) => {
-								e.key === "Escape" && (T(!1), D(""));
+								e.key === "Escape" && (E(!1), O(""));
 							},
 							placeholder: B._({ id: "P5cvAA" }),
 							"aria-label": B._({ id: "P5cvAA" }),
@@ -8231,22 +8350,22 @@ function zp({ cards: e, columns: t, lanes: r, config: i, groupKey: a, swimlaneKe
 						/* @__PURE__ */ S("button", {
 							type: "button",
 							onClick: () => {
-								T(!1), D("");
+								E(!1), O("");
 							},
 							className: "h-8 rounded-lg px-2 text-xs text-brand-gray hover:bg-white",
 							children: /* @__PURE__ */ S(L, { id: "dEgA5A" })
 						})
 					]
 				}),
-				ee.map((e, r) => {
-					let i = j.get(e.key), a = I(e.key), c = e.key === "", l = N.findIndex((t) => t.key === e.key);
+				R.map((e) => {
+					let r = A.get(e.key), i = ee(e.key), a = e.key === "", c = M.findIndex((t) => t.key === e.key);
 					return /* @__PURE__ */ C(n, { children: [/* @__PURE__ */ C("section", {
 						"aria-labelledby": `swimlane-${e.key || "unassigned"}`,
-						"data-swimlane-unassigned": c ? "true" : void 0,
+						"data-swimlane-unassigned": a ? "true" : void 0,
 						className: "sticky left-0 z-10 flex min-h-24 items-start gap-2 rounded-xl border border-line bg-stone-100 p-3",
 						children: [
 							/* @__PURE__ */ S("span", {
-								className: `mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${c ? "bg-transparent" : "bg-stone-300"}`,
+								className: `mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${a ? "bg-transparent" : "bg-stone-300"}`,
 								style: e.color ? { backgroundColor: e.color } : void 0,
 								"aria-hidden": !0
 							}),
@@ -8254,34 +8373,45 @@ function zp({ cards: e, columns: t, lanes: r, config: i, groupKey: a, swimlaneKe
 								className: "min-w-0 flex-1",
 								children: [/* @__PURE__ */ C("h2", {
 									id: `swimlane-${e.key || "unassigned"}`,
-									className: `truncate text-xs font-semibold ${c ? "text-brand-gray" : "text-stone-800"}`,
+									className: `truncate text-xs font-semibold ${a ? "text-brand-gray" : "text-stone-800"}`,
 									title: e.name,
-									children: [c && F > 0 && /* @__PURE__ */ S("button", {
+									children: [a && P > 0 && /* @__PURE__ */ S("button", {
 										type: "button",
-										onClick: b,
+										onClick: w,
 										title: B._({
 											id: "vIKvqQ",
-											values: { missingCount: F }
+											values: { missingCount: P }
 										}),
 										"aria-label": B._({ id: "AoHpbt" }),
 										className: "mr-1 inline-flex align-[-2px] text-amber-600 hover:text-amber-700",
-										children: /* @__PURE__ */ S(uf, { className: "h-3.5 w-3.5" })
+										children: /* @__PURE__ */ S(mf, { className: "h-3.5 w-3.5" })
 									}), e.name]
-								}), /* @__PURE__ */ C("span", {
+								}), /* @__PURE__ */ S("span", {
 									className: "mt-1 block text-[10px] tabular-nums text-brand-gray",
-									children: [
-										a,
-										" ",
-										/* @__PURE__ */ S(L, { id: "sCzmvQ" })
-									]
+									children: /* @__PURE__ */ S(L, {
+										id: "uaR_cz",
+										values: { total: i }
+									})
 								})]
 							}),
-							o === "custom" && !c && z(e, l),
-							o === "status" && te(e, r)
+							o === "custom" && !a && z(e, c),
+							o === "custom" && !a && N.get(e.key) && /* @__PURE__ */ S(Wp, {
+								lane: N.get(e.key),
+								cardCount: i,
+								portalClassName: m
+							}),
+							o === "status" && !f && /* @__PURE__ */ S(Gp, {
+								column: e,
+								siblings: R,
+								actions: d,
+								doneKey: l,
+								orientation: "vertical",
+								portalClassName: m
+							})
 						]
 					}), t.map((t) => /* @__PURE__ */ S("div", {
 						className: "min-h-24 space-y-2 rounded-xl border border-line bg-stone-100/60 p-2",
-						children: kp(i?.get(t.key) ?? [], s).map(R)
+						children: Pp(r?.get(t.key) ?? [], s).map(te)
 					}, `${e.key || "unassigned"}-${t.key}`))] }, `row-${e.key || "unassigned"}`);
 				})
 			]
@@ -8290,11 +8420,8 @@ function zp({ cards: e, columns: t, lanes: r, config: i, groupKey: a, swimlaneKe
 }
 //#endregion
 //#region ../../shared/components/board/StatusManagerDialog.tsx
-function Bp({ open: e, config: t, actions: n, portalClassName: r, onClose: i }) {
-	let [a, o] = y(!1), [s, c] = y(""), l = r ? ` ${r}` : "", u = t.doneColumn ?? "done", d = (e, r) => {
-		let i = t.columns[e + r], a = t.columns[e];
-		a && i && n.reorderColumns?.(a.key, i.key);
-	};
+function qp({ open: e, config: t, actions: n, portalClassName: r, onClose: i }) {
+	let [a, o] = y(!1), [s, c] = y(""), l = r ? ` ${r}` : "", u = t.doneColumn ?? "done";
 	return /* @__PURE__ */ C(ul, {
 		open: e,
 		onClose: i,
@@ -8309,7 +8436,7 @@ function Bp({ open: e, config: t, actions: n, portalClassName: r, onClose: i }) 
 						children: [
 							/* @__PURE__ */ S("span", {
 								className: "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-soft text-brand-dark",
-								children: /* @__PURE__ */ S(Ef, { className: "h-4 w-4" })
+								children: /* @__PURE__ */ S(Af, { className: "h-4 w-4" })
 							}),
 							/* @__PURE__ */ C("div", {
 								className: "min-w-0 flex-1",
@@ -8327,7 +8454,7 @@ function Bp({ open: e, config: t, actions: n, portalClassName: r, onClose: i }) 
 								title: B._({ id: "yz7wBu" }),
 								"aria-label": B._({ id: "yz7wBu" }),
 								className: "rounded-lg p-1 text-stone-400 hover:bg-stone-100 hover:text-stone-600",
-								children: /* @__PURE__ */ S(Bf, { className: "h-4 w-4" })
+								children: /* @__PURE__ */ S(Wf, { className: "h-4 w-4" })
 							})
 						]
 					}),
@@ -8336,7 +8463,7 @@ function Bp({ open: e, config: t, actions: n, portalClassName: r, onClose: i }) 
 						children: [/* @__PURE__ */ S("ul", {
 							className: "space-y-1",
 							"aria-label": B._({ id: "Db4W3_" }),
-							children: t.columns.map((e, r) => {
+							children: t.columns.map((e) => {
 								let i = u === e.key;
 								return /* @__PURE__ */ C("li", {
 									className: "group flex min-h-12 items-center gap-2 rounded-xl px-2 hover:bg-stone-50",
@@ -8356,89 +8483,18 @@ function Bp({ open: e, config: t, actions: n, portalClassName: r, onClose: i }) 
 												values: { 0: e.limit }
 											})
 										}),
-										i && /* @__PURE__ */ S(Gd, {
+										i && /* @__PURE__ */ S(Yd, {
 											className: "h-4 w-4 text-emerald-500",
 											title: B._({ id: "_5CsXX" })
 										}),
-										/* @__PURE__ */ C(Du, {
-											as: "div",
-											className: "relative",
-											children: [/* @__PURE__ */ S(Su, {
-												title: B._({ id: "YHjvGb" }),
-												"aria-label": B._({
-													id: "RlLl3G",
-													values: { 0: e.name }
-												}),
-												className: "flex h-9 w-9 items-center justify-center rounded-lg text-stone-400 hover:bg-white hover:text-stone-600",
-												children: /* @__PURE__ */ S(cf, { className: "h-4 w-4" })
-											}), /* @__PURE__ */ C(Cu, {
-												anchor: "bottom end",
-												className: `z-50 w-48 rounded-xl border border-line bg-white py-1 text-xs shadow-lg shadow-emerald-950/10 [--anchor-gap:4px] focus:outline-none${l}`,
-												children: [
-													n.renameColumn && /* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
-														type: "button",
-														onClick: () => void n.renameColumn?.(e.key),
-														className: "flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 data-[focus]:bg-stone-100",
-														children: [/* @__PURE__ */ S(Sf, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "2wxgft" })]
-													}) }),
-													n.reorderColumns && /* @__PURE__ */ C(x, { children: [/* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
-														type: "button",
-														onClick: () => d(r, -1),
-														"aria-disabled": r === 0,
-														className: "flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 aria-disabled:opacity-40 data-[focus]:bg-stone-100",
-														children: [/* @__PURE__ */ S(jd, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "QyioBP" })]
-													}) }), /* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
-														type: "button",
-														onClick: () => d(r, 1),
-														"aria-disabled": r === t.columns.length - 1,
-														className: "flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 aria-disabled:opacity-40 data-[focus]:bg-stone-100",
-														children: [/* @__PURE__ */ S(Dd, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "3Ib6FN" })]
-													}) })] }),
-													n.toggleDoneColumn && /* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
-														type: "button",
-														onClick: () => void n.toggleDoneColumn?.(e.key),
-														className: "flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 data-[focus]:bg-stone-100",
-														children: [/* @__PURE__ */ S(Gd, { className: "h-3.5 w-3.5" }), i ? /* @__PURE__ */ S(L, { id: "G4qrLy" }) : /* @__PURE__ */ S(L, { id: "wtw-au" })]
-													}) }),
-													n.setColumnLimit && /* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
-														type: "button",
-														onClick: () => void n.setColumnLimit?.(e.key),
-														className: "flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 data-[focus]:bg-stone-100",
-														children: [/* @__PURE__ */ S(ff, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "Iw6WJa" })]
-													}) }),
-													n.setColumnColor && /* @__PURE__ */ C(x, { children: [/* @__PURE__ */ S("div", { className: "my-1 border-t border-line" }), /* @__PURE__ */ C("div", {
-														className: "px-3 py-2",
-														children: [/* @__PURE__ */ S("span", {
-															className: "text-[11px] text-brand-gray",
-															children: /* @__PURE__ */ S(L, { id: "jZlrte" })
-														}), /* @__PURE__ */ C("div", {
-															className: "mt-2 flex flex-wrap gap-2",
-															children: [Qf.map((t) => /* @__PURE__ */ S("button", {
-																type: "button",
-																onClick: () => void n.setColumnColor?.(e.key, t),
-																title: t,
-																className: `h-5 w-5 rounded-full ring-1 ring-black/10 ${e.color === t ? "ring-2 ring-brand ring-offset-2" : ""}`,
-																style: { backgroundColor: t }
-															}, t)), /* @__PURE__ */ S("button", {
-																type: "button",
-																onClick: () => void n.setColumnColor?.(e.key, null),
-																title: B._({ id: "H_SQFv" }),
-																className: "flex h-5 w-5 items-center justify-center rounded-full bg-white ring-1 ring-black/10",
-																children: /* @__PURE__ */ S(Bf, { className: "h-3 w-3 text-stone-400" })
-															})]
-														})]
-													})] }),
-													n.deleteColumn && /* @__PURE__ */ C(x, { children: [/* @__PURE__ */ S("div", { className: "my-1 border-t border-line" }), /* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
-														type: "button",
-														onClick: () => {
-															t.columns.length > 1 && n.deleteColumn?.(e.key);
-														},
-														"aria-disabled": t.columns.length <= 1,
-														className: "flex w-full items-center gap-2 px-3 py-2 text-left text-red-600 aria-disabled:opacity-40 data-[focus]:bg-red-50",
-														children: [/* @__PURE__ */ S(Pf, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "cnGeoo" })]
-													}) })] })
-												]
-											})]
+										/* @__PURE__ */ S(Gp, {
+											column: e,
+											siblings: t.columns,
+											actions: n,
+											doneKey: u,
+											orientation: "vertical",
+											portalClassName: r,
+											buttonClassName: "flex h-9 w-9 items-center justify-center rounded-lg text-stone-400 hover:bg-white hover:text-stone-600"
 										})
 									]
 								}, e.key);
@@ -8451,7 +8507,7 @@ function Bp({ open: e, config: t, actions: n, portalClassName: r, onClose: i }) 
 								t && (o(!1), c(""), n.addColumn?.(t));
 							},
 							children: [
-								/* @__PURE__ */ S(wf, { className: "h-4 w-4 text-brand-dark" }),
+								/* @__PURE__ */ S(Of, { className: "h-4 w-4 text-brand-dark" }),
 								/* @__PURE__ */ S("input", {
 									autoFocus: !0,
 									value: s,
@@ -8473,7 +8529,7 @@ function Bp({ open: e, config: t, actions: n, portalClassName: r, onClose: i }) 
 							type: "button",
 							onClick: () => o(!0),
 							className: "mt-2 flex min-h-11 w-full items-center gap-2 rounded-xl border border-dashed border-brand/20 bg-brand-soft/20 px-3 text-xs font-semibold text-brand-dark hover:border-brand/40 hover:bg-brand-soft/40",
-							children: [/* @__PURE__ */ S(wf, { className: "h-4 w-4" }), /* @__PURE__ */ S(L, { id: "1nUGn5" })]
+							children: [/* @__PURE__ */ S(Of, { className: "h-4 w-4" }), /* @__PURE__ */ S(L, { id: "1nUGn5" })]
 						}))]
 					}),
 					/* @__PURE__ */ S("div", {
@@ -8492,18 +8548,18 @@ function Bp({ open: e, config: t, actions: n, portalClassName: r, onClose: i }) 
 }
 //#endregion
 //#region ../../shared/components/board/controls.tsx
-var Vp = "rounded-md border border-stone-200 bg-white px-1.5 py-1 text-xs text-stone-700 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand";
-function Hp({ value: e, options: t, onChange: n, disabled: r = !1 }) {
+var Jp = "rounded-md border border-stone-200 bg-white px-1.5 py-1 text-xs text-stone-700 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand";
+function Yp({ value: e, options: t, onChange: n, disabled: r = !1 }) {
 	let i = t.find((t) => t.value === e);
 	return /* @__PURE__ */ C(Jl, {
 		value: e,
 		onChange: n,
 		disabled: r,
 		children: [/* @__PURE__ */ C(Ul, {
-			className: `${Vp} flex w-full items-center justify-between gap-1 disabled:cursor-not-allowed disabled:bg-stone-50 disabled:opacity-60`,
+			className: `${Jp} flex w-full items-center justify-between gap-1 disabled:cursor-not-allowed disabled:bg-stone-50 disabled:opacity-60`,
 			children: [/* @__PURE__ */ C("span", {
 				className: "flex min-w-0 items-center gap-1.5",
-				children: [i?.warning ? /* @__PURE__ */ S(uf, { className: "h-3.5 w-3.5 shrink-0 text-amber-500" }) : i?.color ? /* @__PURE__ */ S("span", {
+				children: [i?.warning ? /* @__PURE__ */ S(mf, { className: "h-3.5 w-3.5 shrink-0 text-amber-500" }) : i?.color ? /* @__PURE__ */ S("span", {
 					className: "h-2.5 w-2.5 shrink-0 rounded-full",
 					style: { backgroundColor: i.color },
 					"aria-hidden": !0
@@ -8511,7 +8567,7 @@ function Hp({ value: e, options: t, onChange: n, disabled: r = !1 }) {
 					className: "truncate",
 					children: i?.label ?? e
 				})]
-			}), /* @__PURE__ */ S($d, { className: "h-3.5 w-3.5 shrink-0 text-stone-400" })]
+			}), /* @__PURE__ */ S(rf, { className: "h-3.5 w-3.5 shrink-0 text-stone-400" })]
 		}), /* @__PURE__ */ S(Gl, {
 			anchor: "bottom start",
 			className: "z-[60] w-[var(--button-width)] rounded-md border border-black/[0.06] bg-white py-1 text-xs shadow-lg [--anchor-gap:4px] focus:outline-none",
@@ -8520,7 +8576,7 @@ function Hp({ value: e, options: t, onChange: n, disabled: r = !1 }) {
 				className: "flex cursor-pointer items-center justify-between gap-1 px-2 py-1 text-stone-700 data-[focus]:bg-stone-100",
 				children: [/* @__PURE__ */ C("span", {
 					className: "flex min-w-0 items-center gap-1.5",
-					children: [t.warning ? /* @__PURE__ */ S(uf, { className: "h-3.5 w-3.5 shrink-0 text-amber-500" }) : t.color ? /* @__PURE__ */ S("span", {
+					children: [t.warning ? /* @__PURE__ */ S(mf, { className: "h-3.5 w-3.5 shrink-0 text-amber-500" }) : t.color ? /* @__PURE__ */ S("span", {
 						className: "h-2.5 w-2.5 shrink-0 rounded-full",
 						style: { backgroundColor: t.color },
 						"aria-hidden": !0
@@ -8528,30 +8584,31 @@ function Hp({ value: e, options: t, onChange: n, disabled: r = !1 }) {
 						className: "truncate",
 						children: t.label
 					})]
-				}), t.value === e && /* @__PURE__ */ S(qd, { className: "h-3.5 w-3.5 shrink-0 text-brand" })]
+				}), t.value === e && /* @__PURE__ */ S(Zd, { className: "h-3.5 w-3.5 shrink-0 text-brand" })]
 			}, t.value))
 		})]
 	});
 }
 //#endregion
 //#region ../../shared/components/board/SwimlaneDeleteDialog.tsx
-function Up({ lane: e, cardCount: t, targets: n, busy: r, progress: i, error: a, portalClassName: o, onClose: s, onConfirm: c }) {
-	let [l, u] = y("keep"), [d, p] = y("");
+function Xp({ lane: e, cardCount: t, targets: n, busy: r, progress: i, error: a, portalClassName: o, onClose: s, onConfirm: c }) {
+	let [l, u] = y("keep"), [d, p] = y(""), m = v(null), h = n.length > 0;
 	f(() => {
-		u("keep"), p(n[0]?.value ?? "");
-	}, [e?.key]);
-	let m = o ? ` ${o}` : "", h = () => {
+		let t = e?.key ?? null, r = m.current !== t;
+		m.current = t, r && u("keep"), p((e) => r || !n.some((t) => t.value === e) ? n[0]?.value ?? "" : e);
+	}, [e?.key, n]);
+	let g = o ? ` ${o}` : "", _ = () => {
 		r || s();
 	};
 	return /* @__PURE__ */ C(ul, {
 		open: !!e,
-		onClose: h,
-		className: `relative z-50${m}`,
-		children: [/* @__PURE__ */ S(cl, { className: `fixed inset-0 bg-stone-950/30 backdrop-blur-sm${m}` }), /* @__PURE__ */ S("div", {
-			className: `fixed inset-0 flex items-center justify-center overflow-y-auto p-4${m}`,
+		onClose: _,
+		className: `relative z-50${g}`,
+		children: [/* @__PURE__ */ S(cl, { className: `fixed inset-0 bg-stone-950/30 backdrop-blur-sm${g}` }), /* @__PURE__ */ S("div", {
+			className: `fixed inset-0 flex items-center justify-center overflow-y-auto p-4${g}`,
 			children: /* @__PURE__ */ S(sl, {
 				"aria-describedby": "swimlane-delete-description",
-				className: `w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl shadow-emerald-950/10 ring-1 ring-black/[0.06]${m}`,
+				className: `w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl shadow-emerald-950/10 ring-1 ring-black/[0.06]${g}`,
 				children: e && /* @__PURE__ */ C(x, { children: [/* @__PURE__ */ C("div", {
 					className: "px-5 pb-4 pt-5",
 					children: [
@@ -8601,29 +8658,24 @@ function Up({ lane: e, cardCount: t, targets: n, busy: r, progress: i, error: a,
 									children: /* @__PURE__ */ S("span", { className: "h-2 w-2 rounded-full bg-brand opacity-0 group-data-[checked]:opacity-100" })
 								}), /* @__PURE__ */ C("span", {
 									className: "min-w-0 flex-1",
-									children: [
-										/* @__PURE__ */ S("span", {
-											className: "text-xs font-semibold text-stone-800",
-											children: /* @__PURE__ */ S(L, { id: "_TJomP" })
-										}),
-										/* @__PURE__ */ S("span", {
-											className: "mt-1 block text-[11px] leading-4 text-brand-gray",
-											children: /* @__PURE__ */ S(L, { id: "3CtQL6" })
-										}),
-										/* @__PURE__ */ S("span", {
-											className: "mt-2 block",
-											onClick: (e) => e.stopPropagation(),
-											children: /* @__PURE__ */ S(Hp, {
-												value: d,
-												options: n,
-												onChange: (e) => {
-													u("move"), p(e);
-												}
-											})
-										})
-									]
+									children: [/* @__PURE__ */ S("span", {
+										className: "text-xs font-semibold text-stone-800",
+										children: /* @__PURE__ */ S(L, { id: "_TJomP" })
+									}), /* @__PURE__ */ S("span", {
+										className: "mt-1 block text-[11px] leading-4 text-brand-gray",
+										children: /* @__PURE__ */ S(L, { id: "3CtQL6" })
+									})]
 								})]
 							})]
+						}),
+						h && /* @__PURE__ */ S("div", {
+							className: "mt-2 pl-7",
+							children: /* @__PURE__ */ S(Yp, {
+								value: d,
+								options: n,
+								disabled: l !== "move",
+								onChange: p
+							})
 						}),
 						i && /* @__PURE__ */ C("div", {
 							className: "mt-4",
@@ -8656,14 +8708,14 @@ function Up({ lane: e, cardCount: t, targets: n, busy: r, progress: i, error: a,
 						a && /* @__PURE__ */ C("div", {
 							className: "mt-4 flex gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800",
 							role: "alert",
-							children: [/* @__PURE__ */ S(uf, { className: "mt-0.5 h-4 w-4 shrink-0" }), /* @__PURE__ */ S("span", { children: a })]
+							children: [/* @__PURE__ */ S(mf, { className: "mt-0.5 h-4 w-4 shrink-0" }), /* @__PURE__ */ S("span", { children: a })]
 						})
 					]
 				}), /* @__PURE__ */ C("div", {
 					className: "flex justify-end gap-2 border-t border-line bg-stone-50 px-5 py-3",
 					children: [/* @__PURE__ */ S("button", {
 						type: "button",
-						onClick: h,
+						onClick: _,
 						"aria-disabled": r,
 						className: "rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-xs font-medium text-stone-600 hover:border-brand/30 aria-disabled:cursor-not-allowed aria-disabled:opacity-50",
 						children: /* @__PURE__ */ S(L, { id: "dEgA5A" })
@@ -8684,26 +8736,26 @@ function Up({ lane: e, cardCount: t, targets: n, busy: r, progress: i, error: a,
 }
 //#endregion
 //#region ../../shared/components/board/SwimlaneManagerDialog.tsx
-function Wp({ open: e, lanes: t, cards: n, focusRequest: r, portalClassName: i, onClose: a, onSaveLanes: o, onUpdateCards: s, onShowAffected: c }) {
-	let [l, u] = y(!1), [d, p] = y(""), [m, h] = y(null), [_, b] = y(""), [w, T] = y(null), [E, D] = y(!1), [O, k] = y(null), [A, j] = y(!1), [M, N] = y(""), [P, F] = y(null), [I, ee] = y(null), [R, te] = y(""), z = v(null), [ne, re] = y(null), ie = v(!1), ae = v(null);
+function Zp({ open: e, lanes: t, cards: n, focusRequest: r, portalClassName: i, onClose: a, onSaveLanes: o, onUpdateCards: s, onShowAffected: c }) {
+	let [l, u] = y(!1), [d, p] = y(""), [m, h] = y(null), [_, b] = y(""), [w, T] = y(null), [E, D] = y(!1), [O, k] = y(null), [A, j] = y(!1), [M, N] = y(""), [P, F] = y(null), [I, ee] = y(""), R = v(null), [te, z] = y(null), ne = v(!1), re = v(null);
 	f(() => {
-		e || (u(!1), p(""), h(null), T(null), k(null), N(""), F(null), te(""));
+		e || (u(!1), p(""), h(null), T(null), k(null), N(""), F(null), ee(""));
 	}, [e]), f(() => {
-		if (!e || !r || ae.current === r.id) return;
+		if (!e || !r || re.current === r.id) return;
 		let n = t.find((e) => e.key === r.laneKey);
-		n && (ae.current = r.id, r.action === "rename" ? (h(n.key), b(n.name), T(null)) : (N(""), F(null), k(n)));
+		n && (re.current = r.id, r.action === "rename" ? (h(n.key), b(n.name), T(null)) : (N(""), F(null), k(n)));
 	}, [
 		r?.id,
 		e,
 		t
 	]);
-	let oe = i ? ` ${i}` : "", se = g(() => {
+	let ie = i ? ` ${i}` : "", ae = g(() => {
 		let e = /* @__PURE__ */ new Map();
 		for (let t of n) t.swimlaneKey && e.set(t.swimlaneKey, (e.get(t.swimlaneKey) ?? 0) + 1);
 		return e;
-	}, [n]), ce = g(() => bp({ swimlanes: t }, n), [t, n]), le = ce.filter((e) => e.kind === "dangling_swimlane").reduce((e, t) => e + t.cardCount, 0), ue = ce.filter((e) => e.kind !== "dangling_swimlane"), de = async (e, t = "dialog") => {
-		if (!ie.current) {
-			ie.current = !0, D(!0), T(null);
+	}, [n]), oe = g(() => Tp({ swimlanes: t }, n), [t, n]), se = oe.filter((e) => e.kind === "dangling_swimlane").reduce((e, t) => e + t.cardCount, 0), ce = oe.filter((e) => e.kind !== "dangling_swimlane"), le = async (e, t = "dialog") => {
+		if (!ne.current) {
+			ne.current = !0, D(!0), T(null);
 			try {
 				await o(e);
 			} catch (e) {
@@ -8712,14 +8764,14 @@ function Wp({ open: e, lanes: t, cards: n, focusRequest: r, portalClassName: i, 
 					message: e instanceof Error ? e.message : String(e)
 				}), e;
 			} finally {
-				ie.current = !1, D(!1);
+				ne.current = !1, D(!1);
 			}
 		}
-	}, fe = (e, n) => {
+	}, ue = (e, n) => {
 		let r = t.findIndex((t) => t.key === e), i = r + n;
 		if (r < 0 || i < 0 || i >= t.length || E) return;
 		let a = [...t], [o] = a.splice(r, 1);
-		o && (a.splice(i, 0, o), de(a, e).then(() => te(B._({
+		o && (a.splice(i, 0, o), le(a, e).then(() => ee(B._({
 			id: "CxcMyt",
 			values: {
 				0: o.name,
@@ -8727,12 +8779,12 @@ function Wp({ open: e, lanes: t, cards: n, focusRequest: r, portalClassName: i, 
 				2: t.length
 			}
 		}))).catch(() => void 0));
-	}, pe = (e, n) => {
+	}, de = (e, n) => {
 		if (e === n || E) return;
 		let r = [...t], i = r.findIndex((t) => t.key === e), a = r.findIndex((e) => e.key === n);
 		if (i < 0 || a < 0) return;
 		let [o] = r.splice(i, 1);
-		o && (r.splice(a, 0, o), de(r, e).then(() => te(B._({
+		o && (r.splice(a, 0, o), le(r, e).then(() => ee(B._({
 			id: "CxcMyt",
 			values: {
 				0: o.name,
@@ -8740,32 +8792,32 @@ function Wp({ open: e, lanes: t, cards: n, focusRequest: r, portalClassName: i, 
 				2: t.length
 			}
 		}))).catch(() => void 0));
-	}, me = (e, t) => {
-		e.button !== 0 || E || (z.current = {
+	}, fe = (e, t) => {
+		e.button !== 0 || E || (R.current = {
 			key: t,
 			x: e.clientX,
 			y: e.clientY,
 			moved: !1
 		}, e.currentTarget.setPointerCapture?.(e.pointerId));
-	}, he = (e, t) => {
-		let n = z.current;
+	}, pe = (e, t) => {
+		let n = R.current;
 		if (!(!n || n.key !== t) && !n.moved) {
 			if (Math.abs(e.clientX - n.x) < 4 && Math.abs(e.clientY - n.y) < 4) return;
-			n.moved = !0, re(t);
+			n.moved = !0, z(t);
 		}
-	}, ge = (e, t) => {
-		let n = z.current;
-		z.current = null, re(null);
+	}, me = (e, t) => {
+		let n = R.current;
+		R.current = null, z(null);
 		try {
 			e.currentTarget.releasePointerCapture?.(e.pointerId);
 		} catch {}
 		if (!n?.moved || n.key !== t) return;
 		let r = document.elementFromPoint(e.clientX, e.clientY)?.closest("[data-swimlane-row]")?.dataset.swimlaneRow;
-		r && pe(t, r);
-	}, _e = (e) => {
+		r && de(t, r);
+	}, he = (e) => {
 		T(null), h(e.key), b(e.name);
-	}, ve = async (e) => {
-		let n = vp(_, t, e.key);
+	}, ge = async (e) => {
+		let n = Cp(_, t, e.key);
 		if (n) {
 			T({
 				key: e.key,
@@ -8774,14 +8826,14 @@ function Wp({ open: e, lanes: t, cards: n, focusRequest: r, portalClassName: i, 
 			return;
 		}
 		let r = _.trim();
-		h(null), r !== e.name && await de(t.map((t) => t.key === e.key ? {
+		h(null), r !== e.name && await le(t.map((t) => t.key === e.key ? {
 			...t,
 			name: r
 		} : t), e.key).catch(() => {
 			h(e.key);
 		});
-	}, ye = async () => {
-		let e = vp(d, t);
+	}, _e = async () => {
+		let e = Cp(d, t);
 		if (e) {
 			T({
 				key: "new",
@@ -8790,18 +8842,18 @@ function Wp({ open: e, lanes: t, cards: n, focusRequest: r, portalClassName: i, 
 			return;
 		}
 		let r = d.trim(), i = {
-			key: _p(r, [...t.map((e) => e.key), ...n.map((e) => e.swimlaneKey).filter((e) => !!e)]),
+			key: Sp(r, [...t.map((e) => e.key), ...n.map((e) => e.swimlaneKey).filter((e) => !!e)]),
 			name: r
 		};
-		u(!1), p(""), await de([...t, i], "new").catch(() => {
+		u(!1), p(""), await le([...t, i], "new").catch(() => {
 			u(!0), p(r);
 		});
-	}, be = (e, n) => {
-		E || de(t.map((t) => t.key === e.key ? {
+	}, ve = (e, n) => {
+		E || le(t.map((t) => t.key === e.key ? {
 			...t,
 			color: n
 		} : t), e.key).catch(() => void 0);
-	}, xe = async (e) => {
+	}, ye = async (e) => {
 		if (!O || A) return;
 		let r = n.filter((e) => e.swimlaneKey === O.key);
 		j(!0), N(""), F(null);
@@ -8825,7 +8877,7 @@ function Wp({ open: e, lanes: t, cards: n, focusRequest: r, portalClassName: i, 
 		} finally {
 			j(!1);
 		}
-	}, Se = O ? [{
+	}, be = O ? [{
 		value: "",
 		label: B._({ id: "EbMPZJ" })
 	}, ...t.filter((e) => e.key !== O.key).map((e) => ({
@@ -8838,19 +8890,19 @@ function Wp({ open: e, lanes: t, cards: n, focusRequest: r, portalClassName: i, 
 		onClose: () => {
 			!E && !A && a();
 		},
-		className: `relative z-40${oe}`,
-		children: [/* @__PURE__ */ S(cl, { className: `fixed inset-0 bg-stone-950/30 backdrop-blur-sm${oe}` }), /* @__PURE__ */ S("div", {
-			className: `fixed inset-0 flex items-end justify-center overflow-y-auto p-0 sm:items-center sm:p-4${oe}`,
+		className: `relative z-40${ie}`,
+		children: [/* @__PURE__ */ S(cl, { className: `fixed inset-0 bg-stone-950/30 backdrop-blur-sm${ie}` }), /* @__PURE__ */ S("div", {
+			className: `fixed inset-0 flex items-end justify-center overflow-y-auto p-0 sm:items-center sm:p-4${ie}`,
 			children: /* @__PURE__ */ C(sl, {
 				"aria-describedby": "swimlane-manager-description",
-				className: `flex max-h-[88dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-2xl bg-white shadow-2xl shadow-emerald-950/10 ring-1 ring-black/[0.06] sm:rounded-2xl${oe}`,
+				className: `flex max-h-[88dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-2xl bg-white shadow-2xl shadow-emerald-950/10 ring-1 ring-black/[0.06] sm:rounded-2xl${ie}`,
 				children: [
 					/* @__PURE__ */ C("div", {
 						className: "flex items-start gap-3 border-b border-line px-5 pb-4 pt-5",
 						children: [
 							/* @__PURE__ */ S("span", {
 								className: "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-soft text-brand-dark",
-								children: /* @__PURE__ */ S(Ld, { className: "h-4.5 w-4.5" })
+								children: /* @__PURE__ */ S(Vd, { className: "h-4.5 w-4.5" })
 							}),
 							/* @__PURE__ */ C("div", {
 								className: "min-w-0 flex-1",
@@ -8867,7 +8919,7 @@ function Wp({ open: e, lanes: t, cards: n, focusRequest: r, portalClassName: i, 
 									/* @__PURE__ */ S("span", {
 										className: "sr-only",
 										"aria-live": "polite",
-										children: R
+										children: I
 									})
 								]
 							}),
@@ -8880,7 +8932,7 @@ function Wp({ open: e, lanes: t, cards: n, focusRequest: r, portalClassName: i, 
 								title: B._({ id: "yz7wBu" }),
 								"aria-label": B._({ id: "yz7wBu" }),
 								className: "rounded-lg p-1 text-stone-400 hover:bg-stone-100 hover:text-stone-600 aria-disabled:cursor-not-allowed aria-disabled:opacity-50",
-								children: /* @__PURE__ */ S(Bf, { className: "h-4 w-4" })
+								children: /* @__PURE__ */ S(Wf, { className: "h-4 w-4" })
 							})
 						]
 					}),
@@ -8894,22 +8946,22 @@ function Wp({ open: e, lanes: t, cards: n, focusRequest: r, portalClassName: i, 
 									let r = w?.key === e.key ? w.message : null;
 									return /* @__PURE__ */ C("li", {
 										"data-swimlane-row": e.key,
-										className: `rounded-xl transition ${ne === e.key ? "opacity-50" : ""}`,
+										className: `rounded-xl transition ${te === e.key ? "opacity-50" : ""}`,
 										children: [/* @__PURE__ */ C("div", {
 											className: "group flex min-h-12 items-center gap-2 px-2 hover:bg-stone-50 focus-within:bg-stone-50",
 											children: [
 												/* @__PURE__ */ S("button", {
 													type: "button",
-													onPointerDown: (t) => me(t, e.key),
-													onPointerMove: (t) => he(t, e.key),
-													onPointerUp: (t) => ge(t, e.key),
+													onPointerDown: (t) => fe(t, e.key),
+													onPointerMove: (t) => pe(t, e.key),
+													onPointerUp: (t) => me(t, e.key),
 													title: B._({ id: "KGi3u9" }),
 													"aria-label": B._({
 														id: "2BPVq8",
 														values: { 0: e.name }
 													}),
 													className: "hidden h-9 w-7 shrink-0 touch-none items-center justify-center rounded-lg text-stone-300 hover:bg-white hover:text-stone-500 active:cursor-grabbing md:flex md:cursor-grab",
-													children: /* @__PURE__ */ S(Ld, { className: "h-4 w-4" })
+													children: /* @__PURE__ */ S(Vd, { className: "h-4 w-4" })
 												}),
 												/* @__PURE__ */ C(od, {
 													className: "relative shrink-0",
@@ -8923,24 +8975,24 @@ function Wp({ open: e, lanes: t, cards: n, focusRequest: r, portalClassName: i, 
 														})
 													}), /* @__PURE__ */ C(id, {
 														anchor: "bottom start",
-														className: `z-50 w-52 rounded-xl border border-line bg-white p-3 shadow-lg shadow-emerald-950/10 [--anchor-gap:4px] focus:outline-none${oe}`,
+														className: `z-50 w-52 rounded-xl border border-line bg-white p-3 shadow-lg shadow-emerald-950/10 [--anchor-gap:4px] focus:outline-none${ie}`,
 														children: [/* @__PURE__ */ S("p", {
 															className: "text-[11px] font-medium text-brand-gray",
 															children: /* @__PURE__ */ S(L, { id: "U0hizX" })
 														}), /* @__PURE__ */ C("div", {
 															className: "mt-2 flex flex-wrap gap-2",
-															children: [Qf.map((t) => /* @__PURE__ */ S("button", {
+															children: [rp.map((t) => /* @__PURE__ */ S("button", {
 																type: "button",
-																onClick: () => be(e, t),
+																onClick: () => ve(e, t),
 																title: t,
 																className: `h-5 w-5 rounded-full ring-1 ring-black/10 ${e.color === t ? "ring-2 ring-brand ring-offset-2" : ""}`,
 																style: { backgroundColor: t }
 															}, t)), /* @__PURE__ */ S("button", {
 																type: "button",
-																onClick: () => be(e, null),
+																onClick: () => ve(e, null),
 																title: B._({ id: "H_SQFv" }),
 																className: `flex h-5 w-5 items-center justify-center rounded-full bg-white ring-1 ring-black/10 ${e.color ? "" : "ring-2 ring-brand ring-offset-2"}`,
-																children: /* @__PURE__ */ S(Bf, { className: "h-3 w-3 text-stone-400" })
+																children: /* @__PURE__ */ S(Wf, { className: "h-3 w-3 text-stone-400" })
 															})]
 														})]
 													})]
@@ -8948,14 +9000,14 @@ function Wp({ open: e, lanes: t, cards: n, focusRequest: r, portalClassName: i, 
 												m === e.key ? /* @__PURE__ */ S("form", {
 													className: "min-w-0 flex-1",
 													onSubmit: (t) => {
-														t.preventDefault(), ve(e);
+														t.preventDefault(), ge(e);
 													},
 													children: /* @__PURE__ */ S("input", {
 														autoFocus: !0,
 														value: _,
 														maxLength: 80,
 														onChange: (e) => b(e.target.value),
-														onBlur: () => void ve(e),
+														onBlur: () => void ge(e),
 														onKeyDown: (e) => {
 															e.key === "Escape" && (h(null), T(null));
 														},
@@ -8964,58 +9016,54 @@ function Wp({ open: e, lanes: t, cards: n, focusRequest: r, portalClassName: i, 
 													})
 												}) : /* @__PURE__ */ S("button", {
 													type: "button",
-													onDoubleClick: () => _e(e),
+													onDoubleClick: () => he(e),
 													className: "min-w-0 flex-1 truncate text-left text-xs font-semibold text-stone-800",
 													title: e.name,
 													children: e.name
 												}),
-												/* @__PURE__ */ C("span", {
+												/* @__PURE__ */ S("span", {
 													className: "shrink-0 tabular-nums text-[11px] text-brand-gray",
-													children: [
-														se.get(e.key) ?? 0,
-														" ",
-														/* @__PURE__ */ S(L, { id: "sCzmvQ" })
-													]
+													children: /* @__PURE__ */ S(L, {
+														id: "fFAIng",
+														values: { 0: ae.get(e.key) ?? 0 }
+													})
 												}),
-												/* @__PURE__ */ C(od, {
+												/* @__PURE__ */ C(Du, {
+													as: "div",
 													className: "relative shrink-0",
-													children: [/* @__PURE__ */ C(Du, { children: [/* @__PURE__ */ S(Su, {
+													children: [/* @__PURE__ */ S(Su, {
 														title: B._({ id: "DGEEOQ" }),
 														"aria-label": B._({
 															id: "RlLl3G",
 															values: { 0: e.name }
 														}),
 														className: "flex h-9 w-9 items-center justify-center rounded-lg text-stone-400 opacity-100 hover:bg-white hover:text-stone-600 md:opacity-0 md:group-hover:opacity-100 md:data-[open]:opacity-100",
-														children: /* @__PURE__ */ S(cf, { className: "h-4 w-4" })
+														children: /* @__PURE__ */ S(ff, { className: "h-4 w-4" })
 													}), /* @__PURE__ */ C(Cu, {
 														anchor: "bottom end",
-														className: `z-50 w-48 rounded-xl border border-line bg-white py-1 text-xs shadow-lg shadow-emerald-950/10 [--anchor-gap:4px] focus:outline-none${oe}`,
+														className: `z-50 w-48 rounded-xl border border-line bg-white py-1 text-xs shadow-lg shadow-emerald-950/10 [--anchor-gap:4px] focus:outline-none${ie}`,
 														children: [
 															/* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
 																type: "button",
-																onClick: () => _e(e),
+																onClick: () => he(e),
 																className: "flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 data-[focus]:bg-stone-100",
-																children: [/* @__PURE__ */ S(Sf, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "2wxgft" })]
+																children: [/* @__PURE__ */ S(Ef, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "2wxgft" })]
 															}) }),
 															/* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
 																type: "button",
-																onClick: () => fe(e.key, -1),
+																onClick: () => ue(e.key, -1),
 																disabled: n === 0 || E,
 																"aria-disabled": n === 0 || E,
 																className: "flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 aria-disabled:opacity-40 data-[focus]:bg-stone-100",
-																children: [/* @__PURE__ */ S(jd, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "QyioBP" })]
+																children: [/* @__PURE__ */ S(Fd, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "QyioBP" })]
 															}) }),
 															/* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
 																type: "button",
-																onClick: () => fe(e.key, 1),
+																onClick: () => ue(e.key, 1),
 																disabled: n === t.length - 1 || E,
 																"aria-disabled": n === t.length - 1 || E,
 																className: "flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 aria-disabled:opacity-40 data-[focus]:bg-stone-100",
 																children: [/* @__PURE__ */ S(Dd, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "3Ib6FN" })]
-															}) }),
-															/* @__PURE__ */ S($, { children: /* @__PURE__ */ C(td, {
-																className: "flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 data-[focus]:bg-stone-100",
-																children: [/* @__PURE__ */ S(mf, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "URmyfc" })]
 															}) }),
 															/* @__PURE__ */ S("div", { className: "my-1 border-t border-line" }),
 															/* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
@@ -9024,87 +9072,37 @@ function Wp({ open: e, lanes: t, cards: n, focusRequest: r, portalClassName: i, 
 																	N(""), F(null), k(e);
 																},
 																className: "flex w-full items-center gap-2 px-3 py-2 text-left text-red-600 data-[focus]:bg-red-50",
-																children: [/* @__PURE__ */ S(Pf, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "cnGeoo" })]
+																children: [/* @__PURE__ */ S(Rf, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "cnGeoo" })]
 															}) })
 														]
-													})] }), /* @__PURE__ */ C(id, {
-														anchor: "bottom end",
-														className: `z-50 w-80 rounded-xl border border-line bg-white p-4 shadow-lg shadow-emerald-950/10 [--anchor-gap:4px] focus:outline-none${oe}`,
-														children: [/* @__PURE__ */ C("div", {
-															className: "flex items-center gap-2",
-															children: [/* @__PURE__ */ S(mf, { className: "h-4 w-4 text-brand-dark" }), /* @__PURE__ */ S("p", {
-																className: "text-xs font-semibold text-stone-800",
-																children: /* @__PURE__ */ S(L, { id: "rRubBJ" })
-															})]
-														}), /* @__PURE__ */ C("dl", {
-															className: "mt-3 grid grid-cols-[64px_minmax(0,1fr)] items-center gap-x-2 gap-y-2 text-[11px]",
-															children: [
-																/* @__PURE__ */ S("dt", {
-																	className: "text-brand-gray",
-																	children: /* @__PURE__ */ S(L, { id: "6YtxFj" })
-																}),
-																/* @__PURE__ */ S("dd", {
-																	className: "truncate font-medium text-stone-700",
-																	children: e.name
-																}),
-																/* @__PURE__ */ S("dt", {
-																	className: "text-brand-gray",
-																	children: /* @__PURE__ */ S(L, { id: "c61_Lv" })
-																}),
-																/* @__PURE__ */ C("dd", {
-																	className: "flex min-w-0 items-center gap-1.5",
-																	children: [/* @__PURE__ */ S("code", {
-																		className: "min-w-0 flex-1 truncate rounded bg-stone-100 px-1.5 py-1 text-[10px] text-stone-600",
-																		children: e.key
-																	}), /* @__PURE__ */ C("button", {
-																		type: "button",
-																		title: B._({ id: "qpGDiV" }),
-																		"aria-label": B._({ id: "qpGDiV" }),
-																		onClick: () => {
-																			navigator.clipboard?.writeText(e.key).then(() => {
-																				ee(e.key), window.setTimeout(() => ee(null), 1600);
-																			});
-																		},
-																		className: "inline-flex h-7 items-center gap-1 rounded-lg border border-stone-200 px-2 text-[10px] font-medium text-brand-dark hover:border-brand/30",
-																		children: [/* @__PURE__ */ S(tf, { className: "h-3.5 w-3.5" }), I === e.key ? B._({ id: "6V3Ea3" }) : B._({ id: "he3ygx" })]
-																	})]
-																}),
-																/* @__PURE__ */ S("dt", {
-																	className: "text-brand-gray",
-																	children: /* @__PURE__ */ S(L, { id: "xUOPoQ" })
-																}),
-																/* @__PURE__ */ C("dd", {
-																	className: "tabular-nums text-stone-700",
-																	children: [
-																		se.get(e.key) ?? 0,
-																		" ",
-																		/* @__PURE__ */ S(L, { id: "sCzmvQ" })
-																	]
-																})
-															]
-														})]
 													})]
+												}),
+												/* @__PURE__ */ S(Wp, {
+													lane: e,
+													cardCount: ae.get(e.key) ?? 0,
+													portalClassName: i,
+													buttonClassName: "flex h-9 w-9 items-center justify-center rounded-lg text-stone-400 opacity-100 hover:bg-white hover:text-stone-600 md:opacity-0 md:group-hover:opacity-100 md:data-[open]:opacity-100"
 												})
 											]
 										}), r && /* @__PURE__ */ C("div", {
 											className: "mx-2 mb-1 flex items-center gap-1.5 rounded-lg bg-amber-50 px-2 py-1.5 text-[11px] text-amber-800",
 											role: "alert",
-											children: [/* @__PURE__ */ S(uf, { className: "h-3.5 w-3.5 shrink-0" }), r]
+											children: [/* @__PURE__ */ S(mf, { className: "h-3.5 w-3.5 shrink-0" }), r]
 										})]
-									}, `${e.key}-${n}`);
+									}, e.key);
 								})
 							}),
 							l ? /* @__PURE__ */ C("form", {
 								className: "mt-2 rounded-xl border border-dashed border-brand/30 bg-brand-soft/20 p-2",
 								onSubmit: (e) => {
-									e.preventDefault(), ye();
+									e.preventDefault(), _e();
 								},
 								children: [/* @__PURE__ */ C("div", {
 									className: "flex items-center gap-2",
 									children: [
 										/* @__PURE__ */ S("span", {
 											className: "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-brand-dark",
-											children: /* @__PURE__ */ S(wf, { className: "h-4 w-4" })
+											children: /* @__PURE__ */ S(Of, { className: "h-4 w-4" })
 										}),
 										/* @__PURE__ */ S("input", {
 											autoFocus: !0,
@@ -9144,9 +9142,9 @@ function Wp({ open: e, lanes: t, cards: n, focusRequest: r, portalClassName: i, 
 									u(!0), p(""), T(null);
 								},
 								className: "mt-2 flex min-h-11 w-full items-center gap-2 rounded-xl border border-dashed border-brand/20 bg-brand-soft/20 px-3 text-left text-xs font-semibold text-brand-dark hover:border-brand/40 hover:bg-brand-soft/40",
-								children: [/* @__PURE__ */ S(wf, { className: "h-4 w-4" }), /* @__PURE__ */ S(L, { id: "KCszT6" })]
+								children: [/* @__PURE__ */ S(Of, { className: "h-4 w-4" }), /* @__PURE__ */ S(L, { id: "KCszT6" })]
 							}),
-							(ue.length > 0 || le > 0) && /* @__PURE__ */ C("section", {
+							(ce.length > 0 || se > 0) && /* @__PURE__ */ C("section", {
 								className: "mt-4 border-t border-line pt-3",
 								"aria-labelledby": "swimlane-issues-title",
 								children: [/* @__PURE__ */ S("h3", {
@@ -9155,25 +9153,25 @@ function Wp({ open: e, lanes: t, cards: n, focusRequest: r, portalClassName: i, 
 									children: /* @__PURE__ */ S(L, { id: "1718Q-" })
 								}), /* @__PURE__ */ C("div", {
 									className: "mt-2 space-y-2",
-									children: [ue.map((e) => /* @__PURE__ */ C("div", {
+									children: [ce.map((e) => /* @__PURE__ */ C("div", {
 										className: "flex min-h-11 items-center gap-2 rounded-xl bg-amber-50 px-3 text-xs text-amber-800",
 										role: "alert",
-										children: [/* @__PURE__ */ S(uf, { className: "h-4 w-4 shrink-0" }), /* @__PURE__ */ S("span", { children: e.kind === "duplicate_swimlane_key" ? B._({
+										children: [/* @__PURE__ */ S(mf, { className: "h-4 w-4 shrink-0" }), /* @__PURE__ */ S("span", { children: e.kind === "duplicate_swimlane_key" ? B._({
 											id: "RgO4DX",
 											values: { 0: e.key }
 										}) : B._({
 											id: "uWPalN",
 											values: { 0: e.name }
 										}) })]
-									}, `${e.kind}-${e.kind === "duplicate_swimlane_key" ? e.key : e.name}`)), le > 0 && /* @__PURE__ */ C("div", {
+									}, `${e.kind}-${e.kind === "duplicate_swimlane_key" ? e.key : e.name}`)), se > 0 && /* @__PURE__ */ C("div", {
 										className: "flex min-h-11 items-center gap-2 rounded-xl bg-amber-50 px-3 text-xs text-amber-800",
 										children: [
-											/* @__PURE__ */ S(uf, { className: "h-4 w-4 shrink-0" }),
+											/* @__PURE__ */ S(mf, { className: "h-4 w-4 shrink-0" }),
 											/* @__PURE__ */ S("span", {
 												className: "min-w-0 flex-1",
 												children: B._({
 													id: "SavliD",
-													values: { danglingCount: le }
+													values: { danglingCount: se }
 												})
 											}),
 											/* @__PURE__ */ S("button", {
@@ -9209,10 +9207,10 @@ function Wp({ open: e, lanes: t, cards: n, focusRequest: r, portalClassName: i, 
 				]
 			})
 		})]
-	}), /* @__PURE__ */ S(Up, {
+	}), /* @__PURE__ */ S(Xp, {
 		lane: O,
-		cardCount: O ? se.get(O.key) ?? 0 : 0,
-		targets: Se,
+		cardCount: O ? ae.get(O.key) ?? 0 : 0,
+		targets: be,
 		busy: A,
 		progress: P,
 		error: M,
@@ -9220,15 +9218,15 @@ function Wp({ open: e, lanes: t, cards: n, focusRequest: r, portalClassName: i, 
 		onClose: () => {
 			A || k(null);
 		},
-		onConfirm: xe
+		onConfirm: ye
 	})] });
 }
 //#endregion
 //#region ../../shared/components/board/SwimlaneConversionDialog.tsx
-function Gp({ source: e, rows: t, open: n, busy: r, resume: i, progress: a, error: o, portalClassName: s, onClose: c, onConfirm: l }) {
+function Qp({ source: e, rows: t, open: n, busy: r, resume: i, progress: a, error: o, portalClassName: s, onClose: c, onConfirm: l }) {
 	let u = s ? ` ${s}` : "", d = () => {
 		r || c();
-	}, f = t.reduce((e, t) => e + t.cardCount, 0);
+	};
 	return /* @__PURE__ */ C(ul, {
 		open: n,
 		onClose: d,
@@ -9265,16 +9263,15 @@ function Gp({ source: e, rows: t, open: n, busy: r, resume: i, progress: a, erro
 										className: "min-w-0 flex-1 truncate text-xs font-medium text-stone-700",
 										children: e.name
 									}),
-									/* @__PURE__ */ C("span", {
+									/* @__PURE__ */ S("span", {
 										className: "tabular-nums text-[11px] text-brand-gray",
-										children: [
-											e.cardCount,
-											" ",
-											/* @__PURE__ */ S(L, { id: "sCzmvQ" })
-										]
+										children: /* @__PURE__ */ S(L, {
+											id: "fFAIng",
+											values: { 0: e.cardCount }
+										})
 									})
 								]
-							}, e.value)), f < 1 && /* @__PURE__ */ S("li", {
+							}, e.value)), t.length === 0 && /* @__PURE__ */ S("li", {
 								className: "py-4 text-center text-xs text-brand-gray",
 								children: /* @__PURE__ */ S(L, { id: "gzZWjO" })
 							})]
@@ -9286,7 +9283,7 @@ function Gp({ source: e, rows: t, open: n, busy: r, resume: i, progress: a, erro
 								className: "flex items-center justify-between text-[11px] text-brand-gray",
 								children: [/* @__PURE__ */ C("span", {
 									className: "inline-flex items-center gap-1.5",
-									children: [/* @__PURE__ */ S(kd, { className: "h-3.5 w-3.5 animate-spin" }), /* @__PURE__ */ S(L, { id: "ANe5kn" })]
+									children: [/* @__PURE__ */ S(jd, { className: "h-3.5 w-3.5 animate-spin" }), /* @__PURE__ */ S(L, { id: "ANe5kn" })]
 								}), /* @__PURE__ */ C("span", {
 									className: "tabular-nums",
 									children: [
@@ -9306,7 +9303,7 @@ function Gp({ source: e, rows: t, open: n, busy: r, resume: i, progress: a, erro
 						o && /* @__PURE__ */ C("div", {
 							className: "mt-4 flex gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800",
 							role: "alert",
-							children: [/* @__PURE__ */ S(uf, { className: "mt-0.5 h-4 w-4 shrink-0" }), /* @__PURE__ */ S("span", { children: o })]
+							children: [/* @__PURE__ */ S(mf, { className: "mt-0.5 h-4 w-4 shrink-0" }), /* @__PURE__ */ S("span", { children: o })]
 						})
 					]
 				}), /* @__PURE__ */ C("div", {
@@ -9334,8 +9331,8 @@ function Gp({ source: e, rows: t, open: n, busy: r, resume: i, progress: a, erro
 }
 //#endregion
 //#region ../../shared/components/board/BoardSurface.tsx
-function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFromTemplate: o, assigneeOptions: s, tagOptions: c, loadNotes: l, onUploadAttachment: u, loadComments: d, addComment: p, updateComment: m, deleteComment: h, toggleReaction: _, resolveComment: b, currentUser: w, loadActivity: T, fullscreen: E, onToggleFullscreen: D, onOpenSettings: O, readOnly: k, onCardOpen: A, peekComponent: j, portalClassName: M }) {
-	let [N, P] = y(null), [F, I] = y(/* @__PURE__ */ new Set()), [ee, R] = y(null), [te, z] = y(null), [ne, re] = y(/* @__PURE__ */ new Set()), [ie, ae] = y(null), [oe, se] = y(""), [ce, le] = y(!1), [ue, de] = y(""), [fe, pe] = y(""), [me, he] = y("manual"), [ge, _e] = y(null), [ve, ye] = y(360), [be, xe] = y(null), [Se, Ce] = y(null), [we, Te] = y(null), [Ee, De] = y(!1), [Oe, ke] = y(!1), [Ae, je] = y(), [Me, Ne] = y(!1), [Pe, Fe] = y("priority"), [Ie, Le] = y(!1), [Re, ze] = y(null), [Be, Ve] = y(""), [He, Ue] = y(0), We = v(null), Ge = v(null), Ke = v(!1), qe = v(!1), Je = e.groupBy ?? "status", Ye = Je === "status", Xe = e.viewType ?? "board", Ze = e.doneColumn ?? "done", Qe = (e.colorColumns ?? !1) && Ye && Xe === "board", $e = me === "manual" && Ye && Xe === "board" && !fe.trim() && !ge, et = fp();
+function $p({ config: e, cards: t, actions: r, error: i, templates: a, createFromTemplate: o, assigneeOptions: s, tagOptions: c, loadNotes: l, onUploadAttachment: u, loadComments: d, addComment: p, updateComment: m, deleteComment: h, toggleReaction: _, resolveComment: b, currentUser: w, loadActivity: T, fullscreen: E, onToggleFullscreen: D, onOpenSettings: O, readOnly: k, onCardOpen: A, peekComponent: j, portalClassName: M }) {
+	let [N, P] = y(null), [F, I] = y(/* @__PURE__ */ new Set()), [ee, R] = y(null), [te, z] = y(null), [ne, re] = y(/* @__PURE__ */ new Set()), [ie, ae] = y(null), [oe, se] = y(""), [ce, le] = y(!1), [ue, de] = y(""), [fe, pe] = y(""), [me, he] = y("manual"), [ge, _e] = y(null), [ve, ye] = y(360), [be, xe] = y(null), [Se, Ce] = y(null), [we, Te] = y(null), [Ee, De] = y(!1), [Oe, ke] = y(!1), [Ae, je] = y(), [Me, Ne] = y(!1), [Pe, Fe] = y("priority"), [Ie, Le] = y(!1), [Re, ze] = y(null), [Be, Ve] = y(""), [He, Ue] = y(0), [We, Ge] = y(!1), Ke = v(null), qe = v(null), Je = v(!1), Ye = v(null), Xe = v(!1), Ze = e.groupBy ?? "status", Qe = Ze === "status", $e = e.viewType ?? "board", et = e.doneColumn ?? "done", tt = (e.colorColumns ?? !1) && Qe && $e === "board", nt = me === "manual" && Qe && $e === "board" && !fe.trim() && !ge, rt = _p();
 	f(() => {
 		if (!E || !D) return;
 		let e = (e) => {
@@ -9354,48 +9351,48 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 		};
 		return window.addEventListener("keydown", e), () => window.removeEventListener("keydown", e);
 	}, [F.size]);
-	let tt = g(() => Sp(e, t, Je, B._({ id: "EbMPZJ" })), [
+	let it = g(() => Dp(e, t, Ze, B._({ id: "EbMPZJ" })), [
 		e,
 		t,
-		Je
-	]), nt = gp(e.swimlaneBy), rt = nt && nt !== Je ? nt : null, it = Xe === "board" && !!rt, at = g(() => rt ? wp(e, t, rt, B._({ id: "EbMPZJ" })) : [], [
+		Ze
+	]), at = xp(e.swimlaneBy), ot = at && at !== Ze ? at : null, st = $e === "board" && !!ot, ct = g(() => ot ? kp(e, t, ot, B._({ id: "EbMPZJ" })) : [], [
 		e,
 		t,
-		rt
-	]), ot = g(() => Op(t, fe, ge, e), [
+		ot
+	]), lt = g(() => Np(t, fe, ge, e), [
 		t,
 		fe,
 		ge,
 		e
-	]), st = g(() => lp(t, e.doneColumn), [t, e.doneColumn]), ct = g(() => up(t), [t]), lt = g(() => [...new Set(t.map((e) => e.assignee).filter(Boolean))], [t]), ut = g(() => [...new Set(t.flatMap((e) => e.tags.map((e) => e.label)))], [t]), dt = (t) => e.columns.find((e) => e.key === t)?.name || t || B._({ id: "EbMPZJ" }), ft = N ? t.find((e) => e.id === N) ?? null : null, pt = g(() => Sp(e, t, Pe, B._({ id: "EbMPZJ" })).filter((e) => Pe === "priority" ? e.key !== "none" : e.key !== "").map((e, n) => ({
+	]), ut = g(() => mp(t, e.doneColumn), [t, e.doneColumn]), dt = g(() => hp(t), [t]), ft = g(() => [...new Set(t.map((e) => e.assignee).filter(Boolean))], [t]), pt = g(() => [...new Set(t.flatMap((e) => e.tags.map((e) => e.label)))], [t]), mt = (t) => e.columns.find((e) => e.key === t)?.name || t || B._({ id: "EbMPZJ" }), ht = N ? t.find((e) => e.id === N) ?? null : null, gt = g(() => Dp(e, t, Pe, B._({ id: "EbMPZJ" })).filter((e) => Pe === "priority" ? e.key !== "none" : e.key !== "").map((e, n) => ({
 		value: e.key,
 		name: e.name,
-		color: e.color ?? Qf[n % Qf.length],
-		cardCount: t.filter((t) => xp(t, Pe) === e.key).length
+		color: e.color ?? rp[n % rp.length],
+		cardCount: t.filter((t) => Ep(t, Pe) === e.key).length
 	})), [
 		t,
 		e,
 		Pe
-	]), mt = async (e, t) => {
+	]), _t = async (e, t) => {
 		if (r.updateCards) {
 			await r.updateCards(e, t);
 			return;
 		}
 		let n = 0;
 		for (let i of e) await r.updateCard(i.cardId, i.patch), n += 1, t?.(n, e.length);
-	}, ht = async () => {
+	}, vt = async () => {
 		if (!Ie) {
-			if (Ve(""), !(e.swimlaneMigration?.source === Pe && e.swimlaneMigration)) {
-				let n = /* @__PURE__ */ new Set([...(e.swimlanes ?? []).map((e) => e.key), ...t.map((e) => e.swimlaneKey).filter((e) => !!e)]), i = pt.map((e) => {
-					let t = _p(e.name, n);
+			if (Ve(""), Ye.current = null, !(e.swimlaneMigration?.source === Pe && e.swimlaneMigration)) {
+				let n = /* @__PURE__ */ new Set([...(e.swimlanes ?? []).map((e) => e.key), ...t.map((e) => e.swimlaneKey).filter((e) => !!e)]), i = gt.map((e) => {
+					let t = Sp(e.name, n);
 					return n.add(t), {
 						value: e.value,
 						swimlaneKey: t
 					};
 				}), a = [...e.swimlanes ?? [], ...i.map((e, t) => ({
 					key: e.swimlaneKey,
-					name: pt[t]?.name ?? e.value,
-					color: pt[t]?.color
+					name: gt[t]?.name ?? e.value,
+					color: gt[t]?.color
 				}))], o = {
 					version: 1,
 					source: Pe,
@@ -9415,32 +9412,32 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 		}
 	};
 	f(() => {
-		if (!Ie || Ke.current) return;
+		if (!Ie || Je.current) return;
 		let n = e.swimlaneMigration;
-		!n || n.source !== Pe || (Ke.current = !0, (async () => {
+		!n || n.source !== Pe || (Je.current = !0, (async () => {
 			try {
 				let i = [...n.mapping], a = [...e.swimlanes ?? []], o = new Set(i.map((e) => e.value)), s = new Set(a.map((e) => e.key)), c = /* @__PURE__ */ new Set([
 					...s,
 					...i.map((e) => e.swimlaneKey),
 					...t.map((e) => e.swimlaneKey).filter((e) => !!e)
-				]), l = [...new Set(t.map((e) => xp(e, n.source)).filter((e) => n.source === "priority" ? e !== "none" : e !== ""))], u = !1;
+				]), l = [...new Set(t.map((e) => Ep(e, n.source)).filter((e) => n.source === "priority" ? e !== "none" : e !== ""))], u = !1;
 				for (let e of l) if (!o.has(e)) {
-					let t = _p(e, c);
+					let t = Sp(e, c);
 					c.add(t), i.push({
 						value: e,
 						swimlaneKey: t
 					}), o.add(e), u = !0;
 				}
 				for (let e of i) if (!s.has(e.swimlaneKey)) {
-					let t = pt.find((t) => t.value === e.value), n = Math.max(0, l.indexOf(e.value));
+					let t = gt.find((t) => t.value === e.value), n = Math.max(0, l.indexOf(e.value));
 					a.push({
 						key: e.swimlaneKey,
 						name: t?.name ?? e.value,
-						color: t?.color ?? Qf[n % Qf.length]
+						color: t?.color ?? rp[n % rp.length]
 					}), s.add(e.swimlaneKey), u = !0;
 				}
 				if (u) {
-					await r.setConfig({
+					Ye.current = null, await r.setConfig({
 						swimlanes: a,
 						swimlaneMigration: {
 							...n,
@@ -9450,17 +9447,22 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 					return;
 				}
 				let d = new Map(i.map((e) => [e.value, e.swimlaneKey])), f = t.flatMap((e) => {
-					let t = xp(e, n.source), r = d.get(t);
+					let t = Ep(e, n.source), r = d.get(t);
 					return r && e.swimlaneKey !== r ? [{
 						cardId: e.id,
 						patch: { swimlaneKey: r }
 					}] : [];
 				});
 				if (f.length > 0) {
-					ze({
+					let e = f.map((e) => `${e.cardId}:${String(e.patch.swimlaneKey ?? "")}`).sort().join("\n"), t = Ye.current;
+					if (t?.signature === e && t.writes >= 2) throw Error(B._({ id: "KAlhe_" }));
+					Ye.current = {
+						signature: e,
+						writes: t?.signature === e ? t.writes + 1 : 1
+					}, ze({
 						completed: 0,
 						total: f.length
-					}), await mt(f, (e, t) => ze({
+					}), await _t(f, (e, t) => ze({
 						completed: e,
 						total: t
 					}));
@@ -9470,11 +9472,11 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 					swimlanes: a,
 					swimlaneBy: "custom",
 					swimlaneMigration: void 0
-				}), Le(!1), ze(null), Ne(!1);
+				}), Ye.current = null, Le(!1), ze(null), Ne(!1);
 			} catch (e) {
-				Ve(e instanceof Error ? e.message : String(e)), Le(!1);
+				Ve(e instanceof Error ? e.message : String(e)), ze(null), Le(!1);
 			} finally {
-				Ke.current = !1, Ue((e) => e + 1);
+				Je.current = !1, Ue((e) => e + 1);
 			}
 		})());
 	}, [
@@ -9484,29 +9486,29 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 		e.swimlanes,
 		He,
 		Ie,
-		pt,
+		gt,
 		Pe
 	]);
-	let gt = "h-7 rounded-md border border-stone-200 bg-white px-2 text-xs text-stone-600 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand", _t = M ? ` ${M}` : "", vt = (e) => {
+	let yt = "h-7 rounded-md border border-stone-200 bg-white px-2 text-xs text-stone-600 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand", bt = M ? ` ${M}` : "", xt = (e) => {
 		Ie || Promise.resolve(r.setConfig(e)).catch(() => {});
-	}, yt = async (e) => {
+	}, St = async (e) => {
 		await r.setConfig({ swimlanes: e });
-	}, bt = (t, n) => {
-		if (qe.current) return;
+	}, Ct = (t, n) => {
+		if (Xe.current) return;
 		let i = [...e.swimlanes ?? []], a = i.findIndex((e) => e.key === t), o = a + n;
 		if (a < 0 || o < 0 || o >= i.length) return;
 		let [s] = i.splice(a, 1);
-		s && (i.splice(o, 0, s), qe.current = !0, Promise.resolve(r.setConfig({ swimlanes: i })).catch(() => {}).finally(() => {
-			qe.current = !1;
+		s && (i.splice(o, 0, s), Xe.current = !0, Ge(!0), Promise.resolve(r.setConfig({ swimlanes: i })).catch(() => {}).finally(() => {
+			Xe.current = !1, Ge(!1);
 		}));
-	}, xt = (t, n) => {
-		qe.current || (qe.current = !0, Promise.resolve(r.setConfig({ swimlanes: (e.swimlanes ?? []).map((e) => e.key === t ? {
+	}, wt = (t, n) => {
+		Xe.current || (Xe.current = !0, Ge(!0), Promise.resolve(r.setConfig({ swimlanes: (e.swimlanes ?? []).map((e) => e.key === t ? {
 			...e,
 			color: n
 		} : e) })).catch(() => {}).finally(() => {
-			qe.current = !1;
+			Xe.current = !1, Ge(!1);
 		}));
-	}, St = () => {
+	}, Tt = () => {
 		_e({
 			prop: "swimlaneIssue",
 			value: "dangling"
@@ -9517,9 +9519,9 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 				behavior: "smooth"
 			});
 		}, 80);
-	}, Ct = (e) => {
+	}, Et = (e) => {
 		A ? A(e) : P(e.id);
-	}, wt = !!(r.renameColumn || r.toggleDoneColumn || r.setColumnLimit || r.setColumnColor || r.deleteColumn), Tt = (e, t) => {
+	}, Dt = !!(r.renameColumn || r.toggleDoneColumn || r.setColumnLimit || r.setColumnColor || r.deleteColumn), Ot = (e, t) => {
 		let n = document.elementFromPoint(e, t), r = n?.closest("[data-col-key]");
 		if (!r) return null;
 		let i = r.dataset.colKey, a = n?.closest("[data-card-id]");
@@ -9534,9 +9536,9 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 			col: i,
 			index: r.querySelectorAll("[data-card-id]").length
 		};
-	}, Et = (e, t) => (document.elementFromPoint(e, t)?.closest("[data-col-key]"))?.dataset.colKey ?? null, Dt = (e, t) => {
+	}, kt = (e, t) => (document.elementFromPoint(e, t)?.closest("[data-col-key]"))?.dataset.colKey ?? null, At = (e, t) => {
 		if (e.button === 0) {
-			We.current = {
+			Ke.current = {
 				id: t.id,
 				startX: e.clientX,
 				startY: e.clientY,
@@ -9546,9 +9548,9 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 				e.currentTarget.setPointerCapture(e.pointerId);
 			} catch {}
 		}
-	}, Ot = (e, t) => {
+	}, jt = (e, t) => {
 		if (k) return;
-		let n = We.current;
+		let n = Ke.current;
 		if (!(!n || n.id !== t.id)) {
 			if (!n.moved) {
 				if (Math.abs(e.clientX - n.startX) < 4 && Math.abs(e.clientY - n.startY) < 4) return;
@@ -9557,18 +9559,18 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 			Te({
 				x: e.clientX,
 				y: e.clientY
-			}), R(Tt(e.clientX, e.clientY));
+			}), R(Ot(e.clientX, e.clientY));
 		}
-	}, kt = (e, n) => {
-		let i = We.current;
-		We.current = null;
+	}, Mt = (e, n) => {
+		let i = Ke.current;
+		Ke.current = null;
 		try {
 			e.currentTarget.releasePointerCapture(e.pointerId);
 		} catch {}
 		if (xe(null), Te(null), R(null), i?.moved) {
-			let i = Tt(e.clientX, e.clientY);
+			let i = Ot(e.clientX, e.clientY);
 			if (i) {
-				let e = Ye && !$e ? t.filter((e) => e.id !== n.id && xp(e, Je) === i.col).length : i.index;
+				let e = Qe && !nt ? t.filter((e) => e.id !== n.id && Ep(e, Ze) === i.col).length : i.index;
 				r.moveCard(n.id, i.col, e);
 			}
 		} else if (i) {
@@ -9579,13 +9581,13 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 				});
 				return;
 			}
-			Ct(n);
+			Et(n);
 		}
-	}, At = (e) => {
+	}, Nt = (e) => {
 		for (let n of F) t.some((e) => e.id === n) && r.updateCard(n, e);
-	}, jt = (e, t) => {
-		if (!(!Ye || !r.reorderColumns || e.button !== 0) && !e.target.closest("button")) {
-			Ge.current = {
+	}, Pt = (e, t) => {
+		if (!(!Qe || !r.reorderColumns || e.button !== 0) && !e.target.closest("button")) {
+			qe.current = {
 				key: t.key,
 				startX: e.clientX,
 				startY: e.clientY,
@@ -9595,29 +9597,29 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 				e.currentTarget.setPointerCapture(e.pointerId);
 			} catch {}
 		}
-	}, Mt = (e, t) => {
-		let n = Ge.current;
+	}, V = (e, t) => {
+		let n = qe.current;
 		if (!(!n || n.key !== t.key)) {
 			if (!n.moved) {
 				if (Math.abs(e.clientX - n.startX) < 4 && Math.abs(e.clientY - n.startY) < 4) return;
 				n.moved = !0, Ce(t.key);
 			}
-			z(Et(e.clientX, e.clientY));
+			z(kt(e.clientX, e.clientY));
 		}
-	}, Nt = (e, t) => {
-		let n = Ge.current;
-		Ge.current = null;
+	}, Ft = (e, t) => {
+		let n = qe.current;
+		qe.current = null;
 		try {
 			e.currentTarget.releasePointerCapture(e.pointerId);
 		} catch {}
 		if (Ce(null), z(null), n?.moved) {
-			let n = Et(e.clientX, e.clientY);
+			let n = kt(e.clientX, e.clientY);
 			n && n !== t.key && r.reorderColumns?.(t.key, n);
 		}
-	}, Pt = (e) => re((t) => {
+	}, H = (e) => re((t) => {
 		let n = new Set(t);
 		return n.has(e) ? n.delete(e) : n.add(e), n;
-	}), V = async (e, t) => {
+	}), It = async (e, t) => {
 		let n = t.trim();
 		if (!n) return;
 		let i = await r.createCard(e, n);
@@ -9625,7 +9627,7 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 	};
 	return i && e.columns.length === 0 ? /* @__PURE__ */ C("div", {
 		className: "flex h-full flex-col items-center justify-center gap-3 bg-stone-50 p-8 text-center",
-		children: [/* @__PURE__ */ S(uf, { className: "h-9 w-9 text-amber-500" }), /* @__PURE__ */ S("p", {
+		children: [/* @__PURE__ */ S(mf, { className: "h-9 w-9 text-amber-500" }), /* @__PURE__ */ S("p", {
 			className: "max-w-md break-words text-sm text-stone-600",
 			children: i
 		})]
@@ -9640,7 +9642,7 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 						children: [
 							/* @__PURE__ */ S("span", {
 								className: "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-brand-soft text-brand-dark",
-								children: /* @__PURE__ */ S(Rf, { className: "h-4 w-4" })
+								children: /* @__PURE__ */ S(Hf, { className: "h-4 w-4" })
 							}),
 							/* @__PURE__ */ C("div", {
 								className: "min-w-0 flex-1",
@@ -9655,8 +9657,8 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 											"aria-hidden": !0,
 											children: " · "
 										}),
-										ot.length,
-										ot.length === t.length ? "" : `/${t.length}`,
+										lt.length,
+										lt.length === t.length ? "" : `/${t.length}`,
 										" ",
 										/* @__PURE__ */ S(L, { id: "sCzmvQ" })
 									]
@@ -9670,37 +9672,37 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 										children: [
 											/* @__PURE__ */ C("button", {
 												type: "button",
-												onClick: () => vt({ viewType: "board" }),
-												className: `inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium ${Xe === "board" ? "bg-brand-soft text-brand-dark" : "text-stone-500 hover:text-brand-dark"}`,
-												children: [/* @__PURE__ */ S(Rf, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "QD8opX" })]
+												onClick: () => xt({ viewType: "board" }),
+												className: `inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium ${$e === "board" ? "bg-brand-soft text-brand-dark" : "text-stone-500 hover:text-brand-dark"}`,
+												children: [/* @__PURE__ */ S(Hf, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "QD8opX" })]
 											}),
 											/* @__PURE__ */ C("button", {
 												type: "button",
-												onClick: () => vt({ viewType: "table" }),
-												className: `inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium ${Xe === "table" ? "bg-brand-soft text-brand-dark" : "text-stone-500 hover:text-brand-dark"}`,
-												children: [/* @__PURE__ */ S(Af, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "4hJhzz" })]
+												onClick: () => xt({ viewType: "table" }),
+												className: `inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium ${$e === "table" ? "bg-brand-soft text-brand-dark" : "text-stone-500 hover:text-brand-dark"}`,
+												children: [/* @__PURE__ */ S(Pf, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "4hJhzz" })]
 											}),
 											/* @__PURE__ */ C("button", {
 												type: "button",
-												onClick: () => vt({ viewType: "calendar" }),
-												className: `inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium ${Xe === "calendar" ? "bg-brand-soft text-brand-dark" : "text-stone-500 hover:text-brand-dark"}`,
-												children: [/* @__PURE__ */ S(Ud, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "AjVXBS" })]
+												onClick: () => xt({ viewType: "calendar" }),
+												className: `inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium ${$e === "calendar" ? "bg-brand-soft text-brand-dark" : "text-stone-500 hover:text-brand-dark"}`,
+												children: [/* @__PURE__ */ S(qd, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "AjVXBS" })]
 											})
 										]
 									}),
-									Ye && Xe === "board" && !k && /* @__PURE__ */ C("button", {
+									Qe && $e === "board" && !k && /* @__PURE__ */ C("button", {
 										type: "button",
-										className: `inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium ${Qe ? "border-brand/40 bg-brand-soft/50 text-brand-dark" : "border-stone-200 text-stone-600 hover:border-brand/40 hover:text-brand-dark"}`,
-										onClick: () => vt({ colorColumns: !e.colorColumns }),
+										className: `inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium ${tt ? "border-brand/40 bg-brand-soft/50 text-brand-dark" : "border-stone-200 text-stone-600 hover:border-brand/40 hover:text-brand-dark"}`,
+										onClick: () => xt({ colorColumns: !e.colorColumns }),
 										title: B._({ id: "b4hVKD" }),
-										children: [/* @__PURE__ */ S(Of, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "jZlrte" })]
+										children: [/* @__PURE__ */ S(Mf, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "jZlrte" })]
 									}),
 									r.refresh && /* @__PURE__ */ C("button", {
 										type: "button",
 										className: "inline-flex items-center gap-1.5 rounded-lg border border-stone-200 px-2.5 py-1.5 text-xs font-medium text-stone-600 hover:border-brand/40 hover:text-brand-dark",
 										onClick: () => void r.refresh?.(),
 										title: B._({ id: "lCF0wC" }),
-										children: [/* @__PURE__ */ S(kd, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "lCF0wC" })]
+										children: [/* @__PURE__ */ S(jd, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "lCF0wC" })]
 									}),
 									O && /* @__PURE__ */ S("button", {
 										type: "button",
@@ -9708,7 +9710,7 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 										onClick: O,
 										title: B._({ id: "6buwPb" }),
 										"aria-label": B._({ id: "6buwPb" }),
-										children: /* @__PURE__ */ S(rf, { className: "h-3.5 w-3.5" })
+										children: /* @__PURE__ */ S(cf, { className: "h-3.5 w-3.5" })
 									}),
 									D && /* @__PURE__ */ S("button", {
 										type: "button",
@@ -9717,7 +9719,7 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 										title: E ? B._({ id: "sQpDn6" }) : B._({ id: "3qkggm" }),
 										"aria-label": E ? B._({ id: "sQpDn6" }) : B._({ id: "3qkggm" }),
 										"aria-pressed": E,
-										children: S(E ? Nd : Fd, { className: "h-3.5 w-3.5" })
+										children: S(E ? Ld : zd, { className: "h-3.5 w-3.5" })
 									})
 								]
 							})
@@ -9726,13 +9728,13 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 					/* @__PURE__ */ C("div", {
 						className: "flex flex-wrap items-center gap-2 border-b border-black/[0.04] bg-white/40 px-5 py-1.5",
 						children: [
-							Xe === "board" && /* @__PURE__ */ C("label", {
+							$e === "board" && /* @__PURE__ */ C("label", {
 								className: "inline-flex items-center gap-1 text-xs text-brand-gray",
-								children: [/* @__PURE__ */ S(Ef, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ C("select", {
-									className: gt,
-									value: Je,
+								children: [/* @__PURE__ */ S(Af, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ C("select", {
+									className: yt,
+									value: Ze,
 									disabled: Ie,
-									onChange: (e) => vt({ groupBy: e.target.value }),
+									onChange: (e) => xt({ groupBy: e.target.value }),
 									children: [
 										/* @__PURE__ */ S("option", {
 											value: "status",
@@ -9749,11 +9751,11 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 									]
 								})]
 							}),
-							Xe === "board" && /* @__PURE__ */ C("label", {
+							$e === "board" && /* @__PURE__ */ C("label", {
 								className: "inline-flex items-center gap-1 text-xs text-brand-gray",
-								children: [/* @__PURE__ */ S(Ld, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ C("select", {
-									className: gt,
-									value: rt ?? "",
+								children: [/* @__PURE__ */ S(Vd, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ C("select", {
+									className: yt,
+									value: ot ?? "",
 									disabled: Ie,
 									onChange: (t) => {
 										let n = t.target.value || void 0;
@@ -9770,7 +9772,7 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 											"status",
 											"priority",
 											"assignee"
-										].filter((e) => e !== Je).map((e) => /* @__PURE__ */ S("option", {
+										].filter((e) => e !== Ze).map((e) => /* @__PURE__ */ S("option", {
 											value: e,
 											children: e === "status" ? B._({ id: "ucJg3u" }) : e === "priority" ? B._({ id: "jUbC3Z" }) : B._({ id: "lHxVTh" })
 										}, e)),
@@ -9781,21 +9783,21 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 									]
 								})]
 							}),
-							Xe === "board" && rt && !k && /* @__PURE__ */ S("button", {
+							$e === "board" && ot && !k && /* @__PURE__ */ S("button", {
 								type: "button",
 								disabled: Ie,
 								onClick: () => {
-									rt === "custom" ? De(!0) : rt === "status" ? ke(!0) : (Fe(e.swimlaneMigration?.source ?? rt), Ve(""), Ne(!0));
+									ot === "custom" ? De(!0) : ot === "status" ? ke(!0) : (Fe(e.swimlaneMigration?.source ?? ot), Ve(""), Ne(!0));
 								},
-								title: rt === "custom" ? B._({ id: "uH1U8v" }) : rt === "status" ? B._({ id: "rvpMpc" }) : B._({ id: "jzy1b8" }),
-								"aria-label": rt === "custom" ? B._({ id: "uH1U8v" }) : rt === "status" ? B._({ id: "rvpMpc" }) : B._({ id: "jzy1b8" }),
+								title: ot === "custom" ? B._({ id: "uH1U8v" }) : ot === "status" ? B._({ id: "rvpMpc" }) : B._({ id: "jzy1b8" }),
+								"aria-label": ot === "custom" ? B._({ id: "uH1U8v" }) : ot === "status" ? B._({ id: "rvpMpc" }) : B._({ id: "jzy1b8" }),
 								className: "inline-flex h-7 w-7 items-center justify-center rounded-md border border-stone-200 bg-white text-stone-500 transition hover:border-brand/40 hover:text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand/20 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50",
 								children: /* @__PURE__ */ S(Td, { className: "h-3.5 w-3.5" })
 							}),
-							Xe !== "calendar" && /* @__PURE__ */ C("label", {
+							$e !== "calendar" && /* @__PURE__ */ C("label", {
 								className: "inline-flex items-center gap-1 text-xs text-brand-gray",
-								children: [/* @__PURE__ */ S(zd, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ C("select", {
-									className: gt,
+								children: [/* @__PURE__ */ S(Ud, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ C("select", {
+									className: yt,
 									value: me,
 									onChange: (e) => he(e.target.value),
 									children: [
@@ -9823,22 +9825,22 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 								className: "relative",
 								children: [/* @__PURE__ */ C(Su, {
 									className: `inline-flex h-7 items-center gap-1 rounded-md border px-2 text-xs ${ge ? "border-brand/40 bg-brand-soft/50 text-brand-dark" : "border-stone-200 text-stone-600 hover:border-brand/40"}`,
-									children: [/* @__PURE__ */ S(ff, { className: "h-3.5 w-3.5" }), ge ? ge.prop === "swimlaneIssue" ? B._({ id: "FQylcT" }) : `${ge.prop}: ${ge.value || B._({ id: "EbMPZJ" })}` : /* @__PURE__ */ S(L, { id: "o7J4JM" })]
+									children: [/* @__PURE__ */ S(gf, { className: "h-3.5 w-3.5" }), ge ? ge.prop === "swimlaneIssue" ? B._({ id: "FQylcT" }) : `${ge.prop}: ${ge.value || B._({ id: "EbMPZJ" })}` : /* @__PURE__ */ S(L, { id: "o7J4JM" })]
 								}), /* @__PURE__ */ C(Cu, {
 									anchor: "bottom start",
-									className: `z-30 w-52 rounded-lg border border-black/[0.06] bg-white py-1 text-sm shadow-lg [--anchor-gap:4px] focus:outline-none${_t}`,
+									className: `z-30 w-52 rounded-lg border border-black/[0.06] bg-white py-1 text-sm shadow-lg [--anchor-gap:4px] focus:outline-none${bt}`,
 									children: [
 										ge && /* @__PURE__ */ C(x, { children: [/* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
 											type: "button",
 											className: "flex w-full items-center gap-2 px-3 py-1.5 text-left text-stone-700 data-[focus]:bg-stone-100",
 											onClick: () => _e(null),
-											children: [/* @__PURE__ */ S(Bf, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "Q2mGA7" })]
+											children: [/* @__PURE__ */ S(Wf, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "Q2mGA7" })]
 										}) }), /* @__PURE__ */ S("div", { className: "my-1 border-t border-black/[0.05]" })] }),
 										/* @__PURE__ */ S("div", {
 											className: "px-3 py-0.5 text-[11px] uppercase tracking-wide text-stone-400",
 											children: /* @__PURE__ */ S(L, { id: "1hKEom" })
 										}),
-										Yf.map((e) => /* @__PURE__ */ S($, { children: /* @__PURE__ */ S("button", {
+										ep.map((e) => /* @__PURE__ */ S($, { children: /* @__PURE__ */ S("button", {
 											type: "button",
 											className: "flex w-full items-center px-3 py-1 text-left text-stone-700 data-[focus]:bg-stone-100",
 											onClick: () => _e({
@@ -9847,10 +9849,10 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 											}),
 											children: e
 										}) }, e)),
-										lt.length > 0 && /* @__PURE__ */ C(x, { children: [/* @__PURE__ */ S("div", {
+										ft.length > 0 && /* @__PURE__ */ C(x, { children: [/* @__PURE__ */ S("div", {
 											className: "px-3 py-0.5 text-[11px] uppercase tracking-wide text-stone-400",
 											children: /* @__PURE__ */ S(L, { id: "ojKCLU" })
-										}), lt.map((e) => /* @__PURE__ */ S($, { children: /* @__PURE__ */ S("button", {
+										}), ft.map((e) => /* @__PURE__ */ S($, { children: /* @__PURE__ */ S("button", {
 											type: "button",
 											className: "flex w-full items-center px-3 py-1 text-left text-stone-700 data-[focus]:bg-stone-100",
 											onClick: () => _e({
@@ -9859,25 +9861,25 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 											}),
 											children: e
 										}) }, e))] }),
-										ut.length > 0 && /* @__PURE__ */ C(x, { children: [/* @__PURE__ */ S("div", {
+										pt.length > 0 && /* @__PURE__ */ C(x, { children: [/* @__PURE__ */ S("div", {
 											className: "px-3 py-0.5 text-[11px] uppercase tracking-wide text-stone-400",
 											children: /* @__PURE__ */ S(L, { id: "OYHzN1" })
-										}), ut.map((e) => /* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
+										}), pt.map((e) => /* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
 											type: "button",
 											className: "flex w-full items-center gap-1 px-3 py-1 text-left text-stone-700 data-[focus]:bg-stone-100",
 											onClick: () => _e({
 												prop: "tag",
 												value: e
 											}),
-											children: [/* @__PURE__ */ S(Mf, { className: "h-3 w-3" }), e]
+											children: [/* @__PURE__ */ S(If, { className: "h-3 w-3" }), e]
 										}) }, e))] })
 									]
 								})]
 							}),
 							/* @__PURE__ */ C("div", {
 								className: "relative ml-auto",
-								children: [/* @__PURE__ */ S(bf, { className: "pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-stone-400" }), /* @__PURE__ */ S("input", {
-									className: `${gt} w-44 pl-7`,
+								children: [/* @__PURE__ */ S(wf, { className: "pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-stone-400" }), /* @__PURE__ */ S("input", {
+									className: `${yt} w-44 pl-7`,
 									placeholder: B._({ id: "JTYvAw" }),
 									value: fe,
 									onChange: (e) => pe(e.target.value)
@@ -9892,36 +9894,37 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 							children: i
 						})
 					}),
-					Xe === "table" ? /* @__PURE__ */ S(Ip, {
-						cards: kp(ot, me),
-						statusName: dt,
-						today: et,
-						doneKey: Ze,
-						selectedId: ft?.id,
-						onSelect: Ct
-					}) : Xe === "calendar" ? /* @__PURE__ */ S(Rp, {
-						cards: ot,
-						today: et,
-						doneKey: Ze,
+					$e === "table" ? /* @__PURE__ */ S(Vp, {
+						cards: Pp(lt, me),
+						statusName: mt,
+						today: rt,
+						doneKey: et,
+						selectedId: ht?.id,
+						onSelect: Et
+					}) : $e === "calendar" ? /* @__PURE__ */ S(Up, {
+						cards: lt,
+						today: rt,
+						doneKey: et,
 						mode: e.calendarMode ?? "month",
-						onModeChange: (e) => vt({ calendarMode: e }),
-						selectedId: ft?.id,
-						onSelect: Ct
-					}) : it && rt ? /* @__PURE__ */ S(zp, {
-						cards: ot,
-						columns: tt,
-						lanes: at,
+						onModeChange: (e) => xt({ calendarMode: e }),
+						selectedId: ht?.id,
+						onSelect: Et
+					}) : st && ot ? /* @__PURE__ */ S(Kp, {
+						cards: lt,
+						columns: it,
+						lanes: ct,
 						config: e,
-						groupKey: Je,
-						swimlaneKey: rt,
+						groupKey: Ze,
+						swimlaneKey: ot,
 						sortBy: me,
-						today: et,
-						doneKey: Ze,
-						selectedId: ft?.id,
+						today: rt,
+						doneKey: et,
+						selectedId: ht?.id,
 						actions: r,
 						readOnly: k || Ie,
+						customLaneMutationPending: We,
 						portalClassName: M,
-						onSelect: Ct,
+						onSelect: Et,
 						onOpenManager: () => De(!0),
 						onManageLane: ({ laneKey: e, action: t }) => {
 							je({
@@ -9930,22 +9933,22 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 								action: t
 							}), De(!0);
 						},
-						onMoveCustomLane: bt,
-						onSetCustomLaneColor: xt,
-						onShowMissing: St
+						onMoveCustomLane: Ct,
+						onSetCustomLaneColor: wt,
+						onShowMissing: Tt
 					}) : /* @__PURE__ */ C("div", {
 						className: "flex min-h-0 flex-1 items-stretch gap-3 overflow-x-auto p-4",
-						children: [tt.map((t, i) => {
-							let s = kp(ot.filter((e) => xp(e, Je) === t.key), me), c = (e) => !!be && $e && ee?.col === t.key && ee.index === e, l = Ye && Ze === t.key, u = te === t.key, d = Ye && t.limit != null && s.length > t.limit, f = t.color ?? Qf[i % Qf.length];
+						children: [it.map((t, i) => {
+							let s = Pp(lt.filter((e) => Ep(e, Ze) === t.key), me), c = (e) => !!be && nt && ee?.col === t.key && ee.index === e, l = Qe && et === t.key, u = te === t.key, d = Qe && t.limit != null && s.length > t.limit, f = t.color ?? rp[i % rp.length];
 							return ne.has(t.key) ? /* @__PURE__ */ C("button", {
 								type: "button",
 								"data-col-key": t.key,
-								onClick: () => Pt(t.key),
+								onClick: () => H(t.key),
 								title: B._({ id: "AC9Gkf" }),
 								className: `flex h-full w-10 shrink-0 flex-col items-center gap-2 rounded-xl border bg-stone-100/60 py-2 text-stone-500 hover:border-brand/40 ${u ? "border-brand/60" : "border-black/[0.05]"}`,
 								children: [
-									/* @__PURE__ */ S(Zd, { className: "h-4 w-4" }),
-									(Qe || t.color) && /* @__PURE__ */ S("span", {
+									/* @__PURE__ */ S(tf, { className: "h-4 w-4" }),
+									(tt || t.color) && /* @__PURE__ */ S("span", {
 										className: "h-2 w-2 rounded-full",
 										style: { backgroundColor: f },
 										"aria-hidden": !0
@@ -9964,21 +9967,21 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 								className: `flex max-h-full w-72 shrink-0 flex-col rounded-xl border bg-stone-100/60 transition-opacity ${Se === t.key ? "opacity-50" : ""} ${u ? "border-brand/60" : ee?.col === t.key ? "border-brand/40" : "border-black/[0.05]"}`,
 								children: [/* @__PURE__ */ C("div", {
 									className: "flex items-center justify-between gap-1 rounded-t-xl px-3 py-2",
-									style: Qe ? { backgroundColor: `${f}1f` } : void 0,
+									style: tt ? { backgroundColor: `${f}1f` } : void 0,
 									children: [/* @__PURE__ */ C("div", {
-										onPointerDown: (e) => jt(e, t),
-										onPointerMove: (e) => Mt(e, t),
-										onPointerUp: (e) => Nt(e, t),
-										className: `flex min-w-0 flex-1 select-none items-center gap-1.5 text-sm font-medium text-stone-700 ${Ye && r.reorderColumns ? "cursor-grab touch-none active:cursor-grabbing" : ""}`,
+										onPointerDown: (e) => Pt(e, t),
+										onPointerMove: (e) => V(e, t),
+										onPointerUp: (e) => Ft(e, t),
+										className: `flex min-w-0 flex-1 select-none items-center gap-1.5 text-sm font-medium text-stone-700 ${Qe && r.reorderColumns ? "cursor-grab touch-none active:cursor-grabbing" : ""}`,
 										children: [
 											/* @__PURE__ */ S("button", {
 												type: "button",
-												onClick: () => Pt(t.key),
+												onClick: () => H(t.key),
 												title: B._({ id: "pwN6Ae" }),
 												className: "-ml-1 rotate-90 rounded p-0.5 text-stone-400 hover:bg-white hover:text-stone-600",
-												children: /* @__PURE__ */ S(Zd, { className: "h-3.5 w-3.5" })
+												children: /* @__PURE__ */ S(tf, { className: "h-3.5 w-3.5" })
 											}),
-											(Qe || t.color) && /* @__PURE__ */ S("span", {
+											(tt || t.color) && /* @__PURE__ */ S("span", {
 												className: "h-2 w-2 rounded-full",
 												style: { backgroundColor: f },
 												"aria-hidden": !0
@@ -9987,7 +9990,7 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 												className: "truncate",
 												children: t.name || B._({ id: "EbMPZJ" })
 											}),
-											l && /* @__PURE__ */ S(Gd, {
+											l && /* @__PURE__ */ S(Yd, {
 												className: "h-3.5 w-3.5 shrink-0 text-emerald-500",
 												title: B._({ id: "_5CsXX" })
 											}),
@@ -10000,33 +10003,33 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 												children: [s.length, t.limit == null ? "" : `/${t.limit}`]
 											})
 										]
-									}), Ye && !k && wt && /* @__PURE__ */ C(Du, {
+									}), Qe && !k && Dt && /* @__PURE__ */ C(Du, {
 										as: "div",
 										className: "relative shrink-0",
 										children: [/* @__PURE__ */ S(Su, {
 											className: "rounded p-0.5 text-stone-400 hover:bg-white hover:text-stone-600",
-											children: /* @__PURE__ */ S(cf, { className: "h-4 w-4" })
+											children: /* @__PURE__ */ S(ff, { className: "h-4 w-4" })
 										}), /* @__PURE__ */ C(Cu, {
 											anchor: "bottom end",
-											className: `z-30 w-48 rounded-lg border border-black/[0.06] bg-white py-1 text-sm shadow-lg [--anchor-gap:4px] focus:outline-none${_t}`,
+											className: `z-30 w-48 rounded-lg border border-black/[0.06] bg-white py-1 text-sm shadow-lg [--anchor-gap:4px] focus:outline-none${bt}`,
 											children: [
 												r.renameColumn && /* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
 													type: "button",
 													className: "flex w-full items-center gap-2 px-3 py-1.5 text-left text-stone-700 data-[focus]:bg-stone-100",
 													onClick: () => void r.renameColumn?.(t.key),
-													children: [/* @__PURE__ */ S(Sf, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "2wxgft" })]
+													children: [/* @__PURE__ */ S(Ef, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "2wxgft" })]
 												}) }),
 												r.toggleDoneColumn && /* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
 													type: "button",
 													className: "flex w-full items-center gap-2 px-3 py-1.5 text-left text-stone-700 data-[focus]:bg-stone-100",
 													onClick: () => void r.toggleDoneColumn?.(t.key),
-													children: [/* @__PURE__ */ S(Gd, { className: "h-3.5 w-3.5" }), l ? /* @__PURE__ */ S(L, { id: "G4qrLy" }) : /* @__PURE__ */ S(L, { id: "wtw-au" })]
+													children: [/* @__PURE__ */ S(Yd, { className: "h-3.5 w-3.5" }), l ? /* @__PURE__ */ S(L, { id: "G4qrLy" }) : /* @__PURE__ */ S(L, { id: "wtw-au" })]
 												}) }),
 												r.setColumnLimit && /* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
 													type: "button",
 													className: "flex w-full items-center gap-2 px-3 py-1.5 text-left text-stone-700 data-[focus]:bg-stone-100",
 													onClick: () => void r.setColumnLimit?.(t.key),
-													children: [/* @__PURE__ */ S(ff, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "Iw6WJa" })]
+													children: [/* @__PURE__ */ S(gf, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "Iw6WJa" })]
 												}) }),
 												r.setColumnColor && /* @__PURE__ */ C(x, { children: [/* @__PURE__ */ S("div", { className: "my-1 border-t border-black/[0.05]" }), /* @__PURE__ */ C("div", {
 													className: "px-3 py-1",
@@ -10035,7 +10038,7 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 														children: /* @__PURE__ */ S(L, { id: "jZlrte" })
 													}), /* @__PURE__ */ C("div", {
 														className: "mt-1 flex flex-wrap items-center gap-1.5",
-														children: [Qf.map((e) => /* @__PURE__ */ S("button", {
+														children: [rp.map((e) => /* @__PURE__ */ S("button", {
 															type: "button",
 															title: e,
 															onClick: () => void r.setColumnColor?.(t.key, e),
@@ -10052,10 +10055,10 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 												})] }),
 												r.deleteColumn && /* @__PURE__ */ C(x, { children: [/* @__PURE__ */ S("div", { className: "my-1 border-t border-black/[0.05]" }), /* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
 													type: "button",
-													disabled: tt.length <= 1,
+													disabled: it.length <= 1,
 													className: "flex w-full items-center gap-2 px-3 py-1.5 text-left text-red-600 disabled:opacity-40 data-[focus]:bg-red-50",
 													onClick: () => void r.deleteColumn?.(t.key),
-													children: [/* @__PURE__ */ S(Pf, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "cnGeoo" })]
+													children: [/* @__PURE__ */ S(Rf, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "cnGeoo" })]
 												}) })] })
 											]
 										})]
@@ -10064,19 +10067,19 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 									className: "min-h-0 flex-1 space-y-2 overflow-y-auto p-2",
 									children: [
 										s.map((t, i) => {
-											let a = t.due && t.due < et && t.columnKey !== Ze, o = st.get(t.id) ?? 0, s = ct.get(t.id), l = t.priority && t.priority !== "none" || t.assignee || t.due || (t.taskTotal ?? 0) > 0 || t.tags.length > 0 || o > 0 || (s?.length ?? 0) > 0;
+											let a = t.due && t.due < rt && t.columnKey !== et, o = ut.get(t.id) ?? 0, s = dt.get(t.id), l = t.priority && t.priority !== "none" || t.assignee || t.due || (t.taskTotal ?? 0) > 0 || t.tags.length > 0 || o > 0 || (s?.length ?? 0) > 0;
 											return /* @__PURE__ */ C(n, { children: [c(i) && /* @__PURE__ */ S("div", { className: "mx-1 h-0.5 rounded bg-brand" }), /* @__PURE__ */ C("div", {
 												role: "button",
 												tabIndex: 0,
 												"data-card-id": t.id,
 												"data-card-index": i,
-												onPointerDown: (e) => Dt(e, t),
-												onPointerMove: (e) => Ot(e, t),
-												onPointerUp: (e) => kt(e, t),
+												onPointerDown: (e) => At(e, t),
+												onPointerMove: (e) => jt(e, t),
+												onPointerUp: (e) => Mt(e, t),
 												onKeyDown: (e) => {
-													e.key === "Enter" && Ct(t);
+													e.key === "Enter" && Et(t);
 												},
-												className: `group relative block w-full cursor-pointer touch-none select-none rounded-lg bg-white p-2.5 text-left shadow-sm transition hover:ring-brand/30 ${be === t.id ? "opacity-40" : ""} ${F.has(t.id) ? "ring-2 ring-brand/70" : ft?.id === t.id ? "ring-1 ring-brand/60" : "ring-1 ring-black/[0.04]"}`,
+												className: `group relative block w-full cursor-pointer touch-none select-none rounded-lg bg-white p-2.5 text-left shadow-sm transition hover:ring-brand/30 ${be === t.id ? "opacity-40" : ""} ${F.has(t.id) ? "ring-2 ring-brand/70" : ht?.id === t.id ? "ring-1 ring-brand/60" : "ring-1 ring-black/[0.04]"}`,
 												children: [
 													!k && /* @__PURE__ */ S("div", {
 														className: "absolute right-1 top-1 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100",
@@ -10087,41 +10090,41 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 															as: "div",
 															children: [/* @__PURE__ */ S(Su, {
 																className: "rounded p-0.5 text-stone-400 hover:bg-stone-100 hover:text-stone-600",
-																children: /* @__PURE__ */ S(cf, { className: "h-4 w-4" })
+																children: /* @__PURE__ */ S(ff, { className: "h-4 w-4" })
 															}), /* @__PURE__ */ C(Cu, {
 																anchor: "bottom end",
-																className: `z-30 w-44 rounded-lg border border-black/[0.06] bg-white py-1 text-sm shadow-lg [--anchor-gap:4px] focus:outline-none${_t}`,
+																className: `z-30 w-44 rounded-lg border border-black/[0.06] bg-white py-1 text-sm shadow-lg [--anchor-gap:4px] focus:outline-none${bt}`,
 																children: [
 																	r.openCardFull && /* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
 																		type: "button",
 																		className: "flex w-full items-center gap-2 px-3 py-1.5 text-left text-stone-700 data-[focus]:bg-stone-100",
 																		onClick: () => r.openCardFull?.(t),
-																		children: [/* @__PURE__ */ S(Fd, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "Ik60OC" })]
+																		children: [/* @__PURE__ */ S(zd, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "Ik60OC" })]
 																	}) }),
 																	r.copyCardLink && /* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
 																		type: "button",
 																		className: "flex w-full items-center gap-2 px-3 py-1.5 text-left text-stone-700 data-[focus]:bg-stone-100",
 																		onClick: () => void r.copyCardLink?.(t),
-																		children: [/* @__PURE__ */ S(gf, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "y1eoq1" })]
+																		children: [/* @__PURE__ */ S(bf, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "y1eoq1" })]
 																	}) }),
 																	r.duplicateCard && /* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
 																		type: "button",
 																		className: "flex w-full items-center gap-2 px-3 py-1.5 text-left text-stone-700 data-[focus]:bg-stone-100",
 																		onClick: () => void r.duplicateCard?.(t),
-																		children: [/* @__PURE__ */ S(of, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "euc6Ns" })]
+																		children: [/* @__PURE__ */ S(uf, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "euc6Ns" })]
 																	}) }),
 																	r.saveAsTemplate && /* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
 																		type: "button",
 																		className: "flex w-full items-center gap-2 px-3 py-1.5 text-left text-stone-700 data-[focus]:bg-stone-100",
 																		onClick: () => void r.saveAsTemplate?.(t),
-																		children: [/* @__PURE__ */ S(Vd, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "BnmEvM" })]
+																		children: [/* @__PURE__ */ S(Gd, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "BnmEvM" })]
 																	}) }),
 																	/* @__PURE__ */ S("div", { className: "my-1 border-t border-black/[0.05]" }),
 																	/* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
 																		type: "button",
 																		className: "flex w-full items-center gap-2 px-3 py-1.5 text-left text-red-600 data-[focus]:bg-red-50",
 																		onClick: () => void r.deleteCard(t),
-																		children: [/* @__PURE__ */ S(Pf, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "cnGeoo" })]
+																		children: [/* @__PURE__ */ S(Rf, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "cnGeoo" })]
 																	}) })
 																]
 															})]
@@ -10151,23 +10154,23 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 																	id: "x52RAh",
 																	values: { blockedCount: o }
 																}),
-																children: [/* @__PURE__ */ S(vf, { className: "h-3 w-3" }), o]
+																children: [/* @__PURE__ */ S(Sf, { className: "h-3 w-3" }), o]
 															}),
 															t.priority && t.priority !== "none" && /* @__PURE__ */ S("span", {
-																className: `rounded px-1.5 py-0.5 text-[11px] font-medium ${Zf[t.priority] ?? "bg-stone-100 text-stone-500"}`,
+																className: `rounded px-1.5 py-0.5 text-[11px] font-medium ${np[t.priority] ?? "bg-stone-100 text-stone-500"}`,
 																children: t.priority
 															}),
 															(t.taskTotal ?? 0) > 0 && /* @__PURE__ */ C("span", {
 																className: `inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[11px] font-medium ${t.taskDone === t.taskTotal ? "bg-emerald-50 text-emerald-600" : "bg-stone-100 text-stone-500"}`,
 																children: [
-																	/* @__PURE__ */ S(Gd, { className: "h-3 w-3" }),
+																	/* @__PURE__ */ S(Yd, { className: "h-3 w-3" }),
 																	t.taskDone,
 																	"/",
 																	t.taskTotal
 																]
 															}),
 															s && s.length > 0 && (() => {
-																let t = dp(s, e.doneColumn), n = 2 * Math.PI * 6;
+																let t = gp(s, e.doneColumn), n = 2 * Math.PI * 6;
 																return /* @__PURE__ */ C("span", {
 																	className: `inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-medium ${t.done === t.total ? "bg-emerald-50 text-emerald-600" : "bg-stone-100 text-stone-500"}`,
 																	title: B._({
@@ -10209,15 +10212,15 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 															t.tags.map((e) => /* @__PURE__ */ C("span", {
 																className: "inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[11px] text-brand-dark",
 																style: { backgroundColor: e.color ? `${e.color}22` : "rgba(0,136,132,0.10)" },
-																children: [/* @__PURE__ */ S(Mf, { className: "h-3 w-3" }), e.label]
+																children: [/* @__PURE__ */ S(If, { className: "h-3 w-3" }), e.label]
 															}, e.label)),
 															t.assignee && /* @__PURE__ */ C("span", {
 																className: "inline-flex items-center gap-0.5 text-[11px] text-brand-gray",
-																children: [/* @__PURE__ */ S(If, { className: "h-3 w-3" }), t.assignee]
+																children: [/* @__PURE__ */ S(Bf, { className: "h-3 w-3" }), t.assignee]
 															}),
 															t.due && /* @__PURE__ */ C("span", {
 																className: `inline-flex items-center gap-0.5 text-[11px] ${a ? "font-medium text-red-600" : "text-brand-gray"}`,
-																children: [/* @__PURE__ */ S(Ud, { className: "h-3 w-3" }), t.due]
+																children: [/* @__PURE__ */ S(qd, { className: "h-3 w-3" }), t.due]
 															})
 														]
 													})
@@ -10236,22 +10239,22 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 												if (e.key === "Enter" && !e.shiftKey) {
 													e.preventDefault();
 													let n = oe;
-													se(""), ae(null), V(t.key, n);
+													se(""), ae(null), It(t.key, n);
 												}
 												e.key === "Escape" && (se(""), ae(null));
 											},
 											onBlur: () => {
-												oe.trim() && V(t.key, oe), se(""), ae(null);
+												oe.trim() && It(t.key, oe), se(""), ae(null);
 											}
 										}) : a && a.length > 0 && o ? /* @__PURE__ */ C(Du, {
 											as: "div",
 											className: "relative",
 											children: [/* @__PURE__ */ C(Su, {
 												className: "flex w-full items-center gap-1.5 rounded-lg px-2 py-1.5 text-left text-sm text-stone-400 hover:bg-white hover:text-brand-dark",
-												children: [/* @__PURE__ */ S(wf, { className: "h-4 w-4" }), /* @__PURE__ */ S(L, { id: "pnrmSP" })]
+												children: [/* @__PURE__ */ S(Of, { className: "h-4 w-4" }), /* @__PURE__ */ S(L, { id: "pnrmSP" })]
 											}), /* @__PURE__ */ C(Cu, {
 												anchor: "bottom start",
-												className: `z-30 w-52 rounded-lg border border-black/[0.06] bg-white py-1 text-sm shadow-lg [--anchor-gap:4px] focus:outline-none${_t}`,
+												className: `z-30 w-52 rounded-lg border border-black/[0.06] bg-white py-1 text-sm shadow-lg [--anchor-gap:4px] focus:outline-none${bt}`,
 												children: [
 													/* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
 														type: "button",
@@ -10259,7 +10262,7 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 														onClick: () => {
 															se(""), ae(t.key);
 														},
-														children: [/* @__PURE__ */ S(Sf, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "UQOvxZ" })]
+														children: [/* @__PURE__ */ S(Ef, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "UQOvxZ" })]
 													}) }),
 													/* @__PURE__ */ S("div", { className: "my-1 border-t border-black/[0.05]" }),
 													/* @__PURE__ */ S("div", {
@@ -10270,7 +10273,7 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 														type: "button",
 														className: "flex w-full items-center gap-2 px-3 py-1.5 text-left text-stone-700 data-[focus]:bg-stone-100",
 														onClick: () => void o(t.key, e.id),
-														children: [/* @__PURE__ */ S(Vd, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S("span", {
+														children: [/* @__PURE__ */ S(Gd, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S("span", {
 															className: "truncate",
 															children: e.name
 														})]
@@ -10283,12 +10286,12 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 											onClick: () => {
 												se(""), ae(t.key);
 											},
-											children: [/* @__PURE__ */ S(wf, { className: "h-4 w-4" }), /* @__PURE__ */ S(L, { id: "pnrmSP" })]
+											children: [/* @__PURE__ */ S(Of, { className: "h-4 w-4" }), /* @__PURE__ */ S(L, { id: "pnrmSP" })]
 										})
 									]
 								})]
 							}, t.key);
-						}), Ye && !k && r.addColumn && (ce ? /* @__PURE__ */ S("input", {
+						}), Qe && !k && r.addColumn && (ce ? /* @__PURE__ */ S("input", {
 							autoFocus: !0,
 							className: "w-44 shrink-0 self-start rounded-xl border border-brand/40 px-3 py-2 text-sm text-stone-800 focus:outline-none focus:ring-2 focus:ring-brand/40",
 							placeholder: B._({ id: "iYVqZq" }),
@@ -10311,7 +10314,7 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 							onClick: () => {
 								de(""), le(!0);
 							},
-							children: [/* @__PURE__ */ S(wf, { className: "h-4 w-4" }), /* @__PURE__ */ S(L, { id: "AgvHni" })]
+							children: [/* @__PURE__ */ S(Of, { className: "h-4 w-4" }), /* @__PURE__ */ S(L, { id: "AgvHni" })]
 						}))]
 					})
 				]
@@ -10327,11 +10330,11 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 						})
 					}),
 					/* @__PURE__ */ C("select", {
-						className: gt,
+						className: yt,
 						value: "",
 						"aria-label": B._({ id: "8enUYo" }),
 						onChange: (e) => {
-							e.target.value && At({ columnKey: e.target.value }), e.target.value = "";
+							e.target.value && Nt({ columnKey: e.target.value }), e.target.value = "";
 						},
 						children: [/* @__PURE__ */ S("option", {
 							value: "",
@@ -10343,17 +10346,17 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 						}, e.key))]
 					}),
 					/* @__PURE__ */ C("select", {
-						className: gt,
+						className: yt,
 						value: "",
 						"aria-label": B._({ id: "hNmOZ7" }),
 						onChange: (e) => {
-							e.target.value && At({ priority: e.target.value }), e.target.value = "";
+							e.target.value && Nt({ priority: e.target.value }), e.target.value = "";
 						},
 						children: [/* @__PURE__ */ S("option", {
 							value: "",
 							disabled: !0,
 							children: B._({ id: "B5TUF-" })
-						}), Yf.map((e) => /* @__PURE__ */ S("option", {
+						}), ep.map((e) => /* @__PURE__ */ S("option", {
 							value: e,
 							children: e
 						}, e))]
@@ -10365,7 +10368,7 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 							let e = t.filter((e) => F.has(e.id));
 							I(/* @__PURE__ */ new Set()), r.deleteCards?.(e);
 						},
-						children: [/* @__PURE__ */ S(Pf, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "cnGeoo" })]
+						children: [/* @__PURE__ */ S(Rf, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "cnGeoo" })]
 					}),
 					/* @__PURE__ */ S("button", {
 						type: "button",
@@ -10373,11 +10376,11 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 						title: B._({ id: "FBIuPX" }),
 						"aria-label": B._({ id: "FBIuPX" }),
 						onClick: () => I(/* @__PURE__ */ new Set()),
-						children: /* @__PURE__ */ S(Bf, { className: "h-4 w-4" })
+						children: /* @__PURE__ */ S(Wf, { className: "h-4 w-4" })
 					})
 				]
 			}),
-			ft && j && /* @__PURE__ */ C("div", {
+			ht && j && /* @__PURE__ */ C("div", {
 				className: "absolute right-0 top-0 z-30 h-full shadow-[-10px_0_30px_rgba(0,0,0,0.07)]",
 				style: { width: ve },
 				children: [/* @__PURE__ */ S("div", {
@@ -10391,7 +10394,7 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 					title: B._({ id: "AVreQ5" }),
 					className: "absolute left-0 top-0 z-10 h-full w-1.5 -translate-x-1/2 cursor-col-resize transition-colors hover:bg-brand/40"
 				}), /* @__PURE__ */ S(j, {
-					card: ft,
+					card: ht,
 					statusOptions: e.columns.map((e) => ({
 						value: e.key,
 						label: e.name
@@ -10406,8 +10409,8 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 							label: e.name,
 							color: e.color
 						})),
-						...ft.swimlaneKey && !(e.swimlanes ?? []).some((e) => e.key === ft.swimlaneKey) ? [{
-							value: ft.swimlaneKey,
+						...ht.swimlaneKey && !(e.swimlanes ?? []).some((e) => e.key === ht.swimlaneKey) ? [{
+							value: ht.swimlaneKey,
 							label: B._({ id: "7dZyQU" }),
 							warning: !0
 						}] : []
@@ -10417,32 +10420,32 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 					tagOptions: c,
 					fields: e.fields,
 					onAddField: (t) => {
-						let n = /* @__PURE__ */ new Set([...$f, ...(e.fields ?? []).map((e) => e.key)]), r = pp(t);
+						let n = /* @__PURE__ */ new Set([...ip, ...(e.fields ?? []).map((e) => e.key)]), r = vp(t);
 						if (n.has(r)) {
 							let e = 2;
 							for (; n.has(`${r}-${e}`);) e += 1;
 							r = `${r}-${e}`;
 						}
-						vt({ fields: [...e.fields ?? [], {
+						xt({ fields: [...e.fields ?? [], {
 							key: r,
 							label: t
 						}] });
 					},
-					dependencyCards: t.filter((e) => e.id !== ft.id).map((e) => ({
-						slug: cp(e),
+					dependencyCards: t.filter((e) => e.id !== ht.id).map((e) => ({
+						slug: pp(e),
 						title: e.title
 					})),
-					childCards: (ct.get(ft.id) ?? []).map((e) => ({
+					childCards: (dt.get(ht.id) ?? []).map((e) => ({
 						id: e.id,
 						title: e.title,
 						icon: e.icon,
-						statusName: dt(e.columnKey),
-						done: e.columnKey === Ze
+						statusName: mt(e.columnKey),
+						done: e.columnKey === et
 					})),
 					onOpenCard: (e) => P(e),
 					onAddChild: k ? void 0 : async (t) => {
-						let n = Ye ? e.columns[0]?.key ?? ft.columnKey : ft.columnKey, i = await r.createCard(n, t);
-						typeof i == "string" && await r.updateCard(i, { parent: cp(ft) });
+						let n = Qe ? e.columns[0]?.key ?? ht.columnKey : ht.columnKey, i = await r.createCard(n, t);
+						typeof i == "string" && await r.updateCard(i, { parent: pp(ht) });
 					},
 					loadNotes: l,
 					onUploadAttachment: u,
@@ -10454,13 +10457,13 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 					resolveComment: b,
 					currentUser: w,
 					loadActivity: T,
-					onChange: (e) => void r.updateCard(ft.id, e),
+					onChange: (e) => void r.updateCard(ht.id, e),
 					onClose: () => P(null),
-					onDelete: () => void r.deleteCard(ft),
-					onOpenFull: r.openCardFull ? () => r.openCardFull?.(ft) : void 0
+					onDelete: () => void r.deleteCard(ht),
+					onOpenFull: r.openCardFull ? () => r.openCardFull?.(ht) : void 0
 				})]
 			}),
-			/* @__PURE__ */ S(Wp, {
+			/* @__PURE__ */ S(Zp, {
 				open: Ee,
 				lanes: e.swimlanes ?? [],
 				cards: t,
@@ -10469,20 +10472,20 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 				onClose: () => {
 					De(!1), je(void 0);
 				},
-				onSaveLanes: yt,
-				onUpdateCards: mt,
-				onShowAffected: St
+				onSaveLanes: St,
+				onUpdateCards: _t,
+				onShowAffected: Tt
 			}),
-			/* @__PURE__ */ S(Bp, {
+			/* @__PURE__ */ S(qp, {
 				open: Oe,
 				config: e,
 				actions: r,
 				portalClassName: M,
 				onClose: () => ke(!1)
 			}),
-			/* @__PURE__ */ S(Gp, {
+			/* @__PURE__ */ S(Qp, {
 				source: Pe,
-				rows: pt,
+				rows: gt,
 				open: Me,
 				busy: Ie,
 				resume: e.swimlaneMigration?.source === Pe,
@@ -10492,7 +10495,7 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 				onClose: () => {
 					Ie || Ne(!1);
 				},
-				onConfirm: ht
+				onConfirm: vt
 			}),
 			be && we && (() => {
 				let e = t.find((e) => e.id === be);
@@ -10513,17 +10516,17 @@ function Kp({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 }
 //#endregion
 //#region src/client.ts
-var qp = class extends Error {
+var em = class extends Error {
 	status;
 	code;
 	constructor(e, t) {
 		super(`jtype API error${e ? ` ${e}` : ""}: ${t}`), this.name = "JTypeApiError", this.status = e, this.code = t;
 	}
 };
-function Jp(e) {
+function tm(e) {
 	let t = (e.baseUrl ?? "").replace(/\/+$/, ""), n = e.token, r = e.fetchImpl ?? ((...e) => fetch(...e));
-	if (!t) throw new qp(0, "base_url_required");
-	if (!n) throw new qp(0, "token_required");
+	if (!t) throw new em(0, "base_url_required");
+	if (!n) throw new em(0, "token_required");
 	async function i(e, i = {}) {
 		let a;
 		try {
@@ -10536,11 +10539,11 @@ function Jp(e) {
 				}
 			});
 		} catch {
-			throw new qp(0, "network_error");
+			throw new em(0, "network_error");
 		}
 		if (!a.ok) {
 			let e = await a.json().catch(() => null);
-			throw new qp(a.status, e?.error || `http_${a.status}`);
+			throw new em(a.status, e?.error || `http_${a.status}`);
 		}
 		if (a.status !== 204) return await a.json();
 	}
@@ -10610,26 +10613,26 @@ function Jp(e) {
 }
 //#endregion
 //#region src/resolveBoard.ts
-var Yp = class extends Error {
+var nm = class extends Error {
 	code;
 	candidates;
 	constructor(e, t, n = []) {
 		super(t ? `${e}: ${t}` : e), this.name = "JTypeBoardError", this.code = e, this.candidates = n;
 	}
 };
-function Xp(e, t) {
+function rm(e, t) {
 	let n = t.trim().replace(/^\.?\//, "");
-	if (!n) throw new Yp("board_not_found", "empty boardRef");
+	if (!n) throw new nm("board_not_found", "empty boardRef");
 	let r = n.toLowerCase(), i = r.endsWith(".board") ? r : `${r}.board`, a = e.filter((e) => e.relativePath.toLowerCase().endsWith(".board")), o = a.find((e) => {
 		let t = e.relativePath.toLowerCase();
 		return t === r || t === i;
 	});
-	if (o) return Zp(o);
+	if (o) return im(o);
 	let s = a.filter((e) => e.relativePath.toLowerCase().endsWith(`/${i}`));
-	if (s.length === 1) return Zp(s[0]);
-	throw s.length > 1 ? new Yp("board_ref_ambiguous", `"${t}" matches ${s.length} boards`, s.map((e) => e.relativePath)) : new Yp("board_not_found", `no .board document matches "${t}"`);
+	if (s.length === 1) return im(s[0]);
+	throw s.length > 1 ? new nm("board_ref_ambiguous", `"${t}" matches ${s.length} boards`, s.map((e) => e.relativePath)) : new nm("board_not_found", `no .board document matches "${t}"`);
 }
-function Zp(e) {
+function im(e) {
 	return {
 		boardDocId: e.id,
 		boardRelativePath: e.relativePath,
@@ -10638,7 +10641,7 @@ function Zp(e) {
 }
 //#endregion
 //#region src/boardData.ts
-function Qp(e, t) {
+function am(e, t) {
 	return {
 		title: e.title || t,
 		columns: e.columns,
@@ -10649,16 +10652,16 @@ function Qp(e, t) {
 		fields: e.fields,
 		labels: e.labels,
 		ticketKey: e.ticketKey,
-		swimlaneBy: gp(e.swimlaneBy),
+		swimlaneBy: xp(e.swimlaneBy),
 		swimlanes: e.swimlanes,
 		swimlaneMigration: e.swimlaneMigration,
-		groupBy: hp(e.groupBy)
+		groupBy: bp(e.groupBy)
 	};
 }
-function $p(e, t) {
-	let n = Vf(e.content);
+function om(e, t) {
+	let n = Gf(e.content);
 	if (n.data.board !== t.id) return null;
-	let r = ep(n.body);
+	let r = ap(n.body);
 	return {
 		id: e.relativePath,
 		columnKey: n.data.status || "",
@@ -10669,35 +10672,35 @@ function $p(e, t) {
 		assignee: n.data.assignee || null,
 		swimlaneKey: n.data.swimlane || null,
 		due: n.data.due || null,
-		tags: ap(n.data.tags ? np(n.data.tags) : [], t.labels),
+		tags: up(n.data.tags ? sp(n.data.tags) : [], t.labels),
 		notes: n.body,
 		taskDone: r.done,
 		taskTotal: r.total,
-		excerpt: tp(n.body),
-		attachments: n.data.attachments ? Uf(n.data.attachments) : [],
-		custom: Jf(n.data, t.fields),
-		blockedBy: n.data.blocked_by ? op(n.data.blocked_by) : [],
-		blocks: n.data.blocks ? op(n.data.blocks) : [],
-		relates: n.data.relates ? op(n.data.relates) : [],
-		parent: n.data.parent ? op(n.data.parent)[0] ?? null : null
+		excerpt: op(n.body),
+		attachments: n.data.attachments ? qf(n.data.attachments) : [],
+		custom: $f(n.data, t.fields),
+		blockedBy: n.data.blocked_by ? dp(n.data.blocked_by) : [],
+		blocks: n.data.blocks ? dp(n.data.blocks) : [],
+		relates: n.data.relates ? dp(n.data.relates) : [],
+		parent: n.data.parent ? dp(n.data.parent)[0] ?? null : null
 	};
 }
-function em(e, t) {
-	return Gf(e, t);
+function sm(e, t) {
+	return Xf(e, t);
 }
-var tm = [
+var cm = [
 	"viewType",
 	"groupBy",
 	"swimlaneBy",
 	"calendarMode"
 ];
-function nm(e, t) {
+function lm(e, t) {
 	let n = { ...e };
-	for (let e of tm) e in t && (n[e] = t[e]);
+	for (let e of cm) e in t && (n[e] = t[e]);
 	return n;
 }
-async function rm(e, t, n, r) {
-	let i = await e.listDocuments(t), a = Xp(i, n), o = async (n, i) => {
+async function um(e, t, n, r) {
+	let i = await e.listDocuments(t), a = rm(i, n), o = async (n, i) => {
 		let a = r.get(n);
 		if (a && a.contentHash === i) return a.doc;
 		let o = await e.getDocument(t, n);
@@ -10709,14 +10712,14 @@ async function rm(e, t, n, r) {
 	try {
 		if (l = JSON.parse(c.content), !l || typeof l != "object" || !Array.isArray(l.columns)) throw Error("missing columns");
 	} catch (e) {
-		throw new Yp("board_config_invalid", `${a.boardRelativePath}: ${String(e)}`);
+		throw new nm("board_config_invalid", `${a.boardRelativePath}: ${String(e)}`);
 	}
 	let u = i.filter((e) => e.relativePath.startsWith(`${a.boardDir}/`) && e.relativePath.toLowerCase().endsWith(".md")), d = await Promise.all(u.map(async (e) => ({
 		item: e,
 		doc: await o(e.id, e.contentHash)
 	}))), f = /* @__PURE__ */ new Map(), p = [];
 	for (let { item: e, doc: t } of d) {
-		let n = $p(t, l);
+		let n = om(t, l);
 		n && (f.set(t.relativePath, {
 			id: e.id,
 			relativePath: t.relativePath,
@@ -10741,7 +10744,7 @@ async function rm(e, t, n, r) {
 }
 //#endregion
 //#region src/CardDetail.tsx
-function im({ card: e, config: t, strings: n, onClose: r }) {
+function dm({ card: e, config: t, strings: n, onClose: r }) {
 	f(() => {
 		let e = (e) => {
 			e.key === "Escape" && r();
@@ -10809,7 +10812,7 @@ function im({ card: e, config: t, strings: n, onClose: r }) {
 						}), /* @__PURE__ */ S("dd", {
 							className: "text-sm text-stone-800",
 							children: e === n.priority ? /* @__PURE__ */ S("span", {
-								className: `rounded px-1.5 py-0.5 text-[11px] font-medium ${Zf[t] ?? "bg-stone-100 text-stone-500"}`,
+								className: `rounded px-1.5 py-0.5 text-[11px] font-medium ${np[t] ?? "bg-stone-100 text-stone-500"}`,
 								children: t
 							}) : t
 						})]
@@ -10837,18 +10840,18 @@ function im({ card: e, config: t, strings: n, onClose: r }) {
 						className: "mt-1 space-y-1",
 						children: e.attachments.map((e) => /* @__PURE__ */ S("li", {
 							className: "rounded border border-stone-200 px-2 py-1 text-xs",
-							children: qf(e) ? /* @__PURE__ */ S("a", {
+							children: Qf(e) ? /* @__PURE__ */ S("a", {
 								href: e,
 								target: "_blank",
 								rel: "noreferrer",
 								className: "block truncate text-brand-dark hover:underline",
 								title: e,
-								children: Kf(e)
+								children: Zf(e)
 							}) : /* @__PURE__ */ C("span", {
 								className: "block truncate text-stone-500",
 								title: e,
 								children: [
-									Kf(e),
+									Zf(e),
 									" ",
 									/* @__PURE__ */ C("span", {
 										className: "text-red-500",
@@ -10879,18 +10882,18 @@ function im({ card: e, config: t, strings: n, onClose: r }) {
 }
 //#endregion
 //#region src/i18n.ts
-var am = {
-	en: JSON.parse("{\"--lIxB\":[\"Blocked by\"],\"-b7T3G\":[\"Updated\"],\"1718Q-\":[\"Issues\"],\"1DBGsz\":[\"Notes\"],\"1YABGm\":[\"Link (Ctrl+K)\"],\"1hKEom\":[\"Priority\"],\"1lWHP7\":[\"unsafe\"],\"1nUGn5\":[\"Add status\"],\"1xwZj_\":[\"Previous month\"],\"23yqV0\":[\"Show affected cards\"],\"2BPVq8\":[\"Reorder \",[\"0\"]],\"2wxgft\":[\"Rename\"],\"3CtQL6\":[\"Choose another swimlane, then update the cards first.\"],\"3Ib6FN\":[\"Move down\"],\"3qkggm\":[\"Fullscreen\"],\"4NY8B5\":[\"Swimlanes to create\"],\"4gdyen\":[\"Local (yours)\"],\"4hJhzz\":[\"Table\"],\"54sFiP\":[\"flowchart TD\\n  A[Start] --> B[End]\"],\"5Q_DQ6\":[\"Inline Code\"],\"66g_UW\":[\"Collapse resolved thread\"],\"6V3Ea3\":[\"Copied\"],\"6YtxFj\":[\"Name\"],\"6buwPb\":[\"Board settings\"],\"79Yvzu\":[\"Swimlane name\"],\"7VpPHA\":[\"Confirm\"],\"7dZyQU\":[\"Previous swimlane missing\"],\"7s3WlU\":[\"Blocks\"],\"8PifYj\":[\"Mermaid diagram\"],\"8Tg_JR\":[\"Custom\"],\"8enUYo\":[\"Set status\"],\"8hSn0h\":[\"Result (editable)\"],\"8lE269\":[\"Sort: Manual\"],\"9OEgyT\":[\"Add reaction\"],\"9OH3W0\":[\"Resolve thread\"],\"9gxam6\":[\"Could not render this Draw.io diagram.\"],\"AC9Gkf\":[\"Expand column\"],\"ANe5kn\":[\"Updating cards…\"],\"AS5WO9\":[\"Could not render this PDF.\"],\"ATIq3Z\":[\"Swimlane: Custom\"],\"AVreQ5\":[\"Drag to resize\"],\"AgvHni\":[\"Add column\"],\"AjVXBS\":[\"Calendar\"],\"AoHpbt\":[\"Show cards with missing swimlanes\"],\"AxAubu\":[\"Group: Assignee\"],\"B5TUF-\":[\"Priority…\"],\"BfMZ7w\":[\"Accept cloud\"],\"BiWlsk\":[\"Status…\"],\"BnmEvM\":[\"Save as template\"],\"C6-ZRl\":[\"Someone\"],\"CXTDT_\":[\"Resume swimlane conversion?\"],\"CxcMyt\":[[\"0\"],\" moved to position \",[\"1\"],\" of \",[\"2\"],\".\"],\"DGEEOQ\":[\"Swimlane actions\"],\"DPfwMq\":[\"Done\"],\"Db4W3_\":[\"Statuses\"],\"EWPtMO\":[\"Code\"],\"EbMPZJ\":[\"Unassigned\"],\"FBIuPX\":[\"Clear selection\"],\"FQylcT\":[\"Swimlane: Missing\"],\"G4qrLy\":[\"Unset done column\"],\"GKu3m4\":[\"No labels\"],\"Gpfctt\":[\"Due\"],\"HTKRVa\":[\"Do not close this dialog.\"],\"H_SQFv\":[\"No color\"],\"HajiZl\":[\"Month\"],\"HrmW6B\":[\"Add a comment… (Markdown supported)\"],\"I6SWEy\":[\"Split\"],\"ICip_B\":[\"Cloud (remote)\"],\"IdMoS6\":[\"Create your first swimlane\"],\"Ik60OC\":[\"Open in editor\"],\"ImOQa9\":[\"Reply\"],\"Iw6WJa\":[\"Set WIP limit\"],\"JTYvAw\":[\"Search cards\"],\"KCszT6\":[\"Add swimlane\"],\"KFiYGY\":[\"Change color\"],\"KGi3u9\":[\"Drag to reorder\"],\"K_F6pa\":[\"Saving…\"],\"Kd6eg7\":[\"Moving cards…\"],\"KeYrQ5\":[\"Remove your reaction\"],\"KjXDqG\":[\"Swimlane: None\"],\"KmydK6\":[\"Bold\"],\"KpnwJK\":[\"Delete \\\"\",[\"0\"],\"\\\"?\"],\"KvW1VO\":[\"Draw.io diagram\"],\"LQn6-8\":[\"Accept local\"],\"MHrjPM\":[\"Title\"],\"MYx830\":[\"This empty swimlane will be removed from the board.\"],\"Mm72la\":[\"No comments yet\"],\"MmYpxT\":[\"Reply…\"],\"NBdIgR\":[\"Comment\"],\"NYTPDY\":[\"Move cards and delete\"],\"O6H89R\":[\"Resolved\"],\"ONWvwQ\":[\"Upload\"],\"OR4WQZ\":[\"+ Add sub-card\"],\"OYHzN1\":[\"Tags\"],\"OepdfE\":[\"Group: Status\"],\"P5cvAA\":[\"Status name\"],\"PUeYA1\":[\"Create editable swimlanes\"],\"Pvpx7b\":[\"Paste a URL or path\"],\"Q2mGA7\":[\"Clear filter\"],\"QD8opX\":[\"Board\"],\"QlsPZy\":[\"Write Mermaid syntax to see the diagram.\"],\"QmZYQP\":[\"Unresolve thread\"],\"QyioBP\":[\"Move up\"],\"RbsNko\":[[\"cardCount\"],\" card(s) currently use this swimlane.\"],\"RfEZH1\":[\"JType will create independent swimlanes from the current assignee rows. Card assignee values will stay unchanged.\"],\"RgO4DX\":[\"Duplicate lane ID \\\"\",[\"0\"],\"\\\". The first definition is used.\"],\"RlLl3G\":[\"Actions for \",[\"0\"]],\"S5Qbb1\":[\"comma, separated\"],\"SavliD\":[[\"danglingCount\"],\" card(s) refer to deleted swimlanes.\"],\"T_nAzC\":[\"JType will reuse the existing lane IDs and continue unfinished card updates.\"],\"TdfEV7\":[\"Archived\"],\"U0hizX\":[\"Swimlane color\"],\"UDb2YD\":[\"React\"],\"UQOvxZ\":[\"Blank card\"],\"URmyfc\":[\"Details\"],\"Ubl2by\":[\"Move right\"],\"VNa_N2\":[\"This file type can not be previewed yet.\"],\"VbyRUy\":[\"Comments\"],\"WEYdDv\":[\"Recommended\"],\"WSP6v1\":[\"Sort: Priority\"],\"X03-eC\":[\"Please enter a value.\"],\"XJOV1Y\":[\"Activity\"],\"XklovM\":[\"Working…\"],\"Y8bR2a\":[\"Delete only the swimlane. Card references remain recoverable.\"],\"YHjvGb\":[\"Status actions\"],\"Ya7bZl\":[\"Diagram error\"],\"Zot9XS\":[\"No cards\"],\"_5CsXX\":[\"Done column\"],\"_EsjyQ\":[\"Use this\"],\"_TJomP\":[\"Move cards before deleting\"],\"_YbTQZ\":[\"JType will create independent swimlanes from the current priority rows. Card priority values will stay unchanged.\"],\"a6uhHr\":[\"Bold (Ctrl+B)\"],\"aDvLhk\":[\"Add a comment…\"],\"abUZlY\":[\"Add details...\"],\"agOeRN\":[\"Could not render this API specification.\"],\"b4hVKD\":[\"Color columns\"],\"bwOqWD\":[[\"0\"],\" of \",[\"1\"],\" sub-cards done\"],\"by_svU\":[\"Keep cards in Unassigned\"],\"bzjBcL\":[\"Sub-cards\"],\"c61_Lv\":[\"Lane ID\"],\"cJ44lA\":[\"Unscheduled\"],\"cUt8yN\":[\"Changes save automatically.\"],\"cfaWH-\":[\"Add labels\"],\"cnGeoo\":[\"Delete\"],\"d-F6q9\":[\"Created\"],\"d5z6xQ\":[\"WIP limit \",[\"0\"]],\"dEgA5A\":[\"Cancel\"],\"ecUA8p\":[\"Today\"],\"euc6Ns\":[\"Duplicate\"],\"fEqHZq\":[\"Open sub-card\"],\"fVlS4-\":[\"Swimlane\"],\"fYcKtB\":[\"Sort: Due\"],\"fvImQM\":[[\"0\"],\" selected\"],\"g8JmSC\":[\"Next month\"],\"gANddk\":[\"Uploading…\"],\"gLDJuJ\":[\"Untitled card\"],\"gzZWjO\":[\"No assigned values to convert.\"],\"hNmOZ7\":[\"Set priority\"],\"he3ygx\":[\"Copy\"],\"hh4sEG\":[\"Relates\"],\"hnK1gR\":[\"PDF document\"],\"hyVzII\":[\"Swimlanes\"],\"i4_LY_\":[\"Write\"],\"iSLA_r\":[\"Move left\"],\"iTylMl\":[\"Templates\"],\"iYVqZq\":[\"Column name\"],\"jUbC3Z\":[\"Swimlane: Priority\"],\"jZlrte\":[\"Color\"],\"jzy1b8\":[\"Make swimlanes editable\"],\"k4b5_X\":[\"edited\"],\"kZlRKE\":[\"Mermaid source\"],\"kryGs-\":[\"Card\"],\"lCF0wC\":[\"Refresh\"],\"lEQWoB\":[\"Add stable horizontal groups that stay visible even when they have no cards.\"],\"lHxVTh\":[\"Swimlane: Assignee\"],\"lUeOk0\":[\"Horizontal groups for this board. Names can change; card mapping stays attached.\"],\"l_g7se\":[\"Resume conversion\"],\"ltF1xa\":[\"Save merged result\"],\"m16xKo\":[\"Add\"],\"nabda1\":[\"Delete card\"],\"nfhh60\":[\"Make priority swimlanes editable?\"],\"njJFtc\":[\"Delete comment\"],\"o7J4JM\":[\"Filter\"],\"o8va6N\":[\"Restored\"],\"ojKCLU\":[\"Assignee\"],\"p9yTeb\":[\"Sort: Title\"],\"pKKcSl\":[\"Show resolved thread\"],\"pKztsX\":[\"Open in full editor\"],\"pdVZUg\":[\"WIP \",[\"0\"]],\"pnrmSP\":[\"New card\"],\"pwN6Ae\":[\"Collapse column\"],\"pzutoc\":[\"Italic\"],\"qpGDiV\":[\"Copy lane ID\"],\"rF8SEQ\":[\"Edit comment\"],\"rRubBJ\":[\"Lane details\"],\"rdUucN\":[\"Preview\"],\"rvpMpc\":[\"Manage statuses\"],\"sCzmvQ\":[\"cards\"],\"sQpDn6\":[\"Exit fullscreen\"],\"sujToP\":[\"Parent\"],\"tK2x9T\":[\"⚠ \",[\"0\"],\" Conflict\",[\"1\"],\" to Resolve\"],\"tYS8HY\":[\"Status columns stay available when they are used as columns or swimlanes.\"],\"t_YqKh\":[\"Remove\"],\"tfDRzk\":[\"Save\"],\"u2IprG\":[\"Card title (Enter to add, Esc to cancel)\"],\"uAP6ov\":[\"Delete swimlane\"],\"uAQUqI\":[\"Status\"],\"uH1U8v\":[\"Manage swimlanes\"],\"uWPalN\":[\"Duplicate swimlane name \\\"\",[\"0\"],\"\\\". Names should be unique.\"],\"ucJg3u\":[\"Swimlane: Status\"],\"vIKvqQ\":[[\"missingCount\"],\" card(s) refer to deleted swimlanes.\"],\"vMTOsC\":[\"Make assignee swimlanes editable?\"],\"w7E-FA\":[\"Unsafe link blocked: \",[\"url\"]],\"w_Sphq\":[\"Attachments\"],\"wf6Djn\":[\"Italic (Ctrl+I)\"],\"wtw-au\":[\"Set as done column\"],\"wwu18a\":[\"Icon\"],\"x52RAh\":[\"Blocked by \",[\"blockedCount\"],\" unfinished card(s)\"],\"xDsmP9\":[\"Agenda\"],\"xUOPoQ\":[\"Used by\"],\"y1eoq1\":[\"Copy link\"],\"y9cj46\":[\"Group: Priority\"],\"yEbJGs\":[\"+ Add field\"],\"ybGQtY\":[\"← Back to list\"],\"yz7wBu\":[\"Close\"],\"yzF66j\":[\"Link\"],\"zOc0vf\":[\"No icon\"],\"zga9sT\":[\"OK\"]}"),
-	zh: JSON.parse("{\"--lIxB\":[\"被阻塞于\"],\"-b7T3G\":[\"更新\"],\"1718Q-\":[\"问题\"],\"1DBGsz\":[\"备注\"],\"1YABGm\":[\"链接 (Ctrl+K)\"],\"1hKEom\":[\"优先级\"],\"1lWHP7\":[\"不安全\"],\"1nUGn5\":[\"添加状态\"],\"1xwZj_\":[\"上个月\"],\"23yqV0\":[\"显示受影响的卡片\"],\"2BPVq8\":[\"重新排序 \",[\"0\"]],\"2wxgft\":[\"重命名\"],\"3CtQL6\":[\"选择另一个泳道，然后先更新卡片。\"],\"3Ib6FN\":[\"下移\"],\"3qkggm\":[\"全屏\"],\"4NY8B5\":[\"将创建的泳道\"],\"4gdyen\":[\"本地（我的）\"],\"4hJhzz\":[\"表格\"],\"54sFiP\":[\"flowchart TD\\n  A[开始] --> B[结束]\"],\"5Q_DQ6\":[\"行内代码\"],\"66g_UW\":[\"折叠已解决话题\"],\"6V3Ea3\":[\"已复制\"],\"6YtxFj\":[\"名称\"],\"6buwPb\":[\"看板设置\"],\"79Yvzu\":[\"泳道名称\"],\"7VpPHA\":[\"确认\"],\"7dZyQU\":[\"原泳道已不存在\"],\"7s3WlU\":[\"阻塞\"],\"8PifYj\":[\"Mermaid 图表\"],\"8Tg_JR\":[\"自定义\"],\"8enUYo\":[\"设置状态\"],\"8hSn0h\":[\"结果（可编辑）\"],\"8lE269\":[\"排序:手动\"],\"9OEgyT\":[\"添加回应\"],\"9OH3W0\":[\"解决话题\"],\"9gxam6\":[\"无法渲染此 Draw.io 图表。\"],\"AC9Gkf\":[\"展开列\"],\"ANe5kn\":[\"正在更新卡片…\"],\"AS5WO9\":[\"无法渲染此 PDF。\"],\"ATIq3Z\":[\"泳道：自定义\"],\"AVreQ5\":[\"拖动调整宽度\"],\"AgvHni\":[\"添加列\"],\"AjVXBS\":[\"日历\"],\"AoHpbt\":[\"显示泳道缺失的卡片\"],\"AxAubu\":[\"分组:负责人\"],\"B5TUF-\":[\"优先级…\"],\"BfMZ7w\":[\"接受云端\"],\"BiWlsk\":[\"状态…\"],\"BnmEvM\":[\"存为模板\"],\"C6-ZRl\":[\"某人\"],\"CXTDT_\":[\"继续泳道转换？\"],\"CxcMyt\":[\"已将 \",[\"0\"],\" 移到第 \",[\"1\"],\" 位，共 \",[\"2\"],\" 项。\"],\"DGEEOQ\":[\"泳道操作\"],\"DPfwMq\":[\"完成\"],\"Db4W3_\":[\"状态\"],\"EWPtMO\":[\"代码\"],\"EbMPZJ\":[\"未分配\"],\"FBIuPX\":[\"清除选择\"],\"FQylcT\":[\"泳道：缺失\"],\"G4qrLy\":[\"取消完成列\"],\"GKu3m4\":[\"暂无标签\"],\"Gpfctt\":[\"截止日期\"],\"HTKRVa\":[\"请勿关闭此对话框。\"],\"H_SQFv\":[\"无颜色\"],\"HajiZl\":[\"月\"],\"HrmW6B\":[\"添加评论…（支持 Markdown）\"],\"I6SWEy\":[\"分栏\"],\"ICip_B\":[\"云端（远程）\"],\"IdMoS6\":[\"创建第一条泳道\"],\"Ik60OC\":[\"在编辑器中打开\"],\"ImOQa9\":[\"回复\"],\"Iw6WJa\":[\"设置 WIP 限制\"],\"JTYvAw\":[\"搜索卡片\"],\"KCszT6\":[\"添加泳道\"],\"KFiYGY\":[\"更改颜色\"],\"KGi3u9\":[\"拖动以重新排序\"],\"K_F6pa\":[\"保存中…\"],\"Kd6eg7\":[\"正在移动卡片…\"],\"KeYrQ5\":[\"撤回你的回应\"],\"KjXDqG\":[\"泳道：无\"],\"KmydK6\":[\"粗体\"],\"KpnwJK\":[\"删除“\",[\"0\"],\"”？\"],\"KvW1VO\":[\"Draw.io 图表\"],\"LQn6-8\":[\"接受本地\"],\"MHrjPM\":[\"标题\"],\"MYx830\":[\"此空泳道将从看板中移除。\"],\"Mm72la\":[\"暂无评论\"],\"MmYpxT\":[\"回复…\"],\"NBdIgR\":[\"评论\"],\"NYTPDY\":[\"移动卡片并删除\"],\"O6H89R\":[\"已解决\"],\"ONWvwQ\":[\"上传\"],\"OR4WQZ\":[\"+ 添加子卡片\"],\"OYHzN1\":[\"标签\"],\"OepdfE\":[\"分组:状态\"],\"P5cvAA\":[\"状态名称\"],\"PUeYA1\":[\"创建可编辑泳道\"],\"Pvpx7b\":[\"粘贴 URL 或路径\"],\"Q2mGA7\":[\"清除筛选\"],\"QD8opX\":[\"看板\"],\"QlsPZy\":[\"输入 Mermaid 语法以查看图表。\"],\"QmZYQP\":[\"取消解决\"],\"QyioBP\":[\"上移\"],\"RbsNko\":[\"当前有 \",[\"cardCount\"],\" 张卡片使用此泳道。\"],\"RfEZH1\":[\"JType 将根据当前负责人行创建独立泳道。卡片的负责人值不会改变。\"],\"RgO4DX\":[\"泳道 ID“\",[\"0\"],\"”重复。将使用第一条定义。\"],\"RlLl3G\":[[\"0\"],\" 的操作\"],\"S5Qbb1\":[\"用逗号分隔\"],\"SavliD\":[\"有 \",[\"danglingCount\"],\" 张卡片引用了已删除的泳道。\"],\"T_nAzC\":[\"JType 将复用现有泳道 ID，并继续未完成的卡片更新。\"],\"TdfEV7\":[\"归档\"],\"U0hizX\":[\"泳道颜色\"],\"UDb2YD\":[\"回应\"],\"UQOvxZ\":[\"空白卡片\"],\"URmyfc\":[\"详情\"],\"Ubl2by\":[\"右移\"],\"VNa_N2\":[\"暂不支持预览此文件类型。\"],\"VbyRUy\":[\"评论\"],\"WEYdDv\":[\"推荐\"],\"WSP6v1\":[\"排序:优先级\"],\"X03-eC\":[\"请输入内容。\"],\"XJOV1Y\":[\"活动\"],\"XklovM\":[\"正在处理…\"],\"Y8bR2a\":[\"仅删除泳道。卡片引用仍可恢复。\"],\"YHjvGb\":[\"状态操作\"],\"Ya7bZl\":[\"图表错误\"],\"Zot9XS\":[\"暂无卡片\"],\"_5CsXX\":[\"完成列\"],\"_EsjyQ\":[\"使用此版本\"],\"_TJomP\":[\"删除前移动卡片\"],\"_YbTQZ\":[\"JType 将根据当前优先级行创建独立泳道。卡片的优先级值不会改变。\"],\"a6uhHr\":[\"粗体 (Ctrl+B)\"],\"aDvLhk\":[\"添加评论…\"],\"abUZlY\":[\"添加详情...\"],\"agOeRN\":[\"无法渲染此 API 规范。\"],\"b4hVKD\":[\"彩色列\"],\"bwOqWD\":[[\"1\"],\" 张子卡中已完成 \",[\"0\"],\" 张\"],\"by_svU\":[\"将卡片保留在未分配\"],\"bzjBcL\":[\"子卡片\"],\"c61_Lv\":[\"泳道 ID\"],\"cJ44lA\":[\"未排期\"],\"cUt8yN\":[\"更改会自动保存。\"],\"cfaWH-\":[\"添加标签\"],\"cnGeoo\":[\"删除\"],\"d-F6q9\":[\"创建\"],\"d5z6xQ\":[\"WIP 限制 \",[\"0\"]],\"dEgA5A\":[\"取消\"],\"ecUA8p\":[\"今天\"],\"euc6Ns\":[\"复制卡片\"],\"fEqHZq\":[\"打开子卡片\"],\"fVlS4-\":[\"泳道\"],\"fYcKtB\":[\"排序:截止\"],\"fvImQM\":[\"已选择 \",[\"0\"],\" 项\"],\"g8JmSC\":[\"下个月\"],\"gANddk\":[\"上传中…\"],\"gLDJuJ\":[\"未命名卡片\"],\"gzZWjO\":[\"没有可转换的已分配值。\"],\"hNmOZ7\":[\"设置优先级\"],\"he3ygx\":[\"复制\"],\"hh4sEG\":[\"相关\"],\"hnK1gR\":[\"PDF 文档\"],\"hyVzII\":[\"泳道\"],\"i4_LY_\":[\"写作\"],\"iSLA_r\":[\"左移\"],\"iTylMl\":[\"模板\"],\"iYVqZq\":[\"列名称\"],\"jUbC3Z\":[\"泳道：优先级\"],\"jZlrte\":[\"颜色\"],\"jzy1b8\":[\"将泳道转为可编辑\"],\"k4b5_X\":[\"已编辑\"],\"kZlRKE\":[\"Mermaid 源码\"],\"kryGs-\":[\"卡片\"],\"lCF0wC\":[\"刷新\"],\"lEQWoB\":[\"添加稳定的横向分组，即使没有卡片也会保持显示。\"],\"lHxVTh\":[\"泳道：负责人\"],\"lUeOk0\":[\"此看板的横向分组。名称可以更改，卡片映射会保持关联。\"],\"l_g7se\":[\"继续转换\"],\"ltF1xa\":[\"保存合并结果\"],\"m16xKo\":[\"添加\"],\"nabda1\":[\"删除卡片\"],\"nfhh60\":[\"将优先级泳道转为可编辑？\"],\"njJFtc\":[\"删除评论\"],\"o7J4JM\":[\"筛选\"],\"o8va6N\":[\"恢复\"],\"ojKCLU\":[\"负责人\"],\"p9yTeb\":[\"排序:标题\"],\"pKKcSl\":[\"显示已解决话题\"],\"pKztsX\":[\"在完整编辑器中打开\"],\"pdVZUg\":[\"在制品 \",[\"0\"]],\"pnrmSP\":[\"新建卡片\"],\"pwN6Ae\":[\"折叠列\"],\"pzutoc\":[\"斜体\"],\"qpGDiV\":[\"复制泳道 ID\"],\"rF8SEQ\":[\"编辑评论\"],\"rRubBJ\":[\"泳道详情\"],\"rdUucN\":[\"预览\"],\"rvpMpc\":[\"管理状态\"],\"sCzmvQ\":[\"张卡片\"],\"sQpDn6\":[\"退出全屏\"],\"sujToP\":[\"父卡片\"],\"tK2x9T\":[\"⚠ \",[\"0\"],\" 个冲突\",[\"1\"],\"待解决\"],\"tYS8HY\":[\"无论作为列还是泳道使用，状态列都可以继续管理。\"],\"t_YqKh\":[\"移除\"],\"tfDRzk\":[\"保存\"],\"u2IprG\":[\"卡片标题(回车添加,Esc 取消)\"],\"uAP6ov\":[\"删除泳道\"],\"uAQUqI\":[\"状态\"],\"uH1U8v\":[\"管理泳道\"],\"uWPalN\":[\"泳道名称“\",[\"0\"],\"”重复。名称应保持唯一。\"],\"ucJg3u\":[\"泳道：状态\"],\"vIKvqQ\":[\"有 \",[\"missingCount\"],\" 张卡片引用了已删除的泳道。\"],\"vMTOsC\":[\"将负责人泳道转为可编辑？\"],\"w7E-FA\":[\"已拦截不安全链接：\",[\"url\"]],\"w_Sphq\":[\"附件\"],\"wf6Djn\":[\"斜体 (Ctrl+I)\"],\"wtw-au\":[\"设为完成列\"],\"wwu18a\":[\"图标\"],\"x52RAh\":[\"被 \",[\"blockedCount\"],\" 张未完成卡片阻塞\"],\"xDsmP9\":[\"日程\"],\"xUOPoQ\":[\"使用情况\"],\"y1eoq1\":[\"复制链接\"],\"y9cj46\":[\"分组:优先级\"],\"yEbJGs\":[\"+ 添加字段\"],\"ybGQtY\":[\"← 返回列表\"],\"yz7wBu\":[\"关闭\"],\"yzF66j\":[\"链接\"],\"zOc0vf\":[\"无图标\"],\"zga9sT\":[\"确定\"]}"),
-	ja: JSON.parse("{\"--lIxB\":[\"Blocked by\"],\"-b7T3G\":[\"Updated\"],\"1718Q-\":[\"問題\"],\"1DBGsz\":[\"ノート\"],\"1YABGm\":[\"リンク (Ctrl+K)\"],\"1hKEom\":[\"優先度\"],\"1lWHP7\":[\"unsafe\"],\"1nUGn5\":[\"ステータスを追加\"],\"1xwZj_\":[\"Previous month\"],\"23yqV0\":[\"影響を受けるカードを表示\"],\"2BPVq8\":[[\"0\"],\"を並べ替え\"],\"2wxgft\":[\"名前を変更\"],\"3CtQL6\":[\"別のスイムレーンを選び、先にカードを更新します。\"],\"3Ib6FN\":[\"下へ移動\"],\"3qkggm\":[\"全画面表示\"],\"4NY8B5\":[\"作成するスイムレーン\"],\"4gdyen\":[\"ローカル（自分の）\"],\"4hJhzz\":[\"表\"],\"54sFiP\":[\"flowchart TD\\n  A[開始] --> B[終了]\"],\"5Q_DQ6\":[\"インラインコード\"],\"66g_UW\":[\"Collapse resolved thread\"],\"6V3Ea3\":[\"コピーしました\"],\"6YtxFj\":[\"名前\"],\"6buwPb\":[\"Board settings\"],\"79Yvzu\":[\"スイムレーン名\"],\"7VpPHA\":[\"確認\"],\"7dZyQU\":[\"以前のスイムレーンが見つかりません\"],\"7s3WlU\":[\"Blocks\"],\"8PifYj\":[\"Mermaid 図\"],\"8Tg_JR\":[\"カスタム\"],\"8enUYo\":[\"Set status\"],\"8hSn0h\":[\"結果（編集可能）\"],\"8lE269\":[\"並べ替え：手動\"],\"9OEgyT\":[\"Add reaction\"],\"9OH3W0\":[\"Resolve thread\"],\"9gxam6\":[\"この Draw.io 図をレンダリングできませんでした。\"],\"AC9Gkf\":[\"列を展開\"],\"ANe5kn\":[\"カードを更新中…\"],\"AS5WO9\":[\"この PDF をレンダリングできませんでした。\"],\"ATIq3Z\":[\"スイムレーン：カスタム\"],\"AVreQ5\":[\"ドラッグしてサイズ変更\"],\"AgvHni\":[\"列を追加\"],\"AjVXBS\":[\"Calendar\"],\"AoHpbt\":[\"スイムレーンが見つからないカードを表示\"],\"AxAubu\":[\"グループ：担当者\"],\"B5TUF-\":[\"Priority…\"],\"BfMZ7w\":[\"クラウドを採用\"],\"BiWlsk\":[\"Status…\"],\"BnmEvM\":[\"テンプレートとして保存\"],\"C6-ZRl\":[\"Someone\"],\"CXTDT_\":[\"スイムレーンの変換を再開しますか？\"],\"CxcMyt\":[[\"0\"],\"を\",[\"2\"],\"件中\",[\"1\"],\"番目に移動しました。\"],\"DGEEOQ\":[\"スイムレーンの操作\"],\"DPfwMq\":[\"完了\"],\"Db4W3_\":[\"ステータス\"],\"EWPtMO\":[\"コード\"],\"EbMPZJ\":[\"未割り当て\"],\"FBIuPX\":[\"Clear selection\"],\"FQylcT\":[\"スイムレーン：不明\"],\"G4qrLy\":[\"完了列を解除\"],\"GKu3m4\":[\"ラベルなし\"],\"Gpfctt\":[\"期限\"],\"HTKRVa\":[\"このダイアログを閉じないでください。\"],\"H_SQFv\":[\"色なし\"],\"HajiZl\":[\"Month\"],\"HrmW6B\":[\"Add a comment… (Markdown supported)\"],\"I6SWEy\":[\"分割\"],\"ICip_B\":[\"クラウド（リモート）\"],\"IdMoS6\":[\"最初のスイムレーンを作成\"],\"Ik60OC\":[\"エディターで開く\"],\"ImOQa9\":[\"Reply\"],\"Iw6WJa\":[\"WIP 制限を設定\"],\"JTYvAw\":[\"カードを検索\"],\"KCszT6\":[\"スイムレーンを追加\"],\"KFiYGY\":[\"色を変更\"],\"KGi3u9\":[\"ドラッグして並べ替え\"],\"K_F6pa\":[\"保存中…\"],\"Kd6eg7\":[\"カードを移動中…\"],\"KeYrQ5\":[\"Remove your reaction\"],\"KjXDqG\":[\"Swimlane: None\"],\"KmydK6\":[\"太字\"],\"KpnwJK\":[\"「\",[\"0\"],\"」を削除しますか？\"],\"KvW1VO\":[\"Draw.io 図\"],\"LQn6-8\":[\"ローカルを採用\"],\"MHrjPM\":[\"タイトル\"],\"MYx830\":[\"この空のスイムレーンをボードから削除します。\"],\"Mm72la\":[\"No comments yet\"],\"MmYpxT\":[\"Reply…\"],\"NBdIgR\":[\"Comment\"],\"NYTPDY\":[\"カードを移動して削除\"],\"O6H89R\":[\"Resolved\"],\"ONWvwQ\":[\"Upload\"],\"OR4WQZ\":[\"+ Add sub-card\"],\"OYHzN1\":[\"タグ\"],\"OepdfE\":[\"グループ：ステータス\"],\"P5cvAA\":[\"ステータス名\"],\"PUeYA1\":[\"編集可能なスイムレーンを作成\"],\"Pvpx7b\":[\"Paste a URL or path\"],\"Q2mGA7\":[\"フィルターをクリア\"],\"QD8opX\":[\"ボード\"],\"QlsPZy\":[\"Mermaid 構文を書くと図が表示されます。\"],\"QmZYQP\":[\"Unresolve thread\"],\"QyioBP\":[\"上へ移動\"],\"RbsNko\":[\"現在\",[\"cardCount\"],\"枚のカードがこのスイムレーンを使用しています。\"],\"RfEZH1\":[\"JType は現在の担当者行から独立したスイムレーンを作成します。カードの担当者は変更されません。\"],\"RgO4DX\":[\"スイムレーン ID「\",[\"0\"],\"」が重複しています。最初の定義を使用します。\"],\"RlLl3G\":[[\"0\"],\"の操作\"],\"S5Qbb1\":[\"カンマ区切り\"],\"SavliD\":[[\"danglingCount\"],\"枚のカードが削除済みのスイムレーンを参照しています。\"],\"T_nAzC\":[\"JType は既存のスイムレーン ID を再利用し、未完了のカード更新を続行します。\"],\"TdfEV7\":[\"Archived\"],\"U0hizX\":[\"スイムレーンの色\"],\"UDb2YD\":[\"React\"],\"UQOvxZ\":[\"空のカード\"],\"URmyfc\":[\"詳細\"],\"Ubl2by\":[\"右へ移動\"],\"VNa_N2\":[\"このファイル形式はまだプレビューできません。\"],\"VbyRUy\":[\"Comments\"],\"WEYdDv\":[\"推奨\"],\"WSP6v1\":[\"並べ替え：優先度\"],\"X03-eC\":[\"値を入力してください。\"],\"XJOV1Y\":[\"Activity\"],\"XklovM\":[\"処理中…\"],\"Y8bR2a\":[\"スイムレーンだけを削除します。カードの参照は復元できます。\"],\"YHjvGb\":[\"ステータスの操作\"],\"Ya7bZl\":[\"図のエラー\"],\"Zot9XS\":[\"カードなし\"],\"_5CsXX\":[\"完了列\"],\"_EsjyQ\":[\"これを使用\"],\"_TJomP\":[\"削除前にカードを移動\"],\"_YbTQZ\":[\"JType は現在の優先度行から独立したスイムレーンを作成します。カードの優先度は変更されません。\"],\"a6uhHr\":[\"太字 (Ctrl+B)\"],\"aDvLhk\":[\"Add a comment…\"],\"abUZlY\":[\"詳細を追加...\"],\"agOeRN\":[\"この API 仕様をレンダリングできませんでした。\"],\"b4hVKD\":[\"色付き列\"],\"bwOqWD\":[[\"0\"],\" of \",[\"1\"],\" sub-cards done\"],\"by_svU\":[\"カードを未割り当てに残す\"],\"bzjBcL\":[\"Sub-cards\"],\"c61_Lv\":[\"スイムレーン ID\"],\"cJ44lA\":[\"Unscheduled\"],\"cUt8yN\":[\"変更は自動的に保存されます。\"],\"cfaWH-\":[\"ラベルを追加\"],\"cnGeoo\":[\"削除\"],\"d-F6q9\":[\"Created\"],\"d5z6xQ\":[\"WIP 制限 \",[\"0\"]],\"dEgA5A\":[\"キャンセル\"],\"ecUA8p\":[\"Today\"],\"euc6Ns\":[\"複製\"],\"fEqHZq\":[\"Open sub-card\"],\"fVlS4-\":[\"スイムレーン\"],\"fYcKtB\":[\"並べ替え：期限\"],\"fvImQM\":[[\"0\"],\" selected\"],\"g8JmSC\":[\"Next month\"],\"gANddk\":[\"Uploading…\"],\"gLDJuJ\":[\"無題のカード\"],\"gzZWjO\":[\"変換できる割り当て済みの値がありません。\"],\"hNmOZ7\":[\"Set priority\"],\"he3ygx\":[\"コピー\"],\"hh4sEG\":[\"Relates\"],\"hnK1gR\":[\"PDF ドキュメント\"],\"hyVzII\":[\"スイムレーン\"],\"i4_LY_\":[\"記述\"],\"iSLA_r\":[\"左へ移動\"],\"iTylMl\":[\"テンプレート\"],\"iYVqZq\":[\"列名\"],\"jUbC3Z\":[\"Swimlane: Priority\"],\"jZlrte\":[\"カラー\"],\"jzy1b8\":[\"スイムレーンを編集可能にする\"],\"k4b5_X\":[\"edited\"],\"kZlRKE\":[\"Mermaid ソース\"],\"kryGs-\":[\"カード\"],\"lCF0wC\":[\"更新\"],\"lEQWoB\":[\"カードがなくても表示され続ける横方向のグループを追加します。\"],\"lHxVTh\":[\"Swimlane: Assignee\"],\"lUeOk0\":[\"このボードの横方向グループです。名前を変更しても、カードの関連付けは維持されます。\"],\"l_g7se\":[\"変換を再開\"],\"ltF1xa\":[\"マージ結果を保存\"],\"m16xKo\":[\"追加\"],\"nabda1\":[\"カードを削除\"],\"nfhh60\":[\"優先度スイムレーンを編集可能にしますか？\"],\"njJFtc\":[\"Delete comment\"],\"o7J4JM\":[\"フィルター\"],\"o8va6N\":[\"Restored\"],\"ojKCLU\":[\"担当者\"],\"p9yTeb\":[\"並べ替え：タイトル\"],\"pKKcSl\":[\"Show resolved thread\"],\"pKztsX\":[\"フルエディターで開く\"],\"pdVZUg\":[\"WIP \",[\"0\"]],\"pnrmSP\":[\"新規カード\"],\"pwN6Ae\":[\"列を折りたたむ\"],\"pzutoc\":[\"イタリック\"],\"qpGDiV\":[\"スイムレーン ID をコピー\"],\"rF8SEQ\":[\"Edit comment\"],\"rRubBJ\":[\"スイムレーンの詳細\"],\"rdUucN\":[\"プレビュー\"],\"rvpMpc\":[\"ステータスを管理\"],\"sCzmvQ\":[\"枚のカード\"],\"sQpDn6\":[\"全画面表示を終了\"],\"sujToP\":[\"Parent\"],\"tK2x9T\":[\"⚠ \",[\"0\"],\" 件の競合\",[\"1\"],\"を解決中\"],\"tYS8HY\":[\"ステータス列は、列またはスイムレーンとして使用中でも管理できます。\"],\"t_YqKh\":[\"Remove\"],\"tfDRzk\":[\"Save\"],\"u2IprG\":[\"カードのタイトル（Enter で追加、Esc でキャンセル）\"],\"uAP6ov\":[\"スイムレーンを削除\"],\"uAQUqI\":[\"ステータス\"],\"uH1U8v\":[\"スイムレーンを管理\"],\"uWPalN\":[\"スイムレーン名「\",[\"0\"],\"」が重複しています。名前は一意にしてください。\"],\"ucJg3u\":[\"Swimlane: Status\"],\"vIKvqQ\":[[\"missingCount\"],\"枚のカードが削除済みのスイムレーンを参照しています。\"],\"vMTOsC\":[\"担当者スイムレーンを編集可能にしますか？\"],\"w7E-FA\":[\"Unsafe link blocked: \",[\"url\"]],\"w_Sphq\":[\"Attachments\"],\"wf6Djn\":[\"イタリック (Ctrl+I)\"],\"wtw-au\":[\"完了列に設定\"],\"wwu18a\":[\"アイコン\"],\"x52RAh\":[\"Blocked by \",[\"blockedCount\"],\" unfinished card(s)\"],\"xDsmP9\":[\"Agenda\"],\"xUOPoQ\":[\"使用状況\"],\"y1eoq1\":[\"リンクをコピー\"],\"y9cj46\":[\"グループ：優先度\"],\"yEbJGs\":[\"+ Add field\"],\"ybGQtY\":[\"← リストに戻る\"],\"yz7wBu\":[\"閉じる\"],\"yzF66j\":[\"リンク\"],\"zOc0vf\":[\"アイコンなし\"],\"zga9sT\":[\"OK\"]}"),
-	ko: JSON.parse("{\"--lIxB\":[\"Blocked by\"],\"-b7T3G\":[\"Updated\"],\"1718Q-\":[\"Issues\"],\"1DBGsz\":[\"노트\"],\"1YABGm\":[\"링크 (Ctrl+K)\"],\"1hKEom\":[\"우선순위\"],\"1lWHP7\":[\"unsafe\"],\"1nUGn5\":[\"Add status\"],\"1xwZj_\":[\"Previous month\"],\"23yqV0\":[\"Show affected cards\"],\"2BPVq8\":[\"Reorder \",[\"0\"]],\"2wxgft\":[\"이름 변경\"],\"3CtQL6\":[\"Choose another swimlane, then update the cards first.\"],\"3Ib6FN\":[\"Move down\"],\"3qkggm\":[\"전체 화면\"],\"4NY8B5\":[\"Swimlanes to create\"],\"4gdyen\":[\"로컈 (내 것)\"],\"4hJhzz\":[\"테이블\"],\"54sFiP\":[\"flowchart TD\\n  A[시작] --> B[끝]\"],\"5Q_DQ6\":[\"인라인 코드\"],\"66g_UW\":[\"Collapse resolved thread\"],\"6V3Ea3\":[\"Copied\"],\"6YtxFj\":[\"Name\"],\"6buwPb\":[\"Board settings\"],\"79Yvzu\":[\"Swimlane name\"],\"7VpPHA\":[\"확인\"],\"7dZyQU\":[\"Previous swimlane missing\"],\"7s3WlU\":[\"Blocks\"],\"8PifYj\":[\"Mermaid 다이어그램\"],\"8Tg_JR\":[\"Custom\"],\"8enUYo\":[\"Set status\"],\"8hSn0h\":[\"결과 (편집 가능)\"],\"8lE269\":[\"정렬: 수동\"],\"9OEgyT\":[\"Add reaction\"],\"9OH3W0\":[\"Resolve thread\"],\"9gxam6\":[\"이 Draw.io 다이어그램을 렌더링할 수 없습니다.\"],\"AC9Gkf\":[\"열 펼치기\"],\"ANe5kn\":[\"Updating cards…\"],\"AS5WO9\":[\"이 PDF를 렌더링할 수 없습니다.\"],\"ATIq3Z\":[\"Swimlane: Custom\"],\"AVreQ5\":[\"드래그하여 크기 조정\"],\"AgvHni\":[\"열 추가\"],\"AjVXBS\":[\"Calendar\"],\"AoHpbt\":[\"Show cards with missing swimlanes\"],\"AxAubu\":[\"그룹: 담당자\"],\"B5TUF-\":[\"Priority…\"],\"BfMZ7w\":[\"클라우드 수낙\"],\"BiWlsk\":[\"Status…\"],\"BnmEvM\":[\"템플릿으로 저장\"],\"C6-ZRl\":[\"Someone\"],\"CXTDT_\":[\"Resume swimlane conversion?\"],\"CxcMyt\":[[\"0\"],\" moved to position \",[\"1\"],\" of \",[\"2\"],\".\"],\"DGEEOQ\":[\"Swimlane actions\"],\"DPfwMq\":[\"Done\"],\"Db4W3_\":[\"Statuses\"],\"EWPtMO\":[\"코드\"],\"EbMPZJ\":[\"미할당\"],\"FBIuPX\":[\"Clear selection\"],\"FQylcT\":[\"Swimlane: Missing\"],\"G4qrLy\":[\"완료 열 해제\"],\"GKu3m4\":[\"라벨 없음\"],\"Gpfctt\":[\"마감\"],\"HTKRVa\":[\"Do not close this dialog.\"],\"H_SQFv\":[\"색상 없음\"],\"HajiZl\":[\"Month\"],\"HrmW6B\":[\"Add a comment… (Markdown supported)\"],\"I6SWEy\":[\"스플릿\"],\"ICip_B\":[\"클라우드 (원격)\"],\"IdMoS6\":[\"Create your first swimlane\"],\"Ik60OC\":[\"에디터에서 열기\"],\"ImOQa9\":[\"Reply\"],\"Iw6WJa\":[\"WIP 한도 설정\"],\"JTYvAw\":[\"카드 검색\"],\"KCszT6\":[\"Add swimlane\"],\"KFiYGY\":[\"Change color\"],\"KGi3u9\":[\"Drag to reorder\"],\"K_F6pa\":[\"저장 중…\"],\"Kd6eg7\":[\"Moving cards…\"],\"KeYrQ5\":[\"Remove your reaction\"],\"KjXDqG\":[\"Swimlane: None\"],\"KmydK6\":[\"굵게\"],\"KpnwJK\":[\"Delete \\\"\",[\"0\"],\"\\\"?\"],\"KvW1VO\":[\"Draw.io 다이어그램\"],\"LQn6-8\":[\"로컈 수낙\"],\"MHrjPM\":[\"제목\"],\"MYx830\":[\"This empty swimlane will be removed from the board.\"],\"Mm72la\":[\"No comments yet\"],\"MmYpxT\":[\"Reply…\"],\"NBdIgR\":[\"Comment\"],\"NYTPDY\":[\"Move cards and delete\"],\"O6H89R\":[\"Resolved\"],\"ONWvwQ\":[\"Upload\"],\"OR4WQZ\":[\"+ Add sub-card\"],\"OYHzN1\":[\"태그\"],\"OepdfE\":[\"그룹: 상태\"],\"P5cvAA\":[\"Status name\"],\"PUeYA1\":[\"Create editable swimlanes\"],\"Pvpx7b\":[\"Paste a URL or path\"],\"Q2mGA7\":[\"필터 지우기\"],\"QD8opX\":[\"보드\"],\"QlsPZy\":[\"Mermaid 구문을 작성하면 다이어그램이 표시됩니다.\"],\"QmZYQP\":[\"Unresolve thread\"],\"QyioBP\":[\"Move up\"],\"RbsNko\":[[\"cardCount\"],\" card(s) currently use this swimlane.\"],\"RfEZH1\":[\"JType will create independent swimlanes from the current assignee rows. Card assignee values will stay unchanged.\"],\"RgO4DX\":[\"Duplicate lane ID \\\"\",[\"0\"],\"\\\". The first definition is used.\"],\"RlLl3G\":[\"Actions for \",[\"0\"]],\"S5Qbb1\":[\"쉼표로 구분\"],\"SavliD\":[[\"danglingCount\"],\" card(s) refer to deleted swimlanes.\"],\"T_nAzC\":[\"JType will reuse the existing lane IDs and continue unfinished card updates.\"],\"TdfEV7\":[\"Archived\"],\"U0hizX\":[\"Swimlane color\"],\"UDb2YD\":[\"React\"],\"UQOvxZ\":[\"빈 카드\"],\"URmyfc\":[\"Details\"],\"Ubl2by\":[\"Move right\"],\"VNa_N2\":[\"이 파일 형식은 아직 미리볼 수 없습니다.\"],\"VbyRUy\":[\"Comments\"],\"WEYdDv\":[\"Recommended\"],\"WSP6v1\":[\"정렬: 우선순위\"],\"X03-eC\":[\"값을 입력해 주세요.\"],\"XJOV1Y\":[\"Activity\"],\"XklovM\":[\"Working…\"],\"Y8bR2a\":[\"Delete only the swimlane. Card references remain recoverable.\"],\"YHjvGb\":[\"Status actions\"],\"Ya7bZl\":[\"다이어그램 오류\"],\"Zot9XS\":[\"카드 없음\"],\"_5CsXX\":[\"완료 열\"],\"_EsjyQ\":[\"이것 사용\"],\"_TJomP\":[\"Move cards before deleting\"],\"_YbTQZ\":[\"JType will create independent swimlanes from the current priority rows. Card priority values will stay unchanged.\"],\"a6uhHr\":[\"굵게 (Ctrl+B)\"],\"aDvLhk\":[\"Add a comment…\"],\"abUZlY\":[\"세부정보 추가...\"],\"agOeRN\":[\"이 API 명세를 렌더링할 수 없습니다.\"],\"b4hVKD\":[\"색상 열\"],\"bwOqWD\":[[\"0\"],\" of \",[\"1\"],\" sub-cards done\"],\"by_svU\":[\"Keep cards in Unassigned\"],\"bzjBcL\":[\"Sub-cards\"],\"c61_Lv\":[\"Lane ID\"],\"cJ44lA\":[\"Unscheduled\"],\"cUt8yN\":[\"Changes save automatically.\"],\"cfaWH-\":[\"라벨 추가\"],\"cnGeoo\":[\"삭제\"],\"d-F6q9\":[\"Created\"],\"d5z6xQ\":[\"WIP 한도 \",[\"0\"]],\"dEgA5A\":[\"취소\"],\"ecUA8p\":[\"Today\"],\"euc6Ns\":[\"복제\"],\"fEqHZq\":[\"Open sub-card\"],\"fVlS4-\":[\"Swimlane\"],\"fYcKtB\":[\"정렬: 마감\"],\"fvImQM\":[[\"0\"],\" selected\"],\"g8JmSC\":[\"Next month\"],\"gANddk\":[\"Uploading…\"],\"gLDJuJ\":[\"제목 없는 카드\"],\"gzZWjO\":[\"No assigned values to convert.\"],\"hNmOZ7\":[\"Set priority\"],\"he3ygx\":[\"Copy\"],\"hh4sEG\":[\"Relates\"],\"hnK1gR\":[\"PDF 문서\"],\"hyVzII\":[\"Swimlanes\"],\"i4_LY_\":[\"작성\"],\"iSLA_r\":[\"Move left\"],\"iTylMl\":[\"템플릿\"],\"iYVqZq\":[\"열 이름\"],\"jUbC3Z\":[\"Swimlane: Priority\"],\"jZlrte\":[\"색상\"],\"jzy1b8\":[\"Make swimlanes editable\"],\"k4b5_X\":[\"edited\"],\"kZlRKE\":[\"Mermaid 소스\"],\"kryGs-\":[\"카드\"],\"lCF0wC\":[\"새로고침\"],\"lEQWoB\":[\"Add stable horizontal groups that stay visible even when they have no cards.\"],\"lHxVTh\":[\"Swimlane: Assignee\"],\"lUeOk0\":[\"Horizontal groups for this board. Names can change; card mapping stays attached.\"],\"l_g7se\":[\"Resume conversion\"],\"ltF1xa\":[\"병합 결과 저장\"],\"m16xKo\":[\"Add\"],\"nabda1\":[\"카드 삭제\"],\"nfhh60\":[\"Make priority swimlanes editable?\"],\"njJFtc\":[\"Delete comment\"],\"o7J4JM\":[\"필터\"],\"o8va6N\":[\"Restored\"],\"ojKCLU\":[\"담당자\"],\"p9yTeb\":[\"정렬: 제목\"],\"pKKcSl\":[\"Show resolved thread\"],\"pKztsX\":[\"전체 에디터에서 열기\"],\"pdVZUg\":[\"WIP \",[\"0\"]],\"pnrmSP\":[\"새 카드\"],\"pwN6Ae\":[\"열 접기\"],\"pzutoc\":[\"기울임꼴\"],\"qpGDiV\":[\"Copy lane ID\"],\"rF8SEQ\":[\"Edit comment\"],\"rRubBJ\":[\"Lane details\"],\"rdUucN\":[\"미리보기\"],\"rvpMpc\":[\"Manage statuses\"],\"sCzmvQ\":[\"개 카드\"],\"sQpDn6\":[\"전체 화면 종료\"],\"sujToP\":[\"Parent\"],\"tK2x9T\":[\"⚠ 해결할 충돌 \",[\"0\"],\"건\",[\"1\"]],\"tYS8HY\":[\"Status columns stay available when they are used as columns or swimlanes.\"],\"t_YqKh\":[\"Remove\"],\"tfDRzk\":[\"Save\"],\"u2IprG\":[\"카드 제목 (Enter로 추가, Esc로 취소)\"],\"uAP6ov\":[\"Delete swimlane\"],\"uAQUqI\":[\"상태\"],\"uH1U8v\":[\"Manage swimlanes\"],\"uWPalN\":[\"Duplicate swimlane name \\\"\",[\"0\"],\"\\\". Names should be unique.\"],\"ucJg3u\":[\"Swimlane: Status\"],\"vIKvqQ\":[[\"missingCount\"],\" card(s) refer to deleted swimlanes.\"],\"vMTOsC\":[\"Make assignee swimlanes editable?\"],\"w7E-FA\":[\"Unsafe link blocked: \",[\"url\"]],\"w_Sphq\":[\"Attachments\"],\"wf6Djn\":[\"기울임꼴 (Ctrl+I)\"],\"wtw-au\":[\"완료 열로 설정\"],\"wwu18a\":[\"아이콘\"],\"x52RAh\":[\"Blocked by \",[\"blockedCount\"],\" unfinished card(s)\"],\"xDsmP9\":[\"Agenda\"],\"xUOPoQ\":[\"Used by\"],\"y1eoq1\":[\"링크 복사\"],\"y9cj46\":[\"그룹: 우선순위\"],\"yEbJGs\":[\"+ Add field\"],\"ybGQtY\":[\"← 목록으로\"],\"yz7wBu\":[\"닫기\"],\"yzF66j\":[\"링크\"],\"zOc0vf\":[\"아이콘 없음\"],\"zga9sT\":[\"확인\"]}")
+var fm = {
+	en: JSON.parse("{\"--lIxB\":[\"Blocked by\"],\"-b7T3G\":[\"Updated\"],\"1718Q-\":[\"Issues\"],\"1DBGsz\":[\"Notes\"],\"1YABGm\":[\"Link (Ctrl+K)\"],\"1hKEom\":[\"Priority\"],\"1lWHP7\":[\"unsafe\"],\"1nUGn5\":[\"Add status\"],\"1xwZj_\":[\"Previous month\"],\"23yqV0\":[\"Show affected cards\"],\"2BPVq8\":[\"Reorder \",[\"0\"]],\"2wxgft\":[\"Rename\"],\"3CtQL6\":[\"Choose another swimlane, then update the cards first.\"],\"3Ib6FN\":[\"Move down\"],\"3qkggm\":[\"Fullscreen\"],\"4NY8B5\":[\"Swimlanes to create\"],\"4gdyen\":[\"Local (yours)\"],\"4hJhzz\":[\"Table\"],\"54sFiP\":[\"flowchart TD\\n  A[Start] --> B[End]\"],\"5Q_DQ6\":[\"Inline Code\"],\"66g_UW\":[\"Collapse resolved thread\"],\"6V3Ea3\":[\"Copied\"],\"6YtxFj\":[\"Name\"],\"6buwPb\":[\"Board settings\"],\"79Yvzu\":[\"Swimlane name\"],\"7VpPHA\":[\"Confirm\"],\"7dZyQU\":[\"Previous swimlane missing\"],\"7s3WlU\":[\"Blocks\"],\"8PifYj\":[\"Mermaid diagram\"],\"8Tg_JR\":[\"Custom\"],\"8enUYo\":[\"Set status\"],\"8hSn0h\":[\"Result (editable)\"],\"8lE269\":[\"Sort: Manual\"],\"9OEgyT\":[\"Add reaction\"],\"9OH3W0\":[\"Resolve thread\"],\"9gxam6\":[\"Could not render this Draw.io diagram.\"],\"AC9Gkf\":[\"Expand column\"],\"ANe5kn\":[\"Updating cards…\"],\"AS5WO9\":[\"Could not render this PDF.\"],\"ATIq3Z\":[\"Swimlane: Custom\"],\"AVreQ5\":[\"Drag to resize\"],\"AgvHni\":[\"Add column\"],\"AjVXBS\":[\"Calendar\"],\"AoHpbt\":[\"Show cards with missing swimlanes\"],\"AxAubu\":[\"Group: Assignee\"],\"B5TUF-\":[\"Priority…\"],\"BfMZ7w\":[\"Accept cloud\"],\"BiWlsk\":[\"Status…\"],\"BnmEvM\":[\"Save as template\"],\"C6-ZRl\":[\"Someone\"],\"CXTDT_\":[\"Resume swimlane conversion?\"],\"CxcMyt\":[[\"0\"],\" moved to position \",[\"1\"],\" of \",[\"2\"],\".\"],\"DGEEOQ\":[\"Swimlane actions\"],\"DPfwMq\":[\"Done\"],\"Db4W3_\":[\"Statuses\"],\"EWPtMO\":[\"Code\"],\"EbMPZJ\":[\"Unassigned\"],\"FBIuPX\":[\"Clear selection\"],\"FQylcT\":[\"Swimlane: Missing\"],\"G4qrLy\":[\"Unset done column\"],\"GKu3m4\":[\"No labels\"],\"Gpfctt\":[\"Due\"],\"HTKRVa\":[\"Do not close this dialog.\"],\"H_SQFv\":[\"No color\"],\"HajiZl\":[\"Month\"],\"HrmW6B\":[\"Add a comment… (Markdown supported)\"],\"I6SWEy\":[\"Split\"],\"ICip_B\":[\"Cloud (remote)\"],\"IdMoS6\":[\"Create your first swimlane\"],\"Ik60OC\":[\"Open in editor\"],\"ImOQa9\":[\"Reply\"],\"Iw6WJa\":[\"Set WIP limit\"],\"JTYvAw\":[\"Search cards\"],\"KAlhe_\":[\"Conversion stopped because card updates did not persist. Refresh and try again.\"],\"KCszT6\":[\"Add swimlane\"],\"KFiYGY\":[\"Change color\"],\"KGi3u9\":[\"Drag to reorder\"],\"K_F6pa\":[\"Saving…\"],\"Kd6eg7\":[\"Moving cards…\"],\"KeYrQ5\":[\"Remove your reaction\"],\"KjXDqG\":[\"Swimlane: None\"],\"KmydK6\":[\"Bold\"],\"KpnwJK\":[\"Delete \\\"\",[\"0\"],\"\\\"?\"],\"KvW1VO\":[\"Draw.io diagram\"],\"LQn6-8\":[\"Accept local\"],\"MHrjPM\":[\"Title\"],\"MYx830\":[\"This empty swimlane will be removed from the board.\"],\"Mm72la\":[\"No comments yet\"],\"MmYpxT\":[\"Reply…\"],\"NBdIgR\":[\"Comment\"],\"NYTPDY\":[\"Move cards and delete\"],\"O6H89R\":[\"Resolved\"],\"ONWvwQ\":[\"Upload\"],\"OR4WQZ\":[\"+ Add sub-card\"],\"OYHzN1\":[\"Tags\"],\"OepdfE\":[\"Group: Status\"],\"P5cvAA\":[\"Status name\"],\"PUeYA1\":[\"Create editable swimlanes\"],\"Pvpx7b\":[\"Paste a URL or path\"],\"Q2mGA7\":[\"Clear filter\"],\"QD8opX\":[\"Board\"],\"QlsPZy\":[\"Write Mermaid syntax to see the diagram.\"],\"QmZYQP\":[\"Unresolve thread\"],\"QyioBP\":[\"Move up\"],\"RbsNko\":[[\"cardCount\"],\" card(s) currently use this swimlane.\"],\"RfEZH1\":[\"JType will create independent swimlanes from the current assignee rows. Card assignee values will stay unchanged.\"],\"RgO4DX\":[\"Duplicate lane ID \\\"\",[\"0\"],\"\\\". The first definition is used.\"],\"RlLl3G\":[\"Actions for \",[\"0\"]],\"S5Qbb1\":[\"comma, separated\"],\"SavliD\":[[\"danglingCount\"],\" card(s) refer to deleted swimlanes.\"],\"T_nAzC\":[\"JType will reuse the existing lane IDs and continue unfinished card updates.\"],\"TdfEV7\":[\"Archived\"],\"Th4mIx\":[\"Lane details for \",[\"0\"]],\"U0hizX\":[\"Swimlane color\"],\"UDb2YD\":[\"React\"],\"UQOvxZ\":[\"Blank card\"],\"URmyfc\":[\"Details\"],\"Ubl2by\":[\"Move right\"],\"VNa_N2\":[\"This file type can not be previewed yet.\"],\"VbyRUy\":[\"Comments\"],\"WEYdDv\":[\"Recommended\"],\"WSP6v1\":[\"Sort: Priority\"],\"X03-eC\":[\"Please enter a value.\"],\"XJOV1Y\":[\"Activity\"],\"XklovM\":[\"Working…\"],\"Y8bR2a\":[\"Delete only the swimlane. Card references remain recoverable.\"],\"YHjvGb\":[\"Status actions\"],\"Ya7bZl\":[\"Diagram error\"],\"Zot9XS\":[\"No cards\"],\"_5CsXX\":[\"Done column\"],\"_EsjyQ\":[\"Use this\"],\"_TJomP\":[\"Move cards before deleting\"],\"_YbTQZ\":[\"JType will create independent swimlanes from the current priority rows. Card priority values will stay unchanged.\"],\"a6uhHr\":[\"Bold (Ctrl+B)\"],\"aDvLhk\":[\"Add a comment…\"],\"abUZlY\":[\"Add details...\"],\"agOeRN\":[\"Could not render this API specification.\"],\"b4hVKD\":[\"Color columns\"],\"bwOqWD\":[[\"0\"],\" of \",[\"1\"],\" sub-cards done\"],\"by_svU\":[\"Keep cards in Unassigned\"],\"bzjBcL\":[\"Sub-cards\"],\"c61_Lv\":[\"Lane ID\"],\"cJ44lA\":[\"Unscheduled\"],\"cUt8yN\":[\"Changes save automatically.\"],\"cfaWH-\":[\"Add labels\"],\"cnGeoo\":[\"Delete\"],\"d-F6q9\":[\"Created\"],\"d5z6xQ\":[\"WIP limit \",[\"0\"]],\"dEgA5A\":[\"Cancel\"],\"ecUA8p\":[\"Today\"],\"euc6Ns\":[\"Duplicate\"],\"fEqHZq\":[\"Open sub-card\"],\"fFAIng\":[[\"0\",\"plural\",{\"one\":[\"#\",\" card\"],\"other\":[\"#\",\" cards\"]}]],\"fVlS4-\":[\"Swimlane\"],\"fYcKtB\":[\"Sort: Due\"],\"fvImQM\":[[\"0\"],\" selected\"],\"g8JmSC\":[\"Next month\"],\"gANddk\":[\"Uploading…\"],\"gLDJuJ\":[\"Untitled card\"],\"gzZWjO\":[\"No assigned values to convert.\"],\"hNmOZ7\":[\"Set priority\"],\"he3ygx\":[\"Copy\"],\"hh4sEG\":[\"Relates\"],\"hnK1gR\":[\"PDF document\"],\"hyVzII\":[\"Swimlanes\"],\"i4_LY_\":[\"Write\"],\"iSLA_r\":[\"Move left\"],\"iTylMl\":[\"Templates\"],\"iYVqZq\":[\"Column name\"],\"jUbC3Z\":[\"Swimlane: Priority\"],\"jZlrte\":[\"Color\"],\"jzy1b8\":[\"Make swimlanes editable\"],\"k4b5_X\":[\"edited\"],\"kZlRKE\":[\"Mermaid source\"],\"kryGs-\":[\"Card\"],\"lCF0wC\":[\"Refresh\"],\"lEQWoB\":[\"Add stable horizontal groups that stay visible even when they have no cards.\"],\"lHxVTh\":[\"Swimlane: Assignee\"],\"lUeOk0\":[\"Horizontal groups for this board. Names can change; card mapping stays attached.\"],\"l_g7se\":[\"Resume conversion\"],\"ltF1xa\":[\"Save merged result\"],\"m16xKo\":[\"Add\"],\"nabda1\":[\"Delete card\"],\"nfhh60\":[\"Make priority swimlanes editable?\"],\"njJFtc\":[\"Delete comment\"],\"o7J4JM\":[\"Filter\"],\"o8va6N\":[\"Restored\"],\"ojKCLU\":[\"Assignee\"],\"p9yTeb\":[\"Sort: Title\"],\"pKKcSl\":[\"Show resolved thread\"],\"pKztsX\":[\"Open in full editor\"],\"pdVZUg\":[\"WIP \",[\"0\"]],\"pnrmSP\":[\"New card\"],\"pwN6Ae\":[\"Collapse column\"],\"pzutoc\":[\"Italic\"],\"qpGDiV\":[\"Copy lane ID\"],\"rF8SEQ\":[\"Edit comment\"],\"rRubBJ\":[\"Lane details\"],\"rdUucN\":[\"Preview\"],\"rvpMpc\":[\"Manage statuses\"],\"sCzmvQ\":[\"cards\"],\"sQpDn6\":[\"Exit fullscreen\"],\"sujToP\":[\"Parent\"],\"tF-_sn\":[[\"cardCount\",\"plural\",{\"one\":[\"#\",\" card\"],\"other\":[\"#\",\" cards\"]}]],\"tK2x9T\":[\"⚠ \",[\"0\"],\" Conflict\",[\"1\"],\" to Resolve\"],\"tYS8HY\":[\"Status columns stay available when they are used as columns or swimlanes.\"],\"t_YqKh\":[\"Remove\"],\"tfDRzk\":[\"Save\"],\"u2IprG\":[\"Card title (Enter to add, Esc to cancel)\"],\"uAP6ov\":[\"Delete swimlane\"],\"uAQUqI\":[\"Status\"],\"uH1U8v\":[\"Manage swimlanes\"],\"uWPalN\":[\"Duplicate swimlane name \\\"\",[\"0\"],\"\\\". Names should be unique.\"],\"uaR_cz\":[[\"total\",\"plural\",{\"one\":[\"#\",\" card\"],\"other\":[\"#\",\" cards\"]}]],\"ucJg3u\":[\"Swimlane: Status\"],\"vIKvqQ\":[[\"missingCount\"],\" card(s) refer to deleted swimlanes.\"],\"vMTOsC\":[\"Make assignee swimlanes editable?\"],\"vfYjJ_\":[\"Copy failed.\"],\"w7E-FA\":[\"Unsafe link blocked: \",[\"url\"]],\"w_Sphq\":[\"Attachments\"],\"wf6Djn\":[\"Italic (Ctrl+I)\"],\"wtw-au\":[\"Set as done column\"],\"wwu18a\":[\"Icon\"],\"x52RAh\":[\"Blocked by \",[\"blockedCount\"],\" unfinished card(s)\"],\"xDsmP9\":[\"Agenda\"],\"xUOPoQ\":[\"Used by\"],\"y1eoq1\":[\"Copy link\"],\"y9cj46\":[\"Group: Priority\"],\"yEbJGs\":[\"+ Add field\"],\"ybGQtY\":[\"← Back to list\"],\"yz7wBu\":[\"Close\"],\"yzF66j\":[\"Link\"],\"zOc0vf\":[\"No icon\"],\"zga9sT\":[\"OK\"]}"),
+	zh: JSON.parse("{\"--lIxB\":[\"被阻塞于\"],\"-b7T3G\":[\"更新\"],\"1718Q-\":[\"问题\"],\"1DBGsz\":[\"备注\"],\"1YABGm\":[\"链接 (Ctrl+K)\"],\"1hKEom\":[\"优先级\"],\"1lWHP7\":[\"不安全\"],\"1nUGn5\":[\"添加状态\"],\"1xwZj_\":[\"上个月\"],\"23yqV0\":[\"显示受影响的卡片\"],\"2BPVq8\":[\"重新排序 \",[\"0\"]],\"2wxgft\":[\"重命名\"],\"3CtQL6\":[\"选择另一个泳道，然后先更新卡片。\"],\"3Ib6FN\":[\"下移\"],\"3qkggm\":[\"全屏\"],\"4NY8B5\":[\"将创建的泳道\"],\"4gdyen\":[\"本地（我的）\"],\"4hJhzz\":[\"表格\"],\"54sFiP\":[\"flowchart TD\\n  A[开始] --> B[结束]\"],\"5Q_DQ6\":[\"行内代码\"],\"66g_UW\":[\"折叠已解决话题\"],\"6V3Ea3\":[\"已复制\"],\"6YtxFj\":[\"名称\"],\"6buwPb\":[\"看板设置\"],\"79Yvzu\":[\"泳道名称\"],\"7VpPHA\":[\"确认\"],\"7dZyQU\":[\"原泳道已不存在\"],\"7s3WlU\":[\"阻塞\"],\"8PifYj\":[\"Mermaid 图表\"],\"8Tg_JR\":[\"自定义\"],\"8enUYo\":[\"设置状态\"],\"8hSn0h\":[\"结果（可编辑）\"],\"8lE269\":[\"排序:手动\"],\"9OEgyT\":[\"添加回应\"],\"9OH3W0\":[\"解决话题\"],\"9gxam6\":[\"无法渲染此 Draw.io 图表。\"],\"AC9Gkf\":[\"展开列\"],\"ANe5kn\":[\"正在更新卡片…\"],\"AS5WO9\":[\"无法渲染此 PDF。\"],\"ATIq3Z\":[\"泳道：自定义\"],\"AVreQ5\":[\"拖动调整宽度\"],\"AgvHni\":[\"添加列\"],\"AjVXBS\":[\"日历\"],\"AoHpbt\":[\"显示泳道缺失的卡片\"],\"AxAubu\":[\"分组:负责人\"],\"B5TUF-\":[\"优先级…\"],\"BfMZ7w\":[\"接受云端\"],\"BiWlsk\":[\"状态…\"],\"BnmEvM\":[\"存为模板\"],\"C6-ZRl\":[\"某人\"],\"CXTDT_\":[\"继续泳道转换？\"],\"CxcMyt\":[\"已将 \",[\"0\"],\" 移到第 \",[\"1\"],\" 位，共 \",[\"2\"],\" 项。\"],\"DGEEOQ\":[\"泳道操作\"],\"DPfwMq\":[\"完成\"],\"Db4W3_\":[\"状态\"],\"EWPtMO\":[\"代码\"],\"EbMPZJ\":[\"未分配\"],\"FBIuPX\":[\"清除选择\"],\"FQylcT\":[\"泳道：缺失\"],\"G4qrLy\":[\"取消完成列\"],\"GKu3m4\":[\"暂无标签\"],\"Gpfctt\":[\"截止日期\"],\"HTKRVa\":[\"请勿关闭此对话框。\"],\"H_SQFv\":[\"无颜色\"],\"HajiZl\":[\"月\"],\"HrmW6B\":[\"添加评论…（支持 Markdown）\"],\"I6SWEy\":[\"分栏\"],\"ICip_B\":[\"云端（远程）\"],\"IdMoS6\":[\"创建第一条泳道\"],\"Ik60OC\":[\"在编辑器中打开\"],\"ImOQa9\":[\"回复\"],\"Iw6WJa\":[\"设置 WIP 限制\"],\"JTYvAw\":[\"搜索卡片\"],\"KAlhe_\":[\"卡片更新未能持久化，转换已停止。请刷新后重试。\"],\"KCszT6\":[\"添加泳道\"],\"KFiYGY\":[\"更改颜色\"],\"KGi3u9\":[\"拖动以重新排序\"],\"K_F6pa\":[\"保存中…\"],\"Kd6eg7\":[\"正在移动卡片…\"],\"KeYrQ5\":[\"撤回你的回应\"],\"KjXDqG\":[\"泳道：无\"],\"KmydK6\":[\"粗体\"],\"KpnwJK\":[\"删除“\",[\"0\"],\"”？\"],\"KvW1VO\":[\"Draw.io 图表\"],\"LQn6-8\":[\"接受本地\"],\"MHrjPM\":[\"标题\"],\"MYx830\":[\"此空泳道将从看板中移除。\"],\"Mm72la\":[\"暂无评论\"],\"MmYpxT\":[\"回复…\"],\"NBdIgR\":[\"评论\"],\"NYTPDY\":[\"移动卡片并删除\"],\"O6H89R\":[\"已解决\"],\"ONWvwQ\":[\"上传\"],\"OR4WQZ\":[\"+ 添加子卡片\"],\"OYHzN1\":[\"标签\"],\"OepdfE\":[\"分组:状态\"],\"P5cvAA\":[\"状态名称\"],\"PUeYA1\":[\"创建可编辑泳道\"],\"Pvpx7b\":[\"粘贴 URL 或路径\"],\"Q2mGA7\":[\"清除筛选\"],\"QD8opX\":[\"看板\"],\"QlsPZy\":[\"输入 Mermaid 语法以查看图表。\"],\"QmZYQP\":[\"取消解决\"],\"QyioBP\":[\"上移\"],\"RbsNko\":[\"当前有 \",[\"cardCount\"],\" 张卡片使用此泳道。\"],\"RfEZH1\":[\"JType 将根据当前负责人行创建独立泳道。卡片的负责人值不会改变。\"],\"RgO4DX\":[\"泳道 ID“\",[\"0\"],\"”重复。将使用第一条定义。\"],\"RlLl3G\":[[\"0\"],\" 的操作\"],\"S5Qbb1\":[\"用逗号分隔\"],\"SavliD\":[\"有 \",[\"danglingCount\"],\" 张卡片引用了已删除的泳道。\"],\"T_nAzC\":[\"JType 将复用现有泳道 ID，并继续未完成的卡片更新。\"],\"TdfEV7\":[\"归档\"],\"Th4mIx\":[[\"0\"],\" 的泳道详情\"],\"U0hizX\":[\"泳道颜色\"],\"UDb2YD\":[\"回应\"],\"UQOvxZ\":[\"空白卡片\"],\"URmyfc\":[\"详情\"],\"Ubl2by\":[\"右移\"],\"VNa_N2\":[\"暂不支持预览此文件类型。\"],\"VbyRUy\":[\"评论\"],\"WEYdDv\":[\"推荐\"],\"WSP6v1\":[\"排序:优先级\"],\"X03-eC\":[\"请输入内容。\"],\"XJOV1Y\":[\"活动\"],\"XklovM\":[\"正在处理…\"],\"Y8bR2a\":[\"仅删除泳道。卡片引用仍可恢复。\"],\"YHjvGb\":[\"状态操作\"],\"Ya7bZl\":[\"图表错误\"],\"Zot9XS\":[\"暂无卡片\"],\"_5CsXX\":[\"完成列\"],\"_EsjyQ\":[\"使用此版本\"],\"_TJomP\":[\"删除前移动卡片\"],\"_YbTQZ\":[\"JType 将根据当前优先级行创建独立泳道。卡片的优先级值不会改变。\"],\"a6uhHr\":[\"粗体 (Ctrl+B)\"],\"aDvLhk\":[\"添加评论…\"],\"abUZlY\":[\"添加详情...\"],\"agOeRN\":[\"无法渲染此 API 规范。\"],\"b4hVKD\":[\"彩色列\"],\"bwOqWD\":[[\"1\"],\" 张子卡中已完成 \",[\"0\"],\" 张\"],\"by_svU\":[\"将卡片保留在未分配\"],\"bzjBcL\":[\"子卡片\"],\"c61_Lv\":[\"泳道 ID\"],\"cJ44lA\":[\"未排期\"],\"cUt8yN\":[\"更改会自动保存。\"],\"cfaWH-\":[\"添加标签\"],\"cnGeoo\":[\"删除\"],\"d-F6q9\":[\"创建\"],\"d5z6xQ\":[\"WIP 限制 \",[\"0\"]],\"dEgA5A\":[\"取消\"],\"ecUA8p\":[\"今天\"],\"euc6Ns\":[\"复制卡片\"],\"fEqHZq\":[\"打开子卡片\"],\"fFAIng\":[[\"0\",\"plural\",{\"one\":[\"#\",\" 张卡片\"],\"other\":[\"#\",\" 张卡片\"]}]],\"fVlS4-\":[\"泳道\"],\"fYcKtB\":[\"排序:截止\"],\"fvImQM\":[\"已选择 \",[\"0\"],\" 项\"],\"g8JmSC\":[\"下个月\"],\"gANddk\":[\"上传中…\"],\"gLDJuJ\":[\"未命名卡片\"],\"gzZWjO\":[\"没有可转换的已分配值。\"],\"hNmOZ7\":[\"设置优先级\"],\"he3ygx\":[\"复制\"],\"hh4sEG\":[\"相关\"],\"hnK1gR\":[\"PDF 文档\"],\"hyVzII\":[\"泳道\"],\"i4_LY_\":[\"写作\"],\"iSLA_r\":[\"左移\"],\"iTylMl\":[\"模板\"],\"iYVqZq\":[\"列名称\"],\"jUbC3Z\":[\"泳道：优先级\"],\"jZlrte\":[\"颜色\"],\"jzy1b8\":[\"将泳道转为可编辑\"],\"k4b5_X\":[\"已编辑\"],\"kZlRKE\":[\"Mermaid 源码\"],\"kryGs-\":[\"卡片\"],\"lCF0wC\":[\"刷新\"],\"lEQWoB\":[\"添加稳定的横向分组，即使没有卡片也会保持显示。\"],\"lHxVTh\":[\"泳道：负责人\"],\"lUeOk0\":[\"此看板的横向分组。名称可以更改，卡片映射会保持关联。\"],\"l_g7se\":[\"继续转换\"],\"ltF1xa\":[\"保存合并结果\"],\"m16xKo\":[\"添加\"],\"nabda1\":[\"删除卡片\"],\"nfhh60\":[\"将优先级泳道转为可编辑？\"],\"njJFtc\":[\"删除评论\"],\"o7J4JM\":[\"筛选\"],\"o8va6N\":[\"恢复\"],\"ojKCLU\":[\"负责人\"],\"p9yTeb\":[\"排序:标题\"],\"pKKcSl\":[\"显示已解决话题\"],\"pKztsX\":[\"在完整编辑器中打开\"],\"pdVZUg\":[\"在制品 \",[\"0\"]],\"pnrmSP\":[\"新建卡片\"],\"pwN6Ae\":[\"折叠列\"],\"pzutoc\":[\"斜体\"],\"qpGDiV\":[\"复制泳道 ID\"],\"rF8SEQ\":[\"编辑评论\"],\"rRubBJ\":[\"泳道详情\"],\"rdUucN\":[\"预览\"],\"rvpMpc\":[\"管理状态\"],\"sCzmvQ\":[\"张卡片\"],\"sQpDn6\":[\"退出全屏\"],\"sujToP\":[\"父卡片\"],\"tF-_sn\":[[\"cardCount\",\"plural\",{\"one\":[\"#\",\" 张卡片\"],\"other\":[\"#\",\" 张卡片\"]}]],\"tK2x9T\":[\"⚠ \",[\"0\"],\" 个冲突\",[\"1\"],\"待解决\"],\"tYS8HY\":[\"无论作为列还是泳道使用，状态列都可以继续管理。\"],\"t_YqKh\":[\"移除\"],\"tfDRzk\":[\"保存\"],\"u2IprG\":[\"卡片标题(回车添加,Esc 取消)\"],\"uAP6ov\":[\"删除泳道\"],\"uAQUqI\":[\"状态\"],\"uH1U8v\":[\"管理泳道\"],\"uWPalN\":[\"泳道名称“\",[\"0\"],\"”重复。名称应保持唯一。\"],\"uaR_cz\":[[\"total\",\"plural\",{\"one\":[\"#\",\" 张卡片\"],\"other\":[\"#\",\" 张卡片\"]}]],\"ucJg3u\":[\"泳道：状态\"],\"vIKvqQ\":[\"有 \",[\"missingCount\"],\" 张卡片引用了已删除的泳道。\"],\"vMTOsC\":[\"将负责人泳道转为可编辑？\"],\"vfYjJ_\":[\"复制失败。\"],\"w7E-FA\":[\"已拦截不安全链接：\",[\"url\"]],\"w_Sphq\":[\"附件\"],\"wf6Djn\":[\"斜体 (Ctrl+I)\"],\"wtw-au\":[\"设为完成列\"],\"wwu18a\":[\"图标\"],\"x52RAh\":[\"被 \",[\"blockedCount\"],\" 张未完成卡片阻塞\"],\"xDsmP9\":[\"日程\"],\"xUOPoQ\":[\"使用情况\"],\"y1eoq1\":[\"复制链接\"],\"y9cj46\":[\"分组:优先级\"],\"yEbJGs\":[\"+ 添加字段\"],\"ybGQtY\":[\"← 返回列表\"],\"yz7wBu\":[\"关闭\"],\"yzF66j\":[\"链接\"],\"zOc0vf\":[\"无图标\"],\"zga9sT\":[\"确定\"]}"),
+	ja: JSON.parse("{\"--lIxB\":[\"Blocked by\"],\"-b7T3G\":[\"Updated\"],\"1718Q-\":[\"問題\"],\"1DBGsz\":[\"ノート\"],\"1YABGm\":[\"リンク (Ctrl+K)\"],\"1hKEom\":[\"優先度\"],\"1lWHP7\":[\"unsafe\"],\"1nUGn5\":[\"ステータスを追加\"],\"1xwZj_\":[\"Previous month\"],\"23yqV0\":[\"影響を受けるカードを表示\"],\"2BPVq8\":[[\"0\"],\"を並べ替え\"],\"2wxgft\":[\"名前を変更\"],\"3CtQL6\":[\"別のスイムレーンを選び、先にカードを更新します。\"],\"3Ib6FN\":[\"下へ移動\"],\"3qkggm\":[\"全画面表示\"],\"4NY8B5\":[\"作成するスイムレーン\"],\"4gdyen\":[\"ローカル（自分の）\"],\"4hJhzz\":[\"表\"],\"54sFiP\":[\"flowchart TD\\n  A[開始] --> B[終了]\"],\"5Q_DQ6\":[\"インラインコード\"],\"66g_UW\":[\"Collapse resolved thread\"],\"6V3Ea3\":[\"コピーしました\"],\"6YtxFj\":[\"名前\"],\"6buwPb\":[\"Board settings\"],\"79Yvzu\":[\"スイムレーン名\"],\"7VpPHA\":[\"確認\"],\"7dZyQU\":[\"以前のスイムレーンが見つかりません\"],\"7s3WlU\":[\"Blocks\"],\"8PifYj\":[\"Mermaid 図\"],\"8Tg_JR\":[\"カスタム\"],\"8enUYo\":[\"Set status\"],\"8hSn0h\":[\"結果（編集可能）\"],\"8lE269\":[\"並べ替え：手動\"],\"9OEgyT\":[\"Add reaction\"],\"9OH3W0\":[\"Resolve thread\"],\"9gxam6\":[\"この Draw.io 図をレンダリングできませんでした。\"],\"AC9Gkf\":[\"列を展開\"],\"ANe5kn\":[\"カードを更新中…\"],\"AS5WO9\":[\"この PDF をレンダリングできませんでした。\"],\"ATIq3Z\":[\"スイムレーン：カスタム\"],\"AVreQ5\":[\"ドラッグしてサイズ変更\"],\"AgvHni\":[\"列を追加\"],\"AjVXBS\":[\"Calendar\"],\"AoHpbt\":[\"スイムレーンが見つからないカードを表示\"],\"AxAubu\":[\"グループ：担当者\"],\"B5TUF-\":[\"Priority…\"],\"BfMZ7w\":[\"クラウドを採用\"],\"BiWlsk\":[\"Status…\"],\"BnmEvM\":[\"テンプレートとして保存\"],\"C6-ZRl\":[\"Someone\"],\"CXTDT_\":[\"スイムレーンの変換を再開しますか？\"],\"CxcMyt\":[[\"0\"],\"を\",[\"2\"],\"件中\",[\"1\"],\"番目に移動しました。\"],\"DGEEOQ\":[\"スイムレーンの操作\"],\"DPfwMq\":[\"完了\"],\"Db4W3_\":[\"ステータス\"],\"EWPtMO\":[\"コード\"],\"EbMPZJ\":[\"未割り当て\"],\"FBIuPX\":[\"Clear selection\"],\"FQylcT\":[\"スイムレーン：不明\"],\"G4qrLy\":[\"完了列を解除\"],\"GKu3m4\":[\"ラベルなし\"],\"Gpfctt\":[\"期限\"],\"HTKRVa\":[\"このダイアログを閉じないでください。\"],\"H_SQFv\":[\"色なし\"],\"HajiZl\":[\"Month\"],\"HrmW6B\":[\"Add a comment… (Markdown supported)\"],\"I6SWEy\":[\"分割\"],\"ICip_B\":[\"クラウド（リモート）\"],\"IdMoS6\":[\"最初のスイムレーンを作成\"],\"Ik60OC\":[\"エディターで開く\"],\"ImOQa9\":[\"Reply\"],\"Iw6WJa\":[\"WIP 制限を設定\"],\"JTYvAw\":[\"カードを検索\"],\"KAlhe_\":[\"カードの更新が保存されなかったため、変換を停止しました。更新して再試行してください。\"],\"KCszT6\":[\"スイムレーンを追加\"],\"KFiYGY\":[\"色を変更\"],\"KGi3u9\":[\"ドラッグして並べ替え\"],\"K_F6pa\":[\"保存中…\"],\"Kd6eg7\":[\"カードを移動中…\"],\"KeYrQ5\":[\"Remove your reaction\"],\"KjXDqG\":[\"Swimlane: None\"],\"KmydK6\":[\"太字\"],\"KpnwJK\":[\"「\",[\"0\"],\"」を削除しますか？\"],\"KvW1VO\":[\"Draw.io 図\"],\"LQn6-8\":[\"ローカルを採用\"],\"MHrjPM\":[\"タイトル\"],\"MYx830\":[\"この空のスイムレーンをボードから削除します。\"],\"Mm72la\":[\"No comments yet\"],\"MmYpxT\":[\"Reply…\"],\"NBdIgR\":[\"Comment\"],\"NYTPDY\":[\"カードを移動して削除\"],\"O6H89R\":[\"Resolved\"],\"ONWvwQ\":[\"Upload\"],\"OR4WQZ\":[\"+ Add sub-card\"],\"OYHzN1\":[\"タグ\"],\"OepdfE\":[\"グループ：ステータス\"],\"P5cvAA\":[\"ステータス名\"],\"PUeYA1\":[\"編集可能なスイムレーンを作成\"],\"Pvpx7b\":[\"Paste a URL or path\"],\"Q2mGA7\":[\"フィルターをクリア\"],\"QD8opX\":[\"ボード\"],\"QlsPZy\":[\"Mermaid 構文を書くと図が表示されます。\"],\"QmZYQP\":[\"Unresolve thread\"],\"QyioBP\":[\"上へ移動\"],\"RbsNko\":[\"現在\",[\"cardCount\"],\"枚のカードがこのスイムレーンを使用しています。\"],\"RfEZH1\":[\"JType は現在の担当者行から独立したスイムレーンを作成します。カードの担当者は変更されません。\"],\"RgO4DX\":[\"スイムレーン ID「\",[\"0\"],\"」が重複しています。最初の定義を使用します。\"],\"RlLl3G\":[[\"0\"],\"の操作\"],\"S5Qbb1\":[\"カンマ区切り\"],\"SavliD\":[[\"danglingCount\"],\"枚のカードが削除済みのスイムレーンを参照しています。\"],\"T_nAzC\":[\"JType は既存のスイムレーン ID を再利用し、未完了のカード更新を続行します。\"],\"TdfEV7\":[\"Archived\"],\"Th4mIx\":[[\"0\"],\" のレーン詳細\"],\"U0hizX\":[\"スイムレーンの色\"],\"UDb2YD\":[\"React\"],\"UQOvxZ\":[\"空のカード\"],\"URmyfc\":[\"詳細\"],\"Ubl2by\":[\"右へ移動\"],\"VNa_N2\":[\"このファイル形式はまだプレビューできません。\"],\"VbyRUy\":[\"Comments\"],\"WEYdDv\":[\"推奨\"],\"WSP6v1\":[\"並べ替え：優先度\"],\"X03-eC\":[\"値を入力してください。\"],\"XJOV1Y\":[\"Activity\"],\"XklovM\":[\"処理中…\"],\"Y8bR2a\":[\"スイムレーンだけを削除します。カードの参照は復元できます。\"],\"YHjvGb\":[\"ステータスの操作\"],\"Ya7bZl\":[\"図のエラー\"],\"Zot9XS\":[\"カードなし\"],\"_5CsXX\":[\"完了列\"],\"_EsjyQ\":[\"これを使用\"],\"_TJomP\":[\"削除前にカードを移動\"],\"_YbTQZ\":[\"JType は現在の優先度行から独立したスイムレーンを作成します。カードの優先度は変更されません。\"],\"a6uhHr\":[\"太字 (Ctrl+B)\"],\"aDvLhk\":[\"Add a comment…\"],\"abUZlY\":[\"詳細を追加...\"],\"agOeRN\":[\"この API 仕様をレンダリングできませんでした。\"],\"b4hVKD\":[\"色付き列\"],\"bwOqWD\":[[\"0\"],\" of \",[\"1\"],\" sub-cards done\"],\"by_svU\":[\"カードを未割り当てに残す\"],\"bzjBcL\":[\"Sub-cards\"],\"c61_Lv\":[\"スイムレーン ID\"],\"cJ44lA\":[\"Unscheduled\"],\"cUt8yN\":[\"変更は自動的に保存されます。\"],\"cfaWH-\":[\"ラベルを追加\"],\"cnGeoo\":[\"削除\"],\"d-F6q9\":[\"Created\"],\"d5z6xQ\":[\"WIP 制限 \",[\"0\"]],\"dEgA5A\":[\"キャンセル\"],\"ecUA8p\":[\"Today\"],\"euc6Ns\":[\"複製\"],\"fEqHZq\":[\"Open sub-card\"],\"fFAIng\":[[\"0\",\"plural\",{\"one\":[\"#\",\" 件のカード\"],\"other\":[\"#\",\" 件のカード\"]}]],\"fVlS4-\":[\"スイムレーン\"],\"fYcKtB\":[\"並べ替え：期限\"],\"fvImQM\":[[\"0\"],\" selected\"],\"g8JmSC\":[\"Next month\"],\"gANddk\":[\"Uploading…\"],\"gLDJuJ\":[\"無題のカード\"],\"gzZWjO\":[\"変換できる割り当て済みの値がありません。\"],\"hNmOZ7\":[\"Set priority\"],\"he3ygx\":[\"コピー\"],\"hh4sEG\":[\"Relates\"],\"hnK1gR\":[\"PDF ドキュメント\"],\"hyVzII\":[\"スイムレーン\"],\"i4_LY_\":[\"記述\"],\"iSLA_r\":[\"左へ移動\"],\"iTylMl\":[\"テンプレート\"],\"iYVqZq\":[\"列名\"],\"jUbC3Z\":[\"Swimlane: Priority\"],\"jZlrte\":[\"カラー\"],\"jzy1b8\":[\"スイムレーンを編集可能にする\"],\"k4b5_X\":[\"edited\"],\"kZlRKE\":[\"Mermaid ソース\"],\"kryGs-\":[\"カード\"],\"lCF0wC\":[\"更新\"],\"lEQWoB\":[\"カードがなくても表示され続ける横方向のグループを追加します。\"],\"lHxVTh\":[\"Swimlane: Assignee\"],\"lUeOk0\":[\"このボードの横方向グループです。名前を変更しても、カードの関連付けは維持されます。\"],\"l_g7se\":[\"変換を再開\"],\"ltF1xa\":[\"マージ結果を保存\"],\"m16xKo\":[\"追加\"],\"nabda1\":[\"カードを削除\"],\"nfhh60\":[\"優先度スイムレーンを編集可能にしますか？\"],\"njJFtc\":[\"Delete comment\"],\"o7J4JM\":[\"フィルター\"],\"o8va6N\":[\"Restored\"],\"ojKCLU\":[\"担当者\"],\"p9yTeb\":[\"並べ替え：タイトル\"],\"pKKcSl\":[\"Show resolved thread\"],\"pKztsX\":[\"フルエディターで開く\"],\"pdVZUg\":[\"WIP \",[\"0\"]],\"pnrmSP\":[\"新規カード\"],\"pwN6Ae\":[\"列を折りたたむ\"],\"pzutoc\":[\"イタリック\"],\"qpGDiV\":[\"スイムレーン ID をコピー\"],\"rF8SEQ\":[\"Edit comment\"],\"rRubBJ\":[\"スイムレーンの詳細\"],\"rdUucN\":[\"プレビュー\"],\"rvpMpc\":[\"ステータスを管理\"],\"sCzmvQ\":[\"枚のカード\"],\"sQpDn6\":[\"全画面表示を終了\"],\"sujToP\":[\"Parent\"],\"tF-_sn\":[[\"cardCount\",\"plural\",{\"one\":[\"#\",\" 件のカード\"],\"other\":[\"#\",\" 件のカード\"]}]],\"tK2x9T\":[\"⚠ \",[\"0\"],\" 件の競合\",[\"1\"],\"を解決中\"],\"tYS8HY\":[\"ステータス列は、列またはスイムレーンとして使用中でも管理できます。\"],\"t_YqKh\":[\"Remove\"],\"tfDRzk\":[\"Save\"],\"u2IprG\":[\"カードのタイトル（Enter で追加、Esc でキャンセル）\"],\"uAP6ov\":[\"スイムレーンを削除\"],\"uAQUqI\":[\"ステータス\"],\"uH1U8v\":[\"スイムレーンを管理\"],\"uWPalN\":[\"スイムレーン名「\",[\"0\"],\"」が重複しています。名前は一意にしてください。\"],\"uaR_cz\":[[\"total\",\"plural\",{\"one\":[\"#\",\" 件のカード\"],\"other\":[\"#\",\" 件のカード\"]}]],\"ucJg3u\":[\"Swimlane: Status\"],\"vIKvqQ\":[[\"missingCount\"],\"枚のカードが削除済みのスイムレーンを参照しています。\"],\"vMTOsC\":[\"担当者スイムレーンを編集可能にしますか？\"],\"vfYjJ_\":[\"コピーに失敗しました。\"],\"w7E-FA\":[\"Unsafe link blocked: \",[\"url\"]],\"w_Sphq\":[\"Attachments\"],\"wf6Djn\":[\"イタリック (Ctrl+I)\"],\"wtw-au\":[\"完了列に設定\"],\"wwu18a\":[\"アイコン\"],\"x52RAh\":[\"Blocked by \",[\"blockedCount\"],\" unfinished card(s)\"],\"xDsmP9\":[\"Agenda\"],\"xUOPoQ\":[\"使用状況\"],\"y1eoq1\":[\"リンクをコピー\"],\"y9cj46\":[\"グループ：優先度\"],\"yEbJGs\":[\"+ Add field\"],\"ybGQtY\":[\"← リストに戻る\"],\"yz7wBu\":[\"閉じる\"],\"yzF66j\":[\"リンク\"],\"zOc0vf\":[\"アイコンなし\"],\"zga9sT\":[\"OK\"]}"),
+	ko: JSON.parse("{\"--lIxB\":[\"Blocked by\"],\"-b7T3G\":[\"Updated\"],\"1718Q-\":[\"Issues\"],\"1DBGsz\":[\"노트\"],\"1YABGm\":[\"링크 (Ctrl+K)\"],\"1hKEom\":[\"우선순위\"],\"1lWHP7\":[\"unsafe\"],\"1nUGn5\":[\"Add status\"],\"1xwZj_\":[\"Previous month\"],\"23yqV0\":[\"Show affected cards\"],\"2BPVq8\":[\"Reorder \",[\"0\"]],\"2wxgft\":[\"이름 변경\"],\"3CtQL6\":[\"Choose another swimlane, then update the cards first.\"],\"3Ib6FN\":[\"Move down\"],\"3qkggm\":[\"전체 화면\"],\"4NY8B5\":[\"Swimlanes to create\"],\"4gdyen\":[\"로컈 (내 것)\"],\"4hJhzz\":[\"테이블\"],\"54sFiP\":[\"flowchart TD\\n  A[시작] --> B[끝]\"],\"5Q_DQ6\":[\"인라인 코드\"],\"66g_UW\":[\"Collapse resolved thread\"],\"6V3Ea3\":[\"Copied\"],\"6YtxFj\":[\"Name\"],\"6buwPb\":[\"Board settings\"],\"79Yvzu\":[\"Swimlane name\"],\"7VpPHA\":[\"확인\"],\"7dZyQU\":[\"Previous swimlane missing\"],\"7s3WlU\":[\"Blocks\"],\"8PifYj\":[\"Mermaid 다이어그램\"],\"8Tg_JR\":[\"Custom\"],\"8enUYo\":[\"Set status\"],\"8hSn0h\":[\"결과 (편집 가능)\"],\"8lE269\":[\"정렬: 수동\"],\"9OEgyT\":[\"Add reaction\"],\"9OH3W0\":[\"Resolve thread\"],\"9gxam6\":[\"이 Draw.io 다이어그램을 렌더링할 수 없습니다.\"],\"AC9Gkf\":[\"열 펼치기\"],\"ANe5kn\":[\"Updating cards…\"],\"AS5WO9\":[\"이 PDF를 렌더링할 수 없습니다.\"],\"ATIq3Z\":[\"Swimlane: Custom\"],\"AVreQ5\":[\"드래그하여 크기 조정\"],\"AgvHni\":[\"열 추가\"],\"AjVXBS\":[\"Calendar\"],\"AoHpbt\":[\"Show cards with missing swimlanes\"],\"AxAubu\":[\"그룹: 담당자\"],\"B5TUF-\":[\"Priority…\"],\"BfMZ7w\":[\"클라우드 수낙\"],\"BiWlsk\":[\"Status…\"],\"BnmEvM\":[\"템플릿으로 저장\"],\"C6-ZRl\":[\"Someone\"],\"CXTDT_\":[\"Resume swimlane conversion?\"],\"CxcMyt\":[[\"0\"],\" moved to position \",[\"1\"],\" of \",[\"2\"],\".\"],\"DGEEOQ\":[\"Swimlane actions\"],\"DPfwMq\":[\"Done\"],\"Db4W3_\":[\"Statuses\"],\"EWPtMO\":[\"코드\"],\"EbMPZJ\":[\"미할당\"],\"FBIuPX\":[\"Clear selection\"],\"FQylcT\":[\"Swimlane: Missing\"],\"G4qrLy\":[\"완료 열 해제\"],\"GKu3m4\":[\"라벨 없음\"],\"Gpfctt\":[\"마감\"],\"HTKRVa\":[\"Do not close this dialog.\"],\"H_SQFv\":[\"색상 없음\"],\"HajiZl\":[\"Month\"],\"HrmW6B\":[\"Add a comment… (Markdown supported)\"],\"I6SWEy\":[\"스플릿\"],\"ICip_B\":[\"클라우드 (원격)\"],\"IdMoS6\":[\"Create your first swimlane\"],\"Ik60OC\":[\"에디터에서 열기\"],\"ImOQa9\":[\"Reply\"],\"Iw6WJa\":[\"WIP 한도 설정\"],\"JTYvAw\":[\"카드 검색\"],\"KAlhe_\":[\"카드 업데이트가 저장되지 않아 변환을 중지했습니다. 새로 고친 후 다시 시도하세요.\"],\"KCszT6\":[\"Add swimlane\"],\"KFiYGY\":[\"Change color\"],\"KGi3u9\":[\"Drag to reorder\"],\"K_F6pa\":[\"저장 중…\"],\"Kd6eg7\":[\"Moving cards…\"],\"KeYrQ5\":[\"Remove your reaction\"],\"KjXDqG\":[\"Swimlane: None\"],\"KmydK6\":[\"굵게\"],\"KpnwJK\":[\"Delete \\\"\",[\"0\"],\"\\\"?\"],\"KvW1VO\":[\"Draw.io 다이어그램\"],\"LQn6-8\":[\"로컈 수낙\"],\"MHrjPM\":[\"제목\"],\"MYx830\":[\"This empty swimlane will be removed from the board.\"],\"Mm72la\":[\"No comments yet\"],\"MmYpxT\":[\"Reply…\"],\"NBdIgR\":[\"Comment\"],\"NYTPDY\":[\"Move cards and delete\"],\"O6H89R\":[\"Resolved\"],\"ONWvwQ\":[\"Upload\"],\"OR4WQZ\":[\"+ Add sub-card\"],\"OYHzN1\":[\"태그\"],\"OepdfE\":[\"그룹: 상태\"],\"P5cvAA\":[\"Status name\"],\"PUeYA1\":[\"Create editable swimlanes\"],\"Pvpx7b\":[\"Paste a URL or path\"],\"Q2mGA7\":[\"필터 지우기\"],\"QD8opX\":[\"보드\"],\"QlsPZy\":[\"Mermaid 구문을 작성하면 다이어그램이 표시됩니다.\"],\"QmZYQP\":[\"Unresolve thread\"],\"QyioBP\":[\"Move up\"],\"RbsNko\":[[\"cardCount\"],\" card(s) currently use this swimlane.\"],\"RfEZH1\":[\"JType will create independent swimlanes from the current assignee rows. Card assignee values will stay unchanged.\"],\"RgO4DX\":[\"Duplicate lane ID \\\"\",[\"0\"],\"\\\". The first definition is used.\"],\"RlLl3G\":[\"Actions for \",[\"0\"]],\"S5Qbb1\":[\"쉼표로 구분\"],\"SavliD\":[[\"danglingCount\"],\" card(s) refer to deleted swimlanes.\"],\"T_nAzC\":[\"JType will reuse the existing lane IDs and continue unfinished card updates.\"],\"TdfEV7\":[\"Archived\"],\"Th4mIx\":[[\"0\"],\" 레인 세부 정보\"],\"U0hizX\":[\"Swimlane color\"],\"UDb2YD\":[\"React\"],\"UQOvxZ\":[\"빈 카드\"],\"URmyfc\":[\"Details\"],\"Ubl2by\":[\"Move right\"],\"VNa_N2\":[\"이 파일 형식은 아직 미리볼 수 없습니다.\"],\"VbyRUy\":[\"Comments\"],\"WEYdDv\":[\"Recommended\"],\"WSP6v1\":[\"정렬: 우선순위\"],\"X03-eC\":[\"값을 입력해 주세요.\"],\"XJOV1Y\":[\"Activity\"],\"XklovM\":[\"Working…\"],\"Y8bR2a\":[\"Delete only the swimlane. Card references remain recoverable.\"],\"YHjvGb\":[\"Status actions\"],\"Ya7bZl\":[\"다이어그램 오류\"],\"Zot9XS\":[\"카드 없음\"],\"_5CsXX\":[\"완료 열\"],\"_EsjyQ\":[\"이것 사용\"],\"_TJomP\":[\"Move cards before deleting\"],\"_YbTQZ\":[\"JType will create independent swimlanes from the current priority rows. Card priority values will stay unchanged.\"],\"a6uhHr\":[\"굵게 (Ctrl+B)\"],\"aDvLhk\":[\"Add a comment…\"],\"abUZlY\":[\"세부정보 추가...\"],\"agOeRN\":[\"이 API 명세를 렌더링할 수 없습니다.\"],\"b4hVKD\":[\"색상 열\"],\"bwOqWD\":[[\"0\"],\" of \",[\"1\"],\" sub-cards done\"],\"by_svU\":[\"Keep cards in Unassigned\"],\"bzjBcL\":[\"Sub-cards\"],\"c61_Lv\":[\"Lane ID\"],\"cJ44lA\":[\"Unscheduled\"],\"cUt8yN\":[\"Changes save automatically.\"],\"cfaWH-\":[\"라벨 추가\"],\"cnGeoo\":[\"삭제\"],\"d-F6q9\":[\"Created\"],\"d5z6xQ\":[\"WIP 한도 \",[\"0\"]],\"dEgA5A\":[\"취소\"],\"ecUA8p\":[\"Today\"],\"euc6Ns\":[\"복제\"],\"fEqHZq\":[\"Open sub-card\"],\"fFAIng\":[[\"0\",\"plural\",{\"one\":[\"카드 \",\"#\",\"개\"],\"other\":[\"카드 \",\"#\",\"개\"]}]],\"fVlS4-\":[\"Swimlane\"],\"fYcKtB\":[\"정렬: 마감\"],\"fvImQM\":[[\"0\"],\" selected\"],\"g8JmSC\":[\"Next month\"],\"gANddk\":[\"Uploading…\"],\"gLDJuJ\":[\"제목 없는 카드\"],\"gzZWjO\":[\"No assigned values to convert.\"],\"hNmOZ7\":[\"Set priority\"],\"he3ygx\":[\"Copy\"],\"hh4sEG\":[\"Relates\"],\"hnK1gR\":[\"PDF 문서\"],\"hyVzII\":[\"Swimlanes\"],\"i4_LY_\":[\"작성\"],\"iSLA_r\":[\"Move left\"],\"iTylMl\":[\"템플릿\"],\"iYVqZq\":[\"열 이름\"],\"jUbC3Z\":[\"Swimlane: Priority\"],\"jZlrte\":[\"색상\"],\"jzy1b8\":[\"Make swimlanes editable\"],\"k4b5_X\":[\"edited\"],\"kZlRKE\":[\"Mermaid 소스\"],\"kryGs-\":[\"카드\"],\"lCF0wC\":[\"새로고침\"],\"lEQWoB\":[\"Add stable horizontal groups that stay visible even when they have no cards.\"],\"lHxVTh\":[\"Swimlane: Assignee\"],\"lUeOk0\":[\"Horizontal groups for this board. Names can change; card mapping stays attached.\"],\"l_g7se\":[\"Resume conversion\"],\"ltF1xa\":[\"병합 결과 저장\"],\"m16xKo\":[\"Add\"],\"nabda1\":[\"카드 삭제\"],\"nfhh60\":[\"Make priority swimlanes editable?\"],\"njJFtc\":[\"Delete comment\"],\"o7J4JM\":[\"필터\"],\"o8va6N\":[\"Restored\"],\"ojKCLU\":[\"담당자\"],\"p9yTeb\":[\"정렬: 제목\"],\"pKKcSl\":[\"Show resolved thread\"],\"pKztsX\":[\"전체 에디터에서 열기\"],\"pdVZUg\":[\"WIP \",[\"0\"]],\"pnrmSP\":[\"새 카드\"],\"pwN6Ae\":[\"열 접기\"],\"pzutoc\":[\"기울임꼴\"],\"qpGDiV\":[\"Copy lane ID\"],\"rF8SEQ\":[\"Edit comment\"],\"rRubBJ\":[\"Lane details\"],\"rdUucN\":[\"미리보기\"],\"rvpMpc\":[\"Manage statuses\"],\"sCzmvQ\":[\"개 카드\"],\"sQpDn6\":[\"전체 화면 종료\"],\"sujToP\":[\"Parent\"],\"tF-_sn\":[[\"cardCount\",\"plural\",{\"one\":[\"카드 \",\"#\",\"개\"],\"other\":[\"카드 \",\"#\",\"개\"]}]],\"tK2x9T\":[\"⚠ 해결할 충돌 \",[\"0\"],\"건\",[\"1\"]],\"tYS8HY\":[\"Status columns stay available when they are used as columns or swimlanes.\"],\"t_YqKh\":[\"Remove\"],\"tfDRzk\":[\"Save\"],\"u2IprG\":[\"카드 제목 (Enter로 추가, Esc로 취소)\"],\"uAP6ov\":[\"Delete swimlane\"],\"uAQUqI\":[\"상태\"],\"uH1U8v\":[\"Manage swimlanes\"],\"uWPalN\":[\"Duplicate swimlane name \\\"\",[\"0\"],\"\\\". Names should be unique.\"],\"uaR_cz\":[[\"total\",\"plural\",{\"one\":[\"카드 \",\"#\",\"개\"],\"other\":[\"카드 \",\"#\",\"개\"]}]],\"ucJg3u\":[\"Swimlane: Status\"],\"vIKvqQ\":[[\"missingCount\"],\" card(s) refer to deleted swimlanes.\"],\"vMTOsC\":[\"Make assignee swimlanes editable?\"],\"vfYjJ_\":[\"복사하지 못했습니다.\"],\"w7E-FA\":[\"Unsafe link blocked: \",[\"url\"]],\"w_Sphq\":[\"Attachments\"],\"wf6Djn\":[\"기울임꼴 (Ctrl+I)\"],\"wtw-au\":[\"완료 열로 설정\"],\"wwu18a\":[\"아이콘\"],\"x52RAh\":[\"Blocked by \",[\"blockedCount\"],\" unfinished card(s)\"],\"xDsmP9\":[\"Agenda\"],\"xUOPoQ\":[\"Used by\"],\"y1eoq1\":[\"링크 복사\"],\"y9cj46\":[\"그룹: 우선순위\"],\"yEbJGs\":[\"+ Add field\"],\"ybGQtY\":[\"← 목록으로\"],\"yz7wBu\":[\"닫기\"],\"yzF66j\":[\"링크\"],\"zOc0vf\":[\"아이콘 없음\"],\"zga9sT\":[\"확인\"]}")
 };
-function om(e) {
-	B.load(e, am[e] ?? am.en), B.activate(e);
+function pm(e) {
+	B.load(e, fm[e] ?? fm.en), B.activate(e);
 }
 //#endregion
 //#region src/strings.ts
-var sm = {
+var mm = {
 	en: {
 		loading: "Loading board…",
 		live: "Live",
@@ -11012,18 +11015,18 @@ var sm = {
 		errGeneric: (e) => `보드를 불러오지 못했습니다: ${e}`
 	}
 };
-function cm(e) {
-	return sm[e] ?? sm.en;
+function hm(e) {
+	return mm[e] ?? mm.en;
 }
 //#endregion
 //#region src/JTypeBoard.tsx
-function lm() {
+function gm() {
 	return Math.random().toString(36).slice(2, 6);
 }
-function um({ workspaceId: e, boardRef: t, baseUrl: n, token: r, client: i, readOnly: a = !1, live: o = !0, pollIntervalMs: s = 3e4, onCardOpen: c, onConnectionChange: l, locale: u, className: d, style: p }) {
-	let m = u ?? "en", h = cm(m), _ = v(null);
-	_.current !== m && (_.current = m, om(m));
-	let b = i && (n || r) ? h.errPropsBoth : !i && (!n || !r) ? h.errPropsNone : null, w = g(() => b ? null : i || Jp({
+function _m({ workspaceId: e, boardRef: t, baseUrl: n, token: r, client: i, readOnly: a = !1, live: o = !0, pollIntervalMs: s = 3e4, onCardOpen: c, onConnectionChange: l, locale: u, className: d, style: p }) {
+	let m = u ?? "en", h = hm(m), _ = v(null);
+	_.current !== m && (_.current = m, pm(m));
+	let b = i && (n || r) ? h.errPropsBoth : !i && (!n || !r) ? h.errPropsNone : null, w = g(() => b ? null : i || tm({
 		baseUrl: n,
 		token: r
 	}), [
@@ -11037,7 +11040,7 @@ function um({ workspaceId: e, boardRef: t, baseUrl: n, token: r, client: i, read
 	ie.current = h;
 	let ae = (e) => {
 		let n = ie.current;
-		return e instanceof Yp ? e.code === "board_not_found" ? n.errBoardNotFound(t) : e.code === "board_ref_ambiguous" ? n.errBoardAmbiguous(t, e.candidates) : e.code === "board_config_invalid" ? n.errBoardConfigInvalid : n.errGeneric(e.message) : e instanceof qp ? e.status === 401 || e.status === 403 ? n.errUnauthorized : e.status === 0 && e.code === "network_error" ? n.errNetwork : n.errGeneric(e.code) : n.errGeneric(e instanceof Error ? e.message : String(e));
+		return e instanceof nm ? e.code === "board_not_found" ? n.errBoardNotFound(t) : e.code === "board_ref_ambiguous" ? n.errBoardAmbiguous(t, e.candidates) : e.code === "board_config_invalid" ? n.errBoardConfigInvalid : n.errGeneric(e.message) : e instanceof em ? e.status === 401 || e.status === 403 ? n.errUnauthorized : e.status === 0 && e.code === "network_error" ? n.errNetwork : n.errGeneric(e.code) : n.errGeneric(e instanceof Error ? e.message : String(e));
 	}, oe = v(ae);
 	oe.current = ae, f(() => {
 		if (!w) return;
@@ -11047,7 +11050,7 @@ function um({ workspaceId: e, boardRef: t, baseUrl: n, token: r, client: i, read
 			n || (N(e), ne.current !== e && (ne.current = e, re.current?.(e)));
 		}, d = async () => {
 			try {
-				let r = await rm(w, e, t, te.current);
+				let r = await um(w, e, t, te.current);
 				return n ? null : (R.current = r, D(r), k(""), j(""), u(c ? "live" : "polling"), r);
 			} catch (e) {
 				if (n) return null;
@@ -11101,11 +11104,21 @@ function um({ workspaceId: e, boardRef: t, baseUrl: n, token: r, client: i, read
 				baseContentHash: i?.contentHash,
 				baseContent: i?.content
 			});
-			i && r.metaByPath.set(t, {
-				...i,
-				content: n,
-				contentHash: a.contentHash
-			});
+			if (i) {
+				let e = R.current;
+				if (!e) return;
+				let r = new Map(e.metaByPath);
+				r.set(t, {
+					...r.get(t) ?? i,
+					content: n,
+					contentHash: a.contentHash
+				});
+				let o = {
+					...e,
+					metaByPath: r
+				};
+				R.current = o, D((t) => t === e ? o : t);
+			}
 		};
 		return {
 			refresh: () => void t(),
@@ -11114,7 +11127,7 @@ function um({ workspaceId: e, boardRef: t, baseUrl: n, token: r, client: i, read
 					let r = R.current;
 					if (!r || !w) return;
 					if (a) {
-						L((e) => nm(e, n));
+						L((e) => lm(e, n));
 						return;
 					}
 					let i = {
@@ -11141,10 +11154,10 @@ function um({ workspaceId: e, boardRef: t, baseUrl: n, token: r, client: i, read
 						position: String(o)
 					};
 					a !== "status" && (s[a] = n);
-					let c = `${i.boardDir}/${pp(r)}.md`;
-					return i.metaByPath.has(c) && (c = `${i.boardDir}/${pp(r)}-${lm()}.md`), await w.saveDocument(e, {
+					let c = `${i.boardDir}/${vp(r)}.md`;
+					return i.metaByPath.has(c) && (c = `${i.boardDir}/${vp(r)}-${gm()}.md`), await w.saveDocument(e, {
 						relativePath: c,
-						content: Hf("", s)
+						content: Kf("", s)
 					}), await t(), c;
 				} catch (e) {
 					j(oe.current(e));
@@ -11153,16 +11166,19 @@ function um({ workspaceId: e, boardRef: t, baseUrl: n, token: r, client: i, read
 			},
 			updateCard: (e, i) => n(async () => {
 				let n = R.current, a = n?.metaByPath.get(e);
-				!n || !a || (await r(e, em(a.content, i)), await t());
+				!n || !a || (await r(e, sm(a.content, i)), await t());
 			}),
 			updateCards: async (e, n) => {
 				try {
+					if (a) return;
 					let i = R.current;
 					if (!i) return;
-					let a = 0;
+					let o = e.find((e) => !i.metaByPath.has(e.cardId));
+					if (o) throw Error(`Card metadata is missing for ${o.cardId}.`);
+					let s = 0;
 					for (let t of e) {
-						let o = i.metaByPath.get(t.cardId);
-						o && (await r(t.cardId, em(o.content, t.patch)), a += 1, n?.(a, e.length));
+						let a = i.metaByPath.get(t.cardId);
+						await r(t.cardId, sm(a.content, t.patch)), s += 1, n?.(s, e.length);
 					}
 					await t();
 				} catch (e) {
@@ -11177,8 +11193,8 @@ function um({ workspaceId: e, boardRef: t, baseUrl: n, token: r, client: i, read
 				if (o !== "status") {
 					let a = n.cards.find((t) => t.id === e);
 					if ((o === "priority" ? a?.priority || "none" : a?.assignee || "") === i) return;
-					let { data: c, body: l } = Vf(s.content);
-					await r(e, Hf(l, {
+					let { data: c, body: l } = Gf(s.content);
+					await r(e, Kf(l, {
 						...c,
 						[o]: i
 					})), await t();
@@ -11191,8 +11207,8 @@ function um({ workspaceId: e, boardRef: t, baseUrl: n, token: r, client: i, read
 					if (!a) continue;
 					let o = n.metaByPath.get(a.id);
 					if (!o || a.id !== e && a.position === t && a.columnKey === i) continue;
-					let { data: s, body: l } = Vf(o.content);
-					await r(a.id, Hf(l, {
+					let { data: s, body: l } = Gf(o.content);
+					await r(a.id, Kf(l, {
 						...s,
 						status: i,
 						position: String(t)
@@ -11224,8 +11240,8 @@ function um({ workspaceId: e, boardRef: t, baseUrl: n, token: r, client: i, read
 		E,
 		a,
 		I
-	]), le = g(() => E && ce ? Qp(ce, E.boardDir) : null, [E, ce]), ue = P ? E?.cards.find((e) => e.id === P) ?? null : null, de = c ?? ((e) => F(e.id)), fe;
-	return fe = b ? /* @__PURE__ */ S(dm, { message: b }) : !E && O ? /* @__PURE__ */ S(dm, {
+	]), le = g(() => E && ce ? am(ce, E.boardDir) : null, [E, ce]), ue = P ? E?.cards.find((e) => e.id === P) ?? null : null, de = c ?? ((e) => F(e.id)), fe;
+	return fe = b ? /* @__PURE__ */ S(vm, { message: b }) : !E && O ? /* @__PURE__ */ S(vm, {
 		message: O,
 		retryLabel: h.retry,
 		onRetry: () => void z.current?.()
@@ -11235,7 +11251,7 @@ function um({ workspaceId: e, boardRef: t, baseUrl: n, token: r, client: i, read
 	}) : /* @__PURE__ */ C(x, { children: [
 		/* @__PURE__ */ S(ee, {
 			i18n: B,
-			children: /* @__PURE__ */ S(Kp, {
+			children: /* @__PURE__ */ S($p, {
 				config: le,
 				cards: E.cards,
 				actions: se,
@@ -11245,13 +11261,13 @@ function um({ workspaceId: e, boardRef: t, baseUrl: n, token: r, client: i, read
 				portalClassName: "jtb-scope"
 			})
 		}),
-		ue && !c && ce && /* @__PURE__ */ S(im, {
+		ue && !c && ce && /* @__PURE__ */ S(dm, {
 			card: ue,
 			config: ce,
 			strings: h,
 			onClose: () => F(null)
 		}),
-		/* @__PURE__ */ S(fm, {
+		/* @__PURE__ */ S(ym, {
 			state: M,
 			strings: h,
 			pollSecs: Math.round(T / 1e3),
@@ -11264,7 +11280,7 @@ function um({ workspaceId: e, boardRef: t, baseUrl: n, token: r, client: i, read
 		children: fe
 	});
 }
-function dm({ message: e, retryLabel: t, onRetry: n }) {
+function vm({ message: e, retryLabel: t, onRetry: n }) {
 	return /* @__PURE__ */ C("div", {
 		className: "flex h-full flex-col items-center justify-center gap-3 bg-[#fbfdfb] p-8 text-center",
 		children: [
@@ -11294,7 +11310,7 @@ function dm({ message: e, retryLabel: t, onRetry: n }) {
 		]
 	});
 }
-function fm({ state: e, strings: t, pollSecs: n, liveWanted: r }) {
+function ym({ state: e, strings: t, pollSecs: n, liveWanted: r }) {
 	let i = e === "live" ? t.live : e === "polling" ? t.polling(n) : t.connectionError, a = e === "live" ? "bg-emerald-500" : e === "polling" ? "bg-stone-400" : "bg-red-500";
 	return /* @__PURE__ */ C("div", {
 		className: "pointer-events-none absolute bottom-2 right-2 z-40 inline-flex items-center gap-1.5 rounded-full border border-black/[0.06] bg-white/90 px-2 py-0.5 text-[11px] text-stone-500 shadow-sm",
@@ -11306,4 +11322,4 @@ function fm({ state: e, strings: t, pollSecs: n, liveWanted: r }) {
 	});
 }
 //#endregion
-export { qp as JTypeApiError, um as JTypeBoard, Yp as JTypeBoardError, Jp as createJTypeClient, Xp as resolveBoardDoc };
+export { em as JTypeApiError, _m as JTypeBoard, nm as JTypeBoardError, tm as createJTypeClient, rm as resolveBoardDoc };

@@ -136,6 +136,37 @@ export function serializeAttachments(list: string[]): string {
 }
 
 /**
+ * Frontmatter owned by the normalized card model. Custom fields must never
+ * overwrite these keys, including aliases used by component-level patches.
+ */
+const RESERVED_CARD_FRONTMATTER_KEYS = new Set([
+  "id",
+  "board",
+  "ticket",
+  "title",
+  "status",
+  "columnKey",
+  "position",
+  "priority",
+  "assignee",
+  "swimlane",
+  "swimlaneKey",
+  "due",
+  "icon",
+  "tags",
+  "attachments",
+  "notes",
+  "taskDone",
+  "taskTotal",
+  "excerpt",
+  "blocked_by",
+  "blockedBy",
+  "blocks",
+  "relates",
+  "parent",
+]);
+
+/**
  * Apply a normalized card patch to Markdown frontmatter. Keeping this mapping
  * shared prevents Desktop, Web, and board-react from drifting on core fields.
  */
@@ -152,7 +183,9 @@ export function applyBoardCardPatch(content: string, patch: Partial<BoardViewCar
   if (patch.tags !== undefined) next.tags = patch.tags.map((tag) => tag.label).join(", ");
   if (patch.attachments !== undefined) next.attachments = serializeAttachments(patch.attachments);
   if (patch.custom !== undefined) {
-    for (const [key, value] of Object.entries(patch.custom)) next[key] = value ?? "";
+    for (const [key, value] of Object.entries(patch.custom)) {
+      if (!RESERVED_CARD_FRONTMATTER_KEYS.has(key)) next[key] = value ?? "";
+    }
   }
   if (patch.blockedBy !== undefined) next.blocked_by = serializeLinks(patch.blockedBy);
   if (patch.blocks !== undefined) next.blocks = serializeLinks(patch.blocks);
@@ -463,6 +496,7 @@ export function newSwimlaneKey(name: string, existingKeys: Iterable<string> = []
   return `${prefix}_${Date.now().toString(36)}`;
 }
 
+/** Validate a user-facing lane name against length and board-local uniqueness rules. */
 export function validateSwimlaneName(
   name: string,
   lanes: BoardSwimlane[],
@@ -629,6 +663,7 @@ export function partitionSwimlanes(
   return grid;
 }
 
+/** Test one card against a normalized board filter, including dangling lane references. */
 export function cardMatchesFilter(
   card: BoardViewCard,
   filter: CardFilter | null,
@@ -654,6 +689,7 @@ export function cardMatchesSearch(card: BoardViewCard, q: string): boolean {
   return false;
 }
 
+/** Apply the board's text query and structured filter to its authoritative card list. */
 export function visibleCards(
   cards: BoardViewCard[],
   search: string,

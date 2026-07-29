@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 
 type HarnessState = {
   config: {
+    columns?: Array<{ key: string }>;
     swimlaneBy?: string;
     swimlanes?: Array<{ key: string; name: string; color?: string | null }>;
     swimlaneMigration?: unknown;
@@ -11,6 +12,11 @@ type HarnessState = {
     title: string;
     priority?: string | null;
     swimlaneKey?: string | null;
+  }>;
+  actions: Array<{
+    type: "setConfig" | "updateCards";
+    swimlaneKeys?: string[];
+    cardIds?: string[];
   }>;
 };
 
@@ -97,6 +103,35 @@ test("move-before-delete updates cards before removing the lane", async ({ page 
   await expect
     .poll(async () => (await state(page)).cards.find((card) => card.id.endsWith("analytics.md"))?.swimlaneKey)
     .toBeNull();
+
+  const actionLog = (await state(page)).actions;
+  const cardMoveIndex = actionLog.findIndex(
+    (action) =>
+      action.type === "updateCards" &&
+      action.cardIds?.some((cardId) => cardId.endsWith("analytics.md")),
+  );
+  const laneRemovalIndex = actionLog.findIndex(
+    (action) =>
+      action.type === "setConfig" &&
+      action.swimlaneKeys != null &&
+      !action.swimlaneKeys.includes("lane_growth_22222222"),
+  );
+  expect(cardMoveIndex).toBeGreaterThanOrEqual(0);
+  expect(laneRemovalIndex).toBeGreaterThan(cardMoveIndex);
+});
+
+test("status swimlane actions reorder the status definitions, not the column groups", async ({ page }) => {
+  await openHarness(page);
+  await page.locator("select").first().selectOption("priority");
+  const swimlaneSelect = page.locator("select").filter({ has: page.locator('option[value="custom"]') });
+  await swimlaneSelect.selectOption("status");
+
+  await page.getByRole("button", { name: "Actions for To do" }).click();
+  await page.getByRole("menuitem", { name: "Move down" }).click();
+
+  await expect
+    .poll(async () => (await state(page)).config.columns?.map((column) => column.key))
+    .toEqual(["doing", "todo", "done"]);
 });
 
 test("priority conversion keeps priority and finishes with reusable custom lane IDs", async ({ page }) => {
@@ -116,4 +151,25 @@ test("priority conversion keeps priority and finishes with reusable custom lane 
   expect(high?.priority).toBe("high");
   expect(high?.swimlaneKey).toMatch(/^lane_high_/);
   expect(final.config.swimlanes?.some((lane) => lane.key === high?.swimlaneKey)).toBe(true);
+});
+
+test("conversion stops after bounded retries when card writes do not persist", async ({ page }) => {
+  await page.addInitScript(() => {
+    (window as unknown as { __BOARD_TEST_DROP_UPDATES__: boolean }).__BOARD_TEST_DROP_UPDATES__ = true;
+  });
+  await openHarness(page);
+  const swimlaneSelect = page.locator("select").filter({ has: page.locator('option[value="custom"]') });
+  await swimlaneSelect.selectOption("priority");
+  await page.getByRole("button", { name: "Make swimlanes editable" }).click();
+
+  const dialog = page.getByRole("dialog", { name: "Make priority swimlanes editable?" });
+  await dialog.getByRole("button", { name: "Create editable swimlanes" }).click();
+  await expect(page.getByRole("dialog").getByRole("alert")).toContainText(
+    "Conversion stopped because card updates did not persist.",
+  );
+
+  const updateAttempts = (await state(page)).actions.filter(
+    (action) => action.type === "updateCards",
+  );
+  expect(updateAttempts).toHaveLength(2);
 });

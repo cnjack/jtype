@@ -1,5 +1,5 @@
 import { t } from "@lingui/core/macro";
-import { Trans } from "@lingui/react/macro";
+import { Plural, Trans } from "@lingui/react/macro";
 import {
   Dialog,
   DialogBackdrop,
@@ -45,8 +45,6 @@ export function SwimlaneConversionDialog({
   const close = () => {
     if (!busy) onClose();
   };
-  const total = rows.reduce((sum, row) => sum + row.cardCount, 0);
-
   return (
     <Dialog open={open} onClose={close} className={`relative z-50${portal}`}>
       <DialogBackdrop className={`fixed inset-0 bg-stone-950/30 backdrop-blur-sm${portal}`} />
@@ -83,11 +81,11 @@ export function SwimlaneConversionDialog({
                     {row.name}
                   </span>
                   <span className="tabular-nums text-[11px] text-brand-gray">
-                    {row.cardCount} <Trans>cards</Trans>
+                    <Plural value={row.cardCount} one="# card" other="# cards" />
                   </span>
                 </li>
               ))}
-              {total < 1 && (
+              {rows.length === 0 && (
                 <li className="py-4 text-center text-xs text-brand-gray">
                   <Trans>No assigned values to convert.</Trans>
                 </li>

@@ -6,28 +6,18 @@ import {
   DialogBackdrop,
   DialogPanel,
   DialogTitle,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuItems,
 } from "@headlessui/react";
 import {
-  ArrowDownIcon,
-  ArrowUpIcon,
   CheckCircleIcon,
-  EllipsisHorizontalIcon,
-  FunnelIcon,
-  PencilIcon,
   PlusIcon,
   RectangleGroupIcon,
-  TrashIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import {
-  COLUMN_COLORS,
   DEFAULT_DONE_COLUMN,
   type BoardViewConfig,
 } from "../../lib/board";
+import { StatusActionsMenu } from "./StatusActionsMenu";
 import type { BoardActions } from "./types";
 
 export function StatusManagerDialog({
@@ -47,12 +37,6 @@ export function StatusManagerDialog({
   const [draft, setDraft] = useState("");
   const portal = portalClassName ? ` ${portalClassName}` : "";
   const doneKey = config.doneColumn ?? DEFAULT_DONE_COLUMN;
-
-  const move = (index: number, delta: -1 | 1) => {
-    const target = config.columns[index + delta];
-    const current = config.columns[index];
-    if (current && target) void actions.reorderColumns?.(current.key, target.key);
-  };
 
   return (
     <Dialog open={open} onClose={onClose} className={`relative z-40${portal}`}>
@@ -84,7 +68,7 @@ export function StatusManagerDialog({
 
           <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
             <ul className="space-y-1" aria-label={t`Statuses`}>
-              {config.columns.map((column, index) => {
+              {config.columns.map((column) => {
                 const isDone = doneKey === column.key;
                 return (
                   <li key={column.key} className="group flex min-h-12 items-center gap-2 rounded-xl px-2 hover:bg-stone-50">
@@ -101,132 +85,15 @@ export function StatusManagerDialog({
                       </span>
                     )}
                     {isDone && <CheckCircleIcon className="h-4 w-4 text-emerald-500" title={t`Done column`} />}
-                    <Menu as="div" className="relative">
-                      <MenuButton
-                        title={t`Status actions`}
-                        aria-label={t`Actions for ${column.name}`}
-                        className="flex h-9 w-9 items-center justify-center rounded-lg text-stone-400 hover:bg-white hover:text-stone-600"
-                      >
-                        <EllipsisHorizontalIcon className="h-4 w-4" />
-                      </MenuButton>
-                      <MenuItems
-                        anchor="bottom end"
-                        className={`z-50 w-48 rounded-xl border border-line bg-white py-1 text-xs shadow-lg shadow-emerald-950/10 [--anchor-gap:4px] focus:outline-none${portal}`}
-                      >
-                        {actions.renameColumn && (
-                          <MenuItem>
-                            <button
-                              type="button"
-                              onClick={() => void actions.renameColumn?.(column.key)}
-                              className="flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 data-[focus]:bg-stone-100"
-                            >
-                              <PencilIcon className="h-3.5 w-3.5" />
-                              <Trans>Rename</Trans>
-                            </button>
-                          </MenuItem>
-                        )}
-                        {actions.reorderColumns && (
-                          <>
-                            <MenuItem>
-                              <button
-                                type="button"
-                                onClick={() => move(index, -1)}
-                                aria-disabled={index === 0}
-                                className="flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 aria-disabled:opacity-40 data-[focus]:bg-stone-100"
-                              >
-                                <ArrowUpIcon className="h-3.5 w-3.5" />
-                                <Trans>Move up</Trans>
-                              </button>
-                            </MenuItem>
-                            <MenuItem>
-                              <button
-                                type="button"
-                                onClick={() => move(index, 1)}
-                                aria-disabled={index === config.columns.length - 1}
-                                className="flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 aria-disabled:opacity-40 data-[focus]:bg-stone-100"
-                              >
-                                <ArrowDownIcon className="h-3.5 w-3.5" />
-                                <Trans>Move down</Trans>
-                              </button>
-                            </MenuItem>
-                          </>
-                        )}
-                        {actions.toggleDoneColumn && (
-                          <MenuItem>
-                            <button
-                              type="button"
-                              onClick={() => void actions.toggleDoneColumn?.(column.key)}
-                              className="flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 data-[focus]:bg-stone-100"
-                            >
-                              <CheckCircleIcon className="h-3.5 w-3.5" />
-                              {isDone ? <Trans>Unset done column</Trans> : <Trans>Set as done column</Trans>}
-                            </button>
-                          </MenuItem>
-                        )}
-                        {actions.setColumnLimit && (
-                          <MenuItem>
-                            <button
-                              type="button"
-                              onClick={() => void actions.setColumnLimit?.(column.key)}
-                              className="flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 data-[focus]:bg-stone-100"
-                            >
-                              <FunnelIcon className="h-3.5 w-3.5" />
-                              <Trans>Set WIP limit</Trans>
-                            </button>
-                          </MenuItem>
-                        )}
-                        {actions.setColumnColor && (
-                          <>
-                            <div className="my-1 border-t border-line" />
-                            <div className="px-3 py-2">
-                              <span className="text-[11px] text-brand-gray">
-                                <Trans>Color</Trans>
-                              </span>
-                              <div className="mt-2 flex flex-wrap gap-2">
-                                {COLUMN_COLORS.map((color) => (
-                                  <button
-                                    key={color}
-                                    type="button"
-                                    onClick={() => void actions.setColumnColor?.(column.key, color)}
-                                    title={color}
-                                    className={`h-5 w-5 rounded-full ring-1 ring-black/10 ${
-                                      column.color === color ? "ring-2 ring-brand ring-offset-2" : ""
-                                    }`}
-                                    style={{ backgroundColor: color }}
-                                  />
-                                ))}
-                                <button
-                                  type="button"
-                                  onClick={() => void actions.setColumnColor?.(column.key, null)}
-                                  title={t`No color`}
-                                  className="flex h-5 w-5 items-center justify-center rounded-full bg-white ring-1 ring-black/10"
-                                >
-                                  <XMarkIcon className="h-3 w-3 text-stone-400" />
-                                </button>
-                              </div>
-                            </div>
-                          </>
-                        )}
-                        {actions.deleteColumn && (
-                          <>
-                            <div className="my-1 border-t border-line" />
-                            <MenuItem>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  if (config.columns.length > 1) void actions.deleteColumn?.(column.key);
-                                }}
-                                aria-disabled={config.columns.length <= 1}
-                                className="flex w-full items-center gap-2 px-3 py-2 text-left text-red-600 aria-disabled:opacity-40 data-[focus]:bg-red-50"
-                              >
-                                <TrashIcon className="h-3.5 w-3.5" />
-                                <Trans>Delete</Trans>
-                              </button>
-                            </MenuItem>
-                          </>
-                        )}
-                      </MenuItems>
-                    </Menu>
+                    <StatusActionsMenu
+                      column={column}
+                      siblings={config.columns}
+                      actions={actions}
+                      doneKey={doneKey}
+                      orientation="vertical"
+                      portalClassName={portalClassName}
+                      buttonClassName="flex h-9 w-9 items-center justify-center rounded-lg text-stone-400 hover:bg-white hover:text-stone-600"
+                    />
                   </li>
                 );
               })}

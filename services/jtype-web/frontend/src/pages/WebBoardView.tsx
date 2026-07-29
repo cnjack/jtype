@@ -365,10 +365,13 @@ export function WebBoardView({
       updateCards: async (updates, onProgress) => {
         try {
           const workingMeta = new Map(metaByPath)
+          const missing = updates.find((update) => !workingMeta.has(update.cardId))
+          if (missing) {
+            throw new Error(`Card metadata is missing for ${missing.cardId}. Refresh and try again.`)
+          }
           let completed = 0
           for (const update of updates) {
-            const meta = workingMeta.get(update.cardId)
-            if (!meta) continue
+            const meta = workingMeta.get(update.cardId)!
             const content = applyBoardCardPatch(meta.content, update.patch)
             const saved = await api.saveDocument(workspaceId, {
               relativePath: update.cardId,
@@ -381,10 +384,10 @@ export function WebBoardView({
               content,
               contentHash: saved.contentHash,
             })
-            setMetaByPath(new Map(workingMeta))
             completed += 1
             onProgress?.(completed, updates.length)
           }
+          if (completed > 0) setMetaByPath(workingMeta)
           await load()
         } catch (e) {
           await load()

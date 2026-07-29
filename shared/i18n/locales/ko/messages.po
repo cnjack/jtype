@@ -18,6 +18,13 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
+#. placeholder {0}: counts.get(lane.key) ?? 0
+#. placeholder {0}: row.cardCount
+#: shared/components/board/SwimlaneConversionDialog.tsx
+#: shared/components/board/SwimlaneManagerDialog.tsx
+msgid "{0, plural, one {# card} other {# cards}}"
+msgstr "{0, plural, one {카드 #개} other {카드 #개}}"
+
 #. placeholder {0}: lane.name
 #. placeholder {1}: to + 1
 #. placeholder {2}: lanes.length
@@ -36,6 +43,10 @@ msgstr ""
 msgid "{0} selected"
 msgstr ""
 
+#: shared/components/board/LaneDetailsPopover.tsx
+msgid "{cardCount, plural, one {# card} other {# cards}}"
+msgstr "{cardCount, plural, one {카드 #개} other {카드 #개}}"
+
 #: shared/components/board/SwimlaneDeleteDialog.tsx
 msgid "{cardCount} card(s) currently use this swimlane."
 msgstr ""
@@ -47,6 +58,10 @@ msgstr ""
 #: shared/components/board/BoardSwimlanes.tsx
 msgid "{missingCount} card(s) refer to deleted swimlanes."
 msgstr ""
+
+#: shared/components/board/BoardSwimlanes.tsx
+msgid "{total, plural, one {# card} other {# cards}}"
+msgstr "{total, plural, one {카드 #개} other {카드 #개}}"
 
 #: shared/components/ConflictResolver.tsx
 msgid "← Back to list"
@@ -74,11 +89,10 @@ msgstr "클라우드 수낙"
 msgid "Accept local"
 msgstr "로컈 수낙"
 
-#. placeholder {0}: col.name
 #. placeholder {0}: column.name
 #. placeholder {0}: lane.name
 #: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusManagerDialog.tsx
+#: shared/components/board/StatusActionsMenu.tsx
 #: shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Actions for {0}"
 msgstr ""
@@ -206,9 +220,6 @@ msgid "Card title (Enter to add, Esc to cancel)"
 msgstr "카드 제목 (Enter로 추가, Esc로 취소)"
 
 #: shared/components/board/BoardSurface.tsx
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/SwimlaneConversionDialog.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
 msgid "cards"
 msgstr "개 카드"
 
@@ -256,7 +267,7 @@ msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
 #: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusManagerDialog.tsx
+#: shared/components/board/StatusActionsMenu.tsx
 msgid "Color"
 msgstr "색상"
 
@@ -284,18 +295,24 @@ msgstr ""
 msgid "Confirm"
 msgstr "확인"
 
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: shared/components/board/BoardSurface.tsx
+msgid "Conversion stopped because card updates did not persist. Refresh and try "
+"again."
+msgstr "카드 업데이트가 저장되지 않아 변환을 중지했습니다. 새로 고친 후 다시 시도하세요."
+
+#: shared/components/board/LaneDetailsPopover.tsx
 msgid "Copied"
 msgstr ""
 
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: shared/components/board/LaneDetailsPopover.tsx
 msgid "Copy"
 msgstr ""
 
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: shared/components/board/LaneDetailsPopover.tsx
+msgid "Copy failed."
+msgstr "복사하지 못했습니다."
+
+#: shared/components/board/LaneDetailsPopover.tsx
 msgid "Copy lane ID"
 msgstr ""
 
@@ -333,7 +350,7 @@ msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
 #: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusManagerDialog.tsx
+#: shared/components/board/StatusActionsMenu.tsx
 #: shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Delete"
 msgstr "삭제"
@@ -361,8 +378,8 @@ msgstr ""
 
 #: shared/components/board/BoardSwimlanes.tsx
 #: shared/components/board/SwimlaneManagerDialog.tsx
-msgid "Details"
-msgstr ""
+#~ msgid "Details"
+#~ msgstr ""
 
 #: shared/components/viewers/MermaidView.tsx
 msgid "Diagram error"
@@ -500,13 +517,16 @@ msgstr ""
 msgid "Keep cards in Unassigned"
 msgstr ""
 
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: shared/components/board/LaneDetailsPopover.tsx
 msgid "Lane details"
 msgstr ""
 
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#. placeholder {0}: lane.name
+#: shared/components/board/LaneDetailsPopover.tsx
+msgid "Lane details for {0}"
+msgstr "{0} 레인 세부 정보"
+
+#: shared/components/board/LaneDetailsPopover.tsx
 msgid "Lane ID"
 msgstr ""
 
@@ -565,21 +585,21 @@ msgid "Move cards before deleting"
 msgstr ""
 
 #: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusManagerDialog.tsx
+#: shared/components/board/StatusActionsMenu.tsx
 #: shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Move down"
 msgstr ""
 
-#: shared/components/board/BoardSwimlanes.tsx
+#: shared/components/board/StatusActionsMenu.tsx
 msgid "Move left"
 msgstr ""
 
-#: shared/components/board/BoardSwimlanes.tsx
+#: shared/components/board/StatusActionsMenu.tsx
 msgid "Move right"
 msgstr ""
 
 #: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusManagerDialog.tsx
+#: shared/components/board/StatusActionsMenu.tsx
 #: shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Move up"
 msgstr ""
@@ -588,8 +608,7 @@ msgstr ""
 msgid "Moving cards…"
 msgstr ""
 
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: shared/components/board/LaneDetailsPopover.tsx
 msgid "Name"
 msgstr ""
 
@@ -612,7 +631,7 @@ msgstr "카드 없음"
 
 #: shared/components/board/BoardSurface.tsx
 #: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusManagerDialog.tsx
+#: shared/components/board/StatusActionsMenu.tsx
 #: shared/components/board/SwimlaneManagerDialog.tsx
 msgid "No color"
 msgstr "색상 없음"
@@ -716,7 +735,7 @@ msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
 #: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusManagerDialog.tsx
+#: shared/components/board/StatusActionsMenu.tsx
 #: shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Rename"
 msgstr "이름 변경"
@@ -780,8 +799,7 @@ msgid "Search cards"
 msgstr "카드 검색"
 
 #: shared/components/board/BoardSurface.tsx
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusManagerDialog.tsx
+#: shared/components/board/StatusActionsMenu.tsx
 msgid "Set as done column"
 msgstr "완료 열로 설정"
 
@@ -794,8 +812,7 @@ msgid "Set status"
 msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusManagerDialog.tsx
+#: shared/components/board/StatusActionsMenu.tsx
 msgid "Set WIP limit"
 msgstr "WIP 한도 설정"
 
@@ -841,8 +858,7 @@ msgstr "스플릿"
 msgid "Status"
 msgstr "상태"
 
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusManagerDialog.tsx
+#: shared/components/board/StatusActionsMenu.tsx
 msgid "Status actions"
 msgstr ""
 
@@ -971,8 +987,7 @@ msgid "Unscheduled"
 msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusManagerDialog.tsx
+#: shared/components/board/StatusActionsMenu.tsx
 msgid "Unset done column"
 msgstr "완료 열 해제"
 
@@ -1000,8 +1015,7 @@ msgstr ""
 msgid "Use this"
 msgstr "이것 사용"
 
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: shared/components/board/LaneDetailsPopover.tsx
 msgid "Used by"
 msgstr ""
 

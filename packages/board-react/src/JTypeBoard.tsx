@@ -270,11 +270,17 @@ export function JTypeBoard({
         baseContent: meta?.content,
       })
       if (meta) {
-        snap.metaByPath.set(relativePath, {
-          ...meta,
+        const current = snapRef.current
+        if (!current) return
+        const nextMetaByPath = new Map(current.metaByPath)
+        nextMetaByPath.set(relativePath, {
+          ...(nextMetaByPath.get(relativePath) ?? meta),
           content,
           contentHash: saved.contentHash,
         })
+        const nextSnapshot = { ...current, metaByPath: nextMetaByPath }
+        snapRef.current = nextSnapshot
+        setSnapshot((rendered) => (rendered === current ? nextSnapshot : rendered))
       }
     }
     return {
@@ -346,12 +352,14 @@ export function JTypeBoard({
         }),
       updateCards: async (updates, onProgress) => {
         try {
+          if (readOnly) return
           const snap = snapRef.current
           if (!snap) return
+          const missing = updates.find((update) => !snap.metaByPath.has(update.cardId))
+          if (missing) throw new Error(`Card metadata is missing for ${missing.cardId}.`)
           let completed = 0
           for (const update of updates) {
-            const meta = snap.metaByPath.get(update.cardId)
-            if (!meta) continue
+            const meta = snap.metaByPath.get(update.cardId)!
             await saveDocContent(update.cardId, applyCardPatch(meta.content, update.patch))
             completed += 1
             onProgress?.(completed, updates.length)

@@ -1,25 +1,14 @@
-import { Fragment, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { t } from "@lingui/core/macro";
-import { Trans } from "@lingui/react/macro";
-import {
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuItems,
-  Popover,
-  PopoverButton,
-  PopoverPanel,
-} from "@headlessui/react";
+import { Plural, Trans } from "@lingui/react/macro";
+import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import {
   ArrowDownIcon,
   ArrowUpIcon,
   CalendarDaysIcon,
   CheckCircleIcon,
-  ClipboardDocumentIcon,
   EllipsisHorizontalIcon,
   ExclamationTriangleIcon,
-  FunnelIcon,
-  InformationCircleIcon,
   PencilIcon,
   PlusIcon,
   RectangleGroupIcon,
@@ -38,6 +27,8 @@ import {
   type BoardViewColumn,
   type BoardViewConfig,
 } from "../../lib/board";
+import { LaneDetailsPopover } from "./LaneDetailsPopover";
+import { StatusActionsMenu } from "./StatusActionsMenu";
 import type { BoardActions } from "./types";
 
 type LaneManagerRequest = {
@@ -63,6 +54,7 @@ export function BoardSwimlanes({
   selectedId,
   actions,
   readOnly,
+  customLaneMutationPending,
   portalClassName,
   onSelect,
   onOpenManager,
@@ -83,6 +75,7 @@ export function BoardSwimlanes({
   selectedId?: string;
   actions: BoardActions;
   readOnly?: boolean;
+  customLaneMutationPending?: boolean;
   portalClassName?: string;
   onSelect: (card: BoardViewCard) => void;
   onOpenManager: () => void;
@@ -93,16 +86,25 @@ export function BoardSwimlanes({
 }) {
   const [addingColumn, setAddingColumn] = useState(false);
   const [columnDraft, setColumnDraft] = useState("");
-  const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const portal = portalClassName ? ` ${portalClassName}` : "";
-  const grid = partitionSwimlanes(cards, groupKey, swimlaneKey, config.swimlanes);
+  const grid = useMemo(
+    () => partitionSwimlanes(cards, groupKey, swimlaneKey, config.swimlanes),
+    [cards, config.swimlanes, groupKey, swimlaneKey],
+  );
   const gridStyle = {
     gridTemplateColumns: `9rem repeat(${Math.max(columns.length, 1)}, minmax(15rem, 1fr))`,
   };
-  const customLanes = (config.swimlanes ?? []).filter(
-    (lane, index, all) => all.findIndex((candidate) => candidate.key === lane.key) === index,
+  const customLanes = useMemo(
+    () =>
+      (config.swimlanes ?? []).filter(
+        (lane, index, all) => all.findIndex((candidate) => candidate.key === lane.key) === index,
+      ),
+    [config.swimlanes],
   );
-  const customByKey = new Map(customLanes.map((lane) => [lane.key, lane]));
+  const customByKey = useMemo(
+    () => new Map(customLanes.map((lane) => [lane.key, lane])),
+    [customLanes],
+  );
   const missingCount =
     swimlaneKey === "custom"
       ? cards.filter(
@@ -111,10 +113,26 @@ export function BoardSwimlanes({
         ).length
       : 0;
 
-  const laneTotal = (laneKey: string) => {
-    const row = grid.get(laneKey);
-    return row ? [...row.values()].reduce((total, cell) => total + cell.length, 0) : 0;
-  };
+  const laneTotals = useMemo(() => {
+    const totals = new Map<string, number>();
+    for (const [laneKey, row] of grid) {
+      totals.set(
+        laneKey,
+        [...row.values()].reduce((total, cell) => total + cell.length, 0),
+      );
+    }
+    return totals;
+  }, [grid]);
+  const columnTotals = useMemo(() => {
+    const totals = new Map(columns.map((column) => [column.key, 0]));
+    for (const row of grid.values()) {
+      for (const [columnKey, cell] of row) {
+        if (totals.has(columnKey)) totals.set(columnKey, (totals.get(columnKey) ?? 0) + cell.length);
+      }
+    }
+    return totals;
+  }, [columns, grid]);
+  const laneTotal = (laneKey: string) => laneTotals.get(laneKey) ?? 0;
   const visibleLanes = lanes.filter((lane) => lane.key !== "" || laneTotal(lane.key) > 0);
 
   const cardChip = (card: BoardViewCard) => {
@@ -170,21 +188,16 @@ export function BoardSwimlanes({
     );
   };
 
-  const statusMenu = (col: BoardViewColumn, index: number) => {
-    const isDone = doneKey === col.key;
-    const hasActions =
-      actions.renameColumn ||
-      actions.toggleDoneColumn ||
-      actions.setColumnLimit ||
-      actions.setColumnColor ||
-      actions.deleteColumn;
-    if (readOnly || !hasActions) return null;
+  const customLaneMenu = (lane: BoardViewColumn, index: number) => {
+    const definition = customByKey.get(lane.key);
+    if (!definition || readOnly) return null;
     return (
       <Menu as="div" className="relative shrink-0">
         <MenuButton
-          title={t`Status actions`}
-          aria-label={t`Actions for ${col.name}`}
-          className="flex h-8 w-8 items-center justify-center rounded-lg text-stone-400 hover:bg-white hover:text-stone-600"
+          disabled={customLaneMutationPending}
+          title={t`Swimlane actions`}
+          aria-label={t`Actions for ${lane.name}`}
+          className="flex h-8 w-8 items-center justify-center rounded-lg text-stone-400 hover:bg-white hover:text-stone-600 disabled:cursor-wait disabled:opacity-40"
         >
           <EllipsisHorizontalIcon className="h-4 w-4" />
         </MenuButton>
@@ -192,149 +205,6 @@ export function BoardSwimlanes({
           anchor="bottom end"
           className={`z-50 w-48 rounded-xl border border-line bg-white py-1 text-xs shadow-lg shadow-emerald-950/10 [--anchor-gap:4px] focus:outline-none${portal}`}
         >
-          {actions.renameColumn && (
-            <MenuItem>
-              <button
-                type="button"
-                onClick={() => void actions.renameColumn?.(col.key)}
-                className="flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 data-[focus]:bg-stone-100"
-              >
-                <PencilIcon className="h-3.5 w-3.5" />
-                <Trans>Rename</Trans>
-              </button>
-            </MenuItem>
-          )}
-          {actions.reorderColumns && (
-            <>
-              <MenuItem>
-                <button
-                  type="button"
-                  disabled={index === 0}
-                  aria-disabled={index === 0}
-                  onClick={() => {
-                    const previous = columns[index - 1];
-                    if (previous) void actions.reorderColumns?.(col.key, previous.key);
-                  }}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 aria-disabled:opacity-40 data-[focus]:bg-stone-100"
-                >
-                  <ArrowUpIcon className="h-3.5 w-3.5" />
-                  <Trans>Move left</Trans>
-                </button>
-              </MenuItem>
-              <MenuItem>
-                <button
-                  type="button"
-                  disabled={index === columns.length - 1}
-                  aria-disabled={index === columns.length - 1}
-                  onClick={() => {
-                    const next = columns[index + 1];
-                    if (next) void actions.reorderColumns?.(col.key, next.key);
-                  }}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 aria-disabled:opacity-40 data-[focus]:bg-stone-100"
-                >
-                  <ArrowDownIcon className="h-3.5 w-3.5 -rotate-90" />
-                  <Trans>Move right</Trans>
-                </button>
-              </MenuItem>
-            </>
-          )}
-          {actions.toggleDoneColumn && (
-            <MenuItem>
-              <button
-                type="button"
-                onClick={() => void actions.toggleDoneColumn?.(col.key)}
-                className="flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 data-[focus]:bg-stone-100"
-              >
-                <CheckCircleIcon className="h-3.5 w-3.5" />
-                {isDone ? <Trans>Unset done column</Trans> : <Trans>Set as done column</Trans>}
-              </button>
-            </MenuItem>
-          )}
-          {actions.setColumnLimit && (
-            <MenuItem>
-              <button
-                type="button"
-                onClick={() => void actions.setColumnLimit?.(col.key)}
-                className="flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 data-[focus]:bg-stone-100"
-              >
-                <FunnelIcon className="h-3.5 w-3.5" />
-                <Trans>Set WIP limit</Trans>
-              </button>
-            </MenuItem>
-          )}
-          {actions.setColumnColor && (
-            <>
-              <div className="my-1 border-t border-line" />
-              <div className="px-3 py-2">
-                <span className="text-[11px] text-brand-gray">
-                  <Trans>Color</Trans>
-                </span>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {COLUMN_COLORS.map((color) => (
-                    <button
-                      key={color}
-                      type="button"
-                      onClick={() => void actions.setColumnColor?.(col.key, color)}
-                      title={color}
-                      className={`h-5 w-5 rounded-full ring-1 ring-black/10 ${
-                        col.color === color ? "ring-2 ring-brand ring-offset-2" : ""
-                      }`}
-                      style={{ backgroundColor: color }}
-                    />
-                  ))}
-                  <button
-                    type="button"
-                    title={t`No color`}
-                    onClick={() => void actions.setColumnColor?.(col.key, null)}
-                    className="flex h-5 w-5 items-center justify-center rounded-full bg-white ring-1 ring-black/10"
-                  >
-                    <XMarkIcon className="h-3 w-3 text-stone-400" />
-                  </button>
-                </div>
-              </div>
-            </>
-          )}
-          {actions.deleteColumn && (
-            <>
-              <div className="my-1 border-t border-line" />
-              <MenuItem>
-                <button
-                  type="button"
-                  disabled={columns.length <= 1}
-                  aria-disabled={columns.length <= 1}
-                  onClick={() => {
-                    if (columns.length > 1) void actions.deleteColumn?.(col.key);
-                  }}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-red-600 aria-disabled:opacity-40 data-[focus]:bg-red-50"
-                >
-                  <TrashIcon className="h-3.5 w-3.5" />
-                  <Trans>Delete</Trans>
-                </button>
-              </MenuItem>
-            </>
-          )}
-        </MenuItems>
-      </Menu>
-    );
-  };
-
-  const customLaneMenu = (lane: BoardViewColumn, index: number) => {
-    const definition = customByKey.get(lane.key);
-    if (!definition || readOnly) return null;
-    return (
-      <Popover className="relative shrink-0">
-        <Menu>
-          <MenuButton
-            title={t`Swimlane actions`}
-            aria-label={t`Actions for ${lane.name}`}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-stone-400 hover:bg-white hover:text-stone-600"
-          >
-            <EllipsisHorizontalIcon className="h-4 w-4" />
-          </MenuButton>
-          <MenuItems
-            anchor="bottom end"
-            className={`z-50 w-48 rounded-xl border border-line bg-white py-1 text-xs shadow-lg shadow-emerald-950/10 [--anchor-gap:4px] focus:outline-none${portal}`}
-          >
             <MenuItem>
               <button
                 type="button"
@@ -348,8 +218,8 @@ export function BoardSwimlanes({
             <MenuItem>
               <button
                 type="button"
-                disabled={index === 0}
-                aria-disabled={index === 0}
+                disabled={index === 0 || customLaneMutationPending}
+                aria-disabled={index === 0 || customLaneMutationPending}
                 onClick={() => onMoveCustomLane(lane.key, -1)}
                 className="flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 aria-disabled:opacity-40 data-[focus]:bg-stone-100"
               >
@@ -360,8 +230,8 @@ export function BoardSwimlanes({
             <MenuItem>
               <button
                 type="button"
-                disabled={index === customLanes.length - 1}
-                aria-disabled={index === customLanes.length - 1}
+                disabled={index === customLanes.length - 1 || customLaneMutationPending}
+                aria-disabled={index === customLanes.length - 1 || customLaneMutationPending}
                 onClick={() => onMoveCustomLane(lane.key, 1)}
                 className="flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 aria-disabled:opacity-40 data-[focus]:bg-stone-100"
               >
@@ -379,9 +249,10 @@ export function BoardSwimlanes({
                   <button
                     key={color}
                     type="button"
+                    disabled={customLaneMutationPending}
                     onClick={() => onSetCustomLaneColor(lane.key, color)}
                     title={color}
-                    className={`h-5 w-5 rounded-full ring-1 ring-black/10 ${
+                    className={`h-5 w-5 rounded-full ring-1 ring-black/10 disabled:cursor-wait disabled:opacity-40 ${
                       definition.color === color ? "ring-2 ring-brand ring-offset-2" : ""
                     }`}
                     style={{ backgroundColor: color }}
@@ -389,20 +260,15 @@ export function BoardSwimlanes({
                 ))}
                 <button
                   type="button"
+                  disabled={customLaneMutationPending}
                   title={t`No color`}
                   onClick={() => onSetCustomLaneColor(lane.key, null)}
-                  className="flex h-5 w-5 items-center justify-center rounded-full bg-white ring-1 ring-black/10"
+                  className="flex h-5 w-5 items-center justify-center rounded-full bg-white ring-1 ring-black/10 disabled:cursor-wait disabled:opacity-40"
                 >
                   <XMarkIcon className="h-3 w-3 text-stone-400" />
                 </button>
               </div>
             </div>
-            <MenuItem>
-              <PopoverButton className="flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 data-[focus]:bg-stone-100">
-                <InformationCircleIcon className="h-3.5 w-3.5" />
-                <Trans>Details</Trans>
-              </PopoverButton>
-            </MenuItem>
             <div className="my-1 border-t border-line" />
             <MenuItem>
               <button
@@ -414,53 +280,8 @@ export function BoardSwimlanes({
                 <Trans>Delete</Trans>
               </button>
             </MenuItem>
-          </MenuItems>
-        </Menu>
-        <PopoverPanel
-          anchor="bottom end"
-          className={`z-50 w-80 rounded-xl border border-line bg-white p-4 shadow-lg shadow-emerald-950/10 [--anchor-gap:4px] focus:outline-none${portal}`}
-        >
-          <p className="flex items-center gap-2 text-xs font-semibold text-stone-800">
-            <InformationCircleIcon className="h-4 w-4 text-brand-dark" />
-            <Trans>Lane details</Trans>
-          </p>
-          <dl className="mt-3 grid grid-cols-[64px_minmax(0,1fr)] items-center gap-x-2 gap-y-2 text-[11px]">
-            <dt className="text-brand-gray">
-              <Trans>Name</Trans>
-            </dt>
-            <dd className="truncate font-medium text-stone-700">{lane.name}</dd>
-            <dt className="text-brand-gray">
-              <Trans>Lane ID</Trans>
-            </dt>
-            <dd className="flex min-w-0 items-center gap-1.5">
-              <code className="min-w-0 flex-1 truncate rounded bg-stone-100 px-1.5 py-1 text-[10px] text-stone-600">
-                {lane.key}
-              </code>
-              <button
-                type="button"
-                title={t`Copy lane ID`}
-                aria-label={t`Copy lane ID`}
-                onClick={() => {
-                  void navigator.clipboard?.writeText(lane.key).then(() => {
-                    setCopiedKey(lane.key);
-                    window.setTimeout(() => setCopiedKey(null), 1600);
-                  });
-                }}
-                className="inline-flex h-7 items-center gap-1 rounded-lg border border-stone-200 px-2 text-[10px] font-medium text-brand-dark hover:border-brand/30"
-              >
-                <ClipboardDocumentIcon className="h-3.5 w-3.5" />
-                {copiedKey === lane.key ? t`Copied` : t`Copy`}
-              </button>
-            </dd>
-            <dt className="text-brand-gray">
-              <Trans>Used by</Trans>
-            </dt>
-            <dd className="tabular-nums text-stone-700">
-              {laneTotal(lane.key)} <Trans>cards</Trans>
-            </dd>
-          </dl>
-        </PopoverPanel>
-      </Popover>
+        </MenuItems>
+      </Menu>
     );
   };
 
@@ -526,12 +347,8 @@ export function BoardSwimlanes({
           )}
         </div>
 
-        {columns.map((col, index) => {
-          const count = cards.filter((card) => {
-            if (groupKey === "status") return card.columnKey === col.key;
-            if (groupKey === "priority") return (card.priority || "none") === col.key;
-            return (card.assignee || "") === col.key;
-          }).length;
+        {columns.map((col) => {
+          const count = columnTotals.get(col.key) ?? 0;
           const overLimit = col.limit != null && count > col.limit;
           return (
             <div
@@ -551,7 +368,16 @@ export function BoardSwimlanes({
                 {count}
                 {col.limit != null ? `/${col.limit}` : ""}
               </span>
-              {groupKey === "status" && statusMenu(col, index)}
+              {groupKey === "status" && !readOnly && (
+                <StatusActionsMenu
+                  column={col}
+                  siblings={columns}
+                  actions={actions}
+                  doneKey={doneKey}
+                  orientation="horizontal"
+                  portalClassName={portalClassName}
+                />
+              )}
             </div>
           );
         })}
@@ -599,7 +425,7 @@ export function BoardSwimlanes({
           </form>
         )}
 
-        {visibleLanes.map((lane, laneIndex) => {
+        {visibleLanes.map((lane) => {
           const row = grid.get(lane.key);
           const total = laneTotal(lane.key);
           const isUnassigned = lane.key === "";
@@ -636,13 +462,29 @@ export function BoardSwimlanes({
                     {lane.name}
                   </h2>
                   <span className="mt-1 block text-[10px] tabular-nums text-brand-gray">
-                    {total} <Trans>cards</Trans>
+                    <Plural value={total} one="# card" other="# cards" />
                   </span>
                 </span>
                 {swimlaneKey === "custom" &&
                   !isUnassigned &&
                   customLaneMenu(lane, customDefinitionIndex)}
-                {swimlaneKey === "status" && statusMenu(lane, laneIndex)}
+                {swimlaneKey === "custom" && !isUnassigned && customByKey.get(lane.key) && (
+                  <LaneDetailsPopover
+                    lane={customByKey.get(lane.key)!}
+                    cardCount={total}
+                    portalClassName={portalClassName}
+                  />
+                )}
+                {swimlaneKey === "status" && !readOnly && (
+                  <StatusActionsMenu
+                    column={lane}
+                    siblings={visibleLanes}
+                    actions={actions}
+                    doneKey={doneKey}
+                    orientation="vertical"
+                    portalClassName={portalClassName}
+                  />
+                )}
               </section>
 
               {columns.map((col) => {

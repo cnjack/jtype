@@ -18,6 +18,13 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
+#. placeholder {0}: counts.get(lane.key) ?? 0
+#. placeholder {0}: row.cardCount
+#: shared/components/board/SwimlaneConversionDialog.tsx
+#: shared/components/board/SwimlaneManagerDialog.tsx
+msgid "{0, plural, one {# card} other {# cards}}"
+msgstr "{0, plural, one {# 件のカード} other {# 件のカード}}"
+
 #. placeholder {0}: lane.name
 #. placeholder {1}: to + 1
 #. placeholder {2}: lanes.length
@@ -36,6 +43,10 @@ msgstr ""
 msgid "{0} selected"
 msgstr ""
 
+#: shared/components/board/LaneDetailsPopover.tsx
+msgid "{cardCount, plural, one {# card} other {# cards}}"
+msgstr "{cardCount, plural, one {# 件のカード} other {# 件のカード}}"
+
 #: shared/components/board/SwimlaneDeleteDialog.tsx
 msgid "{cardCount} card(s) currently use this swimlane."
 msgstr "現在{cardCount}枚のカードがこのスイムレーンを使用しています。"
@@ -47,6 +58,10 @@ msgstr "{danglingCount}枚のカードが削除済みのスイムレーンを参
 #: shared/components/board/BoardSwimlanes.tsx
 msgid "{missingCount} card(s) refer to deleted swimlanes."
 msgstr "{missingCount}枚のカードが削除済みのスイムレーンを参照しています。"
+
+#: shared/components/board/BoardSwimlanes.tsx
+msgid "{total, plural, one {# card} other {# cards}}"
+msgstr "{total, plural, one {# 件のカード} other {# 件のカード}}"
 
 #: shared/components/ConflictResolver.tsx
 msgid "← Back to list"
@@ -74,11 +89,10 @@ msgstr "クラウドを採用"
 msgid "Accept local"
 msgstr "ローカルを採用"
 
-#. placeholder {0}: col.name
 #. placeholder {0}: column.name
 #. placeholder {0}: lane.name
 #: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusManagerDialog.tsx
+#: shared/components/board/StatusActionsMenu.tsx
 #: shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Actions for {0}"
 msgstr "{0}の操作"
@@ -206,9 +220,6 @@ msgid "Card title (Enter to add, Esc to cancel)"
 msgstr "カードのタイトル（Enter で追加、Esc でキャンセル）"
 
 #: shared/components/board/BoardSurface.tsx
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/SwimlaneConversionDialog.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
 msgid "cards"
 msgstr "枚のカード"
 
@@ -256,7 +267,7 @@ msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
 #: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusManagerDialog.tsx
+#: shared/components/board/StatusActionsMenu.tsx
 msgid "Color"
 msgstr "カラー"
 
@@ -284,18 +295,24 @@ msgstr ""
 msgid "Confirm"
 msgstr "確認"
 
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: shared/components/board/BoardSurface.tsx
+msgid "Conversion stopped because card updates did not persist. Refresh and try "
+"again."
+msgstr "カードの更新が保存されなかったため、変換を停止しました。更新して再試行してください。"
+
+#: shared/components/board/LaneDetailsPopover.tsx
 msgid "Copied"
 msgstr "コピーしました"
 
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: shared/components/board/LaneDetailsPopover.tsx
 msgid "Copy"
 msgstr "コピー"
 
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: shared/components/board/LaneDetailsPopover.tsx
+msgid "Copy failed."
+msgstr "コピーに失敗しました。"
+
+#: shared/components/board/LaneDetailsPopover.tsx
 msgid "Copy lane ID"
 msgstr "スイムレーン ID をコピー"
 
@@ -333,7 +350,7 @@ msgstr "カスタム"
 
 #: shared/components/board/BoardSurface.tsx
 #: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusManagerDialog.tsx
+#: shared/components/board/StatusActionsMenu.tsx
 #: shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Delete"
 msgstr "削除"
@@ -361,8 +378,8 @@ msgstr "スイムレーンを削除"
 
 #: shared/components/board/BoardSwimlanes.tsx
 #: shared/components/board/SwimlaneManagerDialog.tsx
-msgid "Details"
-msgstr "詳細"
+#~ msgid "Details"
+#~ msgstr "詳細"
 
 #: shared/components/viewers/MermaidView.tsx
 msgid "Diagram error"
@@ -500,13 +517,16 @@ msgstr "JType は既存のスイムレーン ID を再利用し、未完了の�
 msgid "Keep cards in Unassigned"
 msgstr "カードを未割り当てに残す"
 
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: shared/components/board/LaneDetailsPopover.tsx
 msgid "Lane details"
 msgstr "スイムレーンの詳細"
 
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#. placeholder {0}: lane.name
+#: shared/components/board/LaneDetailsPopover.tsx
+msgid "Lane details for {0}"
+msgstr "{0} のレーン詳細"
+
+#: shared/components/board/LaneDetailsPopover.tsx
 msgid "Lane ID"
 msgstr "スイムレーン ID"
 
@@ -565,21 +585,21 @@ msgid "Move cards before deleting"
 msgstr "削除前にカードを移動"
 
 #: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusManagerDialog.tsx
+#: shared/components/board/StatusActionsMenu.tsx
 #: shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Move down"
 msgstr "下へ移動"
 
-#: shared/components/board/BoardSwimlanes.tsx
+#: shared/components/board/StatusActionsMenu.tsx
 msgid "Move left"
 msgstr "左へ移動"
 
-#: shared/components/board/BoardSwimlanes.tsx
+#: shared/components/board/StatusActionsMenu.tsx
 msgid "Move right"
 msgstr "右へ移動"
 
 #: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusManagerDialog.tsx
+#: shared/components/board/StatusActionsMenu.tsx
 #: shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Move up"
 msgstr "上へ移動"
@@ -588,8 +608,7 @@ msgstr "上へ移動"
 msgid "Moving cards…"
 msgstr "カードを移動中…"
 
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: shared/components/board/LaneDetailsPopover.tsx
 msgid "Name"
 msgstr "名前"
 
@@ -612,7 +631,7 @@ msgstr "カードなし"
 
 #: shared/components/board/BoardSurface.tsx
 #: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusManagerDialog.tsx
+#: shared/components/board/StatusActionsMenu.tsx
 #: shared/components/board/SwimlaneManagerDialog.tsx
 msgid "No color"
 msgstr "色なし"
@@ -716,7 +735,7 @@ msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
 #: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusManagerDialog.tsx
+#: shared/components/board/StatusActionsMenu.tsx
 #: shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Rename"
 msgstr "名前を変更"
@@ -780,8 +799,7 @@ msgid "Search cards"
 msgstr "カードを検索"
 
 #: shared/components/board/BoardSurface.tsx
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusManagerDialog.tsx
+#: shared/components/board/StatusActionsMenu.tsx
 msgid "Set as done column"
 msgstr "完了列に設定"
 
@@ -794,8 +812,7 @@ msgid "Set status"
 msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusManagerDialog.tsx
+#: shared/components/board/StatusActionsMenu.tsx
 msgid "Set WIP limit"
 msgstr "WIP 制限を設定"
 
@@ -841,8 +858,7 @@ msgstr "分割"
 msgid "Status"
 msgstr "ステータス"
 
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusManagerDialog.tsx
+#: shared/components/board/StatusActionsMenu.tsx
 msgid "Status actions"
 msgstr "ステータスの操作"
 
@@ -971,8 +987,7 @@ msgid "Unscheduled"
 msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusManagerDialog.tsx
+#: shared/components/board/StatusActionsMenu.tsx
 msgid "Unset done column"
 msgstr "完了列を解除"
 
@@ -1000,8 +1015,7 @@ msgstr ""
 msgid "Use this"
 msgstr "これを使用"
 
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: shared/components/board/LaneDetailsPopover.tsx
 msgid "Used by"
 msgstr "使用状況"
 
