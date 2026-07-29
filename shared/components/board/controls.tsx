@@ -10,7 +10,13 @@ import {
   MenuItem,
   MenuItems,
 } from "@headlessui/react";
-import { XMarkIcon, FaceSmileIcon, ChevronUpDownIcon, CheckIcon } from "@heroicons/react/24/outline";
+import {
+  XMarkIcon,
+  FaceSmileIcon,
+  ChevronUpDownIcon,
+  CheckIcon,
+  ExclamationTriangleIcon,
+} from "@heroicons/react/24/outline";
 import type { BoardOption } from "./types";
 
 export const fieldCls =
@@ -23,19 +29,28 @@ export function ListboxSelect({
   value,
   options,
   onChange,
+  disabled = false,
 }: {
   value: string;
   options: BoardOption[];
   onChange: (v: string) => void;
+  disabled?: boolean;
 }) {
   // No `?? options[0]` fallback: an unmatched non-empty value (e.g. an assignee
   // who isn't in the current member roster) must render itself, not collapse to
   // the first option — see `{current?.label ?? value}` below.
   const current = options.find((o) => o.value === value);
   return (
-    <Listbox value={value} onChange={onChange}>
-      <ListboxButton className={`${fieldCls} flex w-full items-center justify-between gap-1`}>
-        <span className="truncate">{current?.label ?? value}</span>
+    <Listbox value={value} onChange={onChange} disabled={disabled}>
+      <ListboxButton className={`${fieldCls} flex w-full items-center justify-between gap-1 disabled:cursor-not-allowed disabled:bg-stone-50 disabled:opacity-60`}>
+        <span className="flex min-w-0 items-center gap-1.5">
+          {current?.warning ? (
+            <ExclamationTriangleIcon className="h-3.5 w-3.5 shrink-0 text-amber-500" />
+          ) : current?.color ? (
+            <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: current.color }} aria-hidden />
+          ) : null}
+          <span className="truncate">{current?.label ?? value}</span>
+        </span>
         <ChevronUpDownIcon className="h-3.5 w-3.5 shrink-0 text-stone-400" />
       </ListboxButton>
       <ListboxOptions
@@ -48,7 +63,14 @@ export function ListboxSelect({
             value={o.value}
             className="flex cursor-pointer items-center justify-between gap-1 px-2 py-1 text-stone-700 data-[focus]:bg-stone-100"
           >
-            <span className="truncate">{o.label}</span>
+            <span className="flex min-w-0 items-center gap-1.5">
+              {o.warning ? (
+                <ExclamationTriangleIcon className="h-3.5 w-3.5 shrink-0 text-amber-500" />
+              ) : o.color ? (
+                <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: o.color }} aria-hidden />
+              ) : null}
+              <span className="truncate">{o.label}</span>
+            </span>
             {o.value === value && <CheckIcon className="h-3.5 w-3.5 shrink-0 text-brand" />}
           </ListboxOption>
         ))}

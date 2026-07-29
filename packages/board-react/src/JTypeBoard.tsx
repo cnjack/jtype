@@ -263,17 +263,30 @@ export function JTypeBoard({
       const snap = snapRef.current
       if (!snap || !client) return
       const meta = snap.metaByPath.get(relativePath)
-      await client.saveDocument(workspaceId, {
+      const saved = await client.saveDocument(workspaceId, {
         relativePath,
         content,
         baseContentHash: meta?.contentHash,
         baseContent: meta?.content,
       })
+      if (meta) {
+        const current = snapRef.current
+        if (!current) return
+        const nextMetaByPath = new Map(current.metaByPath)
+        nextMetaByPath.set(relativePath, {
+          ...(nextMetaByPath.get(relativePath) ?? meta),
+          content,
+          contentHash: saved.contentHash,
+        })
+        const nextSnapshot = { ...current, metaByPath: nextMetaByPath }
+        snapRef.current = nextSnapshot
+        setSnapshot((rendered) => (rendered === current ? nextSnapshot : rendered))
+      }
     }
     return {
       refresh: () => void reload(),
-      setConfig: (patch: Partial<BoardViewConfig>) =>
-        withErr(async () => {
+      setConfig: async (patch: Partial<BoardViewConfig>) => {
+        try {
           const snap = snapRef.current
           if (!snap || !client) return
           if (readOnly) {
@@ -291,7 +304,11 @@ export function JTypeBoard({
             baseContent: snap.boardDoc.content,
           })
           await reload()
-        }),
+        } catch (e) {
+          setBanner(describeErrorRef.current(e))
+          throw e
+        }
+      },
       createCard: async (colKey, title) => {
         const snap = snapRef.current
         if (!snap || !client) return
@@ -333,6 +350,27 @@ export function JTypeBoard({
           await saveDocContent(id, applyCardPatch(meta.content, patch))
           await reload()
         }),
+      updateCards: async (updates, onProgress) => {
+        try {
+          if (readOnly) return
+          const snap = snapRef.current
+          if (!snap) return
+          const missing = updates.find((update) => !snap.metaByPath.has(update.cardId))
+          if (missing) throw new Error(`Card metadata is missing for ${missing.cardId}.`)
+          let completed = 0
+          for (const update of updates) {
+            const meta = snap.metaByPath.get(update.cardId)!
+            await saveDocContent(update.cardId, applyCardPatch(meta.content, update.patch))
+            completed += 1
+            onProgress?.(completed, updates.length)
+          }
+          await reload()
+        } catch (e) {
+          await reload()
+          setBanner(describeErrorRef.current(e))
+          throw e
+        }
+      },
       moveCard: (id, toCol, index) =>
         withErr(async () => {
           const snap = snapRef.current

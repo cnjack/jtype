@@ -178,8 +178,7 @@ msgid "Add domain"
 msgstr "添加域名"
 
 #: src/pages/Workspace.tsx
-msgid "Add domains, verify DNS ownership, bind them to this workspace, and "
-"manage SSL certificates from one place."
+msgid "Add domains, verify DNS ownership, bind them to this workspace, and manage SSL certificates from one place."
 msgstr "在一处添加域名、验证 DNS 所有权、绑定到此工作区并管理 SSL 证书。"
 
 #: src/pages/Workspace.tsx
@@ -364,9 +363,7 @@ msgid "Bucket"
 msgstr "存储桶"
 
 #: src/pages/Landing.tsx
-msgid "Calm desktop writing, workspace-scoped sync, and public Markdown "
-"publishing in one product flow. Your notes stay local until a cloud "
-"workspace has a job to do."
+msgid "Calm desktop writing, workspace-scoped sync, and public Markdown publishing in one product flow. Your notes stay local until a cloud workspace has a job to do."
 msgstr "平静的桌面写作、工作区范围同步和公开 Markdown 发布集于一体。您的笔记保持本地，直到云工作区需要时才上云。"
 
 #: src/components/NewResourceDialog.tsx
@@ -488,9 +485,7 @@ msgid "Compact"
 msgstr "紧凑"
 
 #: src/pages/Admin.tsx
-msgid "Configure outbound email (SMTP). Used for password reset and email "
-"verification. Saved values override the JTYPED_SMTP_* environment "
-"variables."
+msgid "Configure outbound email (SMTP). Used for password reset and email verification. Saved values override the JTYPED_SMTP_* environment variables."
 msgstr "配置出站邮件 (SMTP)。用于密码重置和邮箱验证。保存的值会覆盖 JTYPED_SMTP_* 环境变量。"
 
 #: src/pages/Admin.tsx
@@ -498,8 +493,7 @@ msgid "Configure server object storage."
 msgstr "配置服务端对象存储。"
 
 #: src/pages/Admin.tsx
-msgid "Configure server object storage. Saved values override the "
-"JTYPED_STORAGE_* environment variables and apply immediately."
+msgid "Configure server object storage. Saved values override the JTYPED_STORAGE_* environment variables and apply immediately."
 msgstr "配置服务端对象存储。保存的值会覆盖 JTYPED_STORAGE_* 环境变量并立即生效。"
 
 #: src/pages/ResetPassword.tsx
@@ -511,8 +505,7 @@ msgid "Confirming your email address."
 msgstr "正在确认你的邮箱地址。"
 
 #: src/pages/AiConnections.tsx
-msgid "Connect Claude, Cursor, Cline, or jcode to your notes & kanban through "
-"the built-in MCP server."
+msgid "Connect Claude, Cursor, Cline, or jcode to your notes & kanban through the built-in MCP server."
 msgstr "通过内置 MCP 服务器，将 Claude、Cursor、Cline 或 jcode 连接到你的笔记和看板。"
 
 #: src/pages/Landing.tsx
@@ -575,8 +568,7 @@ msgstr "无法加载此 PDF。"
 
 #. placeholder {0}: info.error
 #: src/pages/Admin.tsx
-msgid "Could not reach GitHub for the latest release ({0}). Showing the last "
-"known value."
+msgid "Could not reach GitHub for the latest release ({0}). Showing the last known value."
 msgstr "无法从 GitHub 获取最新版本（{0}）。显示上次已知的值。"
 
 #: src/components/SiteThemePanel.tsx
@@ -588,9 +580,7 @@ msgid "Create"
 msgstr "创建"
 
 #: src/pages/Landing.tsx
-msgid "Create a workspace for sync, publishing, and account settings. Local "
-"vault copy stays precise: folders are vaults, server-side collaboration "
-"is a cloud workspace."
+msgid "Create a workspace for sync, publishing, and account settings. Local vault copy stays precise: folders are vaults, server-side collaboration is a cloud workspace."
 msgstr "创建工作区用于同步、发布和账户设置。本地库副本保持精确：文件夹是库，服务端协作是云工作区。"
 
 #: src/pages/Login.tsx
@@ -889,8 +879,7 @@ msgid "Enter your username"
 msgstr "输入用户名"
 
 #: src/help/pages/HelpHome.tsx
-msgid "Everything you need to write in a local-first vault, sync to the cloud, "
-"run a kanban board, publish a site, and connect AI."
+msgid "Everything you need to write in a local-first vault, sync to the cloud, run a kanban board, publish a site, and connect AI."
 msgstr "在本地优先的仓库中写作、同步到云端、运行看板、发布站点并接入 AI——你需要的一切都在这里。"
 
 #: src/components/NewResourceDialog.tsx
@@ -958,11 +947,8 @@ msgid "Footer HTML"
 msgstr "页脚 HTML"
 
 #: src/pages/AiConnections.tsx
-msgid "For clients that only accept a static header (e.g. jcode). Tokens are "
-"<0>mcp</0>-scoped (notes & kanban only, never admin) and expire in 90 "
-"days."
-msgstr "适用于仅接受静态请求头的客户端（例如 jcode）。令牌为 <0>mcp</0> 作用域（仅限笔记和看板，绝不包含管理员权限），90 "
-"天后过期。"
+msgid "For clients that only accept a static header (e.g. jcode). Tokens are <0>mcp</0>-scoped (notes & kanban only, never admin) and expire in 90 days."
+msgstr "适用于仅接受静态请求头的客户端（例如 jcode）。令牌为 <0>mcp</0> 作用域（仅限笔记和看板，绝不包含管理员权限），90 天后过期。"
 
 #: src/pages/Login.tsx
 msgid "Forgot password?"
@@ -1135,12 +1121,8 @@ msgid "JType <noreply@example.com>"
 msgstr "JType <noreply@example.com>"
 
 #: src/pages/Landing.tsx
-msgid "JType ships a built-in MCP server. Connect Claude, Cursor, or any MCP "
-"client over a secure OAuth flow, then ask it to search your notes, draft "
-"a doc, or triage your board. Tokens are scoped, expiring, and revocable "
-"— and admin always stays off-limits."
-msgstr "JType 内置 MCP 服务器。通过安全的 OAuth 流程连接 Claude、Cursor 或任意 MCP "
-"客户端，即可让它搜索笔记、起草文档或整理看板。令牌均为限定范围、自动过期、可随时撤销，且始终无法触及管理员权限。"
+msgid "JType ships a built-in MCP server. Connect Claude, Cursor, or any MCP client over a secure OAuth flow, then ask it to search your notes, draft a doc, or triage your board. Tokens are scoped, expiring, and revocable — and admin always stays off-limits."
+msgstr "JType 内置 MCP 服务器。通过安全的 OAuth 流程连接 Claude、Cursor 或任意 MCP 客户端，即可让它搜索笔记、起草文档或整理看板。令牌均为限定范围、自动过期、可随时撤销，且始终无法触及管理员权限。"
 
 #: src/components/NewResourceDialog.tsx
 msgid "Kanban board"
@@ -1151,8 +1133,7 @@ msgid "Kanban tools"
 msgstr "看板工具"
 
 #: src/pages/Workspace.tsx
-msgid "Keep the publish name and workspace name here. The workspace slug and "
-"storage limit are assigned by the service."
+msgid "Keep the publish name and workspace name here. The workspace slug and storage limit are assigned by the service."
 msgstr "在此保留发布名称和工作区名称。工作区标识和存储限制由服务分配。"
 
 #: src/pages/Login.tsx
@@ -1282,8 +1263,7 @@ msgid "Local-first Markdown vault"
 msgstr "本地优先 Markdown 库"
 
 #: src/help/HelpLayout.tsx
-msgid "Local-first Markdown vault editing with cloud sync, kanban, publishing, "
-"and AI."
+msgid "Local-first Markdown vault editing with cloud sync, kanban, publishing, and AI."
 msgstr "本地优先的 Markdown 仓库编辑，支持云端同步、看板、发布与 AI。"
 
 #: src/pages/Login.tsx
@@ -1530,9 +1510,7 @@ msgid "On this page"
 msgstr "本页目录"
 
 #: src/pages/Landing.tsx
-msgid "One Markdown source shows up everywhere it matters: local files on your "
-"machine, sync state in the cloud, and published output for readers — all "
-"visible at once."
+msgid "One Markdown source shows up everywhere it matters: local files on your machine, sync state in the cloud, and published output for readers — all visible at once."
 msgstr "同一份 Markdown 源文件，出现在每一处需要它的地方：你机器上的本地文件、云端的同步状态，以及面向读者的发布输出——尽收眼底。"
 
 #: src/pages/Landing.tsx
@@ -1552,8 +1530,7 @@ msgid "Open"
 msgstr "打开"
 
 #: src/pages/Landing.tsx
-msgid "Open a local Markdown vault, keep normal folders, and edit without "
-"turning notes into remote-only data."
+msgid "Open a local Markdown vault, keep normal folders, and edit without turning notes into remote-only data."
 msgstr "打开本地 Markdown 库，保持普通文件夹结构，编辑笔记而不将其变为仅远程数据。"
 
 #: src/help/HelpLayout.tsx
@@ -1589,8 +1566,7 @@ msgid "Open sidebar"
 msgstr "打开侧栏"
 
 #: src/help/pages/CaseStudy.tsx
-msgid "Open the example vault in JType and follow along. It lives in the repo "
-"at:"
+msgid "Open the example vault in JType and follow along. It lives in the repo at:"
 msgstr "在 JType 中打开示例仓库，跟着一起操作。它就在代码仓库的："
 
 #: src/pages/Login.tsx
@@ -1744,8 +1720,7 @@ msgid "Publishing details saved"
 msgstr "发布详情已保存"
 
 #: src/pages/Workspace.tsx
-msgid "Publishing uses a server snapshot; frontmatter status is treated as user "
-"metadata."
+msgid "Publishing uses a server snapshot; frontmatter status is treated as user metadata."
 msgstr "发布使用服务器快照；frontmatter 状态被视为用户元数据。"
 
 #: src/pages/Admin.tsx
@@ -1753,8 +1728,7 @@ msgid "Pull the new image and restart your deployment (docker compose / helm)."
 msgstr "拉取新镜像并重启你的部署（docker compose / helm）。"
 
 #: src/pages/Landing.tsx
-msgid "Push and pull versions, resolve conflicts, and keep collaboration scoped "
-"to the workspace you choose."
+msgid "Push and pull versions, resolve conflicts, and keep collaboration scoped to the workspace you choose."
 msgstr "推送和拉取版本、解决冲突，并将协作范围限定在您选择的工作区内。"
 
 #: src/pages/Workspace.tsx
@@ -1778,13 +1752,11 @@ msgid "Ready for the cloud layer"
 msgstr "已为云层做好准备"
 
 #: src/help/pages/CasesIndex.tsx
-msgid "Real, end-to-end scenarios you can reproduce. Each one ships with an "
-"example vault you can open in JType."
+msgid "Real, end-to-end scenarios you can reproduce. Each one ships with an example vault you can open in JType."
 msgstr "可复现的真实端到端场景。每个案例都附带可在 JType 中打开的示例仓库。"
 
 #: src/pages/AiConnections.tsx
-msgid "Recommended: paste this URL into an OAuth-capable client (Claude, "
-"Cursor) — you'll approve in the browser, no token to copy."
+msgid "Recommended: paste this URL into an OAuth-capable client (Claude, Cursor) — you'll approve in the browser, no token to copy."
 msgstr "推荐：将此 URL 粘贴到支持 OAuth 的客户端（Claude、Cursor）中 —— 你将在浏览器中授权，无需复制令牌。"
 
 #: src/pages/Admin.tsx
@@ -2018,8 +1990,7 @@ msgid "Select a Markdown file"
 msgstr "选择 Markdown 文件"
 
 #: src/pages/Login.tsx
-#~ msgid "Self-service reset isn't available yet. Ask an admin to reset your "
-#~ "password."
+#~ msgid "Self-service reset isn't available yet. Ask an admin to reset your password."
 #~ msgstr "暂不支持自助重置。请联系管理员重置你的密码。"
 
 #: src/pages/Login.tsx
@@ -2313,8 +2284,7 @@ msgstr "此验证链接缺少令牌。"
 
 #. placeholder {0}: workspace.name
 #: src/pages/Workspace.tsx
-msgid "This will permanently delete <0>{0}</0> and all its documents. This "
-"cannot be undone."
+msgid "This will permanently delete <0>{0}</0> and all its documents. This cannot be undone."
 msgstr "这将永久删除 <0>{0}</0> 及其所有文档。此操作无法撤销。"
 
 #: src/pages/Admin.tsx
@@ -2367,8 +2337,7 @@ msgid "Try it yourself"
 msgstr "自己试一试"
 
 #: src/pages/Landing.tsx
-msgid "Turn selected documents into a public `/u/:username` site while your "
-"source stays Markdown."
+msgid "Turn selected documents into a public `/u/:username` site while your source stays Markdown."
 msgstr "将选定文档发布为公开的 `/u/:username` 站点，同时源文件保持 Markdown 格式。"
 
 #: src/pages/Workspace.tsx
@@ -2424,8 +2393,7 @@ msgid "Update email"
 msgstr "更新邮箱"
 
 #: src/pages/Workspace.tsx
-msgid "Upload a PEM certificate for a verified domain. The private key is "
-"stored as a hash in the current backend model."
+msgid "Upload a PEM certificate for a verified domain. The private key is stored as a hash in the current backend model."
 msgstr "为已验证域名上传 PEM 证书。私钥在当前后端模型中以哈希形式存储。"
 
 #: src/components/DownloadPromo.tsx
@@ -2587,8 +2555,7 @@ msgid "You will lose access to all cloud documents."
 msgstr "您将失去所有云文档的访问权限。"
 
 #: src/pages/Workspace.tsx
-msgid "You will lose access to all cloud documents. Your local files are "
-"unaffected."
+msgid "You will lose access to all cloud documents. Your local files are unaffected."
 msgstr "您将失去所有云文档的访问权限。您的本地文件不受影响。"
 
 #: src/pages/InviteAccept.tsx

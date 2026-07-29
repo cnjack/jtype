@@ -3,6 +3,8 @@
 // components in shared/components/board render this model; each platform adapts
 // its own data layer into it. See internal-docs/web-board-alignment/design.md.
 
+import { parseFrontmatter, writeFrontmatter } from "./frontmatter";
+
 export type BoardViewColumn = {
   key: string;
   name: string;
@@ -12,9 +14,25 @@ export type BoardViewColumn = {
 };
 
 export type BoardGroupKey = "status" | "priority" | "assignee";
+export type BoardSwimlaneGroupKey = BoardGroupKey | "custom";
 export type BoardSortKey = "manual" | "due" | "priority" | "title";
 export type BoardViewType = "board" | "table" | "calendar";
 export type CalendarMode = "month" | "agenda";
+
+/** Persistent, user-editable swimlane definition stored in a `.board` file. */
+export type BoardSwimlane = {
+  /** Immutable machine identity referenced by card frontmatter `swimlane`. */
+  key: string;
+  name: string;
+  color?: string | null;
+};
+
+/** Persisted while a derived priority/assignee view is converted to custom lanes. */
+export type SwimlaneMigration = {
+  version: 1;
+  source: "priority" | "assignee";
+  mapping: Array<{ value: string; swimlaneKey: string }>;
+};
 
 export type BoardFieldType = "text" | "number" | "date";
 /** A user-defined custom field on a board's cards (stored in frontmatter / properties). */
@@ -46,8 +64,22 @@ export type BoardViewConfig = {
    * Second grouping dimension rendered as horizontal swimlanes (rows) in the
    * board view. Must differ from `groupBy`; unset = no swimlanes.
    */
-  swimlaneBy?: BoardGroupKey;
+  swimlaneBy?: BoardSwimlaneGroupKey;
+  /** Persistent definitions used when `swimlaneBy === "custom"`. */
+  swimlanes?: BoardSwimlane[];
+  /** Present only while a derived-lane conversion is incomplete/retryable. */
+  swimlaneMigration?: SwimlaneMigration;
 };
+
+/** Canonical synced `.board` JSON shape used by Desktop, Web, and board-react. */
+export type BoardDocumentConfig = BoardViewConfig & {
+  id: string;
+};
+
+export type BoardConfigIssue =
+  | { kind: "duplicate_swimlane_key"; key: string }
+  | { kind: "duplicate_swimlane_name"; name: string }
+  | { kind: "dangling_swimlane"; key: string; cardCount: number };
 
 export type BoardTag = { id?: string; label: string; color?: string | null };
 
@@ -67,6 +99,8 @@ export type BoardViewCard = {
   priority?: string | null;
   /** Display text (web resolves a member name; desktop uses free text). */
   assignee?: string | null;
+  /** Stable custom swimlane identity from card frontmatter `swimlane`. */
+  swimlaneKey?: string | null;
   due?: string | null;
   tags: BoardTag[];
   /** Markdown body / description. */
@@ -99,6 +133,65 @@ export function parseAttachments(raw: string): string[] {
 /** Serialize attachment URLs/paths back to a frontmatter value. */
 export function serializeAttachments(list: string[]): string {
   return list.join(", ");
+}
+
+/**
+ * Frontmatter owned by the normalized card model. Custom fields must never
+ * overwrite these keys, including aliases used by component-level patches.
+ */
+const RESERVED_CARD_FRONTMATTER_KEYS = new Set([
+  "id",
+  "board",
+  "ticket",
+  "title",
+  "status",
+  "columnKey",
+  "position",
+  "priority",
+  "assignee",
+  "swimlane",
+  "swimlaneKey",
+  "due",
+  "icon",
+  "tags",
+  "attachments",
+  "notes",
+  "taskDone",
+  "taskTotal",
+  "excerpt",
+  "blocked_by",
+  "blockedBy",
+  "blocks",
+  "relates",
+  "parent",
+]);
+
+/**
+ * Apply a normalized card patch to Markdown frontmatter. Keeping this mapping
+ * shared prevents Desktop, Web, and board-react from drifting on core fields.
+ */
+export function applyBoardCardPatch(content: string, patch: Partial<BoardViewCard>): string {
+  const { data, body } = parseFrontmatter(content);
+  const next = { ...data };
+  if (patch.title !== undefined) next.title = patch.title;
+  if (patch.columnKey !== undefined) next.status = patch.columnKey;
+  if (patch.priority !== undefined) next.priority = patch.priority ?? "";
+  if (patch.assignee !== undefined) next.assignee = patch.assignee ?? "";
+  if (patch.swimlaneKey !== undefined) next.swimlane = patch.swimlaneKey ?? "";
+  if (patch.due !== undefined) next.due = patch.due ?? "";
+  if (patch.icon !== undefined) next.icon = patch.icon ?? "";
+  if (patch.tags !== undefined) next.tags = patch.tags.map((tag) => tag.label).join(", ");
+  if (patch.attachments !== undefined) next.attachments = serializeAttachments(patch.attachments);
+  if (patch.custom !== undefined) {
+    for (const [key, value] of Object.entries(patch.custom)) {
+      if (!RESERVED_CARD_FRONTMATTER_KEYS.has(key)) next[key] = value ?? "";
+    }
+  }
+  if (patch.blockedBy !== undefined) next.blocked_by = serializeLinks(patch.blockedBy);
+  if (patch.blocks !== undefined) next.blocks = serializeLinks(patch.blocks);
+  if (patch.relates !== undefined) next.relates = serializeLinks(patch.relates);
+  if (patch.parent !== undefined) next.parent = patch.parent ? serializeLinks([patch.parent]) : "";
+  return writeFrontmatter(patch.notes !== undefined ? patch.notes : body, next);
 }
 
 /** The display name for an attachment: its last path segment (decoded). */
@@ -140,7 +233,9 @@ export function pickCustomFields(
   return out;
 }
 
-export type CardFilter = { prop: "priority" | "assignee" | "tag"; value: string };
+export type CardFilter =
+  | { prop: "priority" | "assignee" | "tag"; value: string }
+  | { prop: "swimlaneIssue"; value: "dangling" };
 
 /** One emoji reaction summary on a comment. */
 export type CommentReaction = { emoji: string; count: number; mine: boolean };
@@ -188,6 +283,7 @@ export const RESERVED_CARD_KEYS = [
   "position",
   "priority",
   "assignee",
+  "swimlane",
   "due",
   "tags",
   "icon",
@@ -368,8 +464,109 @@ export function slugify(value: string): string {
   );
 }
 
+const BOARD_GROUP_KEYS = new Set<BoardGroupKey>(["status", "priority", "assignee"]);
+
+/** Runtime guard for untrusted `.board` JSON. */
+export function normalizeGroupBy(value: unknown): BoardGroupKey {
+  return typeof value === "string" && BOARD_GROUP_KEYS.has(value as BoardGroupKey)
+    ? (value as BoardGroupKey)
+    : "status";
+}
+
+/** Unknown future/corrupt swimlane modes degrade safely to no swimlanes. */
+export function normalizeSwimlaneBy(value: unknown): BoardSwimlaneGroupKey | undefined {
+  if (value === "custom") return "custom";
+  return typeof value === "string" && BOARD_GROUP_KEYS.has(value as BoardGroupKey)
+    ? (value as BoardGroupKey)
+    : undefined;
+}
+
+/** Create a collision-resistant immutable custom swimlane key. */
+export function newSwimlaneKey(name: string, existingKeys: Iterable<string> = []): string {
+  const taken = new Set(existingKeys);
+  const prefix = `lane_${slugify(name).replace(/-/g, "_")}`;
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const suffix =
+      typeof globalThis.crypto?.randomUUID === "function"
+        ? globalThis.crypto.randomUUID().replace(/-/g, "").slice(0, 8)
+        : Math.random().toString(36).slice(2, 10).padEnd(8, "0");
+    const key = `${prefix}_${suffix}`;
+    if (!taken.has(key)) return key;
+  }
+  return `${prefix}_${Date.now().toString(36)}`;
+}
+
+/** Validate a user-facing lane name against length and board-local uniqueness rules. */
+export function validateSwimlaneName(
+  name: string,
+  lanes: BoardSwimlane[],
+  excludingKey?: string,
+): string | null {
+  const trimmed = name.trim();
+  if (!trimmed) return "Swimlane name is required.";
+  if (trimmed.length > 80) return "Swimlane names can be at most 80 characters.";
+  const duplicate = lanes.some(
+    (lane) => lane.key !== excludingKey && lane.name.trim().toLocaleLowerCase() === trimmed.toLocaleLowerCase(),
+  );
+  return duplicate ? "Swimlane names must be unique on this board." : null;
+}
+
+/** The normalized custom swimlane identity used for bucketing and selection. */
+export function customSwimlaneKeyOf(card: BoardViewCard): string {
+  return card.swimlaneKey || "";
+}
+
+/**
+ * Report malformed definitions and recoverable card references without
+ * rewriting either document. Duplicate keys are resolved first-definition-wins
+ * by the renderer; dangling card keys remain recoverable in Unassigned.
+ */
+export function validateSwimlanes(
+  config: Pick<BoardViewConfig, "swimlanes">,
+  cards: BoardViewCard[],
+): BoardConfigIssue[] {
+  const issues: BoardConfigIssue[] = [];
+  const lanes = config.swimlanes ?? [];
+  const seenKeys = new Set<string>();
+  const duplicateKeys = new Set<string>();
+  const seenNames = new Map<string, string>();
+  const duplicateNames = new Set<string>();
+
+  for (const lane of lanes) {
+    if (seenKeys.has(lane.key)) duplicateKeys.add(lane.key);
+    else seenKeys.add(lane.key);
+
+    const normalizedName = lane.name.trim().toLocaleLowerCase();
+    if (normalizedName) {
+      if (seenNames.has(normalizedName)) duplicateNames.add(normalizedName);
+      else seenNames.set(normalizedName, lane.name.trim());
+    }
+  }
+
+  for (const key of duplicateKeys) issues.push({ kind: "duplicate_swimlane_key", key });
+  for (const normalizedName of duplicateNames) {
+    issues.push({
+      kind: "duplicate_swimlane_name",
+      name: seenNames.get(normalizedName) ?? normalizedName,
+    });
+  }
+
+  const danglingCounts = new Map<string, number>();
+  for (const card of cards) {
+    const key = customSwimlaneKeyOf(card);
+    if (key && !seenKeys.has(key)) {
+      danglingCounts.set(key, (danglingCounts.get(key) ?? 0) + 1);
+    }
+  }
+  for (const [key, cardCount] of danglingCounts) {
+    issues.push({ kind: "dangling_swimlane", key, cardCount });
+  }
+  return issues;
+}
+
 /** The grouping value of a card under the active grouping. */
-export function groupValueOf(card: BoardViewCard, groupBy: BoardGroupKey): string {
+export function groupValueOf(card: BoardViewCard, groupBy: BoardSwimlaneGroupKey): string {
+  if (groupBy === "custom") return customSwimlaneKeyOf(card);
   if (groupBy === "priority") return card.priority || "none";
   if (groupBy === "assignee") return card.assignee || "";
   return card.columnKey || "";
@@ -383,12 +580,56 @@ export function effectiveColumns(
   unassignedLabel: string,
 ): BoardViewColumn[] {
   if (groupBy === "status") return config.columns;
-  if (groupBy === "priority") return PRIORITY_ORDER.map((k) => ({ key: k, name: k }));
+  if (groupBy === "priority") {
+    return PRIORITY_ORDER.map((key) => ({
+      key,
+      name:
+        key === "none"
+          ? unassignedLabel
+          : `${key.charAt(0).toUpperCase()}${key.slice(1)}`,
+    }));
+  }
   const vals = new Set<string>();
   for (const c of cards) vals.add(groupValueOf(c, groupBy));
   return [...vals]
     .sort((a, b) => (a === "" ? 1 : b === "" ? -1 : a.localeCompare(b)))
     .map((v) => ({ key: v, name: v || unassignedLabel }));
+}
+
+/** Whether a card references a custom swimlane definition that no longer exists. */
+export function hasDanglingSwimlane(
+  card: BoardViewCard,
+  swimlanes: BoardSwimlane[] | undefined,
+): boolean {
+  const key = card.swimlaneKey;
+  return !!key && !(swimlanes ?? []).some((lane) => lane.key === key);
+}
+
+/**
+ * Derive swimlane rows. Custom lanes come from persistent definitions so empty
+ * lanes remain visible; Unassigned is a system row shown only when cards need it.
+ */
+export function effectiveSwimlanes(
+  config: BoardViewConfig,
+  cards: BoardViewCard[],
+  swimlaneBy: BoardSwimlaneGroupKey,
+  unassignedLabel: string,
+): BoardViewColumn[] {
+  if (swimlaneBy !== "custom") {
+    return effectiveColumns(config, cards, swimlaneBy, unassignedLabel);
+  }
+  const seen = new Set<string>();
+  const definitions = (config.swimlanes ?? []).filter((lane) => {
+    if (seen.has(lane.key)) return false;
+    seen.add(lane.key);
+    return true;
+  });
+  const valid = new Set(definitions.map((lane) => lane.key));
+  const needsUnassigned = cards.some((card) => !card.swimlaneKey || !valid.has(card.swimlaneKey));
+  return [
+    ...definitions.map((lane) => ({ key: lane.key, name: lane.name, color: lane.color })),
+    ...(needsUnassigned ? [{ key: "", name: unassignedLabel }] : []),
+  ];
 }
 
 /**
@@ -400,11 +641,18 @@ export function effectiveColumns(
 export function partitionSwimlanes(
   cards: BoardViewCard[],
   groupBy: BoardGroupKey,
-  swimlaneBy: BoardGroupKey,
+  swimlaneBy: BoardSwimlaneGroupKey,
+  swimlanes?: BoardSwimlane[],
 ): Map<string, Map<string, BoardViewCard[]>> {
   const grid = new Map<string, Map<string, BoardViewCard[]>>();
+  const validCustomKeys =
+    swimlaneBy === "custom" ? new Set((swimlanes ?? []).map((lane) => lane.key)) : null;
   for (const c of cards) {
-    const lane = groupValueOf(c, swimlaneBy);
+    const rawLane = groupValueOf(c, swimlaneBy);
+    const lane =
+      swimlaneBy === "custom" && (!rawLane || !validCustomKeys?.has(rawLane))
+        ? ""
+        : rawLane;
     const col = groupValueOf(c, groupBy);
     let row = grid.get(lane);
     if (!row) grid.set(lane, (row = new Map()));
@@ -415,8 +663,14 @@ export function partitionSwimlanes(
   return grid;
 }
 
-export function cardMatchesFilter(card: BoardViewCard, filter: CardFilter | null): boolean {
+/** Test one card against a normalized board filter, including dangling lane references. */
+export function cardMatchesFilter(
+  card: BoardViewCard,
+  filter: CardFilter | null,
+  config?: Pick<BoardViewConfig, "swimlanes">,
+): boolean {
   if (!filter) return true;
+  if (filter.prop === "swimlaneIssue") return hasDanglingSwimlane(card, config?.swimlanes);
   if (filter.prop === "priority") return (card.priority || "none") === filter.value;
   if (filter.prop === "assignee") return (card.assignee || "") === filter.value;
   if (filter.prop === "tag") return card.tags.some((t) => t.label === filter.value);
@@ -435,11 +689,17 @@ export function cardMatchesSearch(card: BoardViewCard, q: string): boolean {
   return false;
 }
 
-export function visibleCards(cards: BoardViewCard[], search: string, filter: CardFilter | null): BoardViewCard[] {
+/** Apply the board's text query and structured filter to its authoritative card list. */
+export function visibleCards(
+  cards: BoardViewCard[],
+  search: string,
+  filter: CardFilter | null,
+  config?: Pick<BoardViewConfig, "swimlanes">,
+): BoardViewCard[] {
   const q = search.trim().toLowerCase();
   return cards.filter((c) => {
     if (q && !cardMatchesSearch(c, q)) return false;
-    return cardMatchesFilter(c, filter);
+    return cardMatchesFilter(c, filter, config);
   });
 }
 

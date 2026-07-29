@@ -30,8 +30,14 @@ export function CardDetail({
   }, [onClose])
 
   const statusName = config.columns.find((c) => c.key === card.columnKey)?.name || card.columnKey
+  const swimlaneName = card.swimlaneKey
+    ? config.swimlanes?.find((lane) => lane.key === card.swimlaneKey)?.name ?? strings.unassigned
+    : strings.unassigned
   const fieldRows: [string, string][] = [
     [strings.status, statusName],
+    ...(config.swimlaneBy === 'custom' || (config.swimlanes?.length ?? 0) > 0
+      ? ([[strings.swimlane, swimlaneName]] as [string, string][])
+      : []),
     ...(card.priority && card.priority !== 'none' ? ([[strings.priority, card.priority]] as [string, string][]) : []),
     ...(card.assignee ? ([[strings.assignee, card.assignee]] as [string, string][]) : []),
     ...(card.due ? ([[strings.due, card.due]] as [string, string][]) : []),

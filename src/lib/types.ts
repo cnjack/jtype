@@ -1,37 +1,12 @@
+import type { BoardDocumentConfig, BoardViewColumn } from "@shared/lib/board";
+
 export type EntryKind = "folder" | "markdown" | "asset" | "board" | "diagram";
 
 /** A column in a `.board` view (a status group). */
-export type BoardColumn = {
-  key: string;
-  name: string;
-  color?: string | null;
-  /** Optional WIP limit; the column flags when its card count exceeds this. */
-  limit?: number | null;
-};
+export type BoardColumn = BoardViewColumn;
 
 /** A `.board` file's JSON config: a kanban view over card-notes grouped by a property. */
-export type BoardConfig = {
-  id: string;
-  title: string;
-  groupBy: string;
-  columns: BoardColumn[];
-  /** Column key treated as terminal/done (suppresses overdue styling). Defaults to "done". */
-  doneColumn?: string;
-  /** When true, tint each column header by its column color. */
-  colorColumns?: boolean;
-  /** Which renderer this board shows: kanban columns, a flat table, or a calendar. Defaults to "board". */
-  viewType?: "board" | "table" | "calendar";
-  /** Calendar sub-mode (month grid vs agenda list) when viewType === "calendar". Defaults to "month". */
-  calendarMode?: "month" | "agenda";
-  /** User-defined custom fields shown/edited on this board's cards. */
-  fields?: { key: string; label: string; type?: "text" | "number" | "date" }[];
-  /** Board-level label definitions giving tags an explicit color (else auto-colored). */
-  labels?: { label: string; color?: string | null }[];
-  /** Board ticket-id prefix (e.g. OCCSV) for ticket links; ticket numbers are cloud-only. */
-  ticketKey?: string;
-  /** Optional second grouping dimension rendered as swimlane rows in the board view. */
-  swimlaneBy?: "status" | "priority" | "assignee";
-};
+export type BoardConfig = BoardDocumentConfig;
 
 /** A card = a real `.md` note that belongs to a board (frontmatter `board == id`). */
 export type BoardCard = {

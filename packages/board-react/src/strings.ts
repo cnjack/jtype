@@ -15,6 +15,8 @@ export type UiStrings = {
   close: string
   cardReadOnlyHint: string
   status: string
+  swimlane: string
+  unassigned: string
   priority: string
   assignee: string
   due: string
@@ -44,6 +46,8 @@ const en: UiStrings = {
   close: 'Close',
   cardReadOnlyHint: 'Read-only card view',
   status: 'Status',
+  swimlane: 'Swimlane',
+  unassigned: 'Unassigned',
   priority: 'Priority',
   assignee: 'Assignee',
   due: 'Due',
@@ -73,6 +77,8 @@ const zh: UiStrings = {
   close: '关闭',
   cardReadOnlyHint: '只读卡片视图',
   status: '状态',
+  swimlane: '泳道',
+  unassigned: '未分配',
   priority: '优先级',
   assignee: '负责人',
   due: '截止',
@@ -102,6 +108,8 @@ const ja: UiStrings = {
   close: '閉じる',
   cardReadOnlyHint: '読み取り専用のカード表示',
   status: 'ステータス',
+  swimlane: 'スイムレーン',
+  unassigned: '未割り当て',
   priority: '優先度',
   assignee: '担当者',
   due: '期限',
@@ -131,6 +139,8 @@ const ko: UiStrings = {
   close: '닫기',
   cardReadOnlyHint: '읽기 전용 카드 보기',
   status: '상태',
+  swimlane: '스윔레인',
+  unassigned: '미할당',
   priority: '우선순위',
   assignee: '담당자',
   due: '마감',

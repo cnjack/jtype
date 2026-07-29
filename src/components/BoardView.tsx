@@ -8,10 +8,11 @@ import { BoardSurface, BoardPeek } from "@shared/components/board";
 import type { BoardActions } from "@shared/components/board";
 import {
   DEFAULT_DONE_COLUMN,
+  applyBoardCardPatch,
+  normalizeGroupBy,
+  normalizeSwimlaneBy,
   pickCustomFields,
   resolveTags,
-  serializeAttachments,
-  serializeLinks,
   slugify,
   type BoardComment,
   type BoardViewCard,
@@ -43,6 +44,7 @@ export function BoardView({ boardPath, boardRelativePath }: { boardPath: string;
   const [rawCards, setRawCards] = useState<BoardCard[]>([]);
   const [templates, setTemplates] = useState<CardTemplate[]>([]);
   const [error, setError] = useState("");
+  const configRef = useRef<BoardConfig | null>(null);
 
   const cardsDir = boardRelativePath.replace(/\.board$/i, "");
   const boardName = basename(cardsDir);
@@ -54,6 +56,7 @@ export function BoardView({ boardPath, boardRelativePath }: { boardPath: string;
     }
     try {
       const cfg = JSON.parse(await tauri.readBoardFile(boardPath)) as BoardConfig;
+      configRef.current = cfg;
       setConfig(cfg);
       setRawCards(await tauri.scanBoardCards(rootPath, cfg.id));
       setTemplates(await tauri.scanCardTemplates(rootPath, cardsDir).catch(() => []));
@@ -168,6 +171,7 @@ export function BoardView({ boardPath, boardRelativePath }: { boardPath: string;
         icon: c.icon ?? null,
         priority: c.priority ?? null,
         assignee: c.assignee ?? null,
+        swimlaneKey: c.properties?.swimlane || null,
         due: c.due ?? null,
         tags: resolveTags(c.tags ?? [], config?.labels),
         taskDone: c.taskDone,
@@ -197,21 +201,26 @@ export function BoardView({ boardPath, boardRelativePath }: { boardPath: string;
             fields: config.fields,
             labels: config.labels,
             ticketKey: config.ticketKey,
-            swimlaneBy: config.swimlaneBy as BoardViewConfig["swimlaneBy"],
-            groupBy: (config.groupBy as BoardViewConfig["groupBy"]) || "status",
+            swimlaneBy: normalizeSwimlaneBy(config.swimlaneBy),
+            swimlanes: config.swimlanes,
+            swimlaneMigration: config.swimlaneMigration,
+            groupBy: normalizeGroupBy(config.groupBy),
           }
         : { title: boardName, columns: [] },
     [config, boardName],
   );
 
   const saveConfig = useCallback(
-    async (next: BoardConfig) => {
-      setConfig(next);
+    async (next: BoardConfig, throwOnError = false) => {
       try {
         await tauri.writeBoardFile(boardPath, JSON.stringify(next, null, 2));
+        configRef.current = next;
+        setConfig(next);
         await load();
       } catch (e) {
+        await load().catch(() => undefined);
         setError(String(e));
+        if (throwOnError) throw e;
       }
     },
     [boardPath, load],
@@ -238,8 +247,9 @@ export function BoardView({ boardPath, boardRelativePath }: { boardPath: string;
     () => ({
       refresh: () => load(),
       setConfig: async (patch) => {
-        if (!config) return;
-        await saveConfig({ ...config, ...patch });
+        const latest = configRef.current;
+        if (!latest) return;
+        await saveConfig({ ...latest, ...patch }, true);
       },
       createCard: async (colKey, title) => {
         if (!config || !rootPath) return;
@@ -258,26 +268,28 @@ export function BoardView({ boardPath, boardRelativePath }: { boardPath: string;
       },
       updateCard: async (id, patch) => {
         try {
-          const { data, body } = parseFrontmatter(await tauri.readFile(id));
-          const next = { ...data };
-          if (patch.title !== undefined) next.title = patch.title;
-          if (patch.columnKey !== undefined) next.status = patch.columnKey;
-          if (patch.priority !== undefined) next.priority = patch.priority ?? "";
-          if (patch.assignee !== undefined) next.assignee = patch.assignee ?? "";
-          if (patch.due !== undefined) next.due = patch.due ?? "";
-          if (patch.icon !== undefined) next.icon = patch.icon ?? "";
-          if (patch.tags !== undefined) next.tags = patch.tags.map((tg) => tg.label).join(", ");
-          if (patch.attachments !== undefined) next.attachments = serializeAttachments(patch.attachments);
-          if (patch.custom !== undefined) for (const [k, v] of Object.entries(patch.custom)) next[k] = v ?? "";
-          if (patch.blockedBy !== undefined) next.blocked_by = serializeLinks(patch.blockedBy);
-          if (patch.blocks !== undefined) next.blocks = serializeLinks(patch.blocks);
-          if (patch.relates !== undefined) next.relates = serializeLinks(patch.relates);
-          if (patch.parent !== undefined) next.parent = patch.parent ? serializeLinks([patch.parent]) : "";
-          const newBody = patch.notes !== undefined ? patch.notes : body;
-          await tauri.writeFile(id, writeFrontmatter(newBody, next));
+          await tauri.writeFile(id, applyBoardCardPatch(await tauri.readFile(id), patch));
           await load();
         } catch (e) {
           setError(String(e));
+        }
+      },
+      updateCards: async (updates, onProgress) => {
+        try {
+          let completed = 0;
+          for (const update of updates) {
+            await tauri.writeFile(
+              update.cardId,
+              applyBoardCardPatch(await tauri.readFile(update.cardId), update.patch),
+            );
+            completed += 1;
+            onProgress?.(completed, updates.length);
+          }
+          await load();
+        } catch (e) {
+          await load();
+          setError(String(e));
+          throw e;
         }
       },
       moveCard: async (id, toCol, index) => {
@@ -370,6 +382,7 @@ export function BoardView({ boardPath, boardRelativePath }: { boardPath: string;
           delete next.board;
           delete next.status;
           delete next.position;
+          delete next.swimlane;
           const rel = `${cardsDir}/.templates/${slugify(name)}.md`;
           try {
             await tauri.createEntry(rootPath, rel, "markdown");
@@ -471,6 +484,7 @@ export function BoardView({ boardPath, boardRelativePath }: { boardPath: string;
           status: groupKey === "status" ? colKey : config.columns[0]?.key ?? "todo",
           position: String(pos),
         };
+        delete next.swimlane;
         if (groupKey !== "status") next[groupKey] = colKey;
         await writeNew(slugify(tpl.name), writeFrontmatter(body, next));
         await load();

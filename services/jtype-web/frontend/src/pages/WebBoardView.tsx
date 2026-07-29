@@ -6,6 +6,7 @@ import { BoardSurface, BoardPeek, type BoardActions } from '@shared/components/b
 import { useWorkspaceSocket } from '../hooks/useWorkspaceSocket'
 import {
   DEFAULT_DONE_COLUMN,
+  applyBoardCardPatch,
   bodyExcerpt,
   countTasks,
   parseAttachments,
@@ -13,31 +14,19 @@ import {
   parseTagList,
   pickCustomFields,
   resolveTags,
-  serializeAttachments,
-  serializeLinks,
+  normalizeGroupBy,
+  normalizeSwimlaneBy,
   slugify,
   type BoardActivityEvent,
   type BoardComment,
   type BoardViewCard,
   type BoardViewConfig,
+  type BoardDocumentConfig,
 } from '@shared/lib/board'
 import { api, getStoredUsername, setSessionId, type MemberInfo } from '../api'
 
 type CardMeta = { id: string; relativePath: string; content: string; contentHash: string }
-type BoardConfigJSON = {
-  id: string
-  title: string
-  groupBy?: string
-  columns: { key: string; name: string; color?: string | null; limit?: number | null }[]
-  doneColumn?: string
-  colorColumns?: boolean
-  viewType?: 'board' | 'table' | 'calendar'
-  calendarMode?: 'month' | 'agenda'
-  fields?: { key: string; label: string; type?: 'text' | 'number' | 'date' }[]
-  labels?: { label: string; color?: string | null }[]
-  ticketKey?: string
-  swimlaneBy?: 'status' | 'priority' | 'assignee'
-}
+type BoardConfigJSON = BoardDocumentConfig
 
 function rand() {
   return Math.random().toString(36).slice(2, 6)
@@ -67,19 +56,22 @@ export function WebBoardView({
   const boardDir = boardRelativePath.replace(/\.board$/i, '')
 
   const [config, setConfig] = useState<BoardConfigJSON | null>(null)
-  const [boardDoc, setBoardDoc] = useState<{ content: string; contentHash: string } | null>(null)
   const [cards, setCards] = useState<BoardViewCard[]>([])
   const [metaByPath, setMetaByPath] = useState<Map<string, CardMeta>>(new Map())
   const [error, setError] = useState('')
   const [showBoardSettings, setShowBoardSettings] = useState(false)
   const [ticketByDoc, setTicketByDoc] = useState<Map<string, string>>(new Map())
+  const configRef = useRef<BoardConfigJSON | null>(null)
+  const boardDocRef = useRef<{ content: string; contentHash: string } | null>(null)
 
   const load = useCallback(async () => {
     try {
       const boardDocFull = await api.getDocument(workspaceId, boardDocId)
       const cfg = JSON.parse(boardDocFull.content) as BoardConfigJSON
+      configRef.current = cfg
       setConfig(cfg)
-      setBoardDoc({ content: boardDocFull.content, contentHash: boardDocFull.contentHash })
+      const nextBoardDoc = { content: boardDocFull.content, contentHash: boardDocFull.contentHash }
+      boardDocRef.current = nextBoardDoc
 
       const list = await api.listDocuments(workspaceId)
       const cardItems = list.filter(
@@ -102,6 +94,7 @@ export function WebBoardView({
           icon: fm.data.icon || null,
           priority: fm.data.priority || null,
           assignee: fm.data.assignee || null,
+          swimlaneKey: fm.data.swimlane || null,
           due: fm.data.due || null,
           tags: resolveTags(fm.data.tags ? parseTagList(fm.data.tags) : [], cfg.labels),
           notes: fm.body,
@@ -145,23 +138,29 @@ export function WebBoardView({
   }, [subscribe, sessionId, load])
 
   const saveBoardConfig = useCallback(
-    async (next: BoardConfigJSON) => {
-      if (!boardDoc) return
-      setConfig(next)
+    async (next: BoardConfigJSON, throwOnError = false) => {
+      const latestBoardDoc = boardDocRef.current
+      if (!latestBoardDoc) return
       try {
         const content = JSON.stringify(next, null, 2)
-        await api.saveDocument(workspaceId, {
+        const saved = await api.saveDocument(workspaceId, {
           relativePath: boardRelativePath,
           content,
-          baseContentHash: boardDoc.contentHash,
-          baseContent: boardDoc.content,
+          baseContentHash: latestBoardDoc.contentHash,
+          baseContent: latestBoardDoc.content,
         })
+        configRef.current = next
+        setConfig(next)
+        const nextBoardDoc = { content, contentHash: saved.contentHash }
+        boardDocRef.current = nextBoardDoc
         await load()
       } catch (e) {
+        await load().catch(() => undefined)
         setError(String(e))
+        if (throwOnError) throw e
       }
     },
-    [workspaceId, boardRelativePath, boardDoc, load],
+    [workspaceId, boardRelativePath, load],
   )
 
   const saveCard = useCallback(
@@ -179,10 +178,10 @@ export function WebBoardView({
   )
 
   const createCardDoc = useCallback(
-    async (title: string, data: Record<string, string>) => {
+    async (title: string, data: Record<string, string>, body = '') => {
       let rel = `${boardDir}/${slugify(title)}.md`
       if (metaByPath.has(rel)) rel = `${boardDir}/${slugify(title)}-${rand()}.md`
-      await api.saveDocument(workspaceId, { relativePath: rel, content: writeFrontmatter('', data) })
+      await api.saveDocument(workspaceId, { relativePath: rel, content: writeFrontmatter(body, data) })
       return rel
     },
     [workspaceId, boardDir, metaByPath],
@@ -201,8 +200,10 @@ export function WebBoardView({
             fields: config.fields,
             labels: config.labels,
             ticketKey: config.ticketKey,
-            swimlaneBy: config.swimlaneBy as BoardViewConfig['swimlaneBy'],
-            groupBy: (config.groupBy as BoardViewConfig['groupBy']) || 'status',
+            swimlaneBy: normalizeSwimlaneBy(config.swimlaneBy),
+            swimlanes: config.swimlanes,
+            swimlaneMigration: config.swimlaneMigration,
+            groupBy: normalizeGroupBy(config.groupBy),
           }
         : { title: boardDir, columns: [] },
     [config, boardDir],
@@ -327,8 +328,9 @@ export function WebBoardView({
     () => ({
       refresh: () => load(),
       setConfig: async (patch) => {
-        if (!config) return
-        await saveBoardConfig({ ...config, ...patch })
+        const latest = configRef.current
+        if (!latest) return
+        await saveBoardConfig({ ...latest, ...patch }, true)
       },
       createCard: async (colKey, title) => {
         if (!config) return
@@ -348,27 +350,49 @@ export function WebBoardView({
       updateCard: async (id, patch) => {
         const meta = metaByPath.get(id)
         if (!meta) return
-        const { data, body } = parseFrontmatter(meta.content)
-        const next = { ...data }
-        if (patch.title !== undefined) next.title = patch.title
-        if (patch.columnKey !== undefined) next.status = patch.columnKey
-        if (patch.priority !== undefined) next.priority = patch.priority ?? ''
-        if (patch.assignee !== undefined) next.assignee = patch.assignee ?? ''
-        if (patch.due !== undefined) next.due = patch.due ?? ''
-        if (patch.icon !== undefined) next.icon = patch.icon ?? ''
-        if (patch.tags !== undefined) next.tags = patch.tags.map((t) => t.label).join(', ')
-        if (patch.attachments !== undefined) next.attachments = serializeAttachments(patch.attachments)
-        if (patch.custom !== undefined) for (const [k, v] of Object.entries(patch.custom)) next[k] = v ?? ''
-        if (patch.blockedBy !== undefined) next.blocked_by = serializeLinks(patch.blockedBy)
-        if (patch.blocks !== undefined) next.blocks = serializeLinks(patch.blocks)
-        if (patch.relates !== undefined) next.relates = serializeLinks(patch.relates)
-        if (patch.parent !== undefined) next.parent = patch.parent ? serializeLinks([patch.parent]) : ''
-        const newBody = patch.notes !== undefined ? patch.notes : body
         try {
-          await saveCard(id, next, newBody)
+          await api.saveDocument(workspaceId, {
+            relativePath: id,
+            content: applyBoardCardPatch(meta.content, patch),
+            baseContentHash: meta.contentHash,
+            baseContent: meta.content,
+          })
           await load()
         } catch (e) {
           setError(String(e))
+        }
+      },
+      updateCards: async (updates, onProgress) => {
+        try {
+          const workingMeta = new Map(metaByPath)
+          const missing = updates.find((update) => !workingMeta.has(update.cardId))
+          if (missing) {
+            throw new Error(`Card metadata is missing for ${missing.cardId}. Refresh and try again.`)
+          }
+          let completed = 0
+          for (const update of updates) {
+            const meta = workingMeta.get(update.cardId)!
+            const content = applyBoardCardPatch(meta.content, update.patch)
+            const saved = await api.saveDocument(workspaceId, {
+              relativePath: update.cardId,
+              content,
+              baseContentHash: meta.contentHash,
+              baseContent: meta.content,
+            })
+            workingMeta.set(update.cardId, {
+              ...meta,
+              content,
+              contentHash: saved.contentHash,
+            })
+            completed += 1
+            onProgress?.(completed, updates.length)
+          }
+          if (completed > 0) setMetaByPath(workingMeta)
+          await load()
+        } catch (e) {
+          await load()
+          setError(String(e))
+          throw e
         }
       },
       moveCard: async (id, toCol, index) => {
@@ -431,10 +455,10 @@ export function WebBoardView({
         const meta = metaByPath.get(card.id)
         if (!meta || !config) return
         try {
-          const { data } = parseFrontmatter(meta.content)
+          const { data, body } = parseFrontmatter(meta.content)
           const newTitle = `${card.title} copy`
           const pos = cards.filter((c) => c.columnKey === card.columnKey).reduce((m, c) => Math.max(m, c.position), -1) + 1
-          await createCardDoc(newTitle, { ...data, title: newTitle, position: String(pos) })
+          await createCardDoc(newTitle, { ...data, title: newTitle, position: String(pos) }, body)
           await load()
         } catch (e) {
           setError(String(e))

@@ -2,31 +2,28 @@ import { CSSProperties } from 'react';
 import { ReactElement } from 'react';
 
 /** Shape of the `.board` JSON config document (mirrors WebBoardView). */
-export declare type BoardConfigJSON = {
+export declare type BoardConfigJSON = BoardDocumentConfig;
+
+/** Canonical synced `.board` JSON shape used by Desktop, Web, and board-react. */
+declare type BoardDocumentConfig = BoardViewConfig & {
     id: string;
-    title: string;
-    groupBy?: string;
-    columns: {
-        key: string;
-        name: string;
-        color?: string | null;
-        limit?: number | null;
-    }[];
-    doneColumn?: string;
-    colorColumns?: boolean;
-    viewType?: 'board' | 'table' | 'calendar';
-    calendarMode?: 'month' | 'agenda';
-    fields?: {
-        key: string;
-        label: string;
-        type?: 'text' | 'number' | 'date';
-    }[];
-    labels?: {
-        label: string;
-        color?: string | null;
-    }[];
-    ticketKey?: string;
-    swimlaneBy?: 'status' | 'priority' | 'assignee';
+};
+
+/** A user-defined custom field on a board's cards (stored in frontmatter / properties). */
+declare type BoardFieldDef = {
+    key: string;
+    label: string;
+    type?: BoardFieldType;
+};
+
+declare type BoardFieldType = "text" | "number" | "date";
+
+declare type BoardGroupKey = "status" | "priority" | "assignee";
+
+/** A board-level label definition: a tag's text + its display color. */
+declare type BoardLabelDef = {
+    label: string;
+    color?: string | null;
 };
 
 export declare type BoardLocale = 'en' | 'zh' | 'ja' | 'ko';
@@ -37,6 +34,16 @@ export declare type BoardResolution = {
     /** Folder holding the board's card `.md` documents. */
     boardDir: string;
 };
+
+/** Persistent, user-editable swimlane definition stored in a `.board` file. */
+declare type BoardSwimlane = {
+    /** Immutable machine identity referenced by card frontmatter `swimlane`. */
+    key: string;
+    name: string;
+    color?: string | null;
+};
+
+declare type BoardSwimlaneGroupKey = BoardGroupKey | "custom";
 
 export declare type BoardTag = {
     id?: string;
@@ -57,6 +64,8 @@ export declare type BoardViewCard = {
     priority?: string | null;
     /** Display text (web resolves a member name; desktop uses free text). */
     assignee?: string | null;
+    /** Stable custom swimlane identity from card frontmatter `swimlane`. */
+    swimlaneKey?: string | null;
     due?: string | null;
     tags: BoardTag[];
     /** Markdown body / description. */
@@ -74,7 +83,54 @@ export declare type BoardViewCard = {
     blocks?: string[];
     /** Card slugs this card relates to, no direction (frontmatter `relates`). */
     relates?: string[];
+    /** Parent card slug (frontmatter `parent`) — makes this card a sub-card. */
+    parent?: string | null;
 };
+
+declare type BoardViewColumn = {
+    key: string;
+    name: string;
+    color?: string | null;
+    /** Optional WIP limit; the column flags when its card count exceeds this. */
+    limit?: number | null;
+};
+
+declare type BoardViewConfig = {
+    title: string;
+    columns: BoardViewColumn[];
+    /** Column key treated as terminal/done (suppresses overdue styling). */
+    doneColumn?: string;
+    /** Tint each column header by its (or an auto) color. */
+    colorColumns?: boolean;
+    viewType?: BoardViewType;
+    groupBy?: BoardGroupKey;
+    /** Sub-mode for the calendar view (month grid vs agenda list). Defaults to "month". */
+    calendarMode?: CalendarMode;
+    /** User-defined custom fields shown/edited on cards (board-level schema). */
+    fields?: BoardFieldDef[];
+    /**
+     * Board-level label definitions giving tags an explicit color. A card references
+     * a label by its `label` text in frontmatter `tags`; a tag with no matching
+     * definition (or a definition with no color) falls back to a deterministic
+     * auto-color, so tags are colored with zero config.
+     */
+    labels?: BoardLabelDef[];
+    /** Board ticket-id prefix (e.g. `OCCSV`) for per-card `OCCSV-3371` ticket links. */
+    ticketKey?: string;
+    /**
+     * Second grouping dimension rendered as horizontal swimlanes (rows) in the
+     * board view. Must differ from `groupBy`; unset = no swimlanes.
+     */
+    swimlaneBy?: BoardSwimlaneGroupKey;
+    /** Persistent definitions used when `swimlaneBy === "custom"`. */
+    swimlanes?: BoardSwimlane[];
+    /** Present only while a derived-lane conversion is incomplete/retryable. */
+    swimlaneMigration?: SwimlaneMigration;
+};
+
+declare type BoardViewType = "board" | "table" | "calendar";
+
+declare type CalendarMode = "month" | "agenda";
 
 export declare type CreateClientOptions = {
     /** Origin of the jtype server, e.g. `https://jtype.nightc.com`. */
@@ -241,5 +297,15 @@ export declare type LiveSubscriptionHandlers = {
  * (pass the full path to disambiguate); none → `board_not_found`.
  */
 export declare function resolveBoardDoc(docs: JTypeDocumentListItem[], boardRef: string): BoardResolution;
+
+/** Persisted while a derived priority/assignee view is converted to custom lanes. */
+declare type SwimlaneMigration = {
+    version: 1;
+    source: "priority" | "assignee";
+    mapping: Array<{
+        value: string;
+        swimlaneKey: string;
+    }>;
+};
 
 export { }

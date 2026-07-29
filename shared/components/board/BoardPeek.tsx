@@ -29,6 +29,8 @@ import type { BoardComment, BoardActivityEvent } from "../../lib/board";
 export function BoardPeek({
   card,
   statusOptions,
+  swimlaneOptions,
+  swimlaneDisabled,
   assigneeOptions,
   tagOptions,
   fields,
@@ -64,6 +66,16 @@ export function BoardPeek({
   const [activity, setActivity] = useState<BoardActivityEvent[]>([]);
   const previewRef = useRef<HTMLElement>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingPatch = useRef<Partial<BoardViewCard>>({});
+  const pendingOnChange = useRef(onChange);
+
+  const flushPendingPatch = useCallback((extra: Partial<BoardViewCard> = {}) => {
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = null;
+    const patch = { ...pendingPatch.current, ...extra };
+    pendingPatch.current = {};
+    if (Object.keys(patch).length > 0) pendingOnChange.current(patch);
+  }, []);
 
   // Re-init when a different card is opened; lazily load notes if needed.
   useEffect(() => {
@@ -80,6 +92,11 @@ export function BoardPeek({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [card.id]);
+
+  // A quick close/card switch must not discard the last debounced title/notes
+  // edit. The callback is captured when that patch is queued, so it still
+  // targets the card that owned the draft.
+  useEffect(() => () => flushPendingPatch(), [card.id, flushPendingPatch]);
 
   // Load comments when a card opens (DB board only).
   useEffect(() => {
@@ -155,17 +172,19 @@ export function BoardPeek({
 
   const debouncedPatch = useCallback(
     (patch: Partial<BoardViewCard>) => {
+      pendingPatch.current = { ...pendingPatch.current, ...patch };
+      pendingOnChange.current = onChange;
       if (saveTimer.current) clearTimeout(saveTimer.current);
-      saveTimer.current = setTimeout(() => onChange(patch), 350);
+      saveTimer.current = setTimeout(() => flushPendingPatch(), 350);
     },
-    [onChange],
+    [flushPendingPatch, onChange],
   );
 
   const setField = (patch: Partial<BoardViewCard>, immediate = false) => {
     setDraft((d) => ({ ...d, ...patch }));
     if (immediate) {
-      if (saveTimer.current) clearTimeout(saveTimer.current);
-      onChange(patch);
+      pendingOnChange.current = onChange;
+      flushPendingPatch(patch);
     } else {
       debouncedPatch(patch);
     }
@@ -265,6 +284,20 @@ export function BoardPeek({
             options={statusOptions}
             onChange={(v) => setField({ columnKey: v }, true)}
           />
+
+          {swimlaneOptions && (
+            <>
+              <span className="text-xs text-brand-gray">
+                <Trans>Swimlane</Trans>
+              </span>
+              <ListboxSelect
+                value={draft.swimlaneKey ?? ""}
+                options={swimlaneOptions}
+                onChange={(v) => setField({ swimlaneKey: v || null }, true)}
+                disabled={swimlaneDisabled}
+              />
+            </>
+          )}
 
           <span className="text-xs text-brand-gray">
             <Trans>Priority</Trans>
