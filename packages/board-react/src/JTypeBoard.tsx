@@ -40,6 +40,8 @@ export type JTypeBoardProps = {
   client?: JTypeBoardDataClient
   /** Hide all mutation affordances (view-only board). Default false. */
   readOnly?: boolean
+  /** Current user's display name; enables the personal "My cards" filter. */
+  currentUser?: string
   /**
    * Try the live SSE feed (default true). Post PR #45 the feed requires a
    * full-scope session token — with an mcp-scoped token the server answers
@@ -75,6 +77,7 @@ export function JTypeBoard({
   token,
   client: injectedClient,
   readOnly = false,
+  currentUser,
   live = true,
   pollIntervalMs = 30000,
   onCardOpen,
@@ -460,6 +463,7 @@ export function JTypeBoard({
             actions={actions}
             error={banner || undefined}
             readOnly={readOnly}
+            currentUser={currentUser}
             onCardOpen={handleCardOpen}
             // Dropdown panels mount in body-level portals; carry the scope
             // class so ONLY our portals pick up the package styles (never the

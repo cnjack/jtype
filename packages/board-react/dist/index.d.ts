@@ -159,7 +159,7 @@ export declare class JTypeApiError extends Error {
  * `client`) plus `workspaceId`+`boardRef` and it renders the same shared
  * BoardSurface the jtype desktop + web apps use, backed by the document API.
  */
-export declare function JTypeBoard({ workspaceId, boardRef, baseUrl, token, client: injectedClient, readOnly, live, pollIntervalMs, onCardOpen, onConnectionChange, locale, className, style, }: JTypeBoardProps): ReactElement;
+export declare function JTypeBoard({ workspaceId, boardRef, baseUrl, token, client: injectedClient, readOnly, currentUser, live, pollIntervalMs, onCardOpen, onConnectionChange, locale, className, style, }: JTypeBoardProps): ReactElement;
 
 export declare type JTypeBoardConnection = 'live' | 'polling' | 'error';
 
@@ -216,6 +216,8 @@ export declare type JTypeBoardProps = {
     client?: JTypeBoardDataClient;
     /** Hide all mutation affordances (view-only board). Default false. */
     readOnly?: boolean;
+    /** Current user's display name; enables the personal "My cards" filter. */
+    currentUser?: string;
     /**
      * Try the live SSE feed (default true). Post PR #45 the feed requires a
      * full-scope session token — with an mcp-scoped token the server answers

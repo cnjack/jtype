@@ -28,7 +28,7 @@ const openHarness = async (page: import("@playwright/test").Page) => {
 const state = (page: import("@playwright/test").Page) =>
   page.evaluate(() => (window as unknown as { __BOARD_TEST_STATE__: HarnessState }).__BOARD_TEST_STATE__);
 
-test("custom swimlanes render as one editable grid and keep empty lanes", async ({ page }) => {
+test("custom rows render as one editable grid and keep empty rows", async ({ page }) => {
   await openHarness(page);
 
   await expect(page.locator("[data-swimlane-scrollport]")).toHaveCount(1);
@@ -37,11 +37,11 @@ test("custom swimlanes render as one editable grid and keep empty lanes", async 
   await expect(page.getByText("Offline conflict indicator")).toBeVisible();
   await expect(page.getByText("0 cards")).toBeVisible();
 
-  await page.getByRole("button", { name: "Manage swimlanes" }).click();
-  const dialog = page.getByRole("dialog", { name: "Manage swimlanes" });
-  await expect(dialog.getByRole("heading", { name: "Manage swimlanes" })).toBeVisible();
-  await dialog.getByRole("button", { name: "Add swimlane" }).click();
-  await dialog.getByRole("textbox", { name: "Swimlane name" }).fill("Research");
+  await page.getByRole("button", { name: "Manage custom rows" }).click();
+  const dialog = page.getByRole("dialog", { name: "Manage custom rows" });
+  await expect(dialog.getByRole("heading", { name: "Manage custom rows" })).toBeVisible();
+  await dialog.getByRole("button", { name: "Add row" }).click();
+  await dialog.getByRole("textbox", { name: "Row name" }).fill("Research");
   await dialog.getByRole("button", { name: "Add", exact: true }).click();
 
   await expect
@@ -66,16 +66,16 @@ test("Peek changes card mapping by stable lane key", async ({ page }) => {
     .toBe("Offline conflict state");
 });
 
-test("default delete preserves card key and surfaces the dangling mapping", async ({ page }) => {
+test("default row delete preserves card key and surfaces the dangling mapping", async ({ page }) => {
   await openHarness(page);
-  await page.getByRole("button", { name: "Manage swimlanes" }).click();
-  const dialog = page.getByRole("dialog", { name: "Manage swimlanes" });
+  await page.getByRole("button", { name: "Manage custom rows" }).click();
+  const dialog = page.getByRole("dialog", { name: "Manage custom rows" });
   await dialog.getByRole("button", { name: "Actions for Platform" }).click();
   await page.getByRole("menuitem", { name: "Delete" }).click();
 
   const deleteDialog = page.getByRole("dialog", { name: 'Delete "Platform"?' });
   await expect(deleteDialog.getByText("Keep cards in Unassigned")).toBeVisible();
-  await deleteDialog.getByRole("button", { name: "Delete swimlane" }).click();
+  await deleteDialog.getByRole("button", { name: "Delete row" }).click();
 
   await expect
     .poll(async () => (await state(page)).config.swimlanes?.some((lane) => lane.name === "Platform"))
@@ -88,8 +88,8 @@ test("default delete preserves card key and surfaces the dangling mapping", asyn
 
 test("move-before-delete updates cards before removing the lane", async ({ page }) => {
   await openHarness(page);
-  await page.getByRole("button", { name: "Manage swimlanes" }).click();
-  const dialog = page.getByRole("dialog", { name: "Manage swimlanes" });
+  await page.getByRole("button", { name: "Manage custom rows" }).click();
+  const dialog = page.getByRole("dialog", { name: "Manage custom rows" });
   await dialog.getByRole("button", { name: "Actions for Growth" }).click();
   await page.getByRole("menuitem", { name: "Delete" }).click();
 
@@ -134,15 +134,60 @@ test("status swimlane actions reorder the status definitions, not the column gro
     .toEqual(["doing", "todo", "done"]);
 });
 
-test("priority conversion keeps priority and finishes with reusable custom lane IDs", async ({ page }) => {
+test("manage statuses stays visible and adds a workflow status independently of rows", async ({ page }) => {
+  await openHarness(page);
+
+  await page.getByRole("button", { name: "Manage statuses" }).click();
+  const dialog = page.getByRole("dialog", { name: "Manage statuses" });
+  await expect(dialog.getByText("cards stay mapped by status ID")).toBeVisible();
+  await expect(dialog.getByText("Status ID: todo")).toBeVisible();
+  await dialog.getByRole("button", { name: "Add status" }).click();
+  await dialog.getByRole("textbox", { name: "Status name" }).fill("Review");
+  await dialog.getByRole("button", { name: "Add", exact: true }).click();
+
+  await expect
+    .poll(async () => (await state(page)).config.columns?.map((column) => column.key))
+    .toContain("review");
+
+  await dialog.getByRole("button", { name: "Actions for Review" }).click();
+  await page.getByRole("menuitem", { name: "Delete" }).click();
+  await expect
+    .poll(async () => (await state(page)).config.columns?.map((column) => column.key))
+    .not.toContain("review");
+});
+
+test("lightweight filters OR values within a section and AND across sections", async ({ page }) => {
+  await openHarness(page);
+
+  await page.getByRole("button", { name: "Filters" }).click();
+  await page.getByRole("checkbox", { name: "high" }).click();
+  await page.getByRole("checkbox", { name: "medium" }).click();
+  await page.getByRole("checkbox", { name: "My cards" }).click();
+
+  await expect(page.getByText("1 of 4 cards shown")).toBeVisible();
+  await expect(page.getByText("Offline conflict indicator")).toBeVisible();
+  await expect(page.getByText("Publishing analytics")).toBeHidden();
+  const priorityChip = page.getByRole("button", { name: /Remove filter: Priority/ });
+  const mineChip = page.getByRole("button", { name: /Remove filter: My cards/ });
+  await expect(priorityChip).toBeVisible();
+  await expect(mineChip).toBeVisible();
+
+  await priorityChip.click();
+  await expect(page.getByText("Publishing analytics")).toBeHidden();
+  await expect(page.getByText("Legacy lane cleanup")).toBeVisible();
+  await mineChip.click();
+  await expect(page.getByText("Publishing analytics")).toBeVisible();
+});
+
+test("priority conversion keeps priority and finishes with reusable custom row IDs", async ({ page }) => {
   await openHarness(page);
   const swimlaneSelect = page.locator("select").filter({ has: page.locator('option[value="custom"]') });
   await swimlaneSelect.selectOption("priority");
-  await page.getByRole("button", { name: "Make swimlanes editable" }).click();
+  await page.getByRole("button", { name: "Make rows editable" }).click();
 
-  const dialog = page.getByRole("dialog", { name: "Make priority swimlanes editable?" });
+  const dialog = page.getByRole("dialog", { name: "Make priority rows editable?" });
   await expect(dialog.getByText("High", { exact: true })).toBeVisible();
-  await dialog.getByRole("button", { name: "Create editable swimlanes" }).click();
+  await dialog.getByRole("button", { name: "Create editable rows" }).click();
 
   await expect.poll(async () => (await state(page)).config.swimlaneBy).toBe("custom");
   const final = await state(page);
@@ -160,10 +205,10 @@ test("conversion stops after bounded retries when card writes do not persist", a
   await openHarness(page);
   const swimlaneSelect = page.locator("select").filter({ has: page.locator('option[value="custom"]') });
   await swimlaneSelect.selectOption("priority");
-  await page.getByRole("button", { name: "Make swimlanes editable" }).click();
+  await page.getByRole("button", { name: "Make rows editable" }).click();
 
-  const dialog = page.getByRole("dialog", { name: "Make priority swimlanes editable?" });
-  await dialog.getByRole("button", { name: "Create editable swimlanes" }).click();
+  const dialog = page.getByRole("dialog", { name: "Make priority rows editable?" });
+  await dialog.getByRole("button", { name: "Create editable rows" }).click();
   await expect(page.getByRole("dialog").getByRole("alert")).toContainText(
     "Conversion stopped because card updates did not persist.",
   );

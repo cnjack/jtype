@@ -1,10 +1,12 @@
-Kanban in JType lives in a **cloud workspace**. Once your vault is bound to a workspace, that same workspace can hold **boards** — visual lanes for tracking work — right next to your notes. A board is made of **columns**, and each column holds **cards**. That's the whole model.
+Kanban in JType is local-first. A board is a `.board` document in your **vault**, next to the Markdown notes that act as its cards. The Desktop app edits that board offline; bind the vault to a **cloud workspace** to open and collaborate on the same board in the Web app. A board is made of **status columns**, and each column holds **cards**.
 
-If you haven't connected a workspace yet, start with [Cloud workspaces & binding](/help/c/sync-workspaces/cloud-workspaces). Everything below assumes you have a workspace.
+If you want Web or team access and haven't connected a workspace yet, start with [Cloud workspaces & binding](/help/c/sync-workspaces/cloud-workspaces). Local Desktop boards do not require a cloud connection.
 
 ## Boards and columns
 
-A **board** belongs to one workspace and groups related work — a roadmap, a sprint, a content calendar. Every new board starts with three columns: **To do**, **Doing**, and **Done**. Columns are simply named lanes; you can rename them, recolor them, reorder them, and give them an optional WIP (work-in-progress) limit as a gentle hint. The limit is advisory only — JType never blocks you from adding one more card.
+A **board** belongs to one workspace and groups related work — a roadmap, a sprint, a content calendar. Every new board starts with three statuses: **To do**, **Doing**, and **Done**, normally displayed as columns. You can rename, recolor, and reorder statuses, and give each one an optional WIP (work-in-progress) limit as a gentle hint. The limit is advisory only — JType never blocks you from adding one more card.
+
+Each status has a stable ID stored in the card's `status` frontmatter field, so renaming a status does not disconnect its cards. The visual board can also add optional horizontal **Rows** by priority, assignee, status, or a custom row ID. Rows organize the view; they do not replace status.
 
 To see the boards in a workspace from the terminal:
 

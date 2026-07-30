@@ -50,8 +50,11 @@ const initialCards: BoardViewCard[] = [
     position: 0,
     title: "Offline conflict indicator",
     priority: "high",
+    assignee: "Jack",
+    due: "2026-08-02",
     swimlaneKey: "lane_platform_11111111",
-    tags: [],
+    tags: [{ label: "frontend" }],
+    blockedBy: ["roadmap/dependency"],
   },
   {
     id: "roadmap/analytics.md",
@@ -59,8 +62,10 @@ const initialCards: BoardViewCard[] = [
     position: 0,
     title: "Publishing analytics",
     priority: "medium",
+    assignee: "Kim",
+    due: "2026-08-05",
     swimlaneKey: "lane_growth_22222222",
-    tags: [],
+    tags: [{ label: "analytics" }],
   },
   {
     id: "roadmap/legacy.md",
@@ -68,6 +73,7 @@ const initialCards: BoardViewCard[] = [
     position: 0,
     title: "Legacy lane cleanup",
     priority: "low",
+    assignee: "Jack",
     swimlaneKey: "lane_deleted_99999999",
     tags: [],
   },
@@ -221,6 +227,7 @@ function Harness() {
       config={config}
       cards={cards}
       actions={actions}
+      currentUser="Jack"
       peekComponent={BoardPeek}
     />
   );

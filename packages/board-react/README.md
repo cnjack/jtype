@@ -21,9 +21,10 @@ import 'jtype-board-react/style.css'
 
 The component resolves `boardRef` to the `.board` config document itself
 (exact path first, then unique basename anywhere in the workspace), scans the
-board folder's card documents, and gives you the full board: columns, cards,
-drag-to-move (with document writeback), search/filter/sort, Board/Table/
-Calendar views, and a built-in read-only card detail.
+board folder's card documents, and gives you the full board: editable status
+columns, cards, drag-to-move (with document writeback), optional horizontal
+rows, multi-select filters, search/sort, Board/Table/Calendar views, and a
+built-in read-only card detail.
 
 The wrapper fills its container — **give the parent element a height.**
 
@@ -37,6 +38,7 @@ The wrapper fills its container — **give the parent element a height.**
 | `token` | `string` | — | Session token, typically `mcp`-scoped (mint via the OAuth device flow or the board Settings → MCP access panel). |
 | `client` | `JTypeBoardDataClient` | — | Injected data client; replaces `baseUrl`+`token`. **Memoize it** — a new identity per render remounts the board. |
 | `readOnly` | `boolean` | `false` | Hides every mutation affordance (drag, composers, menus). View switching stays usable but is kept local, never written back. |
+| `currentUser` | `string` | — | Current user's display name. Enables the personal **My cards** filter. |
 | `live` | `boolean` | `true` | Try the live SSE feed; see *Live updates* below. |
 | `pollIntervalMs` | `number` | `30000` | Polling cadence (min 5000). |
 | `onCardOpen` | `(card: BoardViewCard) => void` | — | Intercept card opens; replaces the built-in read-only detail panel. |
@@ -130,9 +132,10 @@ successful poll.
 
 ## MVP scope
 
-Included: column + card rendering, drag to move/reorder cards (frontmatter
-`status`/`position` writeback), card create/delete, board/table/calendar and
-swimlane views, search/filter/sort, read-only card detail, localized chrome.
+Included: status-column management, drag to move/reorder cards (frontmatter
+`status`/`position` writeback), card create/delete, board/table/calendar,
+optional horizontal rows, multi-select filters, search/sort, read-only card
+detail, and localized chrome.
 Not yet (flag-gated later): members/assignee options, versions/activity,
 ticket badges (the `OCCSV-####` chip — the embed client has no ticket-index
 endpoint, so cards never show it even when the board configures `ticketKey`),

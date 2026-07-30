@@ -195,7 +195,7 @@ export function BoardSwimlanes({
       <Menu as="div" className="relative shrink-0">
         <MenuButton
           disabled={customLaneMutationPending}
-          title={t`Swimlane actions`}
+          title={t`Row actions`}
           aria-label={t`Actions for ${lane.name}`}
           className="flex h-8 w-8 items-center justify-center rounded-lg text-stone-400 hover:bg-white hover:text-stone-600 disabled:cursor-wait disabled:opacity-40"
         >
@@ -293,7 +293,7 @@ export function BoardSwimlanes({
             <RectangleGroupIcon className="h-5 w-5" />
           </span>
           <h2 className="mt-4 text-base font-semibold tracking-tight text-stone-900">
-            <Trans>Create your first swimlane</Trans>
+            <Trans>Create your first custom row</Trans>
           </h2>
           <p className="mx-auto mt-2 max-w-sm text-xs leading-5 text-brand-gray">
             <Trans>Add stable horizontal groups that stay visible even when they have no cards.</Trans>
@@ -305,7 +305,7 @@ export function BoardSwimlanes({
               className="mt-5 inline-flex min-h-10 items-center gap-1.5 rounded-lg bg-brand-dark px-3 text-xs font-semibold text-white hover:bg-brand"
             >
               <PlusIcon className="h-4 w-4" />
-              <Trans>Add swimlane</Trans>
+              <Trans>Add row</Trans>
             </button>
           )}
         </section>
@@ -322,7 +322,7 @@ export function BoardSwimlanes({
         <div className="sticky left-0 top-0 z-30 flex h-10 items-center gap-2 rounded-xl border border-line bg-white px-3 shadow-sm">
           <span className="min-w-0 flex-1">
             <span className="block text-[10px] font-semibold text-stone-600">
-              <Trans>Swimlane</Trans>
+              <Trans>Rows</Trans>
             </span>
             <span className="block truncate text-[9px] text-brand-gray">
               {swimlaneKey === "custom"
@@ -452,8 +452,8 @@ export function BoardSwimlanes({
                       <button
                         type="button"
                         onClick={onShowMissing}
-                        title={t`${missingCount} card(s) refer to deleted swimlanes.`}
-                        aria-label={t`Show cards with missing swimlanes`}
+                        title={t`${missingCount} card(s) refer to deleted rows.`}
+                        aria-label={t`Show cards with missing rows`}
                         className="mr-1 inline-flex align-[-2px] text-amber-600 hover:text-amber-700"
                       >
                         <ExclamationTriangleIcon className="h-3.5 w-3.5" />

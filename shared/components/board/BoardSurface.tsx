@@ -31,6 +31,7 @@ import {
   BookmarkIcon,
   Cog6ToothIcon,
   AdjustmentsHorizontalIcon,
+  PencilSquareIcon,
 } from "@heroicons/react/24/outline";
 import {
   COLUMN_COLORS,
@@ -44,6 +45,7 @@ import {
   effectiveColumns,
   effectiveSwimlanes,
   groupValueOf,
+  hasBoardFilters,
   newSwimlaneKey,
   normalizeSwimlaneBy,
   RESERVED_CARD_KEYS,
@@ -59,8 +61,9 @@ import {
   type BoardViewCard,
   type BoardViewColumn,
   type BoardViewConfig,
-  type CardFilter,
+  type BoardFilters,
 } from "../../lib/board";
+import { BoardFilterPopover } from "./BoardFilterPopover";
 import { BoardTable } from "./BoardTable";
 import { BoardCalendar } from "./BoardCalendar";
 import { BoardSwimlanes } from "./BoardSwimlanes";
@@ -118,7 +121,7 @@ export function BoardSurface({
   const [colDraft, setColDraft] = useState("");
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<BoardSortKey>("manual");
-  const [filter, setFilter] = useState<CardFilter | null>(null);
+  const [filters, setFilters] = useState<BoardFilters>({});
   const [peekWidth, setPeekWidth] = useState(360);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [draggingCol, setDraggingCol] = useState<string | null>(null);
@@ -153,7 +156,7 @@ export function BoardSurface({
     editableColumns &&
     viewType === "board" &&
     !search.trim() &&
-    !filter;
+    !hasBoardFilters(filters);
   const today = todayStr();
 
   // Escape exits fullscreen — but only when no card peek is open (BoardPeek
@@ -191,9 +194,18 @@ export function BoardSurface({
     () => (swimlaneKey ? effectiveSwimlanes(config, cards, swimlaneKey, t`Unassigned`) : []),
     [config, cards, swimlaneKey],
   );
-  const vis = useMemo(() => visibleCardsFn(cards, search, filter, config), [cards, search, filter, config]);
   // Blocker counts resolve against ALL cards (a blocker may be filtered out of view).
   const blockers = useMemo(() => blockedCounts(cards, config.doneColumn), [cards, config.doneColumn]);
+  const blockedCardIds = useMemo(() => new Set(blockers.keys()), [blockers]);
+  const vis = useMemo(
+    () =>
+      visibleCardsFn(cards, search, filters, config, {
+        currentUser,
+        today,
+        blockedCardIds,
+      }),
+    [cards, search, filters, config, currentUser, today, blockedCardIds],
+  );
   // Sub-cards resolve against ALL cards too (children may be filtered from view).
   const childrenMap = useMemo(() => childCardsByParent(cards), [cards]);
   const assignees = useMemo(() => [...new Set(cards.map((c) => c.assignee).filter(Boolean) as string[])], [cards]);
@@ -447,7 +459,7 @@ export function BoardSurface({
       });
   };
   const showMissingSwimlanes = () => {
-    setFilter({ prop: "swimlaneIssue", value: "dangling" });
+    setFilters((current) => ({ ...current, missingRow: true }));
     window.setTimeout(() => {
       document
         .querySelector<HTMLElement>("[data-swimlane-unassigned]")
@@ -731,11 +743,23 @@ export function BoardSurface({
                 disabled={conversionRequested}
                 onChange={(e) => setConfigSafely({ groupBy: e.target.value as BoardGroupKey })}
               >
-                <option value="status">{t`Group: Status`}</option>
-                <option value="priority">{t`Group: Priority`}</option>
-                <option value="assignee">{t`Group: Assignee`}</option>
+                <option value="status">{t`Columns: Status`}</option>
+                <option value="priority">{t`Columns: Priority`}</option>
+                <option value="assignee">{t`Columns: Assignee`}</option>
               </select>
             </label>
+          )}
+          {viewType === "board" && !readOnly && (
+            <button
+              type="button"
+              disabled={conversionRequested}
+              onClick={() => setStatusManagerOpen(true)}
+              title={t`Manage statuses`}
+              aria-label={t`Manage statuses`}
+              className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-stone-200 bg-white text-stone-500 transition hover:border-brand/40 hover:text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand/20 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <PencilSquareIcon className="h-3.5 w-3.5" />
+            </button>
           )}
           {viewType === "board" && (
             <label className="inline-flex items-center gap-1 text-xs text-brand-gray">
@@ -759,27 +783,25 @@ export function BoardSurface({
                     });
                 }}
               >
-                <option value="">{t`Swimlane: None`}</option>
+                <option value="">{t`Rows: None`}</option>
                 {(["status", "priority", "assignee"] as BoardGroupKey[])
                   .filter((k) => k !== groupKey)
                   .map((k) => (
                     <option key={k} value={k}>
-                      {k === "status" ? t`Swimlane: Status` : k === "priority" ? t`Swimlane: Priority` : t`Swimlane: Assignee`}
+                      {k === "status" ? t`Rows: Status` : k === "priority" ? t`Rows: Priority` : t`Rows: Assignee`}
                     </option>
                   ))}
-                <option value="custom">{t`Swimlane: Custom`}</option>
+                <option value="custom">{t`Rows: Custom`}</option>
               </select>
             </label>
           )}
-          {viewType === "board" && swimlaneKey && !readOnly && (
+          {viewType === "board" && swimlaneKey && swimlaneKey !== "status" && !readOnly && (
             <button
               type="button"
               disabled={conversionRequested}
               onClick={() => {
                 if (swimlaneKey === "custom") {
                   setSwimlaneManagerOpen(true);
-                } else if (swimlaneKey === "status") {
-                  setStatusManagerOpen(true);
                 } else {
                   setConversionSource(config.swimlaneMigration?.source ?? swimlaneKey);
                   setConversionError("");
@@ -788,17 +810,13 @@ export function BoardSurface({
               }}
               title={
                 swimlaneKey === "custom"
-                  ? t`Manage swimlanes`
-                  : swimlaneKey === "status"
-                    ? t`Manage statuses`
-                    : t`Make swimlanes editable`
+                  ? t`Manage custom rows`
+                  : t`Make rows editable`
               }
               aria-label={
                 swimlaneKey === "custom"
-                  ? t`Manage swimlanes`
-                  : swimlaneKey === "status"
-                    ? t`Manage statuses`
-                    : t`Make swimlanes editable`
+                  ? t`Manage custom rows`
+                  : t`Make rows editable`
               }
               className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-stone-200 bg-white text-stone-500 transition hover:border-brand/40 hover:text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand/20 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50"
             >
@@ -817,74 +835,16 @@ export function BoardSurface({
             </label>
           )}
 
-          <Menu as="div" className="relative">
-            <MenuButton
-              className={`inline-flex h-7 items-center gap-1 rounded-md border px-2 text-xs ${
-                filter ? "border-brand/40 bg-brand-soft/50 text-brand-dark" : "border-stone-200 text-stone-600 hover:border-brand/40"
-              }`}
-            >
-              <FunnelIcon className="h-3.5 w-3.5" />
-              {filter ? (
-                filter.prop === "swimlaneIssue"
-                  ? t`Swimlane: Missing`
-                  : `${filter.prop}: ${filter.value || t`Unassigned`}`
-              ) : (
-                <Trans>Filter</Trans>
-              )}
-            </MenuButton>
-            <MenuItems anchor="bottom start" className={`z-30 w-52 rounded-lg border border-black/[0.06] bg-white py-1 text-sm shadow-lg [--anchor-gap:4px] focus:outline-none${portalCls}`}>
-              {filter && (
-                <>
-                  <MenuItem>
-                    <button type="button" className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-stone-700 data-[focus]:bg-stone-100" onClick={() => setFilter(null)}>
-                      <XMarkIcon className="h-3.5 w-3.5" />
-                      <Trans>Clear filter</Trans>
-                    </button>
-                  </MenuItem>
-                  <div className="my-1 border-t border-black/[0.05]" />
-                </>
-              )}
-              <div className="px-3 py-0.5 text-[11px] uppercase tracking-wide text-stone-400">
-                <Trans>Priority</Trans>
-              </div>
-              {PRIORITY_ORDER.map((p) => (
-                <MenuItem key={p}>
-                  <button type="button" className="flex w-full items-center px-3 py-1 text-left text-stone-700 data-[focus]:bg-stone-100" onClick={() => setFilter({ prop: "priority", value: p })}>
-                    {p}
-                  </button>
-                </MenuItem>
-              ))}
-              {assignees.length > 0 && (
-                <>
-                  <div className="px-3 py-0.5 text-[11px] uppercase tracking-wide text-stone-400">
-                    <Trans>Assignee</Trans>
-                  </div>
-                  {assignees.map((a) => (
-                    <MenuItem key={a}>
-                      <button type="button" className="flex w-full items-center px-3 py-1 text-left text-stone-700 data-[focus]:bg-stone-100" onClick={() => setFilter({ prop: "assignee", value: a })}>
-                        {a}
-                      </button>
-                    </MenuItem>
-                  ))}
-                </>
-              )}
-              {allTags.length > 0 && (
-                <>
-                  <div className="px-3 py-0.5 text-[11px] uppercase tracking-wide text-stone-400">
-                    <Trans>Tags</Trans>
-                  </div>
-                  {allTags.map((tag) => (
-                    <MenuItem key={tag}>
-                      <button type="button" className="flex w-full items-center gap-1 px-3 py-1 text-left text-stone-700 data-[focus]:bg-stone-100" onClick={() => setFilter({ prop: "tag", value: tag })}>
-                        <TagIcon className="h-3 w-3" />
-                        {tag}
-                      </button>
-                    </MenuItem>
-                  ))}
-                </>
-              )}
-            </MenuItems>
-          </Menu>
+          <BoardFilterPopover
+            filters={filters}
+            onChange={setFilters}
+            assignees={assignees}
+            tags={allTags}
+            currentUser={currentUser}
+            visibleCount={vis.length}
+            totalCount={cards.length}
+            portalClassName={portalClassName}
+          />
 
           <div className="relative ml-auto">
             <MagnifyingGlassIcon className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-stone-400" />
@@ -1325,7 +1285,7 @@ export function BoardSurface({
                 <input
                   autoFocus
                   className="w-44 shrink-0 self-start rounded-xl border border-brand/40 px-3 py-2 text-sm text-stone-800 focus:outline-none focus:ring-2 focus:ring-brand/40"
-                  placeholder={t`Column name`}
+                  placeholder={t`Status name`}
                   value={colDraft}
                   onChange={(e) => setColDraft(e.target.value)}
                   onKeyDown={(e) => {
@@ -1357,7 +1317,7 @@ export function BoardSurface({
                   }}
                 >
                   <PlusIcon className="h-4 w-4" />
-                  <Trans>Add column</Trans>
+                  <Trans>Add status</Trans>
                 </button>
               ))}
           </div>
@@ -1466,7 +1426,7 @@ export function BoardSurface({
                       ? [
                           {
                             value: selected.swimlaneKey,
-                            label: t`Previous swimlane missing`,
+                            label: t`Previous row missing`,
                             warning: true,
                           },
                         ]

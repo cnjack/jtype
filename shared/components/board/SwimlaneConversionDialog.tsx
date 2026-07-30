@@ -56,20 +56,20 @@ export function SwimlaneConversionDialog({
           <div className="px-5 pb-4 pt-5">
             <DialogTitle className="text-base font-semibold tracking-tight text-stone-900">
               {resume
-                ? t`Resume swimlane conversion?`
+                ? t`Resume row conversion?`
                 : source === "priority"
-                  ? t`Make priority swimlanes editable?`
-                  : t`Make assignee swimlanes editable?`}
+                  ? t`Make priority rows editable?`
+                  : t`Make assignee rows editable?`}
             </DialogTitle>
             <p id="swimlane-conversion-description" className="mt-1 text-xs leading-5 text-brand-gray">
               {resume
-                ? t`JType will reuse the existing lane IDs and continue unfinished card updates.`
+                ? t`JType will reuse the existing row IDs and continue unfinished card updates.`
                 : source === "priority"
-                  ? t`JType will create independent swimlanes from the current priority rows. Card priority values will stay unchanged.`
-                  : t`JType will create independent swimlanes from the current assignee rows. Card assignee values will stay unchanged.`}
+                  ? t`JType will create independent custom rows from the current priority groups. Card priority values will stay unchanged.`
+                  : t`JType will create independent custom rows from the current assignee groups. Card assignee values will stay unchanged.`}
             </p>
 
-            <ul className="mt-4 divide-y divide-line" aria-label={t`Swimlanes to create`}>
+            <ul className="mt-4 divide-y divide-line" aria-label={t`Rows to create`}>
               {rows.map((row) => (
                 <li key={row.value} className="flex min-h-10 items-center gap-2 py-2">
                   <span
@@ -142,7 +142,7 @@ export function SwimlaneConversionDialog({
                 ? t`Working…`
                 : resume
                   ? t`Resume conversion`
-                  : t`Create editable swimlanes`}
+                  : t`Create editable rows`}
             </button>
           </div>
         </DialogPanel>

@@ -48,20 +48,36 @@ msgid "{cardCount, plural, one {# card} other {# cards}}"
 msgstr "{cardCount, plural, one {카드 #개} other {카드 #개}}"
 
 #: shared/components/board/SwimlaneDeleteDialog.tsx
-msgid "{cardCount} card(s) currently use this swimlane."
+msgid "{cardCount} card(s) currently use this row."
+msgstr ""
+
+#: shared/components/board/SwimlaneDeleteDialog.tsx
+#~ msgid "{cardCount} card(s) currently use this swimlane."
+#~ msgstr ""
+
+#: shared/components/board/SwimlaneManagerDialog.tsx
+msgid "{danglingCount} card(s) refer to deleted rows."
 msgstr ""
 
 #: shared/components/board/SwimlaneManagerDialog.tsx
-msgid "{danglingCount} card(s) refer to deleted swimlanes."
+#~ msgid "{danglingCount} card(s) refer to deleted swimlanes."
+#~ msgstr ""
+
+#: shared/components/board/BoardSwimlanes.tsx
+msgid "{missingCount} card(s) refer to deleted rows."
 msgstr ""
 
 #: shared/components/board/BoardSwimlanes.tsx
-msgid "{missingCount} card(s) refer to deleted swimlanes."
-msgstr ""
+#~ msgid "{missingCount} card(s) refer to deleted swimlanes."
+#~ msgstr ""
 
 #: shared/components/board/BoardSwimlanes.tsx
 msgid "{total, plural, one {# card} other {# cards}}"
 msgstr "{total, plural, one {카드 #개} other {카드 #개}}"
+
+#: shared/components/board/BoardFilterPopover.tsx
+msgid "{visibleCount} of {totalCount} cards shown"
+msgstr ""
 
 #: shared/components/ConflictResolver.tsx
 msgid "← Back to list"
@@ -116,8 +132,8 @@ msgid "Add a comment… (Markdown supported)"
 msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
-msgid "Add column"
-msgstr "열 추가"
+#~ msgid "Add column"
+#~ msgstr "열 추가"
 
 #: shared/components/board/BoardPeek.tsx
 msgid "Add details..."
@@ -132,10 +148,16 @@ msgid "Add reaction"
 msgstr ""
 
 #: shared/components/board/BoardSwimlanes.tsx
+#: shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Add row"
+msgstr ""
+
+#: shared/components/board/BoardSwimlanes.tsx
 msgid "Add stable horizontal groups that stay visible even when they have no "
 "cards."
 msgstr ""
 
+#: shared/components/board/BoardSurface.tsx
 #: shared/components/board/BoardSwimlanes.tsx
 #: shared/components/board/StatusManagerDialog.tsx
 msgid "Add status"
@@ -143,8 +165,8 @@ msgstr ""
 
 #: shared/components/board/BoardSwimlanes.tsx
 #: shared/components/board/SwimlaneManagerDialog.tsx
-msgid "Add swimlane"
-msgstr ""
+#~ msgid "Add swimlane"
+#~ msgstr ""
 
 #: shared/components/board/BoardCalendar.tsx
 msgid "Agenda"
@@ -154,12 +176,17 @@ msgstr ""
 msgid "Archived"
 msgstr ""
 
+#: shared/components/board/BoardFilterPopover.tsx
 #: shared/components/board/BoardPeek.tsx
-#: shared/components/board/BoardSurface.tsx
 #: shared/components/board/BoardSwimlanes.tsx
 #: shared/components/board/BoardTable.tsx
 msgid "Assignee"
 msgstr "담당자"
+
+#. placeholder {0}: filters.assignees .map((assignee) => assignee || t`Unassigned`) .join(", ")
+#: shared/components/board/BoardFilterPopover.tsx
+msgid "Assignee: {0}"
+msgstr ""
 
 #: shared/components/board/BoardPeek.tsx
 msgid "Attachments"
@@ -169,12 +196,20 @@ msgstr ""
 msgid "Blank card"
 msgstr "빈 카드"
 
+#: shared/components/board/BoardFilterPopover.tsx
+msgid "Blocked"
+msgstr ""
+
 #: shared/components/board/BoardPeek.tsx
 msgid "Blocked by"
 msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
 msgid "Blocked by {blockedCount} unfinished card(s)"
+msgstr ""
+
+#: shared/components/board/BoardFilterPopover.tsx
+msgid "Blocked cards"
 msgstr ""
 
 #: shared/components/board/BoardPeek.tsx
@@ -215,6 +250,10 @@ msgstr "취소"
 msgid "Card"
 msgstr "카드"
 
+#: shared/components/board/BoardFilterPopover.tsx
+msgid "Card state"
+msgstr ""
+
 #: shared/components/board/BoardSurface.tsx
 msgid "Card title (Enter to add, Esc to cancel)"
 msgstr "카드 제목 (Enter로 추가, Esc로 취소)"
@@ -222,6 +261,10 @@ msgstr "카드 제목 (Enter로 추가, Esc로 취소)"
 #: shared/components/board/BoardSurface.tsx
 msgid "cards"
 msgstr "개 카드"
+
+#: shared/components/board/BoardFilterPopover.tsx
+msgid "Cards with a missing row"
+msgstr ""
 
 #: shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Change color"
@@ -232,12 +275,20 @@ msgid "Changes save automatically."
 msgstr ""
 
 #: shared/components/board/SwimlaneDeleteDialog.tsx
-msgid "Choose another swimlane, then update the cards first."
+msgid "Choose another row, then update the cards first."
+msgstr ""
+
+#: shared/components/board/SwimlaneDeleteDialog.tsx
+#~ msgid "Choose another swimlane, then update the cards first."
+#~ msgstr ""
+
+#: shared/components/board/BoardFilterPopover.tsx
+msgid "Clear all"
 msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
-msgid "Clear filter"
-msgstr "필터 지우기"
+#~ msgid "Clear filter"
+#~ msgstr "필터 지우기"
 
 #: shared/components/board/BoardSurface.tsx
 msgid "Clear selection"
@@ -276,8 +327,20 @@ msgid "Color columns"
 msgstr "색상 열"
 
 #: shared/components/board/BoardSurface.tsx
-msgid "Column name"
-msgstr "열 이름"
+#~ msgid "Column name"
+#~ msgstr "열 이름"
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Columns: Assignee"
+msgstr ""
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Columns: Priority"
+msgstr ""
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Columns: Status"
+msgstr ""
 
 #: shared/components/board/BoardPeek.tsx
 msgid "comma, separated"
@@ -313,12 +376,16 @@ msgid "Copy failed."
 msgstr "복사하지 못했습니다."
 
 #: shared/components/board/LaneDetailsPopover.tsx
-msgid "Copy lane ID"
-msgstr ""
+#~ msgid "Copy lane ID"
+#~ msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
 msgid "Copy link"
 msgstr "링크 복사"
+
+#: shared/components/board/LaneDetailsPopover.tsx
+msgid "Copy row ID"
+msgstr ""
 
 #: shared/components/viewers/SwaggerView.tsx
 msgid "Could not render this API specification."
@@ -333,12 +400,20 @@ msgid "Could not render this PDF."
 msgstr "이 PDF를 렌더링할 수 없습니다."
 
 #: shared/components/board/SwimlaneConversionDialog.tsx
-msgid "Create editable swimlanes"
+msgid "Create editable rows"
+msgstr ""
+
+#: shared/components/board/SwimlaneConversionDialog.tsx
+#~ msgid "Create editable swimlanes"
+#~ msgstr ""
+
+#: shared/components/board/BoardSwimlanes.tsx
+msgid "Create your first custom row"
 msgstr ""
 
 #: shared/components/board/BoardSwimlanes.tsx
-msgid "Create your first swimlane"
-msgstr ""
+#~ msgid "Create your first swimlane"
+#~ msgstr ""
 
 #: shared/components/board/BoardPeek.tsx
 msgid "Created"
@@ -346,6 +421,10 @@ msgstr ""
 
 #: shared/components/board/BoardSwimlanes.tsx
 msgid "Custom"
+msgstr ""
+
+#: shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Custom rows"
 msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
@@ -369,12 +448,20 @@ msgid "Delete comment"
 msgstr ""
 
 #: shared/components/board/SwimlaneDeleteDialog.tsx
-msgid "Delete only the swimlane. Card references remain recoverable."
+msgid "Delete only the row. Card references remain recoverable."
 msgstr ""
 
 #: shared/components/board/SwimlaneDeleteDialog.tsx
-msgid "Delete swimlane"
+#~ msgid "Delete only the swimlane. Card references remain recoverable."
+#~ msgstr ""
+
+#: shared/components/board/SwimlaneDeleteDialog.tsx
+msgid "Delete row"
 msgstr ""
+
+#: shared/components/board/SwimlaneDeleteDialog.tsx
+#~ msgid "Delete swimlane"
+#~ msgstr ""
 
 #: shared/components/board/BoardSwimlanes.tsx
 #: shared/components/board/SwimlaneManagerDialog.tsx
@@ -417,19 +504,37 @@ msgstr "Draw.io 다이어그램"
 msgid "Due"
 msgstr "마감"
 
+#: shared/components/board/BoardFilterPopover.tsx
+msgid "Due date"
+msgstr ""
+
+#: shared/components/board/BoardFilterPopover.tsx
+msgid "Due today"
+msgstr ""
+
 #: shared/components/board/BoardSurface.tsx
 msgid "Duplicate"
 msgstr "복제"
 
 #. placeholder {0}: issue.key
 #: shared/components/board/SwimlaneManagerDialog.tsx
-msgid "Duplicate lane ID \"{0}\". The first definition is used."
+#~ msgid "Duplicate lane ID \"{0}\". The first definition is used."
+#~ msgstr ""
+
+#. placeholder {0}: issue.key
+#: shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Duplicate row ID \"{0}\". The first definition is used."
 msgstr ""
 
 #. placeholder {0}: issue.name
 #: shared/components/board/SwimlaneManagerDialog.tsx
-msgid "Duplicate swimlane name \"{0}\". Names should be unique."
+msgid "Duplicate row name \"{0}\". Names should be unique."
 msgstr ""
+
+#. placeholder {0}: issue.name
+#: shared/components/board/SwimlaneManagerDialog.tsx
+#~ msgid "Duplicate swimlane name \"{0}\". Names should be unique."
+#~ msgstr ""
 
 #: shared/components/board/BoardPeek.tsx
 msgid "Edit comment"
@@ -448,8 +553,20 @@ msgid "Expand column"
 msgstr "열 펼치기"
 
 #: shared/components/board/BoardSurface.tsx
-msgid "Filter"
-msgstr "필터"
+#~ msgid "Filter"
+#~ msgstr "필터"
+
+#: shared/components/board/BoardFilterPopover.tsx
+msgid "Filter cards"
+msgstr ""
+
+#: shared/components/board/BoardFilterPopover.tsx
+msgid "Filters"
+msgstr ""
+
+#: shared/components/board/BoardFilterPopover.tsx
+msgid "Filters, {activeCount} active"
+msgstr ""
 
 #: shared/components/viewers/MermaidView.tsx
 msgid "flowchart TD\n"
@@ -462,21 +579,21 @@ msgid "Fullscreen"
 msgstr "전체 화면"
 
 #: shared/components/board/BoardSurface.tsx
-msgid "Group: Assignee"
-msgstr "그룹: 담당자"
+#~ msgid "Group: Assignee"
+#~ msgstr "그룹: 담당자"
 
 #: shared/components/board/BoardSurface.tsx
-msgid "Group: Priority"
-msgstr "그룹: 우선순위"
+#~ msgid "Group: Priority"
+#~ msgstr "그룹: 우선순위"
 
 #: shared/components/board/BoardSurface.tsx
-msgid "Group: Status"
-msgstr "그룹: 상태"
+#~ msgid "Group: Status"
+#~ msgstr "그룹: 상태"
 
 #: shared/components/board/SwimlaneManagerDialog.tsx
-msgid "Horizontal groups for this board. Names can change; card mapping stays "
-"attached."
-msgstr ""
+#~ msgid "Horizontal groups for this board. Names can change; card mapping stays "
+#~ "attached."
+#~ msgstr ""
 
 #: shared/components/board/BoardPeek.tsx
 msgid "Icon"
@@ -499,17 +616,32 @@ msgid "Italic (Ctrl+I)"
 msgstr "기울임꼴 (Ctrl+I)"
 
 #: shared/components/board/SwimlaneConversionDialog.tsx
-msgid "JType will create independent swimlanes from the current assignee rows. "
-"Card assignee values will stay unchanged."
+msgid "JType will create independent custom rows from the current assignee "
+"groups. Card assignee values will stay unchanged."
 msgstr ""
 
 #: shared/components/board/SwimlaneConversionDialog.tsx
-msgid "JType will create independent swimlanes from the current priority rows. "
-"Card priority values will stay unchanged."
+msgid "JType will create independent custom rows from the current priority "
+"groups. Card priority values will stay unchanged."
 msgstr ""
 
 #: shared/components/board/SwimlaneConversionDialog.tsx
-msgid "JType will reuse the existing lane IDs and continue unfinished card "
+#~ msgid "JType will create independent swimlanes from the current assignee rows. "
+#~ "Card assignee values will stay unchanged."
+#~ msgstr ""
+
+#: shared/components/board/SwimlaneConversionDialog.tsx
+#~ msgid "JType will create independent swimlanes from the current priority rows. "
+#~ "Card priority values will stay unchanged."
+#~ msgstr ""
+
+#: shared/components/board/SwimlaneConversionDialog.tsx
+#~ msgid "JType will reuse the existing lane IDs and continue unfinished card "
+#~ "updates."
+#~ msgstr ""
+
+#: shared/components/board/SwimlaneConversionDialog.tsx
+msgid "JType will reuse the existing row IDs and continue unfinished card "
 "updates."
 msgstr ""
 
@@ -517,18 +649,27 @@ msgstr ""
 msgid "Keep cards in Unassigned"
 msgstr ""
 
-#: shared/components/board/LaneDetailsPopover.tsx
-msgid "Lane details"
+#: shared/components/board/BoardFilterPopover.tsx
+msgid "Labels"
 msgstr ""
+
+#. placeholder {0}: filters.tags.join(", ")
+#: shared/components/board/BoardFilterPopover.tsx
+msgid "Labels: {0}"
+msgstr ""
+
+#: shared/components/board/LaneDetailsPopover.tsx
+#~ msgid "Lane details"
+#~ msgstr ""
 
 #. placeholder {0}: lane.name
 #: shared/components/board/LaneDetailsPopover.tsx
-msgid "Lane details for {0}"
-msgstr "{0} 레인 세부 정보"
+#~ msgid "Lane details for {0}"
+#~ msgstr "{0} 레인 세부 정보"
 
 #: shared/components/board/LaneDetailsPopover.tsx
-msgid "Lane ID"
-msgstr ""
+#~ msgid "Lane ID"
+#~ msgstr ""
 
 #: shared/components/EditorToolbar.tsx
 msgid "Link"
@@ -543,15 +684,32 @@ msgid "Local (yours)"
 msgstr "로컈 (내 것)"
 
 #: shared/components/board/SwimlaneConversionDialog.tsx
-msgid "Make assignee swimlanes editable?"
+msgid "Make assignee rows editable?"
 msgstr ""
 
 #: shared/components/board/SwimlaneConversionDialog.tsx
-msgid "Make priority swimlanes editable?"
+#~ msgid "Make assignee swimlanes editable?"
+#~ msgstr ""
+
+#: shared/components/board/SwimlaneConversionDialog.tsx
+msgid "Make priority rows editable?"
+msgstr ""
+
+#: shared/components/board/SwimlaneConversionDialog.tsx
+#~ msgid "Make priority swimlanes editable?"
+#~ msgstr ""
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Make rows editable"
 msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
-msgid "Make swimlanes editable"
+#~ msgid "Make swimlanes editable"
+#~ msgstr ""
+
+#: shared/components/board/BoardSurface.tsx
+#: shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Manage custom rows"
 msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
@@ -561,8 +719,8 @@ msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
 #: shared/components/board/SwimlaneManagerDialog.tsx
-msgid "Manage swimlanes"
-msgstr ""
+#~ msgid "Manage swimlanes"
+#~ msgstr ""
 
 #: shared/components/viewers/MermaidView.tsx
 msgid "Mermaid diagram"
@@ -571,6 +729,10 @@ msgstr "Mermaid 다이어그램"
 #: shared/components/viewers/MermaidView.tsx
 msgid "Mermaid source"
 msgstr "Mermaid 소스"
+
+#: shared/components/board/BoardFilterPopover.tsx
+msgid "Missing row"
+msgstr ""
 
 #: shared/components/board/BoardCalendar.tsx
 msgid "Month"
@@ -608,6 +770,10 @@ msgstr ""
 msgid "Moving cards…"
 msgstr ""
 
+#: shared/components/board/BoardFilterPopover.tsx
+msgid "My cards"
+msgstr ""
+
 #: shared/components/board/LaneDetailsPopover.tsx
 msgid "Name"
 msgstr ""
@@ -615,6 +781,10 @@ msgstr ""
 #: shared/components/board/BoardSurface.tsx
 msgid "New card"
 msgstr "새 카드"
+
+#: shared/components/board/BoardFilterPopover.tsx
+msgid "Next 7 days"
+msgstr ""
 
 #: shared/components/board/BoardCalendar.tsx
 msgid "Next month"
@@ -640,6 +810,10 @@ msgstr "색상 없음"
 msgid "No comments yet"
 msgstr ""
 
+#: shared/components/board/BoardFilterPopover.tsx
+msgid "No due date"
+msgstr ""
+
 #: shared/components/board/controls.tsx
 msgid "No icon"
 msgstr "아이콘 없음"
@@ -647,6 +821,10 @@ msgstr "아이콘 없음"
 #: shared/components/board/controls.tsx
 msgid "No labels"
 msgstr "라벨 없음"
+
+#: shared/components/board/BoardFilterPopover.tsx
+msgid "No priority"
+msgstr ""
 
 #: shared/components/board/BoardPeek.tsx
 msgid "Notes"
@@ -667,6 +845,15 @@ msgstr "전체 에디터에서 열기"
 
 #: shared/components/board/BoardPeek.tsx
 msgid "Open sub-card"
+msgstr ""
+
+#: shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Optional horizontal groups for this board. Names can change; cards stay "
+"mapped by row ID."
+msgstr ""
+
+#: shared/components/board/BoardFilterPopover.tsx
+msgid "Overdue"
 msgstr ""
 
 #: shared/components/board/BoardPeek.tsx
@@ -695,15 +882,24 @@ msgid "Previous month"
 msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
-msgid "Previous swimlane missing"
+msgid "Previous row missing"
 msgstr ""
 
-#: shared/components/board/BoardPeek.tsx
 #: shared/components/board/BoardSurface.tsx
+#~ msgid "Previous swimlane missing"
+#~ msgstr ""
+
+#: shared/components/board/BoardFilterPopover.tsx
+#: shared/components/board/BoardPeek.tsx
 #: shared/components/board/BoardSwimlanes.tsx
 #: shared/components/board/BoardTable.tsx
 msgid "Priority"
 msgstr "우선순위"
+
+#. placeholder {0}: filters.priorities.join(", ")
+#: shared/components/board/BoardFilterPopover.tsx
+msgid "Priority: {0}"
+msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
 msgid "Priority…"
@@ -727,6 +923,15 @@ msgstr ""
 
 #: shared/components/board/BoardPeek.tsx
 msgid "Remove"
+msgstr ""
+
+#: shared/components/board/BoardFilterPopover.tsx
+msgid "Remove filter"
+msgstr ""
+
+#. placeholder {0}: chip.label
+#: shared/components/board/BoardFilterPopover.tsx
+msgid "Remove filter: {0}"
 msgstr ""
 
 #: shared/components/board/BoardPeek.tsx
@@ -774,7 +979,69 @@ msgid "Resume conversion"
 msgstr ""
 
 #: shared/components/board/SwimlaneConversionDialog.tsx
-msgid "Resume swimlane conversion?"
+msgid "Resume row conversion?"
+msgstr ""
+
+#: shared/components/board/SwimlaneConversionDialog.tsx
+#~ msgid "Resume swimlane conversion?"
+#~ msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Row"
+msgstr ""
+
+#: shared/components/board/BoardSwimlanes.tsx
+#: shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Row actions"
+msgstr ""
+
+#: shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Row color"
+msgstr ""
+
+#: shared/components/board/LaneDetailsPopover.tsx
+msgid "Row details"
+msgstr ""
+
+#. placeholder {0}: lane.name
+#: shared/components/board/LaneDetailsPopover.tsx
+msgid "Row details for {0}"
+msgstr ""
+
+#: shared/components/board/LaneDetailsPopover.tsx
+msgid "Row ID"
+msgstr ""
+
+#: shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Row name"
+msgstr ""
+
+#: shared/components/board/BoardSwimlanes.tsx
+msgid "Rows"
+msgstr ""
+
+#: shared/components/board/SwimlaneConversionDialog.tsx
+msgid "Rows to create"
+msgstr ""
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Rows: Assignee"
+msgstr ""
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Rows: Custom"
+msgstr ""
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Rows: None"
+msgstr ""
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Rows: Priority"
+msgstr ""
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Rows: Status"
 msgstr ""
 
 #: shared/components/board/BoardPeek.tsx
@@ -821,8 +1088,12 @@ msgid "Show affected cards"
 msgstr ""
 
 #: shared/components/board/BoardSwimlanes.tsx
-msgid "Show cards with missing swimlanes"
+msgid "Show cards with missing rows"
 msgstr ""
+
+#: shared/components/board/BoardSwimlanes.tsx
+#~ msgid "Show cards with missing swimlanes"
+#~ msgstr ""
 
 #: shared/components/board/BoardPeek.tsx
 msgid "Show resolved thread"
@@ -863,10 +1134,15 @@ msgid "Status actions"
 msgstr ""
 
 #: shared/components/board/StatusManagerDialog.tsx
-msgid "Status columns stay available when they are used as columns or "
-"swimlanes."
+#~ msgid "Status columns stay available when they are used as columns or "
+#~ "swimlanes."
+#~ msgstr ""
+
+#: shared/components/board/StatusManagerDialog.tsx
+msgid "Status ID"
 msgstr ""
 
+#: shared/components/board/BoardSurface.tsx
 #: shared/components/board/BoardSwimlanes.tsx
 #: shared/components/board/StatusManagerDialog.tsx
 msgid "Status name"
@@ -880,59 +1156,64 @@ msgstr ""
 msgid "Statuses"
 msgstr ""
 
+#: shared/components/board/StatusManagerDialog.tsx
+msgid "Statuses define the card workflow. Rename or reorder them freely; cards "
+"stay mapped by status ID."
+msgstr ""
+
 #: shared/components/board/BoardPeek.tsx
 msgid "Sub-cards"
 msgstr ""
 
 #: shared/components/board/BoardPeek.tsx
 #: shared/components/board/BoardSwimlanes.tsx
-msgid "Swimlane"
-msgstr ""
+#~ msgid "Swimlane"
+#~ msgstr ""
 
 #: shared/components/board/BoardSwimlanes.tsx
 #: shared/components/board/SwimlaneManagerDialog.tsx
-msgid "Swimlane actions"
-msgstr ""
+#~ msgid "Swimlane actions"
+#~ msgstr ""
 
 #: shared/components/board/SwimlaneManagerDialog.tsx
-msgid "Swimlane color"
-msgstr ""
+#~ msgid "Swimlane color"
+#~ msgstr ""
 
 #: shared/components/board/SwimlaneManagerDialog.tsx
-msgid "Swimlane name"
-msgstr ""
+#~ msgid "Swimlane name"
+#~ msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
-msgid "Swimlane: Assignee"
-msgstr ""
+#~ msgid "Swimlane: Assignee"
+#~ msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
-msgid "Swimlane: Custom"
-msgstr ""
+#~ msgid "Swimlane: Custom"
+#~ msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
-msgid "Swimlane: Missing"
-msgstr ""
+#~ msgid "Swimlane: Missing"
+#~ msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
-msgid "Swimlane: None"
-msgstr ""
+#~ msgid "Swimlane: None"
+#~ msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
-msgid "Swimlane: Priority"
-msgstr ""
+#~ msgid "Swimlane: Priority"
+#~ msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
-msgid "Swimlane: Status"
-msgstr ""
+#~ msgid "Swimlane: Status"
+#~ msgstr ""
 
 #: shared/components/board/SwimlaneManagerDialog.tsx
-msgid "Swimlanes"
-msgstr ""
+#~ msgid "Swimlanes"
+#~ msgstr ""
 
 #: shared/components/board/SwimlaneConversionDialog.tsx
-msgid "Swimlanes to create"
-msgstr ""
+#~ msgid "Swimlanes to create"
+#~ msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
 #: shared/components/EditorToolbar.tsx
@@ -940,7 +1221,6 @@ msgid "Table"
 msgstr "테이블"
 
 #: shared/components/board/BoardPeek.tsx
-#: shared/components/board/BoardSurface.tsx
 #: shared/components/board/BoardTable.tsx
 msgid "Tags"
 msgstr "태그"
@@ -950,8 +1230,12 @@ msgid "Templates"
 msgstr "템플릿"
 
 #: shared/components/board/SwimlaneDeleteDialog.tsx
-msgid "This empty swimlane will be removed from the board."
+msgid "This empty row will be removed from the board."
 msgstr ""
+
+#: shared/components/board/SwimlaneDeleteDialog.tsx
+#~ msgid "This empty swimlane will be removed from the board."
+#~ msgstr ""
 
 #: shared/components/viewers/DiagramView.tsx
 msgid "This file type can not be previewed yet."
@@ -965,6 +1249,7 @@ msgstr "제목"
 msgid "Today"
 msgstr ""
 
+#: shared/components/board/BoardFilterPopover.tsx
 #: shared/components/board/BoardSurface.tsx
 #: shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Unassigned"

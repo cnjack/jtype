@@ -50,8 +50,8 @@ export function LaneDetailsPopover({
   return (
     <Popover className="relative shrink-0">
       <PopoverButton
-        title={t`Lane details`}
-        aria-label={t`Lane details for ${lane.name}`}
+        title={t`Row details`}
+        aria-label={t`Row details for ${lane.name}`}
         className={buttonClassName}
       >
         <InformationCircleIcon className="h-4 w-4" />
@@ -62,7 +62,7 @@ export function LaneDetailsPopover({
       >
         <p className="flex items-center gap-2 text-xs font-semibold text-stone-800">
           <InformationCircleIcon className="h-4 w-4 text-brand-dark" />
-          <Trans>Lane details</Trans>
+          <Trans>Row details</Trans>
         </p>
         <dl className="mt-3 grid grid-cols-[64px_minmax(0,1fr)] items-center gap-x-2 gap-y-2 text-[11px]">
           <dt className="text-brand-gray">
@@ -70,7 +70,7 @@ export function LaneDetailsPopover({
           </dt>
           <dd className="truncate font-medium text-stone-700">{lane.name}</dd>
           <dt className="text-brand-gray">
-            <Trans>Lane ID</Trans>
+            <Trans>Row ID</Trans>
           </dt>
           <dd className="flex min-w-0 items-center gap-1.5">
             <code className="min-w-0 flex-1 truncate rounded bg-stone-100 px-1.5 py-1 text-[10px] text-stone-600">
@@ -78,8 +78,8 @@ export function LaneDetailsPopover({
             </code>
             <button
               type="button"
-              title={t`Copy lane ID`}
-              aria-label={t`Copy lane ID`}
+              title={t`Copy row ID`}
+              aria-label={t`Copy row ID`}
               onClick={() => void copyLaneKey()}
               className="inline-flex h-7 items-center gap-1 rounded-lg border border-stone-200 px-2 text-[10px] font-medium text-brand-dark hover:border-brand/30"
             >

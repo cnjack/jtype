@@ -233,9 +233,39 @@ export function pickCustomFields(
   return out;
 }
 
+/**
+ * Legacy single-filter shape kept for consumers that imported it before the
+ * structured filter UI shipped. New code should use {@link BoardFilters}.
+ */
 export type CardFilter =
   | { prop: "priority" | "assignee" | "tag"; value: string }
   | { prop: "swimlaneIssue"; value: "dangling" };
+
+export type BoardDueFilter = "overdue" | "today" | "nextSevenDays" | "none";
+
+/**
+ * Personal, view-only board filters. Values within one dimension are ORed;
+ * populated dimensions are ANDed together.
+ */
+export type BoardFilters = {
+  priorities?: string[];
+  assignees?: string[];
+  tags?: string[];
+  due?: BoardDueFilter;
+  blocked?: boolean;
+  mine?: boolean;
+  /** Recovery-only filter for cards that reference a deleted custom row. */
+  missingRow?: boolean;
+};
+
+export type BoardFilterContext = {
+  config?: Pick<BoardViewConfig, "swimlanes">;
+  currentUser?: string;
+  /** Injectable for deterministic tests; defaults to the local current day. */
+  today?: string;
+  /** Resolved unfinished dependencies, including reverse `blocks` links. */
+  blockedCardIds?: ReadonlySet<string>;
+};
 
 /** One emoji reaction summary on a comment. */
 export type CommentReaction = { emoji: string; count: number; mine: boolean };
@@ -503,12 +533,12 @@ export function validateSwimlaneName(
   excludingKey?: string,
 ): string | null {
   const trimmed = name.trim();
-  if (!trimmed) return "Swimlane name is required.";
-  if (trimmed.length > 80) return "Swimlane names can be at most 80 characters.";
+  if (!trimmed) return "Row name is required.";
+  if (trimmed.length > 80) return "Row names can be at most 80 characters.";
   const duplicate = lanes.some(
     (lane) => lane.key !== excludingKey && lane.name.trim().toLocaleLowerCase() === trimmed.toLocaleLowerCase(),
   );
-  return duplicate ? "Swimlane names must be unique on this board." : null;
+  return duplicate ? "Row names must be unique on this board." : null;
 }
 
 /** The normalized custom swimlane identity used for bucketing and selection. */
@@ -663,7 +693,7 @@ export function partitionSwimlanes(
   return grid;
 }
 
-/** Test one card against a normalized board filter, including dangling lane references. */
+/** Test one card against a legacy single filter. */
 export function cardMatchesFilter(
   card: BoardViewCard,
   filter: CardFilter | null,
@@ -674,6 +704,106 @@ export function cardMatchesFilter(
   if (filter.prop === "priority") return (card.priority || "none") === filter.value;
   if (filter.prop === "assignee") return (card.assignee || "") === filter.value;
   if (filter.prop === "tag") return card.tags.some((t) => t.label === filter.value);
+  return true;
+}
+
+function normalizedFilterValues(values: string[] | undefined): Set<string> {
+  return new Set((values ?? []).map((value) => value.trim().toLowerCase()));
+}
+
+function offsetIsoDay(day: string, offset: number): string {
+  const [year, month, date] = day.split("-").map(Number);
+  return isoDay(new Date(year!, month! - 1, date! + offset));
+}
+
+/** Whether a structured filter object has any active criteria. */
+export function hasBoardFilters(filters: BoardFilters): boolean {
+  return !!(
+    filters.priorities?.length ||
+    filters.assignees?.length ||
+    filters.tags?.length ||
+    filters.due ||
+    filters.blocked ||
+    filters.mine ||
+    filters.missingRow
+  );
+}
+
+/** Number of active filter dimensions, used by the toolbar count badge. */
+export function activeBoardFilterCount(filters: BoardFilters): number {
+  return [
+    !!filters.priorities?.length,
+    !!filters.assignees?.length,
+    !!filters.tags?.length,
+    !!filters.due,
+    !!filters.blocked,
+    !!filters.mine,
+    !!filters.missingRow,
+  ].filter(Boolean).length;
+}
+
+/**
+ * Test one card against structured board filters. Selected values within a
+ * dimension are ORed; dimensions are ANDed.
+ */
+export function cardMatchesFilters(
+  card: BoardViewCard,
+  filters: BoardFilters,
+  context: BoardFilterContext = {},
+): boolean {
+  const priorities = normalizedFilterValues(filters.priorities);
+  if (priorities.size > 0 && !priorities.has((card.priority || "none").toLowerCase())) {
+    return false;
+  }
+
+  const assignees = normalizedFilterValues(filters.assignees);
+  if (assignees.size > 0 && !assignees.has((card.assignee || "").trim().toLowerCase())) {
+    return false;
+  }
+
+  const tags = normalizedFilterValues(filters.tags);
+  if (
+    tags.size > 0 &&
+    !card.tags.some((tag) => tags.has(tag.label.trim().toLowerCase()))
+  ) {
+    return false;
+  }
+
+  if (filters.due) {
+    const due = card.due && isIsoDate(card.due) ? card.due : null;
+    const today = context.today && isIsoDate(context.today) ? context.today : todayStr();
+    if (filters.due === "none" && due) return false;
+    if (filters.due !== "none" && !due) return false;
+    if (due) {
+      if (filters.due === "overdue" && due >= today) return false;
+      if (filters.due === "today" && due !== today) return false;
+      if (
+        filters.due === "nextSevenDays" &&
+        (due < today || due > offsetIsoDay(today, 6))
+      ) {
+        return false;
+      }
+    }
+  }
+
+  if (
+    filters.blocked &&
+    !(context.blockedCardIds
+      ? context.blockedCardIds.has(card.id)
+      : (card.blockedBy?.length ?? 0) > 0)
+  ) {
+    return false;
+  }
+  if (filters.mine) {
+    const currentUser = context.currentUser?.trim().toLowerCase();
+    if (!currentUser || card.assignee?.trim().toLowerCase() !== currentUser) return false;
+  }
+  if (
+    filters.missingRow &&
+    !hasDanglingSwimlane(card, context.config?.swimlanes)
+  ) {
+    return false;
+  }
   return true;
 }
 
@@ -689,17 +819,31 @@ export function cardMatchesSearch(card: BoardViewCard, q: string): boolean {
   return false;
 }
 
-/** Apply the board's text query and structured filter to its authoritative card list. */
+/** Convert the pre-structured single-filter API into the new filter model. */
+function normalizeBoardFilters(filters: BoardFilters | CardFilter | null): BoardFilters {
+  if (!filters) return {};
+  if ("prop" in filters) {
+    if (filters.prop === "priority") return { priorities: [filters.value] };
+    if (filters.prop === "assignee") return { assignees: [filters.value] };
+    if (filters.prop === "tag") return { tags: [filters.value] };
+    return { missingRow: true };
+  }
+  return filters;
+}
+
+/** Apply the board's text query and structured filters to its authoritative card list. */
 export function visibleCards(
   cards: BoardViewCard[],
   search: string,
-  filter: CardFilter | null,
+  filters: BoardFilters | CardFilter | null,
   config?: Pick<BoardViewConfig, "swimlanes">,
+  context: Omit<BoardFilterContext, "config"> = {},
 ): BoardViewCard[] {
   const q = search.trim().toLowerCase();
+  const normalized = normalizeBoardFilters(filters);
   return cards.filter((c) => {
     if (q && !cardMatchesSearch(c, q)) return false;
-    return cardMatchesFilter(c, filter, config);
+    return cardMatchesFilters(c, normalized, { ...context, config });
   });
 }
 

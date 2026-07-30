@@ -52,7 +52,9 @@ export function StatusManagerDialog({
                 <Trans>Manage statuses</Trans>
               </DialogTitle>
               <p className="mt-1 text-xs leading-5 text-brand-gray">
-                <Trans>Status columns stay available when they are used as columns or swimlanes.</Trans>
+                <Trans>
+                  Statuses define the card workflow. Rename or reorder them freely; cards stay mapped by status ID.
+                </Trans>
               </p>
             </div>
             <button
@@ -76,8 +78,13 @@ export function StatusManagerDialog({
                       className="h-4 w-4 shrink-0 rounded-full bg-stone-300 ring-1 ring-black/10"
                       style={column.color ? { backgroundColor: column.color } : undefined}
                     />
-                    <span className="min-w-0 flex-1 truncate text-xs font-semibold text-stone-800">
-                      {column.name}
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-xs font-semibold text-stone-800">
+                        {column.name}
+                      </span>
+                      <span className="mt-0.5 block truncate text-[10px] text-brand-gray">
+                        <Trans>Status ID</Trans>: <code>{column.key}</code>
+                      </span>
                     </span>
                     {column.limit != null && (
                       <span className="rounded bg-stone-100 px-1.5 py-0.5 text-[10px] tabular-nums text-brand-gray">

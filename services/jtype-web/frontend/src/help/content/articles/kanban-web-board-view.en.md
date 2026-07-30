@@ -15,6 +15,12 @@ Moving work is a drag. Press on a card and drag it:
 
 When you drop a card, JType saves the move immediately and tightens the order so there are no gaps. Behind the scenes this is the same operation as `jtype card move --board B <card> --to-column C` — the board view just gives you a pointer-driven way to do it.
 
+## Manage the status workflow
+
+Statuses are the normal columns of a JType board. Open **Manage statuses** beside the **Columns** control to add, rename, reorder, recolor, or delete them, set a WIP limit, and choose which status counts as done.
+
+Each status has a stable internal ID. Renaming **Doing** to **In progress**, for example, changes the label without losing its cards. When you delete a status that still has cards, JType asks where those cards should move before it removes the status.
+
 ## Realtime updates
 
 A board is live. When a teammate moves a card, renames a column, or edits a description, your board updates on its own — no refresh needed. Each change streams over a live connection and lands on every open board in the workspace within moments.
@@ -23,16 +29,17 @@ Your own actions never echo back to you as a flicker: the board knows which chan
 
 > Tip: open the same board on two screens — say your laptop and a meeting display — and drag a card on one. It moves on the other almost instantly. That's the realtime layer doing its job.
 
-## Filter, sort, group, and search
+## Filter, sort, arrange, and search
 
-A real board gets crowded. The toolbar above the columns gives you four ways to focus, and they stack:
+A real board gets crowded. The toolbar above the columns gives you several ways to focus, and they stack:
 
-- **Filter** — show only cards matching priority, assignee, label, or due date.
+- **Filters** — combine multiple priorities, assignees, labels, due-date ranges, blocked cards, and **My cards**. Choices within one section match any selected value; different sections must all match.
 - **Sort** — order cards within each column, e.g. by priority or due date.
-- **Group** — regroup the whole board by status, priority, or assignee.
+- **Columns** — arrange the vertical columns by status (the normal workflow), priority, or assignee.
+- **Rows** — optionally add a second horizontal grouping by priority, assignee, status, or custom rows. Rows organize a view; they do not replace card status.
 - **Search** — type to narrow to cards whose title or text matches.
 
-There's also a **Table** view if you'd rather scan everything as rows than as lanes. All of these run instantly in your browser and are personal: filtering or grouping changes *your* view only — it never moves anyone's cards or affects what a teammate sees. Your view preferences are remembered per board, so the board comes back the way you left it.
+Active filters appear as removable chips, and the filter panel shows how many cards remain visible. There's also a **Table** view if you'd rather scan everything as records. Filters and search run instantly in your browser and are personal: they change *your* view only and never move cards.
 
 ## Where to go next
 

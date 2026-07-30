@@ -22,6 +22,16 @@ test.beforeEach(async ({ page }) => {
     const files: Record<string, string> = {
       "C:/workspace/intro.md": "# Intro\n\nHello from workspace.",
       "C:/workspace/guides/setup.md": "# Setup\n\nInstall and run.",
+      "C:/workspace/roadmap.board": JSON.stringify({
+        id: "roadmap",
+        title: "Product roadmap",
+        columns: [
+          { key: "todo", name: "To do" },
+          { key: "doing", name: "Doing" },
+          { key: "done", name: "Done" },
+        ],
+        doneColumn: "done",
+      }),
     };
 
     const workspace = {
@@ -50,6 +60,13 @@ test.beforeEach(async ({ page }) => {
               children: [],
             },
           ],
+        },
+        {
+          name: "roadmap.board",
+          path: "C:/workspace/roadmap.board",
+          relativePath: "roadmap.board",
+          kind: "board",
+          children: [],
         },
         {
           name: "intro.md",
@@ -163,6 +180,27 @@ test.beforeEach(async ({ page }) => {
             return path;
           }
           if (cmd === "open_workspace") return workspaceSnapshot();
+          if (cmd === "read_board_file") return files[String(args.path)] ?? "";
+          if (cmd === "write_board_file") {
+            files[String(args.path)] = String(args.content);
+            return null;
+          }
+          if (cmd === "scan_board_cards") {
+            return [
+              {
+                relativePath: "roadmap/desktop-card.md",
+                path: "C:/workspace/roadmap/desktop-card.md",
+                title: "Desktop card",
+                status: "todo",
+                position: 0,
+                priority: "high",
+                assignee: "Jack",
+                tags: ["desktop"],
+                body: "Verify the desktop board.",
+              },
+            ];
+          }
+          if (cmd === "scan_card_templates") return [];
           if (cmd === "read_markdown_file") return files[String(args.path)] ?? "";
           if (cmd === "write_markdown_file") {
             files[String(args.path)] = String(args.content);
@@ -499,6 +537,27 @@ test("opens a workspace and renders a markdown file", async ({ page }) => {
 
   await expect(page.getByLabel("Markdown editor")).toHaveValue("# Intro\n\nHello from workspace.");
   await expect(page.locator("#preview")).toContainText("Hello from workspace.");
+});
+
+test("opens a desktop board and manages status columns from the shared toolbar", async ({ page }) => {
+  await openWorkspace(page);
+  await page.locator("#workspace-sidebar").getByRole("button", { name: /roadmap\.board/ }).click();
+
+  await expect(page.getByText("Product roadmap")).toBeVisible();
+  await expect(page.locator('option[value="status"]').first()).toHaveText("Columns: Status");
+  await page.getByRole("button", { name: "Manage statuses" }).click();
+
+  const dialog = page.getByRole("dialog", { name: "Manage statuses" });
+  await dialog.getByRole("button", { name: "Add status" }).click();
+  await dialog.getByRole("textbox", { name: "Status name" }).fill("Review");
+  await dialog.getByRole("button", { name: "Add", exact: true }).click();
+  await expect(dialog.getByText("Review", { exact: true })).toBeVisible();
+
+  await expect
+    .poll(async () =>
+      page.evaluate(() => JSON.parse(window.__E2E_FS__["C:/workspace/roadmap.board"]).columns.map((column: { name: string }) => column.name)),
+    )
+    .toContain("Review");
 });
 
 test("opens an initial markdown file passed by the OS", async ({ page }) => {
