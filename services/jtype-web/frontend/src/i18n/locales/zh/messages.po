@@ -141,6 +141,10 @@ msgstr "强调色"
 msgid "Accept invitation"
 msgstr "接受邀请"
 
+#: src/pages/DeviceOAuth.tsx
+msgid "Access approved. You can return to the app that requested access."
+msgstr "已批准访问。你可以返回请求访问的应用。"
+
 #: src/pages/Admin.tsx
 msgid "Access key"
 msgstr "访问密钥（Access Key）"
@@ -220,6 +224,14 @@ msgstr "AI 就绪"
 msgid "All case studies"
 msgstr "全部案例"
 
+#: src/pages/DeviceOAuth.tsx
+msgid "Allow access"
+msgstr "允许访问"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Allow full access"
+msgstr "允许全部访问"
+
 #: src/pages/InviteAccept.tsx
 msgid "Already accepted"
 msgstr "已接受"
@@ -256,6 +268,10 @@ msgstr "认证失败"
 #: src/pages/DeviceOAuth.tsx
 msgid "Authorization failed"
 msgstr "授权失败"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Authorization request not found"
+msgstr "找不到授权请求"
 
 #: src/pages/DeviceOAuth.tsx
 #~ msgid "Authorize Desktop"
@@ -686,8 +702,8 @@ msgid "Detected save, queued push."
 msgstr "检测到保存，已排队推送。"
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Device authorized! You can return to the JType desktop app."
-msgstr "设备已授权！您可以返回 JType 桌面应用。"
+#~ msgid "Device authorized! You can return to the JType desktop app."
+#~ msgstr "设备已授权！您可以返回 JType 桌面应用。"
 
 #: src/pages/DeviceOAuth.tsx
 msgid "Device code"
@@ -863,8 +879,8 @@ msgstr "输入 6 位验证码"
 #~ msgstr "输入验证码"
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Enter the code shown in your JType desktop app"
-msgstr "输入 JType 桌面应用中显示的代码"
+#~ msgid "Enter the code shown in your JType desktop app"
+#~ msgstr "输入 JType 桌面应用中显示的代码"
 
 #: src/pages/Login.tsx
 #~ msgid "Enter the code to sign in."
@@ -961,6 +977,10 @@ msgstr "发件地址"
 #: src/pages/Admin.tsx
 msgid "from env"
 msgstr "来自环境变量"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Full account access"
+msgstr "完整账户访问权限"
 
 #: src/pages/Workspace.tsx
 msgid "General"
@@ -1739,6 +1759,10 @@ msgstr "快速打开"
 msgid "Re-enter new password"
 msgstr "再次输入新密码"
 
+#: src/pages/DeviceOAuth.tsx
+msgid "Read and manage your documents and kanban boards."
+msgstr "读取和管理你的文档与看板。"
+
 #: src/help/pages/CasesIndex.tsx
 msgid "Read case study"
 msgstr "阅读案例"
@@ -1746,6 +1770,10 @@ msgstr "阅读案例"
 #: src/pages/Workspace.tsx
 msgid "Read-only"
 msgstr "只读"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Read, create, update, and delete documents and kanban cards"
+msgstr "读取、创建、更新和删除文档及看板卡片"
 
 #: src/pages/Landing.tsx
 msgid "Ready for the cloud layer"
@@ -1831,6 +1859,10 @@ msgstr "重新发布已发布文档"
 msgid "Request failed"
 msgstr "请求失败"
 
+#: src/pages/DeviceOAuth.tsx
+msgid "requests access to your JType account."
+msgstr "请求访问你的 JType 账户。"
+
 #: src/pages/Login.tsx
 msgid "Resend code"
 msgstr "重新发送验证码"
@@ -1866,6 +1898,10 @@ msgstr "恢复或删除云文档"
 #: src/pages/Admin.tsx
 msgid "Review accounts, roles, and enabled status."
 msgstr "查看账户、角色和启用状态。"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Review and approve an app requesting access to JType"
+msgstr "查看并批准请求访问 JType 的应用"
 
 #: src/pages/Admin.tsx
 msgid "Review published custom domains and SSL state."
@@ -2082,8 +2118,8 @@ msgid "Signed in as <0>{loggedInName}</0>"
 msgstr "已登录为 <0>{loggedInName}</0>"
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Signed in. Ready to authorize device."
-msgstr "已登录。准备授权设备。"
+#~ msgid "Signed in. Ready to authorize device."
+#~ msgstr "已登录。准备授权设备。"
 
 #: src/pages/Login.tsx
 msgid "Signing in..."
@@ -2404,6 +2440,10 @@ msgstr "在浏览器之外使用 JType"
 msgid "Use password instead"
 msgstr "改用密码登录"
 
+#: src/pages/DeviceOAuth.tsx
+msgid "Use your workspace and administrator permissions"
+msgstr "使用你现有的工作区与管理员权限"
+
 #: src/pages/Admin.tsx
 msgid "User"
 msgstr "用户"
@@ -2468,6 +2508,10 @@ msgstr "验证 DNS"
 #: src/pages/VerifyEmail.tsx
 msgid "Verifying…"
 msgstr "验证中…"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "View and manage all cloud workspaces you can access"
+msgstr "查看并管理你有权访问的所有云端工作区"
 
 #: src/pages/Admin.tsx
 msgid "View latest release notes →"
@@ -2593,47 +2637,3 @@ msgstr "渲染后的文档将显示在此处。"
 #: src/components/SiteThemePanel.tsx
 msgid "Your theme"
 msgstr "你的主题"
-
-#: src/pages/DeviceOAuth.tsx
-msgid "Access approved. You can return to the app that requested access."
-msgstr "已批准访问。你可以返回请求访问的应用。"
-
-#: src/pages/DeviceOAuth.tsx
-msgid "Allow access"
-msgstr "允许访问"
-
-#: src/pages/DeviceOAuth.tsx
-msgid "Allow full access"
-msgstr "允许全部访问"
-
-#: src/pages/DeviceOAuth.tsx
-msgid "Authorization request not found"
-msgstr "找不到授权请求"
-
-#: src/pages/DeviceOAuth.tsx
-msgid "Full account access"
-msgstr "完整账户访问权限"
-
-#: src/pages/DeviceOAuth.tsx
-msgid "Read and manage your documents and kanban boards."
-msgstr "读取和管理你的文档与看板。"
-
-#: src/pages/DeviceOAuth.tsx
-msgid "Read, create, update, and delete documents and kanban cards"
-msgstr "读取、创建、更新和删除文档及看板卡片"
-
-#: src/pages/DeviceOAuth.tsx
-msgid "requests access to your JType account."
-msgstr "请求访问你的 JType 账户。"
-
-#: src/pages/DeviceOAuth.tsx
-msgid "Review and approve an app requesting access to JType"
-msgstr "查看并批准请求访问 JType 的应用"
-
-#: src/pages/DeviceOAuth.tsx
-msgid "Use your workspace and administrator permissions"
-msgstr "使用你现有的工作区与管理员权限"
-
-#: src/pages/DeviceOAuth.tsx
-msgid "View and manage all cloud workspaces you can access"
-msgstr "查看并管理你有权访问的所有云端工作区"

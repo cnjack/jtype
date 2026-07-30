@@ -140,6 +140,10 @@ msgstr "Accent"
 msgid "Accept invitation"
 msgstr "Accept invitation"
 
+#: src/pages/DeviceOAuth.tsx
+msgid "Access approved. You can return to the app that requested access."
+msgstr "Access approved. You can return to the app that requested access."
+
 #: src/pages/Admin.tsx
 msgid "Access key"
 msgstr "Access key"
@@ -219,6 +223,14 @@ msgstr "AI-Ready"
 msgid "All case studies"
 msgstr "All case studies"
 
+#: src/pages/DeviceOAuth.tsx
+msgid "Allow access"
+msgstr "Allow access"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Allow full access"
+msgstr "Allow full access"
+
 #: src/pages/InviteAccept.tsx
 msgid "Already accepted"
 msgstr "Already accepted"
@@ -255,6 +267,10 @@ msgstr "Authentication failed"
 #: src/pages/DeviceOAuth.tsx
 msgid "Authorization failed"
 msgstr "Authorization failed"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Authorization request not found"
+msgstr "Authorization request not found"
 
 #: src/pages/DeviceOAuth.tsx
 #~ msgid "Authorize Desktop"
@@ -685,8 +701,8 @@ msgid "Detected save, queued push."
 msgstr "Detected save, queued push."
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Device authorized! You can return to the JType desktop app."
-msgstr "Device authorized! You can return to the JType desktop app."
+#~ msgid "Device authorized! You can return to the JType desktop app."
+#~ msgstr "Device authorized! You can return to the JType desktop app."
 
 #: src/pages/DeviceOAuth.tsx
 msgid "Device code"
@@ -862,8 +878,8 @@ msgstr "Enter the 6-digit code"
 #~ msgstr "Enter the code"
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Enter the code shown in your JType desktop app"
-msgstr "Enter the code shown in your JType desktop app"
+#~ msgid "Enter the code shown in your JType desktop app"
+#~ msgstr "Enter the code shown in your JType desktop app"
 
 #: src/pages/Login.tsx
 #~ msgid "Enter the code to sign in."
@@ -960,6 +976,10 @@ msgstr "From address"
 #: src/pages/Admin.tsx
 msgid "from env"
 msgstr "from env"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Full account access"
+msgstr "Full account access"
 
 #: src/pages/Workspace.tsx
 msgid "General"
@@ -1738,6 +1758,10 @@ msgstr "Quick open"
 msgid "Re-enter new password"
 msgstr "Re-enter new password"
 
+#: src/pages/DeviceOAuth.tsx
+msgid "Read and manage your documents and kanban boards."
+msgstr "Read and manage your documents and kanban boards."
+
 #: src/help/pages/CasesIndex.tsx
 msgid "Read case study"
 msgstr "Read case study"
@@ -1745,6 +1769,10 @@ msgstr "Read case study"
 #: src/pages/Workspace.tsx
 msgid "Read-only"
 msgstr "Read-only"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Read, create, update, and delete documents and kanban cards"
+msgstr "Read, create, update, and delete documents and kanban cards"
 
 #: src/pages/Landing.tsx
 msgid "Ready for the cloud layer"
@@ -1830,6 +1858,10 @@ msgstr "Republish live docs"
 msgid "Request failed"
 msgstr "Request failed"
 
+#: src/pages/DeviceOAuth.tsx
+msgid "requests access to your JType account."
+msgstr "requests access to your JType account."
+
 #: src/pages/Login.tsx
 msgid "Resend code"
 msgstr "Resend code"
@@ -1865,6 +1897,10 @@ msgstr "Restore or delete cloud documents"
 #: src/pages/Admin.tsx
 msgid "Review accounts, roles, and enabled status."
 msgstr "Review accounts, roles, and enabled status."
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Review and approve an app requesting access to JType"
+msgstr "Review and approve an app requesting access to JType"
 
 #: src/pages/Admin.tsx
 msgid "Review published custom domains and SSL state."
@@ -2081,8 +2117,8 @@ msgid "Signed in as <0>{loggedInName}</0>"
 msgstr "Signed in as <0>{loggedInName}</0>"
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Signed in. Ready to authorize device."
-msgstr "Signed in. Ready to authorize device."
+#~ msgid "Signed in. Ready to authorize device."
+#~ msgstr "Signed in. Ready to authorize device."
 
 #: src/pages/Login.tsx
 msgid "Signing in..."
@@ -2403,6 +2439,10 @@ msgstr "Use JType beyond the browser"
 msgid "Use password instead"
 msgstr "Use password instead"
 
+#: src/pages/DeviceOAuth.tsx
+msgid "Use your workspace and administrator permissions"
+msgstr "Use your workspace and administrator permissions"
+
 #: src/pages/Admin.tsx
 msgid "User"
 msgstr "User"
@@ -2467,6 +2507,10 @@ msgstr "Verify DNS"
 #: src/pages/VerifyEmail.tsx
 msgid "Verifying…"
 msgstr "Verifying…"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "View and manage all cloud workspaces you can access"
+msgstr "View and manage all cloud workspaces you can access"
 
 #: src/pages/Admin.tsx
 msgid "View latest release notes →"
@@ -2592,47 +2636,3 @@ msgstr "Your rendered document will appear here."
 #: src/components/SiteThemePanel.tsx
 msgid "Your theme"
 msgstr "Your theme"
-
-#: src/pages/DeviceOAuth.tsx
-msgid "Access approved. You can return to the app that requested access."
-msgstr "Access approved. You can return to the app that requested access."
-
-#: src/pages/DeviceOAuth.tsx
-msgid "Allow access"
-msgstr "Allow access"
-
-#: src/pages/DeviceOAuth.tsx
-msgid "Allow full access"
-msgstr "Allow full access"
-
-#: src/pages/DeviceOAuth.tsx
-msgid "Authorization request not found"
-msgstr "Authorization request not found"
-
-#: src/pages/DeviceOAuth.tsx
-msgid "Full account access"
-msgstr "Full account access"
-
-#: src/pages/DeviceOAuth.tsx
-msgid "Read and manage your documents and kanban boards."
-msgstr "Read and manage your documents and kanban boards."
-
-#: src/pages/DeviceOAuth.tsx
-msgid "Read, create, update, and delete documents and kanban cards"
-msgstr "Read, create, update, and delete documents and kanban cards"
-
-#: src/pages/DeviceOAuth.tsx
-msgid "requests access to your JType account."
-msgstr "requests access to your JType account."
-
-#: src/pages/DeviceOAuth.tsx
-msgid "Review and approve an app requesting access to JType"
-msgstr "Review and approve an app requesting access to JType"
-
-#: src/pages/DeviceOAuth.tsx
-msgid "Use your workspace and administrator permissions"
-msgstr "Use your workspace and administrator permissions"
-
-#: src/pages/DeviceOAuth.tsx
-msgid "View and manage all cloud workspaces you can access"
-msgstr "View and manage all cloud workspaces you can access"

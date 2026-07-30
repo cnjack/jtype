@@ -2,14 +2,14 @@
 
 ## 子卡片
 
-任何卡片都可以通过把 `parent` frontmatter 指向父卡的 slug（卡片文件名去掉 `.md`）成为**子卡片**：
+任何卡片都可以通过把 `parent` frontmatter 指向父卡的相对路径（去掉 `.md`）成为**子卡片**：
 
 ```markdown
 ---
 title: 设计登录表单
 board: roadmap
 status: todo
-parent: [[login-epic]]
+parent: [[roadmap/login-epic]]
 ---
 ```
 
@@ -17,7 +17,9 @@ parent: [[login-epic]]
 
 - 在卡片的侧边详情里，从 **Parent** 下拉选择父卡。
 - 或者用父卡详情里的 **Sub-cards** 区：在 *"+ Add sub-card"* 输入标题，JType 会在第一列创建卡片并自动设好 parent。
-- CLI：`jtype card create --board roadmap --status todo "设计表单" --parent login-epic`；之后也可以用 `jtype card set <path> --parent login-epic` 重新指定（空字符串解除）。
+- CLI：`jtype card create --board roadmap --status todo "设计表单" --parent roadmap/login-epic`；之后也可以用 `jtype card set <path> --parent roadmap/login-epic` 重新指定（空字符串解除）。
+
+旧的纯文件名引用（例如 `[[login-epic]]`）在名称唯一时仍然兼容。新写入的路径引用可以避免不同文件夹中存在同名卡片时，把子卡错误地绑定到另一个父卡。
 
 卡片一旦有了子卡，卡面就会显示**完成度圆环**——已完成/总数，子卡位于看板的完成列即计为完成。父卡详情列出所有子卡及其状态，点击即可跳转。
 

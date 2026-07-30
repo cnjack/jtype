@@ -6,7 +6,7 @@ const article: ArticleMeta = {
   id: 'boards-and-cards',
   categoryId: 'kanban',
   order: 1,
-  updated: '2026-07-30',
+  updated: '2026-07-31',
   title: {
     en: 'Boards & cards: turning a workspace into kanban',
     zh: '看板与卡片：把工作区变成看板',

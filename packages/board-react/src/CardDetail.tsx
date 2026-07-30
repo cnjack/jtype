@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { XMarkIcon } from '@heroicons/react/24/outline'
 import { attachmentName, isSafeAttachmentUrl, PRIORITY_STYLE, type BoardViewCard } from '@shared/lib/board'
 import type { BoardConfigJSON } from './boardData'
 import type { UiStrings } from './strings'
@@ -60,9 +61,7 @@ export function CardDetail({
           aria-label={strings.close}
           className="rounded p-1 text-stone-400 hover:bg-stone-100"
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-4 w-4" aria-hidden>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-          </svg>
+          <XMarkIcon className="h-4 w-4" aria-hidden />
         </button>
       </div>
 

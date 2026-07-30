@@ -1,6 +1,6 @@
 {
   "name": "jtype-board-react",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Embeddable React kanban board for jtype cloud workspaces (the shared BoardSurface behind the desktop + web boards, wired to an instance-based API client).",
   "type": "module",
   "files": [
@@ -22,7 +22,7 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "build": "tsc --noEmit && vite build && node scripts/scope-css.mjs",
-    "test": "cd ../.. && npx playwright test --config playwright.unit.config.ts boardReact"
+    "test": "cd ../.. && npx playwright test --config playwright.unit.config.ts boardReact && npx playwright test --config playwright.board.config.ts board-react-embed.spec.ts --workers=1"
   },
   "peerDependencies": {
     "react": "^18.2.0 || ^19.0.0",

@@ -65,6 +65,7 @@ export function cardFromDoc(
   const tasks = countTasks(fm.body)
   return {
     id: doc.relativePath,
+    relationKey: doc.relativePath,
     columnKey: fm.data.status || '',
     position: Number(fm.data.position ?? 0),
     title: fm.data.title || doc.title || doc.relativePath,

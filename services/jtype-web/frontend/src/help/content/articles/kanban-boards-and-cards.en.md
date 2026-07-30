@@ -24,6 +24,8 @@ A **card** is one unit of work. Beyond its title, a card can carry:
 - an **assignee**, who must be a member of the workspace,
 - a **due date**, and colored **labels**.
 
+In the Desktop and Web apps, choose **New card** at the bottom of a swimlane to open the focused quick-create window. Add the title and Markdown description, then set status, priority, assignee, labels, and due date without leaving the board. Press **Command/Ctrl + Enter** to create it. Opening an existing card uses a larger detail view: the Markdown description and conversation stay in the main area, while workflow properties remain grouped in the inspector on the right (or below the content on a narrow screen).
+
 Create and move cards from the CLI:
 
 ```bash

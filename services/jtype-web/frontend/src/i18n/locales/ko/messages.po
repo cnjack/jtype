@@ -141,6 +141,10 @@ msgstr "강조"
 msgid "Accept invitation"
 msgstr "초대 수락"
 
+#: src/pages/DeviceOAuth.tsx
+msgid "Access approved. You can return to the app that requested access."
+msgstr "액세스를 승인했습니다. 액세스를 요청한 앱으로 돌아갈 수 있습니다."
+
 #: src/pages/Admin.tsx
 msgid "Access key"
 msgstr "액세스 키"
@@ -220,6 +224,14 @@ msgstr "AI 준비됨"
 msgid "All case studies"
 msgstr "모든 사례 연구"
 
+#: src/pages/DeviceOAuth.tsx
+msgid "Allow access"
+msgstr "액세스 허용"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Allow full access"
+msgstr "전체 액세스 허용"
+
 #: src/pages/InviteAccept.tsx
 msgid "Already accepted"
 msgstr "이미 수락됨"
@@ -256,6 +268,10 @@ msgstr "인증 실패"
 #: src/pages/DeviceOAuth.tsx
 msgid "Authorization failed"
 msgstr "권한 부여 실패"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Authorization request not found"
+msgstr "인증 요청을 찾을 수 없습니다"
 
 #: src/pages/DeviceOAuth.tsx
 #~ msgid "Authorize Desktop"
@@ -686,8 +702,8 @@ msgid "Detected save, queued push."
 msgstr "저장 감지됨, 푸시 대기 중."
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Device authorized! You can return to the JType desktop app."
-msgstr "기기가 인증되었습니다! JType 데스크탑 앱으로 돌아갈 수 있습니다."
+#~ msgid "Device authorized! You can return to the JType desktop app."
+#~ msgstr "기기가 인증되었습니다! JType 데스크탑 앱으로 돌아갈 수 있습니다."
 
 #: src/pages/DeviceOAuth.tsx
 msgid "Device code"
@@ -863,8 +879,8 @@ msgstr ""
 #~ msgstr ""
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Enter the code shown in your JType desktop app"
-msgstr "JType 데스크탑 앱에 표시된 코드를 입력하세요"
+#~ msgid "Enter the code shown in your JType desktop app"
+#~ msgstr "JType 데스크탑 앱에 표시된 코드를 입력하세요"
 
 #: src/pages/Login.tsx
 #~ msgid "Enter the code to sign in."
@@ -961,6 +977,10 @@ msgstr ""
 #: src/pages/Admin.tsx
 msgid "from env"
 msgstr "환경에서"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Full account access"
+msgstr "계정 전체 액세스"
 
 #: src/pages/Workspace.tsx
 msgid "General"
@@ -1739,6 +1759,10 @@ msgstr "빠른 열기"
 msgid "Re-enter new password"
 msgstr ""
 
+#: src/pages/DeviceOAuth.tsx
+msgid "Read and manage your documents and kanban boards."
+msgstr "문서와 칸반 보드를 읽고 관리합니다."
+
 #: src/help/pages/CasesIndex.tsx
 msgid "Read case study"
 msgstr "사례 연구 읽기"
@@ -1746,6 +1770,10 @@ msgstr "사례 연구 읽기"
 #: src/pages/Workspace.tsx
 msgid "Read-only"
 msgstr "읽기 전용"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Read, create, update, and delete documents and kanban cards"
+msgstr "문서와 칸반 카드 읽기, 만들기, 업데이트 및 삭제"
 
 #: src/pages/Landing.tsx
 msgid "Ready for the cloud layer"
@@ -1831,6 +1859,10 @@ msgstr "게시된 문서 다시 게시"
 msgid "Request failed"
 msgstr "요청 실패"
 
+#: src/pages/DeviceOAuth.tsx
+msgid "requests access to your JType account."
+msgstr "앱이 JType 계정 액세스를 요청합니다."
+
 #: src/pages/Login.tsx
 msgid "Resend code"
 msgstr ""
@@ -1866,6 +1898,10 @@ msgstr "클라우드 문서 복원 또는 삭제"
 #: src/pages/Admin.tsx
 msgid "Review accounts, roles, and enabled status."
 msgstr "계정, 역할 및 활성화 상태를 검토합니다."
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Review and approve an app requesting access to JType"
+msgstr "JType 액세스를 요청하는 앱을 검토하고 승인"
 
 #: src/pages/Admin.tsx
 msgid "Review published custom domains and SSL state."
@@ -2082,8 +2118,8 @@ msgid "Signed in as <0>{loggedInName}</0>"
 msgstr ""
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Signed in. Ready to authorize device."
-msgstr "로그인됨. 기기 인증 준비 완료."
+#~ msgid "Signed in. Ready to authorize device."
+#~ msgstr "로그인됨. 기기 인증 준비 완료."
 
 #: src/pages/Login.tsx
 msgid "Signing in..."
@@ -2404,6 +2440,10 @@ msgstr "브라우저 밖에서도 JType 사용"
 msgid "Use password instead"
 msgstr ""
 
+#: src/pages/DeviceOAuth.tsx
+msgid "Use your workspace and administrator permissions"
+msgstr "기존 워크스페이스 및 관리자 권한 사용"
+
 #: src/pages/Admin.tsx
 msgid "User"
 msgstr "사용자"
@@ -2468,6 +2508,10 @@ msgstr "DNS 확인"
 #: src/pages/VerifyEmail.tsx
 msgid "Verifying…"
 msgstr ""
+
+#: src/pages/DeviceOAuth.tsx
+msgid "View and manage all cloud workspaces you can access"
+msgstr "액세스할 수 있는 모든 클라우드 워크스페이스 보기 및 관리"
 
 #: src/pages/Admin.tsx
 msgid "View latest release notes →"
@@ -2593,47 +2637,3 @@ msgstr "렌더링된 문서가 여기에 표시됩니다."
 #: src/components/SiteThemePanel.tsx
 msgid "Your theme"
 msgstr "내 테마"
-
-#: src/pages/DeviceOAuth.tsx
-msgid "Access approved. You can return to the app that requested access."
-msgstr "액세스를 승인했습니다. 액세스를 요청한 앱으로 돌아갈 수 있습니다."
-
-#: src/pages/DeviceOAuth.tsx
-msgid "Allow access"
-msgstr "액세스 허용"
-
-#: src/pages/DeviceOAuth.tsx
-msgid "Allow full access"
-msgstr "전체 액세스 허용"
-
-#: src/pages/DeviceOAuth.tsx
-msgid "Authorization request not found"
-msgstr "인증 요청을 찾을 수 없습니다"
-
-#: src/pages/DeviceOAuth.tsx
-msgid "Full account access"
-msgstr "계정 전체 액세스"
-
-#: src/pages/DeviceOAuth.tsx
-msgid "Read and manage your documents and kanban boards."
-msgstr "문서와 칸반 보드를 읽고 관리합니다."
-
-#: src/pages/DeviceOAuth.tsx
-msgid "Read, create, update, and delete documents and kanban cards"
-msgstr "문서와 칸반 카드 읽기, 만들기, 업데이트 및 삭제"
-
-#: src/pages/DeviceOAuth.tsx
-msgid "requests access to your JType account."
-msgstr "앱이 JType 계정 액세스를 요청합니다."
-
-#: src/pages/DeviceOAuth.tsx
-msgid "Review and approve an app requesting access to JType"
-msgstr "JType 액세스를 요청하는 앱을 검토하고 승인"
-
-#: src/pages/DeviceOAuth.tsx
-msgid "Use your workspace and administrator permissions"
-msgstr "기존 워크스페이스 및 관리자 권한 사용"
-
-#: src/pages/DeviceOAuth.tsx
-msgid "View and manage all cloud workspaces you can access"
-msgstr "액세스할 수 있는 모든 클라우드 워크스페이스 보기 및 관리"

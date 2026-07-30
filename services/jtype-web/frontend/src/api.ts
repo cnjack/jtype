@@ -798,6 +798,7 @@ export interface UpdateSiteSettings {
 export interface SaveDocumentResponse {
   documentId: string
   relativePath: string
+  content: string
   contentHash: string
   updatedClock: number
   mergeStatus: 'accepted' | 'merged' | 'unchanged'

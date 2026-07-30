@@ -10,12 +10,14 @@ import {
   type BoardViewCard,
   type BoardViewConfig,
 } from "@shared/lib/board";
+import { renderMarkdownToHtml, renderToContainer } from "@shared/lib/markdown";
 import { i18n, ensureLocaleActivated } from "@shared/i18n";
 import "../../src/styles.css";
 
 declare global {
   interface Window {
     __BOARD_TEST_DROP_UPDATES__?: boolean;
+    __BOARD_TEST_CREATE_FAILURE__?: boolean;
     __BOARD_TEST_STATE__?: {
       config: BoardViewConfig;
       cards: BoardViewCard[];
@@ -113,7 +115,8 @@ function Harness() {
         });
         setConfig((current) => ({ ...current, ...patch }));
       },
-      createCard: async (laneKey, title) => {
+      createCard: async (laneKey, title, initial) => {
+        if (window.__BOARD_TEST_CREATE_FAILURE__) throw new Error("simulated create failure");
         const id = `roadmap/${slugify(title)}.md`;
         const activeLane = activeBoardLaneKey(config);
         setCards((current) => [
@@ -127,6 +130,7 @@ function Harness() {
             swimlaneKey: null,
             tags: [],
             ...cardPatchForLaneValue(activeLane, laneKey),
+            ...initial,
           },
         ]);
         return id;
@@ -243,6 +247,8 @@ function Harness() {
       cards={cards}
       actions={actions}
       currentUser="Jack"
+      renderMarkdownToContainer={renderToContainer}
+      renderMarkdownToHtml={renderMarkdownToHtml}
       peekComponent={BoardPeek}
     />
   );

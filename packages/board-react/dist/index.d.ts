@@ -52,8 +52,13 @@ export declare type BoardTag = {
 };
 
 export declare type BoardViewCard = {
-    /** Stable id — desktop: file path; web: card id. */
+    /** Stable id — desktop: absolute file path; web/embed: relative document path. */
     id: string;
+    /**
+     * Portable vault-relative document path used by persisted card relations.
+     * Desktop supplies this separately because `id` is an absolute filesystem path.
+     */
+    relationKey?: string;
     /** Allocated ticket id (e.g. `OCCSV-3371`), cloud-indexed; shown as a card badge. */
     ticket?: string | null;
     /** The grouping value under the default (status) grouping. */
@@ -228,7 +233,7 @@ export declare type JTypeBoardProps = {
     live?: boolean;
     /** Polling cadence in ms (default 30000, min 5000). */
     pollIntervalMs?: number;
-    /** Intercept card opens (replaces the built-in read-only detail panel). */
+    /** Intercept card opens (replaces the built-in editable/read-only detail). */
     onCardOpen?: (card: BoardViewCard) => void;
     /** Observe live/polling/error transitions. */
     onConnectionChange?: (state: JTypeBoardConnection) => void;

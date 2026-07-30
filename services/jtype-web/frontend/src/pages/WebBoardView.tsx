@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BoardSettingsDialog } from '../components/BoardSettingsDialog'
 import { useConfirm, usePrompt } from '@shared/components/PromptDialogContext'
 import { parseFrontmatter, writeFrontmatter } from '@shared/lib/frontmatter'
+import { renderMarkdownToHtml, renderToContainer } from '@shared/lib/markdown'
 import { BoardSurface, BoardPeek, type BoardActions } from '@shared/components/board'
 import { useWorkspaceSocket } from '../hooks/useWorkspaceSocket'
 import {
@@ -11,6 +12,7 @@ import {
   boardLaneValueOf,
   bodyExcerpt,
   cardPatchForLaneValue,
+  newCardLaneValue,
   countTasks,
   parseAttachments,
   parseLinks,
@@ -27,8 +29,11 @@ import {
   type BoardDocumentConfig,
 } from '@shared/lib/board'
 import { api, getStoredUsername, setSessionId, type MemberInfo } from '../api'
+import {
+  saveBoardCardPatch,
+  type WebBoardCardMeta,
+} from '../lib/boardCardWrites'
 
-type CardMeta = { id: string; relativePath: string; content: string; contentHash: string }
 type BoardConfigJSON = BoardDocumentConfig
 
 function rand() {
@@ -60,12 +65,13 @@ export function WebBoardView({
 
   const [config, setConfig] = useState<BoardConfigJSON | null>(null)
   const [cards, setCards] = useState<BoardViewCard[]>([])
-  const [metaByPath, setMetaByPath] = useState<Map<string, CardMeta>>(new Map())
+  const [metaByPath, setMetaByPath] = useState<Map<string, WebBoardCardMeta>>(new Map())
   const [error, setError] = useState('')
   const [showBoardSettings, setShowBoardSettings] = useState(false)
   const [ticketByDoc, setTicketByDoc] = useState<Map<string, string>>(new Map())
   const configRef = useRef<BoardConfigJSON | null>(null)
   const boardDocRef = useRef<{ content: string; contentHash: string } | null>(null)
+  const metaByPathRef = useRef<Map<string, WebBoardCardMeta>>(new Map())
 
   const load = useCallback(async () => {
     try {
@@ -82,7 +88,7 @@ export function WebBoardView({
       )
       const loaded = await Promise.all(cardItems.map((d) => api.getDocument(workspaceId, d.id).then((doc) => ({ item: d, doc }))))
 
-      const nextMeta = new Map<string, CardMeta>()
+      const nextMeta = new Map<string, WebBoardCardMeta>()
       const nextCards: BoardViewCard[] = []
       for (const { item, doc } of loaded) {
         const fm = parseFrontmatter(doc.content)
@@ -91,6 +97,7 @@ export function WebBoardView({
         const tasks = countTasks(fm.body)
         nextCards.push({
           id: doc.relativePath,
+          relationKey: doc.relativePath,
           columnKey: fm.data.status || '',
           position: Number(fm.data.position ?? 0),
           title: fm.data.title || doc.title || doc.relativePath,
@@ -112,6 +119,7 @@ export function WebBoardView({
           parent: fm.data.parent ? (parseLinks(fm.data.parent)[0] ?? null) : null,
         })
       }
+      metaByPathRef.current = nextMeta
       setMetaByPath(nextMeta)
       setCards(nextCards)
       setError('')
@@ -168,26 +176,36 @@ export function WebBoardView({
 
   const saveCard = useCallback(
     async (relativePath: string, data: Record<string, string>, body: string) => {
-      const meta = metaByPath.get(relativePath)
+      const meta = metaByPathRef.current.get(relativePath)
       const content = writeFrontmatter(body, data)
-      await api.saveDocument(workspaceId, {
+      const saved = await api.saveDocument(workspaceId, {
         relativePath,
         content,
         baseContentHash: meta?.contentHash,
         baseContent: meta?.content,
       })
+      if (meta) {
+        const nextMeta = new Map(metaByPathRef.current)
+        nextMeta.set(relativePath, {
+          ...(nextMeta.get(relativePath) ?? meta),
+          content: saved.content,
+          contentHash: saved.contentHash,
+        })
+        metaByPathRef.current = nextMeta
+        setMetaByPath(nextMeta)
+      }
     },
-    [workspaceId, metaByPath],
+    [workspaceId],
   )
 
   const createCardDoc = useCallback(
     async (title: string, data: Record<string, string>, body = '') => {
       let rel = `${boardDir}/${slugify(title)}.md`
-      if (metaByPath.has(rel)) rel = `${boardDir}/${slugify(title)}-${rand()}.md`
+      if (metaByPathRef.current.has(rel)) rel = `${boardDir}/${slugify(title)}-${rand()}.md`
       await api.saveDocument(workspaceId, { relativePath: rel, content: writeFrontmatter(body, data) })
       return rel
     },
-    [workspaceId, boardDir, metaByPath],
+    [workspaceId, boardDir],
   )
 
   const viewConfig: BoardViewConfig = useMemo(
@@ -335,44 +353,50 @@ export function WebBoardView({
         if (!latest) return
         await saveBoardConfig({ ...latest, ...patch }, true)
       },
-      createCard: async (colKey, title) => {
+      createCard: async (colKey, title, initial) => {
         if (!config) return
         const laneKey = activeBoardLaneKey(config)
+        const targetLane = newCardLaneValue(laneKey, colKey, initial)
         const pos = cards
-          .filter((card) => boardLaneValueOf(card, config) === colKey)
+          .filter((card) => boardLaneValueOf(card, config) === targetLane)
           .reduce((max, card) => Math.max(max, card.position), -1) + 1
         const data: Record<string, string> = {
           title,
           board: config.id,
-          status: laneKey === 'status' ? colKey : config.columns[0]?.key ?? 'todo',
+          status: laneKey === 'status' ? targetLane : config.columns[0]?.key ?? 'todo',
           position: String(pos),
         }
         const content = applyBoardCardPatch(
-          writeFrontmatter('', data),
-          cardPatchForLaneValue(laneKey, colKey),
+          applyBoardCardPatch(
+            writeFrontmatter('', data),
+            cardPatchForLaneValue(laneKey, targetLane),
+          ),
+          initial ?? {},
         )
-        const rel = await createCardDoc(title, parseFrontmatter(content).data)
+        const parsed = parseFrontmatter(content)
+        const rel = await createCardDoc(title, parsed.data, parsed.body)
         await load()
         return rel
       },
       updateCard: async (id, patch) => {
-        const meta = metaByPath.get(id)
-        if (!meta) return
         try {
-          await api.saveDocument(workspaceId, {
-            relativePath: id,
-            content: applyBoardCardPatch(meta.content, patch),
-            baseContentHash: meta.contentHash,
-            baseContent: meta.content,
-          })
+          const nextMeta = await saveBoardCardPatch(
+            metaByPathRef,
+            id,
+            patch,
+            (request) => api.saveDocument(workspaceId, request),
+          )
+          if (nextMeta) setMetaByPath(nextMeta)
           await load()
         } catch (e) {
+          await load()
           setError(String(e))
+          throw e
         }
       },
       updateCards: async (updates, onProgress) => {
         try {
-          const workingMeta = new Map(metaByPath)
+          const workingMeta = new Map(metaByPathRef.current)
           const missing = updates.find((update) => !workingMeta.has(update.cardId))
           if (missing) {
             throw new Error(`Card metadata is missing for ${missing.cardId}. Refresh and try again.`)
@@ -389,13 +413,17 @@ export function WebBoardView({
             })
             workingMeta.set(update.cardId, {
               ...meta,
-              content,
+              content: saved.content,
               contentHash: saved.contentHash,
             })
+            metaByPathRef.current = new Map(workingMeta)
             completed += 1
             onProgress?.(completed, updates.length)
           }
-          if (completed > 0) setMetaByPath(workingMeta)
+          if (completed > 0) {
+            metaByPathRef.current = workingMeta
+            setMetaByPath(workingMeta)
+          }
           await load()
         } catch (e) {
           await load()
@@ -406,7 +434,7 @@ export function WebBoardView({
       moveCard: async (id, toCol, index) => {
         if (!config) return
         const laneKey = activeBoardLaneKey(config)
-        const movedMeta = metaByPath.get(id)
+        const movedMeta = metaByPathRef.current.get(id)
         if (!movedMeta) return
         try {
           if (laneKey !== 'status') {
@@ -427,7 +455,7 @@ export function WebBoardView({
           for (let i = 0; i < target.length; i++) {
             const c = target[i]
             if (!c) continue
-            const meta = metaByPath.get(c.id)
+            const meta = metaByPathRef.current.get(c.id)
             if (!meta) continue
             if (c.id !== id && c.position === i && c.columnKey === toCol) continue
             const { data, body } = parseFrontmatter(meta.content)
@@ -439,7 +467,7 @@ export function WebBoardView({
         }
       },
       deleteCard: async (card) => {
-        const meta = metaByPath.get(card.id)
+        const meta = metaByPathRef.current.get(card.id)
         if (!meta) return
         if (!(await confirm(`Delete card "${card.title}"? It moves to the trash.`, { title: 'Delete card', destructive: true }))) return
         try {
@@ -562,6 +590,8 @@ export function WebBoardView({
         fullscreen={fullscreen}
         onToggleFullscreen={onToggleFullscreen}
         onOpenSettings={() => setShowBoardSettings(true)}
+        renderMarkdownToContainer={renderToContainer}
+        renderMarkdownToHtml={renderMarkdownToHtml}
         peekComponent={BoardPeek}
       />
       {showBoardSettings && (

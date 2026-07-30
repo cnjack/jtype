@@ -2,14 +2,14 @@ Three board tools for when a project grows past a handful of cards: sub-cards fo
 
 ## Sub-cards
 
-Any card can become a **sub-card** of another by pointing its `parent` frontmatter at the parent's slug (the card's filename without `.md`):
+Any card can become a **sub-card** of another by pointing its `parent` frontmatter at the parent's relative path without `.md`:
 
 ```markdown
 ---
 title: Design login form
 board: roadmap
 status: todo
-parent: [[login-epic]]
+parent: [[roadmap/login-epic]]
 ---
 ```
 
@@ -17,7 +17,11 @@ You rarely type this by hand:
 
 - In a card's peek panel, pick a **Parent** from the dropdown.
 - Or use the **Sub-cards** section on the parent: type a title in *"+ Add sub-card"* and JType creates the card in the first column with the parent already set.
-- From the CLI: `jtype card create --board roadmap --status todo "Design form" --parent login-epic`, or re-parent later with `jtype card set <path> --parent login-epic` (an empty string detaches).
+- From the CLI: `jtype card create --board roadmap --status todo "Design form" --parent roadmap/login-epic`, or re-parent later with `jtype card set <path> --parent roadmap/login-epic` (an empty string detaches).
+
+Older basename-only references such as `[[login-epic]]` remain compatible when
+that filename is unique. New path-based references avoid attaching a sub-card
+to the wrong parent when different folders contain cards with the same name.
 
 Once a card has children, its face shows a **progress ring** — done/total, where a child counts as done when it sits in the board's done column. The parent's peek lists every sub-card with its status; click one to jump to it.
 
