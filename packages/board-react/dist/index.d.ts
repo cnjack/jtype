@@ -118,11 +118,12 @@ declare type BoardViewConfig = {
     /** Board ticket-id prefix (e.g. `OCCSV`) for per-card `OCCSV-3371` ticket links. */
     ticketKey?: string;
     /**
-     * Second grouping dimension rendered as horizontal swimlanes (rows) in the
-     * board view. Must differ from `groupBy`; unset = no swimlanes.
+     * Active custom swimlane mode. Historical configs may also contain
+     * status/priority/assignee here from the retired two-dimensional layout;
+     * those values now render as the single vertical swimlane dimension.
      */
     swimlaneBy?: BoardSwimlaneGroupKey;
-    /** Persistent definitions used when `swimlaneBy === "custom"`. */
+    /** Persistent definitions used by custom vertical swimlanes. */
     swimlanes?: BoardSwimlane[];
     /** Present only while a derived-lane conversion is incomplete/retryable. */
     swimlaneMigration?: SwimlaneMigration;

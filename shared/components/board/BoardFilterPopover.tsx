@@ -145,7 +145,7 @@ export function BoardFilterPopover({
   if (filters.due) chips.push({ key: "due", label: dueLabel(filters.due) });
   if (filters.blocked) chips.push({ key: "blocked", label: t`Blocked` });
   if (filters.mine) chips.push({ key: "mine", label: t`My cards` });
-  if (filters.missingRow) chips.push({ key: "missingRow", label: t`Missing row` });
+  if (filters.missingRow) chips.push({ key: "missingRow", label: t`Missing swimlane` });
 
   return (
     <Fragment>
@@ -294,7 +294,7 @@ export function BoardFilterPopover({
                     selected
                     onClick={() => update("missingRow", undefined)}
                   >
-                    <Trans>Cards with a missing row</Trans>
+                    <Trans>Cards with a missing swimlane</Trans>
                   </OptionButton>
                 </div>
               )}

@@ -899,57 +899,57 @@ function Lt({ disabled: e = !1 } = {}) {
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/hooks/use-slot.js
-function Rt(e) {
+function W(e) {
 	return g(() => e, Object.values(e));
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/internal/disabled.js
-var zt = i(void 0);
-function Bt() {
-	return u(zt);
+var Rt = i(void 0);
+function zt() {
+	return u(Rt);
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/utils/class-names.js
-function Vt(...e) {
+function Bt(...e) {
 	return Array.from(new Set(e.flatMap((e) => typeof e == "string" ? e.split(" ") : []))).filter(Boolean).join(" ");
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/utils/match.js
-function Ht(e, t, ...n) {
+function Vt(e, t, ...n) {
 	if (e in t) {
 		let r = t[e];
 		return typeof r == "function" ? r(...n) : r;
 	}
 	let r = /* @__PURE__ */ Error(`Tried to handle "${e}" but there is no handler defined. Only defined handlers are: ${Object.keys(t).map((e) => `"${e}"`).join(", ")}.`);
-	throw Error.captureStackTrace && Error.captureStackTrace(r, Ht), r;
+	throw Error.captureStackTrace && Error.captureStackTrace(r, Vt), r;
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/utils/render.js
-var Ut = ((e) => (e[e.None = 0] = "None", e[e.RenderStrategy = 1] = "RenderStrategy", e[e.Static = 2] = "Static", e))(Ut || {}), Wt = ((e) => (e[e.Unmount = 0] = "Unmount", e[e.Hidden = 1] = "Hidden", e))(Wt || {});
-function W() {
-	let e = qt();
-	return l((t) => Gt({
+var Ht = ((e) => (e[e.None = 0] = "None", e[e.RenderStrategy = 1] = "RenderStrategy", e[e.Static = 2] = "Static", e))(Ht || {}), Ut = ((e) => (e[e.Unmount = 0] = "Unmount", e[e.Hidden = 1] = "Hidden", e))(Ut || {});
+function G() {
+	let e = Kt();
+	return l((t) => Wt({
 		mergeRefs: e,
 		...t
 	}), [e]);
 }
-function Gt({ ourProps: e, theirProps: t, slot: n, defaultTag: r, features: i, visible: a = !0, name: o, mergeRefs: s }) {
-	s ??= Jt;
-	let c = Yt(t, e);
-	if (a) return Kt(c, n, r, o, s);
+function Wt({ ourProps: e, theirProps: t, slot: n, defaultTag: r, features: i, visible: a = !0, name: o, mergeRefs: s }) {
+	s ??= qt;
+	let c = Jt(t, e);
+	if (a) return Gt(c, n, r, o, s);
 	let l = i ?? 0;
 	if (l & 2) {
 		let { static: e = !1, ...t } = c;
-		if (e) return Kt(t, n, r, o, s);
+		if (e) return Gt(t, n, r, o, s);
 	}
 	if (l & 1) {
 		let { unmount: e = !0, ...t } = c;
-		return Ht(+!e, {
+		return Vt(+!e, {
 			0() {
 				return null;
 			},
 			1() {
-				return Kt({
+				return Gt({
 					...t,
 					hidden: !0,
 					style: { display: "none" }
@@ -957,11 +957,11 @@ function Gt({ ourProps: e, theirProps: t, slot: n, defaultTag: r, features: i, v
 			}
 		});
 	}
-	return Kt(c, n, r, o, s);
+	return Gt(c, n, r, o, s);
 }
-function Kt(e, t = {}, n, i, o) {
-	let { as: s = n, children: l, refName: u = "ref", ...d } = Qt(e, ["unmount", "static"]), f = e.ref === void 0 ? {} : { [u]: e.ref }, p = typeof l == "function" ? l(t) : l;
-	p = en(p), "className" in d && d.className && typeof d.className == "function" && (d.className = d.className(t)), d["aria-labelledby"] && d["aria-labelledby"] === d.id && (d["aria-labelledby"] = void 0);
+function Gt(e, t = {}, n, i, o) {
+	let { as: s = n, children: l, refName: u = "ref", ...d } = Zt(e, ["unmount", "static"]), f = e.ref === void 0 ? {} : { [u]: e.ref }, p = typeof l == "function" ? l(t) : l;
+	p = $t(p), "className" in d && d.className && typeof d.className == "function" && (d.className = d.className(t)), d["aria-labelledby"] && d["aria-labelledby"] === d.id && (d["aria-labelledby"] = void 0);
 	let m = {};
 	if (t) {
 		let e = !1, n = [];
@@ -971,25 +971,25 @@ function Kt(e, t = {}, n, i, o) {
 			for (let e of n) m[`data-${e}`] = "";
 		}
 	}
-	if (tn(s) && (Object.keys(Zt(d)).length > 0 || Object.keys(Zt(m)).length > 0)) if (!c(p) || Array.isArray(p) && p.length > 1 || nn(p)) {
-		if (Object.keys(Zt(d)).length > 0) throw Error([
+	if (en(s) && (Object.keys(Xt(d)).length > 0 || Object.keys(Xt(m)).length > 0)) if (!c(p) || Array.isArray(p) && p.length > 1 || tn(p)) {
+		if (Object.keys(Xt(d)).length > 0) throw Error([
 			"Passing props on \"Fragment\"!",
 			"",
 			`The current component <${i} /> is rendering a "Fragment".`,
 			"However we need to passthrough the following props:",
-			Object.keys(Zt(d)).concat(Object.keys(Zt(m))).map((e) => `  - ${e}`).join("\n"),
+			Object.keys(Xt(d)).concat(Object.keys(Xt(m))).map((e) => `  - ${e}`).join("\n"),
 			"",
 			"You can apply a few solutions:",
 			["Add an `as=\"...\"` prop, to ensure that we render an actual element instead of a \"Fragment\".", "Render a single element as the child so that we can forward the props onto that element."].map((e) => `  - ${e}`).join("\n")
 		].join("\n"));
 	} else {
-		let e = p.props?.className, t = typeof e == "function" ? (...t) => Vt(e(...t), d.className) : Vt(e, d.className), n = t ? { className: t } : {}, i = Yt(p.props, Zt(Qt(d, ["ref"])));
+		let e = p.props?.className, t = typeof e == "function" ? (...t) => Bt(e(...t), d.className) : Bt(e, d.className), n = t ? { className: t } : {}, i = Jt(p.props, Xt(Zt(d, ["ref"])));
 		for (let e in m) e in i && delete m[e];
-		return r(p, Object.assign({}, i, m, f, { ref: o($t(p), f.ref) }, n));
+		return r(p, Object.assign({}, i, m, f, { ref: o(Qt(p), f.ref) }, n));
 	}
-	return a(s, Object.assign({}, Qt(d, ["ref"]), !tn(s) && f, !tn(s) && m), p);
+	return a(s, Object.assign({}, Zt(d, ["ref"]), !en(s) && f, !en(s) && m), p);
 }
-function qt() {
+function Kt() {
 	let e = v([]), t = l((t) => {
 		for (let n of e.current) n != null && (typeof n == "function" ? n(t) : n.current = t);
 	}, []);
@@ -997,12 +997,12 @@ function qt() {
 		if (!n.every((e) => e == null)) return e.current = n, t;
 	};
 }
-function Jt(...e) {
+function qt(...e) {
 	return e.every((e) => e == null) ? void 0 : (t) => {
 		for (let n of e) n != null && (typeof n == "function" ? n(t) : n.current = t);
 	};
 }
-function Yt(...e) {
+function Jt(...e) {
 	if (e.length === 0) return {};
 	if (e.length === 1) return e[0];
 	let t = {}, n = {};
@@ -1017,7 +1017,7 @@ function Yt(...e) {
 	} });
 	return t;
 }
-function Xt(...e) {
+function Yt(...e) {
 	if (e.length === 0) return {};
 	if (e.length === 1) return e[0];
 	let t = {}, n = {};
@@ -1028,61 +1028,61 @@ function Xt(...e) {
 	} });
 	return t;
 }
-function G(e) {
+function K(e) {
 	return Object.assign(s(e), { displayName: e.displayName ?? e.name });
 }
-function Zt(e) {
+function Xt(e) {
 	let t = Object.assign({}, e);
 	for (let e in t) t[e] === void 0 && delete t[e];
 	return t;
 }
-function Qt(e, t = []) {
+function Zt(e, t = []) {
 	let n = Object.assign({}, e);
 	for (let e of t) e in n && delete n[e];
 	return n;
 }
-function $t(e) {
+function Qt(e) {
 	return t.version.split(".")[0] >= "19" ? e.props.ref : e.ref;
 }
-function en(e) {
+function $t(e) {
 	if (e != null && e.$$typeof === Symbol.for("react.lazy")) {
 		let t = e._payload;
-		if (t != null && t.status === "fulfilled") return en(t.value);
+		if (t != null && t.status === "fulfilled") return $t(t.value);
 	}
 	return e;
 }
-function tn(e) {
+function en(e) {
 	return e === n || e === Symbol.for("react.fragment");
 }
-function nn(e) {
-	return tn(e.type);
+function tn(e) {
+	return en(e.type);
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/hooks/use-controllable.js
-function rn(e, t, n) {
+function nn(e, t, n) {
 	let [r, i] = y(n), a = e !== void 0, o = v(a), s = v(!1), c = v(!1);
 	return a && !o.current && !s.current ? (s.current = !0, o.current = a, console.error("A component is changing from uncontrolled to controlled. This may be caused by the value changing from undefined to a defined value, which should not happen.")) : !a && o.current && !c.current && (c.current = !0, o.current = a, console.error("A component is changing from controlled to uncontrolled. This may be caused by the value changing from a defined value to undefined, which should not happen.")), [a ? e : r, U((e) => (a || E(() => i(e)), t?.(e)))];
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/hooks/use-default-value.js
-function an(e) {
+function rn(e) {
 	let [t] = y(e);
 	return t;
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/utils/form.js
-function on(e = {}, t = null, n = []) {
-	for (let [r, i] of Object.entries(e)) cn(n, sn(t, r), i);
+function an(e = {}, t = null, n = []) {
+	for (let [r, i] of Object.entries(e)) sn(n, on(t, r), i);
 	return n;
 }
-function sn(e, t) {
+function on(e, t) {
 	return e ? e + "[" + t + "]" : t;
 }
-function cn(e, t, n) {
-	if (Array.isArray(n)) for (let [r, i] of n.entries()) cn(e, sn(t, r.toString()), i);
-	else n instanceof Date ? e.push([t, n.toISOString()]) : typeof n == "boolean" ? e.push([t, n ? "1" : "0"]) : typeof n == "string" ? e.push([t, n]) : typeof n == "number" ? e.push([t, `${n}`]) : n == null ? e.push([t, ""]) : un(n) && !c(n) && on(n, t, e);
+function sn(e, t, n) {
+	if (Array.isArray(n)) for (let [r, i] of n.entries()) sn(e, on(t, r.toString()), i);
+	else n instanceof Date ? e.push([t, n.toISOString()]) : typeof n == "boolean" ? e.push([t, n ? "1" : "0"]) : typeof n == "string" ? e.push([t, n]) : typeof n == "number" ? e.push([t, `${n}`]) : n == null ? e.push([t, ""]) : ln(n) && !c(n) && an(n, t, e);
 }
-function ln(e) {
+function cn(e) {
 	var t;
 	let n = e?.form ?? e.closest("form");
 	if (n) {
@@ -1093,15 +1093,15 @@ function ln(e) {
 		(t = n.requestSubmit) == null || t.call(n);
 	}
 }
-function un(e) {
+function ln(e) {
 	if (Object.prototype.toString.call(e) !== "[object Object]") return !1;
 	let t = Object.getPrototypeOf(e);
 	return t === null || Object.getPrototypeOf(t) === null;
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/internal/hidden.js
-var dn = "span", fn = ((e) => (e[e.None = 1] = "None", e[e.Focusable = 2] = "Focusable", e[e.Hidden = 4] = "Hidden", e))(fn || {});
-function pn(e, t) {
+var un = "span", dn = ((e) => (e[e.None = 1] = "None", e[e.Focusable = 2] = "Focusable", e[e.Hidden = 4] = "Hidden", e))(dn || {});
+function fn(e, t) {
 	let { features: n = 1, ...r } = e, i = {
 		ref: t,
 		"aria-hidden": (n & 2) == 2 ? !0 : r["aria-hidden"] ?? void 0,
@@ -1121,22 +1121,22 @@ function pn(e, t) {
 			...(n & 4) == 4 && (n & 2) != 2 && { display: "none" }
 		}
 	};
-	return W()({
+	return G()({
 		ourProps: i,
 		theirProps: r,
 		slot: {},
-		defaultTag: dn,
+		defaultTag: un,
 		name: "Hidden"
 	});
 }
-var mn = G(pn), hn = i(null);
-function gn({ children: e }) {
-	let n = u(hn);
+var pn = K(fn), mn = i(null);
+function hn({ children: e }) {
+	let n = u(mn);
 	if (!n) return t.createElement(t.Fragment, null, e);
 	let { target: r } = n;
 	return r ? T(t.createElement(t.Fragment, null, e), r) : null;
 }
-function _n({ data: e, form: n, disabled: r, onReset: i, overrides: a }) {
+function gn({ data: e, form: n, disabled: r, onReset: i, overrides: a }) {
 	let [o, s] = y(null), c = Nt();
 	return f(() => {
 		if (i && o) return c.addEventListener(o, "reset", i);
@@ -1144,12 +1144,12 @@ function _n({ data: e, form: n, disabled: r, onReset: i, overrides: a }) {
 		o,
 		n,
 		i
-	]), t.createElement(gn, null, t.createElement(vn, {
+	]), t.createElement(hn, null, t.createElement(_n, {
 		setForm: s,
 		formId: n
-	}), on(e).map(([e, i]) => t.createElement(mn, {
-		features: fn.Hidden,
-		...Zt({
+	}), an(e).map(([e, i]) => t.createElement(pn, {
+		features: dn.Hidden,
+		...Xt({
 			key: e,
 			as: "input",
 			type: "hidden",
@@ -1163,14 +1163,14 @@ function _n({ data: e, form: n, disabled: r, onReset: i, overrides: a }) {
 		})
 	})));
 }
-function vn({ setForm: e, formId: n }) {
+function _n({ setForm: e, formId: n }) {
 	return f(() => {
 		if (n) {
 			let t = document.getElementById(n);
 			t && e(t);
 		}
-	}, [e, n]), n ? null : t.createElement(mn, {
-		features: fn.Hidden,
+	}, [e, n]), n ? null : t.createElement(pn, {
+		features: dn.Hidden,
 		as: "input",
 		type: "hidden",
 		hidden: !0,
@@ -1184,69 +1184,69 @@ function vn({ setForm: e, formId: n }) {
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/internal/id.js
-var yn = i(void 0);
-function bn() {
-	return u(yn);
+var vn = i(void 0);
+function yn() {
+	return u(vn);
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/utils/dom.js
-function xn(e) {
+function bn(e) {
 	return typeof e != "object" || !e ? !1 : "nodeType" in e;
 }
+function xn(e) {
+	return bn(e) && "tagName" in e;
+}
 function Sn(e) {
-	return xn(e) && "tagName" in e;
+	return xn(e) && "accessKey" in e;
 }
 function Cn(e) {
-	return Sn(e) && "accessKey" in e;
+	return xn(e) && "tabIndex" in e;
 }
 function wn(e) {
-	return Sn(e) && "tabIndex" in e;
+	return xn(e) && "style" in e;
 }
 function Tn(e) {
-	return Sn(e) && "style" in e;
+	return Sn(e) && e.nodeName === "IFRAME";
 }
 function En(e) {
-	return Cn(e) && e.nodeName === "IFRAME";
+	return Sn(e) && e.nodeName === "INPUT";
 }
 function Dn(e) {
-	return Cn(e) && e.nodeName === "INPUT";
+	return Sn(e) && e.nodeName === "LABEL";
 }
 function On(e) {
-	return Cn(e) && e.nodeName === "LABEL";
+	return Sn(e) && e.nodeName === "FIELDSET";
 }
 function kn(e) {
-	return Cn(e) && e.nodeName === "FIELDSET";
+	return Sn(e) && e.nodeName === "LEGEND";
 }
 function An(e) {
-	return Cn(e) && e.nodeName === "LEGEND";
-}
-function jn(e) {
-	return Sn(e) ? e.matches("a[href],audio[controls],button,details,embed,iframe,img[usemap],input:not([type=\"hidden\"]),label,select,textarea,video[controls]") : !1;
+	return xn(e) ? e.matches("a[href],audio[controls],button,details,embed,iframe,img[usemap],input:not([type=\"hidden\"]),label,select,textarea,video[controls]") : !1;
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/utils/bugs.js
-function Mn(e) {
+function jn(e) {
 	let t = e.parentElement, n = null;
-	for (; t && !kn(t);) An(t) && (n = t), t = t.parentElement;
+	for (; t && !On(t);) kn(t) && (n = t), t = t.parentElement;
 	let r = t?.getAttribute("disabled") === "";
-	return r && Nn(n) ? !1 : r;
+	return r && Mn(n) ? !1 : r;
 }
-function Nn(e) {
+function Mn(e) {
 	if (!e) return !1;
 	let t = e.previousElementSibling;
 	for (; t !== null;) {
-		if (An(t)) return !1;
+		if (kn(t)) return !1;
 		t = t.previousElementSibling;
 	}
 	return !0;
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/hooks/use-sync-refs.js
-var Pn = Symbol();
-function Fn(e, t = !0) {
-	return Object.assign(e, { [Pn]: t });
+var Nn = Symbol();
+function Pn(e, t = !0) {
+	return Object.assign(e, { [Nn]: t });
 }
-function K(...e) {
+function q(...e) {
 	let t = v(e);
 	f(() => {
 		t.current = e;
@@ -1254,24 +1254,24 @@ function K(...e) {
 	let n = U((e) => {
 		for (let n of t.current) n != null && (typeof n == "function" ? n(e) : n.current = e);
 	});
-	return e.every((e) => e == null || e?.[Pn]) ? void 0 : n;
+	return e.every((e) => e == null || e?.[Nn]) ? void 0 : n;
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/components/description/description.js
-var In = i(null);
-In.displayName = "DescriptionContext";
-function Ln() {
-	let e = u(In);
+var Fn = i(null);
+Fn.displayName = "DescriptionContext";
+function In() {
+	let e = u(Fn);
 	if (e === null) {
 		let e = /* @__PURE__ */ Error("You used a <Description /> component, but it is not inside a relevant parent.");
-		throw Error.captureStackTrace && Error.captureStackTrace(e, Ln), e;
+		throw Error.captureStackTrace && Error.captureStackTrace(e, In), e;
 	}
 	return e;
 }
-function Rn() {
-	return u(In)?.value ?? void 0;
+function Ln() {
+	return u(Fn)?.value ?? void 0;
 }
-function zn() {
+function Rn() {
 	let [e, n] = y([]);
 	return [e.length > 0 ? e.join(" ") : void 0, g(() => function(e) {
 		let r = U((e) => (n((t) => [...t, e]), () => n((t) => {
@@ -1290,14 +1290,14 @@ function zn() {
 			e.props,
 			e.value
 		]);
-		return t.createElement(In.Provider, { value: i }, e.children);
+		return t.createElement(Fn.Provider, { value: i }, e.children);
 	}, [n])];
 }
-var Bn = "p";
-function Vn(e, t) {
-	let n = m(), r = Bt(), { id: i = `headlessui-description-${n}`, ...a } = e, o = Ln(), s = K(t);
+var zn = "p";
+function Bn(e, t) {
+	let n = m(), r = zt(), { id: i = `headlessui-description-${n}`, ...a } = e, o = In(), s = q(t);
 	H(() => o.register(i), [i, o.register]);
-	let c = Rt({
+	let c = W({
 		...o.slot,
 		disabled: r || !1
 	}), l = {
@@ -1305,30 +1305,30 @@ function Vn(e, t) {
 		...o.props,
 		id: i
 	};
-	return W()({
+	return G()({
 		ourProps: l,
 		theirProps: a,
 		slot: c,
-		defaultTag: Bn,
+		defaultTag: zn,
 		name: o.name || "Description"
 	});
 }
-var Hn = G(Vn), Un = Object.assign(Hn, {}), q = ((e) => (e.Space = " ", e.Enter = "Enter", e.Escape = "Escape", e.Backspace = "Backspace", e.Delete = "Delete", e.ArrowLeft = "ArrowLeft", e.ArrowUp = "ArrowUp", e.ArrowRight = "ArrowRight", e.ArrowDown = "ArrowDown", e.Home = "Home", e.End = "End", e.PageUp = "PageUp", e.PageDown = "PageDown", e.Tab = "Tab", e))(q || {}), Wn = i(null);
-Wn.displayName = "LabelContext";
-function Gn() {
-	let e = u(Wn);
+var Vn = K(Bn), Hn = Object.assign(Vn, {}), J = ((e) => (e.Space = " ", e.Enter = "Enter", e.Escape = "Escape", e.Backspace = "Backspace", e.Delete = "Delete", e.ArrowLeft = "ArrowLeft", e.ArrowUp = "ArrowUp", e.ArrowRight = "ArrowRight", e.ArrowDown = "ArrowDown", e.Home = "Home", e.End = "End", e.PageUp = "PageUp", e.PageDown = "PageDown", e.Tab = "Tab", e))(J || {}), Un = i(null);
+Un.displayName = "LabelContext";
+function Wn() {
+	let e = u(Un);
 	if (e === null) {
 		let e = /* @__PURE__ */ Error("You used a <Label /> component, but it is not inside a relevant parent.");
-		throw Error.captureStackTrace && Error.captureStackTrace(e, Gn), e;
+		throw Error.captureStackTrace && Error.captureStackTrace(e, Wn), e;
 	}
 	return e;
 }
-function Kn(e) {
-	let t = u(Wn)?.value ?? void 0;
+function Gn(e) {
+	let t = u(Un)?.value ?? void 0;
 	return (e?.length ?? 0) > 0 ? [t, ...e].filter(Boolean).join(" ") : t;
 }
-function qn({ inherit: e = !1 } = {}) {
-	let n = Kn(), [r, i] = y([]), a = e ? [n, ...r].filter(Boolean) : r;
+function Kn({ inherit: e = !1 } = {}) {
+	let n = Gn(), [r, i] = y([]), a = e ? [n, ...r].filter(Boolean) : r;
 	return [a.length > 0 ? a.join(" ") : void 0, g(() => function(e) {
 		let n = U((e) => (i((t) => [...t, e]), () => i((t) => {
 			let n = t.slice(), r = n.indexOf(e);
@@ -1346,26 +1346,26 @@ function qn({ inherit: e = !1 } = {}) {
 			e.props,
 			e.value
 		]);
-		return t.createElement(Wn.Provider, { value: r }, e.children);
+		return t.createElement(Un.Provider, { value: r }, e.children);
 	}, [i])];
 }
-var Jn = "label";
-function Yn(e, t) {
-	let n = m(), r = Gn(), i = bn(), a = Bt(), { id: o = `headlessui-label-${n}`, htmlFor: s = i ?? r.props?.htmlFor, passive: c = !1, ...l } = e, u = K(t);
+var qn = "label";
+function Jn(e, t) {
+	let n = m(), r = Wn(), i = yn(), a = zt(), { id: o = `headlessui-label-${n}`, htmlFor: s = i ?? r.props?.htmlFor, passive: c = !1, ...l } = e, u = q(t);
 	H(() => r.register(o), [o, r.register]);
 	let d = U((e) => {
 		let t = e.currentTarget;
-		if (!(e.target !== e.currentTarget && jn(e.target)) && (On(t) && e.preventDefault(), r.props && "onClick" in r.props && typeof r.props.onClick == "function" && r.props.onClick(e), On(t))) {
+		if (!(e.target !== e.currentTarget && An(e.target)) && (Dn(t) && e.preventDefault(), r.props && "onClick" in r.props && typeof r.props.onClick == "function" && r.props.onClick(e), Dn(t))) {
 			let e = document.getElementById(t.htmlFor);
 			if (e) {
 				let t = e.getAttribute("disabled");
 				if (t === "true" || t === "") return;
 				let n = e.getAttribute("aria-disabled");
 				if (n === "true" || n === "") return;
-				(Dn(e) && (e.type === "file" || e.type === "radio" || e.type === "checkbox") || e.role === "radio" || e.role === "checkbox" || e.role === "switch") && e.click(), e.focus({ preventScroll: !0 });
+				(En(e) && (e.type === "file" || e.type === "radio" || e.type === "checkbox") || e.role === "radio" || e.role === "checkbox" || e.role === "switch") && e.click(), e.focus({ preventScroll: !0 });
 			}
 		}
-	}), f = Rt({
+	}), f = W({
 		...r.slot,
 		disabled: a || !1
 	}), p = {
@@ -1375,24 +1375,24 @@ function Yn(e, t) {
 		htmlFor: s,
 		onClick: d
 	};
-	return c && ("onClick" in p && (delete p.htmlFor, delete p.onClick), "onClick" in l && delete l.onClick), W()({
+	return c && ("onClick" in p && (delete p.htmlFor, delete p.onClick), "onClick" in l && delete l.onClick), G()({
 		ourProps: p,
 		theirProps: l,
 		slot: f,
-		defaultTag: s ? Jn : "div",
+		defaultTag: s ? qn : "div",
 		name: r.name || "Label"
 	});
 }
-var Xn = G(Yn), Zn = Object.assign(Xn, {}), Qn = i(() => {});
-function $n({ value: e, children: n }) {
-	return t.createElement(Qn.Provider, { value: e }, n);
+var Yn = K(Jn), Xn = Object.assign(Yn, {}), Zn = i(() => {});
+function Qn({ value: e, children: n }) {
+	return t.createElement(Zn.Provider, { value: e }, n);
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/hooks/use-by-comparator.js
-function er(e, t) {
+function $n(e, t) {
 	return e !== null && t !== null && typeof e == "object" && typeof t == "object" && "id" in e && "id" in t ? e.id === t.id : e === t;
 }
-function tr(e = er) {
+function er(e = $n) {
 	return l((t, n) => {
 		if (typeof e == "string") {
 			let r = e;
@@ -1403,7 +1403,7 @@ function tr(e = er) {
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/hooks/use-element-size.js
-function nr(e) {
+function tr(e) {
 	if (e === null) return {
 		width: 0,
 		height: 0
@@ -1414,14 +1414,14 @@ function nr(e) {
 		height: n
 	};
 }
-function rr(e, t, n = !1) {
-	let [r, i] = y(() => nr(t));
+function nr(e, t, n = !1) {
+	let [r, i] = y(() => tr(t));
 	return H(() => {
 		if (!t || !e) return;
 		let n = Mt();
 		return n.requestAnimationFrame(function e() {
 			n.requestAnimationFrame(e), i((e) => {
-				let n = nr(t);
+				let n = tr(t);
 				return n.width === e.width && n.height === e.height ? e : n;
 			});
 		}), () => {
@@ -1434,23 +1434,23 @@ function rr(e, t, n = !1) {
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/components/mouse.js
-var ir = ((e) => (e[e.Left = 0] = "Left", e[e.Right = 2] = "Right", e))(ir || {});
+var rr = ((e) => (e[e.Left = 0] = "Left", e[e.Right = 2] = "Right", e))(rr || {});
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/hooks/use-handle-toggle.js
-function ar(e) {
+function ir(e) {
 	let t = v(null);
 	return {
 		onPointerDown: U((n) => {
-			t.current = n.pointerType, !Mn(n.currentTarget) && n.pointerType === "mouse" && n.button === ir.Left && (n.preventDefault(), e(n));
+			t.current = n.pointerType, !jn(n.currentTarget) && n.pointerType === "mouse" && n.button === rr.Left && (n.preventDefault(), e(n));
 		}),
 		onClick: U((n) => {
-			t.current !== "mouse" && (Mn(n.currentTarget) || e(n));
+			t.current !== "mouse" && (jn(n.currentTarget) || e(n));
 		})
 	};
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/utils/default-map.js
-var or = class extends Map {
+var ar = class extends Map {
 	constructor(e) {
 		super(), this.factory = e;
 	}
@@ -1458,19 +1458,19 @@ var or = class extends Map {
 		let t = super.get(e);
 		return t === void 0 && (t = this.factory(e), this.set(e, t)), t;
 	}
-}, sr = Object.defineProperty, cr = (e, t, n) => t in e ? sr(e, t, {
+}, or = Object.defineProperty, sr = (e, t, n) => t in e ? or(e, t, {
 	enumerable: !0,
 	configurable: !0,
 	writable: !0,
 	value: n
-}) : e[t] = n, lr = (e, t, n) => (cr(e, typeof t == "symbol" ? t : t + "", n), n), ur = (e, t, n) => {
+}) : e[t] = n, cr = (e, t, n) => (sr(e, typeof t == "symbol" ? t : t + "", n), n), lr = (e, t, n) => {
 	if (!t.has(e)) throw TypeError("Cannot " + n);
-}, dr = (e, t, n) => (ur(e, t, "read from private field"), n ? n.call(e) : t.get(e)), fr = (e, t, n) => {
+}, ur = (e, t, n) => (lr(e, t, "read from private field"), n ? n.call(e) : t.get(e)), dr = (e, t, n) => {
 	if (t.has(e)) throw TypeError("Cannot add the same private member more than once");
 	t instanceof WeakSet ? t.add(e) : t.set(e, n);
-}, pr = (e, t, n, r) => (ur(e, t, "write to private field"), r ? r.call(e, n) : t.set(e, n), n), mr, hr, gr, _r = class {
+}, fr = (e, t, n, r) => (lr(e, t, "write to private field"), r ? r.call(e, n) : t.set(e, n), n), pr, mr, hr, gr = class {
 	constructor(e) {
-		fr(this, mr, {}), fr(this, hr, new or(() => /* @__PURE__ */ new Set())), fr(this, gr, /* @__PURE__ */ new Set()), lr(this, "disposables", Mt()), pr(this, mr, e), Et.isServer && this.disposables.microTask(() => {
+		dr(this, pr, {}), dr(this, mr, new ar(() => /* @__PURE__ */ new Set())), dr(this, hr, /* @__PURE__ */ new Set()), cr(this, "disposables", Mt()), fr(this, pr, e), Et.isServer && this.disposables.microTask(() => {
 			this.dispose();
 		});
 	}
@@ -1478,53 +1478,53 @@ var or = class extends Map {
 		this.disposables.dispose();
 	}
 	get state() {
-		return dr(this, mr);
+		return ur(this, pr);
 	}
 	subscribe(e, t) {
 		if (Et.isServer) return () => {};
 		let n = {
 			selector: e,
 			callback: t,
-			current: e(dr(this, mr))
+			current: e(ur(this, pr))
 		};
-		return dr(this, gr).add(n), this.disposables.add(() => {
-			dr(this, gr).delete(n);
+		return ur(this, hr).add(n), this.disposables.add(() => {
+			ur(this, hr).delete(n);
 		});
 	}
 	on(e, t) {
-		return Et.isServer ? () => {} : (dr(this, hr).get(e).add(t), this.disposables.add(() => {
-			dr(this, hr).get(e).delete(t);
+		return Et.isServer ? () => {} : (ur(this, mr).get(e).add(t), this.disposables.add(() => {
+			ur(this, mr).get(e).delete(t);
 		}));
 	}
 	send(e) {
-		let t = this.reduce(dr(this, mr), e);
-		if (t !== dr(this, mr)) {
-			pr(this, mr, t);
-			for (let e of dr(this, gr)) {
-				let t = e.selector(dr(this, mr));
-				vr(e.current, t) || (e.current = t, e.callback(t));
+		let t = this.reduce(ur(this, pr), e);
+		if (t !== ur(this, pr)) {
+			fr(this, pr, t);
+			for (let e of ur(this, hr)) {
+				let t = e.selector(ur(this, pr));
+				_r(e.current, t) || (e.current = t, e.callback(t));
 			}
-			for (let t of dr(this, hr).get(e.type)) t(dr(this, mr), e);
+			for (let t of ur(this, mr).get(e.type)) t(ur(this, pr), e);
 		}
 	}
 };
-mr = /* @__PURE__ */ new WeakMap(), hr = /* @__PURE__ */ new WeakMap(), gr = /* @__PURE__ */ new WeakMap();
-function vr(e, t) {
-	return Object.is(e, t) ? !0 : typeof e != "object" || !e || typeof t != "object" || !t ? !1 : Array.isArray(e) && Array.isArray(t) ? e.length === t.length && yr(e[Symbol.iterator](), t[Symbol.iterator]()) : e instanceof Map && t instanceof Map || e instanceof Set && t instanceof Set ? e.size === t.size && yr(e.entries(), t.entries()) : br(e) && br(t) ? yr(Object.entries(e)[Symbol.iterator](), Object.entries(t)[Symbol.iterator]()) : !1;
+pr = /* @__PURE__ */ new WeakMap(), mr = /* @__PURE__ */ new WeakMap(), hr = /* @__PURE__ */ new WeakMap();
+function _r(e, t) {
+	return Object.is(e, t) ? !0 : typeof e != "object" || !e || typeof t != "object" || !t ? !1 : Array.isArray(e) && Array.isArray(t) ? e.length === t.length && vr(e[Symbol.iterator](), t[Symbol.iterator]()) : e instanceof Map && t instanceof Map || e instanceof Set && t instanceof Set ? e.size === t.size && vr(e.entries(), t.entries()) : yr(e) && yr(t) ? vr(Object.entries(e)[Symbol.iterator](), Object.entries(t)[Symbol.iterator]()) : !1;
 }
-function yr(e, t) {
+function vr(e, t) {
 	do {
 		let n = e.next(), r = t.next();
 		if (n.done && r.done) return !0;
 		if (n.done || r.done || !Object.is(n.value, r.value)) return !1;
 	} while (!0);
 }
-function br(e) {
+function yr(e) {
 	if (Object.prototype.toString.call(e) !== "[object Object]") return !1;
 	let t = Object.getPrototypeOf(e);
 	return t === null || Object.getPrototypeOf(t) === null;
 }
-function xr(e) {
+function br(e) {
 	let [t, n] = e(), r = Mt();
 	return (...e) => {
 		t(...e), r.dispose(), r.microTask(n);
@@ -1532,12 +1532,12 @@ function xr(e) {
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/machines/stack-machine.js
-var Sr = Object.defineProperty, Cr = (e, t, n) => t in e ? Sr(e, t, {
+var xr = Object.defineProperty, Sr = (e, t, n) => t in e ? xr(e, t, {
 	enumerable: !0,
 	configurable: !0,
 	writable: !0,
 	value: n
-}) : e[t] = n, wr = (e, t, n) => (Cr(e, typeof t == "symbol" ? t : t + "", n), n), Tr = ((e) => (e[e.Push = 0] = "Push", e[e.Pop = 1] = "Pop", e))(Tr || {}), Er = {
+}) : e[t] = n, Cr = (e, t, n) => (Sr(e, typeof t == "symbol" ? t : t + "", n), n), wr = ((e) => (e[e.Push = 0] = "Push", e[e.Pop = 1] = "Pop", e))(wr || {}), Tr = {
 	0(e, t) {
 		let n = t.id, r = e.stack, i = e.stack.indexOf(n);
 		if (i !== -1) {
@@ -1561,9 +1561,9 @@ var Sr = Object.defineProperty, Cr = (e, t, n) => t in e ? Sr(e, t, {
 			stack: i
 		};
 	}
-}, Dr = class e extends _r {
+}, Er = class e extends gr {
 	constructor() {
-		super(...arguments), wr(this, "actions", {
+		super(...arguments), Cr(this, "actions", {
 			push: (e) => this.send({
 				type: 0,
 				id: e
@@ -1572,7 +1572,7 @@ var Sr = Object.defineProperty, Cr = (e, t, n) => t in e ? Sr(e, t, {
 				type: 1,
 				id: e
 			})
-		}), wr(this, "selectors", {
+		}), Cr(this, "selectors", {
 			isTop: (e, t) => e.stack[e.stack.length - 1] === t,
 			inStack: (e, t) => e.stack.includes(t)
 		});
@@ -1581,10 +1581,10 @@ var Sr = Object.defineProperty, Cr = (e, t, n) => t in e ? Sr(e, t, {
 		return new e({ stack: [] });
 	}
 	reduce(e, t) {
-		return Ht(t.type, Er, e, t);
+		return Vt(t.type, Tr, e, t);
 	}
-}, Or = new or(() => Dr.new()), kr = typeof Object.is == "function" ? Object.is : (e, t) => e === t && (e !== 0 || 1 / e == 1 / t) || e !== e && t !== t;
-function Ar(e, t, n, r, i) {
+}, Dr = new ar(() => Er.new()), Or = typeof Object.is == "function" ? Object.is : (e, t) => e === t && (e !== 0 || 1 / e == 1 / t) || e !== e && t !== t;
+function kr(e, t, n, r, i) {
 	let a = v(null), o;
 	a.current === null ? (o = {
 		hasValue: !1,
@@ -1602,7 +1602,7 @@ function Ar(e, t, n, r, i) {
 				return s = n, n;
 			}
 			let n = a, c = s;
-			if (kr(n, t)) return c;
+			if (Or(n, t)) return c;
 			let l = r(t);
 			return i !== void 0 && i(c, l) ? (a = t, c) : (a = t, s = l, l);
 		}, l = n ?? null;
@@ -1619,16 +1619,16 @@ function Ar(e, t, n, r, i) {
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/react-glue.js
-function J(e, t, n = vr) {
-	return Ar(U((t) => e.subscribe(jr, t)), U(() => e.state), U(() => e.state), U(t), n);
+function Y(e, t, n = _r) {
+	return kr(U((t) => e.subscribe(Ar, t)), U(() => e.state), U(() => e.state), U(t), n);
 }
-function jr(e) {
+function Ar(e) {
 	return e;
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/hooks/use-is-top-layer.js
-function Mr(e, t) {
-	let n = p(), r = Or.get(t), [i, a] = J(r, l((e) => [r.selectors.isTop(e, n), r.selectors.inStack(e, n)], [r, n]));
+function jr(e, t) {
+	let n = p(), r = Dr.get(t), [i, a] = Y(r, l((e) => [r.selectors.isTop(e, n), r.selectors.inStack(e, n)], [r, n]));
 	return H(() => {
 		if (e) return r.actions.push(n), () => r.actions.pop(n);
 	}, [
@@ -1639,26 +1639,26 @@ function Mr(e, t) {
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/hooks/use-inert-others.js
-var Nr = /* @__PURE__ */ new Map(), Pr = /* @__PURE__ */ new Map();
-function Fr(e) {
-	let t = Pr.get(e) ?? 0;
-	return Pr.set(e, t + 1), t === 0 ? (Nr.set(e, {
+var Mr = /* @__PURE__ */ new Map(), Nr = /* @__PURE__ */ new Map();
+function Pr(e) {
+	let t = Nr.get(e) ?? 0;
+	return Nr.set(e, t + 1), t === 0 ? (Mr.set(e, {
 		"aria-hidden": e.getAttribute("aria-hidden"),
 		inert: e.inert
-	}), e.setAttribute("aria-hidden", "true"), e.inert = !0, () => Ir(e)) : () => Ir(e);
+	}), e.setAttribute("aria-hidden", "true"), e.inert = !0, () => Fr(e)) : () => Fr(e);
 }
-function Ir(e) {
-	let t = Pr.get(e) ?? 1;
-	if (t === 1 ? Pr.delete(e) : Pr.set(e, t - 1), t !== 1) return;
-	let n = Nr.get(e);
-	n && (n["aria-hidden"] === null ? e.removeAttribute("aria-hidden") : e.setAttribute("aria-hidden", n["aria-hidden"]), e.inert = n.inert, Nr.delete(e));
+function Fr(e) {
+	let t = Nr.get(e) ?? 1;
+	if (t === 1 ? Nr.delete(e) : Nr.set(e, t - 1), t !== 1) return;
+	let n = Mr.get(e);
+	n && (n["aria-hidden"] === null ? e.removeAttribute("aria-hidden") : e.setAttribute("aria-hidden", n["aria-hidden"]), e.inert = n.inert, Mr.delete(e));
 }
-function Lr(e, { allowed: t, disallowed: n } = {}) {
-	let r = Mr(e, "inert-others");
+function Ir(e, { allowed: t, disallowed: n } = {}) {
+	let r = jr(e, "inert-others");
 	H(() => {
 		if (!r) return;
 		let e = Mt();
-		for (let t of n?.() ?? []) t && e.add(Fr(t));
+		for (let t of n?.() ?? []) t && e.add(Pr(t));
 		let i = t?.() ?? [];
 		for (let t of i) {
 			if (!t) continue;
@@ -1666,7 +1666,7 @@ function Lr(e, { allowed: t, disallowed: n } = {}) {
 			if (!n) continue;
 			let r = t.parentElement;
 			for (; r && r !== n.body;) {
-				for (let t of r.children) i.some((e) => t.contains(e)) || e.add(Fr(t));
+				for (let t of r.children) i.some((e) => t.contains(e)) || e.add(Pr(t));
 				r = r.parentElement;
 			}
 		}
@@ -1679,14 +1679,14 @@ function Lr(e, { allowed: t, disallowed: n } = {}) {
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/hooks/use-on-disappear.js
-function Rr(e, t, n) {
+function Lr(e, t, n) {
 	let r = Pt((e) => {
 		let t = e.getBoundingClientRect();
 		t.x === 0 && t.y === 0 && t.width === 0 && t.height === 0 && n();
 	});
 	f(() => {
 		if (!e) return;
-		let n = t === null ? null : Cn(t) ? t : t.current;
+		let n = t === null ? null : Sn(t) ? t : t.current;
 		if (!n) return;
 		let i = Mt();
 		if (typeof ResizeObserver < "u") {
@@ -1706,7 +1706,7 @@ function Rr(e, t, n) {
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/utils/focus-management.js
-var zr = [
+var Rr = [
 	"[contentEditable=true]",
 	"[tabindex]",
 	"a[href]",
@@ -1717,49 +1717,49 @@ var zr = [
 	"select:not([disabled])",
 	"details>summary",
 	"textarea:not([disabled])"
-].map((e) => `${e}:not([tabindex='-1'])`).join(","), Br = ["[data-autofocus]"].map((e) => `${e}:not([tabindex='-1'])`).join(","), Y = ((e) => (e[e.First = 1] = "First", e[e.Previous = 2] = "Previous", e[e.Next = 4] = "Next", e[e.Last = 8] = "Last", e[e.WrapAround = 16] = "WrapAround", e[e.NoScroll = 32] = "NoScroll", e[e.AutoFocus = 64] = "AutoFocus", e))(Y || {}), Vr = ((e) => (e[e.Error = 0] = "Error", e[e.Overflow = 1] = "Overflow", e[e.Success = 2] = "Success", e[e.Underflow = 3] = "Underflow", e))(Vr || {}), Hr = ((e) => (e[e.Previous = -1] = "Previous", e[e.Next = 1] = "Next", e))(Hr || {});
+].map((e) => `${e}:not([tabindex='-1'])`).join(","), zr = ["[data-autofocus]"].map((e) => `${e}:not([tabindex='-1'])`).join(","), X = ((e) => (e[e.First = 1] = "First", e[e.Previous = 2] = "Previous", e[e.Next = 4] = "Next", e[e.Last = 8] = "Last", e[e.WrapAround = 16] = "WrapAround", e[e.NoScroll = 32] = "NoScroll", e[e.AutoFocus = 64] = "AutoFocus", e))(X || {}), Br = ((e) => (e[e.Error = 0] = "Error", e[e.Overflow = 1] = "Overflow", e[e.Success = 2] = "Success", e[e.Underflow = 3] = "Underflow", e))(Br || {}), Vr = ((e) => (e[e.Previous = -1] = "Previous", e[e.Next = 1] = "Next", e))(Vr || {});
+function Hr(e = document.body) {
+	return e == null ? [] : Array.from(e.querySelectorAll(Rr)).sort((e, t) => Math.sign((e.tabIndex || 2 ** 53 - 1) - (t.tabIndex || 2 ** 53 - 1)));
+}
 function Ur(e = document.body) {
 	return e == null ? [] : Array.from(e.querySelectorAll(zr)).sort((e, t) => Math.sign((e.tabIndex || 2 ** 53 - 1) - (t.tabIndex || 2 ** 53 - 1)));
 }
-function Wr(e = document.body) {
-	return e == null ? [] : Array.from(e.querySelectorAll(Br)).sort((e, t) => Math.sign((e.tabIndex || 2 ** 53 - 1) - (t.tabIndex || 2 ** 53 - 1)));
-}
-var Gr = ((e) => (e[e.Strict = 0] = "Strict", e[e.Loose = 1] = "Loose", e))(Gr || {});
-function Kr(e, t = 0) {
-	return e !== Dt(e)?.body && Ht(t, {
+var Wr = ((e) => (e[e.Strict = 0] = "Strict", e[e.Loose = 1] = "Loose", e))(Wr || {});
+function Gr(e, t = 0) {
+	return e !== Dt(e)?.body && Vt(t, {
 		0() {
-			return e.matches(zr);
+			return e.matches(Rr);
 		},
 		1() {
 			let t = e;
 			for (; t !== null;) {
-				if (t.matches(zr)) return !0;
+				if (t.matches(Rr)) return !0;
 				t = t.parentElement;
 			}
 			return !1;
 		}
 	});
 }
-function qr(e) {
+function Kr(e) {
 	Mt().nextFrame(() => {
 		let t = kt(e);
-		t && wn(t) && !Kr(t, 0) && Yr(e);
+		t && Cn(t) && !Gr(t, 0) && Jr(e);
 	});
 }
-var Jr = ((e) => (e[e.Keyboard = 0] = "Keyboard", e[e.Mouse = 1] = "Mouse", e))(Jr || {});
+var qr = ((e) => (e[e.Keyboard = 0] = "Keyboard", e[e.Mouse = 1] = "Mouse", e))(qr || {});
 typeof window < "u" && typeof document < "u" && (document.addEventListener("keydown", (e) => {
 	e.metaKey || e.altKey || e.ctrlKey || (document.documentElement.dataset.headlessuiFocusVisible = "");
 }, !0), document.addEventListener("click", (e) => {
 	e.detail === 1 ? delete document.documentElement.dataset.headlessuiFocusVisible : e.detail === 0 && (document.documentElement.dataset.headlessuiFocusVisible = "");
 }, !0));
-function Yr(e) {
+function Jr(e) {
 	e?.focus({ preventScroll: !0 });
 }
-var Xr = ["textarea", "input"].join(",");
-function Zr(e) {
-	return (e?.matches)?.call(e, Xr) ?? !1;
+var Yr = ["textarea", "input"].join(",");
+function Xr(e) {
+	return (e?.matches)?.call(e, Yr) ?? !1;
 }
-function Qr(e, t = (e) => e) {
+function Zr(e, t = (e) => e) {
 	return e.slice().sort((e, n) => {
 		let r = t(e), i = t(n);
 		if (r === null || i === null) return 0;
@@ -1767,11 +1767,11 @@ function Qr(e, t = (e) => e) {
 		return a & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : a & Node.DOCUMENT_POSITION_PRECEDING ? 1 : 0;
 	});
 }
-function $r(e, t, n = e === null ? document.body : Ot(e)) {
-	return ei(Ur(n), t, { relativeTo: e });
+function Qr(e, t, n = e === null ? document.body : Ot(e)) {
+	return $r(Hr(n), t, { relativeTo: e });
 }
-function ei(e, t, { sorted: n = !0, relativeTo: r = null, skipElements: i = [] } = {}) {
-	let a = Array.isArray(e) ? e.length > 0 ? Ot(e[0]) : document : Ot(e), o = Array.isArray(e) ? n ? Qr(e) : e : t & 64 ? Wr(e) : Ur(e);
+function $r(e, t, { sorted: n = !0, relativeTo: r = null, skipElements: i = [] } = {}) {
+	let a = Array.isArray(e) ? e.length > 0 ? Ot(e[0]) : document : Ot(e), o = Array.isArray(e) ? n ? Zr(e) : e : t & 64 ? Ur(e) : Hr(e);
 	i.length > 0 && o.length > 1 && (o = o.filter((e) => !i.some((t) => t != null && "current" in t ? t?.current === e : t === e))), r ??= a?.activeElement;
 	let s = (() => {
 		if (t & 5) return 1;
@@ -1794,22 +1794,22 @@ function ei(e, t, { sorted: n = !0, relativeTo: r = null, skipElements: i = [] }
 		}
 		f = o[e], f?.focus(l), u += s;
 	} while (f !== kt(f));
-	return t & 6 && Zr(f) && f.select(), 2;
+	return t & 6 && Xr(f) && f.select(), 2;
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/utils/platform.js
-function ti() {
+function ei() {
 	return /iPhone/gi.test(window.navigator.platform) || /Mac/gi.test(window.navigator.platform) && window.navigator.maxTouchPoints > 0;
 }
-function ni() {
+function ti() {
 	return /Android/gi.test(window.navigator.userAgent);
 }
-function ri() {
-	return ti() || ni();
+function ni() {
+	return ei() || ti();
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/hooks/use-document-event.js
-function ii(e, t, n, r) {
+function ri(e, t, n, r) {
 	let i = Pt(n);
 	f(() => {
 		if (!e) return;
@@ -1825,7 +1825,7 @@ function ii(e, t, n, r) {
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/hooks/use-window-event.js
-function ai(e, t, n, r) {
+function ii(e, t, n, r) {
 	let i = Pt(n);
 	f(() => {
 		if (!e) return;
@@ -1841,8 +1841,8 @@ function ai(e, t, n, r) {
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/hooks/use-outside-click.js
-var oi = 30;
-function si(e, t, n) {
+var ai = 30;
+function oi(e, t, n) {
 	let r = Pt(n), i = l(function(e, n) {
 		if (e.defaultPrevented) return;
 		let i = n(e);
@@ -1851,12 +1851,12 @@ function si(e, t, n) {
 			return typeof t == "function" ? e(t()) : Array.isArray(t) || t instanceof Set ? t : [t];
 		}(t);
 		for (let t of a) if (t !== null && (t.contains(i) || e.composed && e.composedPath().includes(t))) return;
-		return !Kr(i, Gr.Loose) && i.tabIndex !== -1 && e.preventDefault(), r.current(e, i);
+		return !Gr(i, Wr.Loose) && i.tabIndex !== -1 && e.preventDefault(), r.current(e, i);
 	}, [r, t]), a = v(null);
-	ii(e, "pointerdown", (e) => {
-		ri() || (a.current = e.composedPath?.call(e)?.[0] || e.target);
-	}, !0), ii(e, "pointerup", (e) => {
-		if (ri() || !a.current) return;
+	ri(e, "pointerdown", (e) => {
+		ni() || (a.current = e.composedPath?.call(e)?.[0] || e.target);
+	}, !0), ri(e, "pointerup", (e) => {
+		if (ni() || !a.current) return;
 		let t = a.current;
 		return a.current = null, i(e, () => t);
 	}, !0);
@@ -1864,46 +1864,46 @@ function si(e, t, n) {
 		x: 0,
 		y: 0
 	});
-	ii(e, "touchstart", (e) => {
+	ri(e, "touchstart", (e) => {
 		o.current.x = e.touches[0].clientX, o.current.y = e.touches[0].clientY;
-	}, !0), ii(e, "touchend", (e) => {
+	}, !0), ri(e, "touchend", (e) => {
 		let t = {
 			x: e.changedTouches[0].clientX,
 			y: e.changedTouches[0].clientY
 		};
-		if (!(Math.abs(t.x - o.current.x) >= oi || Math.abs(t.y - o.current.y) >= oi)) return i(e, () => wn(e.target) ? e.target : null);
-	}, !0), ai(e, "blur", (e) => i(e, () => En(window.document.activeElement) ? window.document.activeElement : null), !0);
+		if (!(Math.abs(t.x - o.current.x) >= ai || Math.abs(t.y - o.current.y) >= ai)) return i(e, () => Cn(e.target) ? e.target : null);
+	}, !0), ii(e, "blur", (e) => i(e, () => Tn(window.document.activeElement) ? window.document.activeElement : null), !0);
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/hooks/use-owner.js
-function ci(...e) {
+function si(...e) {
 	return g(() => Dt(...e), [...e]);
 }
-function li(...e) {
+function ci(...e) {
 	return g(() => Ot(...e), [...e]);
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/hooks/use-quick-release.js
-var ui = ((e) => (e[e.Ignore = 0] = "Ignore", e[e.Select = 1] = "Select", e[e.Close = 2] = "Close", e))(ui || {}), di = {
+var li = ((e) => (e[e.Ignore = 0] = "Ignore", e[e.Select = 1] = "Select", e[e.Close = 2] = "Close", e))(li || {}), ui = {
 	Ignore: { kind: 0 },
 	Select: (e) => ({
 		kind: 1,
 		target: e
 	}),
 	Close: { kind: 2 }
-}, fi = 200, pi = 5;
-function mi(e, { trigger: t, action: n, close: r, select: i }) {
+}, di = 200, fi = 5;
+function pi(e, { trigger: t, action: n, close: r, select: i }) {
 	let a = v(null), o = v(null), s = v(null);
-	ii(e && t !== null, "pointerdown", (e) => {
-		xn(e?.target) && t != null && t.contains(e.target) && (o.current = e.x, s.current = e.y, a.current = e.timeStamp);
-	}), ii(e && t !== null, "pointerup", (e) => {
+	ri(e && t !== null, "pointerdown", (e) => {
+		bn(e?.target) && t != null && t.contains(e.target) && (o.current = e.x, s.current = e.y, a.current = e.timeStamp);
+	}), ri(e && t !== null, "pointerup", (e) => {
 		let t = a.current;
-		if (t === null || (a.current = null, !wn(e.target)) || Math.abs(e.x - (o.current ?? e.x)) < pi && Math.abs(e.y - (s.current ?? e.y)) < pi) return;
+		if (t === null || (a.current = null, !Cn(e.target)) || Math.abs(e.x - (o.current ?? e.x)) < fi && Math.abs(e.y - (s.current ?? e.y)) < fi) return;
 		let c = n(e);
 		switch (c.kind) {
 			case 0: return;
 			case 1:
-				e.timeStamp - t > fi && (i(c.target), r());
+				e.timeStamp - t > di && (i(c.target), r());
 				break;
 			case 2:
 				r();
@@ -1913,7 +1913,7 @@ function mi(e, { trigger: t, action: n, close: r, select: i }) {
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/hooks/use-event-listener.js
-function hi(e, t, n, r) {
+function mi(e, t, n, r) {
 	let i = Pt(n);
 	f(() => {
 		e ??= window;
@@ -1929,7 +1929,7 @@ function hi(e, t, n, r) {
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/hooks/use-resolve-button-type.js
-function gi(e, t) {
+function hi(e, t) {
 	return g(() => {
 		if (e.type) return e.type;
 		let n = e.as ?? "button";
@@ -1942,12 +1942,12 @@ function gi(e, t) {
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/hooks/use-store.js
-function _i(e) {
+function gi(e) {
 	return b(e.subscribe, e.getSnapshot, e.getSnapshot);
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/utils/store.js
-function vi(e, t) {
+function _i(e, t) {
 	let n = e(), r = /* @__PURE__ */ new Set();
 	return {
 		getSnapshot() {
@@ -1964,7 +1964,7 @@ function vi(e, t) {
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/hooks/document-overflow/adjust-scrollbar-padding.js
-function yi() {
+function vi() {
 	let e;
 	return {
 		before({ doc: t }) {
@@ -1979,8 +1979,8 @@ function yi() {
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/hooks/document-overflow/handle-ios-locking.js
-function bi() {
-	return ti() ? { before({ doc: e, d: t, meta: n }) {
+function yi() {
+	return ei() ? { before({ doc: e, d: t, meta: n }) {
 		function r(e) {
 			for (let t of n().containers) for (let n of t()) if (n.contains(e)) return !0;
 			return !1;
@@ -1992,23 +1992,23 @@ function bi() {
 			}
 			let n = window.scrollY ?? window.pageYOffset, i = null;
 			t.addEventListener(e, "click", (t) => {
-				if (wn(t.target)) try {
+				if (Cn(t.target)) try {
 					let n = t.target.closest("a");
 					if (!n) return;
 					let { hash: a } = new URL(n.href), o = e.querySelector(a);
-					wn(o) && !r(o) && (i = o);
+					Cn(o) && !r(o) && (i = o);
 				} catch {}
 			}, !0), t.group((n) => {
 				t.addEventListener(e, "touchstart", (e) => {
-					if (n.dispose(), wn(e.target) && Tn(e.target)) if (r(e.target)) {
+					if (n.dispose(), Cn(e.target) && wn(e.target)) if (r(e.target)) {
 						let t = e.target;
 						for (; t.parentElement && r(t.parentElement);) t = t.parentElement;
 						n.style(t, "overscrollBehavior", "contain");
 					} else n.style(e.target, "touchAction", "none");
 				});
 			}), t.addEventListener(e, "touchmove", (e) => {
-				if (wn(e.target)) {
-					if (Dn(e.target)) return;
+				if (Cn(e.target)) {
+					if (En(e.target)) return;
 					if (r(e.target)) {
 						let t = e.target;
 						for (; t.parentElement && t.dataset.headlessuiPortal !== "" && !(t.scrollHeight > t.clientHeight || t.scrollWidth > t.clientWidth);) t = t.parentElement;
@@ -2024,19 +2024,19 @@ function bi() {
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/hooks/document-overflow/prevent-scroll.js
-function xi() {
+function bi() {
 	return { before({ doc: e, d: t }) {
 		t.style(e.documentElement, "overflow", "hidden");
 	} };
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/hooks/document-overflow/overflow-store.js
-function Si(e) {
+function xi(e) {
 	let t = {};
 	for (let n of e) Object.assign(t, n(t));
 	return t;
 }
-var Ci = vi(() => /* @__PURE__ */ new Map(), {
+var Si = _i(() => /* @__PURE__ */ new Map(), {
 	PUSH(e, t) {
 		let n = this.get(e) ?? {
 			doc: e,
@@ -2045,11 +2045,11 @@ var Ci = vi(() => /* @__PURE__ */ new Map(), {
 			meta: /* @__PURE__ */ new Set(),
 			computedMeta: {}
 		};
-		return n.count++, n.meta.add(t), n.computedMeta = Si(n.meta), this.set(e, n), this;
+		return n.count++, n.meta.add(t), n.computedMeta = xi(n.meta), this.set(e, n), this;
 	},
 	POP(e, t) {
 		let n = this.get(e);
-		return n && (n.count--, n.meta.delete(t), n.computedMeta = Si(n.meta)), this;
+		return n && (n.count--, n.meta.delete(t), n.computedMeta = xi(n.meta)), this;
 	},
 	SCROLL_PREVENT(e) {
 		let t = {
@@ -2059,9 +2059,9 @@ var Ci = vi(() => /* @__PURE__ */ new Map(), {
 				return e.computedMeta;
 			}
 		}, n = [
-			bi(),
 			yi(),
-			xi()
+			vi(),
+			bi()
 		];
 		n.forEach(({ before: e }) => e?.(t)), n.forEach(({ after: e }) => e?.(t));
 	},
@@ -2072,47 +2072,47 @@ var Ci = vi(() => /* @__PURE__ */ new Map(), {
 		this.delete(e);
 	}
 });
-Ci.subscribe(() => {
-	let e = Ci.getSnapshot(), t = /* @__PURE__ */ new Map();
+Si.subscribe(() => {
+	let e = Si.getSnapshot(), t = /* @__PURE__ */ new Map();
 	for (let [n] of e) t.set(n, n.documentElement.style.overflow);
 	for (let n of e.values()) {
 		let e = t.get(n.doc) === "hidden", r = n.count !== 0;
-		(r && !e || !r && e) && Ci.dispatch(n.count > 0 ? "SCROLL_PREVENT" : "SCROLL_ALLOW", n), n.count === 0 && Ci.dispatch("TEARDOWN", n);
+		(r && !e || !r && e) && Si.dispatch(n.count > 0 ? "SCROLL_PREVENT" : "SCROLL_ALLOW", n), n.count === 0 && Si.dispatch("TEARDOWN", n);
 	}
 });
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/hooks/document-overflow/use-document-overflow.js
-function wi(e, t, n = () => ({ containers: [] })) {
-	let r = _i(Ci), i = t ? r.get(t) : void 0, a = i ? i.count > 0 : !1;
+function Ci(e, t, n = () => ({ containers: [] })) {
+	let r = gi(Si), i = t ? r.get(t) : void 0, a = i ? i.count > 0 : !1;
 	return H(() => {
-		if (!(!t || !e)) return Ci.dispatch("PUSH", t, n), () => Ci.dispatch("POP", t, n);
+		if (!(!t || !e)) return Si.dispatch("PUSH", t, n), () => Si.dispatch("POP", t, n);
 	}, [e, t]), a;
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/hooks/use-scroll-lock.js
-function Ti(e, t, n = () => [document.body]) {
-	wi(Mr(e, "scroll-lock"), t, (e) => ({ containers: [...e.containers ?? [], n] }));
+function wi(e, t, n = () => [document.body]) {
+	Ci(jr(e, "scroll-lock"), t, (e) => ({ containers: [...e.containers ?? [], n] }));
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/hooks/use-tracked-pointer.js
-function Ei(e) {
+function Ti(e) {
 	return [e.screenX, e.screenY];
 }
-function Di() {
+function Ei() {
 	let e = v([-1, -1]);
 	return {
 		wasMoved(t) {
-			let n = Ei(t);
+			let n = Ti(t);
 			return e.current[0] === n[0] && e.current[1] === n[1] ? !1 : (e.current = n, !0);
 		},
 		update(t) {
-			e.current = Ei(t);
+			e.current = Ti(t);
 		}
 	};
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/hooks/use-flags.js
-function Oi(e = 0) {
+function Di(e = 0) {
 	let [t, n] = y(e);
 	return {
 		flags: t,
@@ -2135,14 +2135,14 @@ typeof process < "u" && typeof globalThis < "u" && typeof Element < "u" && (proc
 		"```"
 	].join("\n")), [];
 });
-var ki = ((e) => (e[e.None = 0] = "None", e[e.Closed = 1] = "Closed", e[e.Enter = 2] = "Enter", e[e.Leave = 4] = "Leave", e))(ki || {});
-function Ai(e) {
+var Oi = ((e) => (e[e.None = 0] = "None", e[e.Closed = 1] = "Closed", e[e.Enter = 2] = "Enter", e[e.Leave = 4] = "Leave", e))(Oi || {});
+function ki(e) {
 	let t = {};
 	for (let n in e) e[n] === !0 && (t[`data-${n}`] = "");
 	return t;
 }
-function ji(e, t, n, r) {
-	let [i, a] = y(n), { hasFlag: o, addFlag: s, removeFlag: c } = Oi(e && i ? 3 : 0), l = v(!1), u = v(!1);
+function Ai(e, t, n, r) {
+	let [i, a] = y(n), { hasFlag: o, addFlag: s, removeFlag: c } = Di(e && i ? 3 : 0), l = v(!1), u = v(!1);
 	return H(() => {
 		var i;
 		if (e) {
@@ -2150,7 +2150,7 @@ function ji(e, t, n, r) {
 				n && s(3);
 				return;
 			}
-			return (i = r?.start) == null || i.call(r, n), Mi(t, {
+			return (i = r?.start) == null || i.call(r, n), ji(t, {
 				inFlight: l,
 				prepare() {
 					u.current ? u.current = !1 : u.current = l.current, l.current = !0, !u.current && (n ? (s(3), c(4)) : (s(4), c(2)));
@@ -2160,7 +2160,7 @@ function ji(e, t, n, r) {
 				},
 				done() {
 					var e;
-					u.current && Fi(t) || (l.current = !1, c(7), n || a(!1), (e = r?.end) == null || e.call(r, n));
+					u.current && Pi(t) || (l.current = !1, c(7), n || a(!1), (e = r?.end) == null || e.call(r, n));
 				}
 			});
 		}
@@ -2181,18 +2181,18 @@ function ji(e, t, n, r) {
 		transition: void 0
 	}];
 }
-function Mi(e, { prepare: t, run: n, done: r, inFlight: i }) {
+function ji(e, { prepare: t, run: n, done: r, inFlight: i }) {
 	let a = Mt();
-	return Pi(e, {
+	return Ni(e, {
 		prepare: t,
 		inFlight: i
 	}), a.nextFrame(() => {
 		n(), a.requestAnimationFrame(() => {
-			a.add(Ni(e, r));
+			a.add(Mi(e, r));
 		});
 	}), a.dispose;
 }
-function Ni(e, t) {
+function Mi(e, t) {
 	let n = Mt();
 	if (!e) return n.dispose;
 	let r = !1;
@@ -2204,7 +2204,7 @@ function Ni(e, t) {
 		r || t();
 	}), n.dispose);
 }
-function Pi(e, { inFlight: t, prepare: n }) {
+function Ni(e, { inFlight: t, prepare: n }) {
 	if (t != null && t.current) {
 		n();
 		return;
@@ -2212,12 +2212,12 @@ function Pi(e, { inFlight: t, prepare: n }) {
 	let r = e.style.transition;
 	e.style.transition = "none", n(), e.offsetHeight, e.style.transition = r;
 }
-function Fi(e) {
+function Pi(e) {
 	return (e.getAnimations?.call(e) ?? []).some((e) => e instanceof CSSTransition && e.playState !== "finished");
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/hooks/use-tree-walker.js
-function Ii(e, { container: t, accept: n, walk: r }) {
+function Fi(e, { container: t, accept: n, walk: r }) {
 	let i = v(n), a = v(r);
 	f(() => {
 		i.current = n, a.current = r;
@@ -2236,7 +2236,7 @@ function Ii(e, { container: t, accept: n, walk: r }) {
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/hooks/use-watch.js
-function Li(e, t) {
+function Ii(e, t) {
 	let n = v([]), r = U(e);
 	f(() => {
 		let e = [...n.current];
@@ -2248,39 +2248,39 @@ function Li(e, t) {
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@floating-ui+utils@0.2.11/node_modules/@floating-ui/utils/dist/floating-ui.utils.dom.mjs
-function Ri() {
+function Li() {
 	return typeof window < "u";
 }
-function zi(e) {
-	return Hi(e) ? (e.nodeName || "").toLowerCase() : "#document";
+function Ri(e) {
+	return Vi(e) ? (e.nodeName || "").toLowerCase() : "#document";
 }
-function Bi(e) {
+function zi(e) {
 	var t;
 	return (e == null || (t = e.ownerDocument) == null ? void 0 : t.defaultView) || window;
 }
+function Bi(e) {
+	return ((Vi(e) ? e.ownerDocument : e.document) || window.document)?.documentElement;
+}
 function Vi(e) {
-	return ((Hi(e) ? e.ownerDocument : e.document) || window.document)?.documentElement;
+	return Li() ? e instanceof Node || e instanceof zi(e).Node : !1;
 }
 function Hi(e) {
-	return Ri() ? e instanceof Node || e instanceof Bi(e).Node : !1;
+	return Li() ? e instanceof Element || e instanceof zi(e).Element : !1;
 }
 function Ui(e) {
-	return Ri() ? e instanceof Element || e instanceof Bi(e).Element : !1;
+	return Li() ? e instanceof HTMLElement || e instanceof zi(e).HTMLElement : !1;
 }
 function Wi(e) {
-	return Ri() ? e instanceof HTMLElement || e instanceof Bi(e).HTMLElement : !1;
+	return !Li() || typeof ShadowRoot > "u" ? !1 : e instanceof ShadowRoot || e instanceof zi(e).ShadowRoot;
 }
 function Gi(e) {
-	return !Ri() || typeof ShadowRoot > "u" ? !1 : e instanceof ShadowRoot || e instanceof Bi(e).ShadowRoot;
-}
-function Ki(e) {
-	let { overflow: t, overflowX: n, overflowY: r, display: i } = ra(e);
+	let { overflow: t, overflowX: n, overflowY: r, display: i } = na(e);
 	return /auto|scroll|overlay|hidden|clip/.test(t + r + n) && i !== "inline" && i !== "contents";
 }
-function qi(e) {
-	return /^(table|td|th)$/.test(zi(e));
+function Ki(e) {
+	return /^(table|td|th)$/.test(Ri(e));
 }
-function Ji(e) {
+function qi(e) {
 	try {
 		if (e.matches(":popover-open")) return !0;
 	} catch {}
@@ -2290,31 +2290,31 @@ function Ji(e) {
 		return !1;
 	}
 }
-var Yi = /transform|translate|scale|rotate|perspective|filter/, Xi = /paint|layout|strict|content/, Zi = (e) => !!e && e !== "none", Qi;
-function $i(e) {
-	let t = Ui(e) ? ra(e) : e;
-	return Zi(t.transform) || Zi(t.translate) || Zi(t.scale) || Zi(t.rotate) || Zi(t.perspective) || !ta() && (Zi(t.backdropFilter) || Zi(t.filter)) || Yi.test(t.willChange || "") || Xi.test(t.contain || "");
+var Ji = /transform|translate|scale|rotate|perspective|filter/, Yi = /paint|layout|strict|content/, Xi = (e) => !!e && e !== "none", Zi;
+function Qi(e) {
+	let t = Hi(e) ? na(e) : e;
+	return Xi(t.transform) || Xi(t.translate) || Xi(t.scale) || Xi(t.rotate) || Xi(t.perspective) || !ea() && (Xi(t.backdropFilter) || Xi(t.filter)) || Ji.test(t.willChange || "") || Yi.test(t.contain || "");
 }
-function ea(e) {
-	let t = aa(e);
-	for (; Wi(t) && !na(t);) {
-		if ($i(t)) return t;
-		if (Ji(t)) return null;
-		t = aa(t);
+function $i(e) {
+	let t = ia(e);
+	for (; Ui(t) && !ta(t);) {
+		if (Qi(t)) return t;
+		if (qi(t)) return null;
+		t = ia(t);
 	}
 	return null;
 }
-function ta() {
-	return Qi ??= typeof CSS < "u" && CSS.supports && CSS.supports("-webkit-backdrop-filter", "none"), Qi;
+function ea() {
+	return Zi ??= typeof CSS < "u" && CSS.supports && CSS.supports("-webkit-backdrop-filter", "none"), Zi;
+}
+function ta(e) {
+	return /^(html|body|#document)$/.test(Ri(e));
 }
 function na(e) {
-	return /^(html|body|#document)$/.test(zi(e));
+	return zi(e).getComputedStyle(e);
 }
 function ra(e) {
-	return Bi(e).getComputedStyle(e);
-}
-function ia(e) {
-	return Ui(e) ? {
+	return Hi(e) ? {
 		scrollLeft: e.scrollLeft,
 		scrollTop: e.scrollTop
 	} : {
@@ -2322,29 +2322,29 @@ function ia(e) {
 		scrollTop: e.scrollY
 	};
 }
+function ia(e) {
+	if (Ri(e) === "html") return e;
+	let t = e.assignedSlot || e.parentNode || Wi(e) && e.host || Bi(e);
+	return Wi(t) ? t.host : t;
+}
 function aa(e) {
-	if (zi(e) === "html") return e;
-	let t = e.assignedSlot || e.parentNode || Gi(e) && e.host || Vi(e);
-	return Gi(t) ? t.host : t;
+	let t = ia(e);
+	return ta(t) ? e.ownerDocument ? e.ownerDocument.body : e.body : Ui(t) && Gi(t) ? t : aa(t);
 }
-function oa(e) {
-	let t = aa(e);
-	return na(t) ? e.ownerDocument ? e.ownerDocument.body : e.body : Wi(t) && Ki(t) ? t : oa(t);
-}
-function sa(e, t, n) {
+function oa(e, t, n) {
 	t === void 0 && (t = []), n === void 0 && (n = !0);
-	let r = oa(e), i = r === e.ownerDocument?.body, a = Bi(r);
+	let r = aa(e), i = r === e.ownerDocument?.body, a = zi(r);
 	if (i) {
-		let e = ca(a);
-		return t.concat(a, a.visualViewport || [], Ki(r) ? r : [], e && n ? sa(e) : []);
-	} else return t.concat(r, sa(r, [], n));
+		let e = sa(a);
+		return t.concat(a, a.visualViewport || [], Gi(r) ? r : [], e && n ? oa(e) : []);
+	} else return t.concat(r, oa(r, [], n));
 }
-function ca(e) {
+function sa(e) {
 	return e.parent && Object.getPrototypeOf(e.parent) ? e.frameElement : null;
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@floating-ui+react@0.26.28_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@floating-ui/react/dist/floating-ui.react.utils.mjs
-function la() {
+function ca() {
 	let e = navigator.userAgentData;
 	return e && Array.isArray(e.brands) ? e.brands.map((e) => {
 		let { brand: t, version: n } = e;
@@ -2353,75 +2353,75 @@ function la() {
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@floating-ui+utils@0.2.11/node_modules/@floating-ui/utils/dist/floating-ui.utils.mjs
-var ua = Math.min, da = Math.max, fa = Math.round, pa = Math.floor, ma = (e) => ({
+var la = Math.min, ua = Math.max, da = Math.round, fa = Math.floor, pa = (e) => ({
 	x: e,
 	y: e
-}), ha = {
+}), ma = {
 	left: "right",
 	right: "left",
 	bottom: "top",
 	top: "bottom"
 };
-function ga(e, t, n) {
-	return da(e, ua(t, n));
+function ha(e, t, n) {
+	return ua(e, la(t, n));
 }
-function _a(e, t) {
+function ga(e, t) {
 	return typeof e == "function" ? e(t) : e;
 }
-function va(e) {
+function _a(e) {
 	return e.split("-")[0];
 }
-function ya(e) {
+function va(e) {
 	return e.split("-")[1];
 }
-function ba(e) {
+function ya(e) {
 	return e === "x" ? "y" : "x";
 }
-function xa(e) {
+function ba(e) {
 	return e === "y" ? "height" : "width";
 }
-function Sa(e) {
+function xa(e) {
 	let t = e[0];
 	return t === "t" || t === "b" ? "y" : "x";
 }
-function Ca(e) {
-	return ba(Sa(e));
+function Sa(e) {
+	return ya(xa(e));
 }
-function wa(e, t, n) {
+function Ca(e, t, n) {
 	n === void 0 && (n = !1);
-	let r = ya(e), i = Ca(e), a = xa(i), o = i === "x" ? r === (n ? "end" : "start") ? "right" : "left" : r === "start" ? "bottom" : "top";
-	return t.reference[a] > t.floating[a] && (o = Na(o)), [o, Na(o)];
+	let r = va(e), i = Sa(e), a = ba(i), o = i === "x" ? r === (n ? "end" : "start") ? "right" : "left" : r === "start" ? "bottom" : "top";
+	return t.reference[a] > t.floating[a] && (o = Ma(o)), [o, Ma(o)];
 }
-function Ta(e) {
-	let t = Na(e);
+function wa(e) {
+	let t = Ma(e);
 	return [
-		Ea(e),
+		Ta(e),
 		t,
-		Ea(t)
+		Ta(t)
 	];
 }
-function Ea(e) {
+function Ta(e) {
 	return e.includes("start") ? e.replace("start", "end") : e.replace("end", "start");
 }
-var Da = ["left", "right"], Oa = ["right", "left"], ka = ["top", "bottom"], Aa = ["bottom", "top"];
-function ja(e, t, n) {
+var Ea = ["left", "right"], Da = ["right", "left"], Oa = ["top", "bottom"], ka = ["bottom", "top"];
+function Aa(e, t, n) {
 	switch (e) {
 		case "top":
-		case "bottom": return n ? t ? Oa : Da : t ? Da : Oa;
+		case "bottom": return n ? t ? Da : Ea : t ? Ea : Da;
 		case "left":
-		case "right": return t ? ka : Aa;
+		case "right": return t ? Oa : ka;
 		default: return [];
 	}
 }
-function Ma(e, t, n, r) {
-	let i = ya(e), a = ja(va(e), n === "start", r);
-	return i && (a = a.map((e) => e + "-" + i), t && (a = a.concat(a.map(Ea)))), a;
+function ja(e, t, n, r) {
+	let i = va(e), a = Aa(_a(e), n === "start", r);
+	return i && (a = a.map((e) => e + "-" + i), t && (a = a.concat(a.map(Ta)))), a;
+}
+function Ma(e) {
+	let t = _a(e);
+	return ma[t] + e.slice(t.length);
 }
 function Na(e) {
-	let t = va(e);
-	return ha[t] + e.slice(t.length);
-}
-function Pa(e) {
 	return {
 		top: 0,
 		right: 0,
@@ -2430,15 +2430,15 @@ function Pa(e) {
 		...e
 	};
 }
-function Fa(e) {
+function Pa(e) {
 	return typeof e == "number" ? {
 		top: e,
 		right: e,
 		bottom: e,
 		left: e
-	} : Pa(e);
+	} : Na(e);
 }
-function Ia(e) {
+function Fa(e) {
 	let { x: t, y: n, width: r, height: i } = e;
 	return {
 		width: r,
@@ -2453,8 +2453,8 @@ function Ia(e) {
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@floating-ui+core@1.7.5/node_modules/@floating-ui/core/dist/floating-ui.core.mjs
-function La(e, t, n) {
-	let { reference: r, floating: i } = e, a = Sa(t), o = Ca(t), s = xa(o), c = va(t), l = a === "y", u = r.x + r.width / 2 - i.width / 2, d = r.y + r.height / 2 - i.height / 2, f = r[s] / 2 - i[s] / 2, p;
+function Ia(e, t, n) {
+	let { reference: r, floating: i } = e, a = xa(t), o = Sa(t), s = ba(o), c = _a(t), l = a === "y", u = r.x + r.width / 2 - i.width / 2, d = r.y + r.height / 2 - i.height / 2, f = r[s] / 2 - i[s] / 2, p;
 	switch (c) {
 		case "top":
 			p = {
@@ -2485,7 +2485,7 @@ function La(e, t, n) {
 			y: r.y
 		};
 	}
-	switch (ya(t)) {
+	switch (va(t)) {
 		case "start":
 			p[o] -= f * (n && l ? -1 : 1);
 			break;
@@ -2495,9 +2495,9 @@ function La(e, t, n) {
 	}
 	return p;
 }
-async function Ra(e, t) {
+async function La(e, t) {
 	t === void 0 && (t = {});
-	let { x: n, y: r, platform: i, rects: a, elements: o, strategy: s } = e, { boundary: c = "clippingAncestors", rootBoundary: l = "viewport", elementContext: u = "floating", altBoundary: d = !1, padding: f = 0 } = _a(t, e), p = Fa(f), m = o[d ? u === "floating" ? "reference" : "floating" : u], h = Ia(await i.getClippingRect({
+	let { x: n, y: r, platform: i, rects: a, elements: o, strategy: s } = e, { boundary: c = "clippingAncestors", rootBoundary: l = "viewport", elementContext: u = "floating", altBoundary: d = !1, padding: f = 0 } = ga(t, e), p = Pa(f), m = o[d ? u === "floating" ? "reference" : "floating" : u], h = Fa(await i.getClippingRect({
 		element: await (i.isElement == null ? void 0 : i.isElement(m)) ?? !0 ? m : m.contextElement || await (i.getDocumentElement == null ? void 0 : i.getDocumentElement(o.floating)),
 		boundary: c,
 		rootBoundary: l,
@@ -2510,7 +2510,7 @@ async function Ra(e, t) {
 	} : a.reference, _ = await (i.getOffsetParent == null ? void 0 : i.getOffsetParent(o.floating)), v = await (i.isElement == null ? void 0 : i.isElement(_)) && await (i.getScale == null ? void 0 : i.getScale(_)) || {
 		x: 1,
 		y: 1
-	}, y = Ia(i.convertOffsetParentRelativeRectToViewportRelativeRect ? await i.convertOffsetParentRelativeRectToViewportRelativeRect({
+	}, y = Fa(i.convertOffsetParentRelativeRectToViewportRelativeRect ? await i.convertOffsetParentRelativeRectToViewportRelativeRect({
 		elements: o,
 		rect: g,
 		offsetParent: _,
@@ -2523,15 +2523,15 @@ async function Ra(e, t) {
 		right: (y.right - h.right + p.right) / v.x
 	};
 }
-var za = 50, Ba = async (e, t, n) => {
+var Ra = 50, za = async (e, t, n) => {
 	let { placement: r = "bottom", strategy: i = "absolute", middleware: a = [], platform: o } = n, s = o.detectOverflow ? o : {
 		...o,
-		detectOverflow: Ra
+		detectOverflow: La
 	}, c = await (o.isRTL == null ? void 0 : o.isRTL(t)), l = await o.getElementRects({
 		reference: e,
 		floating: t,
 		strategy: i
-	}), { x: u, y: d } = La(l, r, c), f = r, p = 0, m = {};
+	}), { x: u, y: d } = Ia(l, r, c), f = r, p = 0, m = {};
 	for (let n = 0; n < a.length; n++) {
 		let h = a[n];
 		if (!h) continue;
@@ -2552,11 +2552,11 @@ var za = 50, Ba = async (e, t, n) => {
 		u = v ?? u, d = y ?? d, m[g] = {
 			...m[g],
 			...b
-		}, x && p < za && (p++, typeof x == "object" && (x.placement && (f = x.placement), x.rects && (l = x.rects === !0 ? await o.getElementRects({
+		}, x && p < Ra && (p++, typeof x == "object" && (x.placement && (f = x.placement), x.rects && (l = x.rects === !0 ? await o.getElementRects({
 			reference: e,
 			floating: t,
 			strategy: i
-		}) : x.rects), {x: u, y: d} = La(l, f, c)), n = -1);
+		}) : x.rects), {x: u, y: d} = Ia(l, f, c)), n = -1);
 	}
 	return {
 		x: u,
@@ -2565,19 +2565,19 @@ var za = 50, Ba = async (e, t, n) => {
 		strategy: i,
 		middlewareData: m
 	};
-}, Va = function(e) {
+}, Ba = function(e) {
 	return e === void 0 && (e = {}), {
 		name: "flip",
 		options: e,
 		async fn(t) {
 			var n;
-			let { placement: r, middlewareData: i, rects: a, initialPlacement: o, platform: s, elements: c } = t, { mainAxis: l = !0, crossAxis: u = !0, fallbackPlacements: d, fallbackStrategy: f = "bestFit", fallbackAxisSideDirection: p = "none", flipAlignment: m = !0, ...h } = _a(e, t);
+			let { placement: r, middlewareData: i, rects: a, initialPlacement: o, platform: s, elements: c } = t, { mainAxis: l = !0, crossAxis: u = !0, fallbackPlacements: d, fallbackStrategy: f = "bestFit", fallbackAxisSideDirection: p = "none", flipAlignment: m = !0, ...h } = ga(e, t);
 			if ((n = i.arrow) != null && n.alignmentOffset) return {};
-			let g = va(r), _ = Sa(o), v = va(o) === o, y = await (s.isRTL == null ? void 0 : s.isRTL(c.floating)), b = d || (v || !m ? [Na(o)] : Ta(o)), x = p !== "none";
-			!d && x && b.push(...Ma(o, m, p, y));
+			let g = _a(r), _ = xa(o), v = _a(o) === o, y = await (s.isRTL == null ? void 0 : s.isRTL(c.floating)), b = d || (v || !m ? [Ma(o)] : wa(o)), x = p !== "none";
+			!d && x && b.push(...ja(o, m, p, y));
 			let S = [o, ...b], C = await s.detectOverflow(t, h), w = [], T = i.flip?.overflows || [];
 			if (l && w.push(C[g]), u) {
-				let e = wa(r, a, y);
+				let e = Ca(r, a, y);
 				w.push(C[e[0]], C[e[1]]);
 			}
 			if (T = [...T, {
@@ -2585,7 +2585,7 @@ var za = 50, Ba = async (e, t, n) => {
 				overflows: w
 			}], !w.every((e) => e <= 0)) {
 				let e = (i.flip?.index || 0) + 1, t = S[e];
-				if (t && (!(u === "alignment" && _ !== Sa(t)) || T.every((e) => Sa(e.placement) !== _ || e.overflows[0] > 0))) return {
+				if (t && (!(u === "alignment" && _ !== xa(t)) || T.every((e) => xa(e.placement) !== _ || e.overflows[0] > 0))) return {
 					data: {
 						index: e,
 						overflows: T
@@ -2597,7 +2597,7 @@ var za = 50, Ba = async (e, t, n) => {
 					case "bestFit": {
 						let e = T.filter((e) => {
 							if (x) {
-								let t = Sa(e.placement);
+								let t = xa(e.placement);
 								return t === _ || t === "y";
 							}
 							return !0;
@@ -2614,9 +2614,9 @@ var za = 50, Ba = async (e, t, n) => {
 			return {};
 		}
 	};
-}, Ha = /*#__PURE__*/ new Set(["left", "top"]);
-async function Ua(e, t) {
-	let { placement: n, platform: r, elements: i } = e, a = await (r.isRTL == null ? void 0 : r.isRTL(i.floating)), o = va(n), s = ya(n), c = Sa(n) === "y", l = Ha.has(o) ? -1 : 1, u = a && c ? -1 : 1, d = _a(t, e), { mainAxis: f, crossAxis: p, alignmentAxis: m } = typeof d == "number" ? {
+}, Va = /*#__PURE__*/ new Set(["left", "top"]);
+async function Ha(e, t) {
+	let { placement: n, platform: r, elements: i } = e, a = await (r.isRTL == null ? void 0 : r.isRTL(i.floating)), o = _a(n), s = va(n), c = xa(n) === "y", l = Va.has(o) ? -1 : 1, u = a && c ? -1 : 1, d = ga(t, e), { mainAxis: f, crossAxis: p, alignmentAxis: m } = typeof d == "number" ? {
 		mainAxis: d,
 		crossAxis: 0,
 		alignmentAxis: null
@@ -2633,13 +2633,13 @@ async function Ua(e, t) {
 		y: p * u
 	};
 }
-var Wa = function(e) {
+var Ua = function(e) {
 	return e === void 0 && (e = 0), {
 		name: "offset",
 		options: e,
 		async fn(t) {
 			var n;
-			let { x: r, y: i, placement: a, middlewareData: o } = t, s = await Ua(t, e);
+			let { x: r, y: i, placement: a, middlewareData: o } = t, s = await Ha(t, e);
 			return a === o.offset?.placement && (n = o.arrow) != null && n.alignmentOffset ? {} : {
 				x: r + s.x,
 				y: i + s.y,
@@ -2650,7 +2650,7 @@ var Wa = function(e) {
 			};
 		}
 	};
-}, Ga = function(e) {
+}, Wa = function(e) {
 	return e === void 0 && (e = {}), {
 		name: "shift",
 		options: e,
@@ -2661,17 +2661,17 @@ var Wa = function(e) {
 					x: t,
 					y: n
 				};
-			} }, ...l } = _a(e, t), u = {
+			} }, ...l } = ga(e, t), u = {
 				x: n,
 				y: r
-			}, d = await a.detectOverflow(t, l), f = Sa(va(i)), p = ba(f), m = u[p], h = u[f];
+			}, d = await a.detectOverflow(t, l), f = xa(_a(i)), p = ya(f), m = u[p], h = u[f];
 			if (o) {
 				let e = p === "y" ? "top" : "left", t = p === "y" ? "bottom" : "right", n = m + d[e], r = m - d[t];
-				m = ga(n, m, r);
+				m = ha(n, m, r);
 			}
 			if (s) {
 				let e = f === "y" ? "top" : "left", t = f === "y" ? "bottom" : "right", n = h + d[e], r = h - d[t];
-				h = ga(n, h, r);
+				h = ha(n, h, r);
 			}
 			let g = c.fn({
 				...t,
@@ -2691,18 +2691,18 @@ var Wa = function(e) {
 			};
 		}
 	};
-}, Ka = function(e) {
+}, Ga = function(e) {
 	return e === void 0 && (e = {}), {
 		name: "size",
 		options: e,
 		async fn(t) {
 			var n, r;
-			let { placement: i, rects: a, platform: o, elements: s } = t, { apply: c = () => {}, ...l } = _a(e, t), u = await o.detectOverflow(t, l), d = va(i), f = ya(i), p = Sa(i) === "y", { width: m, height: h } = a.floating, g, _;
+			let { placement: i, rects: a, platform: o, elements: s } = t, { apply: c = () => {}, ...l } = ga(e, t), u = await o.detectOverflow(t, l), d = _a(i), f = va(i), p = xa(i) === "y", { width: m, height: h } = a.floating, g, _;
 			d === "top" || d === "bottom" ? (g = d, _ = f === (await (o.isRTL == null ? void 0 : o.isRTL(s.floating)) ? "start" : "end") ? "left" : "right") : (_ = d, g = f === "end" ? "top" : "bottom");
-			let v = h - u.top - u.bottom, y = m - u.left - u.right, b = ua(h - u[g], v), x = ua(m - u[_], y), S = !t.middlewareData.shift, C = b, w = x;
+			let v = h - u.top - u.bottom, y = m - u.left - u.right, b = la(h - u[g], v), x = la(m - u[_], y), S = !t.middlewareData.shift, C = b, w = x;
 			if ((n = t.middlewareData.shift) != null && n.enabled.x && (w = y), (r = t.middlewareData.shift) != null && r.enabled.y && (C = v), S && !f) {
-				let e = da(u.left, 0), t = da(u.right, 0), n = da(u.top, 0), r = da(u.bottom, 0);
-				p ? w = m - 2 * (e !== 0 || t !== 0 ? e + t : da(u.left, u.right)) : C = h - 2 * (n !== 0 || r !== 0 ? n + r : da(u.top, u.bottom));
+				let e = ua(u.left, 0), t = ua(u.right, 0), n = ua(u.top, 0), r = ua(u.bottom, 0);
+				p ? w = m - 2 * (e !== 0 || t !== 0 ? e + t : ua(u.left, u.right)) : C = h - 2 * (n !== 0 || r !== 0 ? n + r : ua(u.top, u.bottom));
 			}
 			await c({
 				...t,
@@ -2716,79 +2716,79 @@ var Wa = function(e) {
 };
 //#endregion
 //#region ../../node_modules/.pnpm/@floating-ui+dom@1.7.6/node_modules/@floating-ui/dom/dist/floating-ui.dom.mjs
-function qa(e) {
-	let t = ra(e), n = parseFloat(t.width) || 0, r = parseFloat(t.height) || 0, i = Wi(e), a = i ? e.offsetWidth : n, o = i ? e.offsetHeight : r, s = fa(n) !== a || fa(r) !== o;
+function Ka(e) {
+	let t = na(e), n = parseFloat(t.width) || 0, r = parseFloat(t.height) || 0, i = Ui(e), a = i ? e.offsetWidth : n, o = i ? e.offsetHeight : r, s = da(n) !== a || da(r) !== o;
 	return s && (n = a, r = o), {
 		width: n,
 		height: r,
 		$: s
 	};
 }
-function Ja(e) {
-	return Ui(e) ? e : e.contextElement;
+function qa(e) {
+	return Hi(e) ? e : e.contextElement;
 }
-function Ya(e) {
-	let t = Ja(e);
-	if (!Wi(t)) return ma(1);
-	let n = t.getBoundingClientRect(), { width: r, height: i, $: a } = qa(t), o = (a ? fa(n.width) : n.width) / r, s = (a ? fa(n.height) : n.height) / i;
+function Ja(e) {
+	let t = qa(e);
+	if (!Ui(t)) return pa(1);
+	let n = t.getBoundingClientRect(), { width: r, height: i, $: a } = Ka(t), o = (a ? da(n.width) : n.width) / r, s = (a ? da(n.height) : n.height) / i;
 	return (!o || !Number.isFinite(o)) && (o = 1), (!s || !Number.isFinite(s)) && (s = 1), {
 		x: o,
 		y: s
 	};
 }
-var Xa = /*#__PURE__*/ ma(0);
-function Za(e) {
-	let t = Bi(e);
-	return !ta() || !t.visualViewport ? Xa : {
+var Ya = /*#__PURE__*/ pa(0);
+function Xa(e) {
+	let t = zi(e);
+	return !ea() || !t.visualViewport ? Ya : {
 		x: t.visualViewport.offsetLeft,
 		y: t.visualViewport.offsetTop
 	};
 }
-function Qa(e, t, n) {
-	return t === void 0 && (t = !1), !n || t && n !== Bi(e) ? !1 : t;
+function Za(e, t, n) {
+	return t === void 0 && (t = !1), !n || t && n !== zi(e) ? !1 : t;
 }
-function $a(e, t, n, r) {
+function Qa(e, t, n, r) {
 	t === void 0 && (t = !1), n === void 0 && (n = !1);
-	let i = e.getBoundingClientRect(), a = Ja(e), o = ma(1);
-	t && (r ? Ui(r) && (o = Ya(r)) : o = Ya(e));
-	let s = Qa(a, n, r) ? Za(a) : ma(0), c = (i.left + s.x) / o.x, l = (i.top + s.y) / o.y, u = i.width / o.x, d = i.height / o.y;
+	let i = e.getBoundingClientRect(), a = qa(e), o = pa(1);
+	t && (r ? Hi(r) && (o = Ja(r)) : o = Ja(e));
+	let s = Za(a, n, r) ? Xa(a) : pa(0), c = (i.left + s.x) / o.x, l = (i.top + s.y) / o.y, u = i.width / o.x, d = i.height / o.y;
 	if (a) {
-		let e = Bi(a), t = r && Ui(r) ? Bi(r) : r, n = e, i = ca(n);
+		let e = zi(a), t = r && Hi(r) ? zi(r) : r, n = e, i = sa(n);
 		for (; i && r && t !== n;) {
-			let e = Ya(i), t = i.getBoundingClientRect(), r = ra(i), a = t.left + (i.clientLeft + parseFloat(r.paddingLeft)) * e.x, o = t.top + (i.clientTop + parseFloat(r.paddingTop)) * e.y;
-			c *= e.x, l *= e.y, u *= e.x, d *= e.y, c += a, l += o, n = Bi(i), i = ca(n);
+			let e = Ja(i), t = i.getBoundingClientRect(), r = na(i), a = t.left + (i.clientLeft + parseFloat(r.paddingLeft)) * e.x, o = t.top + (i.clientTop + parseFloat(r.paddingTop)) * e.y;
+			c *= e.x, l *= e.y, u *= e.x, d *= e.y, c += a, l += o, n = zi(i), i = sa(n);
 		}
 	}
-	return Ia({
+	return Fa({
 		width: u,
 		height: d,
 		x: c,
 		y: l
 	});
 }
-function eo(e, t) {
-	let n = ia(e).scrollLeft;
-	return t ? t.left + n : $a(Vi(e)).left + n;
+function $a(e, t) {
+	let n = ra(e).scrollLeft;
+	return t ? t.left + n : Qa(Bi(e)).left + n;
 }
-function to(e, t) {
+function eo(e, t) {
 	let n = e.getBoundingClientRect();
 	return {
-		x: n.left + t.scrollLeft - eo(e, n),
+		x: n.left + t.scrollLeft - $a(e, n),
 		y: n.top + t.scrollTop
 	};
 }
-function no(e) {
-	let { elements: t, rect: n, offsetParent: r, strategy: i } = e, a = i === "fixed", o = Vi(r), s = t ? Ji(t.floating) : !1;
+function to(e) {
+	let { elements: t, rect: n, offsetParent: r, strategy: i } = e, a = i === "fixed", o = Bi(r), s = t ? qi(t.floating) : !1;
 	if (r === o || s && a) return n;
 	let c = {
 		scrollLeft: 0,
 		scrollTop: 0
-	}, l = ma(1), u = ma(0), d = Wi(r);
-	if ((d || !d && !a) && ((zi(r) !== "body" || Ki(o)) && (c = ia(r)), d)) {
-		let e = $a(r);
-		l = Ya(r), u.x = e.x + r.clientLeft, u.y = e.y + r.clientTop;
+	}, l = pa(1), u = pa(0), d = Ui(r);
+	if ((d || !d && !a) && ((Ri(r) !== "body" || Gi(o)) && (c = ra(r)), d)) {
+		let e = Qa(r);
+		l = Ja(r), u.x = e.x + r.clientLeft, u.y = e.y + r.clientTop;
 	}
-	let f = o && !d && !a ? to(o, c) : ma(0);
+	let f = o && !d && !a ? eo(o, c) : pa(0);
 	return {
 		width: n.width * l.x,
 		height: n.height * l.y,
@@ -2796,31 +2796,31 @@ function no(e) {
 		y: n.y * l.y - c.scrollTop * l.y + u.y + f.y
 	};
 }
-function ro(e) {
+function no(e) {
 	return Array.from(e.getClientRects());
 }
-function io(e) {
-	let t = Vi(e), n = ia(e), r = e.ownerDocument.body, i = da(t.scrollWidth, t.clientWidth, r.scrollWidth, r.clientWidth), a = da(t.scrollHeight, t.clientHeight, r.scrollHeight, r.clientHeight), o = -n.scrollLeft + eo(e), s = -n.scrollTop;
-	return ra(r).direction === "rtl" && (o += da(t.clientWidth, r.clientWidth) - i), {
+function ro(e) {
+	let t = Bi(e), n = ra(e), r = e.ownerDocument.body, i = ua(t.scrollWidth, t.clientWidth, r.scrollWidth, r.clientWidth), a = ua(t.scrollHeight, t.clientHeight, r.scrollHeight, r.clientHeight), o = -n.scrollLeft + $a(e), s = -n.scrollTop;
+	return na(r).direction === "rtl" && (o += ua(t.clientWidth, r.clientWidth) - i), {
 		width: i,
 		height: a,
 		x: o,
 		y: s
 	};
 }
-var ao = 25;
-function oo(e, t) {
-	let n = Bi(e), r = Vi(e), i = n.visualViewport, a = r.clientWidth, o = r.clientHeight, s = 0, c = 0;
+var io = 25;
+function ao(e, t) {
+	let n = zi(e), r = Bi(e), i = n.visualViewport, a = r.clientWidth, o = r.clientHeight, s = 0, c = 0;
 	if (i) {
 		a = i.width, o = i.height;
-		let e = ta();
+		let e = ea();
 		(!e || e && t === "fixed") && (s = i.offsetLeft, c = i.offsetTop);
 	}
-	let l = eo(r);
+	let l = $a(r);
 	if (l <= 0) {
 		let e = r.ownerDocument, t = e.body, n = getComputedStyle(t), i = e.compatMode === "CSS1Compat" && parseFloat(n.marginLeft) + parseFloat(n.marginRight) || 0, o = Math.abs(r.clientWidth - t.clientWidth - i);
-		o <= ao && (a -= o);
-	} else l <= ao && (a += l);
+		o <= io && (a -= o);
+	} else l <= io && (a += l);
 	return {
 		width: a,
 		height: o,
@@ -2828,8 +2828,8 @@ function oo(e, t) {
 		y: c
 	};
 }
-function so(e, t) {
-	let n = $a(e, !0, t === "fixed"), r = n.top + e.clientTop, i = n.left + e.clientLeft, a = Wi(e) ? Ya(e) : ma(1);
+function oo(e, t) {
+	let n = Qa(e, !0, t === "fixed"), r = n.top + e.clientTop, i = n.left + e.clientLeft, a = Ui(e) ? Ja(e) : pa(1);
 	return {
 		width: e.clientWidth * a.x,
 		height: e.clientHeight * a.y,
@@ -2837,13 +2837,13 @@ function so(e, t) {
 		y: r * a.y
 	};
 }
-function co(e, t, n) {
+function so(e, t, n) {
 	let r;
-	if (t === "viewport") r = oo(e, n);
-	else if (t === "document") r = io(Vi(e));
-	else if (Ui(t)) r = so(t, n);
+	if (t === "viewport") r = ao(e, n);
+	else if (t === "document") r = ro(Bi(e));
+	else if (Hi(t)) r = oo(t, n);
 	else {
-		let n = Za(e);
+		let n = Xa(e);
 		r = {
 			x: t.x - n.x,
 			y: t.y - n.y,
@@ -2851,27 +2851,27 @@ function co(e, t, n) {
 			height: t.height
 		};
 	}
-	return Ia(r);
+	return Fa(r);
+}
+function co(e, t) {
+	let n = ia(e);
+	return n === t || !Hi(n) || ta(n) ? !1 : na(n).position === "fixed" || co(n, t);
 }
 function lo(e, t) {
-	let n = aa(e);
-	return n === t || !Ui(n) || na(n) ? !1 : ra(n).position === "fixed" || lo(n, t);
-}
-function uo(e, t) {
 	let n = t.get(e);
 	if (n) return n;
-	let r = sa(e, [], !1).filter((e) => Ui(e) && zi(e) !== "body"), i = null, a = ra(e).position === "fixed", o = a ? aa(e) : e;
-	for (; Ui(o) && !na(o);) {
-		let t = ra(o), n = $i(o);
-		!n && t.position === "fixed" && (i = null), (a ? !n && !i : !n && t.position === "static" && i && (i.position === "absolute" || i.position === "fixed") || Ki(o) && !n && lo(e, o)) ? r = r.filter((e) => e !== o) : i = t, o = aa(o);
+	let r = oa(e, [], !1).filter((e) => Hi(e) && Ri(e) !== "body"), i = null, a = na(e).position === "fixed", o = a ? ia(e) : e;
+	for (; Hi(o) && !ta(o);) {
+		let t = na(o), n = Qi(o);
+		!n && t.position === "fixed" && (i = null), (a ? !n && !i : !n && t.position === "static" && i && (i.position === "absolute" || i.position === "fixed") || Gi(o) && !n && co(e, o)) ? r = r.filter((e) => e !== o) : i = t, o = ia(o);
 	}
 	return t.set(e, r), r;
 }
-function fo(e) {
-	let { element: t, boundary: n, rootBoundary: r, strategy: i } = e, a = [...n === "clippingAncestors" ? Ji(t) ? [] : uo(t, this._c) : [].concat(n), r], o = co(t, a[0], i), s = o.top, c = o.right, l = o.bottom, u = o.left;
+function uo(e) {
+	let { element: t, boundary: n, rootBoundary: r, strategy: i } = e, a = [...n === "clippingAncestors" ? qi(t) ? [] : lo(t, this._c) : [].concat(n), r], o = so(t, a[0], i), s = o.top, c = o.right, l = o.bottom, u = o.left;
 	for (let e = 1; e < a.length; e++) {
-		let n = co(t, a[e], i);
-		s = da(n.top, s), c = ua(n.right, c), l = ua(n.bottom, l), u = da(n.left, u);
+		let n = so(t, a[e], i);
+		s = ua(n.top, s), c = la(n.right, c), l = la(n.bottom, l), u = ua(n.left, u);
 	}
 	return {
 		width: c - u,
@@ -2880,27 +2880,27 @@ function fo(e) {
 		y: s
 	};
 }
-function po(e) {
-	let { width: t, height: n } = qa(e);
+function fo(e) {
+	let { width: t, height: n } = Ka(e);
 	return {
 		width: t,
 		height: n
 	};
 }
-function mo(e, t, n) {
-	let r = Wi(t), i = Vi(t), a = n === "fixed", o = $a(e, !0, a, t), s = {
+function po(e, t, n) {
+	let r = Ui(t), i = Bi(t), a = n === "fixed", o = Qa(e, !0, a, t), s = {
 		scrollLeft: 0,
 		scrollTop: 0
-	}, c = ma(0);
+	}, c = pa(0);
 	function l() {
-		c.x = eo(i);
+		c.x = $a(i);
 	}
-	if (r || !r && !a) if ((zi(t) !== "body" || Ki(i)) && (s = ia(t)), r) {
-		let e = $a(t, !0, a, t);
+	if (r || !r && !a) if ((Ri(t) !== "body" || Gi(i)) && (s = ra(t)), r) {
+		let e = Qa(t, !0, a, t);
 		c.x = e.x + t.clientLeft, c.y = e.y + t.clientTop;
 	} else i && l();
 	a && !r && i && l();
-	let u = i && !r && !a ? to(i, s) : ma(0);
+	let u = i && !r && !a ? eo(i, s) : pa(0);
 	return {
 		x: o.left + s.scrollLeft - c.x - u.x,
 		y: o.top + s.scrollTop - c.y - u.y,
@@ -2908,34 +2908,34 @@ function mo(e, t, n) {
 		height: o.height
 	};
 }
-function ho(e) {
-	return ra(e).position === "static";
+function mo(e) {
+	return na(e).position === "static";
 }
-function go(e, t) {
-	if (!Wi(e) || ra(e).position === "fixed") return null;
+function ho(e, t) {
+	if (!Ui(e) || na(e).position === "fixed") return null;
 	if (t) return t(e);
 	let n = e.offsetParent;
-	return Vi(e) === n && (n = n.ownerDocument.body), n;
+	return Bi(e) === n && (n = n.ownerDocument.body), n;
 }
-function _o(e, t) {
-	let n = Bi(e);
-	if (Ji(e)) return n;
-	if (!Wi(e)) {
-		let t = aa(e);
-		for (; t && !na(t);) {
-			if (Ui(t) && !ho(t)) return t;
-			t = aa(t);
+function go(e, t) {
+	let n = zi(e);
+	if (qi(e)) return n;
+	if (!Ui(e)) {
+		let t = ia(e);
+		for (; t && !ta(t);) {
+			if (Hi(t) && !mo(t)) return t;
+			t = ia(t);
 		}
 		return n;
 	}
-	let r = go(e, t);
-	for (; r && qi(r) && ho(r);) r = go(r, t);
-	return r && na(r) && ho(r) && !$i(r) ? n : r || ea(e) || n;
+	let r = ho(e, t);
+	for (; r && Ki(r) && mo(r);) r = ho(r, t);
+	return r && ta(r) && mo(r) && !Qi(r) ? n : r || $i(e) || n;
 }
-var vo = async function(e) {
-	let t = this.getOffsetParent || _o, n = this.getDimensions, r = await n(e.floating);
+var _o = async function(e) {
+	let t = this.getOffsetParent || go, n = this.getDimensions, r = await n(e.floating);
 	return {
-		reference: mo(e.reference, await t(e.floating), e.strategy),
+		reference: po(e.reference, await t(e.floating), e.strategy),
 		floating: {
 			x: 0,
 			y: 0,
@@ -2944,26 +2944,26 @@ var vo = async function(e) {
 		}
 	};
 };
-function yo(e) {
-	return ra(e).direction === "rtl";
+function vo(e) {
+	return na(e).direction === "rtl";
 }
-var bo = {
-	convertOffsetParentRelativeRectToViewportRelativeRect: no,
-	getDocumentElement: Vi,
-	getClippingRect: fo,
-	getOffsetParent: _o,
-	getElementRects: vo,
-	getClientRects: ro,
-	getDimensions: po,
-	getScale: Ya,
-	isElement: Ui,
-	isRTL: yo
+var yo = {
+	convertOffsetParentRelativeRectToViewportRelativeRect: to,
+	getDocumentElement: Bi,
+	getClippingRect: uo,
+	getOffsetParent: go,
+	getElementRects: _o,
+	getClientRects: no,
+	getDimensions: fo,
+	getScale: Ja,
+	isElement: Hi,
+	isRTL: vo
 };
-function xo(e, t) {
+function bo(e, t) {
 	return e.x === t.x && e.y === t.y && e.width === t.width && e.height === t.height;
 }
-function So(e, t) {
-	let n = null, r, i = Vi(e);
+function xo(e, t) {
+	let n = null, r, i = Bi(e);
 	function a() {
 		var e;
 		clearTimeout(r), (e = n) == null || e.disconnect(), n = null;
@@ -2972,9 +2972,9 @@ function So(e, t) {
 		s === void 0 && (s = !1), c === void 0 && (c = 1), a();
 		let l = e.getBoundingClientRect(), { left: u, top: d, width: f, height: p } = l;
 		if (s || t(), !f || !p) return;
-		let m = pa(d), h = pa(i.clientWidth - (u + f)), g = pa(i.clientHeight - (d + p)), _ = pa(u), v = {
+		let m = fa(d), h = fa(i.clientWidth - (u + f)), g = fa(i.clientHeight - (d + p)), _ = fa(u), v = {
 			rootMargin: -m + "px " + -h + "px " + -g + "px " + -_ + "px",
-			threshold: da(0, ua(1, c)) || 1
+			threshold: ua(0, la(1, c)) || 1
 		}, y = !0;
 		function b(t) {
 			let n = t[0].intersectionRatio;
@@ -2984,7 +2984,7 @@ function So(e, t) {
 					o(!1, 1e-7);
 				}, 1e3);
 			}
-			n === 1 && !xo(l, e.getBoundingClientRect()) && o(), y = !1;
+			n === 1 && !bo(l, e.getBoundingClientRect()) && o(), y = !1;
 		}
 		try {
 			n = new IntersectionObserver(b, {
@@ -2998,13 +2998,13 @@ function So(e, t) {
 	}
 	return o(!0), a;
 }
-function Co(e, t, n, r) {
+function So(e, t, n, r) {
 	r === void 0 && (r = {});
-	let { ancestorScroll: i = !0, ancestorResize: a = !0, elementResize: o = typeof ResizeObserver == "function", layoutShift: s = typeof IntersectionObserver == "function", animationFrame: c = !1 } = r, l = Ja(e), u = i || a ? [...l ? sa(l) : [], ...t ? sa(t) : []] : [];
+	let { ancestorScroll: i = !0, ancestorResize: a = !0, elementResize: o = typeof ResizeObserver == "function", layoutShift: s = typeof IntersectionObserver == "function", animationFrame: c = !1 } = r, l = qa(e), u = i || a ? [...l ? oa(l) : [], ...t ? oa(t) : []] : [];
 	u.forEach((e) => {
 		i && e.addEventListener("scroll", n, { passive: !0 }), a && e.addEventListener("resize", n);
 	});
-	let d = l && s ? So(l, n) : null, f = -1, p = null;
+	let d = l && s ? xo(l, n) : null, f = -1, p = null;
 	o && (p = new ResizeObserver((e) => {
 		let [r] = e;
 		r && r.target === l && p && t && (p.unobserve(t), cancelAnimationFrame(f), f = requestAnimationFrame(() => {
@@ -3012,11 +3012,11 @@ function Co(e, t, n, r) {
 			(e = p) == null || e.observe(t);
 		})), n();
 	}), l && !c && p.observe(l), t && p.observe(t));
-	let m, h = c ? $a(e) : null;
+	let m, h = c ? Qa(e) : null;
 	c && g();
 	function g() {
-		let t = $a(e);
-		h && !xo(h, t) && n(), h = t, m = requestAnimationFrame(g);
+		let t = Qa(e);
+		h && !bo(h, t) && n(), h = t, m = requestAnimationFrame(g);
 	}
 	return n(), () => {
 		var e;
@@ -3025,20 +3025,20 @@ function Co(e, t, n, r) {
 		}), d?.(), (e = p) == null || e.disconnect(), p = null, c && cancelAnimationFrame(m);
 	};
 }
-var wo = Ra, To = Wa, Eo = Ga, Do = Va, Oo = Ka, ko = (e, t, n) => {
+var Co = La, wo = Ua, To = Wa, Eo = Ba, Do = Ga, Oo = (e, t, n) => {
 	let r = /* @__PURE__ */ new Map(), i = {
-		platform: bo,
+		platform: yo,
 		...n
 	}, a = {
 		...i.platform,
 		_c: r
 	};
-	return Ba(e, t, {
+	return za(e, t, {
 		...i,
 		platform: a
 	});
-}, Ao = typeof document < "u" ? h : function() {};
-function jo(e, t) {
+}, ko = typeof document < "u" ? h : function() {};
+function Ao(e, t) {
 	if (e === t) return !0;
 	if (typeof e != typeof t) return !1;
 	if (typeof e == "function" && e.toString() === t.toString()) return !0;
@@ -3046,33 +3046,33 @@ function jo(e, t) {
 	if (e && t && typeof e == "object") {
 		if (Array.isArray(e)) {
 			if (n = e.length, n !== t.length) return !1;
-			for (r = n; r-- !== 0;) if (!jo(e[r], t[r])) return !1;
+			for (r = n; r-- !== 0;) if (!Ao(e[r], t[r])) return !1;
 			return !0;
 		}
 		if (i = Object.keys(e), n = i.length, n !== Object.keys(t).length) return !1;
 		for (r = n; r-- !== 0;) if (!{}.hasOwnProperty.call(t, i[r])) return !1;
 		for (r = n; r-- !== 0;) {
 			let n = i[r];
-			if (!(n === "_owner" && e.$$typeof) && !jo(e[n], t[n])) return !1;
+			if (!(n === "_owner" && e.$$typeof) && !Ao(e[n], t[n])) return !1;
 		}
 		return !0;
 	}
 	return e !== e && t !== t;
 }
-function Mo(e) {
+function jo(e) {
 	return typeof window > "u" ? 1 : (e.ownerDocument.defaultView || window).devicePixelRatio || 1;
 }
-function No(e, t) {
-	let n = Mo(e);
+function Mo(e, t) {
+	let n = jo(e);
 	return Math.round(t * n) / n;
 }
-function Po(t) {
+function No(t) {
 	let n = e.useRef(t);
-	return Ao(() => {
+	return ko(() => {
 		n.current = t;
 	}), n;
 }
-function Fo(t) {
+function Po(t) {
 	t === void 0 && (t = {});
 	let { placement: n = "bottom", strategy: r = "absolute", middleware: i = [], platform: a, elements: { reference: o, floating: s } = {}, transform: c = !0, whileElementsMounted: l, open: u } = t, [d, f] = e.useState({
 		x: 0,
@@ -3082,24 +3082,24 @@ function Fo(t) {
 		middlewareData: {},
 		isPositioned: !1
 	}), [p, m] = e.useState(i);
-	jo(p, i) || m(i);
+	Ao(p, i) || m(i);
 	let [h, g] = e.useState(null), [_, v] = e.useState(null), y = e.useCallback((e) => {
 		e !== C.current && (C.current = e, g(e));
 	}, []), b = e.useCallback((e) => {
 		e !== T.current && (T.current = e, v(e));
-	}, []), x = o || h, S = s || _, C = e.useRef(null), T = e.useRef(null), E = e.useRef(d), D = l != null, O = Po(l), k = Po(a), A = Po(u), j = e.useCallback(() => {
+	}, []), x = o || h, S = s || _, C = e.useRef(null), T = e.useRef(null), E = e.useRef(d), D = l != null, O = No(l), k = No(a), A = No(u), j = e.useCallback(() => {
 		if (!C.current || !T.current) return;
 		let e = {
 			placement: n,
 			strategy: r,
 			middleware: p
 		};
-		k.current && (e.platform = k.current), ko(C.current, T.current, e).then((e) => {
+		k.current && (e.platform = k.current), Oo(C.current, T.current, e).then((e) => {
 			let t = {
 				...e,
 				isPositioned: A.current !== !1
 			};
-			M.current && !jo(E.current, t) && (E.current = t, w.flushSync(() => {
+			M.current && !Ao(E.current, t) && (E.current = t, w.flushSync(() => {
 				f(t);
 			}));
 		});
@@ -3110,16 +3110,16 @@ function Fo(t) {
 		k,
 		A
 	]);
-	Ao(() => {
+	ko(() => {
 		u === !1 && E.current.isPositioned && (E.current.isPositioned = !1, f((e) => ({
 			...e,
 			isPositioned: !1
 		})));
 	}, [u]);
 	let M = e.useRef(!1);
-	Ao(() => (M.current = !0, () => {
+	ko(() => (M.current = !0, () => {
 		M.current = !1;
-	}), []), Ao(() => {
+	}), []), ko(() => {
 		if (x && (C.current = x), S && (T.current = S), x && S) {
 			if (O.current) return O.current(x, S, j);
 			j();
@@ -3146,11 +3146,11 @@ function Fo(t) {
 			top: 0
 		};
 		if (!P.floating) return e;
-		let t = No(P.floating, d.x), n = No(P.floating, d.y);
+		let t = Mo(P.floating, d.x), n = Mo(P.floating, d.y);
 		return c ? {
 			...e,
 			transform: "translate(" + t + "px, " + n + "px)",
-			...Mo(P.floating) >= 1.5 && { willChange: "transform" }
+			...jo(P.floating) >= 1.5 && { willChange: "transform" }
 		} : {
 			position: r,
 			left: t,
@@ -3177,7 +3177,14 @@ function Fo(t) {
 		F
 	]);
 }
-var Io = (e, t) => {
+var Fo = (e, t) => {
+	let n = wo(e);
+	return {
+		name: n.name,
+		fn: n.fn,
+		options: [e, t]
+	};
+}, Io = (e, t) => {
 	let n = To(e);
 	return {
 		name: n.name,
@@ -3198,36 +3205,29 @@ var Io = (e, t) => {
 		fn: n.fn,
 		options: [e, t]
 	};
-}, zo = (e, t) => {
-	let n = Oo(e);
-	return {
-		name: n.name,
-		fn: n.fn,
-		options: [e, t]
-	};
-}, Bo = { ...e }, Vo = Bo.useInsertionEffect || ((e) => e());
-function Ho(t) {
+}, zo = { ...e }, Bo = zo.useInsertionEffect || ((e) => e());
+function Vo(t) {
 	let n = e.useRef(() => {});
-	return Vo(() => {
+	return Bo(() => {
 		n.current = t;
 	}), e.useCallback(function() {
 		var e = [...arguments];
 		return n.current == null ? void 0 : n.current(...e);
 	}, []);
 }
-var Uo = "ArrowUp", Wo = "ArrowDown", Go = "ArrowLeft", Ko = "ArrowRight", qo = typeof document < "u" ? h : f, Jo = [Go, Ko], Yo = [Uo, Wo];
-[...Jo, ...Yo];
-var Xo = !1, Zo = 0, Qo = () => "floating-ui-" + Math.random().toString(36).slice(2, 6) + Zo++;
-function $o() {
-	let [t, n] = e.useState(() => Xo ? Qo() : void 0);
-	return qo(() => {
-		t ?? n(Qo());
+var Ho = "ArrowUp", Uo = "ArrowDown", Wo = "ArrowLeft", Go = "ArrowRight", Ko = typeof document < "u" ? h : f, qo = [Wo, Go], Jo = [Ho, Uo];
+[...qo, ...Jo];
+var Yo = !1, Xo = 0, Zo = () => "floating-ui-" + Math.random().toString(36).slice(2, 6) + Xo++;
+function Qo() {
+	let [t, n] = e.useState(() => Yo ? Zo() : void 0);
+	return Ko(() => {
+		t ?? n(Zo());
 	}, []), e.useEffect(() => {
-		Xo = !0;
+		Yo = !0;
 	}, []), t;
 }
-var es = Bo.useId || $o;
-function ts() {
+var $o = zo.useId || Qo;
+function es() {
 	let e = /* @__PURE__ */ new Map();
 	return {
 		emit(t, n) {
@@ -3242,9 +3242,9 @@ function ts() {
 		}
 	};
 }
-var ns = /*#__PURE__*/ e.createContext(null), rs = /*#__PURE__*/ e.createContext(null), is = () => e.useContext(ns)?.id || null, as = () => e.useContext(rs), os = "data-floating-ui-focusable";
-function ss(t) {
-	let { open: n = !1, onOpenChange: r, elements: i } = t, a = es(), o = e.useRef({}), [s] = e.useState(() => ts()), c = is() != null, [l, u] = e.useState(i.reference), d = Ho((e, t, n) => {
+var ts = /*#__PURE__*/ e.createContext(null), ns = /*#__PURE__*/ e.createContext(null), rs = () => e.useContext(ts)?.id || null, is = () => e.useContext(ns), as = "data-floating-ui-focusable";
+function os(t) {
+	let { open: n = !1, onOpenChange: r, elements: i } = t, a = $o(), o = e.useRef({}), [s] = e.useState(() => es()), c = rs() != null, [l, u] = e.useState(i.reference), d = Vo((e, t, n) => {
 		o.current.openEvent = e ? t : void 0, s.emit("openchange", {
 			open: e,
 			event: t,
@@ -3277,33 +3277,33 @@ function ss(t) {
 		f
 	]);
 }
-function cs(t) {
+function ss(t) {
 	t === void 0 && (t = {});
-	let { nodeId: n } = t, r = ss({
+	let { nodeId: n } = t, r = os({
 		...t,
 		elements: {
 			reference: null,
 			floating: null,
 			...t.elements
 		}
-	}), i = t.rootContext || r, a = i.elements, [o, s] = e.useState(null), [c, l] = e.useState(null), u = a?.domReference || o, d = e.useRef(null), f = as();
-	qo(() => {
+	}), i = t.rootContext || r, a = i.elements, [o, s] = e.useState(null), [c, l] = e.useState(null), u = a?.domReference || o, d = e.useRef(null), f = is();
+	Ko(() => {
 		u && (d.current = u);
 	}, [u]);
-	let p = Fo({
+	let p = Po({
 		...t,
 		elements: {
 			...a,
 			...c && { reference: c }
 		}
 	}), m = e.useCallback((e) => {
-		let t = Ui(e) ? {
+		let t = Hi(e) ? {
 			getBoundingClientRect: () => e.getBoundingClientRect(),
 			contextElement: e
 		} : e;
 		l(t), p.refs.setReference(t);
 	}, [p.refs]), h = e.useCallback((e) => {
-		(Ui(e) || e === null) && (d.current = e, s(e)), (Ui(p.refs.reference.current) || p.refs.reference.current === null || e !== null && !Ui(e)) && p.refs.setReference(e);
+		(Hi(e) || e === null) && (d.current = e, s(e)), (Hi(p.refs.reference.current) || p.refs.reference.current === null || e !== null && !Hi(e)) && p.refs.setReference(e);
 	}, [p.refs]), g = e.useMemo(() => ({
 		...p.refs,
 		setReference: h,
@@ -3329,7 +3329,7 @@ function cs(t) {
 		n,
 		i
 	]);
-	return qo(() => {
+	return Ko(() => {
 		i.dataRef.current.floatingContext = v;
 		let e = f?.nodesRef.current.find((e) => e.id === n);
 		e && (e.context = v);
@@ -3345,17 +3345,17 @@ function cs(t) {
 		v
 	]);
 }
-var ls = "active", us = "selected";
-function ds(e, t, n) {
+var cs = "active", ls = "selected";
+function us(e, t, n) {
 	let r = /* @__PURE__ */ new Map(), i = n === "item", a = e;
 	if (i && e) {
-		let { [ls]: t, [us]: n, ...r } = e;
+		let { [cs]: t, [ls]: n, ...r } = e;
 		a = r;
 	}
 	return {
 		...n === "floating" && {
 			tabIndex: -1,
-			[os]: ""
+			[as]: ""
 		},
 		...a,
 		...t.map((t) => {
@@ -3363,7 +3363,7 @@ function ds(e, t, n) {
 			return typeof r == "function" ? e ? r(e) : null : r;
 		}).concat(e).reduce((e, t) => (t && Object.entries(t).forEach((t) => {
 			let [n, a] = t;
-			if (!(i && [ls, us].includes(n))) if (n.indexOf("on") === 0) {
+			if (!(i && [cs, ls].includes(n))) if (n.indexOf("on") === 0) {
 				if (r.has(n) || r.set(n, []), typeof a == "function") {
 					var o;
 					(o = r.get(n)) == null || o.push(a), e[n] = function() {
@@ -3375,9 +3375,9 @@ function ds(e, t, n) {
 		}), e), {})
 	};
 }
-function fs(t) {
+function ds(t) {
 	t === void 0 && (t = []);
-	let n = t.map((e) => e?.reference), r = t.map((e) => e?.floating), i = t.map((e) => e?.item), a = e.useCallback((e) => ds(e, t, "reference"), n), o = e.useCallback((e) => ds(e, t, "floating"), r), s = e.useCallback((e) => ds(e, t, "item"), i);
+	let n = t.map((e) => e?.reference), r = t.map((e) => e?.floating), i = t.map((e) => e?.item), a = e.useCallback((e) => us(e, t, "reference"), n), o = e.useCallback((e) => us(e, t, "floating"), r), s = e.useCallback((e) => us(e, t, "item"), i);
 	return e.useMemo(() => ({
 		getReferenceProps: a,
 		getFloatingProps: o,
@@ -3388,7 +3388,7 @@ function fs(t) {
 		s
 	]);
 }
-function ps(e, t) {
+function fs(e, t) {
 	return {
 		...e,
 		rects: {
@@ -3400,31 +3400,31 @@ function ps(e, t) {
 		}
 	};
 }
-var ms = (e) => ({
+var ps = (e) => ({
 	name: "inner",
 	options: e,
 	async fn(t) {
-		let { listRef: n, overflowRef: r, onFallbackChange: i, offset: a = 0, index: o = 0, minItemsVisible: s = 4, referenceOverflowThreshold: c = 0, scrollRef: l, ...u } = _a(e, t), { rects: d, elements: { floating: f } } = t, p = n.current[o], m = l?.current || f, h = f.clientTop || m.clientTop, g = f.clientTop !== 0, _ = m.clientTop !== 0, v = f === m;
+		let { listRef: n, overflowRef: r, onFallbackChange: i, offset: a = 0, index: o = 0, minItemsVisible: s = 4, referenceOverflowThreshold: c = 0, scrollRef: l, ...u } = ga(e, t), { rects: d, elements: { floating: f } } = t, p = n.current[o], m = l?.current || f, h = f.clientTop || m.clientTop, g = f.clientTop !== 0, _ = m.clientTop !== 0, v = f === m;
 		if (!p) return {};
 		let y = {
 			...t,
-			...await Io(-p.offsetTop - f.clientTop - d.reference.height / 2 - p.offsetHeight / 2 - a).fn(t)
-		}, b = await wo(ps(y, m.scrollHeight + h + f.clientTop), u), x = await wo(y, {
+			...await Fo(-p.offsetTop - f.clientTop - d.reference.height / 2 - p.offsetHeight / 2 - a).fn(t)
+		}, b = await Co(fs(y, m.scrollHeight + h + f.clientTop), u), x = await Co(y, {
 			...u,
 			elementContext: "reference"
-		}), S = da(0, b.top), C = y.y + S, T = (m.scrollHeight > m.clientHeight ? (e) => e : fa)(da(0, m.scrollHeight + (g && v || _ ? h * 2 : 0) - S - da(0, b.bottom)));
+		}), S = ua(0, b.top), C = y.y + S, T = (m.scrollHeight > m.clientHeight ? (e) => e : da)(ua(0, m.scrollHeight + (g && v || _ ? h * 2 : 0) - S - ua(0, b.bottom)));
 		if (m.style.maxHeight = T + "px", m.scrollTop = S, i) {
-			let e = m.offsetHeight < p.offsetHeight * ua(s, n.current.length) - 1 || x.top >= -c || x.bottom >= -c;
+			let e = m.offsetHeight < p.offsetHeight * la(s, n.current.length) - 1 || x.top >= -c || x.bottom >= -c;
 			w.flushSync(() => i(e));
 		}
-		return r && (r.current = await wo(ps({
+		return r && (r.current = await Co(fs({
 			...y,
 			y: C
 		}, m.offsetHeight + h + f.clientTop), u)), { y: C };
 	}
 });
-function hs(t, n) {
-	let { open: r, elements: i } = t, { enabled: a = !0, overflowRef: o, scrollRef: s, onChange: c } = n, l = Ho(c), u = e.useRef(!1), d = e.useRef(null), f = e.useRef(null);
+function ms(t, n) {
+	let { open: r, elements: i } = t, { enabled: a = !0, overflowRef: o, scrollRef: s, onChange: c } = n, l = Vo(c), u = e.useRef(!1), d = e.useRef(null), f = e.useRef(null);
 	e.useEffect(() => {
 		if (!a) return;
 		function e(e) {
@@ -3432,7 +3432,7 @@ function hs(t, n) {
 			let n = e.deltaY, r = o.current.top >= -.5, i = o.current.bottom >= -.5, a = t.scrollHeight - t.clientHeight, s = n < 0 ? -1 : 1, c = n < 0 ? "max" : "min";
 			t.scrollHeight <= t.clientHeight || (!r && n > 0 || !i && n < 0 ? (e.preventDefault(), w.flushSync(() => {
 				l((e) => e + Math[c](n, a * s));
-			})) : /firefox/i.test(la()) && (t.scrollTop += n));
+			})) : /firefox/i.test(ca()) && (t.scrollTop += n));
 		}
 		let t = s?.current || i.floating;
 		if (r && t) return t.addEventListener("wheel", e), requestAnimationFrame(() => {
@@ -3480,7 +3480,7 @@ function hs(t, n) {
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/internal/floating.js
-var gs = i({
+var hs = i({
 	styles: void 0,
 	setReference: () => {},
 	setFloating: () => {},
@@ -3488,68 +3488,68 @@ var gs = i({
 	getFloatingProps: () => ({}),
 	slot: {}
 });
-gs.displayName = "FloatingContext";
-var _s = i(null);
-_s.displayName = "PlacementContext";
-function vs(e) {
+hs.displayName = "FloatingContext";
+var gs = i(null);
+gs.displayName = "PlacementContext";
+function _s(e) {
 	return g(() => e ? typeof e == "string" ? { to: e } : e : null, [e]);
 }
+function vs() {
+	return u(hs).setReference;
+}
 function ys() {
-	return u(gs).setReference;
+	return u(hs).getReferenceProps;
 }
 function bs() {
-	return u(gs).getReferenceProps;
-}
-function xs() {
-	let { getFloatingProps: e, slot: t } = u(gs);
+	let { getFloatingProps: e, slot: t } = u(hs);
 	return l((...n) => Object.assign({}, e(...n), { "data-anchor": t.anchor }), [e, t]);
 }
-function Ss(e = null) {
+function xs(e = null) {
 	e === !1 && (e = null), typeof e == "string" && (e = { to: e });
-	let t = u(_s), n = g(() => e, [JSON.stringify(e, (e, t) => t?.outerHTML ?? t)]);
+	let t = u(gs), n = g(() => e, [JSON.stringify(e, (e, t) => t?.outerHTML ?? t)]);
 	H(() => {
 		t?.(n ?? null);
 	}, [t, n]);
-	let r = u(gs);
+	let r = u(hs);
 	return g(() => [r.setFloating, e ? r.styles : {}], [
 		r.setFloating,
 		e,
 		r.styles
 	]);
 }
-var Cs = 4;
-function ws({ children: t, enabled: n = !0 }) {
+var Ss = 4;
+function Cs({ children: t, enabled: n = !0 }) {
 	let [r, i] = y(null), [a, o] = y(0), s = v(null), [c, l] = y(null);
-	Ts(c);
-	let u = n && r !== null && c !== null, { to: d = "bottom", gap: f = 0, offset: p = 0, padding: m = 0, inner: h } = Es(r, c), [_, b = "center"] = d.split(" ");
+	ws(c);
+	let u = n && r !== null && c !== null, { to: d = "bottom", gap: f = 0, offset: p = 0, padding: m = 0, inner: h } = Ts(r, c), [_, b = "center"] = d.split(" ");
 	H(() => {
 		u && o(0);
 	}, [u]);
-	let { refs: x, floatingStyles: S, context: C } = cs({
+	let { refs: x, floatingStyles: S, context: C } = ss({
 		open: u,
 		placement: _ === "selection" ? b === "center" ? "bottom" : `bottom-${b}` : b === "center" ? `${_}` : `${_}-${b}`,
 		strategy: "absolute",
 		transform: !1,
 		middleware: [
-			Io({
+			Fo({
 				mainAxis: _ === "selection" ? 0 : f,
 				crossAxis: p
 			}),
-			Lo({ padding: m }),
-			_ !== "selection" && Ro({ padding: m }),
-			_ === "selection" && h ? ms({
+			Io({ padding: m }),
+			_ !== "selection" && Lo({ padding: m }),
+			_ === "selection" && h ? ps({
 				...h,
 				padding: m,
 				overflowRef: s,
 				offset: a,
-				minItemsVisible: Cs,
+				minItemsVisible: Ss,
 				referenceOverflowThreshold: m,
 				onFallbackChange(e) {
 					if (!e) return;
 					let t = C.elements.floating;
 					if (!t) return;
-					let n = parseFloat(getComputedStyle(t).scrollPaddingBottom) || 0, r = Math.min(Cs, t.childElementCount), i = 0, a = 0;
-					for (let e of C.elements.floating?.childNodes ?? []) if (Cn(e)) {
+					let n = parseFloat(getComputedStyle(t).scrollPaddingBottom) || 0, r = Math.min(Ss, t.childElementCount), i = 0, a = 0;
+					for (let e of C.elements.floating?.childNodes ?? []) if (Sn(e)) {
 						let o = e.offsetTop, s = o + e.clientHeight + n, c = t.scrollTop, l = c + t.clientHeight;
 						if (o >= c && s <= l) r--;
 						else {
@@ -3563,7 +3563,7 @@ function ws({ children: t, enabled: n = !0 }) {
 					});
 				}
 			}) : null,
-			zo({
+			Ro({
 				padding: m,
 				apply({ availableWidth: e, availableHeight: t, elements: n }) {
 					Object.assign(n.floating.style, {
@@ -3574,16 +3574,16 @@ function ws({ children: t, enabled: n = !0 }) {
 				}
 			})
 		].filter(Boolean),
-		whileElementsMounted: Co
+		whileElementsMounted: So
 	}), [w = _, T = b] = C.placement.split("-");
 	_ === "selection" && (w = "selection");
-	let E = g(() => ({ anchor: [w, T].filter(Boolean).join(" ") }), [w, T]), { getReferenceProps: D, getFloatingProps: O } = fs([hs(C, {
+	let E = g(() => ({ anchor: [w, T].filter(Boolean).join(" ") }), [w, T]), { getReferenceProps: D, getFloatingProps: O } = ds([ms(C, {
 		overflowRef: s,
 		onChange: o
 	})]), k = U((e) => {
 		l(e), x.setFloating(e);
 	});
-	return e.createElement(_s.Provider, { value: i }, e.createElement(gs.Provider, { value: {
+	return e.createElement(gs.Provider, { value: i }, e.createElement(hs.Provider, { value: {
 		setFloating: k,
 		setReference: x.setReference,
 		styles: S,
@@ -3592,7 +3592,7 @@ function ws({ children: t, enabled: n = !0 }) {
 		slot: E
 	} }, t));
 }
-function Ts(e) {
+function ws(e) {
 	H(() => {
 		if (!e) return;
 		let t = new MutationObserver(() => {
@@ -3609,8 +3609,8 @@ function Ts(e) {
 		};
 	}, [e]);
 }
-function Es(e, t) {
-	let n = Ds(e?.gap ?? "var(--anchor-gap, 0)", t), r = Ds(e?.offset ?? "var(--anchor-offset, 0)", t), i = Ds(e?.padding ?? "var(--anchor-padding, 0)", t);
+function Ts(e, t) {
+	let n = Es(e?.gap ?? "var(--anchor-gap, 0)", t), r = Es(e?.offset ?? "var(--anchor-offset, 0)", t), i = Es(e?.padding ?? "var(--anchor-padding, 0)", t);
 	return {
 		...e,
 		gap: n,
@@ -3618,15 +3618,15 @@ function Es(e, t) {
 		padding: i
 	};
 }
-function Ds(e, t, n = void 0) {
+function Es(e, t, n = void 0) {
 	let r = Nt(), i = U((e, t) => {
 		if (e == null) return [n, null];
 		if (typeof e == "number") return [e, null];
 		if (typeof e == "string") {
 			if (!t) return [n, null];
-			let i = ks(e, t);
+			let i = Os(e, t);
 			return [i, (n) => {
-				let a = Os(e);
+				let a = Ds(e);
 				{
 					let o = a.map((e) => window.getComputedStyle(t).getPropertyValue(e));
 					r.requestAnimationFrame(function s() {
@@ -3640,7 +3640,7 @@ function Ds(e, t, n = void 0) {
 							}
 						}
 						if (!c) return;
-						let l = ks(e, t);
+						let l = Os(e, t);
 						i !== l && (n(l), i = l);
 					});
 				}
@@ -3654,17 +3654,17 @@ function Ds(e, t, n = void 0) {
 		if (s(n), r) return r(s);
 	}, [e, t]), o;
 }
-function Os(e) {
+function Ds(e) {
 	let t = /var\((.*)\)/.exec(e);
 	if (t) {
 		let e = t[1].indexOf(",");
 		if (e === -1) return [t[1]];
 		let n = t[1].slice(0, e).trim(), r = t[1].slice(e + 1).trim();
-		return r ? [n, ...Os(r)] : [n];
+		return r ? [n, ...Ds(r)] : [n];
 	}
 	return [];
 }
-function ks(e, t) {
+function Os(e, t) {
 	let n = document.createElement("div");
 	t.appendChild(n), n.style.setProperty("margin-top", "0px", "important"), n.style.setProperty("margin-top", e, "important");
 	let r = parseFloat(window.getComputedStyle(n).marginTop) || 0;
@@ -3672,32 +3672,32 @@ function ks(e, t) {
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/internal/frozen.js
-function As({ children: e, freeze: n }, i) {
-	let a = js(n, e);
+function ks({ children: e, freeze: n }, i) {
+	let a = As(n, e);
 	return c(a) ? r(a, { ref: i }) : t.createElement(t.Fragment, null, a);
 }
-t.forwardRef(As);
-function js(e, t) {
+t.forwardRef(ks);
+function As(e, t) {
 	let [n, r] = y(t);
 	return !e && n !== t && r(t), e ? n : t;
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/internal/open-closed.js
-var Ms = i(null);
-Ms.displayName = "OpenClosedContext";
-var X = ((e) => (e[e.Open = 1] = "Open", e[e.Closed = 2] = "Closed", e[e.Closing = 4] = "Closing", e[e.Opening = 8] = "Opening", e))(X || {});
-function Ns() {
-	return u(Ms);
+var js = i(null);
+js.displayName = "OpenClosedContext";
+var Z = ((e) => (e[e.Open = 1] = "Open", e[e.Closed = 2] = "Closed", e[e.Closing = 4] = "Closing", e[e.Opening = 8] = "Opening", e))(Z || {});
+function Ms() {
+	return u(js);
 }
-function Ps({ value: e, children: n }) {
-	return t.createElement(Ms.Provider, { value: e }, n);
+function Ns({ value: e, children: n }) {
+	return t.createElement(js.Provider, { value: e }, n);
 }
-function Fs({ children: e }) {
-	return t.createElement(Ms.Provider, { value: null }, e);
+function Ps({ children: e }) {
+	return t.createElement(js.Provider, { value: null }, e);
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/utils/document-ready.js
-function Is(e) {
+function Fs(e) {
 	function t() {
 		document.readyState !== "loading" && (e(), document.removeEventListener("DOMContentLoaded", t));
 	}
@@ -3705,22 +3705,22 @@ function Is(e) {
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/utils/active-element-history.js
-var Ls = [];
-Is(() => {
+var Is = [];
+Fs(() => {
 	function e(e) {
-		if (!wn(e.target) || e.target === document.body || Ls[0] === e.target) return;
+		if (!Cn(e.target) || e.target === document.body || Is[0] === e.target) return;
 		let t = e.target;
-		t = t.closest(zr), Ls.unshift(t ?? e.target), Ls = Ls.filter((e) => e != null && e.isConnected), Ls.splice(10);
+		t = t.closest(Rr), Is.unshift(t ?? e.target), Is = Is.filter((e) => e != null && e.isConnected), Is.splice(10);
 	}
 	window.addEventListener("click", e, { capture: !0 }), window.addEventListener("mousedown", e, { capture: !0 }), window.addEventListener("focus", e, { capture: !0 }), document.body.addEventListener("click", e, { capture: !0 }), document.body.addEventListener("mousedown", e, { capture: !0 }), document.body.addEventListener("focus", e, { capture: !0 });
 });
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/utils/calculate-active-index.js
-function Rs(e) {
+function Ls(e) {
 	throw Error("Unexpected object: " + e);
 }
-var Z = ((e) => (e[e.First = 0] = "First", e[e.Previous = 1] = "Previous", e[e.Next = 2] = "Next", e[e.Last = 3] = "Last", e[e.Specific = 4] = "Specific", e[e.Nothing = 5] = "Nothing", e))(Z || {});
-function zs(e, t) {
+var Q = ((e) => (e[e.First = 0] = "First", e[e.Previous = 1] = "Previous", e[e.Next = 2] = "Next", e[e.Last = 3] = "Last", e[e.Specific = 4] = "Specific", e[e.Nothing = 5] = "Nothing", e))(Q || {});
+function Rs(e, t) {
 	let n = t.resolveItems();
 	if (n.length <= 0) return null;
 	let r = t.resolveActiveIndex(), i = r ?? -1;
@@ -3742,12 +3742,12 @@ function zs(e, t) {
 			for (let r = 0; r < n.length; ++r) if (t.resolveId(n[r], r, n) === e.id) return r;
 			return r;
 		case 5: return null;
-		default: Rs(e);
+		default: Ls(e);
 	}
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/hooks/use-on-unmount.js
-function Bs(e) {
+function zs(e) {
 	let t = U(e), n = v(!1);
 	f(() => (n.current = !1, () => {
 		n.current = !0, jt(() => {
@@ -3757,29 +3757,29 @@ function Bs(e) {
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/hooks/use-server-handoff-complete.js
-function Vs() {
+function Bs() {
 	let t = typeof document > "u";
 	return "useSyncExternalStore" in e && ((e) => e.useSyncExternalStore)(e)(() => () => {}, () => !1, () => !t);
 }
-function Hs() {
-	let t = Vs(), [n, r] = e.useState(Et.isHandoffComplete);
+function Vs() {
+	let t = Bs(), [n, r] = e.useState(Et.isHandoffComplete);
 	return n && Et.isHandoffComplete === !1 && r(!1), e.useEffect(() => {
 		n !== !0 && r(!0);
 	}, [n]), e.useEffect(() => Et.handoff(), []), !t && n;
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/internal/portal-force-root.js
-var Us = i(!1);
-function Ws() {
-	return u(Us);
+var Hs = i(!1);
+function Us() {
+	return u(Hs);
 }
-function Gs(e) {
-	return t.createElement(Us.Provider, { value: e.force }, e.children);
+function Ws(e) {
+	return t.createElement(Hs.Provider, { value: e.force }, e.children);
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/components/portal/portal.js
-function Ks(e) {
-	let t = Ws(), n = u(Zs), [r, i] = y(() => {
+function Gs(e) {
+	let t = Us(), n = u(Xs), [r, i] = y(() => {
 		if (!t && n !== null) return n.current ?? null;
 		if (Et.isServer) return null;
 		let r = e?.getElementById("headlessui-portal-root");
@@ -3798,11 +3798,11 @@ function Ks(e) {
 		t
 	]), r;
 }
-var qs = n, Js = G(function(e, n) {
-	let { ownerDocument: r = null, ...i } = e, a = v(null), o = K(Fn((e) => {
+var Ks = n, qs = K(function(e, n) {
+	let { ownerDocument: r = null, ...i } = e, a = v(null), o = q(Pn((e) => {
 		a.current = e;
-	}), n), s = ci(a.current), c = Ks(r ?? s), l = u($s), d = Nt(), f = Hs(), p = W();
-	return Bs(() => {
+	}), n), s = si(a.current), c = Gs(r ?? s), l = u(Qs), d = Nt(), f = Vs(), p = G();
+	return zs(() => {
 		var e;
 		c && c.childNodes.length <= 0 && ((e = c.parentElement) == null || e.removeChild(c));
 	}), !c || !f ? null : T(t.createElement("div", {
@@ -3814,13 +3814,13 @@ var qs = n, Js = G(function(e, n) {
 		ourProps: { ref: o },
 		theirProps: i,
 		slot: {},
-		defaultTag: qs,
+		defaultTag: Ks,
 		name: "Portal"
 	})), c);
 });
-function Ys(e, n) {
-	let r = K(n), { enabled: i = !0, ownerDocument: a, ...o } = e, s = W();
-	return i ? t.createElement(Js, {
+function Js(e, n) {
+	let r = q(n), { enabled: i = !0, ownerDocument: a, ...o } = e, s = G();
+	return i ? t.createElement(qs, {
 		...o,
 		ownerDocument: a,
 		ref: r
@@ -3828,23 +3828,23 @@ function Ys(e, n) {
 		ourProps: { ref: r },
 		theirProps: o,
 		slot: {},
-		defaultTag: qs,
+		defaultTag: Ks,
 		name: "Portal"
 	});
 }
-var Xs = n, Zs = i(null);
-function Qs(e, n) {
-	let { target: r, ...i } = e, a = { ref: K(n) }, o = W();
-	return t.createElement(Zs.Provider, { value: r }, o({
+var Ys = n, Xs = i(null);
+function Zs(e, n) {
+	let { target: r, ...i } = e, a = { ref: q(n) }, o = G();
+	return t.createElement(Xs.Provider, { value: r }, o({
 		ourProps: a,
 		theirProps: i,
-		defaultTag: Xs,
+		defaultTag: Ys,
 		name: "Popover.Group"
 	}));
 }
-var $s = i(null);
-function ec() {
-	let e = u($s), n = v([]), r = U((t) => (n.current.push(t), e && e.register(t), () => i(t))), i = U((t) => {
+var Qs = i(null);
+function $s() {
+	let e = u(Qs), n = v([]), r = U((t) => (n.current.push(t), e && e.register(t), () => i(t))), i = U((t) => {
 		let r = n.current.indexOf(t);
 		r !== -1 && n.current.splice(r, 1), e && e.unregister(t);
 	}), a = g(() => ({
@@ -3857,10 +3857,10 @@ function ec() {
 		n
 	]);
 	return [n, g(() => function({ children: e }) {
-		return t.createElement($s.Provider, { value: a }, e);
+		return t.createElement(Qs.Provider, { value: a }, e);
 	}, [a])];
 }
-var tc = G(Ys), nc = G(Qs), rc = Object.assign(tc, { Group: nc }), ic = {
+var ec = K(Js), tc = K(Zs), nc = Object.assign(ec, { Group: tc }), rc = {
 	Idle: { kind: "Idle" },
 	Tracked: (e) => ({
 		kind: "Tracked",
@@ -3868,15 +3868,15 @@ var tc = G(Ys), nc = G(Qs), rc = Object.assign(tc, { Group: nc }), ic = {
 	}),
 	Moved: { kind: "Moved" }
 };
-function ac(e) {
+function ic(e) {
 	let t = e.getBoundingClientRect();
 	return `${t.x},${t.y}`;
 }
-function oc(e, t, n) {
+function ac(e, t, n) {
 	let r = Mt();
 	if (t.kind === "Tracked") {
 		let i = function() {
-			a !== ac(e) && (r.dispose(), n());
+			a !== ic(e) && (r.dispose(), n());
 		}, { position: a } = t, o = new ResizeObserver(i);
 		o.observe(e), r.add(() => o.disconnect()), r.addEventListener(window, "scroll", i, { passive: !0 }), r.addEventListener(window, "resize", i);
 	}
@@ -3884,15 +3884,15 @@ function oc(e, t, n) {
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/hooks/use-escape.js
-function sc(e, t = typeof document < "u" ? document.defaultView : null, n) {
-	let r = Mr(e, "escape");
-	hi(t, "keydown", (e) => {
-		r && (e.defaultPrevented || e.key === q.Escape && n(e));
+function oc(e, t = typeof document < "u" ? document.defaultView : null, n) {
+	let r = jr(e, "escape");
+	mi(t, "keydown", (e) => {
+		r && (e.defaultPrevented || e.key === J.Escape && n(e));
 	});
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/hooks/use-is-touch-device.js
-function cc() {
+function sc() {
 	let [e] = y(() => typeof window < "u" && typeof window.matchMedia == "function" ? window.matchMedia("(pointer: coarse)") : null), [t, n] = y(e?.matches ?? !1);
 	return H(() => {
 		if (!e) return;
@@ -3904,12 +3904,12 @@ function cc() {
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/hooks/use-root-containers.js
-function lc({ defaultContainers: e = [], portals: t, mainTreeNode: n } = {}) {
+function cc({ defaultContainers: e = [], portals: t, mainTreeNode: n } = {}) {
 	let r = U(() => {
 		let r = Dt(n), i = [];
-		for (let t of e) t !== null && (Sn(t) ? i.push(t) : "current" in t && Sn(t.current) && i.push(t.current));
+		for (let t of e) t !== null && (xn(t) ? i.push(t) : "current" in t && xn(t.current) && i.push(t.current));
 		if (t != null && t.current) for (let e of t.current) i.push(e);
-		for (let e of r?.querySelectorAll("html > *, body > *") ?? []) e !== document.body && e !== document.head && Sn(e) && e.id !== "headlessui-portal-root" && (n && (e.contains(n) || e.contains(n?.getRootNode()?.host)) || i.some((t) => e.contains(t)) || i.push(e));
+		for (let e of r?.querySelectorAll("html > *, body > *") ?? []) e !== document.body && e !== document.head && xn(e) && e.id !== "headlessui-portal-root" && (n && (e.contains(n) || e.contains(n?.getRootNode()?.host)) || i.some((t) => e.contains(t)) || i.push(e));
 		return i;
 	});
 	return {
@@ -3917,14 +3917,14 @@ function lc({ defaultContainers: e = [], portals: t, mainTreeNode: n } = {}) {
 		contains: U((e) => r().some((t) => t.contains(e)))
 	};
 }
-var uc = i(null);
-function dc({ children: e, node: n }) {
-	let [r, i] = y(null), a = fc(n ?? r);
-	return t.createElement(uc.Provider, { value: a }, e, a === null && t.createElement(mn, {
-		features: fn.Hidden,
+var lc = i(null);
+function uc({ children: e, node: n }) {
+	let [r, i] = y(null), a = dc(n ?? r);
+	return t.createElement(lc.Provider, { value: a }, e, a === null && t.createElement(pn, {
+		features: dn.Hidden,
 		ref: (e) => {
 			if (e) {
-				for (let t of Dt(e)?.querySelectorAll("html > *, body > *") ?? []) if (t !== document.body && t !== document.head && Sn(t) && t != null && t.contains(e)) {
+				for (let t of Dt(e)?.querySelectorAll("html > *, body > *") ?? []) if (t !== document.body && t !== document.head && xn(t) && t != null && t.contains(e)) {
 					i(t);
 					break;
 				}
@@ -3932,12 +3932,12 @@ function dc({ children: e, node: n }) {
 		}
 	}));
 }
-function fc(e = null) {
-	return u(uc) ?? e;
+function dc(e = null) {
+	return u(lc) ?? e;
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/hooks/use-is-mounted.js
-function pc() {
+function fc() {
 	let e = v(!1);
 	return H(() => (e.current = !0, () => {
 		e.current = !1;
@@ -3945,54 +3945,54 @@ function pc() {
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/hooks/use-tab-direction.js
-var mc = ((e) => (e[e.Forwards = 0] = "Forwards", e[e.Backwards = 1] = "Backwards", e))(mc || {});
-function hc() {
+var pc = ((e) => (e[e.Forwards = 0] = "Forwards", e[e.Backwards = 1] = "Backwards", e))(pc || {});
+function mc() {
 	let e = v(0);
-	return ai(!0, "keydown", (t) => {
+	return ii(!0, "keydown", (t) => {
 		t.key === "Tab" && (e.current = +!!t.shiftKey);
 	}, !0), e;
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/components/focus-trap/focus-trap.js
-function gc(e) {
+function hc(e) {
 	if (!e) return /* @__PURE__ */ new Set();
 	if (typeof e == "function") return new Set(e());
 	let t = /* @__PURE__ */ new Set();
-	for (let n of e.current) Sn(n.current) && t.add(n.current);
+	for (let n of e.current) xn(n.current) && t.add(n.current);
 	return t;
 }
-var _c = "div", vc = ((e) => (e[e.None = 0] = "None", e[e.InitialFocus = 1] = "InitialFocus", e[e.TabLock = 2] = "TabLock", e[e.FocusLock = 4] = "FocusLock", e[e.RestoreFocus = 8] = "RestoreFocus", e[e.AutoFocus = 16] = "AutoFocus", e))(vc || {});
-function yc(e, n) {
-	let r = v(null), i = K(r, n), { initialFocus: a, initialFocusFallback: o, containers: s, features: c = 15, ...l } = e;
-	Hs() || (c = 0);
-	let u = ci(r.current);
-	Cc(c, { ownerDocument: u });
-	let d = wc(c, {
+var gc = "div", _c = ((e) => (e[e.None = 0] = "None", e[e.InitialFocus = 1] = "InitialFocus", e[e.TabLock = 2] = "TabLock", e[e.FocusLock = 4] = "FocusLock", e[e.RestoreFocus = 8] = "RestoreFocus", e[e.AutoFocus = 16] = "AutoFocus", e))(_c || {});
+function vc(e, n) {
+	let r = v(null), i = q(r, n), { initialFocus: a, initialFocusFallback: o, containers: s, features: c = 15, ...l } = e;
+	Vs() || (c = 0);
+	let u = si(r.current);
+	Sc(c, { ownerDocument: u });
+	let d = Cc(c, {
 		ownerDocument: u,
 		container: r,
 		initialFocus: a,
 		initialFocusFallback: o
 	});
-	Tc(c, {
+	wc(c, {
 		ownerDocument: u,
 		container: r,
 		containers: s,
 		previousActiveElement: d
 	});
-	let f = hc(), p = U((e) => {
-		if (!Cn(r.current)) return;
+	let f = mc(), p = U((e) => {
+		if (!Sn(r.current)) return;
 		let t = r.current;
 		((e) => e())(() => {
-			Ht(f.current, {
-				[mc.Forwards]: () => {
-					ei(t, Y.First, { skipElements: [e.relatedTarget, o] });
+			Vt(f.current, {
+				[pc.Forwards]: () => {
+					$r(t, X.First, { skipElements: [e.relatedTarget, o] });
 				},
-				[mc.Backwards]: () => {
-					ei(t, Y.Last, { skipElements: [e.relatedTarget, o] });
+				[pc.Backwards]: () => {
+					$r(t, X.Last, { skipElements: [e.relatedTarget, o] });
 				}
 			});
 		});
-	}), m = Mr(!!(c & 2), "focus-trap#tab-lock"), h = Nt(), g = v(!1), _ = {
+	}), m = jr(!!(c & 2), "focus-trap#tab-lock"), h = Nt(), g = v(!1), _ = {
 		ref: i,
 		onKeyDown(e) {
 			e.key == "Tab" && (g.current = !0, h.requestAnimationFrame(() => {
@@ -4001,61 +4001,61 @@ function yc(e, n) {
 		},
 		onBlur(e) {
 			if (!(c & 4)) return;
-			let t = gc(s);
-			Cn(r.current) && t.add(r.current);
+			let t = hc(s);
+			Sn(r.current) && t.add(r.current);
 			let n = e.relatedTarget;
-			wn(n) && n.dataset.headlessuiFocusGuard !== "true" && (Ec(t, n) || (g.current ? ei(r.current, Ht(f.current, {
-				[mc.Forwards]: () => Y.Next,
-				[mc.Backwards]: () => Y.Previous
-			}) | Y.WrapAround, { relativeTo: e.target }) : wn(e.target) && Yr(e.target)));
+			Cn(n) && n.dataset.headlessuiFocusGuard !== "true" && (Tc(t, n) || (g.current ? $r(r.current, Vt(f.current, {
+				[pc.Forwards]: () => X.Next,
+				[pc.Backwards]: () => X.Previous
+			}) | X.WrapAround, { relativeTo: e.target }) : Cn(e.target) && Jr(e.target)));
 		}
-	}, y = W();
-	return t.createElement(t.Fragment, null, m && t.createElement(mn, {
+	}, y = G();
+	return t.createElement(t.Fragment, null, m && t.createElement(pn, {
 		as: "button",
 		type: "button",
 		"data-headlessui-focus-guard": !0,
 		onFocus: p,
-		features: fn.Focusable
+		features: dn.Focusable
 	}), y({
 		ourProps: _,
 		theirProps: l,
-		defaultTag: _c,
+		defaultTag: gc,
 		name: "FocusTrap"
-	}), m && t.createElement(mn, {
+	}), m && t.createElement(pn, {
 		as: "button",
 		type: "button",
 		"data-headlessui-focus-guard": !0,
 		onFocus: p,
-		features: fn.Focusable
+		features: dn.Focusable
 	}));
 }
-var bc = G(yc), xc = Object.assign(bc, { features: vc });
-function Sc(e = !0) {
-	let t = v(Ls.slice());
-	return Li(([e], [n]) => {
+var yc = K(vc), bc = Object.assign(yc, { features: _c });
+function xc(e = !0) {
+	let t = v(Is.slice());
+	return Ii(([e], [n]) => {
 		n === !0 && e === !1 && jt(() => {
 			t.current.splice(0);
-		}), n === !1 && e === !0 && (t.current = Ls.slice());
+		}), n === !1 && e === !0 && (t.current = Is.slice());
 	}, [
 		e,
-		Ls,
+		Is,
 		t
 	]), U(() => t.current.find((e) => e != null && e.isConnected) ?? null);
 }
-function Cc(e, { ownerDocument: t }) {
-	let n = !!(e & 8), r = Sc(n);
-	Li(() => {
-		n || At(t?.body) && Yr(r());
-	}, [n]), Bs(() => {
-		n && Yr(r());
+function Sc(e, { ownerDocument: t }) {
+	let n = !!(e & 8), r = xc(n);
+	Ii(() => {
+		n || At(t?.body) && Jr(r());
+	}, [n]), zs(() => {
+		n && Jr(r());
 	});
 }
-function wc(e, { ownerDocument: t, container: n, initialFocus: r, initialFocusFallback: i }) {
-	let a = v(null), o = Mr(!!(e & 1), "focus-trap#initial-focus"), s = pc();
-	return Li(() => {
+function Cc(e, { ownerDocument: t, container: n, initialFocus: r, initialFocusFallback: i }) {
+	let a = v(null), o = jr(!!(e & 1), "focus-trap#initial-focus"), s = fc();
+	return Ii(() => {
 		if (e === 0) return;
 		if (!o) {
-			i != null && i.current && Yr(i.current);
+			i != null && i.current && Jr(i.current);
 			return;
 		}
 		let c = n.current;
@@ -4071,12 +4071,12 @@ function wc(e, { ownerDocument: t, container: n, initialFocus: r, initialFocusFa
 				a.current = n;
 				return;
 			}
-			if (r != null && r.current) Yr(r.current);
+			if (r != null && r.current) Jr(r.current);
 			else {
 				if (e & 16) {
-					if (ei(c, Y.First | Y.AutoFocus) !== Vr.Error) return;
-				} else if (ei(c, Y.First) !== Vr.Error) return;
-				if (i != null && i.current && (Yr(i.current), t?.activeElement === i.current)) return;
+					if ($r(c, X.First | X.AutoFocus) !== Br.Error) return;
+				} else if ($r(c, X.First) !== Br.Error) return;
+				if (i != null && i.current && (Jr(i.current), t?.activeElement === i.current)) return;
 				console.warn("There are no focusable elements inside the <FocusTrap />");
 			}
 			a.current = t?.activeElement;
@@ -4087,65 +4087,65 @@ function wc(e, { ownerDocument: t, container: n, initialFocus: r, initialFocusFa
 		e
 	]), a;
 }
-function Tc(e, { ownerDocument: t, container: n, containers: r, previousActiveElement: i }) {
-	let a = pc(), o = !!(e & 4);
-	hi(t?.defaultView, "focus", (e) => {
+function wc(e, { ownerDocument: t, container: n, containers: r, previousActiveElement: i }) {
+	let a = fc(), o = !!(e & 4);
+	mi(t?.defaultView, "focus", (e) => {
 		if (!o || !a.current) return;
-		let t = gc(r);
-		Cn(n.current) && t.add(n.current);
+		let t = hc(r);
+		Sn(n.current) && t.add(n.current);
 		let s = i.current;
 		if (!s) return;
 		let c = e.target;
-		Cn(c) ? Ec(t, c) ? (i.current = c, Yr(c)) : (e.preventDefault(), e.stopPropagation(), Yr(s)) : Yr(i.current);
+		Sn(c) ? Tc(t, c) ? (i.current = c, Jr(c)) : (e.preventDefault(), e.stopPropagation(), Jr(s)) : Jr(i.current);
 	}, !0);
 }
-function Ec(e, t) {
+function Tc(e, t) {
 	for (let n of e) if (n.contains(t)) return !0;
 	return !1;
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/components/transition/transition.js
-function Dc(e) {
-	return !!(e.enter || e.enterFrom || e.enterTo || e.leave || e.leaveFrom || e.leaveTo) || !tn(e.as ?? Fc) || t.Children.count(e.children) === 1;
+function Ec(e) {
+	return !!(e.enter || e.enterFrom || e.enterTo || e.leave || e.leaveFrom || e.leaveTo) || !en(e.as ?? Pc) || t.Children.count(e.children) === 1;
 }
-var Oc = i(null);
-Oc.displayName = "TransitionContext";
-var kc = ((e) => (e.Visible = "visible", e.Hidden = "hidden", e))(kc || {});
+var Dc = i(null);
+Dc.displayName = "TransitionContext";
+var Oc = ((e) => (e.Visible = "visible", e.Hidden = "hidden", e))(Oc || {});
+function kc() {
+	let e = u(Dc);
+	if (e === null) throw Error("A <Transition.Child /> is used but it is missing a parent <Transition /> or <Transition.Root />.");
+	return e;
+}
 function Ac() {
-	let e = u(Oc);
+	let e = u(jc);
 	if (e === null) throw Error("A <Transition.Child /> is used but it is missing a parent <Transition /> or <Transition.Root />.");
 	return e;
 }
-function jc() {
-	let e = u(Mc);
-	if (e === null) throw Error("A <Transition.Child /> is used but it is missing a parent <Transition /> or <Transition.Root />.");
-	return e;
+var jc = i(null);
+jc.displayName = "NestingContext";
+function Mc(e) {
+	return "children" in e ? Mc(e.children) : e.current.filter(({ el: e }) => e.current !== null).filter(({ state: e }) => e === "visible").length > 0;
 }
-var Mc = i(null);
-Mc.displayName = "NestingContext";
-function Nc(e) {
-	return "children" in e ? Nc(e.children) : e.current.filter(({ el: e }) => e.current !== null).filter(({ state: e }) => e === "visible").length > 0;
-}
-function Pc(e, t) {
-	let n = Pt(e), r = v([]), i = pc(), a = Nt(), o = U((e, t = Wt.Hidden) => {
+function Nc(e, t) {
+	let n = Pt(e), r = v([]), i = fc(), a = Nt(), o = U((e, t = Ut.Hidden) => {
 		let o = r.current.findIndex(({ el: t }) => t === e);
-		o !== -1 && (Ht(t, {
-			[Wt.Unmount]() {
+		o !== -1 && (Vt(t, {
+			[Ut.Unmount]() {
 				r.current.splice(o, 1);
 			},
-			[Wt.Hidden]() {
+			[Ut.Hidden]() {
 				r.current[o].state = "hidden";
 			}
 		}), a.microTask(() => {
 			var e;
-			!Nc(r) && i.current && ((e = n.current) == null || e.call(n));
+			!Mc(r) && i.current && ((e = n.current) == null || e.call(n));
 		}));
 	}), s = U((e) => {
 		let t = r.current.find(({ el: t }) => t === e);
 		return t ? t.state !== "visible" && (t.state = "visible") : r.current.push({
 			el: e,
 			state: "visible"
-		}), () => o(e, Wt.Unmount);
+		}), () => o(e, Ut.Unmount);
 	}), c = v([]), l = v(Promise.resolve()), u = v({
 		enter: [],
 		leave: []
@@ -4179,21 +4179,21 @@ function Pc(e, t) {
 		l
 	]);
 }
-var Fc = n, Ic = Ut.RenderStrategy;
-function Lc(e, n) {
+var Pc = n, Fc = Ht.RenderStrategy;
+function Ic(e, n) {
 	var r;
-	let { transition: i = !0, beforeEnter: a, afterEnter: o, beforeLeave: s, afterLeave: c, enter: l, enterFrom: u, enterTo: d, entered: p, leave: m, leaveFrom: h, leaveTo: g, ..._ } = e, [b, x] = y(null), S = v(null), C = Dc(e), w = K(...C ? [
+	let { transition: i = !0, beforeEnter: a, afterEnter: o, beforeLeave: s, afterLeave: c, enter: l, enterFrom: u, enterTo: d, entered: p, leave: m, leaveFrom: h, leaveTo: g, ..._ } = e, [b, x] = y(null), S = v(null), C = Ec(e), w = q(...C ? [
 		S,
 		n,
 		x
-	] : n === null ? [] : [n]), T = (r = _.unmount) == null || r ? Wt.Unmount : Wt.Hidden, { show: E, appear: D, initial: O } = Ac(), [k, A] = y(E ? "visible" : "hidden"), j = jc(), { register: M, unregister: N } = j;
+	] : n === null ? [] : [n]), T = (r = _.unmount) == null || r ? Ut.Unmount : Ut.Hidden, { show: E, appear: D, initial: O } = kc(), [k, A] = y(E ? "visible" : "hidden"), j = Ac(), { register: M, unregister: N } = j;
 	H(() => M(S), [M, S]), H(() => {
-		if (T === Wt.Hidden && S.current) {
+		if (T === Ut.Hidden && S.current) {
 			if (E && k !== "visible") {
 				A("visible");
 				return;
 			}
-			return Ht(k, {
+			return Vt(k, {
 				hidden: () => N(S),
 				visible: () => M(S)
 			});
@@ -4206,7 +4206,7 @@ function Lc(e, n) {
 		E,
 		T
 	]);
-	let P = Hs();
+	let P = Vs();
 	H(() => {
 		if (C && P && k === "visible" && S.current === null) throw Error("Did you forget to passthrough the `ref` to the actual DOM node?");
 	}, [
@@ -4215,7 +4215,7 @@ function Lc(e, n) {
 		P,
 		C
 	]);
-	let F = O && !D, I = D && E && O, ee = v(!1), L = Pc(() => {
+	let F = O && !D, I = D && E && O, ee = v(!1), L = Nc(() => {
 		ee.current || (A("hidden"), N(S));
 	}, j), R = U((e) => {
 		ee.current = !0;
@@ -4227,7 +4227,7 @@ function Lc(e, n) {
 		let t = e ? "enter" : "leave";
 		ee.current = !1, L.onStop(S, t, (e) => {
 			e === "enter" ? o?.() : e === "leave" && c?.();
-		}), t === "leave" && !Nc(L) && (A("hidden"), N(S));
+		}), t === "leave" && !Mc(L) && (A("hidden"), N(S));
 	});
 	f(() => {
 		C && i || (R(E), z(E));
@@ -4236,31 +4236,31 @@ function Lc(e, n) {
 		C,
 		i
 	]);
-	let [, B] = ji(!(!i || !C || !P || F), b, E, {
+	let [, B] = Ai(!(!i || !C || !P || F), b, E, {
 		start: R,
 		end: z
-	}), te = Zt({
+	}), te = Xt({
 		ref: w,
-		className: Vt(_.className, I && l, I && u, B.enter && l, B.enter && B.closed && u, B.enter && !B.closed && d, B.leave && m, B.leave && !B.closed && h, B.leave && B.closed && g, !B.transition && E && p)?.trim() || void 0,
-		...Ai(B)
+		className: Bt(_.className, I && l, I && u, B.enter && l, B.enter && B.closed && u, B.enter && !B.closed && d, B.leave && m, B.leave && !B.closed && h, B.leave && B.closed && g, !B.transition && E && p)?.trim() || void 0,
+		...ki(B)
 	}), ne = 0;
-	k === "visible" && (ne |= X.Open), k === "hidden" && (ne |= X.Closed), E && k === "hidden" && (ne |= X.Opening), !E && k === "visible" && (ne |= X.Closing);
-	let re = W();
-	return t.createElement(Mc.Provider, { value: L }, t.createElement(Ps, { value: ne }, re({
+	k === "visible" && (ne |= Z.Open), k === "hidden" && (ne |= Z.Closed), E && k === "hidden" && (ne |= Z.Opening), !E && k === "visible" && (ne |= Z.Closing);
+	let re = G();
+	return t.createElement(jc.Provider, { value: L }, t.createElement(Ns, { value: ne }, re({
 		ourProps: te,
 		theirProps: _,
-		defaultTag: Fc,
-		features: Ic,
+		defaultTag: Pc,
+		features: Fc,
 		visible: k === "visible",
 		name: "Transition.Child"
 	})));
 }
-function Rc(e, r) {
-	let { show: i, appear: a = !1, unmount: o = !0, ...s } = e, c = v(null), l = K(...Dc(e) ? [c, r] : r === null ? [] : [r]);
-	Hs();
-	let u = Ns();
-	if (i === void 0 && u !== null && (i = (u & X.Open) === X.Open), i === void 0) throw Error("A <Transition /> is used but it is missing a `show={true | false}` prop.");
-	let [d, f] = y(i ? "visible" : "hidden"), p = Pc(() => {
+function Lc(e, r) {
+	let { show: i, appear: a = !1, unmount: o = !0, ...s } = e, c = v(null), l = q(...Ec(e) ? [c, r] : r === null ? [] : [r]);
+	Vs();
+	let u = Ms();
+	if (i === void 0 && u !== null && (i = (u & Z.Open) === Z.Open), i === void 0) throw Error("A <Transition /> is used but it is missing a `show={true | false}` prop.");
+	let [d, f] = y(i ? "visible" : "hidden"), p = Nc(() => {
 		i || f("hidden");
 	}), [m, h] = y(!0), _ = v([i]);
 	H(() => {
@@ -4276,7 +4276,7 @@ function Rc(e, r) {
 		m
 	]);
 	H(() => {
-		i ? f("visible") : !Nc(p) && c.current !== null && f("hidden");
+		i ? f("visible") : !Mc(p) && c.current !== null && f("hidden");
 	}, [i, p]);
 	let x = { unmount: o }, S = U(() => {
 		var t;
@@ -4284,12 +4284,12 @@ function Rc(e, r) {
 	}), C = U(() => {
 		var t;
 		m && h(!1), (t = e.beforeLeave) == null || t.call(e);
-	}), w = W();
-	return t.createElement(Mc.Provider, { value: p }, t.createElement(Oc.Provider, { value: b }, w({
+	}), w = G();
+	return t.createElement(jc.Provider, { value: p }, t.createElement(Dc.Provider, { value: b }, w({
 		ourProps: {
 			...x,
 			as: n,
-			children: t.createElement(Vc, {
+			children: t.createElement(Bc, {
 				ref: l,
 				...x,
 				...s,
@@ -4299,68 +4299,68 @@ function Rc(e, r) {
 		},
 		theirProps: {},
 		defaultTag: n,
-		features: Ic,
+		features: Fc,
 		visible: d === "visible",
 		name: "Transition"
 	})));
 }
-function zc(e, n) {
-	let r = u(Oc) !== null, i = Ns() !== null;
-	return t.createElement(t.Fragment, null, !r && i ? t.createElement(Bc, {
+function Rc(e, n) {
+	let r = u(Dc) !== null, i = Ms() !== null;
+	return t.createElement(t.Fragment, null, !r && i ? t.createElement(zc, {
 		ref: n,
 		...e
-	}) : t.createElement(Vc, {
+	}) : t.createElement(Bc, {
 		ref: n,
 		...e
 	}));
 }
-var Bc = G(Rc), Vc = G(Lc), Hc = G(zc), Uc = Object.assign(Bc, {
-	Child: Hc,
-	Root: Bc
-}), Wc = ((e) => (e[e.Open = 0] = "Open", e[e.Closed = 1] = "Closed", e))(Wc || {}), Gc = ((e) => (e[e.SetTitleId = 0] = "SetTitleId", e))(Gc || {}), Kc = { 0(e, t) {
+var zc = K(Lc), Bc = K(Ic), Vc = K(Rc), Hc = Object.assign(zc, {
+	Child: Vc,
+	Root: zc
+}), Uc = ((e) => (e[e.Open = 0] = "Open", e[e.Closed = 1] = "Closed", e))(Uc || {}), Wc = ((e) => (e[e.SetTitleId = 0] = "SetTitleId", e))(Wc || {}), Gc = { 0(e, t) {
 	return e.titleId === t.id ? e : {
 		...e,
 		titleId: t.id
 	};
-} }, qc = i(null);
-qc.displayName = "DialogContext";
-function Jc(e) {
-	let t = u(qc);
+} }, Kc = i(null);
+Kc.displayName = "DialogContext";
+function qc(e) {
+	let t = u(Kc);
 	if (t === null) {
 		let t = /* @__PURE__ */ Error(`<${e} /> is missing a parent <Dialog /> component.`);
-		throw Error.captureStackTrace && Error.captureStackTrace(t, Jc), t;
+		throw Error.captureStackTrace && Error.captureStackTrace(t, qc), t;
 	}
 	return t;
 }
-function Yc(e, t) {
-	return Ht(t.type, Kc, e, t);
+function Jc(e, t) {
+	return Vt(t.type, Gc, e, t);
 }
-var Xc = G(function(e, n) {
+var Yc = K(function(e, n) {
 	let r = m(), { id: i = `headlessui-dialog-${r}`, open: a, onClose: s, initialFocus: c, role: u = "dialog", autoFocus: d = !0, __demoMode: f = !1, unmount: p = !1, ...h } = e, y = v(!1);
 	u = function() {
 		return u === "dialog" || u === "alertdialog" ? u : (y.current || (y.current = !0, console.warn(`Invalid role [${u}] passed to <Dialog />. Only \`dialog\` and and \`alertdialog\` are supported. Using \`dialog\` instead.`)), "dialog");
 	}();
-	let b = Ns();
-	a === void 0 && b !== null && (a = (b & X.Open) === X.Open);
-	let x = v(null), S = K(x, n), C = ci(x.current), w = +!a, [T, E] = _(Yc, {
+	let b = Ms();
+	a === void 0 && b !== null && (a = (b & Z.Open) === Z.Open);
+	let x = v(null), S = q(x, n), C = si(x.current), w = +!a, [T, E] = _(Jc, {
 		titleId: null,
 		descriptionId: null,
 		panelRef: o()
 	}), D = U(() => s(!1)), O = U((e) => E({
 		type: 0,
 		id: e
-	})), k = Hs() ? w === 0 : !1, [A, j] = ec(), M = { get current() {
+	})), k = Vs() ? w === 0 : !1, [A, j] = $s(), M = { get current() {
 		return T.panelRef.current ?? x.current;
-	} }, N = fc(), { resolveContainers: P } = lc({
+	} }, N = dc(), { resolveContainers: P } = cc({
 		mainTreeNode: N,
 		portals: A,
 		defaultContainers: [M]
-	}), F = b !== null && (b & X.Closing) === X.Closing;
-	Lr(f || F ? !1 : k, {
+	}), F = b !== null && (b & Z.Closing) === Z.Closing;
+	Ir(f || F ? !1 : k, {
 		allowed: U(() => [x.current?.closest("[data-headlessui-portal]") ?? null]),
 		disallowed: U(() => [N?.closest("body > *:not(#headlessui-portal-root)") ?? null])
 	});
-	let I = Or.get(null);
+	let I = Dr.get(null);
 	H(() => {
 		if (k) return I.actions.push(i), () => I.actions.pop(i);
 	}, [
@@ -4368,13 +4368,13 @@ var Xc = G(function(e, n) {
 		i,
 		k
 	]);
-	let ee = J(I, l((e) => I.selectors.isTop(e, i), [I, i]));
-	si(ee, P, (e) => {
+	let ee = Y(I, l((e) => I.selectors.isTop(e, i), [I, i]));
+	oi(ee, P, (e) => {
 		e.preventDefault(), D();
-	}), sc(ee, C?.defaultView, (e) => {
+	}), oc(ee, C?.defaultView, (e) => {
 		e.preventDefault(), e.stopPropagation(), document.activeElement && "blur" in document.activeElement && typeof document.activeElement.blur == "function" && document.activeElement.blur(), D();
-	}), Ti(f || F ? !1 : k, C, P), Rr(k, x, D);
-	let [L, R] = zn(), z = g(() => [{
+	}), wi(f || F ? !1 : k, C, P), Lr(k, x, D);
+	let [L, R] = Rn(), z = g(() => [{
 		dialogState: w,
 		close: D,
 		setTitleId: O,
@@ -4385,7 +4385,7 @@ var Xc = G(function(e, n) {
 		O,
 		p,
 		T
-	]), B = Rt({ open: w === 0 }), te = {
+	]), B = W({ open: w === 0 }), te = {
 		ref: S,
 		id: i,
 		role: u,
@@ -4394,105 +4394,105 @@ var Xc = G(function(e, n) {
 		"aria-labelledby": T.titleId,
 		"aria-describedby": L,
 		unmount: p
-	}, ne = !cc(), re = vc.None;
-	k && !f && (re |= vc.RestoreFocus, re |= vc.TabLock, d && (re |= vc.AutoFocus), ne && (re |= vc.InitialFocus));
-	let ie = W();
-	return t.createElement(Fs, null, t.createElement(Gs, { force: !0 }, t.createElement(rc, null, t.createElement(qc.Provider, { value: z }, t.createElement(nc, { target: x }, t.createElement(Gs, { force: !1 }, t.createElement(R, { slot: B }, t.createElement(j, null, t.createElement(xc, {
+	}, ne = !sc(), re = _c.None;
+	k && !f && (re |= _c.RestoreFocus, re |= _c.TabLock, d && (re |= _c.AutoFocus), ne && (re |= _c.InitialFocus));
+	let ie = G();
+	return t.createElement(Ps, null, t.createElement(Ws, { force: !0 }, t.createElement(nc, null, t.createElement(Kc.Provider, { value: z }, t.createElement(tc, { target: x }, t.createElement(Ws, { force: !1 }, t.createElement(R, { slot: B }, t.createElement(j, null, t.createElement(bc, {
 		initialFocus: c,
 		initialFocusFallback: x,
 		containers: P,
 		features: re
-	}, t.createElement($n, { value: D }, ie({
+	}, t.createElement(Qn, { value: D }, ie({
 		ourProps: te,
 		theirProps: h,
 		slot: B,
-		defaultTag: Zc,
-		features: Qc,
+		defaultTag: Xc,
+		features: Zc,
 		visible: w === 0,
 		name: "Dialog"
 	})))))))))));
-}), Zc = "div", Qc = Ut.RenderStrategy | Ut.Static;
-function $c(e, n) {
-	let { transition: r = !1, open: i, ...a } = e, o = Ns(), s = e.hasOwnProperty("open") || o !== null, c = e.hasOwnProperty("onClose");
+}), Xc = "div", Zc = Ht.RenderStrategy | Ht.Static;
+function Qc(e, n) {
+	let { transition: r = !1, open: i, ...a } = e, o = Ms(), s = e.hasOwnProperty("open") || o !== null, c = e.hasOwnProperty("onClose");
 	if (!s && !c) throw Error("You have to provide an `open` and an `onClose` prop to the `Dialog` component.");
 	if (!s) throw Error("You provided an `onClose` prop to the `Dialog`, but forgot an `open` prop.");
 	if (!c) throw Error("You provided an `open` prop to the `Dialog`, but forgot an `onClose` prop.");
 	if (!o && typeof e.open != "boolean") throw Error(`You provided an \`open\` prop to the \`Dialog\`, but the value is not a boolean. Received: ${e.open}`);
 	if (typeof e.onClose != "function") throw Error(`You provided an \`onClose\` prop to the \`Dialog\`, but the value is not a function. Received: ${e.onClose}`);
-	return (i !== void 0 || r) && !a.static ? t.createElement(dc, null, t.createElement(Uc, {
+	return (i !== void 0 || r) && !a.static ? t.createElement(uc, null, t.createElement(Hc, {
 		show: i,
 		transition: r,
 		unmount: a.unmount
-	}, t.createElement(Xc, {
+	}, t.createElement(Yc, {
 		ref: n,
 		...a
-	}))) : t.createElement(dc, null, t.createElement(Xc, {
+	}))) : t.createElement(uc, null, t.createElement(Yc, {
 		ref: n,
 		open: i,
 		...a
 	}));
 }
-var el = "div";
-function tl(e, r) {
-	let i = m(), { id: a = `headlessui-dialog-panel-${i}`, transition: o = !1, ...s } = e, [{ dialogState: c, unmount: l }, u] = Jc("Dialog.Panel"), d = K(r, u.panelRef), f = Rt({ open: c === 0 }), p = {
+var $c = "div";
+function el(e, r) {
+	let i = m(), { id: a = `headlessui-dialog-panel-${i}`, transition: o = !1, ...s } = e, [{ dialogState: c, unmount: l }, u] = qc("Dialog.Panel"), d = q(r, u.panelRef), f = W({ open: c === 0 }), p = {
 		ref: d,
 		id: a,
 		onClick: U((e) => {
 			e.stopPropagation();
 		})
-	}, h = o ? Hc : n, g = o ? { unmount: l } : {}, _ = W();
+	}, h = o ? Vc : n, g = o ? { unmount: l } : {}, _ = G();
 	return t.createElement(h, { ...g }, _({
 		ourProps: p,
 		theirProps: s,
 		slot: f,
-		defaultTag: el,
+		defaultTag: $c,
 		name: "Dialog.Panel"
 	}));
 }
-var nl = "div";
-function rl(e, r) {
-	let { transition: i = !1, ...a } = e, [{ dialogState: o, unmount: s }] = Jc("Dialog.Backdrop"), c = Rt({ open: o === 0 }), l = {
+var tl = "div";
+function nl(e, r) {
+	let { transition: i = !1, ...a } = e, [{ dialogState: o, unmount: s }] = qc("Dialog.Backdrop"), c = W({ open: o === 0 }), l = {
 		ref: r,
 		"aria-hidden": !0
-	}, u = i ? Hc : n, d = i ? { unmount: s } : {}, f = W();
+	}, u = i ? Vc : n, d = i ? { unmount: s } : {}, f = G();
 	return t.createElement(u, { ...d }, f({
 		ourProps: l,
 		theirProps: a,
 		slot: c,
-		defaultTag: nl,
+		defaultTag: tl,
 		name: "Dialog.Backdrop"
 	}));
 }
-var il = "h2";
-function al(e, t) {
-	let n = m(), { id: r = `headlessui-dialog-title-${n}`, ...i } = e, [{ dialogState: a, setTitleId: o }] = Jc("Dialog.Title"), s = K(t);
+var rl = "h2";
+function il(e, t) {
+	let n = m(), { id: r = `headlessui-dialog-title-${n}`, ...i } = e, [{ dialogState: a, setTitleId: o }] = qc("Dialog.Title"), s = q(t);
 	f(() => (o(r), () => o(null)), [r, o]);
-	let c = Rt({ open: a === 0 }), l = {
+	let c = W({ open: a === 0 }), l = {
 		ref: s,
 		id: r
 	};
-	return W()({
+	return G()({
 		ourProps: l,
 		theirProps: i,
 		slot: c,
-		defaultTag: il,
+		defaultTag: rl,
 		name: "Dialog.Title"
 	});
 }
-var ol = G($c), sl = G(tl), cl = G(rl), ll = G(al), ul = Object.assign(ol, {
-	Panel: sl,
-	Title: ll,
-	Description: Un
-}), dl = /([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g;
-function fl(e) {
+var al = K(Qc), ol = K(el), sl = K(nl), cl = K(il), ll = Object.assign(al, {
+	Panel: ol,
+	Title: cl,
+	Description: Hn
+}), ul = /([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g;
+function dl(e) {
 	let t = e.innerText ?? "", n = e.cloneNode(!0);
-	if (!Cn(n)) return t;
+	if (!Sn(n)) return t;
 	let r = !1;
 	for (let e of n.querySelectorAll("[hidden],[aria-hidden],[role=\"img\"]")) e.remove(), r = !0;
 	let i = r ? n.innerText ?? "" : t;
-	return dl.test(i) && (i = i.replace(dl, "")), i;
+	return ul.test(i) && (i = i.replace(ul, "")), i;
 }
-function pl(e) {
+function fl(e) {
 	let t = e.getAttribute("aria-label");
 	if (typeof t == "string") return t.trim();
 	let n = e.getAttribute("aria-labelledby");
@@ -4501,50 +4501,50 @@ function pl(e) {
 			let t = document.getElementById(e);
 			if (t) {
 				let e = t.getAttribute("aria-label");
-				return typeof e == "string" ? e.trim() : fl(t).trim();
+				return typeof e == "string" ? e.trim() : dl(t).trim();
 			}
 			return null;
 		}).filter(Boolean);
 		if (e.length > 0) return e.join(", ");
 	}
-	return fl(e).trim();
+	return dl(e).trim();
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/hooks/use-text-value.js
-function ml(e) {
+function pl(e) {
 	let t = v(""), n = v("");
 	return U(() => {
 		let r = e.current;
 		if (!r) return "";
 		let i = r.innerText;
 		if (t.current === i) return n.current;
-		let a = pl(r).trim().toLowerCase();
+		let a = fl(r).trim().toLowerCase();
 		return t.current = i, n.current = a, a;
 	});
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/components/listbox/listbox-machine.js
-var hl = Object.defineProperty, gl = (e, t, n) => t in e ? hl(e, t, {
+var ml = Object.defineProperty, hl = (e, t, n) => t in e ? ml(e, t, {
 	enumerable: !0,
 	configurable: !0,
 	writable: !0,
 	value: n
-}) : e[t] = n, _l = (e, t, n) => (gl(e, typeof t == "symbol" ? t : t + "", n), n), vl = ((e) => (e[e.Open = 0] = "Open", e[e.Closed = 1] = "Closed", e))(vl || {}), yl = ((e) => (e[e.Single = 0] = "Single", e[e.Multi = 1] = "Multi", e))(yl || {}), bl = ((e) => (e[e.Pointer = 0] = "Pointer", e[e.Other = 1] = "Other", e))(bl || {}), xl = ((e) => (e[e.OpenListbox = 0] = "OpenListbox", e[e.CloseListbox = 1] = "CloseListbox", e[e.GoToOption = 2] = "GoToOption", e[e.Search = 3] = "Search", e[e.ClearSearch = 4] = "ClearSearch", e[e.SelectOption = 5] = "SelectOption", e[e.RegisterOptions = 6] = "RegisterOptions", e[e.UnregisterOptions = 7] = "UnregisterOptions", e[e.SetButtonElement = 8] = "SetButtonElement", e[e.SetOptionsElement = 9] = "SetOptionsElement", e[e.SortOptions = 10] = "SortOptions", e[e.MarkButtonAsMoved = 11] = "MarkButtonAsMoved", e))(xl || {});
-function Sl(e, t = (e) => e) {
-	let n = e.activeOptionIndex === null ? null : e.options[e.activeOptionIndex], r = Qr(t(e.options.slice()), (e) => e.dataRef.current.domRef.current), i = n ? r.indexOf(n) : null;
+}) : e[t] = n, gl = (e, t, n) => (hl(e, typeof t == "symbol" ? t : t + "", n), n), _l = ((e) => (e[e.Open = 0] = "Open", e[e.Closed = 1] = "Closed", e))(_l || {}), vl = ((e) => (e[e.Single = 0] = "Single", e[e.Multi = 1] = "Multi", e))(vl || {}), yl = ((e) => (e[e.Pointer = 0] = "Pointer", e[e.Other = 1] = "Other", e))(yl || {}), bl = ((e) => (e[e.OpenListbox = 0] = "OpenListbox", e[e.CloseListbox = 1] = "CloseListbox", e[e.GoToOption = 2] = "GoToOption", e[e.Search = 3] = "Search", e[e.ClearSearch = 4] = "ClearSearch", e[e.SelectOption = 5] = "SelectOption", e[e.RegisterOptions = 6] = "RegisterOptions", e[e.UnregisterOptions = 7] = "UnregisterOptions", e[e.SetButtonElement = 8] = "SetButtonElement", e[e.SetOptionsElement = 9] = "SetOptionsElement", e[e.SortOptions = 10] = "SortOptions", e[e.MarkButtonAsMoved = 11] = "MarkButtonAsMoved", e))(bl || {});
+function xl(e, t = (e) => e) {
+	let n = e.activeOptionIndex === null ? null : e.options[e.activeOptionIndex], r = Zr(t(e.options.slice()), (e) => e.dataRef.current.domRef.current), i = n ? r.indexOf(n) : null;
 	return i === -1 && (i = null), {
 		options: r,
 		activeOptionIndex: i
 	};
 }
-var Cl = {
+var Sl = {
 	1(e) {
 		if (e.dataRef.current.disabled || e.listboxState === 1) return e;
-		let t = e.buttonElement ? ic.Tracked(ac(e.buttonElement)) : e.buttonPositionState;
+		let t = e.buttonElement ? rc.Tracked(ic(e.buttonElement)) : e.buttonPositionState;
 		return {
 			...e,
 			activeOptionIndex: null,
-			pendingFocus: { focus: Z.Nothing },
+			pendingFocus: { focus: Q.Nothing },
 			listboxState: 1,
 			__demoMode: !1,
 			buttonPositionState: t
@@ -4560,7 +4560,7 @@ var Cl = {
 			listboxState: 0,
 			activeOptionIndex: n,
 			__demoMode: !1,
-			buttonPositionState: ic.Idle
+			buttonPositionState: rc.Idle
 		};
 	},
 	2(e, t) {
@@ -4571,18 +4571,18 @@ var Cl = {
 			activationTrigger: t.trigger ?? 1,
 			__demoMode: !1
 		};
-		if (t.focus === Z.Nothing) return {
+		if (t.focus === Q.Nothing) return {
 			...n,
 			activeOptionIndex: null
 		};
-		if (t.focus === Z.Specific) return {
+		if (t.focus === Q.Specific) return {
 			...n,
 			activeOptionIndex: e.options.findIndex((e) => e.id === t.id)
 		};
-		if (t.focus === Z.Previous) {
+		if (t.focus === Q.Previous) {
 			let r = e.activeOptionIndex;
 			if (r !== null) {
-				let i = e.options[r].dataRef.current.domRef, a = zs(t, {
+				let i = e.options[r].dataRef.current.domRef, a = Rs(t, {
 					resolveItems: () => e.options,
 					resolveActiveIndex: () => e.activeOptionIndex,
 					resolveId: (e) => e.id,
@@ -4596,10 +4596,10 @@ var Cl = {
 					};
 				}
 			}
-		} else if (t.focus === Z.Next) {
+		} else if (t.focus === Q.Next) {
 			let r = e.activeOptionIndex;
 			if (r !== null) {
-				let i = e.options[r].dataRef.current.domRef, a = zs(t, {
+				let i = e.options[r].dataRef.current.domRef, a = Rs(t, {
 					resolveItems: () => e.options,
 					resolveActiveIndex: () => e.activeOptionIndex,
 					resolveId: (e) => e.id,
@@ -4614,7 +4614,7 @@ var Cl = {
 				}
 			}
 		}
-		let r = Sl(e), i = zs(t, {
+		let r = xl(e), i = Rs(t, {
 			resolveItems: () => r.options,
 			resolveActiveIndex: () => r.activeOptionIndex,
 			resolveId: (e) => e.id,
@@ -4653,7 +4653,7 @@ var Cl = {
 	},
 	6: (e, t) => {
 		let n = e.options.concat(t.options), r = e.activeOptionIndex;
-		if (e.pendingFocus.focus !== Z.Nothing && (r = zs(e.pendingFocus, {
+		if (e.pendingFocus.focus !== Q.Nothing && (r = Rs(e.pendingFocus, {
 			resolveItems: () => n,
 			resolveActiveIndex: () => e.activeOptionIndex,
 			resolveId: (e) => e.id,
@@ -4669,7 +4669,7 @@ var Cl = {
 			...e,
 			options: n,
 			activeOptionIndex: r,
-			pendingFocus: { focus: Z.Nothing },
+			pendingFocus: { focus: Q.Nothing },
 			pendingShouldSort: !0
 		};
 	},
@@ -4696,21 +4696,21 @@ var Cl = {
 	},
 	10: (e) => e.pendingShouldSort ? {
 		...e,
-		...Sl(e),
+		...xl(e),
 		pendingShouldSort: !1
 	} : e,
 	11(e) {
 		return e.buttonPositionState.kind === "Tracked" ? {
 			...e,
-			buttonPositionState: ic.Moved
+			buttonPositionState: rc.Moved
 		} : e;
 	}
-}, wl = class e extends _r {
+}, Cl = class e extends gr {
 	constructor(e) {
-		super(e), _l(this, "actions", {
+		super(e), gl(this, "actions", {
 			onChange: (e) => {
 				let { onChange: t, compare: n, mode: r, value: i } = this.state.dataRef.current;
-				return Ht(r, {
+				return Vt(r, {
 					0: () => t?.(e),
 					1: () => {
 						let r = i.slice(), a = r.findIndex((t) => n(t, e));
@@ -4718,7 +4718,7 @@ var Cl = {
 					}
 				});
 			},
-			registerOption: xr(() => {
+			registerOption: br(() => {
 				let e = [], t = /* @__PURE__ */ new Set();
 				return [(n, r) => {
 					t.has(r) || (t.add(r), e.push({
@@ -4730,7 +4730,7 @@ var Cl = {
 					options: e.splice(0)
 				}))];
 			}),
-			unregisterOption: xr(() => {
+			unregisterOption: br(() => {
 				let e = [];
 				return [(t) => e.push(t), () => {
 					this.send({
@@ -4739,7 +4739,7 @@ var Cl = {
 					});
 				}];
 			}),
-			goToOption: xr(() => {
+			goToOption: br(() => {
 				let e = null;
 				return [(t, n) => {
 					e = {
@@ -4792,7 +4792,7 @@ var Cl = {
 					element: e
 				});
 			}
-		}), _l(this, "selectors", {
+		}), gl(this, "selectors", {
 			activeDescendantId(e) {
 				var t;
 				let n = e.activeOptionIndex, r = e.options;
@@ -4817,14 +4817,14 @@ var Cl = {
 			});
 		});
 		{
-			let e = this.state.id, t = Or.get(null);
-			this.disposables.add(t.on(Tr.Push, (n) => {
+			let e = this.state.id, t = Dr.get(null);
+			this.disposables.add(t.on(wr.Push, (n) => {
 				!t.selectors.isTop(n, e) && this.state.listboxState === 0 && this.actions.closeListbox();
 			})), this.on(0, () => t.actions.push(e)), this.on(1, () => t.actions.pop(e));
 		}
 		this.disposables.group((e) => {
 			this.on(1, (t) => {
-				t.buttonElement && (e.dispose(), e.add(oc(t.buttonElement, t.buttonPositionState, () => {
+				t.buttonElement && (e.dispose(), e.add(ac(t.buttonElement, t.buttonPositionState, () => {
 					this.send({ type: 11 });
 				})));
 			});
@@ -4845,59 +4845,59 @@ var Cl = {
 			buttonElement: null,
 			optionsElement: null,
 			pendingShouldSort: !1,
-			pendingFocus: { focus: Z.Nothing },
+			pendingFocus: { focus: Q.Nothing },
 			frozenValue: !1,
 			__demoMode: n,
-			buttonPositionState: ic.Idle
+			buttonPositionState: rc.Idle
 		});
 	}
 	reduce(e, t) {
-		return Ht(t.type, Cl, e, t);
+		return Vt(t.type, Sl, e, t);
 	}
-}, Tl = i(null);
-function El(e) {
-	let t = u(Tl);
+}, wl = i(null);
+function Tl(e) {
+	let t = u(wl);
 	if (t === null) {
 		let t = /* @__PURE__ */ Error(`<${e} /> is missing a parent <Listbox /> component.`);
-		throw Error.captureStackTrace && Error.captureStackTrace(t, Dl), t;
+		throw Error.captureStackTrace && Error.captureStackTrace(t, El), t;
 	}
 	return t;
 }
-function Dl({ id: e, __demoMode: t = !1 }) {
-	let n = g(() => wl.new({
+function El({ id: e, __demoMode: t = !1 }) {
+	let n = g(() => Cl.new({
 		id: e,
 		__demoMode: t
 	}), []);
-	return Bs(() => n.dispose()), n;
+	return zs(() => n.dispose()), n;
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/components/listbox/listbox.js
-var Ol = i(null);
-Ol.displayName = "ListboxDataContext";
-function kl(e) {
-	let t = u(Ol);
+var Dl = i(null);
+Dl.displayName = "ListboxDataContext";
+function Ol(e) {
+	let t = u(Dl);
 	if (t === null) {
 		let t = /* @__PURE__ */ Error(`<${e} /> is missing a parent <Listbox /> component.`);
-		throw Error.captureStackTrace && Error.captureStackTrace(t, kl), t;
+		throw Error.captureStackTrace && Error.captureStackTrace(t, Ol), t;
 	}
 	return t;
 }
-var Al = n;
-function jl(e, n) {
-	let r = m(), i = Bt(), { value: a, defaultValue: o, form: s, name: c, onChange: u, by: d, invalid: f = !1, disabled: p = i || !1, horizontal: h = !1, multiple: g = !1, __demoMode: _ = !1, ...y } = e, b = h ? "horizontal" : "vertical", x = K(n), S = an(o), [C = g ? [] : void 0, w] = rn(a, u, S), T = Dl({
+var kl = n;
+function Al(e, n) {
+	let r = m(), i = zt(), { value: a, defaultValue: o, form: s, name: c, onChange: u, by: d, invalid: f = !1, disabled: p = i || !1, horizontal: h = !1, multiple: g = !1, __demoMode: _ = !1, ...y } = e, b = h ? "horizontal" : "vertical", x = q(n), S = rn(o), [C = g ? [] : void 0, w] = nn(a, u, S), T = El({
 		id: r,
 		__demoMode: _
 	}), E = v({
 		static: !1,
 		hold: !1
-	}), D = v(/* @__PURE__ */ new Map()), O = tr(d), k = l((e) => Ht(A.mode, {
-		[yl.Multi]: () => C.some((t) => O(t, e)),
-		[yl.Single]: () => O(C, e)
-	}), [C]), A = Rt({
+	}), D = v(/* @__PURE__ */ new Map()), O = er(d), k = l((e) => Vt(A.mode, {
+		[vl.Multi]: () => C.some((t) => O(t, e)),
+		[vl.Single]: () => O(C, e)
+	}), [C]), A = W({
 		value: C,
 		disabled: p,
 		invalid: f,
-		mode: g ? yl.Multi : yl.Single,
+		mode: g ? vl.Multi : vl.Single,
 		orientation: b,
 		onChange: w,
 		compare: O,
@@ -4908,29 +4908,29 @@ function jl(e, n) {
 	H(() => {
 		T.state.dataRef.current = A;
 	}, [A]);
-	let j = J(T, (e) => e.listboxState), M = Or.get(null), N = J(M, l((e) => M.selectors.isTop(e, r), [M, r])), [P, F] = J(T, (e) => [e.buttonElement, e.optionsElement]);
-	si(N, [P, F], (e, t) => {
-		T.send({ type: xl.CloseListbox }), Kr(t, Gr.Loose) || (e.preventDefault(), P?.focus());
+	let j = Y(T, (e) => e.listboxState), M = Dr.get(null), N = Y(M, l((e) => M.selectors.isTop(e, r), [M, r])), [P, F] = Y(T, (e) => [e.buttonElement, e.optionsElement]);
+	oi(N, [P, F], (e, t) => {
+		T.send({ type: bl.CloseListbox }), Gr(t, Wr.Loose) || (e.preventDefault(), P?.focus());
 	});
-	let I = Rt({
-		open: j === vl.Open,
+	let I = W({
+		open: j === _l.Open,
 		disabled: p,
 		invalid: f,
 		value: C
-	}), [ee, L] = qn({ inherit: !0 }), R = { ref: x }, z = l(() => {
+	}), [ee, L] = Kn({ inherit: !0 }), R = { ref: x }, z = l(() => {
 		if (S !== void 0) return w?.(S);
-	}, [w, S]), B = W();
+	}, [w, S]), B = G();
 	return t.createElement(L, {
 		value: ee,
 		props: { htmlFor: P?.id },
 		slot: {
-			open: j === vl.Open,
+			open: j === _l.Open,
 			disabled: p
 		}
-	}, t.createElement(ws, null, t.createElement(Tl.Provider, { value: T }, t.createElement(Ol.Provider, { value: A }, t.createElement(Ps, { value: Ht(j, {
-		[vl.Open]: X.Open,
-		[vl.Closed]: X.Closed
-	}) }, c != null && C != null && t.createElement(_n, {
+	}, t.createElement(Cs, null, t.createElement(wl.Provider, { value: T }, t.createElement(Dl.Provider, { value: A }, t.createElement(Ns, { value: Vt(j, {
+		[_l.Open]: Z.Open,
+		[_l.Closed]: Z.Closed
+	}) }, c != null && C != null && t.createElement(gn, {
 		disabled: p,
 		data: { [c]: C },
 		form: s,
@@ -4939,62 +4939,62 @@ function jl(e, n) {
 		ourProps: R,
 		theirProps: y,
 		slot: I,
-		defaultTag: Al,
+		defaultTag: kl,
 		name: "Listbox"
 	}))))));
 }
-var Ml = "button";
-function Nl(e, t) {
-	let n = m(), r = bn(), i = kl("Listbox.Button"), a = El("Listbox.Button"), { id: o = r || `headlessui-listbox-button-${n}`, disabled: s = i.disabled || !1, autoFocus: c = !1, ...u } = e, d = K(t, ys(), a.actions.setButtonElement), f = bs(), [p, h, g] = J(a, (e) => [
+var jl = "button";
+function Ml(e, t) {
+	let n = m(), r = yn(), i = Ol("Listbox.Button"), a = Tl("Listbox.Button"), { id: o = r || `headlessui-listbox-button-${n}`, disabled: s = i.disabled || !1, autoFocus: c = !1, ...u } = e, d = q(t, vs(), a.actions.setButtonElement), f = ys(), [p, h, g] = Y(a, (e) => [
 		e.listboxState,
 		e.buttonElement,
 		e.optionsElement
 	]);
-	mi(p === vl.Open, {
+	pi(p === _l.Open, {
 		trigger: h,
 		action: l((e) => {
-			if (h != null && h.contains(e.target)) return di.Ignore;
+			if (h != null && h.contains(e.target)) return ui.Ignore;
 			let t = e.target.closest("[role=\"option\"]:not([data-disabled])");
-			return Cn(t) ? di.Select(t) : g != null && g.contains(e.target) ? di.Ignore : di.Close;
+			return Sn(t) ? ui.Select(t) : g != null && g.contains(e.target) ? ui.Ignore : ui.Close;
 		}, [h, g]),
 		close: a.actions.closeListbox,
 		select: a.actions.selectActiveOption
 	});
 	let _ = U((e) => {
 		switch (e.key) {
-			case q.Enter:
-				ln(e.currentTarget);
+			case J.Enter:
+				cn(e.currentTarget);
 				break;
-			case q.Space:
-			case q.ArrowDown:
-				e.preventDefault(), a.actions.openListbox({ focus: i.value ? Z.Nothing : Z.First });
+			case J.Space:
+			case J.ArrowDown:
+				e.preventDefault(), a.actions.openListbox({ focus: i.value ? Q.Nothing : Q.First });
 				break;
-			case q.ArrowUp:
-				e.preventDefault(), a.actions.openListbox({ focus: i.value ? Z.Nothing : Z.Last });
+			case J.ArrowUp:
+				e.preventDefault(), a.actions.openListbox({ focus: i.value ? Q.Nothing : Q.Last });
 				break;
 		}
 	}), v = U((e) => {
 		switch (e.key) {
-			case q.Space:
+			case J.Space:
 				e.preventDefault();
 				break;
 		}
-	}), y = ar((e) => {
+	}), y = ir((e) => {
 		var t;
-		a.state.listboxState === vl.Open ? (E(() => a.actions.closeListbox()), (t = a.state.buttonElement) == null || t.focus({ preventScroll: !0 })) : (e.preventDefault(), a.actions.openListbox({ focus: Z.Nothing }));
-	}), b = U((e) => e.preventDefault()), x = Kn([o]), S = Rn(), { isFocusVisible: C, focusProps: w } = gt({ autoFocus: c }), { isHovered: T, hoverProps: D } = St({ isDisabled: s }), { pressed: O, pressProps: k } = Lt({ disabled: s }), A = Rt({
-		open: p === vl.Open,
-		active: O || p === vl.Open,
+		a.state.listboxState === _l.Open ? (E(() => a.actions.closeListbox()), (t = a.state.buttonElement) == null || t.focus({ preventScroll: !0 })) : (e.preventDefault(), a.actions.openListbox({ focus: Q.Nothing }));
+	}), b = U((e) => e.preventDefault()), x = Gn([o]), S = Ln(), { isFocusVisible: C, focusProps: w } = gt({ autoFocus: c }), { isHovered: T, hoverProps: D } = St({ isDisabled: s }), { pressed: O, pressProps: k } = Lt({ disabled: s }), A = W({
+		open: p === _l.Open,
+		active: O || p === _l.Open,
 		disabled: s,
 		invalid: i.invalid,
 		value: i.value,
 		hover: T,
 		focus: C,
 		autofocus: c
-	}), j = J(a, (e) => e.listboxState === vl.Open), M = Xt(f(), {
+	}), j = Y(a, (e) => e.listboxState === _l.Open), M = Yt(f(), {
 		ref: d,
 		id: o,
-		type: gi(e, h),
+		type: hi(e, h),
 		"aria-haspopup": "listbox",
 		"aria-controls": g?.id,
 		"aria-expanded": j,
@@ -5006,31 +5006,31 @@ function Nl(e, t) {
 		onKeyUp: v,
 		onKeyPress: b
 	}, y, w, D, k);
-	return W()({
+	return G()({
 		ourProps: M,
 		theirProps: u,
 		slot: A,
-		defaultTag: Ml,
+		defaultTag: jl,
 		name: "Listbox.Button"
 	});
 }
-var Pl = i(!1), Fl = "div", Il = Ut.RenderStrategy | Ut.Static;
-function Ll(e, n) {
-	let r = m(), { id: i = `headlessui-listbox-options-${r}`, anchor: a, portal: o = !1, modal: s = !0, transition: c = !1, ...u } = e, d = vs(a), [p, h] = y(null);
+var Nl = i(!1), Pl = "div", Fl = Ht.RenderStrategy | Ht.Static;
+function Il(e, n) {
+	let r = m(), { id: i = `headlessui-listbox-options-${r}`, anchor: a, portal: o = !1, modal: s = !0, transition: c = !1, ...u } = e, d = _s(a), [p, h] = y(null);
 	d && (o = !0);
-	let _ = kl("Listbox.Options"), v = El("Listbox.Options"), [b, x, S, C] = J(v, (e) => [
+	let _ = Ol("Listbox.Options"), v = Tl("Listbox.Options"), [b, x, S, C] = Y(v, (e) => [
 		e.listboxState,
 		e.buttonElement,
 		e.optionsElement,
 		e.__demoMode
-	]), w = ci(x), T = ci(S), D = Ns(), [O, k] = ji(c, p, D === null ? b === vl.Open : (D & X.Open) === X.Open);
-	Rr(O, x, v.actions.closeListbox), Ti(!C && s && b === vl.Open, T), Lr(!C && s && b === vl.Open, { allowed: l(() => [x, S], [x, S]) });
-	let A = !J(v, v.selectors.didButtonMove) && O, j = js(J(v, v.selectors.hasFrozenValue) && !e.static, _.value), M = l((e) => _.compare(j, e), [_.compare, j]), N = J(v, (e) => {
+	]), w = si(x), T = si(S), D = Ms(), [O, k] = Ai(c, p, D === null ? b === _l.Open : (D & Z.Open) === Z.Open);
+	Lr(O, x, v.actions.closeListbox), wi(!C && s && b === _l.Open, T), Ir(!C && s && b === _l.Open, { allowed: l(() => [x, S], [x, S]) });
+	let A = !Y(v, v.selectors.didButtonMove) && O, j = As(Y(v, v.selectors.hasFrozenValue) && !e.static, _.value), M = l((e) => _.compare(j, e), [_.compare, j]), N = Y(v, (e) => {
 		var t;
 		if (d == null || !((t = d?.to) != null && t.includes("selection"))) return null;
 		let n = e.options.findIndex((e) => M(e.dataRef.current.value));
 		return n === -1 && (n = 0), n;
-	}), [P, F] = Ss((() => {
+	}), [P, F] = xs((() => {
 		if (d == null) return;
 		if (N === null) return {
 			...d,
@@ -5044,85 +5044,85 @@ function Ll(e, n) {
 				index: N
 			}
 		};
-	})()), I = xs(), ee = K(n, d ? P : null, v.actions.setOptionsElement, h), L = Nt();
+	})()), I = bs(), ee = q(n, d ? P : null, v.actions.setOptionsElement, h), L = Nt();
 	f(() => {
 		let e = S;
-		e && b === vl.Open && (At(e) || e == null || e.focus({ preventScroll: !0 }));
+		e && b === _l.Open && (At(e) || e == null || e.focus({ preventScroll: !0 }));
 	}, [b, S]);
 	let R = U((e) => {
 		var t;
 		switch (L.dispose(), e.key) {
-			case q.Space: if (v.state.searchQuery !== "") return e.preventDefault(), e.stopPropagation(), v.actions.search(e.key);
-			case q.Enter:
+			case J.Space: if (v.state.searchQuery !== "") return e.preventDefault(), e.stopPropagation(), v.actions.search(e.key);
+			case J.Enter:
 				e.preventDefault(), e.stopPropagation(), v.actions.selectActiveOption();
 				break;
-			case Ht(_.orientation, {
-				vertical: q.ArrowDown,
-				horizontal: q.ArrowRight
-			}): return e.preventDefault(), e.stopPropagation(), v.actions.goToOption({ focus: Z.Next });
-			case Ht(_.orientation, {
-				vertical: q.ArrowUp,
-				horizontal: q.ArrowLeft
-			}): return e.preventDefault(), e.stopPropagation(), v.actions.goToOption({ focus: Z.Previous });
-			case q.Home:
-			case q.PageUp: return e.preventDefault(), e.stopPropagation(), v.actions.goToOption({ focus: Z.First });
-			case q.End:
-			case q.PageDown: return e.preventDefault(), e.stopPropagation(), v.actions.goToOption({ focus: Z.Last });
-			case q.Escape:
+			case Vt(_.orientation, {
+				vertical: J.ArrowDown,
+				horizontal: J.ArrowRight
+			}): return e.preventDefault(), e.stopPropagation(), v.actions.goToOption({ focus: Q.Next });
+			case Vt(_.orientation, {
+				vertical: J.ArrowUp,
+				horizontal: J.ArrowLeft
+			}): return e.preventDefault(), e.stopPropagation(), v.actions.goToOption({ focus: Q.Previous });
+			case J.Home:
+			case J.PageUp: return e.preventDefault(), e.stopPropagation(), v.actions.goToOption({ focus: Q.First });
+			case J.End:
+			case J.PageDown: return e.preventDefault(), e.stopPropagation(), v.actions.goToOption({ focus: Q.Last });
+			case J.Escape:
 				e.preventDefault(), e.stopPropagation(), E(() => v.actions.closeListbox()), (t = v.state.buttonElement) == null || t.focus({ preventScroll: !0 });
 				return;
-			case q.Tab:
-				e.preventDefault(), e.stopPropagation(), E(() => v.actions.closeListbox()), $r(v.state.buttonElement, e.shiftKey ? Y.Previous : Y.Next);
+			case J.Tab:
+				e.preventDefault(), e.stopPropagation(), E(() => v.actions.closeListbox()), Qr(v.state.buttonElement, e.shiftKey ? X.Previous : X.Next);
 				break;
 			default:
 				e.key.length === 1 && (v.actions.search(e.key), L.setTimeout(() => v.actions.clearSearch(), 350));
 				break;
 		}
-	}), z = J(v, (e) => e.buttonElement?.id), B = Rt({ open: b === vl.Open }), te = Xt(d ? I() : {}, {
+	}), z = Y(v, (e) => e.buttonElement?.id), B = W({ open: b === _l.Open }), te = Yt(d ? I() : {}, {
 		id: i,
 		ref: ee,
-		"aria-activedescendant": J(v, v.selectors.activeDescendantId),
-		"aria-multiselectable": _.mode === yl.Multi || void 0,
+		"aria-activedescendant": Y(v, v.selectors.activeDescendantId),
+		"aria-multiselectable": _.mode === vl.Multi || void 0,
 		"aria-labelledby": z,
 		"aria-orientation": _.orientation,
 		onKeyDown: R,
 		role: "listbox",
-		tabIndex: b === vl.Open ? 0 : void 0,
+		tabIndex: b === _l.Open ? 0 : void 0,
 		style: {
 			...u.style,
 			...F,
-			"--button-width": rr(O, x, !0).width
+			"--button-width": nr(O, x, !0).width
 		},
-		...Ai(k)
-	}), ne = W(), re = g(() => _.mode === yl.Multi ? _ : {
+		...ki(k)
+	}), ne = G(), re = g(() => _.mode === vl.Multi ? _ : {
 		..._,
 		isSelected: M
 	}, [_, M]);
-	return t.createElement(rc, {
+	return t.createElement(nc, {
 		enabled: o ? e.static || O : !1,
 		ownerDocument: w
-	}, t.createElement(Ol.Provider, { value: re }, ne({
+	}, t.createElement(Dl.Provider, { value: re }, ne({
 		ourProps: te,
 		theirProps: u,
 		slot: B,
-		defaultTag: Fl,
-		features: Il,
+		defaultTag: Pl,
+		features: Fl,
 		visible: A,
 		name: "Listbox.Options"
 	})));
 }
-var Rl = "div";
-function zl(e, t) {
-	let n = m(), { id: r = `headlessui-listbox-option-${n}`, disabled: i = !1, value: a, ...o } = e, s = u(Pl) === !0, c = kl("Listbox.Option"), l = El("Listbox.Option"), d = J(l, (e) => l.selectors.isActive(e, r)), f = c.isSelected(a), p = v(null), h = ml(p), g = Pt({
+var Ll = "div";
+function Rl(e, t) {
+	let n = m(), { id: r = `headlessui-listbox-option-${n}`, disabled: i = !1, value: a, ...o } = e, s = u(Nl) === !0, c = Ol("Listbox.Option"), l = Tl("Listbox.Option"), d = Y(l, (e) => l.selectors.isActive(e, r)), f = c.isSelected(a), p = v(null), h = pl(p), g = Pt({
 		disabled: i,
 		value: a,
 		domRef: p,
 		get textValue() {
 			return h();
 		}
-	}), _ = K(t, p, (e) => {
+	}), _ = q(t, p, (e) => {
 		e ? c.listRef.current.set(r, e) : c.listRef.current.delete(r);
-	}), y = J(l, (e) => l.selectors.shouldScrollIntoView(e, r));
+	}), y = Y(l, (e) => l.selectors.shouldScrollIntoView(e, r));
 	H(() => {
 		if (y) return Mt().requestAnimationFrame(() => {
 			var e, t;
@@ -5139,19 +5139,19 @@ function zl(e, t) {
 		if (i) return e.preventDefault();
 		l.actions.selectOption(a);
 	}), x = U(() => {
-		if (i) return l.actions.goToOption({ focus: Z.Nothing });
+		if (i) return l.actions.goToOption({ focus: Q.Nothing });
 		l.actions.goToOption({
-			focus: Z.Specific,
+			focus: Q.Specific,
 			id: r
 		});
-	}), S = Di(), C = U((e) => S.update(e)), w = U((e) => {
-		S.wasMoved(e) && (i || d && l.state.activationTrigger === bl.Pointer || l.actions.goToOption({
-			focus: Z.Specific,
+	}), S = Ei(), C = U((e) => S.update(e)), w = U((e) => {
+		S.wasMoved(e) && (i || d && l.state.activationTrigger === yl.Pointer || l.actions.goToOption({
+			focus: Q.Specific,
 			id: r
-		}, bl.Pointer));
+		}, yl.Pointer));
 	}), T = U((e) => {
-		S.wasMoved(e) && (i || d && l.state.activationTrigger === bl.Pointer && l.actions.goToOption({ focus: Z.Nothing }));
-	}), E = Rt({
+		S.wasMoved(e) && (i || d && l.state.activationTrigger === yl.Pointer && l.actions.goToOption({ focus: Q.Nothing }));
+	}), E = W({
 		active: d,
 		focus: d,
 		selected: f,
@@ -5173,56 +5173,56 @@ function zl(e, t) {
 		onMouseMove: w,
 		onPointerLeave: T,
 		onMouseLeave: T
-	}, O = W();
+	}, O = G();
 	return !f && s ? null : O({
 		ourProps: D,
 		theirProps: o,
 		slot: E,
-		defaultTag: Rl,
+		defaultTag: Ll,
 		name: "Listbox.Option"
 	});
 }
-var Bl = n;
-function Vl(e, n) {
-	let { options: r, placeholder: i, ...a } = e, o = { ref: K(n) }, s = kl("ListboxSelectedOption"), c = Rt({}), l = s.value === void 0 || s.value === null || s.mode === yl.Multi && Array.isArray(s.value) && s.value.length === 0, u = W();
-	return t.createElement(Pl.Provider, { value: !0 }, u({
+var zl = n;
+function Bl(e, n) {
+	let { options: r, placeholder: i, ...a } = e, o = { ref: q(n) }, s = Ol("ListboxSelectedOption"), c = W({}), l = s.value === void 0 || s.value === null || s.mode === vl.Multi && Array.isArray(s.value) && s.value.length === 0, u = G();
+	return t.createElement(Nl.Provider, { value: !0 }, u({
 		ourProps: o,
 		theirProps: {
 			...a,
 			children: t.createElement(t.Fragment, null, i && l ? i : r)
 		},
 		slot: c,
-		defaultTag: Bl,
+		defaultTag: zl,
 		name: "ListboxSelectedOption"
 	}));
 }
-var Hl = G(jl), Ul = G(Nl), Wl = Zn, Gl = G(Ll), Kl = G(zl), ql = G(Vl), Jl = Object.assign(Hl, {
-	Button: Ul,
-	Label: Wl,
-	Options: Gl,
-	Option: Kl,
-	SelectedOption: ql
-}), Yl = Object.defineProperty, Xl = (e, t, n) => t in e ? Yl(e, t, {
+var Vl = K(Al), Hl = K(Ml), Ul = Xn, Wl = K(Il), Gl = K(Rl), Kl = K(Bl), ql = Object.assign(Vl, {
+	Button: Hl,
+	Label: Ul,
+	Options: Wl,
+	Option: Gl,
+	SelectedOption: Kl
+}), Jl = Object.defineProperty, Yl = (e, t, n) => t in e ? Jl(e, t, {
 	enumerable: !0,
 	configurable: !0,
 	writable: !0,
 	value: n
-}) : e[t] = n, Zl = (e, t, n) => (Xl(e, typeof t == "symbol" ? t : t + "", n), n), Ql = ((e) => (e[e.Open = 0] = "Open", e[e.Closed = 1] = "Closed", e))(Ql || {}), $l = ((e) => (e[e.Pointer = 0] = "Pointer", e[e.Other = 1] = "Other", e))($l || {}), Q = ((e) => (e[e.OpenMenu = 0] = "OpenMenu", e[e.CloseMenu = 1] = "CloseMenu", e[e.GoToItem = 2] = "GoToItem", e[e.Search = 3] = "Search", e[e.ClearSearch = 4] = "ClearSearch", e[e.RegisterItems = 5] = "RegisterItems", e[e.UnregisterItems = 6] = "UnregisterItems", e[e.SetButtonElement = 7] = "SetButtonElement", e[e.SetItemsElement = 8] = "SetItemsElement", e[e.SortItems = 9] = "SortItems", e[e.MarkButtonAsMoved = 10] = "MarkButtonAsMoved", e))(Q || {});
-function eu(e, t = (e) => e) {
-	let n = e.activeItemIndex === null ? null : e.items[e.activeItemIndex], r = Qr(t(e.items.slice()), (e) => e.dataRef.current.domRef.current), i = n ? r.indexOf(n) : null;
+}) : e[t] = n, Xl = (e, t, n) => (Yl(e, typeof t == "symbol" ? t : t + "", n), n), Zl = ((e) => (e[e.Open = 0] = "Open", e[e.Closed = 1] = "Closed", e))(Zl || {}), Ql = ((e) => (e[e.Pointer = 0] = "Pointer", e[e.Other = 1] = "Other", e))(Ql || {}), $ = ((e) => (e[e.OpenMenu = 0] = "OpenMenu", e[e.CloseMenu = 1] = "CloseMenu", e[e.GoToItem = 2] = "GoToItem", e[e.Search = 3] = "Search", e[e.ClearSearch = 4] = "ClearSearch", e[e.RegisterItems = 5] = "RegisterItems", e[e.UnregisterItems = 6] = "UnregisterItems", e[e.SetButtonElement = 7] = "SetButtonElement", e[e.SetItemsElement = 8] = "SetItemsElement", e[e.SortItems = 9] = "SortItems", e[e.MarkButtonAsMoved = 10] = "MarkButtonAsMoved", e))($ || {});
+function $l(e, t = (e) => e) {
+	let n = e.activeItemIndex === null ? null : e.items[e.activeItemIndex], r = Zr(t(e.items.slice()), (e) => e.dataRef.current.domRef.current), i = n ? r.indexOf(n) : null;
 	return i === -1 && (i = null), {
 		items: r,
 		activeItemIndex: i
 	};
 }
-var tu = {
+var eu = {
 	1(e) {
 		if (e.menuState === 1) return e;
-		let t = e.buttonElement ? ic.Tracked(ac(e.buttonElement)) : e.buttonPositionState;
+		let t = e.buttonElement ? rc.Tracked(ic(e.buttonElement)) : e.buttonPositionState;
 		return {
 			...e,
 			activeItemIndex: null,
-			pendingFocus: { focus: Z.Nothing },
+			pendingFocus: { focus: Q.Nothing },
 			menuState: 1,
 			buttonPositionState: t
 		};
@@ -5233,7 +5233,7 @@ var tu = {
 			__demoMode: !1,
 			pendingFocus: t.focus,
 			menuState: 0,
-			buttonPositionState: ic.Idle
+			buttonPositionState: rc.Idle
 		};
 	},
 	2: (e, t) => {
@@ -5244,18 +5244,18 @@ var tu = {
 			activationTrigger: t.trigger ?? 1,
 			__demoMode: !1
 		};
-		if (t.focus === Z.Nothing) return {
+		if (t.focus === Q.Nothing) return {
 			...n,
 			activeItemIndex: null
 		};
-		if (t.focus === Z.Specific) return {
+		if (t.focus === Q.Specific) return {
 			...n,
 			activeItemIndex: e.items.findIndex((e) => e.id === t.id)
 		};
-		if (t.focus === Z.Previous) {
+		if (t.focus === Q.Previous) {
 			let r = e.activeItemIndex;
 			if (r !== null) {
-				let i = e.items[r].dataRef.current.domRef, a = zs(t, {
+				let i = e.items[r].dataRef.current.domRef, a = Rs(t, {
 					resolveItems: () => e.items,
 					resolveActiveIndex: () => e.activeItemIndex,
 					resolveId: (e) => e.id,
@@ -5269,10 +5269,10 @@ var tu = {
 					};
 				}
 			}
-		} else if (t.focus === Z.Next) {
+		} else if (t.focus === Q.Next) {
 			let r = e.activeItemIndex;
 			if (r !== null) {
-				let i = e.items[r].dataRef.current.domRef, a = zs(t, {
+				let i = e.items[r].dataRef.current.domRef, a = Rs(t, {
 					resolveItems: () => e.items,
 					resolveActiveIndex: () => e.activeItemIndex,
 					resolveId: (e) => e.id,
@@ -5287,7 +5287,7 @@ var tu = {
 				}
 			}
 		}
-		let r = eu(e), i = zs(t, {
+		let r = $l(e), i = Rs(t, {
 			resolveItems: () => r.items,
 			resolveActiveIndex: () => r.activeItemIndex,
 			resolveId: (e) => e.id,
@@ -5320,7 +5320,7 @@ var tu = {
 	},
 	5: (e, t) => {
 		let n = e.items.concat(t.items.map((e) => e)), r = e.activeItemIndex;
-		return e.pendingFocus.focus !== Z.Nothing && (r = zs(e.pendingFocus, {
+		return e.pendingFocus.focus !== Q.Nothing && (r = Rs(e.pendingFocus, {
 			resolveItems: () => n,
 			resolveActiveIndex: () => e.activeItemIndex,
 			resolveId: (e) => e.id,
@@ -5329,7 +5329,7 @@ var tu = {
 			...e,
 			items: n,
 			activeItemIndex: r,
-			pendingFocus: { focus: Z.Nothing },
+			pendingFocus: { focus: Q.Nothing },
 			pendingShouldSort: !0
 		};
 	},
@@ -5356,19 +5356,19 @@ var tu = {
 	},
 	9: (e) => e.pendingShouldSort ? {
 		...e,
-		...eu(e),
+		...$l(e),
 		pendingShouldSort: !1
 	} : e,
 	10(e) {
 		return e.buttonPositionState.kind === "Tracked" ? {
 			...e,
-			buttonPositionState: ic.Moved
+			buttonPositionState: rc.Moved
 		} : e;
 	}
-}, nu = class e extends _r {
+}, tu = class e extends gr {
 	constructor(e) {
-		super(e), Zl(this, "actions", {
-			registerItem: xr(() => {
+		super(e), Xl(this, "actions", {
+			registerItem: br(() => {
 				let e = [], t = /* @__PURE__ */ new Set();
 				return [(n, r) => {
 					t.has(r) || (t.add(r), e.push({
@@ -5380,14 +5380,14 @@ var tu = {
 					items: e.splice(0)
 				}))];
 			}),
-			unregisterItem: xr(() => {
+			unregisterItem: br(() => {
 				let e = [];
 				return [(t) => e.push(t), () => this.send({
 					type: 6,
 					items: e.splice(0)
 				})];
 			})
-		}), Zl(this, "selectors", {
+		}), Xl(this, "selectors", {
 			activeDescendantId(e) {
 				var t;
 				let n = e.activeItemIndex, r = e.items;
@@ -5409,14 +5409,14 @@ var tu = {
 			});
 		});
 		{
-			let e = this.state.id, t = Or.get(null);
-			this.disposables.add(t.on(Tr.Push, (n) => {
+			let e = this.state.id, t = Dr.get(null);
+			this.disposables.add(t.on(wr.Push, (n) => {
 				!t.selectors.isTop(n, e) && this.state.menuState === 0 && this.send({ type: 1 });
 			})), this.on(0, () => t.actions.push(e)), this.on(1, () => t.actions.pop(e));
 		}
 		this.disposables.group((e) => {
 			this.on(1, (t) => {
-				t.buttonElement && (e.dispose(), e.add(oc(t.buttonElement, t.buttonPositionState, () => {
+				t.buttonElement && (e.dispose(), e.add(ac(t.buttonElement, t.buttonPositionState, () => {
 					this.send({ type: 10 });
 				})));
 			});
@@ -5434,157 +5434,157 @@ var tu = {
 			activeItemIndex: null,
 			activationTrigger: 1,
 			pendingShouldSort: !1,
-			pendingFocus: { focus: Z.Nothing },
-			buttonPositionState: ic.Idle
+			pendingFocus: { focus: Q.Nothing },
+			buttonPositionState: rc.Idle
 		});
 	}
 	reduce(e, t) {
-		return Ht(t.type, tu, e, t);
+		return Vt(t.type, eu, e, t);
 	}
-}, ru = i(null);
-function iu(e) {
-	let t = u(ru);
+}, nu = i(null);
+function ru(e) {
+	let t = u(nu);
 	if (t === null) {
 		let t = /* @__PURE__ */ Error(`<${e} /> is missing a parent <Menu /> component.`);
-		throw Error.captureStackTrace && Error.captureStackTrace(t, au), t;
+		throw Error.captureStackTrace && Error.captureStackTrace(t, iu), t;
 	}
 	return t;
 }
-function au({ id: e, __demoMode: t = !1 }) {
-	let n = g(() => nu.new({
+function iu({ id: e, __demoMode: t = !1 }) {
+	let n = g(() => tu.new({
 		id: e,
 		__demoMode: t
 	}), []);
-	return Bs(() => n.dispose()), n;
+	return zs(() => n.dispose()), n;
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/components/menu/menu.js
-var ou = n;
-function su(e, n) {
-	let r = m(), { __demoMode: i = !1, ...a } = e, o = au({
+var au = n;
+function ou(e, n) {
+	let r = m(), { __demoMode: i = !1, ...a } = e, o = iu({
 		id: r,
 		__demoMode: i
-	}), [s, c, u] = J(o, (e) => [
+	}), [s, c, u] = Y(o, (e) => [
 		e.menuState,
 		e.itemsElement,
 		e.buttonElement
-	]), d = K(n), f = Or.get(null);
-	si(J(f, l((e) => f.selectors.isTop(e, r), [f, r])), [u, c], (e, t) => {
+	]), d = q(n), f = Dr.get(null);
+	oi(Y(f, l((e) => f.selectors.isTop(e, r), [f, r])), [u, c], (e, t) => {
 		var n;
-		o.send({ type: Q.CloseMenu }), Kr(t, Gr.Loose) || (e.preventDefault(), (n = o.state.buttonElement) == null || n.focus());
+		o.send({ type: $.CloseMenu }), Gr(t, Wr.Loose) || (e.preventDefault(), (n = o.state.buttonElement) == null || n.focus());
 	});
 	let p = U(() => {
-		o.send({ type: Q.CloseMenu });
-	}), h = Rt({
-		open: s === Ql.Open,
+		o.send({ type: $.CloseMenu });
+	}), h = W({
+		open: s === Zl.Open,
 		close: p
-	}), g = { ref: d }, _ = W();
-	return t.createElement(ws, null, t.createElement(ru.Provider, { value: o }, t.createElement(Ps, { value: Ht(s, {
-		[Ql.Open]: X.Open,
-		[Ql.Closed]: X.Closed
+	}), g = { ref: d }, _ = G();
+	return t.createElement(Cs, null, t.createElement(nu.Provider, { value: o }, t.createElement(Ns, { value: Vt(s, {
+		[Zl.Open]: Z.Open,
+		[Zl.Closed]: Z.Closed
 	}) }, _({
 		ourProps: g,
 		theirProps: a,
 		slot: h,
-		defaultTag: ou,
+		defaultTag: au,
 		name: "Menu"
 	}))));
 }
-var cu = "button";
-function lu(e, t) {
-	let n = iu("Menu.Button"), r = m(), { id: i = `headlessui-menu-button-${r}`, disabled: a = !1, autoFocus: o = !1, ...s } = e, c = v(null), u = bs(), d = K(t, c, ys(), U((e) => n.send({
-		type: Q.SetButtonElement,
+var su = "button";
+function cu(e, t) {
+	let n = ru("Menu.Button"), r = m(), { id: i = `headlessui-menu-button-${r}`, disabled: a = !1, autoFocus: o = !1, ...s } = e, c = v(null), u = ys(), d = q(t, c, vs(), U((e) => n.send({
+		type: $.SetButtonElement,
 		element: e
 	}))), f = U((e) => {
 		switch (e.key) {
-			case q.Space:
-			case q.Enter:
-			case q.ArrowDown:
+			case J.Space:
+			case J.Enter:
+			case J.ArrowDown:
 				e.preventDefault(), e.stopPropagation(), n.send({
-					type: Q.OpenMenu,
-					focus: { focus: Z.First }
+					type: $.OpenMenu,
+					focus: { focus: Q.First }
 				});
 				break;
-			case q.ArrowUp:
+			case J.ArrowUp:
 				e.preventDefault(), e.stopPropagation(), n.send({
-					type: Q.OpenMenu,
-					focus: { focus: Z.Last }
+					type: $.OpenMenu,
+					focus: { focus: Q.Last }
 				});
 				break;
 		}
 	}), p = U((e) => {
 		switch (e.key) {
-			case q.Space:
+			case J.Space:
 				e.preventDefault();
 				break;
 		}
-	}), [h, g, _] = J(n, (e) => [
+	}), [h, g, _] = Y(n, (e) => [
 		e.menuState,
 		e.buttonElement,
 		e.itemsElement
 	]);
-	mi(h === Ql.Open, {
+	pi(h === Zl.Open, {
 		trigger: g,
 		action: l((e) => {
-			if (g != null && g.contains(e.target)) return di.Ignore;
+			if (g != null && g.contains(e.target)) return ui.Ignore;
 			let t = e.target.closest("[role=\"menuitem\"]:not([data-disabled])");
-			return Cn(t) ? di.Select(t) : _ != null && _.contains(e.target) ? di.Ignore : di.Close;
+			return Sn(t) ? ui.Select(t) : _ != null && _.contains(e.target) ? ui.Ignore : ui.Close;
 		}, [g, _]),
-		close: l(() => n.send({ type: Q.CloseMenu }), []),
+		close: l(() => n.send({ type: $.CloseMenu }), []),
 		select: l((e) => e.click(), [])
 	});
-	let y = ar((e) => {
+	let y = ir((e) => {
 		var t;
-		a || (h === Ql.Open ? (E(() => n.send({ type: Q.CloseMenu })), (t = c.current) == null || t.focus({ preventScroll: !0 })) : (e.preventDefault(), n.send({
-			type: Q.OpenMenu,
-			focus: { focus: Z.Nothing },
-			trigger: $l.Pointer
+		a || (h === Zl.Open ? (E(() => n.send({ type: $.CloseMenu })), (t = c.current) == null || t.focus({ preventScroll: !0 })) : (e.preventDefault(), n.send({
+			type: $.OpenMenu,
+			focus: { focus: Q.Nothing },
+			trigger: Ql.Pointer
 		})));
-	}), { isFocusVisible: b, focusProps: x } = gt({ autoFocus: o }), { isHovered: S, hoverProps: C } = St({ isDisabled: a }), { pressed: w, pressProps: T } = Lt({ disabled: a }), D = Rt({
-		open: h === Ql.Open,
-		active: w || h === Ql.Open,
+	}), { isFocusVisible: b, focusProps: x } = gt({ autoFocus: o }), { isHovered: S, hoverProps: C } = St({ isDisabled: a }), { pressed: w, pressProps: T } = Lt({ disabled: a }), D = W({
+		open: h === Zl.Open,
+		active: w || h === Zl.Open,
 		disabled: a,
 		hover: S,
 		focus: b,
 		autofocus: o
-	}), O = Xt(u(), {
+	}), O = Yt(u(), {
 		ref: d,
 		id: i,
-		type: gi(e, c.current),
+		type: hi(e, c.current),
 		"aria-haspopup": "menu",
 		"aria-controls": _?.id,
-		"aria-expanded": h === Ql.Open,
+		"aria-expanded": h === Zl.Open,
 		disabled: a || void 0,
 		autoFocus: o,
 		onKeyDown: f,
 		onKeyUp: p
 	}, y, x, C, T);
-	return W()({
+	return G()({
 		ourProps: O,
 		theirProps: s,
 		slot: D,
-		defaultTag: cu,
+		defaultTag: su,
 		name: "Menu.Button"
 	});
 }
-var uu = "div", du = Ut.RenderStrategy | Ut.Static;
-function fu(e, n) {
-	let r = m(), { id: i = `headlessui-menu-items-${r}`, anchor: a, portal: o = !1, modal: s = !0, transition: c = !1, ...u } = e, d = vs(a), p = iu("Menu.Items"), [h, g] = Ss(d), _ = xs(), [v, b] = y(null), x = K(n, d ? h : null, U((e) => p.send({
-		type: Q.SetItemsElement,
+var lu = "div", uu = Ht.RenderStrategy | Ht.Static;
+function du(e, n) {
+	let r = m(), { id: i = `headlessui-menu-items-${r}`, anchor: a, portal: o = !1, modal: s = !0, transition: c = !1, ...u } = e, d = _s(a), p = ru("Menu.Items"), [h, g] = xs(d), _ = bs(), [v, b] = y(null), x = q(n, d ? h : null, U((e) => p.send({
+		type: $.SetItemsElement,
 		element: e
-	})), b), [S, C] = J(p, (e) => [e.menuState, e.buttonElement]), w = ci(C), T = ci(v);
+	})), b), [S, C] = Y(p, (e) => [e.menuState, e.buttonElement]), w = si(C), T = si(v);
 	d && (o = !0);
-	let D = Ns(), [O, k] = ji(c, v, D === null ? S === Ql.Open : (D & X.Open) === X.Open);
-	Rr(O, C, () => {
-		p.send({ type: Q.CloseMenu });
+	let D = Ms(), [O, k] = Ai(c, v, D === null ? S === Zl.Open : (D & Z.Open) === Z.Open);
+	Lr(O, C, () => {
+		p.send({ type: $.CloseMenu });
 	});
-	let A = J(p, (e) => e.__demoMode);
-	Ti(!A && s && S === Ql.Open, T), Lr(!A && s && S === Ql.Open, { allowed: l(() => [C, v], [C, v]) });
-	let j = !J(p, p.selectors.didButtonMove) && O;
+	let A = Y(p, (e) => e.__demoMode);
+	wi(!A && s && S === Zl.Open, T), Ir(!A && s && S === Zl.Open, { allowed: l(() => [C, v], [C, v]) });
+	let j = !Y(p, p.selectors.didButtonMove) && O;
 	f(() => {
 		let e = v;
-		e && S === Ql.Open && (At(e) || e.focus({ preventScroll: !0 }));
-	}, [S, v]), Ii(S === Ql.Open, {
+		e && S === Zl.Open && (At(e) || e.focus({ preventScroll: !0 }));
+	}, [S, v]), Fi(S === Zl.Open, {
 		container: v,
 		accept(e) {
 			return e.getAttribute("role") === "menuitem" ? NodeFilter.FILTER_REJECT : e.hasAttribute("role") ? NodeFilter.FILTER_SKIP : NodeFilter.FILTER_ACCEPT;
@@ -5596,93 +5596,93 @@ function fu(e, n) {
 	let M = Nt(), N = U((e) => {
 		var t, n;
 		switch (M.dispose(), e.key) {
-			case q.Space: if (p.state.searchQuery !== "") return e.preventDefault(), e.stopPropagation(), p.send({
-				type: Q.Search,
+			case J.Space: if (p.state.searchQuery !== "") return e.preventDefault(), e.stopPropagation(), p.send({
+				type: $.Search,
 				value: e.key
 			});
-			case q.Enter:
+			case J.Enter:
 				if (e.preventDefault(), e.stopPropagation(), p.state.activeItemIndex !== null) {
 					let { dataRef: e } = p.state.items[p.state.activeItemIndex];
 					(t = e.current?.domRef.current) == null || t.click();
 				}
-				p.send({ type: Q.CloseMenu }), qr(p.state.buttonElement);
+				p.send({ type: $.CloseMenu }), Kr(p.state.buttonElement);
 				break;
-			case q.ArrowDown: return e.preventDefault(), e.stopPropagation(), p.send({
-				type: Q.GoToItem,
-				focus: Z.Next
+			case J.ArrowDown: return e.preventDefault(), e.stopPropagation(), p.send({
+				type: $.GoToItem,
+				focus: Q.Next
 			});
-			case q.ArrowUp: return e.preventDefault(), e.stopPropagation(), p.send({
-				type: Q.GoToItem,
-				focus: Z.Previous
+			case J.ArrowUp: return e.preventDefault(), e.stopPropagation(), p.send({
+				type: $.GoToItem,
+				focus: Q.Previous
 			});
-			case q.Home:
-			case q.PageUp: return e.preventDefault(), e.stopPropagation(), p.send({
-				type: Q.GoToItem,
-				focus: Z.First
+			case J.Home:
+			case J.PageUp: return e.preventDefault(), e.stopPropagation(), p.send({
+				type: $.GoToItem,
+				focus: Q.First
 			});
-			case q.End:
-			case q.PageDown: return e.preventDefault(), e.stopPropagation(), p.send({
-				type: Q.GoToItem,
-				focus: Z.Last
+			case J.End:
+			case J.PageDown: return e.preventDefault(), e.stopPropagation(), p.send({
+				type: $.GoToItem,
+				focus: Q.Last
 			});
-			case q.Escape:
-				e.preventDefault(), e.stopPropagation(), E(() => p.send({ type: Q.CloseMenu })), (n = p.state.buttonElement) == null || n.focus({ preventScroll: !0 });
+			case J.Escape:
+				e.preventDefault(), e.stopPropagation(), E(() => p.send({ type: $.CloseMenu })), (n = p.state.buttonElement) == null || n.focus({ preventScroll: !0 });
 				break;
-			case q.Tab:
-				e.preventDefault(), e.stopPropagation(), E(() => p.send({ type: Q.CloseMenu })), $r(p.state.buttonElement, e.shiftKey ? Y.Previous : Y.Next);
+			case J.Tab:
+				e.preventDefault(), e.stopPropagation(), E(() => p.send({ type: $.CloseMenu })), Qr(p.state.buttonElement, e.shiftKey ? X.Previous : X.Next);
 				break;
 			default:
 				e.key.length === 1 && (p.send({
-					type: Q.Search,
+					type: $.Search,
 					value: e.key
-				}), M.setTimeout(() => p.send({ type: Q.ClearSearch }), 350));
+				}), M.setTimeout(() => p.send({ type: $.ClearSearch }), 350));
 				break;
 		}
 	}), P = U((e) => {
 		switch (e.key) {
-			case q.Space:
+			case J.Space:
 				e.preventDefault();
 				break;
 		}
-	}), F = Rt({ open: S === Ql.Open }), I = Xt(d ? _() : {}, {
-		"aria-activedescendant": J(p, p.selectors.activeDescendantId),
-		"aria-labelledby": J(p, (e) => e.buttonElement?.id),
+	}), F = W({ open: S === Zl.Open }), I = Yt(d ? _() : {}, {
+		"aria-activedescendant": Y(p, p.selectors.activeDescendantId),
+		"aria-labelledby": Y(p, (e) => e.buttonElement?.id),
 		id: i,
 		onKeyDown: N,
 		onKeyUp: P,
 		role: "menu",
-		tabIndex: S === Ql.Open ? 0 : void 0,
+		tabIndex: S === Zl.Open ? 0 : void 0,
 		ref: x,
 		style: {
 			...u.style,
 			...g,
-			"--button-width": rr(O, C, !0).width
+			"--button-width": nr(O, C, !0).width
 		},
-		...Ai(k)
-	}), ee = W();
-	return t.createElement(rc, {
+		...ki(k)
+	}), ee = G();
+	return t.createElement(nc, {
 		enabled: o ? e.static || O : !1,
 		ownerDocument: w
 	}, ee({
 		ourProps: I,
 		theirProps: u,
 		slot: F,
-		defaultTag: uu,
-		features: du,
+		defaultTag: lu,
+		features: uu,
 		visible: j,
 		name: "Menu.Items"
 	}));
 }
-var pu = n;
-function mu(e, n) {
-	let r = m(), { id: i = `headlessui-menu-item-${r}`, disabled: a = !1, ...o } = e, s = iu("Menu.Item"), c = J(s, (e) => s.selectors.isActive(e, i)), l = v(null), u = K(n, l), d = J(s, (e) => s.selectors.shouldScrollIntoView(e, i));
+var fu = n;
+function pu(e, n) {
+	let r = m(), { id: i = `headlessui-menu-item-${r}`, disabled: a = !1, ...o } = e, s = ru("Menu.Item"), c = Y(s, (e) => s.selectors.isActive(e, i)), l = v(null), u = q(n, l), d = Y(s, (e) => s.selectors.shouldScrollIntoView(e, i));
 	H(() => {
 		if (d) return Mt().requestAnimationFrame(() => {
 			var e, t;
 			(t = (e = l.current)?.scrollIntoView) == null || t.call(e, { block: "nearest" });
 		});
 	}, [d, l]);
-	let f = ml(l), p = v({
+	let f = pl(l), p = v({
 		disabled: a,
 		domRef: l,
 		get textValue() {
@@ -5693,33 +5693,33 @@ function mu(e, n) {
 		p.current.disabled = a;
 	}, [p, a]), H(() => (s.actions.registerItem(i, p), () => s.actions.unregisterItem(i)), [p, i]);
 	let h = U(() => {
-		s.send({ type: Q.CloseMenu });
+		s.send({ type: $.CloseMenu });
 	}), g = U((e) => {
 		if (a) return e.preventDefault();
-		s.send({ type: Q.CloseMenu }), qr(s.state.buttonElement);
+		s.send({ type: $.CloseMenu }), Kr(s.state.buttonElement);
 	}), _ = U(() => {
 		if (a) return s.send({
-			type: Q.GoToItem,
-			focus: Z.Nothing
+			type: $.GoToItem,
+			focus: Q.Nothing
 		});
 		s.send({
-			type: Q.GoToItem,
-			focus: Z.Specific,
+			type: $.GoToItem,
+			focus: Q.Specific,
 			id: i
 		});
-	}), y = Di(), b = U((e) => y.update(e)), x = U((e) => {
+	}), y = Ei(), b = U((e) => y.update(e)), x = U((e) => {
 		y.wasMoved(e) && (a || c || s.send({
-			type: Q.GoToItem,
-			focus: Z.Specific,
+			type: $.GoToItem,
+			focus: Q.Specific,
 			id: i,
-			trigger: $l.Pointer
+			trigger: Ql.Pointer
 		}));
 	}), S = U((e) => {
-		y.wasMoved(e) && (a || c && s.state.activationTrigger === $l.Pointer && s.send({
-			type: Q.GoToItem,
-			focus: Z.Nothing
+		y.wasMoved(e) && (a || c && s.state.activationTrigger === Ql.Pointer && s.send({
+			type: $.GoToItem,
+			focus: Q.Nothing
 		}));
-	}), [C, w] = qn(), [T, E] = zn(), D = Rt({
+	}), [C, w] = Kn(), [T, E] = Rn(), D = W({
 		active: c,
 		focus: c,
 		disabled: a,
@@ -5741,33 +5741,33 @@ function mu(e, n) {
 		onMouseMove: x,
 		onPointerLeave: S,
 		onMouseLeave: S
-	}, k = W();
+	}, k = G();
 	return t.createElement(w, null, t.createElement(E, null, k({
 		ourProps: O,
 		theirProps: o,
 		slot: D,
-		defaultTag: pu,
+		defaultTag: fu,
 		name: "Menu.Item"
 	})));
 }
-var hu = "div";
-function gu(e, n) {
-	let [r, i] = qn(), a = e, o = {
+var mu = "div";
+function hu(e, n) {
+	let [r, i] = Kn(), a = e, o = {
 		ref: n,
 		"aria-labelledby": r,
 		role: "group"
-	}, s = W();
+	}, s = G();
 	return t.createElement(i, null, s({
 		ourProps: o,
 		theirProps: a,
 		slot: {},
-		defaultTag: hu,
+		defaultTag: mu,
 		name: "Menu.Section"
 	}));
 }
-var _u = "header";
-function vu(e, t) {
-	let n = m(), { id: r = `headlessui-menu-heading-${n}`, ...i } = e, a = Gn();
+var gu = "header";
+function _u(e, t) {
+	let n = m(), { id: r = `headlessui-menu-heading-${n}`, ...i } = e, a = Wn();
 	H(() => a.register(r), [r, a.register]);
 	let o = {
 		id: r,
@@ -5775,32 +5775,32 @@ function vu(e, t) {
 		role: "presentation",
 		...a.props
 	};
-	return W()({
+	return G()({
 		ourProps: o,
 		theirProps: i,
 		slot: {},
-		defaultTag: _u,
+		defaultTag: gu,
 		name: "Menu.Heading"
 	});
 }
-var yu = "div";
-function bu(e, t) {
+var vu = "div";
+function yu(e, t) {
 	let n = e, r = {
 		ref: t,
 		role: "separator"
 	};
-	return W()({
+	return G()({
 		ourProps: r,
 		theirProps: n,
 		slot: {},
-		defaultTag: yu,
+		defaultTag: vu,
 		name: "Menu.Separator"
 	});
 }
-var xu = G(su), Su = G(lu), Cu = G(fu), $ = G(mu), wu = G(gu), Tu = G(vu), Eu = G(bu), Du = Object.assign(xu, {
-	Button: Su,
-	Items: Cu,
-	Item: $,
+var bu = K(ou), xu = K(cu), Su = K(du), Cu = K(pu), wu = K(hu), Tu = K(_u), Eu = K(yu), Du = Object.assign(bu, {
+	Button: xu,
+	Items: Su,
+	Item: Cu,
 	Section: wu,
 	Heading: Tu,
 	Separator: Eu
@@ -5846,12 +5846,12 @@ var xu = G(su), Su = G(lu), Cu = G(fu), $ = G(mu), wu = G(gu), Tu = G(vu), Eu = 
 			panelId: t.panelId
 		};
 	}
-}, Pu = class e extends _r {
+}, Pu = class e extends gr {
 	constructor(e) {
 		super(e), Au(this, "actions", {
 			close: () => this.send({ type: 1 }),
 			refocusableClose: (e) => {
-				this.actions.close(), (e ? Cn(e) ? e : "current" in e && Cn(e.current) ? e.current : this.state.button : this.state.button)?.focus();
+				this.actions.close(), (e ? Sn(e) ? e : "current" in e && Sn(e.current) ? e.current : this.state.button : this.state.button)?.focus();
 			},
 			open: () => this.send({ type: 0 }),
 			setButtonId: (e) => this.send({
@@ -5874,11 +5874,11 @@ var xu = G(su), Su = G(lu), Cu = G(fu), $ = G(mu), wu = G(gu), Tu = G(vu), Eu = 
 			if (!e.button || !e.panel) return !1;
 			let t = Dt(e.button) ?? document;
 			for (let n of t.querySelectorAll("body > *")) if (Number(n?.contains(e.button)) ^ Number(n?.contains(e.panel))) return !0;
-			let n = Ur(t), r = n.indexOf(e.button), i = (r + n.length - 1) % n.length, a = (r + 1) % n.length, o = n[i], s = n[a];
+			let n = Hr(t), r = n.indexOf(e.button), i = (r + n.length - 1) % n.length, a = (r + 1) % n.length, o = n[i], s = n[a];
 			return !e.panel.contains(o) && !e.panel.contains(s);
 		} });
 		{
-			let e = this.state.id, t = Or.get(null);
+			let e = this.state.id, t = Dr.get(null);
 			this.on(0, () => t.actions.push(e)), this.on(1, () => t.actions.pop(e));
 		}
 	}
@@ -5898,7 +5898,7 @@ var xu = G(su), Su = G(lu), Cu = G(fu), $ = G(mu), wu = G(gu), Tu = G(vu), Eu = 
 		});
 	}
 	reduce(e, t) {
-		return Ht(t.type, Nu, e, t);
+		return Vt(t.type, Nu, e, t);
 	}
 }, Fu = i(null);
 function Iu(e) {
@@ -5914,7 +5914,7 @@ function Lu({ id: e, __demoMode: t = !1 }) {
 		id: e,
 		__demoMode: t
 	}), []);
-	return Bs(() => n.dispose()), n;
+	return zs(() => n.dispose()), n;
 }
 //#endregion
 //#region ../../node_modules/.pnpm/@headlessui+react@2.2.10_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/@headlessui/react/dist/components/popover/popover.js
@@ -5933,15 +5933,15 @@ function Uu(e, n) {
 	let r = m(), { __demoMode: i = !1, ...a } = e, o = Lu({
 		id: r,
 		__demoMode: i
-	}), s = v(null), c = K(n, Fn((e) => {
+	}), s = v(null), c = q(n, Pn((e) => {
 		s.current = e;
-	})), [u, d, p, h, _] = J(o, l((e) => [
+	})), [u, d, p, h, _] = Y(o, l((e) => [
 		e.popoverState,
 		e.button,
 		e.panel,
 		e.buttonId,
 		e.panelId
-	], [])), y = li(s.current ?? d), b = Pt(h), x = Pt(_), S = g(() => ({
+	], [])), y = ci(s.current ?? d), b = Pt(h), x = Pt(_), S = g(() => ({
 		buttonId: b,
 		panelId: x,
 		close: o.actions.close
@@ -5954,7 +5954,7 @@ function Uu(e, n) {
 		return C?.isFocusWithinPopoverGroup() ?? (e && (d?.contains(e) || p?.contains(e)));
 	});
 	f(() => w?.(S), [w, S]);
-	let [E, D] = ec(), O = fc(d), k = lc({
+	let [E, D] = $s(), O = dc(d), k = cc({
 		mainTreeNode: O,
 		portals: E,
 		defaultContainers: [{ get current() {
@@ -5963,20 +5963,20 @@ function Uu(e, n) {
 			return o.state.panel;
 		} }]
 	});
-	hi(y, "focus", (e) => {
+	mi(y, "focus", (e) => {
 		var t, n, r, i, a, s;
-		e.target !== window && wn(e.target) && o.state.popoverState === ju.Open && (T() || o.state.button && o.state.panel && (k.contains(e.target) || (n = (t = o.state.beforePanelSentinel.current)?.contains) != null && n.call(t, e.target) || (i = (r = o.state.afterPanelSentinel.current)?.contains) != null && i.call(r, e.target) || (s = (a = o.state.afterButtonSentinel.current)?.contains) != null && s.call(a, e.target) || o.actions.close()));
-	}, !0), si(u === ju.Open, k.resolveContainers, (e, t) => {
-		o.actions.close(), Kr(t, Gr.Loose) || (e.preventDefault(), d?.focus());
+		e.target !== window && Cn(e.target) && o.state.popoverState === ju.Open && (T() || o.state.button && o.state.panel && (k.contains(e.target) || (n = (t = o.state.beforePanelSentinel.current)?.contains) != null && n.call(t, e.target) || (i = (r = o.state.afterPanelSentinel.current)?.contains) != null && i.call(r, e.target) || (s = (a = o.state.afterButtonSentinel.current)?.contains) != null && s.call(a, e.target) || o.actions.close()));
+	}, !0), oi(u === ju.Open, k.resolveContainers, (e, t) => {
+		o.actions.close(), Gr(t, Wr.Loose) || (e.preventDefault(), d?.focus());
 	});
-	let A = Rt({
+	let A = W({
 		open: u === ju.Open,
 		close: o.actions.refocusableClose
-	}), j = J(o, l((e) => Ht(e.popoverState, {
-		[ju.Open]: X.Open,
-		[ju.Closed]: X.Closed
-	}), [])), M = { ref: c }, N = W();
-	return t.createElement(dc, { node: O }, t.createElement(ws, null, t.createElement(Bu.Provider, { value: null }, t.createElement(Fu.Provider, { value: o }, t.createElement($n, { value: o.actions.refocusableClose }, t.createElement(Ps, { value: j }, t.createElement(D, null, N({
+	}), j = Y(o, l((e) => Vt(e.popoverState, {
+		[ju.Open]: Z.Open,
+		[ju.Closed]: Z.Closed
+	}), [])), M = { ref: c }, N = G();
+	return t.createElement(uc, { node: O }, t.createElement(Cs, null, t.createElement(Bu.Provider, { value: null }, t.createElement(Fu.Provider, { value: o }, t.createElement(Qn, { value: o.actions.refocusableClose }, t.createElement(Ns, { value: j }, t.createElement(D, null, N({
 		ourProps: M,
 		theirProps: a,
 		slot: A,
@@ -5986,7 +5986,7 @@ function Uu(e, n) {
 }
 var Wu = "button";
 function Gu(e, n) {
-	let r = m(), { id: i = `headlessui-popover-button-${r}`, disabled: a = !1, autoFocus: o = !1, ...s } = e, c = Iu("Popover.Button"), [u, d, p, h, g, _, b] = J(c, l((e) => [
+	let r = m(), { id: i = `headlessui-popover-button-${r}`, disabled: a = !1, autoFocus: o = !1, ...s } = e, c = Iu("Popover.Button"), [u, d, p, h, g, _, b] = Y(c, l((e) => [
 		e.popoverState,
 		c.selectors.isPortalled(e),
 		e.button,
@@ -6002,7 +6002,7 @@ function Gu(e, n) {
 		i,
 		c
 	]);
-	let [T] = y(() => Symbol()), E = K(x, n, ys(), U((e) => {
+	let [T] = y(() => Symbol()), E = q(x, n, vs(), U((e) => {
 		if (!w) {
 			if (e) c.state.buttons.current.push(T);
 			else {
@@ -6011,22 +6011,22 @@ function Gu(e, n) {
 			}
 			c.state.buttons.current.length > 1 && console.warn("You are already using a <Popover.Button /> but only 1 <Popover.Button /> is supported."), e && c.actions.setButton(e);
 		}
-	})), D = K(x, n), O = U((e) => {
+	})), D = q(x, n), O = U((e) => {
 		var t, n, r;
 		if (w) {
 			if (c.state.popoverState === ju.Closed) return;
 			switch (e.key) {
-				case q.Space:
-				case q.Enter:
+				case J.Space:
+				case J.Enter:
 					e.preventDefault(), (n = (t = e.target).click) == null || n.call(t), c.actions.close(), (r = c.state.button) == null || r.focus();
 					break;
 			}
 		} else switch (e.key) {
-			case q.Space:
-			case q.Enter:
+			case J.Space:
+			case J.Enter:
 				e.preventDefault(), e.stopPropagation(), c.state.popoverState === ju.Closed ? (C?.(c.state.buttonId), c.actions.open()) : c.actions.close();
 				break;
-			case q.Escape:
+			case J.Escape:
 				if (c.state.popoverState !== ju.Open) return C?.(c.state.buttonId);
 				if (!x.current) return;
 				let t = kt(x.current);
@@ -6035,20 +6035,20 @@ function Gu(e, n) {
 				break;
 		}
 	}), k = U((e) => {
-		w || e.key === q.Space && e.preventDefault();
+		w || e.key === J.Space && e.preventDefault();
 	}), A = U((e) => {
 		var t, n;
-		Mn(e.currentTarget) || a || (w ? (c.actions.close(), (t = c.state.button) == null || t.focus()) : (e.preventDefault(), e.stopPropagation(), c.state.popoverState === ju.Closed ? (C?.(c.state.buttonId), c.actions.open()) : c.actions.close(), (n = c.state.button) == null || n.focus()));
+		jn(e.currentTarget) || a || (w ? (c.actions.close(), (t = c.state.button) == null || t.focus()) : (e.preventDefault(), e.stopPropagation(), c.state.popoverState === ju.Closed ? (C?.(c.state.buttonId), c.actions.open()) : c.actions.close(), (n = c.state.button) == null || n.focus()));
 	}), j = U((e) => {
 		e.preventDefault(), e.stopPropagation();
-	}), { isFocusVisible: M, focusProps: N } = gt({ autoFocus: o }), { isHovered: P, hoverProps: F } = St({ isDisabled: a }), { pressed: I, pressProps: ee } = Lt({ disabled: a }), L = u === ju.Open, R = Rt({
+	}), { isFocusVisible: M, focusProps: N } = gt({ autoFocus: o }), { isHovered: P, hoverProps: F } = St({ isDisabled: a }), { pressed: I, pressProps: ee } = Lt({ disabled: a }), L = u === ju.Open, R = W({
 		open: L,
 		active: I || L,
 		disabled: a,
 		hover: P,
 		focus: M,
 		autofocus: o
-	}), z = gi(e, p), B = Xt(w ? {
+	}), z = hi(e, p), B = Yt(w ? {
 		ref: D,
 		type: z,
 		onKeyDown: O,
@@ -6067,49 +6067,49 @@ function Gu(e, n) {
 		onKeyUp: k,
 		onClick: A,
 		onMouseDown: j
-	}, N, F, ee), te = hc(), ne = U(() => {
-		if (!Cn(c.state.panel)) return;
+	}, N, F, ee), te = mc(), ne = U(() => {
+		if (!Sn(c.state.panel)) return;
 		let e = c.state.panel;
 		function t() {
-			Ht(te.current, {
-				[mc.Forwards]: () => ei(e, Y.First),
-				[mc.Backwards]: () => ei(e, Y.Last)
-			}) === Vr.Error && ei(Ur(Ot(c.state.button)).filter((e) => e.dataset.headlessuiFocusGuard !== "true"), Ht(te.current, {
-				[mc.Forwards]: Y.Next,
-				[mc.Backwards]: Y.Previous
+			Vt(te.current, {
+				[pc.Forwards]: () => $r(e, X.First),
+				[pc.Backwards]: () => $r(e, X.Last)
+			}) === Br.Error && $r(Hr(Ot(c.state.button)).filter((e) => e.dataset.headlessuiFocusGuard !== "true"), Vt(te.current, {
+				[pc.Forwards]: X.Next,
+				[pc.Backwards]: X.Previous
 			}), { relativeTo: c.state.button });
 		}
 		t();
-	}), re = W();
+	}), re = G();
 	return t.createElement(t.Fragment, null, re({
 		ourProps: B,
 		theirProps: s,
 		slot: R,
 		defaultTag: Wu,
 		name: "Popover.Button"
-	}), L && !w && d && t.createElement(mn, {
+	}), L && !w && d && t.createElement(pn, {
 		id: S,
 		ref: b,
-		features: fn.Focusable,
+		features: dn.Focusable,
 		"data-headlessui-focus-guard": !0,
 		as: "button",
 		type: "button",
 		onFocus: ne
 	}));
 }
-var Ku = "div", qu = Ut.RenderStrategy | Ut.Static;
+var Ku = "div", qu = Ht.RenderStrategy | Ht.Static;
 function Ju(e, t) {
-	let n = m(), { id: r = `headlessui-popover-backdrop-${n}`, transition: i = !1, ...a } = e, o = Iu("Popover.Backdrop"), s = J(o, l((e) => e.popoverState, [])), [c, u] = y(null), d = K(t, u), f = Ns(), [p, h] = ji(i, c, f === null ? s === ju.Open : (f & X.Open) === X.Open), g = U((e) => {
-		if (Mn(e.currentTarget)) return e.preventDefault();
+	let n = m(), { id: r = `headlessui-popover-backdrop-${n}`, transition: i = !1, ...a } = e, o = Iu("Popover.Backdrop"), s = Y(o, l((e) => e.popoverState, [])), [c, u] = y(null), d = q(t, u), f = Ms(), [p, h] = Ai(i, c, f === null ? s === ju.Open : (f & Z.Open) === Z.Open), g = U((e) => {
+		if (jn(e.currentTarget)) return e.preventDefault();
 		o.actions.close();
-	}), _ = Rt({ open: s === ju.Open }), v = {
+	}), _ = W({ open: s === ju.Open }), v = {
 		ref: d,
 		id: r,
 		"aria-hidden": !0,
 		onClick: g,
-		...Ai(h)
+		...ki(h)
 	};
-	return W()({
+	return G()({
 		ourProps: v,
 		theirProps: a,
 		slot: _,
@@ -6119,24 +6119,24 @@ function Ju(e, t) {
 		name: "Popover.Backdrop"
 	});
 }
-var Yu = "div", Xu = Ut.RenderStrategy | Ut.Static;
+var Yu = "div", Xu = Ht.RenderStrategy | Ht.Static;
 function Zu(e, n) {
-	let r = m(), { id: i = `headlessui-popover-panel-${r}`, focus: a = !1, anchor: o, portal: s = !1, modal: c = !1, transition: u = !1, ...d } = e, p = Iu("Popover.Panel"), h = J(p, p.selectors.isPortalled), [g, _, b, x, S] = J(p, l((e) => [
+	let r = m(), { id: i = `headlessui-popover-panel-${r}`, focus: a = !1, anchor: o, portal: s = !1, modal: c = !1, transition: u = !1, ...d } = e, p = Iu("Popover.Panel"), h = Y(p, p.selectors.isPortalled), [g, _, b, x, S] = Y(p, l((e) => [
 		e.popoverState,
 		e.button,
 		e.__demoMode,
 		e.beforePanelSentinel,
 		e.afterPanelSentinel
-	], [])), C = `headlessui-focus-sentinel-before-${r}`, w = `headlessui-focus-sentinel-after-${r}`, T = v(null), E = vs(o), [D, O] = Ss(E), k = xs();
+	], [])), C = `headlessui-focus-sentinel-before-${r}`, w = `headlessui-focus-sentinel-after-${r}`, T = v(null), E = _s(o), [D, O] = xs(E), k = bs();
 	E && (s = !0);
-	let [A, j] = y(null), M = K(T, n, E ? D : null, p.actions.setPanel, j), N = ci(_), P = ci(T.current);
+	let [A, j] = y(null), M = q(T, n, E ? D : null, p.actions.setPanel, j), N = si(_), P = si(T.current);
 	H(() => (p.actions.setPanelId(i), () => p.actions.setPanelId(null)), [i, p]);
-	let F = Ns(), [I, ee] = ji(u, A, F === null ? g === ju.Open : (F & X.Open) === X.Open);
-	Rr(I, _, p.actions.close), Ti(!b && c && I, P);
+	let F = Ms(), [I, ee] = Ai(u, A, F === null ? g === ju.Open : (F & Z.Open) === Z.Open);
+	Lr(I, _, p.actions.close), wi(!b && c && I, P);
 	let L = U((e) => {
 		var t;
 		switch (e.key) {
-			case q.Escape:
+			case J.Escape:
 				if (p.state.popoverState !== ju.Open || !T.current) return;
 				let n = kt(T.current);
 				if (n && !T.current.contains(n)) return;
@@ -6155,17 +6155,17 @@ function Zu(e, n) {
 	]), f(() => {
 		if (b || !a || g !== ju.Open || !T.current) return;
 		let e = kt(T.current);
-		T.current.contains(e) || ei(T.current, Y.First);
+		T.current.contains(e) || $r(T.current, X.First);
 	}, [
 		b,
 		a,
 		T.current,
 		g
 	]);
-	let R = Rt({
+	let R = W({
 		open: g === ju.Open,
 		close: p.actions.refocusableClose
-	}), z = Xt(E ? k() : {}, {
+	}), z = Yt(E ? k() : {}, {
 		ref: M,
 		id: i,
 		onKeyDown: L,
@@ -6178,19 +6178,19 @@ function Zu(e, n) {
 		style: {
 			...d.style,
 			...O,
-			"--button-width": rr(I, _, !0).width
+			"--button-width": nr(I, _, !0).width
 		},
-		...Ai(ee)
-	}), B = hc(), te = U(() => {
+		...ki(ee)
+	}), B = mc(), te = U(() => {
 		let e = T.current;
 		if (!e) return;
 		function t() {
-			Ht(B.current, {
-				[mc.Forwards]: () => {
+			Vt(B.current, {
+				[pc.Forwards]: () => {
 					var t;
-					ei(e, Y.First) === Vr.Error && ((t = p.state.afterPanelSentinel.current) == null || t.focus());
+					$r(e, X.First) === Br.Error && ((t = p.state.afterPanelSentinel.current) == null || t.focus());
 				},
-				[mc.Backwards]: () => {
+				[pc.Backwards]: () => {
 					var e;
 					(e = p.state.button) == null || e.focus({ preventScroll: !0 });
 				}
@@ -6201,31 +6201,31 @@ function Zu(e, n) {
 		let e = T.current;
 		if (!e) return;
 		function t() {
-			Ht(B.current, {
-				[mc.Forwards]: () => {
+			Vt(B.current, {
+				[pc.Forwards]: () => {
 					if (!p.state.button) return;
-					let e = Ur(Ot(p.state.button) ?? document.body), t = e.indexOf(p.state.button), n = e.slice(0, t + 1), r = [...e.slice(t + 1), ...n];
+					let e = Hr(Ot(p.state.button) ?? document.body), t = e.indexOf(p.state.button), n = e.slice(0, t + 1), r = [...e.slice(t + 1), ...n];
 					for (let e of r.slice()) if (e.dataset.headlessuiFocusGuard === "true" || A != null && A.contains(e)) {
 						let t = r.indexOf(e);
 						t !== -1 && r.splice(t, 1);
 					}
-					ei(r, Y.First, { sorted: !1 });
+					$r(r, X.First, { sorted: !1 });
 				},
-				[mc.Backwards]: () => {
+				[pc.Backwards]: () => {
 					var t;
-					ei(e, Y.Previous) === Vr.Error && ((t = p.state.button) == null || t.focus());
+					$r(e, X.Previous) === Br.Error && ((t = p.state.button) == null || t.focus());
 				}
 			});
 		}
 		t();
-	}), re = W();
-	return t.createElement(Fs, null, t.createElement(Bu.Provider, { value: i }, t.createElement($n, { value: p.actions.refocusableClose }, t.createElement(rc, {
+	}), re = G();
+	return t.createElement(Ps, null, t.createElement(Bu.Provider, { value: i }, t.createElement(Qn, { value: p.actions.refocusableClose }, t.createElement(nc, {
 		enabled: s ? e.static || I : !1,
 		ownerDocument: N
-	}, I && h && t.createElement(mn, {
+	}, I && h && t.createElement(pn, {
 		id: C,
 		ref: x,
-		features: fn.Focusable,
+		features: dn.Focusable,
 		"data-headlessui-focus-guard": !0,
 		as: "button",
 		type: "button",
@@ -6238,10 +6238,10 @@ function Zu(e, n) {
 		features: Xu,
 		visible: I,
 		name: "Popover.Panel"
-	}), I && h && t.createElement(mn, {
+	}), I && h && t.createElement(pn, {
 		id: w,
 		ref: S,
-		features: fn.Focusable,
+		features: dn.Focusable,
 		"data-headlessui-focus-guard": !0,
 		as: "button",
 		type: "button",
@@ -6250,7 +6250,7 @@ function Zu(e, n) {
 }
 var Qu = "div";
 function $u(e, n) {
-	let r = v(null), i = K(r, n), [a, o] = y([]), s = U((e) => {
+	let r = v(null), i = q(r, n), [a, o] = y([]), s = U((e) => {
 		o((t) => {
 			let n = t.indexOf(e);
 			if (n !== -1) {
@@ -6277,8 +6277,8 @@ function $u(e, n) {
 		s,
 		l,
 		u
-	]), f = Rt({}), p = e, m = { ref: i }, h = W();
-	return t.createElement(dc, null, t.createElement(Ru.Provider, { value: d }, h({
+	]), f = W({}), p = e, m = { ref: i }, h = G();
+	return t.createElement(uc, null, t.createElement(Ru.Provider, { value: d }, h({
 		ourProps: m,
 		theirProps: p,
 		slot: f,
@@ -6286,7 +6286,7 @@ function $u(e, n) {
 		name: "Popover.Group"
 	})));
 }
-var ed = G(Uu), td = G(Gu), nd = G(Ju), rd = G(Ju), id = G(Zu), ad = G($u), od = Object.assign(ed, {
+var ed = K(Uu), td = K(Gu), nd = K(Ju), rd = K(Ju), id = K(Zu), ad = K($u), od = Object.assign(ed, {
 	Button: td,
 	Backdrop: rd,
 	Overlay: nd,
@@ -6301,7 +6301,7 @@ var ed = G(Uu), td = G(Gu), nd = G(Ju), rd = G(Ju), id = G(Zu), ad = G($u), od =
 		}];
 		return {
 			...e,
-			options: Qr(n, (e) => e.element.current)
+			options: Zr(n, (e) => e.element.current)
 		};
 	},
 	1(e, t) {
@@ -6332,11 +6332,11 @@ function fd(e) {
 	return t;
 }
 function pd(e, t) {
-	return Ht(t.type, cd, e, t);
+	return Vt(t.type, cd, e, t);
 }
 var md = "div";
 function hd(e, n) {
-	let r = m(), i = Bt(), { id: a = `headlessui-radiogroup-${r}`, value: o, form: s, name: c, onChange: u, by: d, disabled: f = i || !1, defaultValue: p, tabIndex: h = 0, ...y } = e, b = tr(d), [x, S] = _(pd, { options: [] }), C = x.options, [w, T] = qn(), [E, D] = zn(), O = v(null), k = K(O, n), A = an(p), [j, M] = rn(o, u, A), N = g(() => C.find((e) => !e.propsRef.current.disabled), [C]), P = g(() => C.some((e) => b(e.propsRef.current.value, j)), [C, j]), F = U((e) => {
+	let r = m(), i = zt(), { id: a = `headlessui-radiogroup-${r}`, value: o, form: s, name: c, onChange: u, by: d, disabled: f = i || !1, defaultValue: p, tabIndex: h = 0, ...y } = e, b = er(d), [x, S] = _(pd, { options: [] }), C = x.options, [w, T] = Kn(), [E, D] = Rn(), O = v(null), k = q(O, n), A = rn(p), [j, M] = nn(o, u, A), N = g(() => C.find((e) => !e.propsRef.current.disabled), [C]), P = g(() => C.some((e) => b(e.propsRef.current.value, j)), [C, j]), F = U((e) => {
 		if (f || b(e, j)) return !1;
 		let t = C.find((t) => b(t.propsRef.current.value, e))?.propsRef.current;
 		return t != null && t.disabled ? !1 : (M?.(e), !0);
@@ -6344,24 +6344,24 @@ function hd(e, n) {
 		if (!O.current) return;
 		let t = C.filter((e) => e.propsRef.current.disabled === !1).map((e) => e.element.current);
 		switch (e.key) {
-			case q.Enter:
-				ln(e.currentTarget);
+			case J.Enter:
+				cn(e.currentTarget);
 				break;
-			case q.ArrowLeft:
-			case q.ArrowUp:
-				if (e.preventDefault(), e.stopPropagation(), ei(t, Y.Previous | Y.WrapAround) === Vr.Success) {
+			case J.ArrowLeft:
+			case J.ArrowUp:
+				if (e.preventDefault(), e.stopPropagation(), $r(t, X.Previous | X.WrapAround) === Br.Success) {
 					let e = C.find((e) => At(e.element.current));
 					e && F(e.propsRef.current.value);
 				}
 				break;
-			case q.ArrowRight:
-			case q.ArrowDown:
-				if (e.preventDefault(), e.stopPropagation(), ei(t, Y.Next | Y.WrapAround) === Vr.Success) {
+			case J.ArrowRight:
+			case J.ArrowDown:
+				if (e.preventDefault(), e.stopPropagation(), $r(t, X.Next | X.WrapAround) === Br.Success) {
 					let e = C.find((e) => At(e.element.current));
 					e && F(e.propsRef.current.value);
 				}
 				break;
-			case q.Space:
+			case J.Space:
 				{
 					e.preventDefault(), e.stopPropagation();
 					let t = C.find((e) => At(e.element.current));
@@ -6401,10 +6401,10 @@ function hd(e, n) {
 		"aria-labelledby": w,
 		"aria-describedby": E,
 		onKeyDown: I
-	}, B = Rt({ value: j }), te = l(() => {
+	}, B = W({ value: j }), te = l(() => {
 		if (A !== void 0) return F(A);
-	}, [F, A]), ne = W();
-	return t.createElement(D, { name: "RadioGroup.Description" }, t.createElement(T, { name: "RadioGroup.Label" }, t.createElement(dd.Provider, { value: R }, t.createElement(ld.Provider, { value: L }, c != null && t.createElement(_n, {
+	}, [F, A]), ne = G();
+	return t.createElement(D, { name: "RadioGroup.Description" }, t.createElement(T, { name: "RadioGroup.Label" }, t.createElement(dd.Provider, { value: R }, t.createElement(ld.Provider, { value: L }, c != null && t.createElement(gn, {
 		disabled: f,
 		data: { [c]: j || "on" },
 		overrides: {
@@ -6423,7 +6423,7 @@ function hd(e, n) {
 }
 var gd = "div";
 function _d(e, n) {
-	let r = ud("RadioGroup.Option"), i = fd("RadioGroup.Option"), a = m(), { id: o = `headlessui-radiogroup-option-${a}`, value: s, disabled: c = r.disabled || !1, autoFocus: l = !1, ...u } = e, d = v(null), f = K(d, n), [p, h] = qn(), [g, _] = zn(), y = Pt({
+	let r = ud("RadioGroup.Option"), i = fd("RadioGroup.Option"), a = m(), { id: o = `headlessui-radiogroup-option-${a}`, value: s, disabled: c = r.disabled || !1, autoFocus: l = !1, ...u } = e, d = v(null), f = q(d, n), [p, h] = Kn(), [g, _] = Rn(), y = Pt({
 		value: s,
 		disabled: c
 	});
@@ -6439,9 +6439,9 @@ function _d(e, n) {
 	]);
 	let b = U((e) => {
 		var t;
-		if (Mn(e.currentTarget)) return e.preventDefault();
+		if (jn(e.currentTarget)) return e.preventDefault();
 		i.change(s) && ((t = d.current) == null || t.focus());
-	}), x = r.firstOption?.id === o, { isFocusVisible: S, focusProps: C } = gt({ autoFocus: l }), { isHovered: w, hoverProps: T } = St({ isDisabled: c }), E = r.compare(r.value, s), D = Xt({
+	}), x = r.firstOption?.id === o, { isFocusVisible: S, focusProps: C } = gt({ autoFocus: l }), { isHovered: w, hoverProps: T } = St({ isDisabled: c }), E = r.compare(r.value, s), D = Yt({
 		ref: f,
 		id: o,
 		role: "radio",
@@ -6452,14 +6452,14 @@ function _d(e, n) {
 		tabIndex: c ? -1 : E || !r.containsCheckedOption && x ? r.tabIndex : -1,
 		onClick: c ? void 0 : b,
 		autoFocus: l
-	}, C, T), O = Rt({
+	}, C, T), O = W({
 		checked: E,
 		disabled: c,
 		active: S,
 		hover: w,
 		focus: S,
 		autofocus: l
-	}), k = W();
+	}), k = G();
 	return t.createElement(_, { name: "RadioGroup.Description" }, t.createElement(h, { name: "RadioGroup.Label" }, k({
 		ourProps: D,
 		theirProps: u,
@@ -6470,7 +6470,7 @@ function _d(e, n) {
 }
 var vd = "span";
 function yd(e, t) {
-	let n = ud("Radio"), r = fd("Radio"), i = m(), a = bn(), o = Bt(), { id: s = a || `headlessui-radio-${i}`, value: c, disabled: l = n.disabled || o || !1, autoFocus: u = !1, ...d } = e, f = v(null), p = K(f, t), h = Kn(), g = Rn(), _ = Pt({
+	let n = ud("Radio"), r = fd("Radio"), i = m(), a = yn(), o = zt(), { id: s = a || `headlessui-radio-${i}`, value: c, disabled: l = n.disabled || o || !1, autoFocus: u = !1, ...d } = e, f = v(null), p = q(f, t), h = Gn(), g = Ln(), _ = Pt({
 		value: c,
 		disabled: l
 	});
@@ -6486,9 +6486,9 @@ function yd(e, t) {
 	]);
 	let y = U((e) => {
 		var t;
-		if (Mn(e.currentTarget)) return e.preventDefault();
+		if (jn(e.currentTarget)) return e.preventDefault();
 		r.change(c) && ((t = f.current) == null || t.focus());
-	}), { isFocusVisible: b, focusProps: x } = gt({ autoFocus: u }), { isHovered: S, hoverProps: C } = St({ isDisabled: l }), w = n.firstOption?.id === s, T = n.compare(n.value, c), E = Xt({
+	}), { isFocusVisible: b, focusProps: x } = gt({ autoFocus: u }), { isHovered: S, hoverProps: C } = St({ isDisabled: l }), w = n.firstOption?.id === s, T = n.compare(n.value, c), E = Yt({
 		ref: p,
 		id: s,
 		role: "radio",
@@ -6499,14 +6499,14 @@ function yd(e, t) {
 		tabIndex: l ? -1 : T || !n.containsCheckedOption && w ? n.tabIndex : -1,
 		autoFocus: u,
 		onClick: l ? void 0 : y
-	}, x, C), D = Rt({
+	}, x, C), D = W({
 		checked: T,
 		disabled: l,
 		hover: S,
 		focus: b,
 		autofocus: u
 	});
-	return W()({
+	return G()({
 		ourProps: E,
 		theirProps: d,
 		slot: D,
@@ -6514,11 +6514,11 @@ function yd(e, t) {
 		name: "Radio"
 	});
 }
-var bd = G(hd), xd = G(_d), Sd = G(yd), Cd = Object.assign(bd, {
+var bd = K(hd), xd = K(_d), Sd = K(yd), Cd = Object.assign(bd, {
 	Option: xd,
 	Radio: Sd,
-	Label: Zn,
-	Description: Un
+	Label: Xn,
+	Description: Hn
 });
 //#endregion
 //#region ../../node_modules/.pnpm/@heroicons+react@2.2.0_react@19.2.7/node_modules/@heroicons/react/24/outline/esm/AdjustmentsHorizontalIcon.js
@@ -7581,7 +7581,13 @@ function Ep(e) {
 function Dp(e) {
 	return e === "custom" ? "custom" : typeof e == "string" && Tp.has(e) ? e : void 0;
 }
-function Op(e, t = []) {
+function Op(e) {
+	return Dp(e.swimlaneBy) ?? Ep(e.groupBy);
+}
+function kp(e, t) {
+	return e === "status" ? { columnKey: t } : e === "priority" ? { priority: t === "none" ? null : t } : e === "assignee" ? { assignee: t || null } : { swimlaneKey: t || null };
+}
+function Ap(e, t = []) {
 	let n = new Set(t), r = `lane_${wp(e).replace(/-/g, "_")}`;
 	for (let e = 0; e < 20; e += 1) {
 		let e = `${r}_${typeof globalThis.crypto?.randomUUID == "function" ? globalThis.crypto.randomUUID().replace(/-/g, "").slice(0, 8) : Math.random().toString(36).slice(2, 10).padEnd(8, "0")}`;
@@ -7589,14 +7595,14 @@ function Op(e, t = []) {
 	}
 	return `${r}_${Date.now().toString(36)}`;
 }
-function kp(e, t, n) {
+function jp(e, t, n) {
 	let r = e.trim();
-	return r ? r.length > 80 ? "Row names can be at most 80 characters." : t.some((e) => e.key !== n && e.name.trim().toLocaleLowerCase() === r.toLocaleLowerCase()) ? "Row names must be unique on this board." : null : "Row name is required.";
+	return r ? r.length > 80 ? "Swimlane names can be at most 80 characters." : t.some((e) => e.key !== n && e.name.trim().toLocaleLowerCase() === r.toLocaleLowerCase()) ? "Swimlane names must be unique on this board." : null : "Swimlane name is required.";
 }
-function Ap(e) {
+function Mp(e) {
 	return e.swimlaneKey || "";
 }
-function jp(e, t) {
+function Np(e, t) {
 	let n = [], r = e.swimlanes ?? [], i = /* @__PURE__ */ new Set(), a = /* @__PURE__ */ new Set(), o = /* @__PURE__ */ new Map(), s = /* @__PURE__ */ new Set();
 	for (let e of r) {
 		i.has(e.key) ? a.add(e.key) : i.add(e.key);
@@ -7613,7 +7619,7 @@ function jp(e, t) {
 	});
 	let c = /* @__PURE__ */ new Map();
 	for (let e of t) {
-		let t = Ap(e);
+		let t = Mp(e);
 		t && !i.has(t) && c.set(t, (c.get(t) ?? 0) + 1);
 	}
 	for (let [e, t] of c) n.push({
@@ -7623,59 +7629,53 @@ function jp(e, t) {
 	});
 	return n;
 }
-function Mp(e, t) {
-	return t === "custom" ? Ap(e) : t === "priority" ? e.priority || "none" : t === "assignee" ? e.assignee || "" : e.columnKey || "";
+function Pp(e, t) {
+	return t === "custom" ? Mp(e) : t === "priority" ? e.priority || "none" : t === "assignee" ? e.assignee || "" : e.columnKey || "";
 }
-function Np(e, t, n, r) {
+function Fp(e, t) {
+	let n = Op(t), r = Pp(e, n);
+	return n === "custom" && r && !(t.swimlanes ?? []).some((e) => e.key === r) ? "" : r;
+}
+function Ip(e, t, n, r) {
 	if (n === "status") return e.columns;
 	if (n === "priority") return op.map((e) => ({
 		key: e,
 		name: e === "none" ? r : `${e.charAt(0).toUpperCase()}${e.slice(1)}`
 	}));
-	let i = /* @__PURE__ */ new Set();
-	for (let e of t) i.add(Mp(e, n));
+	let i = /* @__PURE__ */ new Set([""]);
+	for (let e of t) i.add(Pp(e, n));
 	return [...i].sort((e, t) => e === "" ? 1 : t === "" ? -1 : e.localeCompare(t)).map((e) => ({
 		key: e,
 		name: e || r
 	}));
 }
-function Pp(e, t) {
+function Lp(e, t) {
 	let n = e.swimlaneKey;
 	return !!n && !(t ?? []).some((e) => e.key === n);
 }
-function Fp(e, t, n, r) {
-	if (n !== "custom") return Np(e, t, n, r);
-	let i = /* @__PURE__ */ new Set(), a = (e.swimlanes ?? []).filter((e) => i.has(e.key) ? !1 : (i.add(e.key), !0)), o = new Set(a.map((e) => e.key)), s = t.some((e) => !e.swimlaneKey || !o.has(e.swimlaneKey));
-	return [...a.map((e) => ({
+function Rp(e, t, n, r) {
+	if (n !== "custom") return Ip(e, t, n, r);
+	let i = /* @__PURE__ */ new Set();
+	return [...(e.swimlanes ?? []).filter((e) => i.has(e.key) ? !1 : (i.add(e.key), !0)).map((e) => ({
 		key: e.key,
 		name: e.name,
 		color: e.color
-	})), ...s ? [{
+	})), {
 		key: "",
 		name: r
-	}] : []];
-}
-function Ip(e, t, n, r) {
-	let i = /* @__PURE__ */ new Map(), a = n === "custom" ? new Set((r ?? []).map((e) => e.key)) : null;
-	for (let r of e) {
-		let e = Mp(r, n), o = n === "custom" && (!e || !a?.has(e)) ? "" : e, s = Mp(r, t), c = i.get(o);
-		c || i.set(o, c = /* @__PURE__ */ new Map());
-		let l = c.get(s);
-		l || c.set(s, l = []), l.push(r);
-	}
-	return i;
-}
-function Lp(e) {
-	return new Set((e ?? []).map((e) => e.trim().toLowerCase()));
-}
-function Rp(e, t) {
-	let [n, r, i] = e.split("-").map(Number);
-	return Kp(new Date(n, r - 1, i + t));
+	}];
 }
 function zp(e) {
+	return new Set((e ?? []).map((e) => e.trim().toLowerCase()));
+}
+function Bp(e, t) {
+	let [n, r, i] = e.split("-").map(Number);
+	return Jp(new Date(n, r - 1, i + t));
+}
+function Vp(e) {
 	return !!(e.priorities?.length || e.assignees?.length || e.tags?.length || e.due || e.blocked || e.mine || e.missingRow);
 }
-function Bp(e) {
+function Hp(e) {
 	return [
 		!!e.priorities?.length,
 		!!e.assignees?.length,
@@ -7686,79 +7686,79 @@ function Bp(e) {
 		!!e.missingRow
 	].filter(Boolean).length;
 }
-function Vp(e, t, n = {}) {
-	let r = Lp(t.priorities);
+function Up(e, t, n = {}) {
+	let r = zp(t.priorities);
 	if (r.size > 0 && !r.has((e.priority || "none").toLowerCase())) return !1;
-	let i = Lp(t.assignees);
+	let i = zp(t.assignees);
 	if (i.size > 0 && !i.has((e.assignee || "").trim().toLowerCase())) return !1;
-	let a = Lp(t.tags);
+	let a = zp(t.tags);
 	if (a.size > 0 && !e.tags.some((e) => a.has(e.label.trim().toLowerCase()))) return !1;
 	if (t.due) {
-		let r = e.due && qp(e.due) ? e.due : null, i = n.today && qp(n.today) ? n.today : Cp();
-		if (t.due === "none" && r || t.due !== "none" && !r || r && (t.due === "overdue" && r >= i || t.due === "today" && r !== i || t.due === "nextSevenDays" && (r < i || r > Rp(i, 6)))) return !1;
+		let r = e.due && Yp(e.due) ? e.due : null, i = n.today && Yp(n.today) ? n.today : Cp();
+		if (t.due === "none" && r || t.due !== "none" && !r || r && (t.due === "overdue" && r >= i || t.due === "today" && r !== i || t.due === "nextSevenDays" && (r < i || r > Bp(i, 6)))) return !1;
 	}
 	if (t.blocked && !(n.blockedCardIds ? n.blockedCardIds.has(e.id) : (e.blockedBy?.length ?? 0) > 0)) return !1;
 	if (t.mine) {
 		let t = n.currentUser?.trim().toLowerCase();
 		if (!t || e.assignee?.trim().toLowerCase() !== t) return !1;
 	}
-	return !(t.missingRow && !Pp(e, n.config?.swimlanes));
+	return !(t.missingRow && !Lp(e, n.config?.swimlanes));
 }
-function Hp(e, t) {
+function Wp(e, t) {
 	return !!(e.title.toLowerCase().includes(t) || e.ticket && e.ticket.toLowerCase().includes(t) || e.assignee && e.assignee.toLowerCase().includes(t) || e.tags.some((e) => e.label.toLowerCase().includes(t)) || e.notes && e.notes.toLowerCase().includes(t) || !e.notes && e.excerpt && e.excerpt.toLowerCase().includes(t));
 }
-function Up(e) {
+function Gp(e) {
 	return e ? "prop" in e ? e.prop === "priority" ? { priorities: [e.value] } : e.prop === "assignee" ? { assignees: [e.value] } : e.prop === "tag" ? { tags: [e.value] } : { missingRow: !0 } : e : {};
 }
-function Wp(e, t, n, r, i = {}) {
-	let a = t.trim().toLowerCase(), o = Up(n);
-	return e.filter((e) => a && !Hp(e, a) ? !1 : Vp(e, o, {
+function Kp(e, t, n, r, i = {}) {
+	let a = t.trim().toLowerCase(), o = Gp(n);
+	return e.filter((e) => a && !Wp(e, a) ? !1 : Up(e, o, {
 		...i,
 		config: r
 	}));
 }
-function Gp(e, t) {
+function qp(e, t) {
 	let n = [...e];
 	return t === "due" ? n.sort((e, t) => (e.due || "9999-99-99").localeCompare(t.due || "9999-99-99")) : t === "priority" ? n.sort((e, t) => (sp[e.priority || "none"] ?? 5) - (sp[t.priority || "none"] ?? 5)) : t === "title" ? n.sort((e, t) => e.title.localeCompare(t.title)) : n.sort((e, t) => e.position - t.position), n;
 }
-function Kp(e) {
+function Jp(e) {
 	return `${e.getFullYear()}-${String(e.getMonth() + 1).padStart(2, "0")}-${String(e.getDate()).padStart(2, "0")}`;
 }
-function qp(e) {
+function Yp(e) {
 	return !!e && /^\d{4}-\d{2}-\d{2}$/.test(e);
 }
-function Jp() {
+function Xp() {
 	return Cp().slice(0, 7);
 }
-function Yp(e, t) {
+function Zp(e, t) {
 	let [n, r] = e.split("-"), i = new Date(Number(n), Number(r) - 1 + t, 1);
 	return `${i.getFullYear()}-${String(i.getMonth() + 1).padStart(2, "0")}`;
 }
-function Xp(e) {
+function Qp(e) {
 	let t = /* @__PURE__ */ new Map();
 	for (let n of e) {
-		if (!qp(n.due)) continue;
+		if (!Yp(n.due)) continue;
 		let e = t.get(n.due);
 		e ? e.push(n) : t.set(n.due, [n]);
 	}
 	return t;
 }
-function Zp(e, t = 0) {
+function $p(e, t = 0) {
 	let [n, r] = e.split("-"), i = Number(n), a = Number(r), o = (new Date(i, a - 1, 1).getDay() - t + 7) % 7, s = new Date(i, a - 1, 1 - o), c = [];
 	for (let e = 0; e < 6; e++) {
 		let t = [];
-		for (let n = 0; n < 7; n++) t.push(Kp(new Date(s.getFullYear(), s.getMonth(), s.getDate() + e * 7 + n)));
+		for (let n = 0; n < 7; n++) t.push(Jp(new Date(s.getFullYear(), s.getMonth(), s.getDate() + e * 7 + n)));
 		c.push(t);
 	}
 	return c;
 }
 //#endregion
 //#region ../../shared/components/board/BoardFilterPopover.tsx
-function Qp(e, t) {
+function em(e, t) {
 	let n = new Set(e ?? []);
 	return n.has(t) ? n.delete(t) : n.add(t), n.size > 0 ? [...n] : void 0;
 }
-function $p({ selected: e, children: t, onClick: n, selectionRole: r = "checkbox" }) {
+function tm({ selected: e, children: t, onClick: n, selectionRole: r = "checkbox" }) {
 	return /* @__PURE__ */ C("button", {
 		type: "button",
 		role: r,
@@ -7775,7 +7775,7 @@ function $p({ selected: e, children: t, onClick: n, selectionRole: r = "checkbox
 		})]
 	});
 }
-function em({ title: e, children: t }) {
+function nm({ title: e, children: t }) {
 	return /* @__PURE__ */ C("section", {
 		className: "border-t border-line px-3 py-3 first:border-t-0",
 		children: [/* @__PURE__ */ S("h3", {
@@ -7784,11 +7784,11 @@ function em({ title: e, children: t }) {
 		}), t]
 	});
 }
-function tm(e) {
+function rm(e) {
 	return e === "overdue" ? V._({ id: "ddrz1m" }) : e === "today" ? V._({ id: "1iShX0" }) : e === "nextSevenDays" ? V._({ id: "3CIp19" }) : V._({ id: "VXh9CK" });
 }
-function nm({ filters: e, onChange: t, assignees: r, tags: i, currentUser: a, visibleCount: o, totalCount: s, portalClassName: c }) {
-	let l = Bp(e), u = c ? ` ${c}` : "", d = (n, r) => t({
+function im({ filters: e, onChange: t, assignees: r, tags: i, currentUser: a, visibleCount: o, totalCount: s, portalClassName: c }) {
+	let l = Hp(e), u = c ? ` ${c}` : "", d = (n, r) => t({
 		...e,
 		[n]: r
 	}), f = (n) => {
@@ -7819,7 +7819,7 @@ function nm({ filters: e, onChange: t, assignees: r, tags: i, currentUser: a, vi
 		})
 	}), e.due && p.push({
 		key: "due",
-		label: tm(e.due)
+		label: rm(e.due)
 	}), e.blocked && p.push({
 		key: "blocked",
 		label: V._({ id: "32TndD" })
@@ -7828,7 +7828,7 @@ function nm({ filters: e, onChange: t, assignees: r, tags: i, currentUser: a, vi
 		label: V._({ id: "YDa2KG" })
 	}), e.missingRow && p.push({
 		key: "missingRow",
-		label: V._({ id: "lqoy3F" })
+		label: V._({ id: "WSbuWy" })
 	}), /* @__PURE__ */ C(n, { children: [/* @__PURE__ */ C(od, {
 		className: "relative",
 		children: [/* @__PURE__ */ C(td, {
@@ -7875,23 +7875,23 @@ function nm({ filters: e, onChange: t, assignees: r, tags: i, currentUser: a, vi
 			}), /* @__PURE__ */ C("div", {
 				className: "max-h-[min(70vh,34rem)] overflow-y-auto",
 				children: [
-					/* @__PURE__ */ S(em, {
+					/* @__PURE__ */ S(nm, {
 						title: /* @__PURE__ */ S(L, { id: "1hKEom" }),
 						children: /* @__PURE__ */ S("div", {
 							className: "grid grid-cols-2 gap-1",
-							children: op.map((t) => /* @__PURE__ */ S($p, {
+							children: op.map((t) => /* @__PURE__ */ S(tm, {
 								selected: e.priorities?.includes(t) ?? !1,
-								onClick: () => d("priorities", Qp(e.priorities, t)),
+								onClick: () => d("priorities", em(e.priorities, t)),
 								children: t === "none" ? V._({ id: "-X4ual" }) : t
 							}, t))
 						})
 					}),
-					/* @__PURE__ */ S(em, {
+					/* @__PURE__ */ S(nm, {
 						title: /* @__PURE__ */ S(L, { id: "ojKCLU" }),
 						children: /* @__PURE__ */ C("div", {
 							className: "space-y-1",
 							children: [
-								a && /* @__PURE__ */ S($p, {
+								a && /* @__PURE__ */ S(tm, {
 									selected: !!e.mine,
 									onClick: () => d("mine", !e.mine || void 0),
 									children: /* @__PURE__ */ C("span", {
@@ -7899,31 +7899,31 @@ function nm({ filters: e, onChange: t, assignees: r, tags: i, currentUser: a, vi
 										children: [/* @__PURE__ */ S(Wf, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "YDa2KG" })]
 									})
 								}),
-								/* @__PURE__ */ S($p, {
+								/* @__PURE__ */ S(tm, {
 									selected: e.assignees?.includes("") ?? !1,
-									onClick: () => d("assignees", Qp(e.assignees, "")),
+									onClick: () => d("assignees", em(e.assignees, "")),
 									children: /* @__PURE__ */ S(L, { id: "EbMPZJ" })
 								}),
-								r.map((t) => /* @__PURE__ */ S($p, {
+								r.map((t) => /* @__PURE__ */ S(tm, {
 									selected: e.assignees?.includes(t) ?? !1,
-									onClick: () => d("assignees", Qp(e.assignees, t)),
+									onClick: () => d("assignees", em(e.assignees, t)),
 									children: t
 								}, t))
 							]
 						})
 					}),
-					i.length > 0 && /* @__PURE__ */ S(em, {
+					i.length > 0 && /* @__PURE__ */ S(nm, {
 						title: /* @__PURE__ */ S(L, { id: "h8DugX" }),
 						children: /* @__PURE__ */ S("div", {
 							className: "space-y-1",
-							children: i.map((t) => /* @__PURE__ */ S($p, {
+							children: i.map((t) => /* @__PURE__ */ S(tm, {
 								selected: e.tags?.includes(t) ?? !1,
-								onClick: () => d("tags", Qp(e.tags, t)),
+								onClick: () => d("tags", em(e.tags, t)),
 								children: t
 							}, t))
 						})
 					}),
-					/* @__PURE__ */ S(em, {
+					/* @__PURE__ */ S(nm, {
 						title: /* @__PURE__ */ S(L, { id: "XicmhT" }),
 						children: /* @__PURE__ */ S("div", {
 							className: "grid grid-cols-2 gap-1",
@@ -7934,17 +7934,17 @@ function nm({ filters: e, onChange: t, assignees: r, tags: i, currentUser: a, vi
 								"today",
 								"nextSevenDays",
 								"none"
-							].map((t) => /* @__PURE__ */ S($p, {
+							].map((t) => /* @__PURE__ */ S(tm, {
 								selected: e.due === t,
 								selectionRole: "radio",
 								onClick: () => d("due", t),
-								children: tm(t)
+								children: rm(t)
 							}, t))
 						})
 					}),
-					/* @__PURE__ */ C(em, {
+					/* @__PURE__ */ C(nm, {
 						title: /* @__PURE__ */ S(L, { id: "YFdnVT" }),
-						children: [/* @__PURE__ */ S($p, {
+						children: [/* @__PURE__ */ S(tm, {
 							selected: !!e.blocked,
 							onClick: () => d("blocked", !e.blocked || void 0),
 							children: /* @__PURE__ */ C("span", {
@@ -7953,10 +7953,10 @@ function nm({ filters: e, onChange: t, assignees: r, tags: i, currentUser: a, vi
 							})
 						}), e.missingRow && /* @__PURE__ */ S("div", {
 							className: "mt-1",
-							children: /* @__PURE__ */ S($p, {
+							children: /* @__PURE__ */ S(tm, {
 								selected: !0,
 								onClick: () => d("missingRow", void 0),
-								children: /* @__PURE__ */ S(L, { id: "-9kYEs" })
+								children: /* @__PURE__ */ S(L, { id: "JPB7_s" })
 							})
 						})]
 					})
@@ -7980,7 +7980,7 @@ function nm({ filters: e, onChange: t, assignees: r, tags: i, currentUser: a, vi
 }
 //#endregion
 //#region ../../shared/components/board/BoardTable.tsx
-function rm({ cards: e, statusName: t, today: n, doneKey: r, selectedId: i, onSelect: a }) {
+function am({ cards: e, statusName: t, today: n, doneKey: r, selectedId: i, onSelect: a }) {
 	let o = "px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-brand-gray", s = "px-3 py-2 align-middle", c = /* @__PURE__ */ S("span", {
 		className: "text-stone-300",
 		children: "—"
@@ -8101,9 +8101,9 @@ function rm({ cards: e, statusName: t, today: n, doneKey: r, selectedId: i, onSe
 }
 //#endregion
 //#region ../../shared/components/board/BoardCalendar.tsx
-var im = Array.from({ length: 7 }, (e, t) => new Date(2023, 0, 1 + t).toLocaleDateString(void 0, { weekday: "short" }));
-function am({ cards: e, today: t, doneKey: n, mode: r, onModeChange: i, selectedId: a, onSelect: o }) {
-	let [s, c] = y(() => Jp()), l = Xp(e), [u, d] = s.split("-"), f = new Date(Number(u), Number(d) - 1, 1).toLocaleDateString(void 0, {
+var om = Array.from({ length: 7 }, (e, t) => new Date(2023, 0, 1 + t).toLocaleDateString(void 0, { weekday: "short" }));
+function sm({ cards: e, today: t, doneKey: n, mode: r, onModeChange: i, selectedId: a, onSelect: o }) {
+	let [s, c] = y(() => Xp()), l = Qp(e), [u, d] = s.split("-"), f = new Date(Number(u), Number(d) - 1, 1).toLocaleDateString(void 0, {
 		year: "numeric",
 		month: "long"
 	}), p = (e) => !!e.due && e.due < t && e.columnKey !== n, m = "inline-flex h-7 w-7 items-center justify-center rounded-md border border-stone-200 text-stone-500 hover:border-brand/40 hover:text-brand-dark", h = (e) => `rounded-md px-2 py-1 text-xs font-medium ${r === e ? "bg-brand-soft text-brand-dark" : "text-stone-500 hover:text-brand-dark"}`, g = (e, t) => {
@@ -8142,7 +8142,7 @@ function am({ cards: e, today: t, doneKey: n, mode: r, onModeChange: i, selected
 				className: m,
 				title: V._({ id: "1xwZj_" }),
 				"aria-label": V._({ id: "1xwZj_" }),
-				onClick: () => c((e) => Yp(e, -1)),
+				onClick: () => c((e) => Zp(e, -1)),
 				children: /* @__PURE__ */ S(tf, { className: "h-4 w-4" })
 			}),
 			/* @__PURE__ */ S("button", {
@@ -8150,7 +8150,7 @@ function am({ cards: e, today: t, doneKey: n, mode: r, onModeChange: i, selected
 				className: m,
 				title: V._({ id: "g8JmSC" }),
 				"aria-label": V._({ id: "g8JmSC" }),
-				onClick: () => c((e) => Yp(e, 1)),
+				onClick: () => c((e) => Zp(e, 1)),
 				children: /* @__PURE__ */ S(rf, { className: "h-4 w-4" })
 			}),
 			/* @__PURE__ */ S("span", {
@@ -8160,7 +8160,7 @@ function am({ cards: e, today: t, doneKey: n, mode: r, onModeChange: i, selected
 			/* @__PURE__ */ S("button", {
 				type: "button",
 				className: "rounded-md border border-stone-200 px-2 py-1 text-xs text-stone-600 hover:border-brand/40 hover:text-brand-dark",
-				onClick: () => c(Jp()),
+				onClick: () => c(Xp()),
 				children: /* @__PURE__ */ S(L, { id: "ecUA8p" })
 			})
 		] }), /* @__PURE__ */ C("div", {
@@ -8179,7 +8179,7 @@ function am({ cards: e, today: t, doneKey: n, mode: r, onModeChange: i, selected
 		})]
 	});
 	if (r === "agenda") {
-		let n = Gp(e, "due"), r = n.filter((e) => qp(e.due)), i = n.filter((e) => !qp(e.due)), a = "";
+		let n = qp(e, "due"), r = n.filter((e) => Yp(e.due)), i = n.filter((e) => !Yp(e.due)), a = "";
 		return /* @__PURE__ */ C("div", {
 			className: "flex min-h-0 flex-1 flex-col",
 			children: [_, /* @__PURE__ */ C("div", {
@@ -8213,14 +8213,14 @@ function am({ cards: e, today: t, doneKey: n, mode: r, onModeChange: i, selected
 			})]
 		});
 	}
-	let v = Zp(s);
+	let v = $p(s);
 	return /* @__PURE__ */ C("div", {
 		className: "flex min-h-0 flex-1 flex-col",
 		children: [
 			_,
 			/* @__PURE__ */ S("div", {
 				className: "grid grid-cols-7 border-b border-black/[0.04] bg-[#fbfdfb]",
-				children: im.map((e) => /* @__PURE__ */ S("div", {
+				children: om.map((e) => /* @__PURE__ */ S("div", {
 					className: "px-2 py-1 text-center text-[11px] font-medium uppercase tracking-wide text-brand-gray",
 					children: e
 				}, e))
@@ -8248,101 +8248,15 @@ function am({ cards: e, today: t, doneKey: n, mode: r, onModeChange: i, selected
 	});
 }
 //#endregion
-//#region ../../shared/components/board/LaneDetailsPopover.tsx
-function om({ lane: e, cardCount: t, portalClassName: n, buttonClassName: r = "flex h-8 w-8 items-center justify-center rounded-lg text-stone-400 hover:bg-white hover:text-stone-600" }) {
-	let [i, a] = y("idle"), o = v(null), s = n ? ` ${n}` : "";
-	f(() => {
-		a("idle");
-	}, [e.key]), f(() => () => {
-		o.current != null && window.clearTimeout(o.current);
-	}, []);
-	let c = async () => {
-		try {
-			if (!navigator.clipboard) throw Error("Clipboard unavailable");
-			await navigator.clipboard.writeText(e.key), a("copied"), o.current != null && window.clearTimeout(o.current), o.current = window.setTimeout(() => a("idle"), 1600);
-		} catch {
-			a("error");
-		}
-	};
-	return /* @__PURE__ */ C(od, {
-		className: "relative shrink-0",
-		children: [/* @__PURE__ */ S(td, {
-			title: V._({ id: "6G3KzD" }),
-			"aria-label": V._({
-				id: "RnplaY",
-				values: { 0: e.name }
-			}),
-			className: r,
-			children: /* @__PURE__ */ S(bf, { className: "h-4 w-4" })
-		}), /* @__PURE__ */ C(id, {
-			anchor: "bottom end",
-			className: `z-50 w-80 rounded-xl border border-line bg-white p-4 shadow-lg shadow-emerald-950/10 [--anchor-gap:4px] focus:outline-none${s}`,
-			children: [
-				/* @__PURE__ */ C("p", {
-					className: "flex items-center gap-2 text-xs font-semibold text-stone-800",
-					children: [/* @__PURE__ */ S(bf, { className: "h-4 w-4 text-brand-dark" }), /* @__PURE__ */ S(L, { id: "6G3KzD" })]
-				}),
-				/* @__PURE__ */ C("dl", {
-					className: "mt-3 grid grid-cols-[64px_minmax(0,1fr)] items-center gap-x-2 gap-y-2 text-[11px]",
-					children: [
-						/* @__PURE__ */ S("dt", {
-							className: "text-brand-gray",
-							children: /* @__PURE__ */ S(L, { id: "6YtxFj" })
-						}),
-						/* @__PURE__ */ S("dd", {
-							className: "truncate font-medium text-stone-700",
-							children: e.name
-						}),
-						/* @__PURE__ */ S("dt", {
-							className: "text-brand-gray",
-							children: /* @__PURE__ */ S(L, { id: "PM7yYy" })
-						}),
-						/* @__PURE__ */ C("dd", {
-							className: "flex min-w-0 items-center gap-1.5",
-							children: [/* @__PURE__ */ S("code", {
-								className: "min-w-0 flex-1 truncate rounded bg-stone-100 px-1.5 py-1 text-[10px] text-stone-600",
-								children: e.key
-							}), /* @__PURE__ */ C("button", {
-								type: "button",
-								title: V._({ id: "fdEjOR" }),
-								"aria-label": V._({ id: "fdEjOR" }),
-								onClick: () => void c(),
-								className: "inline-flex h-7 items-center gap-1 rounded-lg border border-stone-200 px-2 text-[10px] font-medium text-brand-dark hover:border-brand/30",
-								children: [/* @__PURE__ */ S(cf, { className: "h-3.5 w-3.5" }), i === "copied" ? V._({ id: "6V3Ea3" }) : V._({ id: "he3ygx" })]
-							})]
-						}),
-						/* @__PURE__ */ S("dt", {
-							className: "text-brand-gray",
-							children: /* @__PURE__ */ S(L, { id: "xUOPoQ" })
-						}),
-						/* @__PURE__ */ S("dd", {
-							className: "tabular-nums text-stone-700",
-							children: /* @__PURE__ */ S(L, {
-								id: "tF-_sn",
-								values: { cardCount: t }
-							})
-						})
-					]
-				}),
-				i === "error" && /* @__PURE__ */ S("p", {
-					className: "mt-3 text-[11px] text-red-600",
-					role: "alert",
-					children: /* @__PURE__ */ S(L, { id: "vfYjJ_" })
-				})
-			]
-		})]
-	});
-}
-//#endregion
 //#region ../../shared/components/board/StatusActionsMenu.tsx
-function sm({ column: e, siblings: t, actions: n, doneKey: r, orientation: i, portalClassName: a, buttonClassName: o = "flex h-8 w-8 items-center justify-center rounded-lg text-stone-400 hover:bg-white hover:text-stone-600" }) {
+function cm({ column: e, siblings: t, actions: n, doneKey: r, orientation: i, portalClassName: a, buttonClassName: o = "flex h-8 w-8 items-center justify-center rounded-lg text-stone-400 hover:bg-white hover:text-stone-600" }) {
 	let s = t.findIndex((t) => t.key === e.key), c = r === e.key;
 	if (!(n.renameColumn || n.reorderColumns || n.toggleDoneColumn || n.setColumnLimit || n.setColumnColor || n.deleteColumn)) return null;
 	let l = a ? ` ${a}` : "", u = s > 0 ? t[s - 1] : void 0, d = s >= 0 && s < t.length - 1 ? t[s + 1] : void 0;
 	return /* @__PURE__ */ C(Du, {
 		as: "div",
 		className: "relative shrink-0",
-		children: [/* @__PURE__ */ S(Su, {
+		children: [/* @__PURE__ */ S(xu, {
 			title: V._({ id: "YHjvGb" }),
 			"aria-label": V._({
 				id: "RlLl3G",
@@ -8350,17 +8264,17 @@ function sm({ column: e, siblings: t, actions: n, doneKey: r, orientation: i, po
 			}),
 			className: o,
 			children: /* @__PURE__ */ S(mf, { className: "h-4 w-4" })
-		}), /* @__PURE__ */ C(Cu, {
+		}), /* @__PURE__ */ C(Su, {
 			anchor: "bottom end",
 			className: `z-50 w-48 rounded-xl border border-line bg-white py-1 text-xs shadow-lg shadow-emerald-950/10 [--anchor-gap:4px] focus:outline-none${l}`,
 			children: [
-				n.renameColumn && /* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
+				n.renameColumn && /* @__PURE__ */ S(Cu, { children: /* @__PURE__ */ C("button", {
 					type: "button",
 					onClick: () => void n.renameColumn?.(e.key),
 					className: "flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 data-[focus]:bg-stone-100",
 					children: [/* @__PURE__ */ S(Af, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "2wxgft" })]
 				}) }),
-				n.reorderColumns && /* @__PURE__ */ C(x, { children: [/* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
+				n.reorderColumns && /* @__PURE__ */ C(x, { children: [/* @__PURE__ */ S(Cu, { children: /* @__PURE__ */ C("button", {
 					type: "button",
 					disabled: !u,
 					"aria-disabled": !u,
@@ -8369,7 +8283,7 @@ function sm({ column: e, siblings: t, actions: n, doneKey: r, orientation: i, po
 					},
 					className: "flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 aria-disabled:opacity-40 data-[focus]:bg-stone-100",
 					children: [S(i === "horizontal" ? kd : Fd, { className: "h-3.5 w-3.5" }), i === "horizontal" ? /* @__PURE__ */ S(L, { id: "iSLA_r" }) : /* @__PURE__ */ S(L, { id: "QyioBP" })]
-				}) }), /* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
+				}) }), /* @__PURE__ */ S(Cu, { children: /* @__PURE__ */ C("button", {
 					type: "button",
 					disabled: !d,
 					"aria-disabled": !d,
@@ -8379,13 +8293,13 @@ function sm({ column: e, siblings: t, actions: n, doneKey: r, orientation: i, po
 					className: "flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 aria-disabled:opacity-40 data-[focus]:bg-stone-100",
 					children: [S(i === "horizontal" ? Nd : Dd, { className: "h-3.5 w-3.5" }), i === "horizontal" ? /* @__PURE__ */ S(L, { id: "Ubl2by" }) : /* @__PURE__ */ S(L, { id: "3Ib6FN" })]
 				}) })] }),
-				n.toggleDoneColumn && /* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
+				n.toggleDoneColumn && /* @__PURE__ */ S(Cu, { children: /* @__PURE__ */ C("button", {
 					type: "button",
 					onClick: () => void n.toggleDoneColumn?.(e.key),
 					className: "flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 data-[focus]:bg-stone-100",
 					children: [/* @__PURE__ */ S(Yd, { className: "h-3.5 w-3.5" }), c ? /* @__PURE__ */ S(L, { id: "G4qrLy" }) : /* @__PURE__ */ S(L, { id: "wtw-au" })]
 				}) }),
-				n.setColumnLimit && /* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
+				n.setColumnLimit && /* @__PURE__ */ S(Cu, { children: /* @__PURE__ */ C("button", {
 					type: "button",
 					onClick: () => void n.setColumnLimit?.(e.key),
 					className: "flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 data-[focus]:bg-stone-100",
@@ -8413,7 +8327,7 @@ function sm({ column: e, siblings: t, actions: n, doneKey: r, orientation: i, po
 						})]
 					})]
 				})] }),
-				n.deleteColumn && /* @__PURE__ */ C(x, { children: [/* @__PURE__ */ S("div", { className: "my-1 border-t border-line" }), /* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
+				n.deleteColumn && /* @__PURE__ */ C(x, { children: [/* @__PURE__ */ S("div", { className: "my-1 border-t border-line" }), /* @__PURE__ */ S(Cu, { children: /* @__PURE__ */ C("button", {
 					type: "button",
 					disabled: t.length <= 1,
 					"aria-disabled": t.length <= 1,
@@ -8428,335 +8342,16 @@ function sm({ column: e, siblings: t, actions: n, doneKey: r, orientation: i, po
 	});
 }
 //#endregion
-//#region ../../shared/components/board/BoardSwimlanes.tsx
-function cm({ cards: e, columns: t, lanes: r, config: i, groupKey: a, swimlaneKey: o, sortBy: s, today: c, doneKey: l, selectedId: u, actions: d, readOnly: f, customLaneMutationPending: p, portalClassName: m, onSelect: h, onOpenManager: _, onManageLane: v, onMoveCustomLane: b, onSetCustomLaneColor: x, onShowMissing: w }) {
-	let [T, E] = y(!1), [D, O] = y(""), k = m ? ` ${m}` : "", A = g(() => Ip(e, a, o, i.swimlanes), [
-		e,
-		i.swimlanes,
-		a,
-		o
-	]), j = { gridTemplateColumns: `9rem repeat(${Math.max(t.length, 1)}, minmax(15rem, 1fr))` }, M = g(() => (i.swimlanes ?? []).filter((e, t, n) => n.findIndex((t) => t.key === e.key) === t), [i.swimlanes]), N = g(() => new Map(M.map((e) => [e.key, e])), [M]), P = o === "custom" ? e.filter((e) => !!e.swimlaneKey && !N.has(e.swimlaneKey)).length : 0, F = g(() => {
-		let e = /* @__PURE__ */ new Map();
-		for (let [t, n] of A) e.set(t, [...n.values()].reduce((e, t) => e + t.length, 0));
-		return e;
-	}, [A]), I = g(() => {
-		let e = new Map(t.map((e) => [e.key, 0]));
-		for (let t of A.values()) for (let [n, r] of t) e.has(n) && e.set(n, (e.get(n) ?? 0) + r.length);
-		return e;
-	}, [t, A]), ee = (e) => F.get(e) ?? 0, R = r.filter((e) => e.key !== "" || ee(e.key) > 0), z = (e) => {
-		let t = e.due && e.due < c && e.columnKey !== l;
-		return /* @__PURE__ */ C("button", {
-			type: "button",
-			onClick: () => h(e),
-			title: e.title,
-			"data-card-id": e.id,
-			className: `block w-full rounded-lg bg-white p-2 text-left text-sm shadow-sm ring-1 transition hover:ring-brand/30 focus:outline-none focus:ring-2 focus:ring-brand/40 ${u === e.id ? "ring-brand/60" : "ring-black/[0.04]"}`,
-			children: [
-				e.ticket && /* @__PURE__ */ S("span", {
-					className: "mb-0.5 inline-block rounded bg-stone-100 px-1 py-0.5 font-mono text-[10px] font-medium tracking-tight text-stone-500",
-					children: e.ticket
-				}),
-				/* @__PURE__ */ C("span", {
-					className: "block truncate text-stone-800",
-					children: [e.icon && /* @__PURE__ */ S("span", {
-						className: "mr-1",
-						children: e.icon
-					}), e.title]
-				}),
-				(e.priority && e.priority !== "none" || e.due || (e.taskTotal ?? 0) > 0) && /* @__PURE__ */ C("span", {
-					className: "mt-1 flex flex-wrap items-center gap-1.5",
-					children: [
-						e.priority && e.priority !== "none" && /* @__PURE__ */ S("span", {
-							className: `rounded px-1.5 py-0.5 text-[11px] font-medium ${cp[e.priority] ?? "bg-stone-100 text-stone-500"}`,
-							children: e.priority
-						}),
-						(e.taskTotal ?? 0) > 0 && /* @__PURE__ */ C("span", {
-							className: `inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[11px] font-medium ${e.taskDone === e.taskTotal ? "bg-emerald-50 text-emerald-600" : "bg-stone-100 text-stone-500"}`,
-							children: [
-								/* @__PURE__ */ S(Yd, { className: "h-3 w-3" }),
-								e.taskDone,
-								"/",
-								e.taskTotal
-							]
-						}),
-						e.due && /* @__PURE__ */ C("span", {
-							className: `inline-flex items-center gap-0.5 text-[11px] ${t ? "font-medium text-red-600" : "text-brand-gray"}`,
-							children: [/* @__PURE__ */ S(qd, { className: "h-3 w-3" }), e.due]
-						})
-					]
-				})
-			]
-		}, e.id);
-	}, B = (e, t) => {
-		let n = N.get(e.key);
-		return !n || f ? null : /* @__PURE__ */ C(Du, {
-			as: "div",
-			className: "relative shrink-0",
-			children: [/* @__PURE__ */ S(Su, {
-				disabled: p,
-				title: V._({ id: "-hwvgo" }),
-				"aria-label": V._({
-					id: "RlLl3G",
-					values: { 0: e.name }
-				}),
-				className: "flex h-8 w-8 items-center justify-center rounded-lg text-stone-400 hover:bg-white hover:text-stone-600 disabled:cursor-wait disabled:opacity-40",
-				children: /* @__PURE__ */ S(mf, { className: "h-4 w-4" })
-			}), /* @__PURE__ */ C(Cu, {
-				anchor: "bottom end",
-				className: `z-50 w-48 rounded-xl border border-line bg-white py-1 text-xs shadow-lg shadow-emerald-950/10 [--anchor-gap:4px] focus:outline-none${k}`,
-				children: [
-					/* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
-						type: "button",
-						onClick: () => v({
-							laneKey: e.key,
-							action: "rename"
-						}),
-						className: "flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 data-[focus]:bg-stone-100",
-						children: [/* @__PURE__ */ S(Af, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "2wxgft" })]
-					}) }),
-					/* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
-						type: "button",
-						disabled: t === 0 || p,
-						"aria-disabled": t === 0 || p,
-						onClick: () => b(e.key, -1),
-						className: "flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 aria-disabled:opacity-40 data-[focus]:bg-stone-100",
-						children: [/* @__PURE__ */ S(Fd, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "QyioBP" })]
-					}) }),
-					/* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
-						type: "button",
-						disabled: t === M.length - 1 || p,
-						"aria-disabled": t === M.length - 1 || p,
-						onClick: () => b(e.key, 1),
-						className: "flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 aria-disabled:opacity-40 data-[focus]:bg-stone-100",
-						children: [/* @__PURE__ */ S(Dd, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "3Ib6FN" })]
-					}) }),
-					/* @__PURE__ */ S("div", { className: "my-1 border-t border-line" }),
-					/* @__PURE__ */ C("div", {
-						className: "px-3 py-2",
-						children: [/* @__PURE__ */ S("span", {
-							className: "text-[11px] text-brand-gray",
-							children: /* @__PURE__ */ S(L, { id: "jZlrte" })
-						}), /* @__PURE__ */ C("div", {
-							className: "mt-2 flex flex-wrap gap-2",
-							children: [lp.map((t) => /* @__PURE__ */ S("button", {
-								type: "button",
-								disabled: p,
-								onClick: () => x(e.key, t),
-								title: t,
-								className: `h-5 w-5 rounded-full ring-1 ring-black/10 disabled:cursor-wait disabled:opacity-40 ${n.color === t ? "ring-2 ring-brand ring-offset-2" : ""}`,
-								style: { backgroundColor: t }
-							}, t)), /* @__PURE__ */ S("button", {
-								type: "button",
-								disabled: p,
-								title: V._({ id: "H_SQFv" }),
-								onClick: () => x(e.key, null),
-								className: "flex h-5 w-5 items-center justify-center rounded-full bg-white ring-1 ring-black/10 disabled:cursor-wait disabled:opacity-40",
-								children: /* @__PURE__ */ S(Xf, { className: "h-3 w-3 text-stone-400" })
-							})]
-						})]
-					}),
-					/* @__PURE__ */ S("div", { className: "my-1 border-t border-line" }),
-					/* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
-						type: "button",
-						onClick: () => v({
-							laneKey: e.key,
-							action: "delete"
-						}),
-						className: "flex w-full items-center gap-2 px-3 py-2 text-left text-red-600 data-[focus]:bg-red-50",
-						children: [/* @__PURE__ */ S(Hf, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "cnGeoo" })]
-					}) })
-				]
-			})]
-		});
-	};
-	return o === "custom" && M.length === 0 ? /* @__PURE__ */ S("div", {
-		className: "flex min-h-0 flex-1 items-center justify-center overflow-auto bg-stone-50 p-6",
-		children: /* @__PURE__ */ C("section", {
-			className: "w-full max-w-md rounded-2xl bg-white px-8 py-10 text-center shadow-lg shadow-emerald-950/10 ring-1 ring-black/[0.05]",
-			children: [
-				/* @__PURE__ */ S("span", {
-					className: "mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-brand-soft text-brand-dark",
-					children: /* @__PURE__ */ S(Pf, { className: "h-5 w-5" })
-				}),
-				/* @__PURE__ */ S("h2", {
-					className: "mt-4 text-base font-semibold tracking-tight text-stone-900",
-					children: /* @__PURE__ */ S(L, { id: "NnxWLJ" })
-				}),
-				/* @__PURE__ */ S("p", {
-					className: "mx-auto mt-2 max-w-sm text-xs leading-5 text-brand-gray",
-					children: /* @__PURE__ */ S(L, { id: "lEQWoB" })
-				}),
-				!f && /* @__PURE__ */ C("button", {
-					type: "button",
-					onClick: _,
-					className: "mt-5 inline-flex min-h-10 items-center gap-1.5 rounded-lg bg-brand-dark px-3 text-xs font-semibold text-white hover:bg-brand",
-					children: [/* @__PURE__ */ S(Mf, { className: "h-4 w-4" }), /* @__PURE__ */ S(L, { id: "qZd_ph" })]
-				})
-			]
-		})
-	}) : /* @__PURE__ */ S("div", {
-		className: "min-h-0 flex-1 overflow-auto bg-stone-50 p-3",
-		"data-swimlane-scrollport": !0,
-		children: /* @__PURE__ */ C("div", {
-			className: "grid min-w-max items-stretch gap-2",
-			style: j,
-			children: [
-				/* @__PURE__ */ C("div", {
-					className: "sticky left-0 top-0 z-30 flex h-10 items-center gap-2 rounded-xl border border-line bg-white px-3 shadow-sm",
-					children: [/* @__PURE__ */ C("span", {
-						className: "min-w-0 flex-1",
-						children: [/* @__PURE__ */ S("span", {
-							className: "block text-[10px] font-semibold text-stone-600",
-							children: /* @__PURE__ */ S(L, { id: "hL5-_P" })
-						}), /* @__PURE__ */ S("span", {
-							className: "block truncate text-[9px] text-brand-gray",
-							children: o === "custom" ? V._({ id: "8Tg_JR" }) : o === "status" ? V._({ id: "uAQUqI" }) : o === "priority" ? V._({ id: "1hKEom" }) : V._({ id: "ojKCLU" })
-						})]
-					}), a === "status" && d.addColumn && !f && /* @__PURE__ */ S("button", {
-						type: "button",
-						onClick: () => E(!0),
-						title: V._({ id: "1nUGn5" }),
-						"aria-label": V._({ id: "1nUGn5" }),
-						className: "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-brand-dark hover:bg-brand-soft",
-						children: /* @__PURE__ */ S(Mf, { className: "h-4 w-4" })
-					})]
-				}),
-				t.map((e) => {
-					let n = I.get(e.key) ?? 0, r = e.limit != null && n > e.limit;
-					return /* @__PURE__ */ C("div", {
-						className: "sticky top-0 z-20 flex h-10 items-center gap-2 rounded-xl border border-line bg-white px-3 shadow-sm",
-						style: e.color ? { boxShadow: `inset 0 2px 0 ${e.color}` } : void 0,
-						children: [
-							/* @__PURE__ */ S("span", {
-								className: "min-w-0 flex-1 truncate text-xs font-semibold text-stone-700",
-								children: e.name
-							}),
-							l === e.key && a === "status" && /* @__PURE__ */ S(Yd, {
-								className: "h-3.5 w-3.5 shrink-0 text-emerald-500",
-								title: V._({ id: "_5CsXX" })
-							}),
-							/* @__PURE__ */ C("span", {
-								className: `shrink-0 rounded-full px-1.5 py-0.5 text-[10px] tabular-nums ${r ? "bg-red-100 font-semibold text-red-600" : "bg-stone-100 text-brand-gray"}`,
-								children: [n, e.limit == null ? "" : `/${e.limit}`]
-							}),
-							a === "status" && !f && /* @__PURE__ */ S(sm, {
-								column: e,
-								siblings: t,
-								actions: d,
-								doneKey: l,
-								orientation: "horizontal",
-								portalClassName: m
-							})
-						]
-					}, `head-${e.key}`);
-				}),
-				T && /* @__PURE__ */ C("form", {
-					className: "sticky left-0 z-10 col-span-full flex min-h-11 items-center gap-2 rounded-xl border border-brand/20 bg-brand-soft/30 px-3",
-					onSubmit: (e) => {
-						e.preventDefault();
-						let t = D.trim();
-						t && (E(!1), O(""), d.addColumn?.(t));
-					},
-					children: [
-						/* @__PURE__ */ S(Mf, { className: "h-4 w-4 text-brand-dark" }),
-						/* @__PURE__ */ S("input", {
-							autoFocus: !0,
-							value: D,
-							onChange: (e) => O(e.target.value),
-							onKeyDown: (e) => {
-								e.key === "Escape" && (E(!1), O(""));
-							},
-							placeholder: V._({ id: "P5cvAA" }),
-							"aria-label": V._({ id: "P5cvAA" }),
-							className: "h-8 w-56 rounded-lg border border-stone-200 bg-white px-2 text-xs outline-none focus:border-brand focus:ring-2 focus:ring-brand/10"
-						}),
-						/* @__PURE__ */ S("button", {
-							type: "submit",
-							className: "h-8 rounded-lg bg-brand-dark px-3 text-xs font-semibold text-white",
-							children: /* @__PURE__ */ S(L, { id: "m16xKo" })
-						}),
-						/* @__PURE__ */ S("button", {
-							type: "button",
-							onClick: () => {
-								E(!1), O("");
-							},
-							className: "h-8 rounded-lg px-2 text-xs text-brand-gray hover:bg-white",
-							children: /* @__PURE__ */ S(L, { id: "dEgA5A" })
-						})
-					]
-				}),
-				R.map((e) => {
-					let r = A.get(e.key), i = ee(e.key), a = e.key === "", c = M.findIndex((t) => t.key === e.key);
-					return /* @__PURE__ */ C(n, { children: [/* @__PURE__ */ C("section", {
-						"aria-labelledby": `swimlane-${e.key || "unassigned"}`,
-						"data-swimlane-unassigned": a ? "true" : void 0,
-						className: "sticky left-0 z-10 flex min-h-24 items-start gap-2 rounded-xl border border-line bg-stone-100 p-3",
-						children: [
-							/* @__PURE__ */ S("span", {
-								className: `mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${a ? "bg-transparent" : "bg-stone-300"}`,
-								style: e.color ? { backgroundColor: e.color } : void 0,
-								"aria-hidden": !0
-							}),
-							/* @__PURE__ */ C("span", {
-								className: "min-w-0 flex-1",
-								children: [/* @__PURE__ */ C("h2", {
-									id: `swimlane-${e.key || "unassigned"}`,
-									className: `truncate text-xs font-semibold ${a ? "text-brand-gray" : "text-stone-800"}`,
-									title: e.name,
-									children: [a && P > 0 && /* @__PURE__ */ S("button", {
-										type: "button",
-										onClick: w,
-										title: V._({
-											id: "9gx7rl",
-											values: { missingCount: P }
-										}),
-										"aria-label": V._({ id: "_kh61D" }),
-										className: "mr-1 inline-flex align-[-2px] text-amber-600 hover:text-amber-700",
-										children: /* @__PURE__ */ S(gf, { className: "h-3.5 w-3.5" })
-									}), e.name]
-								}), /* @__PURE__ */ S("span", {
-									className: "mt-1 block text-[10px] tabular-nums text-brand-gray",
-									children: /* @__PURE__ */ S(L, {
-										id: "uaR_cz",
-										values: { total: i }
-									})
-								})]
-							}),
-							o === "custom" && !a && B(e, c),
-							o === "custom" && !a && N.get(e.key) && /* @__PURE__ */ S(om, {
-								lane: N.get(e.key),
-								cardCount: i,
-								portalClassName: m
-							}),
-							o === "status" && !f && /* @__PURE__ */ S(sm, {
-								column: e,
-								siblings: R,
-								actions: d,
-								doneKey: l,
-								orientation: "vertical",
-								portalClassName: m
-							})
-						]
-					}), t.map((t) => /* @__PURE__ */ S("div", {
-						className: "min-h-24 space-y-2 rounded-xl border border-line bg-stone-100/60 p-2",
-						children: Gp(r?.get(t.key) ?? [], s).map(z)
-					}, `${e.key || "unassigned"}-${t.key}`))] }, `row-${e.key || "unassigned"}`);
-				})
-			]
-		})
-	});
-}
-//#endregion
 //#region ../../shared/components/board/StatusManagerDialog.tsx
 function lm({ open: e, config: t, actions: n, portalClassName: r, onClose: i }) {
 	let [a, o] = y(!1), [s, c] = y(""), l = r ? ` ${r}` : "", u = t.doneColumn ?? "done";
-	return /* @__PURE__ */ C(ul, {
+	return /* @__PURE__ */ C(ll, {
 		open: e,
 		onClose: i,
 		className: `relative z-40${l}`,
-		children: [/* @__PURE__ */ S(cl, { className: `fixed inset-0 bg-stone-950/30 backdrop-blur-sm${l}` }), /* @__PURE__ */ S("div", {
+		children: [/* @__PURE__ */ S(sl, { className: `fixed inset-0 bg-stone-950/30 backdrop-blur-sm${l}` }), /* @__PURE__ */ S("div", {
 			className: `fixed inset-0 flex items-end justify-center overflow-y-auto p-0 sm:items-center sm:p-4${l}`,
-			children: /* @__PURE__ */ C(sl, {
+			children: /* @__PURE__ */ C(ol, {
 				className: `flex max-h-[88dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-2xl bg-white shadow-2xl shadow-emerald-950/10 ring-1 ring-black/[0.06] sm:rounded-2xl${l}`,
 				children: [
 					/* @__PURE__ */ C("div", {
@@ -8768,7 +8363,7 @@ function lm({ open: e, config: t, actions: n, portalClassName: r, onClose: i }) 
 							}),
 							/* @__PURE__ */ C("div", {
 								className: "min-w-0 flex-1",
-								children: [/* @__PURE__ */ S(ll, {
+								children: [/* @__PURE__ */ S(cl, {
 									className: "text-base font-semibold tracking-tight text-stone-900",
 									children: /* @__PURE__ */ S(L, { id: "rvpMpc" })
 								}), /* @__PURE__ */ S("p", {
@@ -8825,7 +8420,7 @@ function lm({ open: e, config: t, actions: n, portalClassName: r, onClose: i }) 
 											className: "h-4 w-4 text-emerald-500",
 											title: V._({ id: "_5CsXX" })
 										}),
-										/* @__PURE__ */ S(sm, {
+										/* @__PURE__ */ S(cm, {
 											column: e,
 											siblings: t.columns,
 											actions: n,
@@ -8885,16 +8480,102 @@ function lm({ open: e, config: t, actions: n, portalClassName: r, onClose: i }) 
 	});
 }
 //#endregion
+//#region ../../shared/components/board/LaneDetailsPopover.tsx
+function um({ lane: e, cardCount: t, portalClassName: n, buttonClassName: r = "flex h-8 w-8 items-center justify-center rounded-lg text-stone-400 hover:bg-white hover:text-stone-600" }) {
+	let [i, a] = y("idle"), o = v(null), s = n ? ` ${n}` : "";
+	f(() => {
+		a("idle");
+	}, [e.key]), f(() => () => {
+		o.current != null && window.clearTimeout(o.current);
+	}, []);
+	let c = async () => {
+		try {
+			if (!navigator.clipboard) throw Error("Clipboard unavailable");
+			await navigator.clipboard.writeText(e.key), a("copied"), o.current != null && window.clearTimeout(o.current), o.current = window.setTimeout(() => a("idle"), 1600);
+		} catch {
+			a("error");
+		}
+	};
+	return /* @__PURE__ */ C(od, {
+		className: "relative shrink-0",
+		children: [/* @__PURE__ */ S(td, {
+			title: V._({ id: "-eTfgY" }),
+			"aria-label": V._({
+				id: "Q-Pe7U",
+				values: { 0: e.name }
+			}),
+			className: r,
+			children: /* @__PURE__ */ S(bf, { className: "h-4 w-4" })
+		}), /* @__PURE__ */ C(id, {
+			anchor: "bottom end",
+			className: `z-50 w-80 rounded-xl border border-line bg-white p-4 shadow-lg shadow-emerald-950/10 [--anchor-gap:4px] focus:outline-none${s}`,
+			children: [
+				/* @__PURE__ */ C("p", {
+					className: "flex items-center gap-2 text-xs font-semibold text-stone-800",
+					children: [/* @__PURE__ */ S(bf, { className: "h-4 w-4 text-brand-dark" }), /* @__PURE__ */ S(L, { id: "-eTfgY" })]
+				}),
+				/* @__PURE__ */ C("dl", {
+					className: "mt-3 grid grid-cols-[64px_minmax(0,1fr)] items-center gap-x-2 gap-y-2 text-[11px]",
+					children: [
+						/* @__PURE__ */ S("dt", {
+							className: "text-brand-gray",
+							children: /* @__PURE__ */ S(L, { id: "6YtxFj" })
+						}),
+						/* @__PURE__ */ S("dd", {
+							className: "truncate font-medium text-stone-700",
+							children: e.name
+						}),
+						/* @__PURE__ */ S("dt", {
+							className: "text-brand-gray",
+							children: /* @__PURE__ */ S(L, { id: "arhExE" })
+						}),
+						/* @__PURE__ */ C("dd", {
+							className: "flex min-w-0 items-center gap-1.5",
+							children: [/* @__PURE__ */ S("code", {
+								className: "min-w-0 flex-1 truncate rounded bg-stone-100 px-1.5 py-1 text-[10px] text-stone-600",
+								children: e.key
+							}), /* @__PURE__ */ C("button", {
+								type: "button",
+								title: V._({ id: "GNoXOd" }),
+								"aria-label": V._({ id: "GNoXOd" }),
+								onClick: () => void c(),
+								className: "inline-flex h-7 items-center gap-1 rounded-lg border border-stone-200 px-2 text-[10px] font-medium text-brand-dark hover:border-brand/30",
+								children: [/* @__PURE__ */ S(cf, { className: "h-3.5 w-3.5" }), i === "copied" ? V._({ id: "6V3Ea3" }) : V._({ id: "he3ygx" })]
+							})]
+						}),
+						/* @__PURE__ */ S("dt", {
+							className: "text-brand-gray",
+							children: /* @__PURE__ */ S(L, { id: "xUOPoQ" })
+						}),
+						/* @__PURE__ */ S("dd", {
+							className: "tabular-nums text-stone-700",
+							children: /* @__PURE__ */ S(L, {
+								id: "tF-_sn",
+								values: { cardCount: t }
+							})
+						})
+					]
+				}),
+				i === "error" && /* @__PURE__ */ S("p", {
+					className: "mt-3 text-[11px] text-red-600",
+					role: "alert",
+					children: /* @__PURE__ */ S(L, { id: "vfYjJ_" })
+				})
+			]
+		})]
+	});
+}
+//#endregion
 //#region ../../shared/components/board/controls.tsx
-var um = "rounded-md border border-stone-200 bg-white px-1.5 py-1 text-xs text-stone-700 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand";
-function dm({ value: e, options: t, onChange: n, disabled: r = !1 }) {
+var dm = "rounded-md border border-stone-200 bg-white px-1.5 py-1 text-xs text-stone-700 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand";
+function fm({ value: e, options: t, onChange: n, disabled: r = !1 }) {
 	let i = t.find((t) => t.value === e);
-	return /* @__PURE__ */ C(Jl, {
+	return /* @__PURE__ */ C(ql, {
 		value: e,
 		onChange: n,
 		disabled: r,
-		children: [/* @__PURE__ */ C(Ul, {
-			className: `${um} flex w-full items-center justify-between gap-1 disabled:cursor-not-allowed disabled:bg-stone-50 disabled:opacity-60`,
+		children: [/* @__PURE__ */ C(Hl, {
+			className: `${dm} flex w-full items-center justify-between gap-1 disabled:cursor-not-allowed disabled:bg-stone-50 disabled:opacity-60`,
 			children: [/* @__PURE__ */ C("span", {
 				className: "flex min-w-0 items-center gap-1.5",
 				children: [i?.warning ? /* @__PURE__ */ S(gf, { className: "h-3.5 w-3.5 shrink-0 text-amber-500" }) : i?.color ? /* @__PURE__ */ S("span", {
@@ -8906,10 +8587,10 @@ function dm({ value: e, options: t, onChange: n, disabled: r = !1 }) {
 					children: i?.label ?? e
 				})]
 			}), /* @__PURE__ */ S(of, { className: "h-3.5 w-3.5 shrink-0 text-stone-400" })]
-		}), /* @__PURE__ */ S(Gl, {
+		}), /* @__PURE__ */ S(Wl, {
 			anchor: "bottom start",
 			className: "z-[60] w-[var(--button-width)] rounded-md border border-black/[0.06] bg-white py-1 text-xs shadow-lg [--anchor-gap:4px] focus:outline-none",
-			children: t.map((t) => /* @__PURE__ */ C(Kl, {
+			children: t.map((t) => /* @__PURE__ */ C(Gl, {
 				value: t.value,
 				className: "flex cursor-pointer items-center justify-between gap-1 px-2 py-1 text-stone-700 data-[focus]:bg-stone-100",
 				children: [/* @__PURE__ */ C("span", {
@@ -8929,7 +8610,7 @@ function dm({ value: e, options: t, onChange: n, disabled: r = !1 }) {
 }
 //#endregion
 //#region ../../shared/components/board/SwimlaneDeleteDialog.tsx
-function fm({ lane: e, cardCount: t, targets: n, busy: r, progress: i, error: a, portalClassName: o, onClose: s, onConfirm: c }) {
+function pm({ lane: e, cardCount: t, targets: n, busy: r, progress: i, error: a, portalClassName: o, onClose: s, onConfirm: c }) {
 	let [l, u] = y("keep"), [d, p] = y(""), m = v(null), h = n.length > 0;
 	f(() => {
 		let t = e?.key ?? null, r = m.current !== t;
@@ -8938,19 +8619,19 @@ function fm({ lane: e, cardCount: t, targets: n, busy: r, progress: i, error: a,
 	let g = o ? ` ${o}` : "", _ = () => {
 		r || s();
 	};
-	return /* @__PURE__ */ C(ul, {
+	return /* @__PURE__ */ C(ll, {
 		open: !!e,
 		onClose: _,
 		className: `relative z-50${g}`,
-		children: [/* @__PURE__ */ S(cl, { className: `fixed inset-0 bg-stone-950/30 backdrop-blur-sm${g}` }), /* @__PURE__ */ S("div", {
+		children: [/* @__PURE__ */ S(sl, { className: `fixed inset-0 bg-stone-950/30 backdrop-blur-sm${g}` }), /* @__PURE__ */ S("div", {
 			className: `fixed inset-0 flex items-center justify-center overflow-y-auto p-4${g}`,
-			children: /* @__PURE__ */ S(sl, {
+			children: /* @__PURE__ */ S(ol, {
 				"aria-describedby": "swimlane-delete-description",
 				className: `w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl shadow-emerald-950/10 ring-1 ring-black/[0.06]${g}`,
 				children: e && /* @__PURE__ */ C(x, { children: [/* @__PURE__ */ C("div", {
 					className: "px-5 pb-4 pt-5",
 					children: [
-						/* @__PURE__ */ S(ll, {
+						/* @__PURE__ */ S(cl, {
 							className: "text-base font-semibold tracking-tight text-stone-900",
 							children: V._({
 								id: "KpnwJK",
@@ -8961,9 +8642,9 @@ function fm({ lane: e, cardCount: t, targets: n, busy: r, progress: i, error: a,
 							id: "swimlane-delete-description",
 							className: "mt-1 text-xs leading-5 text-brand-gray",
 							children: t > 0 ? V._({
-								id: "GL6e_U",
+								id: "RbsNko",
 								values: { cardCount: t }
-							}) : V._({ id: "9L7ptC" })
+							}) : V._({ id: "MYx830" })
 						}),
 						t > 0 && /* @__PURE__ */ C(Cd, {
 							value: l,
@@ -8985,7 +8666,7 @@ function fm({ lane: e, cardCount: t, targets: n, busy: r, progress: i, error: a,
 										})]
 									}), /* @__PURE__ */ S("span", {
 										className: "mt-1 block text-[11px] leading-4 text-brand-gray",
-										children: /* @__PURE__ */ S(L, { id: "c-EXz1" })
+										children: /* @__PURE__ */ S(L, { id: "Y8bR2a" })
 									})]
 								})]
 							}), /* @__PURE__ */ C(Sd, {
@@ -9001,14 +8682,14 @@ function fm({ lane: e, cardCount: t, targets: n, busy: r, progress: i, error: a,
 										children: /* @__PURE__ */ S(L, { id: "_TJomP" })
 									}), /* @__PURE__ */ S("span", {
 										className: "mt-1 block text-[11px] leading-4 text-brand-gray",
-										children: /* @__PURE__ */ S(L, { id: "xX5QVp" })
+										children: /* @__PURE__ */ S(L, { id: "3CtQL6" })
 									})]
 								})]
 							})]
 						}),
 						h && /* @__PURE__ */ S("div", {
 							className: "mt-2 pl-7",
-							children: /* @__PURE__ */ S(dm, {
+							children: /* @__PURE__ */ S(fm, {
 								value: d,
 								options: n,
 								disabled: l !== "move",
@@ -9065,7 +8746,7 @@ function fm({ lane: e, cardCount: t, targets: n, busy: r, progress: i, error: a,
 						}),
 						"aria-disabled": r || t > 0 && l === "move" && n.length === 0,
 						className: "rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 aria-disabled:cursor-not-allowed aria-disabled:opacity-50",
-						children: r ? V._({ id: "XklovM" }) : t > 0 && l === "move" ? V._({ id: "NYTPDY" }) : V._({ id: "0cspe_" })
+						children: r ? V._({ id: "XklovM" }) : t > 0 && l === "move" ? V._({ id: "NYTPDY" }) : V._({ id: "uAP6ov" })
 					})]
 				})] })
 			})
@@ -9074,7 +8755,7 @@ function fm({ lane: e, cardCount: t, targets: n, busy: r, progress: i, error: a,
 }
 //#endregion
 //#region ../../shared/components/board/SwimlaneManagerDialog.tsx
-function pm({ open: e, lanes: t, cards: n, focusRequest: r, portalClassName: i, onClose: a, onSaveLanes: o, onUpdateCards: s, onShowAffected: c }) {
+function mm({ open: e, lanes: t, cards: n, focusRequest: r, portalClassName: i, onClose: a, onSaveLanes: o, onUpdateCards: s, onShowAffected: c }) {
 	let [l, u] = y(!1), [d, p] = y(""), [m, h] = y(null), [_, b] = y(""), [w, T] = y(null), [E, D] = y(!1), [O, k] = y(null), [A, j] = y(!1), [M, N] = y(""), [P, F] = y(null), [I, ee] = y(""), R = v(null), [z, B] = y(null), te = v(!1), ne = v(null);
 	f(() => {
 		e || (u(!1), p(""), h(null), T(null), k(null), N(""), F(null), ee(""));
@@ -9091,7 +8772,7 @@ function pm({ open: e, lanes: t, cards: n, focusRequest: r, portalClassName: i, 
 		let e = /* @__PURE__ */ new Map();
 		for (let t of n) t.swimlaneKey && e.set(t.swimlaneKey, (e.get(t.swimlaneKey) ?? 0) + 1);
 		return e;
-	}, [n]), ae = g(() => jp({ swimlanes: t }, n), [t, n]), oe = ae.filter((e) => e.kind === "dangling_swimlane").reduce((e, t) => e + t.cardCount, 0), se = ae.filter((e) => e.kind !== "dangling_swimlane"), ce = async (e, t = "dialog") => {
+	}, [n]), ae = g(() => Np({ swimlanes: t }, n), [t, n]), oe = ae.filter((e) => e.kind === "dangling_swimlane").reduce((e, t) => e + t.cardCount, 0), se = ae.filter((e) => e.kind !== "dangling_swimlane"), ce = async (e, t = "dialog") => {
 		if (!te.current) {
 			te.current = !0, D(!0), T(null);
 			try {
@@ -9155,7 +8836,7 @@ function pm({ open: e, lanes: t, cards: n, focusRequest: r, portalClassName: i, 
 	}, me = (e) => {
 		T(null), h(e.key), b(e.name);
 	}, he = async (e) => {
-		let n = kp(_, t, e.key);
+		let n = jp(_, t, e.key);
 		if (n) {
 			T({
 				key: e.key,
@@ -9171,7 +8852,7 @@ function pm({ open: e, lanes: t, cards: n, focusRequest: r, portalClassName: i, 
 			h(e.key);
 		});
 	}, ge = async () => {
-		let e = kp(d, t);
+		let e = jp(d, t);
 		if (e) {
 			T({
 				key: "new",
@@ -9180,7 +8861,7 @@ function pm({ open: e, lanes: t, cards: n, focusRequest: r, portalClassName: i, 
 			return;
 		}
 		let r = d.trim(), i = {
-			key: Op(r, [...t.map((e) => e.key), ...n.map((e) => e.swimlaneKey).filter((e) => !!e)]),
+			key: Ap(r, [...t.map((e) => e.key), ...n.map((e) => e.swimlaneKey).filter((e) => !!e)]),
 			name: r
 		};
 		u(!1), p(""), await ce([...t, i], "new").catch(() => {
@@ -9223,15 +8904,15 @@ function pm({ open: e, lanes: t, cards: n, focusRequest: r, portalClassName: i, 
 		label: e.name,
 		color: e.color
 	}))] : [];
-	return /* @__PURE__ */ C(x, { children: [/* @__PURE__ */ C(ul, {
+	return /* @__PURE__ */ C(x, { children: [/* @__PURE__ */ C(ll, {
 		open: e,
 		onClose: () => {
 			!E && !A && a();
 		},
 		className: `relative z-40${re}`,
-		children: [/* @__PURE__ */ S(cl, { className: `fixed inset-0 bg-stone-950/30 backdrop-blur-sm${re}` }), /* @__PURE__ */ S("div", {
+		children: [/* @__PURE__ */ S(sl, { className: `fixed inset-0 bg-stone-950/30 backdrop-blur-sm${re}` }), /* @__PURE__ */ S("div", {
 			className: `fixed inset-0 flex items-end justify-center overflow-y-auto p-0 sm:items-center sm:p-4${re}`,
-			children: /* @__PURE__ */ C(sl, {
+			children: /* @__PURE__ */ C(ol, {
 				"aria-describedby": "swimlane-manager-description",
 				className: `flex max-h-[88dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-2xl bg-white shadow-2xl shadow-emerald-950/10 ring-1 ring-black/[0.06] sm:rounded-2xl${re}`,
 				children: [
@@ -9245,14 +8926,14 @@ function pm({ open: e, lanes: t, cards: n, focusRequest: r, portalClassName: i, 
 							/* @__PURE__ */ C("div", {
 								className: "min-w-0 flex-1",
 								children: [
-									/* @__PURE__ */ S(ll, {
+									/* @__PURE__ */ S(cl, {
 										className: "text-base font-semibold tracking-tight text-stone-900",
-										children: /* @__PURE__ */ S(L, { id: "2aEwT_" })
+										children: /* @__PURE__ */ S(L, { id: "pip_Rq" })
 									}),
 									/* @__PURE__ */ S("p", {
 										id: "swimlane-manager-description",
 										className: "mt-1 text-xs leading-5 text-brand-gray",
-										children: /* @__PURE__ */ S(L, { id: "rK_KGj" })
+										children: /* @__PURE__ */ S(L, { id: "s8QaQC" })
 									}),
 									/* @__PURE__ */ S("span", {
 										className: "sr-only",
@@ -9278,7 +8959,7 @@ function pm({ open: e, lanes: t, cards: n, focusRequest: r, portalClassName: i, 
 						className: "min-h-0 flex-1 overflow-y-auto px-4 py-3",
 						children: [
 							/* @__PURE__ */ S("ul", {
-								"aria-label": V._({ id: "ceQmqN" }),
+								"aria-label": V._({ id: "nNGN_D" }),
 								className: "space-y-1",
 								children: t.map((e, n) => {
 									let r = w?.key === e.key ? w.message : null;
@@ -9316,7 +8997,7 @@ function pm({ open: e, lanes: t, cards: n, focusRequest: r, portalClassName: i, 
 														className: `z-50 w-52 rounded-xl border border-line bg-white p-3 shadow-lg shadow-emerald-950/10 [--anchor-gap:4px] focus:outline-none${re}`,
 														children: [/* @__PURE__ */ S("p", {
 															className: "text-[11px] font-medium text-brand-gray",
-															children: /* @__PURE__ */ S(L, { id: "fwTn8F" })
+															children: /* @__PURE__ */ S(L, { id: "U0hizX" })
 														}), /* @__PURE__ */ C("div", {
 															className: "mt-2 flex flex-wrap gap-2",
 															children: [lp.map((t) => /* @__PURE__ */ S("button", {
@@ -9349,7 +9030,7 @@ function pm({ open: e, lanes: t, cards: n, focusRequest: r, portalClassName: i, 
 														onKeyDown: (e) => {
 															e.key === "Escape" && (h(null), T(null));
 														},
-														"aria-label": V._({ id: "kMqzL_" }),
+														"aria-label": V._({ id: "79Yvzu" }),
 														className: "h-8 w-full rounded-lg border border-brand/40 bg-white px-2 text-xs font-medium text-stone-800 outline-none ring-2 ring-brand/10"
 													})
 												}) : /* @__PURE__ */ S("button", {
@@ -9369,25 +9050,25 @@ function pm({ open: e, lanes: t, cards: n, focusRequest: r, portalClassName: i, 
 												/* @__PURE__ */ C(Du, {
 													as: "div",
 													className: "relative shrink-0",
-													children: [/* @__PURE__ */ S(Su, {
-														title: V._({ id: "-hwvgo" }),
+													children: [/* @__PURE__ */ S(xu, {
+														title: V._({ id: "DGEEOQ" }),
 														"aria-label": V._({
 															id: "RlLl3G",
 															values: { 0: e.name }
 														}),
 														className: "flex h-9 w-9 items-center justify-center rounded-lg text-stone-400 opacity-100 hover:bg-white hover:text-stone-600 md:opacity-0 md:group-hover:opacity-100 md:data-[open]:opacity-100",
 														children: /* @__PURE__ */ S(mf, { className: "h-4 w-4" })
-													}), /* @__PURE__ */ C(Cu, {
+													}), /* @__PURE__ */ C(Su, {
 														anchor: "bottom end",
 														className: `z-50 w-48 rounded-xl border border-line bg-white py-1 text-xs shadow-lg shadow-emerald-950/10 [--anchor-gap:4px] focus:outline-none${re}`,
 														children: [
-															/* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
+															/* @__PURE__ */ S(Cu, { children: /* @__PURE__ */ C("button", {
 																type: "button",
 																onClick: () => me(e),
 																className: "flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 data-[focus]:bg-stone-100",
 																children: [/* @__PURE__ */ S(Af, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "2wxgft" })]
 															}) }),
-															/* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
+															/* @__PURE__ */ S(Cu, { children: /* @__PURE__ */ C("button", {
 																type: "button",
 																onClick: () => le(e.key, -1),
 																disabled: n === 0 || E,
@@ -9395,7 +9076,7 @@ function pm({ open: e, lanes: t, cards: n, focusRequest: r, portalClassName: i, 
 																className: "flex w-full items-center gap-2 px-3 py-2 text-left text-stone-700 aria-disabled:opacity-40 data-[focus]:bg-stone-100",
 																children: [/* @__PURE__ */ S(Fd, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "QyioBP" })]
 															}) }),
-															/* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
+															/* @__PURE__ */ S(Cu, { children: /* @__PURE__ */ C("button", {
 																type: "button",
 																onClick: () => le(e.key, 1),
 																disabled: n === t.length - 1 || E,
@@ -9404,7 +9085,7 @@ function pm({ open: e, lanes: t, cards: n, focusRequest: r, portalClassName: i, 
 																children: [/* @__PURE__ */ S(Dd, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "3Ib6FN" })]
 															}) }),
 															/* @__PURE__ */ S("div", { className: "my-1 border-t border-line" }),
-															/* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
+															/* @__PURE__ */ S(Cu, { children: /* @__PURE__ */ C("button", {
 																type: "button",
 																onClick: () => {
 																	N(""), F(null), k(e);
@@ -9415,7 +9096,7 @@ function pm({ open: e, lanes: t, cards: n, focusRequest: r, portalClassName: i, 
 														]
 													})]
 												}),
-												/* @__PURE__ */ S(om, {
+												/* @__PURE__ */ S(um, {
 													lane: e,
 													cardCount: ie.get(e.key) ?? 0,
 													portalClassName: i,
@@ -9450,8 +9131,8 @@ function pm({ open: e, lanes: t, cards: n, focusRequest: r, portalClassName: i, 
 											onKeyDown: (e) => {
 												e.key === "Escape" && (u(!1), p(""), T(null));
 											},
-											placeholder: V._({ id: "kMqzL_" }),
-											"aria-label": V._({ id: "kMqzL_" }),
+											placeholder: V._({ id: "79Yvzu" }),
+											"aria-label": V._({ id: "79Yvzu" }),
 											className: "h-8 min-w-0 flex-1 rounded-lg border border-stone-200 bg-white px-2 text-xs text-stone-800 outline-none focus:border-brand focus:ring-2 focus:ring-brand/10"
 										}),
 										/* @__PURE__ */ S("button", {
@@ -9480,7 +9161,7 @@ function pm({ open: e, lanes: t, cards: n, focusRequest: r, portalClassName: i, 
 									u(!0), p(""), T(null);
 								},
 								className: "mt-2 flex min-h-11 w-full items-center gap-2 rounded-xl border border-dashed border-brand/20 bg-brand-soft/20 px-3 text-left text-xs font-semibold text-brand-dark hover:border-brand/40 hover:bg-brand-soft/40",
-								children: [/* @__PURE__ */ S(Mf, { className: "h-4 w-4" }), /* @__PURE__ */ S(L, { id: "qZd_ph" })]
+								children: [/* @__PURE__ */ S(Mf, { className: "h-4 w-4" }), /* @__PURE__ */ S(L, { id: "KCszT6" })]
 							}),
 							(se.length > 0 || oe > 0) && /* @__PURE__ */ C("section", {
 								className: "mt-4 border-t border-line pt-3",
@@ -9495,10 +9176,10 @@ function pm({ open: e, lanes: t, cards: n, focusRequest: r, portalClassName: i, 
 										className: "flex min-h-11 items-center gap-2 rounded-xl bg-amber-50 px-3 text-xs text-amber-800",
 										role: "alert",
 										children: [/* @__PURE__ */ S(gf, { className: "h-4 w-4 shrink-0" }), /* @__PURE__ */ S("span", { children: e.kind === "duplicate_swimlane_key" ? V._({
-											id: "dQva-y",
+											id: "bUNpV2",
 											values: { 0: e.key }
 										}) : V._({
-											id: "mPINe9",
+											id: "uWPalN",
 											values: { 0: e.name }
 										}) })]
 									}, `${e.kind}-${e.kind === "duplicate_swimlane_key" ? e.key : e.name}`)), oe > 0 && /* @__PURE__ */ C("div", {
@@ -9508,7 +9189,7 @@ function pm({ open: e, lanes: t, cards: n, focusRequest: r, portalClassName: i, 
 											/* @__PURE__ */ S("span", {
 												className: "min-w-0 flex-1",
 												children: V._({
-													id: "F6osRA",
+													id: "SavliD",
 													values: { danglingCount: oe }
 												})
 											}),
@@ -9545,7 +9226,7 @@ function pm({ open: e, lanes: t, cards: n, focusRequest: r, portalClassName: i, 
 				]
 			})
 		})]
-	}), /* @__PURE__ */ S(fm, {
+	}), /* @__PURE__ */ S(pm, {
 		lane: O,
 		cardCount: O ? ie.get(O.key) ?? 0 : 0,
 		targets: ye,
@@ -9561,34 +9242,34 @@ function pm({ open: e, lanes: t, cards: n, focusRequest: r, portalClassName: i, 
 }
 //#endregion
 //#region ../../shared/components/board/SwimlaneConversionDialog.tsx
-function mm({ source: e, rows: t, open: n, busy: r, resume: i, progress: a, error: o, portalClassName: s, onClose: c, onConfirm: l }) {
+function hm({ source: e, rows: t, open: n, busy: r, resume: i, progress: a, error: o, portalClassName: s, onClose: c, onConfirm: l }) {
 	let u = s ? ` ${s}` : "", d = () => {
 		r || c();
 	};
-	return /* @__PURE__ */ C(ul, {
+	return /* @__PURE__ */ C(ll, {
 		open: n,
 		onClose: d,
 		className: `relative z-50${u}`,
-		children: [/* @__PURE__ */ S(cl, { className: `fixed inset-0 bg-stone-950/30 backdrop-blur-sm${u}` }), /* @__PURE__ */ S("div", {
+		children: [/* @__PURE__ */ S(sl, { className: `fixed inset-0 bg-stone-950/30 backdrop-blur-sm${u}` }), /* @__PURE__ */ S("div", {
 			className: `fixed inset-0 flex items-center justify-center overflow-y-auto p-4${u}`,
-			children: /* @__PURE__ */ C(sl, {
+			children: /* @__PURE__ */ C(ol, {
 				"aria-describedby": "swimlane-conversion-description",
 				className: `w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl shadow-emerald-950/10 ring-1 ring-black/[0.06]${u}`,
 				children: [/* @__PURE__ */ C("div", {
 					className: "px-5 pb-4 pt-5",
 					children: [
-						/* @__PURE__ */ S(ll, {
+						/* @__PURE__ */ S(cl, {
 							className: "text-base font-semibold tracking-tight text-stone-900",
-							children: i ? V._({ id: "K_cST0" }) : e === "priority" ? V._({ id: "U95P80" }) : V._({ id: "WWUwTb" })
+							children: i ? V._({ id: "CXTDT_" }) : e === "priority" ? V._({ id: "nfhh60" }) : V._({ id: "vMTOsC" })
 						}),
 						/* @__PURE__ */ S("p", {
 							id: "swimlane-conversion-description",
 							className: "mt-1 text-xs leading-5 text-brand-gray",
-							children: i ? V._({ id: "7MGAQC" }) : e === "priority" ? V._({ id: "eAi4RE" }) : V._({ id: "fOluHh" })
+							children: i ? V._({ id: "MRsDXp" }) : e === "priority" ? V._({ id: "4vd-Kd" }) : V._({ id: "QRhoJb" })
 						}),
 						/* @__PURE__ */ C("ul", {
 							className: "mt-4 divide-y divide-line",
-							"aria-label": V._({ id: "4t8aKB" }),
+							"aria-label": V._({ id: "4NY8B5" }),
 							children: [t.map((e) => /* @__PURE__ */ C("li", {
 								className: "flex min-h-10 items-center gap-2 py-2",
 								children: [
@@ -9660,7 +9341,7 @@ function mm({ source: e, rows: t, open: n, busy: r, resume: i, progress: a, erro
 						disabled: r || t.length === 0,
 						"aria-disabled": r || t.length === 0,
 						className: "rounded-lg bg-brand-dark px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand aria-disabled:cursor-not-allowed aria-disabled:opacity-50",
-						children: r ? V._({ id: "XklovM" }) : i ? V._({ id: "l_g7se" }) : V._({ id: "kBRFD0" })
+						children: r ? V._({ id: "XklovM" }) : i ? V._({ id: "l_g7se" }) : V._({ id: "PUeYA1" })
 					})]
 				})]
 			})
@@ -9669,8 +9350,8 @@ function mm({ source: e, rows: t, open: n, busy: r, resume: i, progress: a, erro
 }
 //#endregion
 //#region ../../shared/components/board/BoardSurface.tsx
-function hm({ config: e, cards: t, actions: r, error: i, templates: a, createFromTemplate: o, assigneeOptions: s, tagOptions: c, loadNotes: l, onUploadAttachment: u, loadComments: d, addComment: p, updateComment: m, deleteComment: h, toggleReaction: _, resolveComment: b, currentUser: w, loadActivity: T, fullscreen: E, onToggleFullscreen: D, onOpenSettings: O, readOnly: k, onCardOpen: A, peekComponent: j, portalClassName: M }) {
-	let [N, P] = y(null), [F, I] = y(/* @__PURE__ */ new Set()), [ee, R] = y(null), [z, B] = y(null), [te, ne] = y(/* @__PURE__ */ new Set()), [re, ie] = y(null), [ae, oe] = y(""), [se, ce] = y(!1), [le, ue] = y(""), [de, fe] = y(""), [pe, me] = y("manual"), [he, ge] = y({}), [_e, ve] = y(360), [ye, be] = y(null), [xe, Se] = y(null), [Ce, we] = y(null), [Te, Ee] = y(!1), [De, Oe] = y(!1), [ke, Ae] = y(), [je, Me] = y(!1), [Ne, Pe] = y("priority"), [Fe, Ie] = y(!1), [Le, Re] = y(null), [ze, Be] = y(""), [Ve, He] = y(0), [Ue, We] = y(!1), Ge = v(null), Ke = v(null), qe = v(!1), Je = v(null), Ye = v(!1), Xe = e.groupBy ?? "status", Ze = Xe === "status", Qe = e.viewType ?? "board", $e = e.doneColumn ?? "done", et = (e.colorColumns ?? !1) && Ze && Qe === "board", tt = pe === "manual" && Ze && Qe === "board" && !de.trim() && !zp(he), nt = Cp();
+function gm({ config: e, cards: t, actions: r, error: i, templates: a, createFromTemplate: o, assigneeOptions: s, tagOptions: c, loadNotes: l, onUploadAttachment: u, loadComments: d, addComment: p, updateComment: m, deleteComment: h, toggleReaction: _, resolveComment: b, currentUser: w, loadActivity: T, fullscreen: E, onToggleFullscreen: D, onOpenSettings: O, readOnly: k, onCardOpen: A, peekComponent: j, portalClassName: M }) {
+	let [N, P] = y(null), [F, I] = y(/* @__PURE__ */ new Set()), [ee, R] = y(null), [z, B] = y(null), [te, ne] = y(/* @__PURE__ */ new Set()), [re, ie] = y(null), [ae, oe] = y(""), [se, ce] = y(!1), [le, ue] = y(""), [de, fe] = y(""), [pe, me] = y("manual"), [he, ge] = y({}), [_e, ve] = y(360), [ye, be] = y(null), [xe, Se] = y(null), [Ce, we] = y(null), [Te, Ee] = y(!1), [De, Oe] = y(!1), [ke, Ae] = y(!1), [je, Me] = y("priority"), [Ne, Pe] = y(!1), [Fe, Ie] = y(null), [Le, Re] = y(""), [ze, Be] = y(0), Ve = v(null), He = v(null), Ue = v(!1), We = v(null), Ge = Op(e), Ke = Ge === "status", qe = Ge === "custom", Je = e.viewType ?? "board", Ye = e.doneColumn ?? "done", Xe = (e.colorColumns ?? !1) && Ke && Je === "board", Ze = pe === "manual" && Ke && Je === "board" && !de.trim() && !Vp(he), Qe = Cp();
 	f(() => {
 		if (!E || !D) return;
 		let e = (e) => {
@@ -9689,58 +9370,54 @@ function hm({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 		};
 		return window.addEventListener("keydown", e), () => window.removeEventListener("keydown", e);
 	}, [F.size]);
-	let rt = g(() => Np(e, t, Xe, V._({ id: "EbMPZJ" })), [
+	let $e = g(() => Ge === "custom" ? Rp(e, t, Ge, V._({ id: "EbMPZJ" })) : Ip(e, t, Ge, V._({ id: "EbMPZJ" })), [
 		e,
 		t,
-		Xe
-	]), it = Dp(e.swimlaneBy), at = it && it !== Xe ? it : null, ot = Qe === "board" && !!at, st = g(() => at ? Fp(e, t, at, V._({ id: "EbMPZJ" })) : [], [
-		e,
-		t,
-		at
-	]), ct = g(() => bp(t, e.doneColumn), [t, e.doneColumn]), lt = g(() => new Set(ct.keys()), [ct]), ut = g(() => Wp(t, de, he, e, {
+		Ge
+	]), et = g(() => bp(t, e.doneColumn), [t, e.doneColumn]), tt = g(() => new Set(et.keys()), [et]), nt = g(() => Kp(t, de, he, e, {
 		currentUser: w,
-		today: nt,
-		blockedCardIds: lt
+		today: Qe,
+		blockedCardIds: tt
 	}), [
 		t,
 		de,
 		he,
 		e,
 		w,
-		nt,
-		lt
-	]), dt = g(() => xp(t), [t]), ft = g(() => [...new Set(t.map((e) => e.assignee).filter(Boolean))], [t]), pt = g(() => [...new Set(t.flatMap((e) => e.tags.map((e) => e.label)))], [t]), mt = (t) => e.columns.find((e) => e.key === t)?.name || t || V._({ id: "EbMPZJ" }), ht = N ? t.find((e) => e.id === N) ?? null : null, gt = g(() => Np(e, t, Ne, V._({ id: "EbMPZJ" })).filter((e) => Ne === "priority" ? e.key !== "none" : e.key !== "").map((e, n) => ({
+		Qe,
+		tt
+	]), rt = g(() => xp(t), [t]), it = g(() => [...new Set(t.map((e) => e.assignee).filter(Boolean))], [t]), at = g(() => [...new Set(t.flatMap((e) => e.tags.map((e) => e.label)))], [t]), ot = (t) => e.columns.find((e) => e.key === t)?.name || t || V._({ id: "EbMPZJ" }), st = N ? t.find((e) => e.id === N) ?? null : null, ct = g(() => Ip(e, t, je, V._({ id: "EbMPZJ" })).filter((e) => je === "priority" ? e.key !== "none" : e.key !== "").map((e, n) => ({
 		value: e.key,
 		name: e.name,
 		color: e.color ?? lp[n % lp.length],
-		cardCount: t.filter((t) => Mp(t, Ne) === e.key).length
+		cardCount: t.filter((t) => Pp(t, je) === e.key).length
 	})), [
 		t,
 		e,
-		Ne
-	]), _t = async (e, t) => {
+		je
+	]), lt = async (e, t) => {
 		if (r.updateCards) {
 			await r.updateCards(e, t);
 			return;
 		}
 		let n = 0;
 		for (let i of e) await r.updateCard(i.cardId, i.patch), n += 1, t?.(n, e.length);
-	}, vt = async () => {
-		if (!Fe) {
-			if (Be(""), Je.current = null, !(e.swimlaneMigration?.source === Ne && e.swimlaneMigration)) {
-				let n = /* @__PURE__ */ new Set([...(e.swimlanes ?? []).map((e) => e.key), ...t.map((e) => e.swimlaneKey).filter((e) => !!e)]), i = gt.map((e) => {
-					let t = Op(e.name, n);
+	}, ut = async () => {
+		if (!Ne) {
+			if (Re(""), We.current = null, !(e.swimlaneMigration?.source === je && e.swimlaneMigration)) {
+				let n = /* @__PURE__ */ new Set([...(e.swimlanes ?? []).map((e) => e.key), ...t.map((e) => e.swimlaneKey).filter((e) => !!e)]), i = ct.map((e) => {
+					let t = Ap(e.name, n);
 					return n.add(t), {
 						value: e.value,
 						swimlaneKey: t
 					};
 				}), a = [...e.swimlanes ?? [], ...i.map((e, t) => ({
 					key: e.swimlaneKey,
-					name: gt[t]?.name ?? e.value,
-					color: gt[t]?.color
+					name: ct[t]?.name ?? e.value,
+					color: ct[t]?.color
 				}))], o = {
 					version: 1,
-					source: Ne,
+					source: je,
 					mapping: i
 				};
 				try {
@@ -9749,32 +9426,32 @@ function hm({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 						swimlaneMigration: o
 					});
 				} catch (e) {
-					Be(e instanceof Error ? e.message : String(e));
+					Re(e instanceof Error ? e.message : String(e));
 					return;
 				}
 			}
-			Re(null), Ie(!0);
+			Ie(null), Pe(!0);
 		}
 	};
 	f(() => {
-		if (!Fe || qe.current) return;
+		if (!Ne || Ue.current) return;
 		let n = e.swimlaneMigration;
-		!n || n.source !== Ne || (qe.current = !0, (async () => {
+		!n || n.source !== je || (Ue.current = !0, (async () => {
 			try {
 				let i = [...n.mapping], a = [...e.swimlanes ?? []], o = new Set(i.map((e) => e.value)), s = new Set(a.map((e) => e.key)), c = /* @__PURE__ */ new Set([
 					...s,
 					...i.map((e) => e.swimlaneKey),
 					...t.map((e) => e.swimlaneKey).filter((e) => !!e)
-				]), l = [...new Set(t.map((e) => Mp(e, n.source)).filter((e) => n.source === "priority" ? e !== "none" : e !== ""))], u = !1;
+				]), l = [...new Set(t.map((e) => Pp(e, n.source)).filter((e) => n.source === "priority" ? e !== "none" : e !== ""))], u = !1;
 				for (let e of l) if (!o.has(e)) {
-					let t = Op(e, c);
+					let t = Ap(e, c);
 					c.add(t), i.push({
 						value: e,
 						swimlaneKey: t
 					}), o.add(e), u = !0;
 				}
 				for (let e of i) if (!s.has(e.swimlaneKey)) {
-					let t = gt.find((t) => t.value === e.value), n = Math.max(0, l.indexOf(e.value));
+					let t = ct.find((t) => t.value === e.value), n = Math.max(0, l.indexOf(e.value));
 					a.push({
 						key: e.swimlaneKey,
 						name: t?.name ?? e.value,
@@ -9782,7 +9459,7 @@ function hm({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 					}), s.add(e.swimlaneKey), u = !0;
 				}
 				if (u) {
-					Je.current = null, await r.setConfig({
+					We.current = null, await r.setConfig({
 						swimlanes: a,
 						swimlaneMigration: {
 							...n,
@@ -9792,36 +9469,37 @@ function hm({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 					return;
 				}
 				let d = new Map(i.map((e) => [e.value, e.swimlaneKey])), f = t.flatMap((e) => {
-					let t = Mp(e, n.source), r = d.get(t);
+					let t = Pp(e, n.source), r = d.get(t);
 					return r && e.swimlaneKey !== r ? [{
 						cardId: e.id,
 						patch: { swimlaneKey: r }
 					}] : [];
 				});
 				if (f.length > 0) {
-					let e = f.map((e) => `${e.cardId}:${String(e.patch.swimlaneKey ?? "")}`).sort().join("\n"), t = Je.current;
+					let e = f.map((e) => `${e.cardId}:${String(e.patch.swimlaneKey ?? "")}`).sort().join("\n"), t = We.current;
 					if (t?.signature === e && t.writes >= 2) throw Error(V._({ id: "KAlhe_" }));
-					Je.current = {
+					We.current = {
 						signature: e,
 						writes: t?.signature === e ? t.writes + 1 : 1
-					}, Re({
+					}, Ie({
 						completed: 0,
 						total: f.length
-					}), await _t(f, (e, t) => Re({
+					}), await lt(f, (e, t) => Ie({
 						completed: e,
 						total: t
 					}));
 					return;
 				}
 				await r.setConfig({
+					groupBy: "status",
 					swimlanes: a,
 					swimlaneBy: "custom",
 					swimlaneMigration: void 0
-				}), Je.current = null, Ie(!1), Re(null), Me(!1);
+				}), We.current = null, Pe(!1), Ie(null), Ae(!1);
 			} catch (e) {
-				Be(e instanceof Error ? e.message : String(e)), Re(null), Ie(!1);
+				Re(e instanceof Error ? e.message : String(e)), Ie(null), Pe(!1);
 			} finally {
-				qe.current = !1, He((e) => e + 1);
+				Ue.current = !1, Be((e) => e + 1);
 			}
 		})());
 	}, [
@@ -9829,44 +9507,29 @@ function hm({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 		t,
 		e.swimlaneMigration,
 		e.swimlanes,
-		Ve,
-		Fe,
-		gt,
-		Ne
+		ze,
+		Ne,
+		ct,
+		je
 	]);
-	let yt = "h-7 rounded-md border border-stone-200 bg-white px-2 text-xs text-stone-600 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand", bt = M ? ` ${M}` : "", xt = (e) => {
-		Fe || Promise.resolve(r.setConfig(e)).catch(() => {});
-	}, St = async (e) => {
+	let dt = "h-7 rounded-md border border-stone-200 bg-white px-2 text-xs text-stone-600 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand", ft = M ? ` ${M}` : "", pt = (e) => {
+		Ne || Promise.resolve(r.setConfig(e)).catch(() => {});
+	}, mt = async (e) => {
 		await r.setConfig({ swimlanes: e });
-	}, Ct = (t, n) => {
-		if (Ye.current) return;
-		let i = [...e.swimlanes ?? []], a = i.findIndex((e) => e.key === t), o = a + n;
-		if (a < 0 || o < 0 || o >= i.length) return;
-		let [s] = i.splice(a, 1);
-		s && (i.splice(o, 0, s), Ye.current = !0, We(!0), Promise.resolve(r.setConfig({ swimlanes: i })).catch(() => {}).finally(() => {
-			Ye.current = !1, We(!1);
-		}));
-	}, wt = (t, n) => {
-		Ye.current || (Ye.current = !0, We(!0), Promise.resolve(r.setConfig({ swimlanes: (e.swimlanes ?? []).map((e) => e.key === t ? {
-			...e,
-			color: n
-		} : e) })).catch(() => {}).finally(() => {
-			Ye.current = !1, We(!1);
-		}));
-	}, Tt = () => {
+	}, ht = () => {
 		ge((e) => ({
 			...e,
 			missingRow: !0
 		})), window.setTimeout(() => {
-			document.querySelector("[data-swimlane-unassigned]")?.scrollIntoView({
+			document.querySelector("[data-col-key=\"\"]")?.scrollIntoView({
 				block: "nearest",
 				inline: "nearest",
 				behavior: "smooth"
 			});
 		}, 80);
-	}, Et = (e) => {
+	}, gt = (e) => {
 		A ? A(e) : P(e.id);
-	}, Dt = !!(r.renameColumn || r.toggleDoneColumn || r.setColumnLimit || r.setColumnColor || r.deleteColumn), Ot = (e, t) => {
+	}, _t = !!(r.renameColumn || r.toggleDoneColumn || r.setColumnLimit || r.setColumnColor || r.deleteColumn), vt = (e, t) => {
 		let n = document.elementFromPoint(e, t), r = n?.closest("[data-col-key]");
 		if (!r) return null;
 		let i = r.dataset.colKey, a = n?.closest("[data-card-id]");
@@ -9881,9 +9544,9 @@ function hm({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 			col: i,
 			index: r.querySelectorAll("[data-card-id]").length
 		};
-	}, kt = (e, t) => (document.elementFromPoint(e, t)?.closest("[data-col-key]"))?.dataset.colKey ?? null, At = (e, t) => {
+	}, yt = (e, t) => (document.elementFromPoint(e, t)?.closest("[data-col-key]"))?.dataset.colKey ?? null, bt = (e, t) => {
 		if (e.button === 0) {
-			Ge.current = {
+			Ve.current = {
 				id: t.id,
 				startX: e.clientX,
 				startY: e.clientY,
@@ -9893,9 +9556,9 @@ function hm({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 				e.currentTarget.setPointerCapture(e.pointerId);
 			} catch {}
 		}
-	}, jt = (e, t) => {
+	}, xt = (e, t) => {
 		if (k) return;
-		let n = Ge.current;
+		let n = Ve.current;
 		if (!(!n || n.id !== t.id)) {
 			if (!n.moved) {
 				if (Math.abs(e.clientX - n.startX) < 4 && Math.abs(e.clientY - n.startY) < 4) return;
@@ -9904,35 +9567,35 @@ function hm({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 			we({
 				x: e.clientX,
 				y: e.clientY
-			}), R(Ot(e.clientX, e.clientY));
+			}), R(vt(e.clientX, e.clientY));
 		}
-	}, Mt = (e, n) => {
-		let i = Ge.current;
-		Ge.current = null;
+	}, St = (n, i) => {
+		let a = Ve.current;
+		Ve.current = null;
 		try {
-			e.currentTarget.releasePointerCapture(e.pointerId);
+			n.currentTarget.releasePointerCapture(n.pointerId);
 		} catch {}
-		if (be(null), we(null), R(null), i?.moved) {
-			let i = Ot(e.clientX, e.clientY);
-			if (i) {
-				let e = Ze && !tt ? t.filter((e) => e.id !== n.id && Mp(e, Xe) === i.col).length : i.index;
-				r.moveCard(n.id, i.col, e);
+		if (be(null), we(null), R(null), a?.moved) {
+			let a = vt(n.clientX, n.clientY);
+			if (a) {
+				let n = Ke && !Ze ? t.filter((t) => t.id !== i.id && Fp(t, e) === a.col).length : a.index;
+				r.moveCard(i.id, a.col, n);
 			}
-		} else if (i) {
-			if ((e.metaKey || e.ctrlKey) && !k) {
+		} else if (a) {
+			if ((n.metaKey || n.ctrlKey) && !k) {
 				I((e) => {
 					let t = new Set(e);
-					return t.has(n.id) ? t.delete(n.id) : t.add(n.id), t;
+					return t.has(i.id) ? t.delete(i.id) : t.add(i.id), t;
 				});
 				return;
 			}
-			Et(n);
+			gt(i);
 		}
-	}, Nt = (e) => {
+	}, Ct = (e) => {
 		for (let n of F) t.some((e) => e.id === n) && r.updateCard(n, e);
-	}, H = (e, t) => {
-		if (!(!Ze || !r.reorderColumns || e.button !== 0) && !e.target.closest("button")) {
-			Ke.current = {
+	}, wt = (e, t) => {
+		if (!(!Ke || !r.reorderColumns || e.button !== 0) && !e.target.closest("button")) {
+			He.current = {
 				key: t.key,
 				startX: e.clientX,
 				startY: e.clientY,
@@ -9942,29 +9605,29 @@ function hm({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 				e.currentTarget.setPointerCapture(e.pointerId);
 			} catch {}
 		}
-	}, Pt = (e, t) => {
-		let n = Ke.current;
+	}, Tt = (e, t) => {
+		let n = He.current;
 		if (!(!n || n.key !== t.key)) {
 			if (!n.moved) {
 				if (Math.abs(e.clientX - n.startX) < 4 && Math.abs(e.clientY - n.startY) < 4) return;
 				n.moved = !0, Se(t.key);
 			}
-			B(kt(e.clientX, e.clientY));
+			B(yt(e.clientX, e.clientY));
 		}
-	}, U = (e, t) => {
-		let n = Ke.current;
-		Ke.current = null;
+	}, Et = (e, t) => {
+		let n = He.current;
+		He.current = null;
 		try {
 			e.currentTarget.releasePointerCapture(e.pointerId);
 		} catch {}
 		if (Se(null), B(null), n?.moved) {
-			let n = kt(e.clientX, e.clientY);
+			let n = yt(e.clientX, e.clientY);
 			n && n !== t.key && r.reorderColumns?.(t.key, n);
 		}
-	}, Ft = (e) => ne((t) => {
+	}, Dt = (e) => ne((t) => {
 		let n = new Set(t);
 		return n.has(e) ? n.delete(e) : n.add(e), n;
-	}), It = async (e, t) => {
+	}), Ot = async (e, t) => {
 		let n = t.trim();
 		if (!n) return;
 		let i = await r.createCard(e, n);
@@ -10002,8 +9665,8 @@ function hm({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 											"aria-hidden": !0,
 											children: " · "
 										}),
-										ut.length,
-										ut.length === t.length ? "" : `/${t.length}`,
+										nt.length,
+										nt.length === t.length ? "" : `/${t.length}`,
 										" ",
 										/* @__PURE__ */ S(L, { id: "sCzmvQ" })
 									]
@@ -10017,28 +9680,28 @@ function hm({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 										children: [
 											/* @__PURE__ */ C("button", {
 												type: "button",
-												onClick: () => xt({ viewType: "board" }),
-												className: `inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium ${Qe === "board" ? "bg-brand-soft text-brand-dark" : "text-stone-500 hover:text-brand-dark"}`,
+												onClick: () => pt({ viewType: "board" }),
+												className: `inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium ${Je === "board" ? "bg-brand-soft text-brand-dark" : "text-stone-500 hover:text-brand-dark"}`,
 												children: [/* @__PURE__ */ S(Jf, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "QD8opX" })]
 											}),
 											/* @__PURE__ */ C("button", {
 												type: "button",
-												onClick: () => xt({ viewType: "table" }),
-												className: `inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium ${Qe === "table" ? "bg-brand-soft text-brand-dark" : "text-stone-500 hover:text-brand-dark"}`,
+												onClick: () => pt({ viewType: "table" }),
+												className: `inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium ${Je === "table" ? "bg-brand-soft text-brand-dark" : "text-stone-500 hover:text-brand-dark"}`,
 												children: [/* @__PURE__ */ S(Rf, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "4hJhzz" })]
 											}),
 											/* @__PURE__ */ C("button", {
 												type: "button",
-												onClick: () => xt({ viewType: "calendar" }),
-												className: `inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium ${Qe === "calendar" ? "bg-brand-soft text-brand-dark" : "text-stone-500 hover:text-brand-dark"}`,
+												onClick: () => pt({ viewType: "calendar" }),
+												className: `inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium ${Je === "calendar" ? "bg-brand-soft text-brand-dark" : "text-stone-500 hover:text-brand-dark"}`,
 												children: [/* @__PURE__ */ S(qd, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "AjVXBS" })]
 											})
 										]
 									}),
-									Ze && Qe === "board" && !k && /* @__PURE__ */ C("button", {
+									Ke && Je === "board" && !k && /* @__PURE__ */ C("button", {
 										type: "button",
-										className: `inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium ${et ? "border-brand/40 bg-brand-soft/50 text-brand-dark" : "border-stone-200 text-stone-600 hover:border-brand/40 hover:text-brand-dark"}`,
-										onClick: () => xt({ colorColumns: !e.colorColumns }),
+										className: `inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium ${Xe ? "border-brand/40 bg-brand-soft/50 text-brand-dark" : "border-stone-200 text-stone-600 hover:border-brand/40 hover:text-brand-dark"}`,
+										onClick: () => pt({ colorColumns: !e.colorColumns }),
 										title: V._({ id: "b4hVKD" }),
 										children: [/* @__PURE__ */ S(If, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "jZlrte" })]
 									}),
@@ -10073,85 +9736,69 @@ function hm({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 					/* @__PURE__ */ C("div", {
 						className: "flex flex-wrap items-center gap-2 border-b border-black/[0.04] bg-white/40 px-5 py-1.5",
 						children: [
-							Qe === "board" && /* @__PURE__ */ C("label", {
+							Je === "board" && /* @__PURE__ */ C("label", {
 								className: "inline-flex items-center gap-1 text-xs text-brand-gray",
 								children: [/* @__PURE__ */ S(Pf, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ C("select", {
-									className: yt,
-									value: Xe,
-									disabled: Fe,
-									onChange: (e) => xt({ groupBy: e.target.value }),
+									className: dt,
+									"aria-label": V._({ id: "hyVzII" }),
+									value: Ge,
+									disabled: Ne,
+									onChange: (t) => {
+										let n = t.target.value, i = n === "custom" ? {
+											groupBy: "status",
+											swimlaneBy: "custom"
+										} : {
+											groupBy: n,
+											swimlaneBy: void 0
+										};
+										Promise.resolve(r.setConfig(i)).then(() => {
+											n === "custom" && (e.swimlanes?.length ?? 0) === 0 && !k && Ee(!0);
+										}).catch(() => {});
+									},
 									children: [
 										/* @__PURE__ */ S("option", {
 											value: "status",
-											children: V._({ id: "guQk4e" })
+											children: V._({ id: "CQ_dDx" })
 										}),
 										/* @__PURE__ */ S("option", {
 											value: "priority",
-											children: V._({ id: "hNQgyI" })
+											children: V._({ id: "Ve-C10" })
 										}),
 										/* @__PURE__ */ S("option", {
 											value: "assignee",
-											children: V._({ id: "yjeGpt" })
+											children: V._({ id: "UouxNQ" })
+										}),
+										/* @__PURE__ */ S("option", {
+											value: "custom",
+											children: V._({ id: "5Cawxq" })
 										})
 									]
 								})]
 							}),
-							Qe === "board" && !k && /* @__PURE__ */ S("button", {
+							Je === "board" && Ge === "status" && !k && /* @__PURE__ */ S("button", {
 								type: "button",
-								disabled: Fe,
+								disabled: Ne,
 								onClick: () => Oe(!0),
 								title: V._({ id: "rvpMpc" }),
 								"aria-label": V._({ id: "rvpMpc" }),
 								className: "inline-flex h-7 w-7 items-center justify-center rounded-md border border-stone-200 bg-white text-stone-500 transition hover:border-brand/40 hover:text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand/20 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50",
 								children: /* @__PURE__ */ S(Of, { className: "h-3.5 w-3.5" })
 							}),
-							Qe === "board" && /* @__PURE__ */ C("label", {
-								className: "inline-flex items-center gap-1 text-xs text-brand-gray",
-								children: [/* @__PURE__ */ S(Vd, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ C("select", {
-									className: yt,
-									value: at ?? "",
-									disabled: Fe,
-									onChange: (t) => {
-										let n = t.target.value || void 0;
-										Promise.resolve(r.setConfig({ swimlaneBy: n })).then(() => {
-											n === "custom" && (e.swimlanes?.length ?? 0) === 0 && !k && Ee(!0);
-										}).catch(() => {});
-									},
-									children: [
-										/* @__PURE__ */ S("option", {
-											value: "",
-											children: V._({ id: "lt2UOc" })
-										}),
-										[
-											"status",
-											"priority",
-											"assignee"
-										].filter((e) => e !== Xe).map((e) => /* @__PURE__ */ S("option", {
-											value: e,
-											children: e === "status" ? V._({ id: "wp-2ZK" }) : e === "priority" ? V._({ id: "p4rTvq" }) : V._({ id: "Ld9MtR" })
-										}, e)),
-										/* @__PURE__ */ S("option", {
-											value: "custom",
-											children: V._({ id: "wGM_xy" })
-										})
-									]
-								})]
-							}),
-							Qe === "board" && at && at !== "status" && !k && /* @__PURE__ */ S("button", {
+							Je === "board" && Ge !== "status" && !k && /* @__PURE__ */ S("button", {
 								type: "button",
-								disabled: Fe,
+								disabled: Ne,
 								onClick: () => {
-									at === "custom" ? Ee(!0) : (Pe(e.swimlaneMigration?.source ?? at), Be(""), Me(!0));
+									Ge === "custom" ? Ee(!0) : (Me(e.swimlaneMigration?.source ?? Ge), Re(""), Ae(!0));
 								},
-								title: at === "custom" ? V._({ id: "2aEwT_" }) : V._({ id: "u36sC2" }),
-								"aria-label": at === "custom" ? V._({ id: "2aEwT_" }) : V._({ id: "u36sC2" }),
+								title: Ge === "custom" ? V._({ id: "pip_Rq" }) : V._({ id: "jzy1b8" }),
+								"aria-label": Ge === "custom" ? V._({ id: "pip_Rq" }) : V._({ id: "jzy1b8" }),
 								className: "inline-flex h-7 w-7 items-center justify-center rounded-md border border-stone-200 bg-white text-stone-500 transition hover:border-brand/40 hover:text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand/20 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50",
 								children: /* @__PURE__ */ S(Td, { className: "h-3.5 w-3.5" })
 							}),
-							Qe !== "calendar" && /* @__PURE__ */ C("label", {
+							Je !== "calendar" && /* @__PURE__ */ C("label", {
 								className: "inline-flex items-center gap-1 text-xs text-brand-gray",
 								children: [/* @__PURE__ */ S(Ud, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ C("select", {
-									className: yt,
+									className: dt,
 									value: pe,
 									onChange: (e) => me(e.target.value),
 									children: [
@@ -10174,20 +9821,20 @@ function hm({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 									]
 								})]
 							}),
-							/* @__PURE__ */ S(nm, {
+							/* @__PURE__ */ S(im, {
 								filters: he,
 								onChange: ge,
-								assignees: ft,
-								tags: pt,
+								assignees: it,
+								tags: at,
 								currentUser: w,
-								visibleCount: ut.length,
+								visibleCount: nt.length,
 								totalCount: t.length,
 								portalClassName: M
 							}),
 							/* @__PURE__ */ C("div", {
 								className: "relative ml-auto",
 								children: [/* @__PURE__ */ S(Ef, { className: "pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-stone-400" }), /* @__PURE__ */ S("input", {
-									className: `${yt} w-44 pl-7`,
+									className: `${dt} w-44 pl-7`,
 									placeholder: V._({ id: "JTYvAw" }),
 									value: de,
 									onChange: (e) => fe(e.target.value)
@@ -10202,428 +9849,410 @@ function hm({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 							children: i
 						})
 					}),
-					Qe === "table" ? /* @__PURE__ */ S(rm, {
-						cards: Gp(ut, pe),
-						statusName: mt,
-						today: nt,
-						doneKey: $e,
-						selectedId: ht?.id,
-						onSelect: Et
-					}) : Qe === "calendar" ? /* @__PURE__ */ S(am, {
-						cards: ut,
-						today: nt,
-						doneKey: $e,
+					Je === "table" ? /* @__PURE__ */ S(am, {
+						cards: qp(nt, pe),
+						statusName: ot,
+						today: Qe,
+						doneKey: Ye,
+						selectedId: st?.id,
+						onSelect: gt
+					}) : Je === "calendar" ? /* @__PURE__ */ S(sm, {
+						cards: nt,
+						today: Qe,
+						doneKey: Ye,
 						mode: e.calendarMode ?? "month",
-						onModeChange: (e) => xt({ calendarMode: e }),
-						selectedId: ht?.id,
-						onSelect: Et
-					}) : ot && at ? /* @__PURE__ */ S(cm, {
-						cards: ut,
-						columns: rt,
-						lanes: st,
-						config: e,
-						groupKey: Xe,
-						swimlaneKey: at,
-						sortBy: pe,
-						today: nt,
-						doneKey: $e,
-						selectedId: ht?.id,
-						actions: r,
-						readOnly: k || Fe,
-						customLaneMutationPending: Ue,
-						portalClassName: M,
-						onSelect: Et,
-						onOpenManager: () => Ee(!0),
-						onManageLane: ({ laneKey: e, action: t }) => {
-							Ae({
-								id: Date.now(),
-								laneKey: e,
-								action: t
-							}), Ee(!0);
-						},
-						onMoveCustomLane: Ct,
-						onSetCustomLaneColor: wt,
-						onShowMissing: Tt
+						onModeChange: (e) => pt({ calendarMode: e }),
+						selectedId: st?.id,
+						onSelect: gt
 					}) : /* @__PURE__ */ C("div", {
 						className: "flex min-h-0 flex-1 items-stretch gap-3 overflow-x-auto p-4",
-						children: [rt.map((t, i) => {
-							let s = Gp(ut.filter((e) => Mp(e, Xe) === t.key), pe), c = (e) => !!ye && tt && ee?.col === t.key && ee.index === e, l = Ze && $e === t.key, u = z === t.key, d = Ze && t.limit != null && s.length > t.limit, f = t.color ?? lp[i % lp.length];
-							return te.has(t.key) ? /* @__PURE__ */ C("button", {
-								type: "button",
-								"data-col-key": t.key,
-								onClick: () => Ft(t.key),
-								title: V._({ id: "AC9Gkf" }),
-								className: `flex h-full w-10 shrink-0 flex-col items-center gap-2 rounded-xl border bg-stone-100/60 py-2 text-stone-500 hover:border-brand/40 ${u ? "border-brand/60" : "border-black/[0.05]"}`,
-								children: [
-									/* @__PURE__ */ S(rf, { className: "h-4 w-4" }),
-									(et || t.color) && /* @__PURE__ */ S("span", {
-										className: "h-2 w-2 rounded-full",
-										style: { backgroundColor: f },
-										"aria-hidden": !0
-									}),
-									/* @__PURE__ */ S("span", {
-										className: "rounded-full bg-white px-1.5 text-[11px] text-stone-400",
-										children: s.length
-									}),
-									/* @__PURE__ */ S("span", {
-										className: "mt-1 whitespace-nowrap text-xs font-medium text-stone-600 [writing-mode:vertical-rl]",
-										children: t.name
-									})
-								]
-							}, t.key) : /* @__PURE__ */ C("div", {
-								"data-col-key": t.key,
-								className: `flex max-h-full w-72 shrink-0 flex-col rounded-xl border bg-stone-100/60 transition-opacity ${xe === t.key ? "opacity-50" : ""} ${u ? "border-brand/60" : ee?.col === t.key ? "border-brand/40" : "border-black/[0.05]"}`,
-								children: [/* @__PURE__ */ C("div", {
-									className: "flex items-center justify-between gap-1 rounded-t-xl px-3 py-2",
-									style: et ? { backgroundColor: `${f}1f` } : void 0,
-									children: [/* @__PURE__ */ C("div", {
-										onPointerDown: (e) => H(e, t),
-										onPointerMove: (e) => Pt(e, t),
-										onPointerUp: (e) => U(e, t),
-										className: `flex min-w-0 flex-1 select-none items-center gap-1.5 text-sm font-medium text-stone-700 ${Ze && r.reorderColumns ? "cursor-grab touch-none active:cursor-grabbing" : ""}`,
-										children: [
-											/* @__PURE__ */ S("button", {
-												type: "button",
-												onClick: () => Ft(t.key),
-												title: V._({ id: "pwN6Ae" }),
-												className: "-ml-1 rotate-90 rounded p-0.5 text-stone-400 hover:bg-white hover:text-stone-600",
-												children: /* @__PURE__ */ S(rf, { className: "h-3.5 w-3.5" })
-											}),
-											(et || t.color) && /* @__PURE__ */ S("span", {
-												className: "h-2 w-2 rounded-full",
-												style: { backgroundColor: f },
-												"aria-hidden": !0
-											}),
-											/* @__PURE__ */ S("span", {
-												className: "truncate",
-												children: t.name || V._({ id: "EbMPZJ" })
-											}),
-											l && /* @__PURE__ */ S(Yd, {
-												className: "h-3.5 w-3.5 shrink-0 text-emerald-500",
-												title: V._({ id: "_5CsXX" })
-											}),
-											/* @__PURE__ */ C("span", {
-												className: `rounded-full px-1.5 text-xs ${d ? "bg-red-100 font-medium text-red-600" : "bg-white text-stone-400"}`,
-												title: t.limit == null ? void 0 : V._({
-													id: "d5z6xQ",
-													values: { 0: t.limit }
-												}),
-												children: [s.length, t.limit == null ? "" : `/${t.limit}`]
-											})
-										]
-									}), Ze && !k && Dt && /* @__PURE__ */ C(Du, {
-										as: "div",
-										className: "relative shrink-0",
-										children: [/* @__PURE__ */ S(Su, {
-											className: "rounded p-0.5 text-stone-400 hover:bg-white hover:text-stone-600",
-											children: /* @__PURE__ */ S(mf, { className: "h-4 w-4" })
-										}), /* @__PURE__ */ C(Cu, {
-											anchor: "bottom end",
-											className: `z-30 w-48 rounded-lg border border-black/[0.06] bg-white py-1 text-sm shadow-lg [--anchor-gap:4px] focus:outline-none${bt}`,
-											children: [
-												r.renameColumn && /* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
-													type: "button",
-													className: "flex w-full items-center gap-2 px-3 py-1.5 text-left text-stone-700 data-[focus]:bg-stone-100",
-													onClick: () => void r.renameColumn?.(t.key),
-													children: [/* @__PURE__ */ S(Af, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "2wxgft" })]
-												}) }),
-												r.toggleDoneColumn && /* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
-													type: "button",
-													className: "flex w-full items-center gap-2 px-3 py-1.5 text-left text-stone-700 data-[focus]:bg-stone-100",
-													onClick: () => void r.toggleDoneColumn?.(t.key),
-													children: [/* @__PURE__ */ S(Yd, { className: "h-3.5 w-3.5" }), l ? /* @__PURE__ */ S(L, { id: "G4qrLy" }) : /* @__PURE__ */ S(L, { id: "wtw-au" })]
-												}) }),
-												r.setColumnLimit && /* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
-													type: "button",
-													className: "flex w-full items-center gap-2 px-3 py-1.5 text-left text-stone-700 data-[focus]:bg-stone-100",
-													onClick: () => void r.setColumnLimit?.(t.key),
-													children: [/* @__PURE__ */ S(vf, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "Iw6WJa" })]
-												}) }),
-												r.setColumnColor && /* @__PURE__ */ C(x, { children: [/* @__PURE__ */ S("div", { className: "my-1 border-t border-black/[0.05]" }), /* @__PURE__ */ C("div", {
-													className: "px-3 py-1",
-													children: [/* @__PURE__ */ S("span", {
-														className: "text-[11px] text-brand-gray",
-														children: /* @__PURE__ */ S(L, { id: "jZlrte" })
-													}), /* @__PURE__ */ C("div", {
-														className: "mt-1 flex flex-wrap items-center gap-1.5",
-														children: [lp.map((e) => /* @__PURE__ */ S("button", {
-															type: "button",
-															title: e,
-															onClick: () => void r.setColumnColor?.(t.key, e),
-															className: `h-4 w-4 rounded-full ring-1 ring-black/10 ${t.color === e ? "ring-2 ring-offset-1 ring-stone-500" : ""}`,
-															style: { backgroundColor: e }
-														}, e)), /* @__PURE__ */ S("button", {
-															type: "button",
-															title: V._({ id: "H_SQFv" }),
-															onClick: () => void r.setColumnColor?.(t.key, null),
-															className: `flex h-4 w-4 items-center justify-center rounded-full bg-white ring-1 ring-black/10 ${t.color ? "" : "ring-2 ring-offset-1 ring-stone-500"}`,
-															children: /* @__PURE__ */ S("span", { className: "h-2 w-2 rounded-full bg-stone-300" })
-														})]
-													})]
-												})] }),
-												r.deleteColumn && /* @__PURE__ */ C(x, { children: [/* @__PURE__ */ S("div", { className: "my-1 border-t border-black/[0.05]" }), /* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
-													type: "button",
-													disabled: rt.length <= 1,
-													className: "flex w-full items-center gap-2 px-3 py-1.5 text-left text-red-600 disabled:opacity-40 data-[focus]:bg-red-50",
-													onClick: () => void r.deleteColumn?.(t.key),
-													children: [/* @__PURE__ */ S(Hf, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "cnGeoo" })]
-												}) })] })
-											]
-										})]
-									})]
-								}), /* @__PURE__ */ C("div", {
-									className: "min-h-0 flex-1 space-y-2 overflow-y-auto p-2",
+						children: [
+							$e.map((t, i) => {
+								let s = qp(nt.filter((n) => Fp(n, e) === t.key), pe), c = (e) => !!ye && Ze && ee?.col === t.key && ee.index === e, l = Ke && Ye === t.key, u = z === t.key, d = Ke && t.limit != null && s.length > t.limit, f = t.color ?? lp[i % lp.length];
+								return te.has(t.key) ? /* @__PURE__ */ C("button", {
+									type: "button",
+									"data-col-key": t.key,
+									onClick: () => Dt(t.key),
+									title: V._({ id: "AC9Gkf" }),
+									className: `flex h-full w-10 shrink-0 flex-col items-center gap-2 rounded-xl border bg-stone-100/60 py-2 text-stone-500 hover:border-brand/40 ${u ? "border-brand/60" : "border-black/[0.05]"}`,
 									children: [
-										s.map((t, i) => {
-											let a = t.due && t.due < nt && t.columnKey !== $e, o = ct.get(t.id) ?? 0, s = dt.get(t.id), l = t.priority && t.priority !== "none" || t.assignee || t.due || (t.taskTotal ?? 0) > 0 || t.tags.length > 0 || o > 0 || (s?.length ?? 0) > 0;
-											return /* @__PURE__ */ C(n, { children: [c(i) && /* @__PURE__ */ S("div", { className: "mx-1 h-0.5 rounded bg-brand" }), /* @__PURE__ */ C("div", {
-												role: "button",
-												tabIndex: 0,
-												"data-card-id": t.id,
-												"data-card-index": i,
-												onPointerDown: (e) => At(e, t),
-												onPointerMove: (e) => jt(e, t),
-												onPointerUp: (e) => Mt(e, t),
-												onKeyDown: (e) => {
-													e.key === "Enter" && Et(t);
-												},
-												className: `group relative block w-full cursor-pointer touch-none select-none rounded-lg bg-white p-2.5 text-left shadow-sm transition hover:ring-brand/30 ${ye === t.id ? "opacity-40" : ""} ${F.has(t.id) ? "ring-2 ring-brand/70" : ht?.id === t.id ? "ring-1 ring-brand/60" : "ring-1 ring-black/[0.04]"}`,
-												children: [
-													!k && /* @__PURE__ */ S("div", {
-														className: "absolute right-1 top-1 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100",
-														onClick: (e) => e.stopPropagation(),
-														onMouseDown: (e) => e.stopPropagation(),
-														onPointerDown: (e) => e.stopPropagation(),
-														children: /* @__PURE__ */ C(Du, {
-															as: "div",
-															children: [/* @__PURE__ */ S(Su, {
-																className: "rounded p-0.5 text-stone-400 hover:bg-stone-100 hover:text-stone-600",
-																children: /* @__PURE__ */ S(mf, { className: "h-4 w-4" })
-															}), /* @__PURE__ */ C(Cu, {
-																anchor: "bottom end",
-																className: `z-30 w-44 rounded-lg border border-black/[0.06] bg-white py-1 text-sm shadow-lg [--anchor-gap:4px] focus:outline-none${bt}`,
-																children: [
-																	r.openCardFull && /* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
-																		type: "button",
-																		className: "flex w-full items-center gap-2 px-3 py-1.5 text-left text-stone-700 data-[focus]:bg-stone-100",
-																		onClick: () => r.openCardFull?.(t),
-																		children: [/* @__PURE__ */ S(zd, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "Ik60OC" })]
-																	}) }),
-																	r.copyCardLink && /* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
-																		type: "button",
-																		className: "flex w-full items-center gap-2 px-3 py-1.5 text-left text-stone-700 data-[focus]:bg-stone-100",
-																		onClick: () => void r.copyCardLink?.(t),
-																		children: [/* @__PURE__ */ S(Sf, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "y1eoq1" })]
-																	}) }),
-																	r.duplicateCard && /* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
-																		type: "button",
-																		className: "flex w-full items-center gap-2 px-3 py-1.5 text-left text-stone-700 data-[focus]:bg-stone-100",
-																		onClick: () => void r.duplicateCard?.(t),
-																		children: [/* @__PURE__ */ S(ff, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "euc6Ns" })]
-																	}) }),
-																	r.saveAsTemplate && /* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
-																		type: "button",
-																		className: "flex w-full items-center gap-2 px-3 py-1.5 text-left text-stone-700 data-[focus]:bg-stone-100",
-																		onClick: () => void r.saveAsTemplate?.(t),
-																		children: [/* @__PURE__ */ S(Gd, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "BnmEvM" })]
-																	}) }),
-																	/* @__PURE__ */ S("div", { className: "my-1 border-t border-black/[0.05]" }),
-																	/* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
-																		type: "button",
-																		className: "flex w-full items-center gap-2 px-3 py-1.5 text-left text-red-600 data-[focus]:bg-red-50",
-																		onClick: () => void r.deleteCard(t),
-																		children: [/* @__PURE__ */ S(Hf, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "cnGeoo" })]
-																	}) })
-																]
-															})]
-														})
-													}),
-													t.ticket && /* @__PURE__ */ S("span", {
-														className: "mb-0.5 inline-block rounded bg-stone-100 px-1 py-0.5 font-mono text-[10px] font-medium tracking-tight text-stone-500",
-														children: t.ticket
-													}),
-													/* @__PURE__ */ C("span", {
-														className: "block pr-5 text-sm text-stone-800",
-														children: [t.icon && /* @__PURE__ */ S("span", {
-															className: "mr-1",
-															children: t.icon
-														}), t.title]
-													}),
-													t.excerpt && t.excerpt !== t.title && /* @__PURE__ */ S("span", {
-														className: "mt-0.5 block truncate text-[11px] text-stone-400",
-														children: t.excerpt
-													}),
-													l && /* @__PURE__ */ C("span", {
-														className: "mt-1.5 flex flex-wrap items-center gap-1.5",
-														children: [
-															o > 0 && /* @__PURE__ */ C("span", {
-																className: "inline-flex items-center gap-0.5 rounded bg-red-50 px-1.5 py-0.5 text-[11px] font-medium text-red-600",
-																title: V._({
-																	id: "x52RAh",
-																	values: { blockedCount: o }
-																}),
-																children: [/* @__PURE__ */ S(wf, { className: "h-3 w-3" }), o]
-															}),
-															t.priority && t.priority !== "none" && /* @__PURE__ */ S("span", {
-																className: `rounded px-1.5 py-0.5 text-[11px] font-medium ${cp[t.priority] ?? "bg-stone-100 text-stone-500"}`,
-																children: t.priority
-															}),
-															(t.taskTotal ?? 0) > 0 && /* @__PURE__ */ C("span", {
-																className: `inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[11px] font-medium ${t.taskDone === t.taskTotal ? "bg-emerald-50 text-emerald-600" : "bg-stone-100 text-stone-500"}`,
-																children: [
-																	/* @__PURE__ */ S(Yd, { className: "h-3 w-3" }),
-																	t.taskDone,
-																	"/",
-																	t.taskTotal
-																]
-															}),
-															s && s.length > 0 && (() => {
-																let t = Sp(s, e.doneColumn), n = 2 * Math.PI * 6;
-																return /* @__PURE__ */ C("span", {
-																	className: `inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-medium ${t.done === t.total ? "bg-emerald-50 text-emerald-600" : "bg-stone-100 text-stone-500"}`,
-																	title: V._({
-																		id: "bwOqWD",
-																		values: {
-																			0: t.done,
-																			1: t.total
-																		}
-																	}),
-																	children: [
-																		/* @__PURE__ */ C("svg", {
-																			viewBox: "0 0 16 16",
-																			className: "h-3 w-3 -rotate-90",
-																			children: [/* @__PURE__ */ S("circle", {
-																				cx: "8",
-																				cy: "8",
-																				r: "6",
-																				fill: "none",
-																				stroke: "currentColor",
-																				strokeOpacity: "0.25",
-																				strokeWidth: "3"
-																			}), /* @__PURE__ */ S("circle", {
-																				cx: "8",
-																				cy: "8",
-																				r: "6",
-																				fill: "none",
-																				stroke: "currentColor",
-																				strokeWidth: "3",
-																				strokeLinecap: "round",
-																				strokeDasharray: `${t.done / t.total * n} ${n}`
-																			})]
-																		}),
-																		t.done,
-																		"/",
-																		t.total
-																	]
-																});
-															})(),
-															t.tags.map((e) => /* @__PURE__ */ C("span", {
-																className: "inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[11px] text-brand-dark",
-																style: { backgroundColor: e.color ? `${e.color}22` : "rgba(0,136,132,0.10)" },
-																children: [/* @__PURE__ */ S(Bf, { className: "h-3 w-3" }), e.label]
-															}, e.label)),
-															t.assignee && /* @__PURE__ */ C("span", {
-																className: "inline-flex items-center gap-0.5 text-[11px] text-brand-gray",
-																children: [/* @__PURE__ */ S(Kf, { className: "h-3 w-3" }), t.assignee]
-															}),
-															t.due && /* @__PURE__ */ C("span", {
-																className: `inline-flex items-center gap-0.5 text-[11px] ${a ? "font-medium text-red-600" : "text-brand-gray"}`,
-																children: [/* @__PURE__ */ S(qd, { className: "h-3 w-3" }), t.due]
-															})
-														]
-													})
-												]
-											})] }, t.id);
+										/* @__PURE__ */ S(rf, { className: "h-4 w-4" }),
+										(Xe || t.color) && /* @__PURE__ */ S("span", {
+											className: "h-2 w-2 rounded-full",
+											style: { backgroundColor: f },
+											"aria-hidden": !0
 										}),
-										s.length === 0 ? ye && ee?.col === t.key && /* @__PURE__ */ S("div", { className: "mx-1 h-14 rounded-lg border-2 border-dashed border-brand/50 bg-brand-soft/30" }) : c(s.length) && /* @__PURE__ */ S("div", { className: "mx-1 h-0.5 rounded bg-brand" }),
-										k ? null : re === t.key ? /* @__PURE__ */ S("textarea", {
-											autoFocus: !0,
-											rows: 2,
-											className: "w-full resize-none rounded-lg bg-white p-2 text-sm text-stone-800 shadow-sm ring-1 ring-brand/40 focus:outline-none focus:ring-2 focus:ring-brand/40",
-											placeholder: V._({ id: "u2IprG" }),
-											value: ae,
-											onChange: (e) => oe(e.target.value),
-											onKeyDown: (e) => {
-												if (e.key === "Enter" && !e.shiftKey) {
-													e.preventDefault();
-													let n = ae;
-													oe(""), ie(null), It(t.key, n);
-												}
-												e.key === "Escape" && (oe(""), ie(null));
-											},
-											onBlur: () => {
-												ae.trim() && It(t.key, ae), oe(""), ie(null);
-											}
-										}) : a && a.length > 0 && o ? /* @__PURE__ */ C(Du, {
-											as: "div",
-											className: "relative",
-											children: [/* @__PURE__ */ C(Su, {
-												className: "flex w-full items-center gap-1.5 rounded-lg px-2 py-1.5 text-left text-sm text-stone-400 hover:bg-white hover:text-brand-dark",
-												children: [/* @__PURE__ */ S(Mf, { className: "h-4 w-4" }), /* @__PURE__ */ S(L, { id: "pnrmSP" })]
-											}), /* @__PURE__ */ C(Cu, {
-												anchor: "bottom start",
-												className: `z-30 w-52 rounded-lg border border-black/[0.06] bg-white py-1 text-sm shadow-lg [--anchor-gap:4px] focus:outline-none${bt}`,
-												children: [
-													/* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
-														type: "button",
-														className: "flex w-full items-center gap-2 px-3 py-1.5 text-left text-stone-700 data-[focus]:bg-stone-100",
-														onClick: () => {
-															oe(""), ie(t.key);
-														},
-														children: [/* @__PURE__ */ S(Af, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "UQOvxZ" })]
-													}) }),
-													/* @__PURE__ */ S("div", { className: "my-1 border-t border-black/[0.05]" }),
-													/* @__PURE__ */ S("div", {
-														className: "px-3 py-0.5 text-[11px] uppercase tracking-wide text-stone-400",
-														children: /* @__PURE__ */ S(L, { id: "iTylMl" })
-													}),
-													a.map((e) => /* @__PURE__ */ S($, { children: /* @__PURE__ */ C("button", {
-														type: "button",
-														className: "flex w-full items-center gap-2 px-3 py-1.5 text-left text-stone-700 data-[focus]:bg-stone-100",
-														onClick: () => void o(t.key, e.id),
-														children: [/* @__PURE__ */ S(Gd, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S("span", {
-															className: "truncate",
-															children: e.name
-														})]
-													}) }, e.id))
-												]
-											})]
-										}) : /* @__PURE__ */ C("button", {
-											type: "button",
-											className: "flex w-full items-center gap-1.5 rounded-lg px-2 py-1.5 text-left text-sm text-stone-400 hover:bg-white hover:text-brand-dark",
-											onClick: () => {
-												oe(""), ie(t.key);
-											},
-											children: [/* @__PURE__ */ S(Mf, { className: "h-4 w-4" }), /* @__PURE__ */ S(L, { id: "pnrmSP" })]
+										/* @__PURE__ */ S("span", {
+											className: "rounded-full bg-white px-1.5 text-[11px] text-stone-400",
+											children: s.length
+										}),
+										/* @__PURE__ */ S("span", {
+											className: "mt-1 whitespace-nowrap text-xs font-medium text-stone-600 [writing-mode:vertical-rl]",
+											children: t.name
 										})
 									]
-								})]
-							}, t.key);
-						}), Ze && !k && r.addColumn && (se ? /* @__PURE__ */ S("input", {
-							autoFocus: !0,
-							className: "w-44 shrink-0 self-start rounded-xl border border-brand/40 px-3 py-2 text-sm text-stone-800 focus:outline-none focus:ring-2 focus:ring-brand/40",
-							placeholder: V._({ id: "P5cvAA" }),
-							value: le,
-							onChange: (e) => ue(e.target.value),
-							onKeyDown: (e) => {
-								if (e.key === "Enter") {
+								}, t.key) : /* @__PURE__ */ C("div", {
+									"data-col-key": t.key,
+									className: `flex max-h-full w-72 shrink-0 flex-col rounded-xl border bg-stone-100/60 transition-opacity ${xe === t.key ? "opacity-50" : ""} ${u ? "border-brand/60" : ee?.col === t.key ? "border-brand/40" : "border-black/[0.05]"}`,
+									children: [/* @__PURE__ */ C("div", {
+										className: "flex items-center justify-between gap-1 rounded-t-xl px-3 py-2",
+										style: Xe ? { backgroundColor: `${f}1f` } : void 0,
+										children: [/* @__PURE__ */ C("div", {
+											onPointerDown: (e) => wt(e, t),
+											onPointerMove: (e) => Tt(e, t),
+											onPointerUp: (e) => Et(e, t),
+											className: `flex min-w-0 flex-1 select-none items-center gap-1.5 text-sm font-medium text-stone-700 ${Ke && r.reorderColumns ? "cursor-grab touch-none active:cursor-grabbing" : ""}`,
+											children: [
+												/* @__PURE__ */ S("button", {
+													type: "button",
+													onClick: () => Dt(t.key),
+													title: V._({ id: "pwN6Ae" }),
+													className: "-ml-1 rotate-90 rounded p-0.5 text-stone-400 hover:bg-white hover:text-stone-600",
+													children: /* @__PURE__ */ S(rf, { className: "h-3.5 w-3.5" })
+												}),
+												(Xe || t.color) && /* @__PURE__ */ S("span", {
+													className: "h-2 w-2 rounded-full",
+													style: { backgroundColor: f },
+													"aria-hidden": !0
+												}),
+												/* @__PURE__ */ S("span", {
+													className: "truncate",
+													children: t.name || V._({ id: "EbMPZJ" })
+												}),
+												l && /* @__PURE__ */ S(Yd, {
+													className: "h-3.5 w-3.5 shrink-0 text-emerald-500",
+													title: V._({ id: "_5CsXX" })
+												}),
+												/* @__PURE__ */ C("span", {
+													className: `rounded-full px-1.5 text-xs ${d ? "bg-red-100 font-medium text-red-600" : "bg-white text-stone-400"}`,
+													title: t.limit == null ? void 0 : V._({
+														id: "d5z6xQ",
+														values: { 0: t.limit }
+													}),
+													children: [s.length, t.limit == null ? "" : `/${t.limit}`]
+												})
+											]
+										}), Ke && !k && _t && /* @__PURE__ */ C(Du, {
+											as: "div",
+											className: "relative shrink-0",
+											children: [/* @__PURE__ */ S(xu, {
+												className: "rounded p-0.5 text-stone-400 hover:bg-white hover:text-stone-600",
+												children: /* @__PURE__ */ S(mf, { className: "h-4 w-4" })
+											}), /* @__PURE__ */ C(Su, {
+												anchor: "bottom end",
+												className: `z-30 w-48 rounded-lg border border-black/[0.06] bg-white py-1 text-sm shadow-lg [--anchor-gap:4px] focus:outline-none${ft}`,
+												children: [
+													r.renameColumn && /* @__PURE__ */ S(Cu, { children: /* @__PURE__ */ C("button", {
+														type: "button",
+														className: "flex w-full items-center gap-2 px-3 py-1.5 text-left text-stone-700 data-[focus]:bg-stone-100",
+														onClick: () => void r.renameColumn?.(t.key),
+														children: [/* @__PURE__ */ S(Af, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "2wxgft" })]
+													}) }),
+													r.toggleDoneColumn && /* @__PURE__ */ S(Cu, { children: /* @__PURE__ */ C("button", {
+														type: "button",
+														className: "flex w-full items-center gap-2 px-3 py-1.5 text-left text-stone-700 data-[focus]:bg-stone-100",
+														onClick: () => void r.toggleDoneColumn?.(t.key),
+														children: [/* @__PURE__ */ S(Yd, { className: "h-3.5 w-3.5" }), l ? /* @__PURE__ */ S(L, { id: "G4qrLy" }) : /* @__PURE__ */ S(L, { id: "wtw-au" })]
+													}) }),
+													r.setColumnLimit && /* @__PURE__ */ S(Cu, { children: /* @__PURE__ */ C("button", {
+														type: "button",
+														className: "flex w-full items-center gap-2 px-3 py-1.5 text-left text-stone-700 data-[focus]:bg-stone-100",
+														onClick: () => void r.setColumnLimit?.(t.key),
+														children: [/* @__PURE__ */ S(vf, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "Iw6WJa" })]
+													}) }),
+													r.setColumnColor && /* @__PURE__ */ C(x, { children: [/* @__PURE__ */ S("div", { className: "my-1 border-t border-black/[0.05]" }), /* @__PURE__ */ C("div", {
+														className: "px-3 py-1",
+														children: [/* @__PURE__ */ S("span", {
+															className: "text-[11px] text-brand-gray",
+															children: /* @__PURE__ */ S(L, { id: "jZlrte" })
+														}), /* @__PURE__ */ C("div", {
+															className: "mt-1 flex flex-wrap items-center gap-1.5",
+															children: [lp.map((e) => /* @__PURE__ */ S("button", {
+																type: "button",
+																title: e,
+																onClick: () => void r.setColumnColor?.(t.key, e),
+																className: `h-4 w-4 rounded-full ring-1 ring-black/10 ${t.color === e ? "ring-2 ring-offset-1 ring-stone-500" : ""}`,
+																style: { backgroundColor: e }
+															}, e)), /* @__PURE__ */ S("button", {
+																type: "button",
+																title: V._({ id: "H_SQFv" }),
+																onClick: () => void r.setColumnColor?.(t.key, null),
+																className: `flex h-4 w-4 items-center justify-center rounded-full bg-white ring-1 ring-black/10 ${t.color ? "" : "ring-2 ring-offset-1 ring-stone-500"}`,
+																children: /* @__PURE__ */ S("span", { className: "h-2 w-2 rounded-full bg-stone-300" })
+															})]
+														})]
+													})] }),
+													r.deleteColumn && /* @__PURE__ */ C(x, { children: [/* @__PURE__ */ S("div", { className: "my-1 border-t border-black/[0.05]" }), /* @__PURE__ */ S(Cu, { children: /* @__PURE__ */ C("button", {
+														type: "button",
+														disabled: $e.length <= 1,
+														className: "flex w-full items-center gap-2 px-3 py-1.5 text-left text-red-600 disabled:opacity-40 data-[focus]:bg-red-50",
+														onClick: () => void r.deleteColumn?.(t.key),
+														children: [/* @__PURE__ */ S(Hf, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "cnGeoo" })]
+													}) })] })
+												]
+											})]
+										})]
+									}), /* @__PURE__ */ C("div", {
+										className: "min-h-0 flex-1 space-y-2 overflow-y-auto p-2",
+										children: [
+											s.map((t, i) => {
+												let a = t.due && t.due < Qe && t.columnKey !== Ye, o = et.get(t.id) ?? 0, s = rt.get(t.id), l = t.priority && t.priority !== "none" || t.assignee || t.due || (t.taskTotal ?? 0) > 0 || t.tags.length > 0 || o > 0 || (s?.length ?? 0) > 0;
+												return /* @__PURE__ */ C(n, { children: [c(i) && /* @__PURE__ */ S("div", { className: "mx-1 h-0.5 rounded bg-brand" }), /* @__PURE__ */ C("div", {
+													role: "button",
+													tabIndex: 0,
+													"data-card-id": t.id,
+													"data-card-index": i,
+													onPointerDown: (e) => bt(e, t),
+													onPointerMove: (e) => xt(e, t),
+													onPointerUp: (e) => St(e, t),
+													onKeyDown: (e) => {
+														e.key === "Enter" && gt(t);
+													},
+													className: `group relative block w-full cursor-pointer touch-none select-none rounded-lg bg-white p-2.5 text-left shadow-sm transition hover:ring-brand/30 ${ye === t.id ? "opacity-40" : ""} ${F.has(t.id) ? "ring-2 ring-brand/70" : st?.id === t.id ? "ring-1 ring-brand/60" : "ring-1 ring-black/[0.04]"}`,
+													children: [
+														!k && /* @__PURE__ */ S("div", {
+															className: "absolute right-1 top-1 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100",
+															onClick: (e) => e.stopPropagation(),
+															onMouseDown: (e) => e.stopPropagation(),
+															onPointerDown: (e) => e.stopPropagation(),
+															children: /* @__PURE__ */ C(Du, {
+																as: "div",
+																children: [/* @__PURE__ */ S(xu, {
+																	className: "rounded p-0.5 text-stone-400 hover:bg-stone-100 hover:text-stone-600",
+																	children: /* @__PURE__ */ S(mf, { className: "h-4 w-4" })
+																}), /* @__PURE__ */ C(Su, {
+																	anchor: "bottom end",
+																	className: `z-30 w-44 rounded-lg border border-black/[0.06] bg-white py-1 text-sm shadow-lg [--anchor-gap:4px] focus:outline-none${ft}`,
+																	children: [
+																		r.openCardFull && /* @__PURE__ */ S(Cu, { children: /* @__PURE__ */ C("button", {
+																			type: "button",
+																			className: "flex w-full items-center gap-2 px-3 py-1.5 text-left text-stone-700 data-[focus]:bg-stone-100",
+																			onClick: () => r.openCardFull?.(t),
+																			children: [/* @__PURE__ */ S(zd, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "Ik60OC" })]
+																		}) }),
+																		r.copyCardLink && /* @__PURE__ */ S(Cu, { children: /* @__PURE__ */ C("button", {
+																			type: "button",
+																			className: "flex w-full items-center gap-2 px-3 py-1.5 text-left text-stone-700 data-[focus]:bg-stone-100",
+																			onClick: () => void r.copyCardLink?.(t),
+																			children: [/* @__PURE__ */ S(Sf, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "y1eoq1" })]
+																		}) }),
+																		r.duplicateCard && /* @__PURE__ */ S(Cu, { children: /* @__PURE__ */ C("button", {
+																			type: "button",
+																			className: "flex w-full items-center gap-2 px-3 py-1.5 text-left text-stone-700 data-[focus]:bg-stone-100",
+																			onClick: () => void r.duplicateCard?.(t),
+																			children: [/* @__PURE__ */ S(ff, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "euc6Ns" })]
+																		}) }),
+																		r.saveAsTemplate && /* @__PURE__ */ S(Cu, { children: /* @__PURE__ */ C("button", {
+																			type: "button",
+																			className: "flex w-full items-center gap-2 px-3 py-1.5 text-left text-stone-700 data-[focus]:bg-stone-100",
+																			onClick: () => void r.saveAsTemplate?.(t),
+																			children: [/* @__PURE__ */ S(Gd, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "BnmEvM" })]
+																		}) }),
+																		/* @__PURE__ */ S("div", { className: "my-1 border-t border-black/[0.05]" }),
+																		/* @__PURE__ */ S(Cu, { children: /* @__PURE__ */ C("button", {
+																			type: "button",
+																			className: "flex w-full items-center gap-2 px-3 py-1.5 text-left text-red-600 data-[focus]:bg-red-50",
+																			onClick: () => void r.deleteCard(t),
+																			children: [/* @__PURE__ */ S(Hf, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "cnGeoo" })]
+																		}) })
+																	]
+																})]
+															})
+														}),
+														t.ticket && /* @__PURE__ */ S("span", {
+															className: "mb-0.5 inline-block rounded bg-stone-100 px-1 py-0.5 font-mono text-[10px] font-medium tracking-tight text-stone-500",
+															children: t.ticket
+														}),
+														/* @__PURE__ */ C("span", {
+															className: "block pr-5 text-sm text-stone-800",
+															children: [t.icon && /* @__PURE__ */ S("span", {
+																className: "mr-1",
+																children: t.icon
+															}), t.title]
+														}),
+														t.excerpt && t.excerpt !== t.title && /* @__PURE__ */ S("span", {
+															className: "mt-0.5 block truncate text-[11px] text-stone-400",
+															children: t.excerpt
+														}),
+														l && /* @__PURE__ */ C("span", {
+															className: "mt-1.5 flex flex-wrap items-center gap-1.5",
+															children: [
+																o > 0 && /* @__PURE__ */ C("span", {
+																	className: "inline-flex items-center gap-0.5 rounded bg-red-50 px-1.5 py-0.5 text-[11px] font-medium text-red-600",
+																	title: V._({
+																		id: "x52RAh",
+																		values: { blockedCount: o }
+																	}),
+																	children: [/* @__PURE__ */ S(wf, { className: "h-3 w-3" }), o]
+																}),
+																t.priority && t.priority !== "none" && /* @__PURE__ */ S("span", {
+																	className: `rounded px-1.5 py-0.5 text-[11px] font-medium ${cp[t.priority] ?? "bg-stone-100 text-stone-500"}`,
+																	children: t.priority
+																}),
+																(t.taskTotal ?? 0) > 0 && /* @__PURE__ */ C("span", {
+																	className: `inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[11px] font-medium ${t.taskDone === t.taskTotal ? "bg-emerald-50 text-emerald-600" : "bg-stone-100 text-stone-500"}`,
+																	children: [
+																		/* @__PURE__ */ S(Yd, { className: "h-3 w-3" }),
+																		t.taskDone,
+																		"/",
+																		t.taskTotal
+																	]
+																}),
+																s && s.length > 0 && (() => {
+																	let t = Sp(s, e.doneColumn), n = 2 * Math.PI * 6;
+																	return /* @__PURE__ */ C("span", {
+																		className: `inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-medium ${t.done === t.total ? "bg-emerald-50 text-emerald-600" : "bg-stone-100 text-stone-500"}`,
+																		title: V._({
+																			id: "bwOqWD",
+																			values: {
+																				0: t.done,
+																				1: t.total
+																			}
+																		}),
+																		children: [
+																			/* @__PURE__ */ C("svg", {
+																				viewBox: "0 0 16 16",
+																				className: "h-3 w-3 -rotate-90",
+																				children: [/* @__PURE__ */ S("circle", {
+																					cx: "8",
+																					cy: "8",
+																					r: "6",
+																					fill: "none",
+																					stroke: "currentColor",
+																					strokeOpacity: "0.25",
+																					strokeWidth: "3"
+																				}), /* @__PURE__ */ S("circle", {
+																					cx: "8",
+																					cy: "8",
+																					r: "6",
+																					fill: "none",
+																					stroke: "currentColor",
+																					strokeWidth: "3",
+																					strokeLinecap: "round",
+																					strokeDasharray: `${t.done / t.total * n} ${n}`
+																				})]
+																			}),
+																			t.done,
+																			"/",
+																			t.total
+																		]
+																	});
+																})(),
+																t.tags.map((e) => /* @__PURE__ */ C("span", {
+																	className: "inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[11px] text-brand-dark",
+																	style: { backgroundColor: e.color ? `${e.color}22` : "rgba(0,136,132,0.10)" },
+																	children: [/* @__PURE__ */ S(Bf, { className: "h-3 w-3" }), e.label]
+																}, e.label)),
+																t.assignee && /* @__PURE__ */ C("span", {
+																	className: "inline-flex items-center gap-0.5 text-[11px] text-brand-gray",
+																	children: [/* @__PURE__ */ S(Kf, { className: "h-3 w-3" }), t.assignee]
+																}),
+																t.due && /* @__PURE__ */ C("span", {
+																	className: `inline-flex items-center gap-0.5 text-[11px] ${a ? "font-medium text-red-600" : "text-brand-gray"}`,
+																	children: [/* @__PURE__ */ S(qd, { className: "h-3 w-3" }), t.due]
+																})
+															]
+														})
+													]
+												})] }, t.id);
+											}),
+											s.length === 0 ? ye && ee?.col === t.key && /* @__PURE__ */ S("div", { className: "mx-1 h-14 rounded-lg border-2 border-dashed border-brand/50 bg-brand-soft/30" }) : c(s.length) && /* @__PURE__ */ S("div", { className: "mx-1 h-0.5 rounded bg-brand" }),
+											k ? null : re === t.key ? /* @__PURE__ */ S("textarea", {
+												autoFocus: !0,
+												rows: 2,
+												className: "w-full resize-none rounded-lg bg-white p-2 text-sm text-stone-800 shadow-sm ring-1 ring-brand/40 focus:outline-none focus:ring-2 focus:ring-brand/40",
+												placeholder: V._({ id: "u2IprG" }),
+												value: ae,
+												onChange: (e) => oe(e.target.value),
+												onKeyDown: (e) => {
+													if (e.key === "Enter" && !e.shiftKey) {
+														e.preventDefault();
+														let n = ae;
+														oe(""), ie(null), Ot(t.key, n);
+													}
+													e.key === "Escape" && (oe(""), ie(null));
+												},
+												onBlur: () => {
+													ae.trim() && Ot(t.key, ae), oe(""), ie(null);
+												}
+											}) : a && a.length > 0 && o ? /* @__PURE__ */ C(Du, {
+												as: "div",
+												className: "relative",
+												children: [/* @__PURE__ */ C(xu, {
+													className: "flex w-full items-center gap-1.5 rounded-lg px-2 py-1.5 text-left text-sm text-stone-400 hover:bg-white hover:text-brand-dark",
+													children: [/* @__PURE__ */ S(Mf, { className: "h-4 w-4" }), /* @__PURE__ */ S(L, { id: "pnrmSP" })]
+												}), /* @__PURE__ */ C(Su, {
+													anchor: "bottom start",
+													className: `z-30 w-52 rounded-lg border border-black/[0.06] bg-white py-1 text-sm shadow-lg [--anchor-gap:4px] focus:outline-none${ft}`,
+													children: [
+														/* @__PURE__ */ S(Cu, { children: /* @__PURE__ */ C("button", {
+															type: "button",
+															className: "flex w-full items-center gap-2 px-3 py-1.5 text-left text-stone-700 data-[focus]:bg-stone-100",
+															onClick: () => {
+																oe(""), ie(t.key);
+															},
+															children: [/* @__PURE__ */ S(Af, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S(L, { id: "UQOvxZ" })]
+														}) }),
+														/* @__PURE__ */ S("div", { className: "my-1 border-t border-black/[0.05]" }),
+														/* @__PURE__ */ S("div", {
+															className: "px-3 py-0.5 text-[11px] uppercase tracking-wide text-stone-400",
+															children: /* @__PURE__ */ S(L, { id: "iTylMl" })
+														}),
+														a.map((e) => /* @__PURE__ */ S(Cu, { children: /* @__PURE__ */ C("button", {
+															type: "button",
+															className: "flex w-full items-center gap-2 px-3 py-1.5 text-left text-stone-700 data-[focus]:bg-stone-100",
+															onClick: () => void o(t.key, e.id),
+															children: [/* @__PURE__ */ S(Gd, { className: "h-3.5 w-3.5" }), /* @__PURE__ */ S("span", {
+																className: "truncate",
+																children: e.name
+															})]
+														}) }, e.id))
+													]
+												})]
+											}) : /* @__PURE__ */ C("button", {
+												type: "button",
+												className: "flex w-full items-center gap-1.5 rounded-lg px-2 py-1.5 text-left text-sm text-stone-400 hover:bg-white hover:text-brand-dark",
+												onClick: () => {
+													oe(""), ie(t.key);
+												},
+												children: [/* @__PURE__ */ S(Mf, { className: "h-4 w-4" }), /* @__PURE__ */ S(L, { id: "pnrmSP" })]
+											})
+										]
+									})]
+								}, t.key);
+							}),
+							Ke && !k && r.addColumn && (se ? /* @__PURE__ */ S("input", {
+								autoFocus: !0,
+								className: "w-44 shrink-0 self-start rounded-xl border border-brand/40 px-3 py-2 text-sm text-stone-800 focus:outline-none focus:ring-2 focus:ring-brand/40",
+								placeholder: V._({ id: "P5cvAA" }),
+								value: le,
+								onChange: (e) => ue(e.target.value),
+								onKeyDown: (e) => {
+									if (e.key === "Enter") {
+										let e = le.trim();
+										ue(""), ce(!1), e && r.addColumn?.(e);
+									}
+									e.key === "Escape" && (ue(""), ce(!1));
+								},
+								onBlur: () => {
 									let e = le.trim();
-									ue(""), ce(!1), e && r.addColumn?.(e);
+									e && r.addColumn?.(e), ue(""), ce(!1);
 								}
-								e.key === "Escape" && (ue(""), ce(!1));
-							},
-							onBlur: () => {
-								let e = le.trim();
-								e && r.addColumn?.(e), ue(""), ce(!1);
-							}
-						}) : /* @__PURE__ */ C("button", {
-							type: "button",
-							className: "flex w-44 shrink-0 self-start items-center gap-1.5 rounded-xl border border-dashed border-stone-300 px-3 py-2 text-sm text-stone-400 hover:border-brand/40 hover:text-brand-dark",
-							onClick: () => {
-								ue(""), ce(!0);
-							},
-							children: [/* @__PURE__ */ S(Mf, { className: "h-4 w-4" }), /* @__PURE__ */ S(L, { id: "1nUGn5" })]
-						}))]
+							}) : /* @__PURE__ */ C("button", {
+								type: "button",
+								className: "flex w-44 shrink-0 self-start items-center gap-1.5 rounded-xl border border-dashed border-stone-300 px-3 py-2 text-sm text-stone-400 hover:border-brand/40 hover:text-brand-dark",
+								onClick: () => {
+									ue(""), ce(!0);
+								},
+								children: [/* @__PURE__ */ S(Mf, { className: "h-4 w-4" }), /* @__PURE__ */ S(L, { id: "1nUGn5" })]
+							})),
+							qe && !k && /* @__PURE__ */ C("button", {
+								type: "button",
+								className: "flex w-72 shrink-0 self-start items-center gap-1.5 rounded-xl border border-dashed border-stone-300 px-3 py-2 text-sm text-stone-400 transition hover:border-brand/40 hover:bg-brand-soft/20 hover:text-brand-dark active:translate-y-px",
+								onClick: () => Ee(!0),
+								children: [/* @__PURE__ */ S(Mf, { className: "h-4 w-4" }), /* @__PURE__ */ S(L, { id: "KCszT6" })]
+							})
+						]
 					})
 				]
 			}),
@@ -10638,11 +10267,11 @@ function hm({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 						})
 					}),
 					/* @__PURE__ */ C("select", {
-						className: yt,
+						className: dt,
 						value: "",
 						"aria-label": V._({ id: "8enUYo" }),
 						onChange: (e) => {
-							e.target.value && Nt({ columnKey: e.target.value }), e.target.value = "";
+							e.target.value && Ct({ columnKey: e.target.value }), e.target.value = "";
 						},
 						children: [/* @__PURE__ */ S("option", {
 							value: "",
@@ -10654,11 +10283,11 @@ function hm({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 						}, e.key))]
 					}),
 					/* @__PURE__ */ C("select", {
-						className: yt,
+						className: dt,
 						value: "",
 						"aria-label": V._({ id: "hNmOZ7" }),
 						onChange: (e) => {
-							e.target.value && Nt({ priority: e.target.value }), e.target.value = "";
+							e.target.value && Ct({ priority: e.target.value }), e.target.value = "";
 						},
 						children: [/* @__PURE__ */ S("option", {
 							value: "",
@@ -10688,7 +10317,7 @@ function hm({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 					})
 				]
 			}),
-			ht && j && /* @__PURE__ */ C("div", {
+			st && j && /* @__PURE__ */ C("div", {
 				className: "absolute right-0 top-0 z-30 h-full shadow-[-10px_0_30px_rgba(0,0,0,0.07)]",
 				style: { width: _e },
 				children: [/* @__PURE__ */ S("div", {
@@ -10702,7 +10331,7 @@ function hm({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 					title: V._({ id: "AVreQ5" }),
 					className: "absolute left-0 top-0 z-10 h-full w-1.5 -translate-x-1/2 cursor-col-resize transition-colors hover:bg-brand/40"
 				}), /* @__PURE__ */ S(j, {
-					card: ht,
+					card: st,
 					statusOptions: e.columns.map((e) => ({
 						value: e.key,
 						label: e.name
@@ -10717,13 +10346,13 @@ function hm({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 							label: e.name,
 							color: e.color
 						})),
-						...ht.swimlaneKey && !(e.swimlanes ?? []).some((e) => e.key === ht.swimlaneKey) ? [{
-							value: ht.swimlaneKey,
-							label: V._({ id: "_laW0t" }),
+						...st.swimlaneKey && !(e.swimlanes ?? []).some((e) => e.key === st.swimlaneKey) ? [{
+							value: st.swimlaneKey,
+							label: V._({ id: "7dZyQU" }),
 							warning: !0
 						}] : []
 					] : void 0,
-					swimlaneDisabled: Fe,
+					swimlaneDisabled: Ne,
 					assigneeOptions: s,
 					tagOptions: c,
 					fields: e.fields,
@@ -10734,26 +10363,26 @@ function hm({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 							for (; n.has(`${r}-${e}`);) e += 1;
 							r = `${r}-${e}`;
 						}
-						xt({ fields: [...e.fields ?? [], {
+						pt({ fields: [...e.fields ?? [], {
 							key: r,
 							label: t
 						}] });
 					},
-					dependencyCards: t.filter((e) => e.id !== ht.id).map((e) => ({
+					dependencyCards: t.filter((e) => e.id !== st.id).map((e) => ({
 						slug: yp(e),
 						title: e.title
 					})),
-					childCards: (dt.get(ht.id) ?? []).map((e) => ({
+					childCards: (rt.get(st.id) ?? []).map((e) => ({
 						id: e.id,
 						title: e.title,
 						icon: e.icon,
-						statusName: mt(e.columnKey),
-						done: e.columnKey === $e
+						statusName: ot(e.columnKey),
+						done: e.columnKey === Ye
 					})),
 					onOpenCard: (e) => P(e),
 					onAddChild: k ? void 0 : async (t) => {
-						let n = Ze ? e.columns[0]?.key ?? ht.columnKey : ht.columnKey, i = await r.createCard(n, t);
-						typeof i == "string" && await r.updateCard(i, { parent: yp(ht) });
+						let n = Ge === "status" ? e.columns[0]?.key ?? st.columnKey : Fp(st, e), i = await r.createCard(n, t);
+						typeof i == "string" && await r.updateCard(i, { parent: yp(st) });
 					},
 					loadNotes: l,
 					onUploadAttachment: u,
@@ -10765,24 +10394,21 @@ function hm({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 					resolveComment: b,
 					currentUser: w,
 					loadActivity: T,
-					onChange: (e) => void r.updateCard(ht.id, e),
+					onChange: (e) => void r.updateCard(st.id, e),
 					onClose: () => P(null),
-					onDelete: () => void r.deleteCard(ht),
-					onOpenFull: r.openCardFull ? () => r.openCardFull?.(ht) : void 0
+					onDelete: () => void r.deleteCard(st),
+					onOpenFull: r.openCardFull ? () => r.openCardFull?.(st) : void 0
 				})]
 			}),
-			/* @__PURE__ */ S(pm, {
+			/* @__PURE__ */ S(mm, {
 				open: Te,
 				lanes: e.swimlanes ?? [],
 				cards: t,
-				focusRequest: ke,
 				portalClassName: M,
-				onClose: () => {
-					Ee(!1), Ae(void 0);
-				},
-				onSaveLanes: St,
-				onUpdateCards: _t,
-				onShowAffected: Tt
+				onClose: () => Ee(!1),
+				onSaveLanes: mt,
+				onUpdateCards: lt,
+				onShowAffected: ht
 			}),
 			/* @__PURE__ */ S(lm, {
 				open: De,
@@ -10791,19 +10417,19 @@ function hm({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 				portalClassName: M,
 				onClose: () => Oe(!1)
 			}),
-			/* @__PURE__ */ S(mm, {
-				source: Ne,
-				rows: gt,
-				open: je,
-				busy: Fe,
-				resume: e.swimlaneMigration?.source === Ne,
-				progress: Le,
-				error: ze,
+			/* @__PURE__ */ S(hm, {
+				source: je,
+				rows: ct,
+				open: ke,
+				busy: Ne,
+				resume: e.swimlaneMigration?.source === je,
+				progress: Fe,
+				error: Le,
 				portalClassName: M,
 				onClose: () => {
-					Fe || Me(!1);
+					Ne || Ae(!1);
 				},
-				onConfirm: vt
+				onConfirm: ut
 			}),
 			ye && Ce && (() => {
 				let e = t.find((e) => e.id === ye);
@@ -10824,17 +10450,17 @@ function hm({ config: e, cards: t, actions: r, error: i, templates: a, createFro
 }
 //#endregion
 //#region src/client.ts
-var gm = class extends Error {
+var _m = class extends Error {
 	status;
 	code;
 	constructor(e, t) {
 		super(`jtype API error${e ? ` ${e}` : ""}: ${t}`), this.name = "JTypeApiError", this.status = e, this.code = t;
 	}
 };
-function _m(e) {
+function vm(e) {
 	let t = (e.baseUrl ?? "").replace(/\/+$/, ""), n = e.token, r = e.fetchImpl ?? ((...e) => fetch(...e));
-	if (!t) throw new gm(0, "base_url_required");
-	if (!n) throw new gm(0, "token_required");
+	if (!t) throw new _m(0, "base_url_required");
+	if (!n) throw new _m(0, "token_required");
 	async function i(e, i = {}) {
 		let a;
 		try {
@@ -10847,11 +10473,11 @@ function _m(e) {
 				}
 			});
 		} catch {
-			throw new gm(0, "network_error");
+			throw new _m(0, "network_error");
 		}
 		if (!a.ok) {
 			let e = await a.json().catch(() => null);
-			throw new gm(a.status, e?.error || `http_${a.status}`);
+			throw new _m(a.status, e?.error || `http_${a.status}`);
 		}
 		if (a.status !== 204) return await a.json();
 	}
@@ -10921,26 +10547,26 @@ function _m(e) {
 }
 //#endregion
 //#region src/resolveBoard.ts
-var vm = class extends Error {
+var ym = class extends Error {
 	code;
 	candidates;
 	constructor(e, t, n = []) {
 		super(t ? `${e}: ${t}` : e), this.name = "JTypeBoardError", this.code = e, this.candidates = n;
 	}
 };
-function ym(e, t) {
+function bm(e, t) {
 	let n = t.trim().replace(/^\.?\//, "");
-	if (!n) throw new vm("board_not_found", "empty boardRef");
+	if (!n) throw new ym("board_not_found", "empty boardRef");
 	let r = n.toLowerCase(), i = r.endsWith(".board") ? r : `${r}.board`, a = e.filter((e) => e.relativePath.toLowerCase().endsWith(".board")), o = a.find((e) => {
 		let t = e.relativePath.toLowerCase();
 		return t === r || t === i;
 	});
-	if (o) return bm(o);
+	if (o) return xm(o);
 	let s = a.filter((e) => e.relativePath.toLowerCase().endsWith(`/${i}`));
-	if (s.length === 1) return bm(s[0]);
-	throw s.length > 1 ? new vm("board_ref_ambiguous", `"${t}" matches ${s.length} boards`, s.map((e) => e.relativePath)) : new vm("board_not_found", `no .board document matches "${t}"`);
+	if (s.length === 1) return xm(s[0]);
+	throw s.length > 1 ? new ym("board_ref_ambiguous", `"${t}" matches ${s.length} boards`, s.map((e) => e.relativePath)) : new ym("board_not_found", `no .board document matches "${t}"`);
 }
-function bm(e) {
+function xm(e) {
 	return {
 		boardDocId: e.id,
 		boardRelativePath: e.relativePath,
@@ -10949,7 +10575,7 @@ function bm(e) {
 }
 //#endregion
 //#region src/boardData.ts
-function xm(e, t) {
+function Sm(e, t) {
 	return {
 		title: e.title || t,
 		columns: e.columns,
@@ -10966,7 +10592,7 @@ function xm(e, t) {
 		groupBy: Ep(e.groupBy)
 	};
 }
-function Sm(e, t) {
+function Cm(e, t) {
 	let n = Zf(e.content);
 	if (n.data.board !== t.id) return null;
 	let r = dp(n.body);
@@ -10993,22 +10619,22 @@ function Sm(e, t) {
 		parent: n.data.parent ? _p(n.data.parent)[0] ?? null : null
 	};
 }
-function Cm(e, t) {
+function wm(e, t) {
 	return np(e, t);
 }
-var wm = [
+var Tm = [
 	"viewType",
 	"groupBy",
 	"swimlaneBy",
 	"calendarMode"
 ];
-function Tm(e, t) {
+function Em(e, t) {
 	let n = { ...e };
-	for (let e of wm) e in t && (n[e] = t[e]);
+	for (let e of Tm) e in t && (n[e] = t[e]);
 	return n;
 }
-async function Em(e, t, n, r) {
-	let i = await e.listDocuments(t), a = ym(i, n), o = async (n, i) => {
+async function Dm(e, t, n, r) {
+	let i = await e.listDocuments(t), a = bm(i, n), o = async (n, i) => {
 		let a = r.get(n);
 		if (a && a.contentHash === i) return a.doc;
 		let o = await e.getDocument(t, n);
@@ -11020,14 +10646,14 @@ async function Em(e, t, n, r) {
 	try {
 		if (l = JSON.parse(c.content), !l || typeof l != "object" || !Array.isArray(l.columns)) throw Error("missing columns");
 	} catch (e) {
-		throw new vm("board_config_invalid", `${a.boardRelativePath}: ${String(e)}`);
+		throw new ym("board_config_invalid", `${a.boardRelativePath}: ${String(e)}`);
 	}
 	let u = i.filter((e) => e.relativePath.startsWith(`${a.boardDir}/`) && e.relativePath.toLowerCase().endsWith(".md")), d = await Promise.all(u.map(async (e) => ({
 		item: e,
 		doc: await o(e.id, e.contentHash)
 	}))), f = /* @__PURE__ */ new Map(), p = [];
 	for (let { item: e, doc: t } of d) {
-		let n = Sm(t, l);
+		let n = Cm(t, l);
 		n && (f.set(t.relativePath, {
 			id: e.id,
 			relativePath: t.relativePath,
@@ -11052,7 +10678,7 @@ async function Em(e, t, n, r) {
 }
 //#endregion
 //#region src/CardDetail.tsx
-function Dm({ card: e, config: t, strings: n, onClose: r }) {
+function Om({ card: e, config: t, strings: n, onClose: r }) {
 	f(() => {
 		let e = (e) => {
 			e.key === "Escape" && r();
@@ -11190,18 +10816,18 @@ function Dm({ card: e, config: t, strings: n, onClose: r }) {
 }
 //#endregion
 //#region src/i18n.ts
-var Om = {
-	en: JSON.parse("{\"--lIxB\":[\"Blocked by\"],\"-3Qbcm\":[\"Priority: \",[\"0\"]],\"-9kYEs\":[\"Cards with a missing row\"],\"-X4ual\":[\"No priority\"],\"-b7T3G\":[\"Updated\"],\"-hwvgo\":[\"Row actions\"],\"02N8r0\":[\"Filter cards\"],\"0cspe_\":[\"Delete row\"],\"0gvHNl\":[\"Statuses define the card workflow. Rename or reorder them freely; cards stay mapped by status ID.\"],\"1718Q-\":[\"Issues\"],\"1DBGsz\":[\"Notes\"],\"1YABGm\":[\"Link (Ctrl+K)\"],\"1hKEom\":[\"Priority\"],\"1iShX0\":[\"Due today\"],\"1lWHP7\":[\"unsafe\"],\"1nUGn5\":[\"Add status\"],\"1xwZj_\":[\"Previous month\"],\"23yqV0\":[\"Show affected cards\"],\"2BPVq8\":[\"Reorder \",[\"0\"]],\"2aEwT_\":[\"Manage custom rows\"],\"2wxgft\":[\"Rename\"],\"32TndD\":[\"Blocked\"],\"3CIp19\":[\"Next 7 days\"],\"3CtQL6\":[\"Choose another swimlane, then update the cards first.\"],\"3Ib6FN\":[\"Move down\"],\"3qkggm\":[\"Fullscreen\"],\"4NY8B5\":[\"Swimlanes to create\"],\"4gdyen\":[\"Local (yours)\"],\"4hJhzz\":[\"Table\"],\"4t8aKB\":[\"Rows to create\"],\"54sFiP\":[\"flowchart TD\\n  A[Start] --> B[End]\"],\"5Oy0YM\":[\"Labels: \",[\"0\"]],\"5Q_DQ6\":[\"Inline Code\"],\"66g_UW\":[\"Collapse resolved thread\"],\"6G3KzD\":[\"Row details\"],\"6V3Ea3\":[\"Copied\"],\"6YtxFj\":[\"Name\"],\"6buwPb\":[\"Board settings\"],\"79Yvzu\":[\"Swimlane name\"],\"7MGAQC\":[\"JType will reuse the existing row IDs and continue unfinished card updates.\"],\"7VpPHA\":[\"Confirm\"],\"7dZyQU\":[\"Previous swimlane missing\"],\"7pBic4\":[[\"visibleCount\"],\" of \",[\"totalCount\"],\" cards shown\"],\"7s3WlU\":[\"Blocks\"],\"8PifYj\":[\"Mermaid diagram\"],\"8Tg_JR\":[\"Custom\"],\"8enUYo\":[\"Set status\"],\"8hSn0h\":[\"Result (editable)\"],\"8lE269\":[\"Sort: Manual\"],\"9L7ptC\":[\"This empty row will be removed from the board.\"],\"9OEgyT\":[\"Add reaction\"],\"9OH3W0\":[\"Resolve thread\"],\"9YTdO7\":[\"Blocked cards\"],\"9gx7rl\":[[\"missingCount\"],\" card(s) refer to deleted rows.\"],\"9gxam6\":[\"Could not render this Draw.io diagram.\"],\"AC9Gkf\":[\"Expand column\"],\"ANe5kn\":[\"Updating cards…\"],\"AS5WO9\":[\"Could not render this PDF.\"],\"ATIq3Z\":[\"Swimlane: Custom\"],\"AVreQ5\":[\"Drag to resize\"],\"AgvHni\":[\"Add column\"],\"AjVXBS\":[\"Calendar\"],\"AoHpbt\":[\"Show cards with missing swimlanes\"],\"AxAubu\":[\"Group: Assignee\"],\"B5TUF-\":[\"Priority…\"],\"BfMZ7w\":[\"Accept cloud\"],\"BiWlsk\":[\"Status…\"],\"BnmEvM\":[\"Save as template\"],\"C6-ZRl\":[\"Someone\"],\"CXTDT_\":[\"Resume swimlane conversion?\"],\"CxcMyt\":[[\"0\"],\" moved to position \",[\"1\"],\" of \",[\"2\"],\".\"],\"DGEEOQ\":[\"Swimlane actions\"],\"DPfwMq\":[\"Done\"],\"Db4W3_\":[\"Statuses\"],\"EWPtMO\":[\"Code\"],\"EbMPZJ\":[\"Unassigned\"],\"F6osRA\":[[\"danglingCount\"],\" card(s) refer to deleted rows.\"],\"FBIuPX\":[\"Clear selection\"],\"FQylcT\":[\"Swimlane: Missing\"],\"G4qrLy\":[\"Unset done column\"],\"GKu3m4\":[\"No labels\"],\"GL6e_U\":[[\"cardCount\"],\" card(s) currently use this row.\"],\"Gpfctt\":[\"Due\"],\"HTKRVa\":[\"Do not close this dialog.\"],\"H_SQFv\":[\"No color\"],\"HajiZl\":[\"Month\"],\"HrmW6B\":[\"Add a comment… (Markdown supported)\"],\"I6SWEy\":[\"Split\"],\"ICip_B\":[\"Cloud (remote)\"],\"IdMoS6\":[\"Create your first swimlane\"],\"Ik60OC\":[\"Open in editor\"],\"ImOQa9\":[\"Reply\"],\"IqKCNQ\":[\"Row\"],\"Iw6WJa\":[\"Set WIP limit\"],\"JTYvAw\":[\"Search cards\"],\"KAlhe_\":[\"Conversion stopped because card updates did not persist. Refresh and try again.\"],\"KCszT6\":[\"Add swimlane\"],\"KFiYGY\":[\"Change color\"],\"KGi3u9\":[\"Drag to reorder\"],\"K_F6pa\":[\"Saving…\"],\"K_cST0\":[\"Resume row conversion?\"],\"Kd6eg7\":[\"Moving cards…\"],\"KeYrQ5\":[\"Remove your reaction\"],\"KjXDqG\":[\"Swimlane: None\"],\"KmydK6\":[\"Bold\"],\"KpnwJK\":[\"Delete \\\"\",[\"0\"],\"\\\"?\"],\"KvW1VO\":[\"Draw.io diagram\"],\"LQn6-8\":[\"Accept local\"],\"Ld9MtR\":[\"Rows: Assignee\"],\"MHrjPM\":[\"Title\"],\"MYx830\":[\"This empty swimlane will be removed from the board.\"],\"Mm72la\":[\"No comments yet\"],\"MmYpxT\":[\"Reply…\"],\"NBdIgR\":[\"Comment\"],\"NYTPDY\":[\"Move cards and delete\"],\"NnxWLJ\":[\"Create your first custom row\"],\"O6H89R\":[\"Resolved\"],\"ONWvwQ\":[\"Upload\"],\"OR4WQZ\":[\"+ Add sub-card\"],\"OYHzN1\":[\"Tags\"],\"OepdfE\":[\"Group: Status\"],\"P5cvAA\":[\"Status name\"],\"PM7yYy\":[\"Row ID\"],\"PUeYA1\":[\"Create editable swimlanes\"],\"Pvpx7b\":[\"Paste a URL or path\"],\"Q2mGA7\":[\"Clear filter\"],\"QD8opX\":[\"Board\"],\"QlsPZy\":[\"Write Mermaid syntax to see the diagram.\"],\"QmZYQP\":[\"Unresolve thread\"],\"QyioBP\":[\"Move up\"],\"RbsNko\":[[\"cardCount\"],\" card(s) currently use this swimlane.\"],\"RfEZH1\":[\"JType will create independent swimlanes from the current assignee rows. Card assignee values will stay unchanged.\"],\"RgO4DX\":[\"Duplicate lane ID \\\"\",[\"0\"],\"\\\". The first definition is used.\"],\"RlLl3G\":[\"Actions for \",[\"0\"]],\"RnplaY\":[\"Row details for \",[\"0\"]],\"S5Qbb1\":[\"comma, separated\"],\"SavliD\":[[\"danglingCount\"],\" card(s) refer to deleted swimlanes.\"],\"T_nAzC\":[\"JType will reuse the existing lane IDs and continue unfinished card updates.\"],\"TdfEV7\":[\"Archived\"],\"Th4mIx\":[\"Lane details for \",[\"0\"]],\"U0hizX\":[\"Swimlane color\"],\"U95P80\":[\"Make priority rows editable?\"],\"UDb2YD\":[\"React\"],\"UQOvxZ\":[\"Blank card\"],\"URmyfc\":[\"Details\"],\"Ubl2by\":[\"Move right\"],\"VNa_N2\":[\"This file type can not be previewed yet.\"],\"VXh9CK\":[\"No due date\"],\"VbyRUy\":[\"Comments\"],\"WEYdDv\":[\"Recommended\"],\"WSP6v1\":[\"Sort: Priority\"],\"WWUwTb\":[\"Make assignee rows editable?\"],\"X03-eC\":[\"Please enter a value.\"],\"XJOV1Y\":[\"Activity\"],\"XicmhT\":[\"Due date\"],\"XklovM\":[\"Working…\"],\"Y8bR2a\":[\"Delete only the swimlane. Card references remain recoverable.\"],\"YDa2KG\":[\"My cards\"],\"YFdnVT\":[\"Card state\"],\"YHjvGb\":[\"Status actions\"],\"YNYued\":[\"Status ID\"],\"Ya7bZl\":[\"Diagram error\"],\"Zot9XS\":[\"No cards\"],\"_5CsXX\":[\"Done column\"],\"_EsjyQ\":[\"Use this\"],\"_TJomP\":[\"Move cards before deleting\"],\"_YbTQZ\":[\"JType will create independent swimlanes from the current priority rows. Card priority values will stay unchanged.\"],\"_kh61D\":[\"Show cards with missing rows\"],\"_laW0t\":[\"Previous row missing\"],\"a6uhHr\":[\"Bold (Ctrl+B)\"],\"aDvLhk\":[\"Add a comment…\"],\"abUZlY\":[\"Add details...\"],\"agOeRN\":[\"Could not render this API specification.\"],\"b4hVKD\":[\"Color columns\"],\"bwOqWD\":[[\"0\"],\" of \",[\"1\"],\" sub-cards done\"],\"by_svU\":[\"Keep cards in Unassigned\"],\"bzjBcL\":[\"Sub-cards\"],\"c-EXz1\":[\"Delete only the row. Card references remain recoverable.\"],\"c61_Lv\":[\"Lane ID\"],\"cJ44lA\":[\"Unscheduled\"],\"cSev-j\":[\"Filters\"],\"cUt8yN\":[\"Changes save automatically.\"],\"ceQmqN\":[\"Custom rows\"],\"cfaWH-\":[\"Add labels\"],\"cnGeoo\":[\"Delete\"],\"d-F6q9\":[\"Created\"],\"d5z6xQ\":[\"WIP limit \",[\"0\"]],\"dEgA5A\":[\"Cancel\"],\"dQva-y\":[\"Duplicate row ID \\\"\",[\"0\"],\"\\\". The first definition is used.\"],\"ddrz1m\":[\"Overdue\"],\"eAi4RE\":[\"JType will create independent custom rows from the current priority groups. Card priority values will stay unchanged.\"],\"ecUA8p\":[\"Today\"],\"euc6Ns\":[\"Duplicate\"],\"fEqHZq\":[\"Open sub-card\"],\"fFAIng\":[[\"0\",\"plural\",{\"one\":[\"#\",\" card\"],\"other\":[\"#\",\" cards\"]}]],\"fOluHh\":[\"JType will create independent custom rows from the current assignee groups. Card assignee values will stay unchanged.\"],\"fVlS4-\":[\"Swimlane\"],\"fYcKtB\":[\"Sort: Due\"],\"fdEjOR\":[\"Copy row ID\"],\"fvImQM\":[[\"0\"],\" selected\"],\"fwTn8F\":[\"Row color\"],\"g8JmSC\":[\"Next month\"],\"gANddk\":[\"Uploading…\"],\"gLDJuJ\":[\"Untitled card\"],\"guQk4e\":[\"Columns: Status\"],\"gzZWjO\":[\"No assigned values to convert.\"],\"h8DugX\":[\"Labels\"],\"hL5-_P\":[\"Rows\"],\"hNQgyI\":[\"Columns: Priority\"],\"hNmOZ7\":[\"Set priority\"],\"he3ygx\":[\"Copy\"],\"hh4sEG\":[\"Relates\"],\"hnK1gR\":[\"PDF document\"],\"hyVzII\":[\"Swimlanes\"],\"i4_LY_\":[\"Write\"],\"iSLA_r\":[\"Move left\"],\"iTylMl\":[\"Templates\"],\"iYVqZq\":[\"Column name\"],\"jUbC3Z\":[\"Swimlane: Priority\"],\"jZlrte\":[\"Color\"],\"jzy1b8\":[\"Make swimlanes editable\"],\"k4b5_X\":[\"edited\"],\"kBRFD0\":[\"Create editable rows\"],\"kMqzL_\":[\"Row name\"],\"kZlRKE\":[\"Mermaid source\"],\"kryGs-\":[\"Card\"],\"lCF0wC\":[\"Refresh\"],\"lEQWoB\":[\"Add stable horizontal groups that stay visible even when they have no cards.\"],\"lHxVTh\":[\"Swimlane: Assignee\"],\"lUeOk0\":[\"Horizontal groups for this board. Names can change; card mapping stays attached.\"],\"l_g7se\":[\"Resume conversion\"],\"lqoy3F\":[\"Missing row\"],\"lt2UOc\":[\"Rows: None\"],\"ltF1xa\":[\"Save merged result\"],\"m16xKo\":[\"Add\"],\"mPINe9\":[\"Duplicate row name \\\"\",[\"0\"],\"\\\". Names should be unique.\"],\"nabda1\":[\"Delete card\"],\"nfhh60\":[\"Make priority swimlanes editable?\"],\"njJFtc\":[\"Delete comment\"],\"o7J4JM\":[\"Filter\"],\"o8va6N\":[\"Restored\"],\"obId50\":[\"Filters, \",[\"activeCount\"],\" active\"],\"ojKCLU\":[\"Assignee\"],\"p4rTvq\":[\"Rows: Priority\"],\"p9yTeb\":[\"Sort: Title\"],\"pKKcSl\":[\"Show resolved thread\"],\"pKztsX\":[\"Open in full editor\"],\"pdVZUg\":[\"WIP \",[\"0\"]],\"pnrmSP\":[\"New card\"],\"pwN6Ae\":[\"Collapse column\"],\"pzutoc\":[\"Italic\"],\"qZd_ph\":[\"Add row\"],\"qpGDiV\":[\"Copy lane ID\"],\"rF8SEQ\":[\"Edit comment\"],\"rK_KGj\":[\"Optional horizontal groups for this board. Names can change; cards stay mapped by row ID.\"],\"rRubBJ\":[\"Lane details\"],\"rT-mCe\":[\"Remove filter: \",[\"0\"]],\"rdUucN\":[\"Preview\"],\"rn2_2V\":[\"Remove filter\"],\"rvpMpc\":[\"Manage statuses\"],\"sCzmvQ\":[\"cards\"],\"sQpDn6\":[\"Exit fullscreen\"],\"sujToP\":[\"Parent\"],\"tF-_sn\":[[\"cardCount\",\"plural\",{\"one\":[\"#\",\" card\"],\"other\":[\"#\",\" cards\"]}]],\"tK2x9T\":[\"⚠ \",[\"0\"],\" Conflict\",[\"1\"],\" to Resolve\"],\"tYS8HY\":[\"Status columns stay available when they are used as columns or swimlanes.\"],\"t_YqKh\":[\"Remove\"],\"tfDRzk\":[\"Save\"],\"u2IprG\":[\"Card title (Enter to add, Esc to cancel)\"],\"u36sC2\":[\"Make rows editable\"],\"uAP6ov\":[\"Delete swimlane\"],\"uAQUqI\":[\"Status\"],\"uH1U8v\":[\"Manage swimlanes\"],\"uWPalN\":[\"Duplicate swimlane name \\\"\",[\"0\"],\"\\\". Names should be unique.\"],\"uaR_cz\":[[\"total\",\"plural\",{\"one\":[\"#\",\" card\"],\"other\":[\"#\",\" cards\"]}]],\"ucJg3u\":[\"Swimlane: Status\"],\"vIKvqQ\":[[\"missingCount\"],\" card(s) refer to deleted swimlanes.\"],\"vJvZPY\":[\"Assignee: \",[\"0\"]],\"vMTOsC\":[\"Make assignee swimlanes editable?\"],\"vfYjJ_\":[\"Copy failed.\"],\"w7E-FA\":[\"Unsafe link blocked: \",[\"url\"]],\"wGM_xy\":[\"Rows: Custom\"],\"w_Sphq\":[\"Attachments\"],\"wf6Djn\":[\"Italic (Ctrl+I)\"],\"wp-2ZK\":[\"Rows: Status\"],\"wtw-au\":[\"Set as done column\"],\"wwu18a\":[\"Icon\"],\"x52RAh\":[\"Blocked by \",[\"blockedCount\"],\" unfinished card(s)\"],\"xDsmP9\":[\"Agenda\"],\"xUOPoQ\":[\"Used by\"],\"xX5QVp\":[\"Choose another row, then update the cards first.\"],\"y1eoq1\":[\"Copy link\"],\"y9cj46\":[\"Group: Priority\"],\"yEbJGs\":[\"+ Add field\"],\"yYxB17\":[\"Clear all\"],\"ybGQtY\":[\"← Back to list\"],\"yjeGpt\":[\"Columns: Assignee\"],\"yz7wBu\":[\"Close\"],\"yzF66j\":[\"Link\"],\"zOc0vf\":[\"No icon\"],\"zga9sT\":[\"OK\"]}"),
-	zh: JSON.parse("{\"--lIxB\":[\"被阻塞于\"],\"-3Qbcm\":[\"优先级：\",[\"0\"]],\"-9kYEs\":[\"横向分组缺失的卡片\"],\"-X4ual\":[\"无优先级\"],\"-b7T3G\":[\"更新\"],\"-hwvgo\":[\"横向分组操作\"],\"02N8r0\":[\"筛选卡片\"],\"0cspe_\":[\"删除横向分组\"],\"0gvHNl\":[\"状态定义卡片工作流。可自由重命名或排序；卡片始终通过状态 ID 保持映射。\"],\"1718Q-\":[\"问题\"],\"1DBGsz\":[\"备注\"],\"1YABGm\":[\"链接 (Ctrl+K)\"],\"1hKEom\":[\"优先级\"],\"1iShX0\":[\"今天到期\"],\"1lWHP7\":[\"不安全\"],\"1nUGn5\":[\"添加状态\"],\"1xwZj_\":[\"上个月\"],\"23yqV0\":[\"显示受影响的卡片\"],\"2BPVq8\":[\"重新排序 \",[\"0\"]],\"2aEwT_\":[\"管理自定义横向分组\"],\"2wxgft\":[\"重命名\"],\"32TndD\":[\"被阻塞\"],\"3CIp19\":[\"未来 7 天\"],\"3CtQL6\":[\"选择另一个泳道，然后先更新卡片。\"],\"3Ib6FN\":[\"下移\"],\"3qkggm\":[\"全屏\"],\"4NY8B5\":[\"将创建的泳道\"],\"4gdyen\":[\"本地（我的）\"],\"4hJhzz\":[\"表格\"],\"4t8aKB\":[\"将创建的横向分组\"],\"54sFiP\":[\"flowchart TD\\n  A[开始] --> B[结束]\"],\"5Oy0YM\":[\"标签：\",[\"0\"]],\"5Q_DQ6\":[\"行内代码\"],\"66g_UW\":[\"折叠已解决话题\"],\"6G3KzD\":[\"横向分组详情\"],\"6V3Ea3\":[\"已复制\"],\"6YtxFj\":[\"名称\"],\"6buwPb\":[\"看板设置\"],\"79Yvzu\":[\"泳道名称\"],\"7MGAQC\":[\"JType 会复用现有横向分组 ID，并继续完成尚未结束的卡片更新。\"],\"7VpPHA\":[\"确认\"],\"7dZyQU\":[\"原泳道已不存在\"],\"7pBic4\":[\"显示 \",[\"visibleCount\"],\"/\",[\"totalCount\"],\" 张卡片\"],\"7s3WlU\":[\"阻塞\"],\"8PifYj\":[\"Mermaid 图表\"],\"8Tg_JR\":[\"自定义\"],\"8enUYo\":[\"设置状态\"],\"8hSn0h\":[\"结果（可编辑）\"],\"8lE269\":[\"排序:手动\"],\"9L7ptC\":[\"此空横向分组将从看板中移除。\"],\"9OEgyT\":[\"添加回应\"],\"9OH3W0\":[\"解决话题\"],\"9YTdO7\":[\"被阻塞的卡片\"],\"9gx7rl\":[\"有 \",[\"missingCount\"],\" 张卡片引用了已删除的横向分组。\"],\"9gxam6\":[\"无法渲染此 Draw.io 图表。\"],\"AC9Gkf\":[\"展开列\"],\"ANe5kn\":[\"正在更新卡片…\"],\"AS5WO9\":[\"无法渲染此 PDF。\"],\"ATIq3Z\":[\"泳道：自定义\"],\"AVreQ5\":[\"拖动调整宽度\"],\"AgvHni\":[\"添加列\"],\"AjVXBS\":[\"日历\"],\"AoHpbt\":[\"显示泳道缺失的卡片\"],\"AxAubu\":[\"分组:负责人\"],\"B5TUF-\":[\"优先级…\"],\"BfMZ7w\":[\"接受云端\"],\"BiWlsk\":[\"状态…\"],\"BnmEvM\":[\"存为模板\"],\"C6-ZRl\":[\"某人\"],\"CXTDT_\":[\"继续泳道转换？\"],\"CxcMyt\":[\"已将 \",[\"0\"],\" 移到第 \",[\"1\"],\" 位，共 \",[\"2\"],\" 项。\"],\"DGEEOQ\":[\"泳道操作\"],\"DPfwMq\":[\"完成\"],\"Db4W3_\":[\"状态\"],\"EWPtMO\":[\"代码\"],\"EbMPZJ\":[\"未分配\"],\"F6osRA\":[\"有 \",[\"danglingCount\"],\" 张卡片引用了已删除的横向分组。\"],\"FBIuPX\":[\"清除选择\"],\"FQylcT\":[\"泳道：缺失\"],\"G4qrLy\":[\"取消完成列\"],\"GKu3m4\":[\"暂无标签\"],\"GL6e_U\":[\"当前有 \",[\"cardCount\"],\" 张卡片使用此横向分组。\"],\"Gpfctt\":[\"截止日期\"],\"HTKRVa\":[\"请勿关闭此对话框。\"],\"H_SQFv\":[\"无颜色\"],\"HajiZl\":[\"月\"],\"HrmW6B\":[\"添加评论…（支持 Markdown）\"],\"I6SWEy\":[\"分栏\"],\"ICip_B\":[\"云端（远程）\"],\"IdMoS6\":[\"创建第一条泳道\"],\"Ik60OC\":[\"在编辑器中打开\"],\"ImOQa9\":[\"回复\"],\"IqKCNQ\":[\"横向分组\"],\"Iw6WJa\":[\"设置 WIP 限制\"],\"JTYvAw\":[\"搜索卡片\"],\"KAlhe_\":[\"卡片更新未能持久化，转换已停止。请刷新后重试。\"],\"KCszT6\":[\"添加泳道\"],\"KFiYGY\":[\"更改颜色\"],\"KGi3u9\":[\"拖动以重新排序\"],\"K_F6pa\":[\"保存中…\"],\"K_cST0\":[\"继续转换横向分组？\"],\"Kd6eg7\":[\"正在移动卡片…\"],\"KeYrQ5\":[\"撤回你的回应\"],\"KjXDqG\":[\"泳道：无\"],\"KmydK6\":[\"粗体\"],\"KpnwJK\":[\"删除“\",[\"0\"],\"”？\"],\"KvW1VO\":[\"Draw.io 图表\"],\"LQn6-8\":[\"接受本地\"],\"Ld9MtR\":[\"横向分组：负责人\"],\"MHrjPM\":[\"标题\"],\"MYx830\":[\"此空泳道将从看板中移除。\"],\"Mm72la\":[\"暂无评论\"],\"MmYpxT\":[\"回复…\"],\"NBdIgR\":[\"评论\"],\"NYTPDY\":[\"移动卡片并删除\"],\"NnxWLJ\":[\"创建第一个自定义横向分组\"],\"O6H89R\":[\"已解决\"],\"ONWvwQ\":[\"上传\"],\"OR4WQZ\":[\"+ 添加子卡片\"],\"OYHzN1\":[\"标签\"],\"OepdfE\":[\"分组:状态\"],\"P5cvAA\":[\"状态名称\"],\"PM7yYy\":[\"横向分组 ID\"],\"PUeYA1\":[\"创建可编辑泳道\"],\"Pvpx7b\":[\"粘贴 URL 或路径\"],\"Q2mGA7\":[\"清除筛选\"],\"QD8opX\":[\"看板\"],\"QlsPZy\":[\"输入 Mermaid 语法以查看图表。\"],\"QmZYQP\":[\"取消解决\"],\"QyioBP\":[\"上移\"],\"RbsNko\":[\"当前有 \",[\"cardCount\"],\" 张卡片使用此泳道。\"],\"RfEZH1\":[\"JType 将根据当前负责人行创建独立泳道。卡片的负责人值不会改变。\"],\"RgO4DX\":[\"泳道 ID“\",[\"0\"],\"”重复。将使用第一条定义。\"],\"RlLl3G\":[[\"0\"],\" 的操作\"],\"RnplaY\":[[\"0\"],\" 的横向分组详情\"],\"S5Qbb1\":[\"用逗号分隔\"],\"SavliD\":[\"有 \",[\"danglingCount\"],\" 张卡片引用了已删除的泳道。\"],\"T_nAzC\":[\"JType 将复用现有泳道 ID，并继续未完成的卡片更新。\"],\"TdfEV7\":[\"归档\"],\"Th4mIx\":[[\"0\"],\" 的泳道详情\"],\"U0hizX\":[\"泳道颜色\"],\"U95P80\":[\"将优先级横向分组转为可编辑？\"],\"UDb2YD\":[\"回应\"],\"UQOvxZ\":[\"空白卡片\"],\"URmyfc\":[\"详情\"],\"Ubl2by\":[\"右移\"],\"VNa_N2\":[\"暂不支持预览此文件类型。\"],\"VXh9CK\":[\"无截止日期\"],\"VbyRUy\":[\"评论\"],\"WEYdDv\":[\"推荐\"],\"WSP6v1\":[\"排序:优先级\"],\"WWUwTb\":[\"将负责人横向分组转为可编辑？\"],\"X03-eC\":[\"请输入内容。\"],\"XJOV1Y\":[\"活动\"],\"XicmhT\":[\"截止日期\"],\"XklovM\":[\"正在处理…\"],\"Y8bR2a\":[\"仅删除泳道。卡片引用仍可恢复。\"],\"YDa2KG\":[\"我的卡片\"],\"YFdnVT\":[\"卡片状态\"],\"YHjvGb\":[\"状态操作\"],\"YNYued\":[\"状态 ID\"],\"Ya7bZl\":[\"图表错误\"],\"Zot9XS\":[\"暂无卡片\"],\"_5CsXX\":[\"完成列\"],\"_EsjyQ\":[\"使用此版本\"],\"_TJomP\":[\"删除前移动卡片\"],\"_YbTQZ\":[\"JType 将根据当前优先级行创建独立泳道。卡片的优先级值不会改变。\"],\"_kh61D\":[\"显示横向分组缺失的卡片\"],\"_laW0t\":[\"原横向分组已缺失\"],\"a6uhHr\":[\"粗体 (Ctrl+B)\"],\"aDvLhk\":[\"添加评论…\"],\"abUZlY\":[\"添加详情...\"],\"agOeRN\":[\"无法渲染此 API 规范。\"],\"b4hVKD\":[\"彩色列\"],\"bwOqWD\":[[\"1\"],\" 张子卡中已完成 \",[\"0\"],\" 张\"],\"by_svU\":[\"将卡片保留在未分配\"],\"bzjBcL\":[\"子卡片\"],\"c-EXz1\":[\"仅删除横向分组。卡片引用仍可恢复。\"],\"c61_Lv\":[\"泳道 ID\"],\"cJ44lA\":[\"未排期\"],\"cSev-j\":[\"筛选\"],\"cUt8yN\":[\"更改会自动保存。\"],\"ceQmqN\":[\"自定义横向分组\"],\"cfaWH-\":[\"添加标签\"],\"cnGeoo\":[\"删除\"],\"d-F6q9\":[\"创建\"],\"d5z6xQ\":[\"WIP 限制 \",[\"0\"]],\"dEgA5A\":[\"取消\"],\"dQva-y\":[\"横向分组 ID“\",[\"0\"],\"”重复。将使用第一条定义。\"],\"ddrz1m\":[\"已逾期\"],\"eAi4RE\":[\"JType 会根据当前优先级分组创建独立的自定义横向分组。卡片的优先级不会改变。\"],\"ecUA8p\":[\"今天\"],\"euc6Ns\":[\"复制卡片\"],\"fEqHZq\":[\"打开子卡片\"],\"fFAIng\":[[\"0\",\"plural\",{\"one\":[\"#\",\" 张卡片\"],\"other\":[\"#\",\" 张卡片\"]}]],\"fOluHh\":[\"JType 会根据当前负责人分组创建独立的自定义横向分组。卡片的负责人不会改变。\"],\"fVlS4-\":[\"泳道\"],\"fYcKtB\":[\"排序:截止\"],\"fdEjOR\":[\"复制横向分组 ID\"],\"fvImQM\":[\"已选择 \",[\"0\"],\" 项\"],\"fwTn8F\":[\"横向分组颜色\"],\"g8JmSC\":[\"下个月\"],\"gANddk\":[\"上传中…\"],\"gLDJuJ\":[\"未命名卡片\"],\"guQk4e\":[\"列：状态\"],\"gzZWjO\":[\"没有可转换的已分配值。\"],\"h8DugX\":[\"标签\"],\"hL5-_P\":[\"横向分组\"],\"hNQgyI\":[\"列：优先级\"],\"hNmOZ7\":[\"设置优先级\"],\"he3ygx\":[\"复制\"],\"hh4sEG\":[\"相关\"],\"hnK1gR\":[\"PDF 文档\"],\"hyVzII\":[\"泳道\"],\"i4_LY_\":[\"写作\"],\"iSLA_r\":[\"左移\"],\"iTylMl\":[\"模板\"],\"iYVqZq\":[\"列名称\"],\"jUbC3Z\":[\"泳道：优先级\"],\"jZlrte\":[\"颜色\"],\"jzy1b8\":[\"将泳道转为可编辑\"],\"k4b5_X\":[\"已编辑\"],\"kBRFD0\":[\"创建可编辑横向分组\"],\"kMqzL_\":[\"横向分组名称\"],\"kZlRKE\":[\"Mermaid 源码\"],\"kryGs-\":[\"卡片\"],\"lCF0wC\":[\"刷新\"],\"lEQWoB\":[\"添加稳定的横向分组，即使没有卡片也会保持显示。\"],\"lHxVTh\":[\"泳道：负责人\"],\"lUeOk0\":[\"此看板的横向分组。名称可以更改，卡片映射会保持关联。\"],\"l_g7se\":[\"继续转换\"],\"lqoy3F\":[\"横向分组缺失\"],\"lt2UOc\":[\"横向分组：无\"],\"ltF1xa\":[\"保存合并结果\"],\"m16xKo\":[\"添加\"],\"mPINe9\":[\"横向分组名称“\",[\"0\"],\"”重复。名称应保持唯一。\"],\"nabda1\":[\"删除卡片\"],\"nfhh60\":[\"将优先级泳道转为可编辑？\"],\"njJFtc\":[\"删除评论\"],\"o7J4JM\":[\"筛选\"],\"o8va6N\":[\"恢复\"],\"obId50\":[\"筛选，已启用 \",[\"activeCount\"],\" 项\"],\"ojKCLU\":[\"负责人\"],\"p4rTvq\":[\"横向分组：优先级\"],\"p9yTeb\":[\"排序:标题\"],\"pKKcSl\":[\"显示已解决话题\"],\"pKztsX\":[\"在完整编辑器中打开\"],\"pdVZUg\":[\"在制品 \",[\"0\"]],\"pnrmSP\":[\"新建卡片\"],\"pwN6Ae\":[\"折叠列\"],\"pzutoc\":[\"斜体\"],\"qZd_ph\":[\"添加横向分组\"],\"qpGDiV\":[\"复制泳道 ID\"],\"rF8SEQ\":[\"编辑评论\"],\"rK_KGj\":[\"看板的可选横向分组。名称可以修改，卡片仍通过横向分组 ID 保持映射。\"],\"rRubBJ\":[\"泳道详情\"],\"rT-mCe\":[\"移除筛选：\",[\"0\"]],\"rdUucN\":[\"预览\"],\"rn2_2V\":[\"移除筛选\"],\"rvpMpc\":[\"管理状态\"],\"sCzmvQ\":[\"张卡片\"],\"sQpDn6\":[\"退出全屏\"],\"sujToP\":[\"父卡片\"],\"tF-_sn\":[[\"cardCount\",\"plural\",{\"one\":[\"#\",\" 张卡片\"],\"other\":[\"#\",\" 张卡片\"]}]],\"tK2x9T\":[\"⚠ \",[\"0\"],\" 个冲突\",[\"1\"],\"待解决\"],\"tYS8HY\":[\"无论作为列还是泳道使用，状态列都可以继续管理。\"],\"t_YqKh\":[\"移除\"],\"tfDRzk\":[\"保存\"],\"u2IprG\":[\"卡片标题(回车添加,Esc 取消)\"],\"u36sC2\":[\"转为可编辑横向分组\"],\"uAP6ov\":[\"删除泳道\"],\"uAQUqI\":[\"状态\"],\"uH1U8v\":[\"管理泳道\"],\"uWPalN\":[\"泳道名称“\",[\"0\"],\"”重复。名称应保持唯一。\"],\"uaR_cz\":[[\"total\",\"plural\",{\"one\":[\"#\",\" 张卡片\"],\"other\":[\"#\",\" 张卡片\"]}]],\"ucJg3u\":[\"泳道：状态\"],\"vIKvqQ\":[\"有 \",[\"missingCount\"],\" 张卡片引用了已删除的泳道。\"],\"vJvZPY\":[\"负责人：\",[\"0\"]],\"vMTOsC\":[\"将负责人泳道转为可编辑？\"],\"vfYjJ_\":[\"复制失败。\"],\"w7E-FA\":[\"已拦截不安全链接：\",[\"url\"]],\"wGM_xy\":[\"横向分组：自定义\"],\"w_Sphq\":[\"附件\"],\"wf6Djn\":[\"斜体 (Ctrl+I)\"],\"wp-2ZK\":[\"横向分组：状态\"],\"wtw-au\":[\"设为完成列\"],\"wwu18a\":[\"图标\"],\"x52RAh\":[\"被 \",[\"blockedCount\"],\" 张未完成卡片阻塞\"],\"xDsmP9\":[\"日程\"],\"xUOPoQ\":[\"使用情况\"],\"xX5QVp\":[\"选择另一个横向分组，然后先更新卡片。\"],\"y1eoq1\":[\"复制链接\"],\"y9cj46\":[\"分组:优先级\"],\"yEbJGs\":[\"+ 添加字段\"],\"yYxB17\":[\"清除全部\"],\"ybGQtY\":[\"← 返回列表\"],\"yjeGpt\":[\"列：负责人\"],\"yz7wBu\":[\"关闭\"],\"yzF66j\":[\"链接\"],\"zOc0vf\":[\"无图标\"],\"zga9sT\":[\"确定\"]}"),
-	ja: JSON.parse("{\"--lIxB\":[\"Blocked by\"],\"-3Qbcm\":[\"Priority: \",[\"0\"]],\"-9kYEs\":[\"Cards with a missing row\"],\"-X4ual\":[\"No priority\"],\"-b7T3G\":[\"Updated\"],\"-hwvgo\":[\"Row actions\"],\"02N8r0\":[\"Filter cards\"],\"0cspe_\":[\"Delete row\"],\"0gvHNl\":[\"Statuses define the card workflow. Rename or reorder them freely; cards stay mapped by status ID.\"],\"1718Q-\":[\"問題\"],\"1DBGsz\":[\"ノート\"],\"1YABGm\":[\"リンク (Ctrl+K)\"],\"1hKEom\":[\"優先度\"],\"1iShX0\":[\"Due today\"],\"1lWHP7\":[\"unsafe\"],\"1nUGn5\":[\"ステータスを追加\"],\"1xwZj_\":[\"Previous month\"],\"23yqV0\":[\"影響を受けるカードを表示\"],\"2BPVq8\":[[\"0\"],\"を並べ替え\"],\"2aEwT_\":[\"Manage custom rows\"],\"2wxgft\":[\"名前を変更\"],\"32TndD\":[\"Blocked\"],\"3CIp19\":[\"Next 7 days\"],\"3CtQL6\":[\"別のスイムレーンを選び、先にカードを更新します。\"],\"3Ib6FN\":[\"下へ移動\"],\"3qkggm\":[\"全画面表示\"],\"4NY8B5\":[\"作成するスイムレーン\"],\"4gdyen\":[\"ローカル（自分の）\"],\"4hJhzz\":[\"表\"],\"4t8aKB\":[\"Rows to create\"],\"54sFiP\":[\"flowchart TD\\n  A[開始] --> B[終了]\"],\"5Oy0YM\":[\"Labels: \",[\"0\"]],\"5Q_DQ6\":[\"インラインコード\"],\"66g_UW\":[\"Collapse resolved thread\"],\"6G3KzD\":[\"Row details\"],\"6V3Ea3\":[\"コピーしました\"],\"6YtxFj\":[\"名前\"],\"6buwPb\":[\"Board settings\"],\"79Yvzu\":[\"スイムレーン名\"],\"7MGAQC\":[\"JType will reuse the existing row IDs and continue unfinished card updates.\"],\"7VpPHA\":[\"確認\"],\"7dZyQU\":[\"以前のスイムレーンが見つかりません\"],\"7pBic4\":[[\"visibleCount\"],\" of \",[\"totalCount\"],\" cards shown\"],\"7s3WlU\":[\"Blocks\"],\"8PifYj\":[\"Mermaid 図\"],\"8Tg_JR\":[\"カスタム\"],\"8enUYo\":[\"Set status\"],\"8hSn0h\":[\"結果（編集可能）\"],\"8lE269\":[\"並べ替え：手動\"],\"9L7ptC\":[\"This empty row will be removed from the board.\"],\"9OEgyT\":[\"Add reaction\"],\"9OH3W0\":[\"Resolve thread\"],\"9YTdO7\":[\"Blocked cards\"],\"9gx7rl\":[[\"missingCount\"],\" card(s) refer to deleted rows.\"],\"9gxam6\":[\"この Draw.io 図をレンダリングできませんでした。\"],\"AC9Gkf\":[\"列を展開\"],\"ANe5kn\":[\"カードを更新中…\"],\"AS5WO9\":[\"この PDF をレンダリングできませんでした。\"],\"ATIq3Z\":[\"スイムレーン：カスタム\"],\"AVreQ5\":[\"ドラッグしてサイズ変更\"],\"AgvHni\":[\"列を追加\"],\"AjVXBS\":[\"Calendar\"],\"AoHpbt\":[\"スイムレーンが見つからないカードを表示\"],\"AxAubu\":[\"グループ：担当者\"],\"B5TUF-\":[\"Priority…\"],\"BfMZ7w\":[\"クラウドを採用\"],\"BiWlsk\":[\"Status…\"],\"BnmEvM\":[\"テンプレートとして保存\"],\"C6-ZRl\":[\"Someone\"],\"CXTDT_\":[\"スイムレーンの変換を再開しますか？\"],\"CxcMyt\":[[\"0\"],\"を\",[\"2\"],\"件中\",[\"1\"],\"番目に移動しました。\"],\"DGEEOQ\":[\"スイムレーンの操作\"],\"DPfwMq\":[\"完了\"],\"Db4W3_\":[\"ステータス\"],\"EWPtMO\":[\"コード\"],\"EbMPZJ\":[\"未割り当て\"],\"F6osRA\":[[\"danglingCount\"],\" card(s) refer to deleted rows.\"],\"FBIuPX\":[\"Clear selection\"],\"FQylcT\":[\"スイムレーン：不明\"],\"G4qrLy\":[\"完了列を解除\"],\"GKu3m4\":[\"ラベルなし\"],\"GL6e_U\":[[\"cardCount\"],\" card(s) currently use this row.\"],\"Gpfctt\":[\"期限\"],\"HTKRVa\":[\"このダイアログを閉じないでください。\"],\"H_SQFv\":[\"色なし\"],\"HajiZl\":[\"Month\"],\"HrmW6B\":[\"Add a comment… (Markdown supported)\"],\"I6SWEy\":[\"分割\"],\"ICip_B\":[\"クラウド（リモート）\"],\"IdMoS6\":[\"最初のスイムレーンを作成\"],\"Ik60OC\":[\"エディターで開く\"],\"ImOQa9\":[\"Reply\"],\"IqKCNQ\":[\"Row\"],\"Iw6WJa\":[\"WIP 制限を設定\"],\"JTYvAw\":[\"カードを検索\"],\"KAlhe_\":[\"カードの更新が保存されなかったため、変換を停止しました。更新して再試行してください。\"],\"KCszT6\":[\"スイムレーンを追加\"],\"KFiYGY\":[\"色を変更\"],\"KGi3u9\":[\"ドラッグして並べ替え\"],\"K_F6pa\":[\"保存中…\"],\"K_cST0\":[\"Resume row conversion?\"],\"Kd6eg7\":[\"カードを移動中…\"],\"KeYrQ5\":[\"Remove your reaction\"],\"KjXDqG\":[\"Swimlane: None\"],\"KmydK6\":[\"太字\"],\"KpnwJK\":[\"「\",[\"0\"],\"」を削除しますか？\"],\"KvW1VO\":[\"Draw.io 図\"],\"LQn6-8\":[\"ローカルを採用\"],\"Ld9MtR\":[\"Rows: Assignee\"],\"MHrjPM\":[\"タイトル\"],\"MYx830\":[\"この空のスイムレーンをボードから削除します。\"],\"Mm72la\":[\"No comments yet\"],\"MmYpxT\":[\"Reply…\"],\"NBdIgR\":[\"Comment\"],\"NYTPDY\":[\"カードを移動して削除\"],\"NnxWLJ\":[\"Create your first custom row\"],\"O6H89R\":[\"Resolved\"],\"ONWvwQ\":[\"Upload\"],\"OR4WQZ\":[\"+ Add sub-card\"],\"OYHzN1\":[\"タグ\"],\"OepdfE\":[\"グループ：ステータス\"],\"P5cvAA\":[\"ステータス名\"],\"PM7yYy\":[\"Row ID\"],\"PUeYA1\":[\"編集可能なスイムレーンを作成\"],\"Pvpx7b\":[\"Paste a URL or path\"],\"Q2mGA7\":[\"フィルターをクリア\"],\"QD8opX\":[\"ボード\"],\"QlsPZy\":[\"Mermaid 構文を書くと図が表示されます。\"],\"QmZYQP\":[\"Unresolve thread\"],\"QyioBP\":[\"上へ移動\"],\"RbsNko\":[\"現在\",[\"cardCount\"],\"枚のカードがこのスイムレーンを使用しています。\"],\"RfEZH1\":[\"JType は現在の担当者行から独立したスイムレーンを作成します。カードの担当者は変更されません。\"],\"RgO4DX\":[\"スイムレーン ID「\",[\"0\"],\"」が重複しています。最初の定義を使用します。\"],\"RlLl3G\":[[\"0\"],\"の操作\"],\"RnplaY\":[\"Row details for \",[\"0\"]],\"S5Qbb1\":[\"カンマ区切り\"],\"SavliD\":[[\"danglingCount\"],\"枚のカードが削除済みのスイムレーンを参照しています。\"],\"T_nAzC\":[\"JType は既存のスイムレーン ID を再利用し、未完了のカード更新を続行します。\"],\"TdfEV7\":[\"Archived\"],\"Th4mIx\":[[\"0\"],\" のレーン詳細\"],\"U0hizX\":[\"スイムレーンの色\"],\"U95P80\":[\"Make priority rows editable?\"],\"UDb2YD\":[\"React\"],\"UQOvxZ\":[\"空のカード\"],\"URmyfc\":[\"詳細\"],\"Ubl2by\":[\"右へ移動\"],\"VNa_N2\":[\"このファイル形式はまだプレビューできません。\"],\"VXh9CK\":[\"No due date\"],\"VbyRUy\":[\"Comments\"],\"WEYdDv\":[\"推奨\"],\"WSP6v1\":[\"並べ替え：優先度\"],\"WWUwTb\":[\"Make assignee rows editable?\"],\"X03-eC\":[\"値を入力してください。\"],\"XJOV1Y\":[\"Activity\"],\"XicmhT\":[\"Due date\"],\"XklovM\":[\"処理中…\"],\"Y8bR2a\":[\"スイムレーンだけを削除します。カードの参照は復元できます。\"],\"YDa2KG\":[\"My cards\"],\"YFdnVT\":[\"Card state\"],\"YHjvGb\":[\"ステータスの操作\"],\"YNYued\":[\"Status ID\"],\"Ya7bZl\":[\"図のエラー\"],\"Zot9XS\":[\"カードなし\"],\"_5CsXX\":[\"完了列\"],\"_EsjyQ\":[\"これを使用\"],\"_TJomP\":[\"削除前にカードを移動\"],\"_YbTQZ\":[\"JType は現在の優先度行から独立したスイムレーンを作成します。カードの優先度は変更されません。\"],\"_kh61D\":[\"Show cards with missing rows\"],\"_laW0t\":[\"Previous row missing\"],\"a6uhHr\":[\"太字 (Ctrl+B)\"],\"aDvLhk\":[\"Add a comment…\"],\"abUZlY\":[\"詳細を追加...\"],\"agOeRN\":[\"この API 仕様をレンダリングできませんでした。\"],\"b4hVKD\":[\"色付き列\"],\"bwOqWD\":[[\"0\"],\" of \",[\"1\"],\" sub-cards done\"],\"by_svU\":[\"カードを未割り当てに残す\"],\"bzjBcL\":[\"Sub-cards\"],\"c-EXz1\":[\"Delete only the row. Card references remain recoverable.\"],\"c61_Lv\":[\"スイムレーン ID\"],\"cJ44lA\":[\"Unscheduled\"],\"cSev-j\":[\"Filters\"],\"cUt8yN\":[\"変更は自動的に保存されます。\"],\"ceQmqN\":[\"Custom rows\"],\"cfaWH-\":[\"ラベルを追加\"],\"cnGeoo\":[\"削除\"],\"d-F6q9\":[\"Created\"],\"d5z6xQ\":[\"WIP 制限 \",[\"0\"]],\"dEgA5A\":[\"キャンセル\"],\"dQva-y\":[\"Duplicate row ID \\\"\",[\"0\"],\"\\\". The first definition is used.\"],\"ddrz1m\":[\"Overdue\"],\"eAi4RE\":[\"JType will create independent custom rows from the current priority groups. Card priority values will stay unchanged.\"],\"ecUA8p\":[\"Today\"],\"euc6Ns\":[\"複製\"],\"fEqHZq\":[\"Open sub-card\"],\"fFAIng\":[[\"0\",\"plural\",{\"one\":[\"#\",\" 件のカード\"],\"other\":[\"#\",\" 件のカード\"]}]],\"fOluHh\":[\"JType will create independent custom rows from the current assignee groups. Card assignee values will stay unchanged.\"],\"fVlS4-\":[\"スイムレーン\"],\"fYcKtB\":[\"並べ替え：期限\"],\"fdEjOR\":[\"Copy row ID\"],\"fvImQM\":[[\"0\"],\" selected\"],\"fwTn8F\":[\"Row color\"],\"g8JmSC\":[\"Next month\"],\"gANddk\":[\"Uploading…\"],\"gLDJuJ\":[\"無題のカード\"],\"guQk4e\":[\"Columns: Status\"],\"gzZWjO\":[\"変換できる割り当て済みの値がありません。\"],\"h8DugX\":[\"Labels\"],\"hL5-_P\":[\"Rows\"],\"hNQgyI\":[\"Columns: Priority\"],\"hNmOZ7\":[\"Set priority\"],\"he3ygx\":[\"コピー\"],\"hh4sEG\":[\"Relates\"],\"hnK1gR\":[\"PDF ドキュメント\"],\"hyVzII\":[\"スイムレーン\"],\"i4_LY_\":[\"記述\"],\"iSLA_r\":[\"左へ移動\"],\"iTylMl\":[\"テンプレート\"],\"iYVqZq\":[\"列名\"],\"jUbC3Z\":[\"Swimlane: Priority\"],\"jZlrte\":[\"カラー\"],\"jzy1b8\":[\"スイムレーンを編集可能にする\"],\"k4b5_X\":[\"edited\"],\"kBRFD0\":[\"Create editable rows\"],\"kMqzL_\":[\"Row name\"],\"kZlRKE\":[\"Mermaid ソース\"],\"kryGs-\":[\"カード\"],\"lCF0wC\":[\"更新\"],\"lEQWoB\":[\"カードがなくても表示され続ける横方向のグループを追加します。\"],\"lHxVTh\":[\"Swimlane: Assignee\"],\"lUeOk0\":[\"このボードの横方向グループです。名前を変更しても、カードの関連付けは維持されます。\"],\"l_g7se\":[\"変換を再開\"],\"lqoy3F\":[\"Missing row\"],\"lt2UOc\":[\"Rows: None\"],\"ltF1xa\":[\"マージ結果を保存\"],\"m16xKo\":[\"追加\"],\"mPINe9\":[\"Duplicate row name \\\"\",[\"0\"],\"\\\". Names should be unique.\"],\"nabda1\":[\"カードを削除\"],\"nfhh60\":[\"優先度スイムレーンを編集可能にしますか？\"],\"njJFtc\":[\"Delete comment\"],\"o7J4JM\":[\"フィルター\"],\"o8va6N\":[\"Restored\"],\"obId50\":[\"Filters, \",[\"activeCount\"],\" active\"],\"ojKCLU\":[\"担当者\"],\"p4rTvq\":[\"Rows: Priority\"],\"p9yTeb\":[\"並べ替え：タイトル\"],\"pKKcSl\":[\"Show resolved thread\"],\"pKztsX\":[\"フルエディターで開く\"],\"pdVZUg\":[\"WIP \",[\"0\"]],\"pnrmSP\":[\"新規カード\"],\"pwN6Ae\":[\"列を折りたたむ\"],\"pzutoc\":[\"イタリック\"],\"qZd_ph\":[\"Add row\"],\"qpGDiV\":[\"スイムレーン ID をコピー\"],\"rF8SEQ\":[\"Edit comment\"],\"rK_KGj\":[\"Optional horizontal groups for this board. Names can change; cards stay mapped by row ID.\"],\"rRubBJ\":[\"スイムレーンの詳細\"],\"rT-mCe\":[\"Remove filter: \",[\"0\"]],\"rdUucN\":[\"プレビュー\"],\"rn2_2V\":[\"Remove filter\"],\"rvpMpc\":[\"ステータスを管理\"],\"sCzmvQ\":[\"枚のカード\"],\"sQpDn6\":[\"全画面表示を終了\"],\"sujToP\":[\"Parent\"],\"tF-_sn\":[[\"cardCount\",\"plural\",{\"one\":[\"#\",\" 件のカード\"],\"other\":[\"#\",\" 件のカード\"]}]],\"tK2x9T\":[\"⚠ \",[\"0\"],\" 件の競合\",[\"1\"],\"を解決中\"],\"tYS8HY\":[\"ステータス列は、列またはスイムレーンとして使用中でも管理できます。\"],\"t_YqKh\":[\"Remove\"],\"tfDRzk\":[\"Save\"],\"u2IprG\":[\"カードのタイトル（Enter で追加、Esc でキャンセル）\"],\"u36sC2\":[\"Make rows editable\"],\"uAP6ov\":[\"スイムレーンを削除\"],\"uAQUqI\":[\"ステータス\"],\"uH1U8v\":[\"スイムレーンを管理\"],\"uWPalN\":[\"スイムレーン名「\",[\"0\"],\"」が重複しています。名前は一意にしてください。\"],\"uaR_cz\":[[\"total\",\"plural\",{\"one\":[\"#\",\" 件のカード\"],\"other\":[\"#\",\" 件のカード\"]}]],\"ucJg3u\":[\"Swimlane: Status\"],\"vIKvqQ\":[[\"missingCount\"],\"枚のカードが削除済みのスイムレーンを参照しています。\"],\"vJvZPY\":[\"Assignee: \",[\"0\"]],\"vMTOsC\":[\"担当者スイムレーンを編集可能にしますか？\"],\"vfYjJ_\":[\"コピーに失敗しました。\"],\"w7E-FA\":[\"Unsafe link blocked: \",[\"url\"]],\"wGM_xy\":[\"Rows: Custom\"],\"w_Sphq\":[\"Attachments\"],\"wf6Djn\":[\"イタリック (Ctrl+I)\"],\"wp-2ZK\":[\"Rows: Status\"],\"wtw-au\":[\"完了列に設定\"],\"wwu18a\":[\"アイコン\"],\"x52RAh\":[\"Blocked by \",[\"blockedCount\"],\" unfinished card(s)\"],\"xDsmP9\":[\"Agenda\"],\"xUOPoQ\":[\"使用状況\"],\"xX5QVp\":[\"Choose another row, then update the cards first.\"],\"y1eoq1\":[\"リンクをコピー\"],\"y9cj46\":[\"グループ：優先度\"],\"yEbJGs\":[\"+ Add field\"],\"yYxB17\":[\"Clear all\"],\"ybGQtY\":[\"← リストに戻る\"],\"yjeGpt\":[\"Columns: Assignee\"],\"yz7wBu\":[\"閉じる\"],\"yzF66j\":[\"リンク\"],\"zOc0vf\":[\"アイコンなし\"],\"zga9sT\":[\"OK\"]}"),
-	ko: JSON.parse("{\"--lIxB\":[\"Blocked by\"],\"-3Qbcm\":[\"Priority: \",[\"0\"]],\"-9kYEs\":[\"Cards with a missing row\"],\"-X4ual\":[\"No priority\"],\"-b7T3G\":[\"Updated\"],\"-hwvgo\":[\"Row actions\"],\"02N8r0\":[\"Filter cards\"],\"0cspe_\":[\"Delete row\"],\"0gvHNl\":[\"Statuses define the card workflow. Rename or reorder them freely; cards stay mapped by status ID.\"],\"1718Q-\":[\"Issues\"],\"1DBGsz\":[\"노트\"],\"1YABGm\":[\"링크 (Ctrl+K)\"],\"1hKEom\":[\"우선순위\"],\"1iShX0\":[\"Due today\"],\"1lWHP7\":[\"unsafe\"],\"1nUGn5\":[\"Add status\"],\"1xwZj_\":[\"Previous month\"],\"23yqV0\":[\"Show affected cards\"],\"2BPVq8\":[\"Reorder \",[\"0\"]],\"2aEwT_\":[\"Manage custom rows\"],\"2wxgft\":[\"이름 변경\"],\"32TndD\":[\"Blocked\"],\"3CIp19\":[\"Next 7 days\"],\"3CtQL6\":[\"Choose another swimlane, then update the cards first.\"],\"3Ib6FN\":[\"Move down\"],\"3qkggm\":[\"전체 화면\"],\"4NY8B5\":[\"Swimlanes to create\"],\"4gdyen\":[\"로컈 (내 것)\"],\"4hJhzz\":[\"테이블\"],\"4t8aKB\":[\"Rows to create\"],\"54sFiP\":[\"flowchart TD\\n  A[시작] --> B[끝]\"],\"5Oy0YM\":[\"Labels: \",[\"0\"]],\"5Q_DQ6\":[\"인라인 코드\"],\"66g_UW\":[\"Collapse resolved thread\"],\"6G3KzD\":[\"Row details\"],\"6V3Ea3\":[\"Copied\"],\"6YtxFj\":[\"Name\"],\"6buwPb\":[\"Board settings\"],\"79Yvzu\":[\"Swimlane name\"],\"7MGAQC\":[\"JType will reuse the existing row IDs and continue unfinished card updates.\"],\"7VpPHA\":[\"확인\"],\"7dZyQU\":[\"Previous swimlane missing\"],\"7pBic4\":[[\"visibleCount\"],\" of \",[\"totalCount\"],\" cards shown\"],\"7s3WlU\":[\"Blocks\"],\"8PifYj\":[\"Mermaid 다이어그램\"],\"8Tg_JR\":[\"Custom\"],\"8enUYo\":[\"Set status\"],\"8hSn0h\":[\"결과 (편집 가능)\"],\"8lE269\":[\"정렬: 수동\"],\"9L7ptC\":[\"This empty row will be removed from the board.\"],\"9OEgyT\":[\"Add reaction\"],\"9OH3W0\":[\"Resolve thread\"],\"9YTdO7\":[\"Blocked cards\"],\"9gx7rl\":[[\"missingCount\"],\" card(s) refer to deleted rows.\"],\"9gxam6\":[\"이 Draw.io 다이어그램을 렌더링할 수 없습니다.\"],\"AC9Gkf\":[\"열 펼치기\"],\"ANe5kn\":[\"Updating cards…\"],\"AS5WO9\":[\"이 PDF를 렌더링할 수 없습니다.\"],\"ATIq3Z\":[\"Swimlane: Custom\"],\"AVreQ5\":[\"드래그하여 크기 조정\"],\"AgvHni\":[\"열 추가\"],\"AjVXBS\":[\"Calendar\"],\"AoHpbt\":[\"Show cards with missing swimlanes\"],\"AxAubu\":[\"그룹: 담당자\"],\"B5TUF-\":[\"Priority…\"],\"BfMZ7w\":[\"클라우드 수낙\"],\"BiWlsk\":[\"Status…\"],\"BnmEvM\":[\"템플릿으로 저장\"],\"C6-ZRl\":[\"Someone\"],\"CXTDT_\":[\"Resume swimlane conversion?\"],\"CxcMyt\":[[\"0\"],\" moved to position \",[\"1\"],\" of \",[\"2\"],\".\"],\"DGEEOQ\":[\"Swimlane actions\"],\"DPfwMq\":[\"Done\"],\"Db4W3_\":[\"Statuses\"],\"EWPtMO\":[\"코드\"],\"EbMPZJ\":[\"미할당\"],\"F6osRA\":[[\"danglingCount\"],\" card(s) refer to deleted rows.\"],\"FBIuPX\":[\"Clear selection\"],\"FQylcT\":[\"Swimlane: Missing\"],\"G4qrLy\":[\"완료 열 해제\"],\"GKu3m4\":[\"라벨 없음\"],\"GL6e_U\":[[\"cardCount\"],\" card(s) currently use this row.\"],\"Gpfctt\":[\"마감\"],\"HTKRVa\":[\"Do not close this dialog.\"],\"H_SQFv\":[\"색상 없음\"],\"HajiZl\":[\"Month\"],\"HrmW6B\":[\"Add a comment… (Markdown supported)\"],\"I6SWEy\":[\"스플릿\"],\"ICip_B\":[\"클라우드 (원격)\"],\"IdMoS6\":[\"Create your first swimlane\"],\"Ik60OC\":[\"에디터에서 열기\"],\"ImOQa9\":[\"Reply\"],\"IqKCNQ\":[\"Row\"],\"Iw6WJa\":[\"WIP 한도 설정\"],\"JTYvAw\":[\"카드 검색\"],\"KAlhe_\":[\"카드 업데이트가 저장되지 않아 변환을 중지했습니다. 새로 고친 후 다시 시도하세요.\"],\"KCszT6\":[\"Add swimlane\"],\"KFiYGY\":[\"Change color\"],\"KGi3u9\":[\"Drag to reorder\"],\"K_F6pa\":[\"저장 중…\"],\"K_cST0\":[\"Resume row conversion?\"],\"Kd6eg7\":[\"Moving cards…\"],\"KeYrQ5\":[\"Remove your reaction\"],\"KjXDqG\":[\"Swimlane: None\"],\"KmydK6\":[\"굵게\"],\"KpnwJK\":[\"Delete \\\"\",[\"0\"],\"\\\"?\"],\"KvW1VO\":[\"Draw.io 다이어그램\"],\"LQn6-8\":[\"로컈 수낙\"],\"Ld9MtR\":[\"Rows: Assignee\"],\"MHrjPM\":[\"제목\"],\"MYx830\":[\"This empty swimlane will be removed from the board.\"],\"Mm72la\":[\"No comments yet\"],\"MmYpxT\":[\"Reply…\"],\"NBdIgR\":[\"Comment\"],\"NYTPDY\":[\"Move cards and delete\"],\"NnxWLJ\":[\"Create your first custom row\"],\"O6H89R\":[\"Resolved\"],\"ONWvwQ\":[\"Upload\"],\"OR4WQZ\":[\"+ Add sub-card\"],\"OYHzN1\":[\"태그\"],\"OepdfE\":[\"그룹: 상태\"],\"P5cvAA\":[\"Status name\"],\"PM7yYy\":[\"Row ID\"],\"PUeYA1\":[\"Create editable swimlanes\"],\"Pvpx7b\":[\"Paste a URL or path\"],\"Q2mGA7\":[\"필터 지우기\"],\"QD8opX\":[\"보드\"],\"QlsPZy\":[\"Mermaid 구문을 작성하면 다이어그램이 표시됩니다.\"],\"QmZYQP\":[\"Unresolve thread\"],\"QyioBP\":[\"Move up\"],\"RbsNko\":[[\"cardCount\"],\" card(s) currently use this swimlane.\"],\"RfEZH1\":[\"JType will create independent swimlanes from the current assignee rows. Card assignee values will stay unchanged.\"],\"RgO4DX\":[\"Duplicate lane ID \\\"\",[\"0\"],\"\\\". The first definition is used.\"],\"RlLl3G\":[\"Actions for \",[\"0\"]],\"RnplaY\":[\"Row details for \",[\"0\"]],\"S5Qbb1\":[\"쉼표로 구분\"],\"SavliD\":[[\"danglingCount\"],\" card(s) refer to deleted swimlanes.\"],\"T_nAzC\":[\"JType will reuse the existing lane IDs and continue unfinished card updates.\"],\"TdfEV7\":[\"Archived\"],\"Th4mIx\":[[\"0\"],\" 레인 세부 정보\"],\"U0hizX\":[\"Swimlane color\"],\"U95P80\":[\"Make priority rows editable?\"],\"UDb2YD\":[\"React\"],\"UQOvxZ\":[\"빈 카드\"],\"URmyfc\":[\"Details\"],\"Ubl2by\":[\"Move right\"],\"VNa_N2\":[\"이 파일 형식은 아직 미리볼 수 없습니다.\"],\"VXh9CK\":[\"No due date\"],\"VbyRUy\":[\"Comments\"],\"WEYdDv\":[\"Recommended\"],\"WSP6v1\":[\"정렬: 우선순위\"],\"WWUwTb\":[\"Make assignee rows editable?\"],\"X03-eC\":[\"값을 입력해 주세요.\"],\"XJOV1Y\":[\"Activity\"],\"XicmhT\":[\"Due date\"],\"XklovM\":[\"Working…\"],\"Y8bR2a\":[\"Delete only the swimlane. Card references remain recoverable.\"],\"YDa2KG\":[\"My cards\"],\"YFdnVT\":[\"Card state\"],\"YHjvGb\":[\"Status actions\"],\"YNYued\":[\"Status ID\"],\"Ya7bZl\":[\"다이어그램 오류\"],\"Zot9XS\":[\"카드 없음\"],\"_5CsXX\":[\"완료 열\"],\"_EsjyQ\":[\"이것 사용\"],\"_TJomP\":[\"Move cards before deleting\"],\"_YbTQZ\":[\"JType will create independent swimlanes from the current priority rows. Card priority values will stay unchanged.\"],\"_kh61D\":[\"Show cards with missing rows\"],\"_laW0t\":[\"Previous row missing\"],\"a6uhHr\":[\"굵게 (Ctrl+B)\"],\"aDvLhk\":[\"Add a comment…\"],\"abUZlY\":[\"세부정보 추가...\"],\"agOeRN\":[\"이 API 명세를 렌더링할 수 없습니다.\"],\"b4hVKD\":[\"색상 열\"],\"bwOqWD\":[[\"0\"],\" of \",[\"1\"],\" sub-cards done\"],\"by_svU\":[\"Keep cards in Unassigned\"],\"bzjBcL\":[\"Sub-cards\"],\"c-EXz1\":[\"Delete only the row. Card references remain recoverable.\"],\"c61_Lv\":[\"Lane ID\"],\"cJ44lA\":[\"Unscheduled\"],\"cSev-j\":[\"Filters\"],\"cUt8yN\":[\"Changes save automatically.\"],\"ceQmqN\":[\"Custom rows\"],\"cfaWH-\":[\"라벨 추가\"],\"cnGeoo\":[\"삭제\"],\"d-F6q9\":[\"Created\"],\"d5z6xQ\":[\"WIP 한도 \",[\"0\"]],\"dEgA5A\":[\"취소\"],\"dQva-y\":[\"Duplicate row ID \\\"\",[\"0\"],\"\\\". The first definition is used.\"],\"ddrz1m\":[\"Overdue\"],\"eAi4RE\":[\"JType will create independent custom rows from the current priority groups. Card priority values will stay unchanged.\"],\"ecUA8p\":[\"Today\"],\"euc6Ns\":[\"복제\"],\"fEqHZq\":[\"Open sub-card\"],\"fFAIng\":[[\"0\",\"plural\",{\"one\":[\"카드 \",\"#\",\"개\"],\"other\":[\"카드 \",\"#\",\"개\"]}]],\"fOluHh\":[\"JType will create independent custom rows from the current assignee groups. Card assignee values will stay unchanged.\"],\"fVlS4-\":[\"Swimlane\"],\"fYcKtB\":[\"정렬: 마감\"],\"fdEjOR\":[\"Copy row ID\"],\"fvImQM\":[[\"0\"],\" selected\"],\"fwTn8F\":[\"Row color\"],\"g8JmSC\":[\"Next month\"],\"gANddk\":[\"Uploading…\"],\"gLDJuJ\":[\"제목 없는 카드\"],\"guQk4e\":[\"Columns: Status\"],\"gzZWjO\":[\"No assigned values to convert.\"],\"h8DugX\":[\"Labels\"],\"hL5-_P\":[\"Rows\"],\"hNQgyI\":[\"Columns: Priority\"],\"hNmOZ7\":[\"Set priority\"],\"he3ygx\":[\"Copy\"],\"hh4sEG\":[\"Relates\"],\"hnK1gR\":[\"PDF 문서\"],\"hyVzII\":[\"Swimlanes\"],\"i4_LY_\":[\"작성\"],\"iSLA_r\":[\"Move left\"],\"iTylMl\":[\"템플릿\"],\"iYVqZq\":[\"열 이름\"],\"jUbC3Z\":[\"Swimlane: Priority\"],\"jZlrte\":[\"색상\"],\"jzy1b8\":[\"Make swimlanes editable\"],\"k4b5_X\":[\"edited\"],\"kBRFD0\":[\"Create editable rows\"],\"kMqzL_\":[\"Row name\"],\"kZlRKE\":[\"Mermaid 소스\"],\"kryGs-\":[\"카드\"],\"lCF0wC\":[\"새로고침\"],\"lEQWoB\":[\"Add stable horizontal groups that stay visible even when they have no cards.\"],\"lHxVTh\":[\"Swimlane: Assignee\"],\"lUeOk0\":[\"Horizontal groups for this board. Names can change; card mapping stays attached.\"],\"l_g7se\":[\"Resume conversion\"],\"lqoy3F\":[\"Missing row\"],\"lt2UOc\":[\"Rows: None\"],\"ltF1xa\":[\"병합 결과 저장\"],\"m16xKo\":[\"Add\"],\"mPINe9\":[\"Duplicate row name \\\"\",[\"0\"],\"\\\". Names should be unique.\"],\"nabda1\":[\"카드 삭제\"],\"nfhh60\":[\"Make priority swimlanes editable?\"],\"njJFtc\":[\"Delete comment\"],\"o7J4JM\":[\"필터\"],\"o8va6N\":[\"Restored\"],\"obId50\":[\"Filters, \",[\"activeCount\"],\" active\"],\"ojKCLU\":[\"담당자\"],\"p4rTvq\":[\"Rows: Priority\"],\"p9yTeb\":[\"정렬: 제목\"],\"pKKcSl\":[\"Show resolved thread\"],\"pKztsX\":[\"전체 에디터에서 열기\"],\"pdVZUg\":[\"WIP \",[\"0\"]],\"pnrmSP\":[\"새 카드\"],\"pwN6Ae\":[\"열 접기\"],\"pzutoc\":[\"기울임꼴\"],\"qZd_ph\":[\"Add row\"],\"qpGDiV\":[\"Copy lane ID\"],\"rF8SEQ\":[\"Edit comment\"],\"rK_KGj\":[\"Optional horizontal groups for this board. Names can change; cards stay mapped by row ID.\"],\"rRubBJ\":[\"Lane details\"],\"rT-mCe\":[\"Remove filter: \",[\"0\"]],\"rdUucN\":[\"미리보기\"],\"rn2_2V\":[\"Remove filter\"],\"rvpMpc\":[\"Manage statuses\"],\"sCzmvQ\":[\"개 카드\"],\"sQpDn6\":[\"전체 화면 종료\"],\"sujToP\":[\"Parent\"],\"tF-_sn\":[[\"cardCount\",\"plural\",{\"one\":[\"카드 \",\"#\",\"개\"],\"other\":[\"카드 \",\"#\",\"개\"]}]],\"tK2x9T\":[\"⚠ 해결할 충돌 \",[\"0\"],\"건\",[\"1\"]],\"tYS8HY\":[\"Status columns stay available when they are used as columns or swimlanes.\"],\"t_YqKh\":[\"Remove\"],\"tfDRzk\":[\"Save\"],\"u2IprG\":[\"카드 제목 (Enter로 추가, Esc로 취소)\"],\"u36sC2\":[\"Make rows editable\"],\"uAP6ov\":[\"Delete swimlane\"],\"uAQUqI\":[\"상태\"],\"uH1U8v\":[\"Manage swimlanes\"],\"uWPalN\":[\"Duplicate swimlane name \\\"\",[\"0\"],\"\\\". Names should be unique.\"],\"uaR_cz\":[[\"total\",\"plural\",{\"one\":[\"카드 \",\"#\",\"개\"],\"other\":[\"카드 \",\"#\",\"개\"]}]],\"ucJg3u\":[\"Swimlane: Status\"],\"vIKvqQ\":[[\"missingCount\"],\" card(s) refer to deleted swimlanes.\"],\"vJvZPY\":[\"Assignee: \",[\"0\"]],\"vMTOsC\":[\"Make assignee swimlanes editable?\"],\"vfYjJ_\":[\"복사하지 못했습니다.\"],\"w7E-FA\":[\"Unsafe link blocked: \",[\"url\"]],\"wGM_xy\":[\"Rows: Custom\"],\"w_Sphq\":[\"Attachments\"],\"wf6Djn\":[\"기울임꼴 (Ctrl+I)\"],\"wp-2ZK\":[\"Rows: Status\"],\"wtw-au\":[\"완료 열로 설정\"],\"wwu18a\":[\"아이콘\"],\"x52RAh\":[\"Blocked by \",[\"blockedCount\"],\" unfinished card(s)\"],\"xDsmP9\":[\"Agenda\"],\"xUOPoQ\":[\"Used by\"],\"xX5QVp\":[\"Choose another row, then update the cards first.\"],\"y1eoq1\":[\"링크 복사\"],\"y9cj46\":[\"그룹: 우선순위\"],\"yEbJGs\":[\"+ Add field\"],\"yYxB17\":[\"Clear all\"],\"ybGQtY\":[\"← 목록으로\"],\"yjeGpt\":[\"Columns: Assignee\"],\"yz7wBu\":[\"닫기\"],\"yzF66j\":[\"링크\"],\"zOc0vf\":[\"아이콘 없음\"],\"zga9sT\":[\"확인\"]}")
+var km = {
+	en: JSON.parse("{\"--lIxB\":[\"Blocked by\"],\"-3Qbcm\":[\"Priority: \",[\"0\"]],\"-9kYEs\":[\"Cards with a missing row\"],\"-X4ual\":[\"No priority\"],\"-b7T3G\":[\"Updated\"],\"-eTfgY\":[\"Swimlane details\"],\"-hwvgo\":[\"Row actions\"],\"02N8r0\":[\"Filter cards\"],\"0cspe_\":[\"Delete row\"],\"0gvHNl\":[\"Statuses define the card workflow. Rename or reorder them freely; cards stay mapped by status ID.\"],\"1718Q-\":[\"Issues\"],\"1DBGsz\":[\"Notes\"],\"1YABGm\":[\"Link (Ctrl+K)\"],\"1hKEom\":[\"Priority\"],\"1iShX0\":[\"Due today\"],\"1lWHP7\":[\"unsafe\"],\"1nUGn5\":[\"Add status\"],\"1xwZj_\":[\"Previous month\"],\"23yqV0\":[\"Show affected cards\"],\"2BPVq8\":[\"Reorder \",[\"0\"]],\"2aEwT_\":[\"Manage custom rows\"],\"2wxgft\":[\"Rename\"],\"32TndD\":[\"Blocked\"],\"3CIp19\":[\"Next 7 days\"],\"3CtQL6\":[\"Choose another swimlane, then update the cards first.\"],\"3Ib6FN\":[\"Move down\"],\"3qkggm\":[\"Fullscreen\"],\"4NY8B5\":[\"Swimlanes to create\"],\"4gdyen\":[\"Local (yours)\"],\"4hJhzz\":[\"Table\"],\"4t8aKB\":[\"Rows to create\"],\"4vd-Kd\":[\"JType will create independent custom swimlanes from the current priority columns. Card priority values will stay unchanged.\"],\"54sFiP\":[\"flowchart TD\\n  A[Start] --> B[End]\"],\"5Cawxq\":[\"Swimlanes: Custom\"],\"5Oy0YM\":[\"Labels: \",[\"0\"]],\"5Q_DQ6\":[\"Inline Code\"],\"66g_UW\":[\"Collapse resolved thread\"],\"6G3KzD\":[\"Row details\"],\"6V3Ea3\":[\"Copied\"],\"6YtxFj\":[\"Name\"],\"6buwPb\":[\"Board settings\"],\"79Yvzu\":[\"Swimlane name\"],\"7MGAQC\":[\"JType will reuse the existing row IDs and continue unfinished card updates.\"],\"7VpPHA\":[\"Confirm\"],\"7dZyQU\":[\"Previous swimlane missing\"],\"7pBic4\":[[\"visibleCount\"],\" of \",[\"totalCount\"],\" cards shown\"],\"7s3WlU\":[\"Blocks\"],\"8PifYj\":[\"Mermaid diagram\"],\"8Tg_JR\":[\"Custom\"],\"8enUYo\":[\"Set status\"],\"8hSn0h\":[\"Result (editable)\"],\"8lE269\":[\"Sort: Manual\"],\"9L7ptC\":[\"This empty row will be removed from the board.\"],\"9OEgyT\":[\"Add reaction\"],\"9OH3W0\":[\"Resolve thread\"],\"9YTdO7\":[\"Blocked cards\"],\"9gx7rl\":[[\"missingCount\"],\" card(s) refer to deleted rows.\"],\"9gxam6\":[\"Could not render this Draw.io diagram.\"],\"AC9Gkf\":[\"Expand column\"],\"ANe5kn\":[\"Updating cards…\"],\"AS5WO9\":[\"Could not render this PDF.\"],\"ATIq3Z\":[\"Swimlane: Custom\"],\"AVreQ5\":[\"Drag to resize\"],\"AgvHni\":[\"Add column\"],\"AjVXBS\":[\"Calendar\"],\"AoHpbt\":[\"Show cards with missing swimlanes\"],\"AxAubu\":[\"Group: Assignee\"],\"B5TUF-\":[\"Priority…\"],\"BfMZ7w\":[\"Accept cloud\"],\"BiWlsk\":[\"Status…\"],\"BnmEvM\":[\"Save as template\"],\"C6-ZRl\":[\"Someone\"],\"CQ_dDx\":[\"Swimlanes: Status\"],\"CXTDT_\":[\"Resume swimlane conversion?\"],\"CxcMyt\":[[\"0\"],\" moved to position \",[\"1\"],\" of \",[\"2\"],\".\"],\"DGEEOQ\":[\"Swimlane actions\"],\"DPfwMq\":[\"Done\"],\"Db4W3_\":[\"Statuses\"],\"EWPtMO\":[\"Code\"],\"EbMPZJ\":[\"Unassigned\"],\"F6osRA\":[[\"danglingCount\"],\" card(s) refer to deleted rows.\"],\"FBIuPX\":[\"Clear selection\"],\"FQylcT\":[\"Swimlane: Missing\"],\"G4qrLy\":[\"Unset done column\"],\"GKu3m4\":[\"No labels\"],\"GL6e_U\":[[\"cardCount\"],\" card(s) currently use this row.\"],\"GNoXOd\":[\"Copy swimlane ID\"],\"Gpfctt\":[\"Due\"],\"HTKRVa\":[\"Do not close this dialog.\"],\"H_SQFv\":[\"No color\"],\"HajiZl\":[\"Month\"],\"HrmW6B\":[\"Add a comment… (Markdown supported)\"],\"I6SWEy\":[\"Split\"],\"ICip_B\":[\"Cloud (remote)\"],\"IdMoS6\":[\"Create your first swimlane\"],\"Ik60OC\":[\"Open in editor\"],\"ImOQa9\":[\"Reply\"],\"IqKCNQ\":[\"Row\"],\"Iw6WJa\":[\"Set WIP limit\"],\"JPB7_s\":[\"Cards with a missing swimlane\"],\"JTYvAw\":[\"Search cards\"],\"KAlhe_\":[\"Conversion stopped because card updates did not persist. Refresh and try again.\"],\"KCszT6\":[\"Add swimlane\"],\"KFiYGY\":[\"Change color\"],\"KGi3u9\":[\"Drag to reorder\"],\"K_F6pa\":[\"Saving…\"],\"K_cST0\":[\"Resume row conversion?\"],\"Kd6eg7\":[\"Moving cards…\"],\"KeYrQ5\":[\"Remove your reaction\"],\"KjXDqG\":[\"Swimlane: None\"],\"KmydK6\":[\"Bold\"],\"KpnwJK\":[\"Delete \\\"\",[\"0\"],\"\\\"?\"],\"KvW1VO\":[\"Draw.io diagram\"],\"LQn6-8\":[\"Accept local\"],\"Ld9MtR\":[\"Rows: Assignee\"],\"MHrjPM\":[\"Title\"],\"MRsDXp\":[\"JType will reuse the existing swimlane IDs and continue unfinished card updates.\"],\"MYx830\":[\"This empty swimlane will be removed from the board.\"],\"Mm72la\":[\"No comments yet\"],\"MmYpxT\":[\"Reply…\"],\"NBdIgR\":[\"Comment\"],\"NYTPDY\":[\"Move cards and delete\"],\"NnxWLJ\":[\"Create your first custom row\"],\"O6H89R\":[\"Resolved\"],\"ONWvwQ\":[\"Upload\"],\"OR4WQZ\":[\"+ Add sub-card\"],\"OYHzN1\":[\"Tags\"],\"OepdfE\":[\"Group: Status\"],\"P5cvAA\":[\"Status name\"],\"PM7yYy\":[\"Row ID\"],\"PUeYA1\":[\"Create editable swimlanes\"],\"Pvpx7b\":[\"Paste a URL or path\"],\"Q-Pe7U\":[\"Swimlane details for \",[\"0\"]],\"Q2mGA7\":[\"Clear filter\"],\"QD8opX\":[\"Board\"],\"QRhoJb\":[\"JType will create independent custom swimlanes from the current assignee columns. Card assignee values will stay unchanged.\"],\"QlsPZy\":[\"Write Mermaid syntax to see the diagram.\"],\"QmZYQP\":[\"Unresolve thread\"],\"QyioBP\":[\"Move up\"],\"RbsNko\":[[\"cardCount\"],\" card(s) currently use this swimlane.\"],\"RfEZH1\":[\"JType will create independent swimlanes from the current assignee rows. Card assignee values will stay unchanged.\"],\"RgO4DX\":[\"Duplicate lane ID \\\"\",[\"0\"],\"\\\". The first definition is used.\"],\"RlLl3G\":[\"Actions for \",[\"0\"]],\"RnplaY\":[\"Row details for \",[\"0\"]],\"S5Qbb1\":[\"comma, separated\"],\"SavliD\":[[\"danglingCount\"],\" card(s) refer to deleted swimlanes.\"],\"T_nAzC\":[\"JType will reuse the existing lane IDs and continue unfinished card updates.\"],\"TdfEV7\":[\"Archived\"],\"Th4mIx\":[\"Lane details for \",[\"0\"]],\"U0hizX\":[\"Swimlane color\"],\"U95P80\":[\"Make priority rows editable?\"],\"UDb2YD\":[\"React\"],\"UQOvxZ\":[\"Blank card\"],\"URmyfc\":[\"Details\"],\"Ubl2by\":[\"Move right\"],\"UouxNQ\":[\"Swimlanes: Assignee\"],\"VNa_N2\":[\"This file type can not be previewed yet.\"],\"VXh9CK\":[\"No due date\"],\"VbyRUy\":[\"Comments\"],\"Ve-C10\":[\"Swimlanes: Priority\"],\"WEYdDv\":[\"Recommended\"],\"WSP6v1\":[\"Sort: Priority\"],\"WSbuWy\":[\"Missing swimlane\"],\"WWUwTb\":[\"Make assignee rows editable?\"],\"X03-eC\":[\"Please enter a value.\"],\"XJOV1Y\":[\"Activity\"],\"XicmhT\":[\"Due date\"],\"XklovM\":[\"Working…\"],\"Y8bR2a\":[\"Delete only the swimlane. Card references remain recoverable.\"],\"YDa2KG\":[\"My cards\"],\"YFdnVT\":[\"Card state\"],\"YHjvGb\":[\"Status actions\"],\"YNYued\":[\"Status ID\"],\"Ya7bZl\":[\"Diagram error\"],\"Zot9XS\":[\"No cards\"],\"_5CsXX\":[\"Done column\"],\"_EsjyQ\":[\"Use this\"],\"_TJomP\":[\"Move cards before deleting\"],\"_YbTQZ\":[\"JType will create independent swimlanes from the current priority rows. Card priority values will stay unchanged.\"],\"_kh61D\":[\"Show cards with missing rows\"],\"_laW0t\":[\"Previous row missing\"],\"a6uhHr\":[\"Bold (Ctrl+B)\"],\"aDvLhk\":[\"Add a comment…\"],\"abUZlY\":[\"Add details...\"],\"agOeRN\":[\"Could not render this API specification.\"],\"arhExE\":[\"Swimlane ID\"],\"b4hVKD\":[\"Color columns\"],\"bUNpV2\":[\"Duplicate swimlane ID \\\"\",[\"0\"],\"\\\". The first definition is used.\"],\"bwOqWD\":[[\"0\"],\" of \",[\"1\"],\" sub-cards done\"],\"by_svU\":[\"Keep cards in Unassigned\"],\"bzjBcL\":[\"Sub-cards\"],\"c-EXz1\":[\"Delete only the row. Card references remain recoverable.\"],\"c61_Lv\":[\"Lane ID\"],\"cJ44lA\":[\"Unscheduled\"],\"cSev-j\":[\"Filters\"],\"cUt8yN\":[\"Changes save automatically.\"],\"ceQmqN\":[\"Custom rows\"],\"cfaWH-\":[\"Add labels\"],\"cnGeoo\":[\"Delete\"],\"d-F6q9\":[\"Created\"],\"d5z6xQ\":[\"WIP limit \",[\"0\"]],\"dEgA5A\":[\"Cancel\"],\"dQva-y\":[\"Duplicate row ID \\\"\",[\"0\"],\"\\\". The first definition is used.\"],\"ddrz1m\":[\"Overdue\"],\"eAi4RE\":[\"JType will create independent custom rows from the current priority groups. Card priority values will stay unchanged.\"],\"ecUA8p\":[\"Today\"],\"euc6Ns\":[\"Duplicate\"],\"fEqHZq\":[\"Open sub-card\"],\"fFAIng\":[[\"0\",\"plural\",{\"one\":[\"#\",\" card\"],\"other\":[\"#\",\" cards\"]}]],\"fOluHh\":[\"JType will create independent custom rows from the current assignee groups. Card assignee values will stay unchanged.\"],\"fVlS4-\":[\"Swimlane\"],\"fYcKtB\":[\"Sort: Due\"],\"fdEjOR\":[\"Copy row ID\"],\"fvImQM\":[[\"0\"],\" selected\"],\"fwTn8F\":[\"Row color\"],\"g8JmSC\":[\"Next month\"],\"gANddk\":[\"Uploading…\"],\"gLDJuJ\":[\"Untitled card\"],\"guQk4e\":[\"Columns: Status\"],\"gzZWjO\":[\"No assigned values to convert.\"],\"h8DugX\":[\"Labels\"],\"hL5-_P\":[\"Rows\"],\"hNQgyI\":[\"Columns: Priority\"],\"hNmOZ7\":[\"Set priority\"],\"he3ygx\":[\"Copy\"],\"hh4sEG\":[\"Relates\"],\"hnK1gR\":[\"PDF document\"],\"hyVzII\":[\"Swimlanes\"],\"i4_LY_\":[\"Write\"],\"iSLA_r\":[\"Move left\"],\"iTylMl\":[\"Templates\"],\"iYVqZq\":[\"Column name\"],\"jUbC3Z\":[\"Swimlane: Priority\"],\"jZlrte\":[\"Color\"],\"jzy1b8\":[\"Make swimlanes editable\"],\"k4b5_X\":[\"edited\"],\"kBRFD0\":[\"Create editable rows\"],\"kMqzL_\":[\"Row name\"],\"kZlRKE\":[\"Mermaid source\"],\"kryGs-\":[\"Card\"],\"lCF0wC\":[\"Refresh\"],\"lEQWoB\":[\"Add stable horizontal groups that stay visible even when they have no cards.\"],\"lHxVTh\":[\"Swimlane: Assignee\"],\"lUeOk0\":[\"Horizontal groups for this board. Names can change; card mapping stays attached.\"],\"l_g7se\":[\"Resume conversion\"],\"lqoy3F\":[\"Missing row\"],\"lt2UOc\":[\"Rows: None\"],\"ltF1xa\":[\"Save merged result\"],\"m16xKo\":[\"Add\"],\"mPINe9\":[\"Duplicate row name \\\"\",[\"0\"],\"\\\". Names should be unique.\"],\"nNGN_D\":[\"Custom swimlanes\"],\"nabda1\":[\"Delete card\"],\"nfhh60\":[\"Make priority swimlanes editable?\"],\"njJFtc\":[\"Delete comment\"],\"o7J4JM\":[\"Filter\"],\"o8va6N\":[\"Restored\"],\"obId50\":[\"Filters, \",[\"activeCount\"],\" active\"],\"ojKCLU\":[\"Assignee\"],\"p4rTvq\":[\"Rows: Priority\"],\"p9yTeb\":[\"Sort: Title\"],\"pKKcSl\":[\"Show resolved thread\"],\"pKztsX\":[\"Open in full editor\"],\"pdVZUg\":[\"WIP \",[\"0\"]],\"pip_Rq\":[\"Manage custom swimlanes\"],\"pnrmSP\":[\"New card\"],\"pwN6Ae\":[\"Collapse column\"],\"pzutoc\":[\"Italic\"],\"qZd_ph\":[\"Add row\"],\"qpGDiV\":[\"Copy lane ID\"],\"rF8SEQ\":[\"Edit comment\"],\"rK_KGj\":[\"Optional horizontal groups for this board. Names can change; cards stay mapped by row ID.\"],\"rRubBJ\":[\"Lane details\"],\"rT-mCe\":[\"Remove filter: \",[\"0\"]],\"rdUucN\":[\"Preview\"],\"rn2_2V\":[\"Remove filter\"],\"rvpMpc\":[\"Manage statuses\"],\"s8QaQC\":[\"Vertical columns for this board. Names can change; cards stay mapped by swimlane ID.\"],\"sCzmvQ\":[\"cards\"],\"sQpDn6\":[\"Exit fullscreen\"],\"sujToP\":[\"Parent\"],\"tF-_sn\":[[\"cardCount\",\"plural\",{\"one\":[\"#\",\" card\"],\"other\":[\"#\",\" cards\"]}]],\"tK2x9T\":[\"⚠ \",[\"0\"],\" Conflict\",[\"1\"],\" to Resolve\"],\"tYS8HY\":[\"Status columns stay available when they are used as columns or swimlanes.\"],\"t_YqKh\":[\"Remove\"],\"tfDRzk\":[\"Save\"],\"u2IprG\":[\"Card title (Enter to add, Esc to cancel)\"],\"u36sC2\":[\"Make rows editable\"],\"uAP6ov\":[\"Delete swimlane\"],\"uAQUqI\":[\"Status\"],\"uH1U8v\":[\"Manage swimlanes\"],\"uWPalN\":[\"Duplicate swimlane name \\\"\",[\"0\"],\"\\\". Names should be unique.\"],\"uaR_cz\":[[\"total\",\"plural\",{\"one\":[\"#\",\" card\"],\"other\":[\"#\",\" cards\"]}]],\"ucJg3u\":[\"Swimlane: Status\"],\"vIKvqQ\":[[\"missingCount\"],\" card(s) refer to deleted swimlanes.\"],\"vJvZPY\":[\"Assignee: \",[\"0\"]],\"vMTOsC\":[\"Make assignee swimlanes editable?\"],\"vfYjJ_\":[\"Copy failed.\"],\"w7E-FA\":[\"Unsafe link blocked: \",[\"url\"]],\"wGM_xy\":[\"Rows: Custom\"],\"w_Sphq\":[\"Attachments\"],\"wf6Djn\":[\"Italic (Ctrl+I)\"],\"wp-2ZK\":[\"Rows: Status\"],\"wtw-au\":[\"Set as done column\"],\"wwu18a\":[\"Icon\"],\"x52RAh\":[\"Blocked by \",[\"blockedCount\"],\" unfinished card(s)\"],\"xDsmP9\":[\"Agenda\"],\"xUOPoQ\":[\"Used by\"],\"xX5QVp\":[\"Choose another row, then update the cards first.\"],\"y1eoq1\":[\"Copy link\"],\"y9cj46\":[\"Group: Priority\"],\"yEbJGs\":[\"+ Add field\"],\"yYxB17\":[\"Clear all\"],\"ybGQtY\":[\"← Back to list\"],\"yjeGpt\":[\"Columns: Assignee\"],\"yz7wBu\":[\"Close\"],\"yzF66j\":[\"Link\"],\"zOc0vf\":[\"No icon\"],\"zga9sT\":[\"OK\"]}"),
+	zh: JSON.parse("{\"--lIxB\":[\"被阻塞于\"],\"-3Qbcm\":[\"优先级：\",[\"0\"]],\"-9kYEs\":[\"横向分组缺失的卡片\"],\"-X4ual\":[\"无优先级\"],\"-b7T3G\":[\"更新\"],\"-eTfgY\":[\"泳道详情\"],\"-hwvgo\":[\"横向分组操作\"],\"02N8r0\":[\"筛选卡片\"],\"0cspe_\":[\"删除横向分组\"],\"0gvHNl\":[\"状态定义卡片工作流。可自由重命名或排序；卡片始终通过状态 ID 保持映射。\"],\"1718Q-\":[\"问题\"],\"1DBGsz\":[\"备注\"],\"1YABGm\":[\"链接 (Ctrl+K)\"],\"1hKEom\":[\"优先级\"],\"1iShX0\":[\"今天到期\"],\"1lWHP7\":[\"不安全\"],\"1nUGn5\":[\"添加状态\"],\"1xwZj_\":[\"上个月\"],\"23yqV0\":[\"显示受影响的卡片\"],\"2BPVq8\":[\"重新排序 \",[\"0\"]],\"2aEwT_\":[\"管理自定义横向分组\"],\"2wxgft\":[\"重命名\"],\"32TndD\":[\"被阻塞\"],\"3CIp19\":[\"未来 7 天\"],\"3CtQL6\":[\"选择另一个泳道，然后先更新卡片。\"],\"3Ib6FN\":[\"下移\"],\"3qkggm\":[\"全屏\"],\"4NY8B5\":[\"将创建的泳道\"],\"4gdyen\":[\"本地（我的）\"],\"4hJhzz\":[\"表格\"],\"4t8aKB\":[\"将创建的横向分组\"],\"4vd-Kd\":[\"JType 将根据当前优先级列创建独立的自定义泳道。卡片的优先级值保持不变。\"],\"54sFiP\":[\"flowchart TD\\n  A[开始] --> B[结束]\"],\"5Cawxq\":[\"泳道：自定义\"],\"5Oy0YM\":[\"标签：\",[\"0\"]],\"5Q_DQ6\":[\"行内代码\"],\"66g_UW\":[\"折叠已解决话题\"],\"6G3KzD\":[\"横向分组详情\"],\"6V3Ea3\":[\"已复制\"],\"6YtxFj\":[\"名称\"],\"6buwPb\":[\"看板设置\"],\"79Yvzu\":[\"泳道名称\"],\"7MGAQC\":[\"JType 会复用现有横向分组 ID，并继续完成尚未结束的卡片更新。\"],\"7VpPHA\":[\"确认\"],\"7dZyQU\":[\"原泳道已不存在\"],\"7pBic4\":[\"显示 \",[\"visibleCount\"],\"/\",[\"totalCount\"],\" 张卡片\"],\"7s3WlU\":[\"阻塞\"],\"8PifYj\":[\"Mermaid 图表\"],\"8Tg_JR\":[\"自定义\"],\"8enUYo\":[\"设置状态\"],\"8hSn0h\":[\"结果（可编辑）\"],\"8lE269\":[\"排序:手动\"],\"9L7ptC\":[\"此空横向分组将从看板中移除。\"],\"9OEgyT\":[\"添加回应\"],\"9OH3W0\":[\"解决话题\"],\"9YTdO7\":[\"被阻塞的卡片\"],\"9gx7rl\":[\"有 \",[\"missingCount\"],\" 张卡片引用了已删除的横向分组。\"],\"9gxam6\":[\"无法渲染此 Draw.io 图表。\"],\"AC9Gkf\":[\"展开列\"],\"ANe5kn\":[\"正在更新卡片…\"],\"AS5WO9\":[\"无法渲染此 PDF。\"],\"ATIq3Z\":[\"泳道：自定义\"],\"AVreQ5\":[\"拖动调整宽度\"],\"AgvHni\":[\"添加列\"],\"AjVXBS\":[\"日历\"],\"AoHpbt\":[\"显示泳道缺失的卡片\"],\"AxAubu\":[\"分组:负责人\"],\"B5TUF-\":[\"优先级…\"],\"BfMZ7w\":[\"接受云端\"],\"BiWlsk\":[\"状态…\"],\"BnmEvM\":[\"存为模板\"],\"C6-ZRl\":[\"某人\"],\"CQ_dDx\":[\"泳道：状态\"],\"CXTDT_\":[\"继续泳道转换？\"],\"CxcMyt\":[\"已将 \",[\"0\"],\" 移到第 \",[\"1\"],\" 位，共 \",[\"2\"],\" 项。\"],\"DGEEOQ\":[\"泳道操作\"],\"DPfwMq\":[\"完成\"],\"Db4W3_\":[\"状态\"],\"EWPtMO\":[\"代码\"],\"EbMPZJ\":[\"未分配\"],\"F6osRA\":[\"有 \",[\"danglingCount\"],\" 张卡片引用了已删除的横向分组。\"],\"FBIuPX\":[\"清除选择\"],\"FQylcT\":[\"泳道：缺失\"],\"G4qrLy\":[\"取消完成列\"],\"GKu3m4\":[\"暂无标签\"],\"GL6e_U\":[\"当前有 \",[\"cardCount\"],\" 张卡片使用此横向分组。\"],\"GNoXOd\":[\"复制泳道 ID\"],\"Gpfctt\":[\"截止日期\"],\"HTKRVa\":[\"请勿关闭此对话框。\"],\"H_SQFv\":[\"无颜色\"],\"HajiZl\":[\"月\"],\"HrmW6B\":[\"添加评论…（支持 Markdown）\"],\"I6SWEy\":[\"分栏\"],\"ICip_B\":[\"云端（远程）\"],\"IdMoS6\":[\"创建第一条泳道\"],\"Ik60OC\":[\"在编辑器中打开\"],\"ImOQa9\":[\"回复\"],\"IqKCNQ\":[\"横向分组\"],\"Iw6WJa\":[\"设置 WIP 限制\"],\"JPB7_s\":[\"泳道映射缺失的卡片\"],\"JTYvAw\":[\"搜索卡片\"],\"KAlhe_\":[\"卡片更新未能持久化，转换已停止。请刷新后重试。\"],\"KCszT6\":[\"添加泳道\"],\"KFiYGY\":[\"更改颜色\"],\"KGi3u9\":[\"拖动以重新排序\"],\"K_F6pa\":[\"保存中…\"],\"K_cST0\":[\"继续转换横向分组？\"],\"Kd6eg7\":[\"正在移动卡片…\"],\"KeYrQ5\":[\"撤回你的回应\"],\"KjXDqG\":[\"泳道：无\"],\"KmydK6\":[\"粗体\"],\"KpnwJK\":[\"删除“\",[\"0\"],\"”？\"],\"KvW1VO\":[\"Draw.io 图表\"],\"LQn6-8\":[\"接受本地\"],\"Ld9MtR\":[\"横向分组：负责人\"],\"MHrjPM\":[\"标题\"],\"MRsDXp\":[\"JType 将复用现有泳道 ID，并继续尚未完成的卡片更新。\"],\"MYx830\":[\"此空泳道将从看板中移除。\"],\"Mm72la\":[\"暂无评论\"],\"MmYpxT\":[\"回复…\"],\"NBdIgR\":[\"评论\"],\"NYTPDY\":[\"移动卡片并删除\"],\"NnxWLJ\":[\"创建第一个自定义横向分组\"],\"O6H89R\":[\"已解决\"],\"ONWvwQ\":[\"上传\"],\"OR4WQZ\":[\"+ 添加子卡片\"],\"OYHzN1\":[\"标签\"],\"OepdfE\":[\"分组:状态\"],\"P5cvAA\":[\"状态名称\"],\"PM7yYy\":[\"横向分组 ID\"],\"PUeYA1\":[\"创建可编辑泳道\"],\"Pvpx7b\":[\"粘贴 URL 或路径\"],\"Q-Pe7U\":[[\"0\"],\" 的泳道详情\"],\"Q2mGA7\":[\"清除筛选\"],\"QD8opX\":[\"看板\"],\"QRhoJb\":[\"JType 将根据当前负责人列创建独立的自定义泳道。卡片的负责人值保持不变。\"],\"QlsPZy\":[\"输入 Mermaid 语法以查看图表。\"],\"QmZYQP\":[\"取消解决\"],\"QyioBP\":[\"上移\"],\"RbsNko\":[\"当前有 \",[\"cardCount\"],\" 张卡片使用此泳道。\"],\"RfEZH1\":[\"JType 将根据当前负责人行创建独立泳道。卡片的负责人值不会改变。\"],\"RgO4DX\":[\"泳道 ID“\",[\"0\"],\"”重复。将使用第一条定义。\"],\"RlLl3G\":[[\"0\"],\" 的操作\"],\"RnplaY\":[[\"0\"],\" 的横向分组详情\"],\"S5Qbb1\":[\"用逗号分隔\"],\"SavliD\":[\"有 \",[\"danglingCount\"],\" 张卡片引用了已删除的泳道。\"],\"T_nAzC\":[\"JType 将复用现有泳道 ID，并继续未完成的卡片更新。\"],\"TdfEV7\":[\"归档\"],\"Th4mIx\":[[\"0\"],\" 的泳道详情\"],\"U0hizX\":[\"泳道颜色\"],\"U95P80\":[\"将优先级横向分组转为可编辑？\"],\"UDb2YD\":[\"回应\"],\"UQOvxZ\":[\"空白卡片\"],\"URmyfc\":[\"详情\"],\"Ubl2by\":[\"右移\"],\"UouxNQ\":[\"泳道：负责人\"],\"VNa_N2\":[\"暂不支持预览此文件类型。\"],\"VXh9CK\":[\"无截止日期\"],\"VbyRUy\":[\"评论\"],\"Ve-C10\":[\"泳道：优先级\"],\"WEYdDv\":[\"推荐\"],\"WSP6v1\":[\"排序:优先级\"],\"WSbuWy\":[\"泳道缺失\"],\"WWUwTb\":[\"将负责人横向分组转为可编辑？\"],\"X03-eC\":[\"请输入内容。\"],\"XJOV1Y\":[\"活动\"],\"XicmhT\":[\"截止日期\"],\"XklovM\":[\"正在处理…\"],\"Y8bR2a\":[\"仅删除泳道。卡片引用仍可恢复。\"],\"YDa2KG\":[\"我的卡片\"],\"YFdnVT\":[\"卡片状态\"],\"YHjvGb\":[\"状态操作\"],\"YNYued\":[\"状态 ID\"],\"Ya7bZl\":[\"图表错误\"],\"Zot9XS\":[\"暂无卡片\"],\"_5CsXX\":[\"完成列\"],\"_EsjyQ\":[\"使用此版本\"],\"_TJomP\":[\"删除前移动卡片\"],\"_YbTQZ\":[\"JType 将根据当前优先级行创建独立泳道。卡片的优先级值不会改变。\"],\"_kh61D\":[\"显示横向分组缺失的卡片\"],\"_laW0t\":[\"原横向分组已缺失\"],\"a6uhHr\":[\"粗体 (Ctrl+B)\"],\"aDvLhk\":[\"添加评论…\"],\"abUZlY\":[\"添加详情...\"],\"agOeRN\":[\"无法渲染此 API 规范。\"],\"arhExE\":[\"泳道 ID\"],\"b4hVKD\":[\"彩色列\"],\"bUNpV2\":[\"泳道 ID“\",[\"0\"],\"”重复。将使用第一个定义。\"],\"bwOqWD\":[[\"1\"],\" 张子卡中已完成 \",[\"0\"],\" 张\"],\"by_svU\":[\"将卡片保留在未分配\"],\"bzjBcL\":[\"子卡片\"],\"c-EXz1\":[\"仅删除横向分组。卡片引用仍可恢复。\"],\"c61_Lv\":[\"泳道 ID\"],\"cJ44lA\":[\"未排期\"],\"cSev-j\":[\"筛选\"],\"cUt8yN\":[\"更改会自动保存。\"],\"ceQmqN\":[\"自定义横向分组\"],\"cfaWH-\":[\"添加标签\"],\"cnGeoo\":[\"删除\"],\"d-F6q9\":[\"创建\"],\"d5z6xQ\":[\"WIP 限制 \",[\"0\"]],\"dEgA5A\":[\"取消\"],\"dQva-y\":[\"横向分组 ID“\",[\"0\"],\"”重复。将使用第一条定义。\"],\"ddrz1m\":[\"已逾期\"],\"eAi4RE\":[\"JType 会根据当前优先级分组创建独立的自定义横向分组。卡片的优先级不会改变。\"],\"ecUA8p\":[\"今天\"],\"euc6Ns\":[\"复制卡片\"],\"fEqHZq\":[\"打开子卡片\"],\"fFAIng\":[[\"0\",\"plural\",{\"one\":[\"#\",\" 张卡片\"],\"other\":[\"#\",\" 张卡片\"]}]],\"fOluHh\":[\"JType 会根据当前负责人分组创建独立的自定义横向分组。卡片的负责人不会改变。\"],\"fVlS4-\":[\"泳道\"],\"fYcKtB\":[\"排序:截止\"],\"fdEjOR\":[\"复制横向分组 ID\"],\"fvImQM\":[\"已选择 \",[\"0\"],\" 项\"],\"fwTn8F\":[\"横向分组颜色\"],\"g8JmSC\":[\"下个月\"],\"gANddk\":[\"上传中…\"],\"gLDJuJ\":[\"未命名卡片\"],\"guQk4e\":[\"列：状态\"],\"gzZWjO\":[\"没有可转换的已分配值。\"],\"h8DugX\":[\"标签\"],\"hL5-_P\":[\"横向分组\"],\"hNQgyI\":[\"列：优先级\"],\"hNmOZ7\":[\"设置优先级\"],\"he3ygx\":[\"复制\"],\"hh4sEG\":[\"相关\"],\"hnK1gR\":[\"PDF 文档\"],\"hyVzII\":[\"泳道\"],\"i4_LY_\":[\"写作\"],\"iSLA_r\":[\"左移\"],\"iTylMl\":[\"模板\"],\"iYVqZq\":[\"列名称\"],\"jUbC3Z\":[\"泳道：优先级\"],\"jZlrte\":[\"颜色\"],\"jzy1b8\":[\"将泳道转为可编辑\"],\"k4b5_X\":[\"已编辑\"],\"kBRFD0\":[\"创建可编辑横向分组\"],\"kMqzL_\":[\"横向分组名称\"],\"kZlRKE\":[\"Mermaid 源码\"],\"kryGs-\":[\"卡片\"],\"lCF0wC\":[\"刷新\"],\"lEQWoB\":[\"添加稳定的横向分组，即使没有卡片也会保持显示。\"],\"lHxVTh\":[\"泳道：负责人\"],\"lUeOk0\":[\"此看板的横向分组。名称可以更改，卡片映射会保持关联。\"],\"l_g7se\":[\"继续转换\"],\"lqoy3F\":[\"横向分组缺失\"],\"lt2UOc\":[\"横向分组：无\"],\"ltF1xa\":[\"保存合并结果\"],\"m16xKo\":[\"添加\"],\"mPINe9\":[\"横向分组名称“\",[\"0\"],\"”重复。名称应保持唯一。\"],\"nNGN_D\":[\"自定义泳道\"],\"nabda1\":[\"删除卡片\"],\"nfhh60\":[\"将优先级泳道转为可编辑？\"],\"njJFtc\":[\"删除评论\"],\"o7J4JM\":[\"筛选\"],\"o8va6N\":[\"恢复\"],\"obId50\":[\"筛选，已启用 \",[\"activeCount\"],\" 项\"],\"ojKCLU\":[\"负责人\"],\"p4rTvq\":[\"横向分组：优先级\"],\"p9yTeb\":[\"排序:标题\"],\"pKKcSl\":[\"显示已解决话题\"],\"pKztsX\":[\"在完整编辑器中打开\"],\"pdVZUg\":[\"在制品 \",[\"0\"]],\"pip_Rq\":[\"管理自定义泳道\"],\"pnrmSP\":[\"新建卡片\"],\"pwN6Ae\":[\"折叠列\"],\"pzutoc\":[\"斜体\"],\"qZd_ph\":[\"添加横向分组\"],\"qpGDiV\":[\"复制泳道 ID\"],\"rF8SEQ\":[\"编辑评论\"],\"rK_KGj\":[\"看板的可选横向分组。名称可以修改，卡片仍通过横向分组 ID 保持映射。\"],\"rRubBJ\":[\"泳道详情\"],\"rT-mCe\":[\"移除筛选：\",[\"0\"]],\"rdUucN\":[\"预览\"],\"rn2_2V\":[\"移除筛选\"],\"rvpMpc\":[\"管理状态\"],\"s8QaQC\":[\"此看板的纵向列。名称可以修改；卡片始终通过泳道 ID 保持映射。\"],\"sCzmvQ\":[\"张卡片\"],\"sQpDn6\":[\"退出全屏\"],\"sujToP\":[\"父卡片\"],\"tF-_sn\":[[\"cardCount\",\"plural\",{\"one\":[\"#\",\" 张卡片\"],\"other\":[\"#\",\" 张卡片\"]}]],\"tK2x9T\":[\"⚠ \",[\"0\"],\" 个冲突\",[\"1\"],\"待解决\"],\"tYS8HY\":[\"无论作为列还是泳道使用，状态列都可以继续管理。\"],\"t_YqKh\":[\"移除\"],\"tfDRzk\":[\"保存\"],\"u2IprG\":[\"卡片标题(回车添加,Esc 取消)\"],\"u36sC2\":[\"转为可编辑横向分组\"],\"uAP6ov\":[\"删除泳道\"],\"uAQUqI\":[\"状态\"],\"uH1U8v\":[\"管理泳道\"],\"uWPalN\":[\"泳道名称“\",[\"0\"],\"”重复。名称应保持唯一。\"],\"uaR_cz\":[[\"total\",\"plural\",{\"one\":[\"#\",\" 张卡片\"],\"other\":[\"#\",\" 张卡片\"]}]],\"ucJg3u\":[\"泳道：状态\"],\"vIKvqQ\":[\"有 \",[\"missingCount\"],\" 张卡片引用了已删除的泳道。\"],\"vJvZPY\":[\"负责人：\",[\"0\"]],\"vMTOsC\":[\"将负责人泳道转为可编辑？\"],\"vfYjJ_\":[\"复制失败。\"],\"w7E-FA\":[\"已拦截不安全链接：\",[\"url\"]],\"wGM_xy\":[\"横向分组：自定义\"],\"w_Sphq\":[\"附件\"],\"wf6Djn\":[\"斜体 (Ctrl+I)\"],\"wp-2ZK\":[\"横向分组：状态\"],\"wtw-au\":[\"设为完成列\"],\"wwu18a\":[\"图标\"],\"x52RAh\":[\"被 \",[\"blockedCount\"],\" 张未完成卡片阻塞\"],\"xDsmP9\":[\"日程\"],\"xUOPoQ\":[\"使用情况\"],\"xX5QVp\":[\"选择另一个横向分组，然后先更新卡片。\"],\"y1eoq1\":[\"复制链接\"],\"y9cj46\":[\"分组:优先级\"],\"yEbJGs\":[\"+ 添加字段\"],\"yYxB17\":[\"清除全部\"],\"ybGQtY\":[\"← 返回列表\"],\"yjeGpt\":[\"列：负责人\"],\"yz7wBu\":[\"关闭\"],\"yzF66j\":[\"链接\"],\"zOc0vf\":[\"无图标\"],\"zga9sT\":[\"确定\"]}"),
+	ja: JSON.parse("{\"--lIxB\":[\"Blocked by\"],\"-3Qbcm\":[\"Priority: \",[\"0\"]],\"-9kYEs\":[\"Cards with a missing row\"],\"-X4ual\":[\"No priority\"],\"-b7T3G\":[\"Updated\"],\"-eTfgY\":[\"Swimlane details\"],\"-hwvgo\":[\"Row actions\"],\"02N8r0\":[\"Filter cards\"],\"0cspe_\":[\"Delete row\"],\"0gvHNl\":[\"Statuses define the card workflow. Rename or reorder them freely; cards stay mapped by status ID.\"],\"1718Q-\":[\"問題\"],\"1DBGsz\":[\"ノート\"],\"1YABGm\":[\"リンク (Ctrl+K)\"],\"1hKEom\":[\"優先度\"],\"1iShX0\":[\"Due today\"],\"1lWHP7\":[\"unsafe\"],\"1nUGn5\":[\"ステータスを追加\"],\"1xwZj_\":[\"Previous month\"],\"23yqV0\":[\"影響を受けるカードを表示\"],\"2BPVq8\":[[\"0\"],\"を並べ替え\"],\"2aEwT_\":[\"Manage custom rows\"],\"2wxgft\":[\"名前を変更\"],\"32TndD\":[\"Blocked\"],\"3CIp19\":[\"Next 7 days\"],\"3CtQL6\":[\"別のスイムレーンを選び、先にカードを更新します。\"],\"3Ib6FN\":[\"下へ移動\"],\"3qkggm\":[\"全画面表示\"],\"4NY8B5\":[\"作成するスイムレーン\"],\"4gdyen\":[\"ローカル（自分の）\"],\"4hJhzz\":[\"表\"],\"4t8aKB\":[\"Rows to create\"],\"4vd-Kd\":[\"JType will create independent custom swimlanes from the current priority columns. Card priority values will stay unchanged.\"],\"54sFiP\":[\"flowchart TD\\n  A[開始] --> B[終了]\"],\"5Cawxq\":[\"Swimlanes: Custom\"],\"5Oy0YM\":[\"Labels: \",[\"0\"]],\"5Q_DQ6\":[\"インラインコード\"],\"66g_UW\":[\"Collapse resolved thread\"],\"6G3KzD\":[\"Row details\"],\"6V3Ea3\":[\"コピーしました\"],\"6YtxFj\":[\"名前\"],\"6buwPb\":[\"Board settings\"],\"79Yvzu\":[\"スイムレーン名\"],\"7MGAQC\":[\"JType will reuse the existing row IDs and continue unfinished card updates.\"],\"7VpPHA\":[\"確認\"],\"7dZyQU\":[\"以前のスイムレーンが見つかりません\"],\"7pBic4\":[[\"visibleCount\"],\" of \",[\"totalCount\"],\" cards shown\"],\"7s3WlU\":[\"Blocks\"],\"8PifYj\":[\"Mermaid 図\"],\"8Tg_JR\":[\"カスタム\"],\"8enUYo\":[\"Set status\"],\"8hSn0h\":[\"結果（編集可能）\"],\"8lE269\":[\"並べ替え：手動\"],\"9L7ptC\":[\"This empty row will be removed from the board.\"],\"9OEgyT\":[\"Add reaction\"],\"9OH3W0\":[\"Resolve thread\"],\"9YTdO7\":[\"Blocked cards\"],\"9gx7rl\":[[\"missingCount\"],\" card(s) refer to deleted rows.\"],\"9gxam6\":[\"この Draw.io 図をレンダリングできませんでした。\"],\"AC9Gkf\":[\"列を展開\"],\"ANe5kn\":[\"カードを更新中…\"],\"AS5WO9\":[\"この PDF をレンダリングできませんでした。\"],\"ATIq3Z\":[\"スイムレーン：カスタム\"],\"AVreQ5\":[\"ドラッグしてサイズ変更\"],\"AgvHni\":[\"列を追加\"],\"AjVXBS\":[\"Calendar\"],\"AoHpbt\":[\"スイムレーンが見つからないカードを表示\"],\"AxAubu\":[\"グループ：担当者\"],\"B5TUF-\":[\"Priority…\"],\"BfMZ7w\":[\"クラウドを採用\"],\"BiWlsk\":[\"Status…\"],\"BnmEvM\":[\"テンプレートとして保存\"],\"C6-ZRl\":[\"Someone\"],\"CQ_dDx\":[\"Swimlanes: Status\"],\"CXTDT_\":[\"スイムレーンの変換を再開しますか？\"],\"CxcMyt\":[[\"0\"],\"を\",[\"2\"],\"件中\",[\"1\"],\"番目に移動しました。\"],\"DGEEOQ\":[\"スイムレーンの操作\"],\"DPfwMq\":[\"完了\"],\"Db4W3_\":[\"ステータス\"],\"EWPtMO\":[\"コード\"],\"EbMPZJ\":[\"未割り当て\"],\"F6osRA\":[[\"danglingCount\"],\" card(s) refer to deleted rows.\"],\"FBIuPX\":[\"Clear selection\"],\"FQylcT\":[\"スイムレーン：不明\"],\"G4qrLy\":[\"完了列を解除\"],\"GKu3m4\":[\"ラベルなし\"],\"GL6e_U\":[[\"cardCount\"],\" card(s) currently use this row.\"],\"GNoXOd\":[\"Copy swimlane ID\"],\"Gpfctt\":[\"期限\"],\"HTKRVa\":[\"このダイアログを閉じないでください。\"],\"H_SQFv\":[\"色なし\"],\"HajiZl\":[\"Month\"],\"HrmW6B\":[\"Add a comment… (Markdown supported)\"],\"I6SWEy\":[\"分割\"],\"ICip_B\":[\"クラウド（リモート）\"],\"IdMoS6\":[\"最初のスイムレーンを作成\"],\"Ik60OC\":[\"エディターで開く\"],\"ImOQa9\":[\"Reply\"],\"IqKCNQ\":[\"Row\"],\"Iw6WJa\":[\"WIP 制限を設定\"],\"JPB7_s\":[\"Cards with a missing swimlane\"],\"JTYvAw\":[\"カードを検索\"],\"KAlhe_\":[\"カードの更新が保存されなかったため、変換を停止しました。更新して再試行してください。\"],\"KCszT6\":[\"スイムレーンを追加\"],\"KFiYGY\":[\"色を変更\"],\"KGi3u9\":[\"ドラッグして並べ替え\"],\"K_F6pa\":[\"保存中…\"],\"K_cST0\":[\"Resume row conversion?\"],\"Kd6eg7\":[\"カードを移動中…\"],\"KeYrQ5\":[\"Remove your reaction\"],\"KjXDqG\":[\"Swimlane: None\"],\"KmydK6\":[\"太字\"],\"KpnwJK\":[\"「\",[\"0\"],\"」を削除しますか？\"],\"KvW1VO\":[\"Draw.io 図\"],\"LQn6-8\":[\"ローカルを採用\"],\"Ld9MtR\":[\"Rows: Assignee\"],\"MHrjPM\":[\"タイトル\"],\"MRsDXp\":[\"JType will reuse the existing swimlane IDs and continue unfinished card updates.\"],\"MYx830\":[\"この空のスイムレーンをボードから削除します。\"],\"Mm72la\":[\"No comments yet\"],\"MmYpxT\":[\"Reply…\"],\"NBdIgR\":[\"Comment\"],\"NYTPDY\":[\"カードを移動して削除\"],\"NnxWLJ\":[\"Create your first custom row\"],\"O6H89R\":[\"Resolved\"],\"ONWvwQ\":[\"Upload\"],\"OR4WQZ\":[\"+ Add sub-card\"],\"OYHzN1\":[\"タグ\"],\"OepdfE\":[\"グループ：ステータス\"],\"P5cvAA\":[\"ステータス名\"],\"PM7yYy\":[\"Row ID\"],\"PUeYA1\":[\"編集可能なスイムレーンを作成\"],\"Pvpx7b\":[\"Paste a URL or path\"],\"Q-Pe7U\":[\"Swimlane details for \",[\"0\"]],\"Q2mGA7\":[\"フィルターをクリア\"],\"QD8opX\":[\"ボード\"],\"QRhoJb\":[\"JType will create independent custom swimlanes from the current assignee columns. Card assignee values will stay unchanged.\"],\"QlsPZy\":[\"Mermaid 構文を書くと図が表示されます。\"],\"QmZYQP\":[\"Unresolve thread\"],\"QyioBP\":[\"上へ移動\"],\"RbsNko\":[\"現在\",[\"cardCount\"],\"枚のカードがこのスイムレーンを使用しています。\"],\"RfEZH1\":[\"JType は現在の担当者行から独立したスイムレーンを作成します。カードの担当者は変更されません。\"],\"RgO4DX\":[\"スイムレーン ID「\",[\"0\"],\"」が重複しています。最初の定義を使用します。\"],\"RlLl3G\":[[\"0\"],\"の操作\"],\"RnplaY\":[\"Row details for \",[\"0\"]],\"S5Qbb1\":[\"カンマ区切り\"],\"SavliD\":[[\"danglingCount\"],\"枚のカードが削除済みのスイムレーンを参照しています。\"],\"T_nAzC\":[\"JType は既存のスイムレーン ID を再利用し、未完了のカード更新を続行します。\"],\"TdfEV7\":[\"Archived\"],\"Th4mIx\":[[\"0\"],\" のレーン詳細\"],\"U0hizX\":[\"スイムレーンの色\"],\"U95P80\":[\"Make priority rows editable?\"],\"UDb2YD\":[\"React\"],\"UQOvxZ\":[\"空のカード\"],\"URmyfc\":[\"詳細\"],\"Ubl2by\":[\"右へ移動\"],\"UouxNQ\":[\"Swimlanes: Assignee\"],\"VNa_N2\":[\"このファイル形式はまだプレビューできません。\"],\"VXh9CK\":[\"No due date\"],\"VbyRUy\":[\"Comments\"],\"Ve-C10\":[\"Swimlanes: Priority\"],\"WEYdDv\":[\"推奨\"],\"WSP6v1\":[\"並べ替え：優先度\"],\"WSbuWy\":[\"Missing swimlane\"],\"WWUwTb\":[\"Make assignee rows editable?\"],\"X03-eC\":[\"値を入力してください。\"],\"XJOV1Y\":[\"Activity\"],\"XicmhT\":[\"Due date\"],\"XklovM\":[\"処理中…\"],\"Y8bR2a\":[\"スイムレーンだけを削除します。カードの参照は復元できます。\"],\"YDa2KG\":[\"My cards\"],\"YFdnVT\":[\"Card state\"],\"YHjvGb\":[\"ステータスの操作\"],\"YNYued\":[\"Status ID\"],\"Ya7bZl\":[\"図のエラー\"],\"Zot9XS\":[\"カードなし\"],\"_5CsXX\":[\"完了列\"],\"_EsjyQ\":[\"これを使用\"],\"_TJomP\":[\"削除前にカードを移動\"],\"_YbTQZ\":[\"JType は現在の優先度行から独立したスイムレーンを作成します。カードの優先度は変更されません。\"],\"_kh61D\":[\"Show cards with missing rows\"],\"_laW0t\":[\"Previous row missing\"],\"a6uhHr\":[\"太字 (Ctrl+B)\"],\"aDvLhk\":[\"Add a comment…\"],\"abUZlY\":[\"詳細を追加...\"],\"agOeRN\":[\"この API 仕様をレンダリングできませんでした。\"],\"arhExE\":[\"Swimlane ID\"],\"b4hVKD\":[\"色付き列\"],\"bUNpV2\":[\"Duplicate swimlane ID \\\"\",[\"0\"],\"\\\". The first definition is used.\"],\"bwOqWD\":[[\"0\"],\" of \",[\"1\"],\" sub-cards done\"],\"by_svU\":[\"カードを未割り当てに残す\"],\"bzjBcL\":[\"Sub-cards\"],\"c-EXz1\":[\"Delete only the row. Card references remain recoverable.\"],\"c61_Lv\":[\"スイムレーン ID\"],\"cJ44lA\":[\"Unscheduled\"],\"cSev-j\":[\"Filters\"],\"cUt8yN\":[\"変更は自動的に保存されます。\"],\"ceQmqN\":[\"Custom rows\"],\"cfaWH-\":[\"ラベルを追加\"],\"cnGeoo\":[\"削除\"],\"d-F6q9\":[\"Created\"],\"d5z6xQ\":[\"WIP 制限 \",[\"0\"]],\"dEgA5A\":[\"キャンセル\"],\"dQva-y\":[\"Duplicate row ID \\\"\",[\"0\"],\"\\\". The first definition is used.\"],\"ddrz1m\":[\"Overdue\"],\"eAi4RE\":[\"JType will create independent custom rows from the current priority groups. Card priority values will stay unchanged.\"],\"ecUA8p\":[\"Today\"],\"euc6Ns\":[\"複製\"],\"fEqHZq\":[\"Open sub-card\"],\"fFAIng\":[[\"0\",\"plural\",{\"one\":[\"#\",\" 件のカード\"],\"other\":[\"#\",\" 件のカード\"]}]],\"fOluHh\":[\"JType will create independent custom rows from the current assignee groups. Card assignee values will stay unchanged.\"],\"fVlS4-\":[\"スイムレーン\"],\"fYcKtB\":[\"並べ替え：期限\"],\"fdEjOR\":[\"Copy row ID\"],\"fvImQM\":[[\"0\"],\" selected\"],\"fwTn8F\":[\"Row color\"],\"g8JmSC\":[\"Next month\"],\"gANddk\":[\"Uploading…\"],\"gLDJuJ\":[\"無題のカード\"],\"guQk4e\":[\"Columns: Status\"],\"gzZWjO\":[\"変換できる割り当て済みの値がありません。\"],\"h8DugX\":[\"Labels\"],\"hL5-_P\":[\"Rows\"],\"hNQgyI\":[\"Columns: Priority\"],\"hNmOZ7\":[\"Set priority\"],\"he3ygx\":[\"コピー\"],\"hh4sEG\":[\"Relates\"],\"hnK1gR\":[\"PDF ドキュメント\"],\"hyVzII\":[\"スイムレーン\"],\"i4_LY_\":[\"記述\"],\"iSLA_r\":[\"左へ移動\"],\"iTylMl\":[\"テンプレート\"],\"iYVqZq\":[\"列名\"],\"jUbC3Z\":[\"Swimlane: Priority\"],\"jZlrte\":[\"カラー\"],\"jzy1b8\":[\"スイムレーンを編集可能にする\"],\"k4b5_X\":[\"edited\"],\"kBRFD0\":[\"Create editable rows\"],\"kMqzL_\":[\"Row name\"],\"kZlRKE\":[\"Mermaid ソース\"],\"kryGs-\":[\"カード\"],\"lCF0wC\":[\"更新\"],\"lEQWoB\":[\"カードがなくても表示され続ける横方向のグループを追加します。\"],\"lHxVTh\":[\"Swimlane: Assignee\"],\"lUeOk0\":[\"このボードの横方向グループです。名前を変更しても、カードの関連付けは維持されます。\"],\"l_g7se\":[\"変換を再開\"],\"lqoy3F\":[\"Missing row\"],\"lt2UOc\":[\"Rows: None\"],\"ltF1xa\":[\"マージ結果を保存\"],\"m16xKo\":[\"追加\"],\"mPINe9\":[\"Duplicate row name \\\"\",[\"0\"],\"\\\". Names should be unique.\"],\"nNGN_D\":[\"Custom swimlanes\"],\"nabda1\":[\"カードを削除\"],\"nfhh60\":[\"優先度スイムレーンを編集可能にしますか？\"],\"njJFtc\":[\"Delete comment\"],\"o7J4JM\":[\"フィルター\"],\"o8va6N\":[\"Restored\"],\"obId50\":[\"Filters, \",[\"activeCount\"],\" active\"],\"ojKCLU\":[\"担当者\"],\"p4rTvq\":[\"Rows: Priority\"],\"p9yTeb\":[\"並べ替え：タイトル\"],\"pKKcSl\":[\"Show resolved thread\"],\"pKztsX\":[\"フルエディターで開く\"],\"pdVZUg\":[\"WIP \",[\"0\"]],\"pip_Rq\":[\"Manage custom swimlanes\"],\"pnrmSP\":[\"新規カード\"],\"pwN6Ae\":[\"列を折りたたむ\"],\"pzutoc\":[\"イタリック\"],\"qZd_ph\":[\"Add row\"],\"qpGDiV\":[\"スイムレーン ID をコピー\"],\"rF8SEQ\":[\"Edit comment\"],\"rK_KGj\":[\"Optional horizontal groups for this board. Names can change; cards stay mapped by row ID.\"],\"rRubBJ\":[\"スイムレーンの詳細\"],\"rT-mCe\":[\"Remove filter: \",[\"0\"]],\"rdUucN\":[\"プレビュー\"],\"rn2_2V\":[\"Remove filter\"],\"rvpMpc\":[\"ステータスを管理\"],\"s8QaQC\":[\"Vertical columns for this board. Names can change; cards stay mapped by swimlane ID.\"],\"sCzmvQ\":[\"枚のカード\"],\"sQpDn6\":[\"全画面表示を終了\"],\"sujToP\":[\"Parent\"],\"tF-_sn\":[[\"cardCount\",\"plural\",{\"one\":[\"#\",\" 件のカード\"],\"other\":[\"#\",\" 件のカード\"]}]],\"tK2x9T\":[\"⚠ \",[\"0\"],\" 件の競合\",[\"1\"],\"を解決中\"],\"tYS8HY\":[\"ステータス列は、列またはスイムレーンとして使用中でも管理できます。\"],\"t_YqKh\":[\"Remove\"],\"tfDRzk\":[\"Save\"],\"u2IprG\":[\"カードのタイトル（Enter で追加、Esc でキャンセル）\"],\"u36sC2\":[\"Make rows editable\"],\"uAP6ov\":[\"スイムレーンを削除\"],\"uAQUqI\":[\"ステータス\"],\"uH1U8v\":[\"スイムレーンを管理\"],\"uWPalN\":[\"スイムレーン名「\",[\"0\"],\"」が重複しています。名前は一意にしてください。\"],\"uaR_cz\":[[\"total\",\"plural\",{\"one\":[\"#\",\" 件のカード\"],\"other\":[\"#\",\" 件のカード\"]}]],\"ucJg3u\":[\"Swimlane: Status\"],\"vIKvqQ\":[[\"missingCount\"],\"枚のカードが削除済みのスイムレーンを参照しています。\"],\"vJvZPY\":[\"Assignee: \",[\"0\"]],\"vMTOsC\":[\"担当者スイムレーンを編集可能にしますか？\"],\"vfYjJ_\":[\"コピーに失敗しました。\"],\"w7E-FA\":[\"Unsafe link blocked: \",[\"url\"]],\"wGM_xy\":[\"Rows: Custom\"],\"w_Sphq\":[\"Attachments\"],\"wf6Djn\":[\"イタリック (Ctrl+I)\"],\"wp-2ZK\":[\"Rows: Status\"],\"wtw-au\":[\"完了列に設定\"],\"wwu18a\":[\"アイコン\"],\"x52RAh\":[\"Blocked by \",[\"blockedCount\"],\" unfinished card(s)\"],\"xDsmP9\":[\"Agenda\"],\"xUOPoQ\":[\"使用状況\"],\"xX5QVp\":[\"Choose another row, then update the cards first.\"],\"y1eoq1\":[\"リンクをコピー\"],\"y9cj46\":[\"グループ：優先度\"],\"yEbJGs\":[\"+ Add field\"],\"yYxB17\":[\"Clear all\"],\"ybGQtY\":[\"← リストに戻る\"],\"yjeGpt\":[\"Columns: Assignee\"],\"yz7wBu\":[\"閉じる\"],\"yzF66j\":[\"リンク\"],\"zOc0vf\":[\"アイコンなし\"],\"zga9sT\":[\"OK\"]}"),
+	ko: JSON.parse("{\"--lIxB\":[\"Blocked by\"],\"-3Qbcm\":[\"Priority: \",[\"0\"]],\"-9kYEs\":[\"Cards with a missing row\"],\"-X4ual\":[\"No priority\"],\"-b7T3G\":[\"Updated\"],\"-eTfgY\":[\"Swimlane details\"],\"-hwvgo\":[\"Row actions\"],\"02N8r0\":[\"Filter cards\"],\"0cspe_\":[\"Delete row\"],\"0gvHNl\":[\"Statuses define the card workflow. Rename or reorder them freely; cards stay mapped by status ID.\"],\"1718Q-\":[\"Issues\"],\"1DBGsz\":[\"노트\"],\"1YABGm\":[\"링크 (Ctrl+K)\"],\"1hKEom\":[\"우선순위\"],\"1iShX0\":[\"Due today\"],\"1lWHP7\":[\"unsafe\"],\"1nUGn5\":[\"Add status\"],\"1xwZj_\":[\"Previous month\"],\"23yqV0\":[\"Show affected cards\"],\"2BPVq8\":[\"Reorder \",[\"0\"]],\"2aEwT_\":[\"Manage custom rows\"],\"2wxgft\":[\"이름 변경\"],\"32TndD\":[\"Blocked\"],\"3CIp19\":[\"Next 7 days\"],\"3CtQL6\":[\"Choose another swimlane, then update the cards first.\"],\"3Ib6FN\":[\"Move down\"],\"3qkggm\":[\"전체 화면\"],\"4NY8B5\":[\"Swimlanes to create\"],\"4gdyen\":[\"로컈 (내 것)\"],\"4hJhzz\":[\"테이블\"],\"4t8aKB\":[\"Rows to create\"],\"4vd-Kd\":[\"JType will create independent custom swimlanes from the current priority columns. Card priority values will stay unchanged.\"],\"54sFiP\":[\"flowchart TD\\n  A[시작] --> B[끝]\"],\"5Cawxq\":[\"Swimlanes: Custom\"],\"5Oy0YM\":[\"Labels: \",[\"0\"]],\"5Q_DQ6\":[\"인라인 코드\"],\"66g_UW\":[\"Collapse resolved thread\"],\"6G3KzD\":[\"Row details\"],\"6V3Ea3\":[\"Copied\"],\"6YtxFj\":[\"Name\"],\"6buwPb\":[\"Board settings\"],\"79Yvzu\":[\"Swimlane name\"],\"7MGAQC\":[\"JType will reuse the existing row IDs and continue unfinished card updates.\"],\"7VpPHA\":[\"확인\"],\"7dZyQU\":[\"Previous swimlane missing\"],\"7pBic4\":[[\"visibleCount\"],\" of \",[\"totalCount\"],\" cards shown\"],\"7s3WlU\":[\"Blocks\"],\"8PifYj\":[\"Mermaid 다이어그램\"],\"8Tg_JR\":[\"Custom\"],\"8enUYo\":[\"Set status\"],\"8hSn0h\":[\"결과 (편집 가능)\"],\"8lE269\":[\"정렬: 수동\"],\"9L7ptC\":[\"This empty row will be removed from the board.\"],\"9OEgyT\":[\"Add reaction\"],\"9OH3W0\":[\"Resolve thread\"],\"9YTdO7\":[\"Blocked cards\"],\"9gx7rl\":[[\"missingCount\"],\" card(s) refer to deleted rows.\"],\"9gxam6\":[\"이 Draw.io 다이어그램을 렌더링할 수 없습니다.\"],\"AC9Gkf\":[\"열 펼치기\"],\"ANe5kn\":[\"Updating cards…\"],\"AS5WO9\":[\"이 PDF를 렌더링할 수 없습니다.\"],\"ATIq3Z\":[\"Swimlane: Custom\"],\"AVreQ5\":[\"드래그하여 크기 조정\"],\"AgvHni\":[\"열 추가\"],\"AjVXBS\":[\"Calendar\"],\"AoHpbt\":[\"Show cards with missing swimlanes\"],\"AxAubu\":[\"그룹: 담당자\"],\"B5TUF-\":[\"Priority…\"],\"BfMZ7w\":[\"클라우드 수낙\"],\"BiWlsk\":[\"Status…\"],\"BnmEvM\":[\"템플릿으로 저장\"],\"C6-ZRl\":[\"Someone\"],\"CQ_dDx\":[\"Swimlanes: Status\"],\"CXTDT_\":[\"Resume swimlane conversion?\"],\"CxcMyt\":[[\"0\"],\" moved to position \",[\"1\"],\" of \",[\"2\"],\".\"],\"DGEEOQ\":[\"Swimlane actions\"],\"DPfwMq\":[\"Done\"],\"Db4W3_\":[\"Statuses\"],\"EWPtMO\":[\"코드\"],\"EbMPZJ\":[\"미할당\"],\"F6osRA\":[[\"danglingCount\"],\" card(s) refer to deleted rows.\"],\"FBIuPX\":[\"Clear selection\"],\"FQylcT\":[\"Swimlane: Missing\"],\"G4qrLy\":[\"완료 열 해제\"],\"GKu3m4\":[\"라벨 없음\"],\"GL6e_U\":[[\"cardCount\"],\" card(s) currently use this row.\"],\"GNoXOd\":[\"Copy swimlane ID\"],\"Gpfctt\":[\"마감\"],\"HTKRVa\":[\"Do not close this dialog.\"],\"H_SQFv\":[\"색상 없음\"],\"HajiZl\":[\"Month\"],\"HrmW6B\":[\"Add a comment… (Markdown supported)\"],\"I6SWEy\":[\"스플릿\"],\"ICip_B\":[\"클라우드 (원격)\"],\"IdMoS6\":[\"Create your first swimlane\"],\"Ik60OC\":[\"에디터에서 열기\"],\"ImOQa9\":[\"Reply\"],\"IqKCNQ\":[\"Row\"],\"Iw6WJa\":[\"WIP 한도 설정\"],\"JPB7_s\":[\"Cards with a missing swimlane\"],\"JTYvAw\":[\"카드 검색\"],\"KAlhe_\":[\"카드 업데이트가 저장되지 않아 변환을 중지했습니다. 새로 고친 후 다시 시도하세요.\"],\"KCszT6\":[\"Add swimlane\"],\"KFiYGY\":[\"Change color\"],\"KGi3u9\":[\"Drag to reorder\"],\"K_F6pa\":[\"저장 중…\"],\"K_cST0\":[\"Resume row conversion?\"],\"Kd6eg7\":[\"Moving cards…\"],\"KeYrQ5\":[\"Remove your reaction\"],\"KjXDqG\":[\"Swimlane: None\"],\"KmydK6\":[\"굵게\"],\"KpnwJK\":[\"Delete \\\"\",[\"0\"],\"\\\"?\"],\"KvW1VO\":[\"Draw.io 다이어그램\"],\"LQn6-8\":[\"로컈 수낙\"],\"Ld9MtR\":[\"Rows: Assignee\"],\"MHrjPM\":[\"제목\"],\"MRsDXp\":[\"JType will reuse the existing swimlane IDs and continue unfinished card updates.\"],\"MYx830\":[\"This empty swimlane will be removed from the board.\"],\"Mm72la\":[\"No comments yet\"],\"MmYpxT\":[\"Reply…\"],\"NBdIgR\":[\"Comment\"],\"NYTPDY\":[\"Move cards and delete\"],\"NnxWLJ\":[\"Create your first custom row\"],\"O6H89R\":[\"Resolved\"],\"ONWvwQ\":[\"Upload\"],\"OR4WQZ\":[\"+ Add sub-card\"],\"OYHzN1\":[\"태그\"],\"OepdfE\":[\"그룹: 상태\"],\"P5cvAA\":[\"Status name\"],\"PM7yYy\":[\"Row ID\"],\"PUeYA1\":[\"Create editable swimlanes\"],\"Pvpx7b\":[\"Paste a URL or path\"],\"Q-Pe7U\":[\"Swimlane details for \",[\"0\"]],\"Q2mGA7\":[\"필터 지우기\"],\"QD8opX\":[\"보드\"],\"QRhoJb\":[\"JType will create independent custom swimlanes from the current assignee columns. Card assignee values will stay unchanged.\"],\"QlsPZy\":[\"Mermaid 구문을 작성하면 다이어그램이 표시됩니다.\"],\"QmZYQP\":[\"Unresolve thread\"],\"QyioBP\":[\"Move up\"],\"RbsNko\":[[\"cardCount\"],\" card(s) currently use this swimlane.\"],\"RfEZH1\":[\"JType will create independent swimlanes from the current assignee rows. Card assignee values will stay unchanged.\"],\"RgO4DX\":[\"Duplicate lane ID \\\"\",[\"0\"],\"\\\". The first definition is used.\"],\"RlLl3G\":[\"Actions for \",[\"0\"]],\"RnplaY\":[\"Row details for \",[\"0\"]],\"S5Qbb1\":[\"쉼표로 구분\"],\"SavliD\":[[\"danglingCount\"],\" card(s) refer to deleted swimlanes.\"],\"T_nAzC\":[\"JType will reuse the existing lane IDs and continue unfinished card updates.\"],\"TdfEV7\":[\"Archived\"],\"Th4mIx\":[[\"0\"],\" 레인 세부 정보\"],\"U0hizX\":[\"Swimlane color\"],\"U95P80\":[\"Make priority rows editable?\"],\"UDb2YD\":[\"React\"],\"UQOvxZ\":[\"빈 카드\"],\"URmyfc\":[\"Details\"],\"Ubl2by\":[\"Move right\"],\"UouxNQ\":[\"Swimlanes: Assignee\"],\"VNa_N2\":[\"이 파일 형식은 아직 미리볼 수 없습니다.\"],\"VXh9CK\":[\"No due date\"],\"VbyRUy\":[\"Comments\"],\"Ve-C10\":[\"Swimlanes: Priority\"],\"WEYdDv\":[\"Recommended\"],\"WSP6v1\":[\"정렬: 우선순위\"],\"WSbuWy\":[\"Missing swimlane\"],\"WWUwTb\":[\"Make assignee rows editable?\"],\"X03-eC\":[\"값을 입력해 주세요.\"],\"XJOV1Y\":[\"Activity\"],\"XicmhT\":[\"Due date\"],\"XklovM\":[\"Working…\"],\"Y8bR2a\":[\"Delete only the swimlane. Card references remain recoverable.\"],\"YDa2KG\":[\"My cards\"],\"YFdnVT\":[\"Card state\"],\"YHjvGb\":[\"Status actions\"],\"YNYued\":[\"Status ID\"],\"Ya7bZl\":[\"다이어그램 오류\"],\"Zot9XS\":[\"카드 없음\"],\"_5CsXX\":[\"완료 열\"],\"_EsjyQ\":[\"이것 사용\"],\"_TJomP\":[\"Move cards before deleting\"],\"_YbTQZ\":[\"JType will create independent swimlanes from the current priority rows. Card priority values will stay unchanged.\"],\"_kh61D\":[\"Show cards with missing rows\"],\"_laW0t\":[\"Previous row missing\"],\"a6uhHr\":[\"굵게 (Ctrl+B)\"],\"aDvLhk\":[\"Add a comment…\"],\"abUZlY\":[\"세부정보 추가...\"],\"agOeRN\":[\"이 API 명세를 렌더링할 수 없습니다.\"],\"arhExE\":[\"Swimlane ID\"],\"b4hVKD\":[\"색상 열\"],\"bUNpV2\":[\"Duplicate swimlane ID \\\"\",[\"0\"],\"\\\". The first definition is used.\"],\"bwOqWD\":[[\"0\"],\" of \",[\"1\"],\" sub-cards done\"],\"by_svU\":[\"Keep cards in Unassigned\"],\"bzjBcL\":[\"Sub-cards\"],\"c-EXz1\":[\"Delete only the row. Card references remain recoverable.\"],\"c61_Lv\":[\"Lane ID\"],\"cJ44lA\":[\"Unscheduled\"],\"cSev-j\":[\"Filters\"],\"cUt8yN\":[\"Changes save automatically.\"],\"ceQmqN\":[\"Custom rows\"],\"cfaWH-\":[\"라벨 추가\"],\"cnGeoo\":[\"삭제\"],\"d-F6q9\":[\"Created\"],\"d5z6xQ\":[\"WIP 한도 \",[\"0\"]],\"dEgA5A\":[\"취소\"],\"dQva-y\":[\"Duplicate row ID \\\"\",[\"0\"],\"\\\". The first definition is used.\"],\"ddrz1m\":[\"Overdue\"],\"eAi4RE\":[\"JType will create independent custom rows from the current priority groups. Card priority values will stay unchanged.\"],\"ecUA8p\":[\"Today\"],\"euc6Ns\":[\"복제\"],\"fEqHZq\":[\"Open sub-card\"],\"fFAIng\":[[\"0\",\"plural\",{\"one\":[\"카드 \",\"#\",\"개\"],\"other\":[\"카드 \",\"#\",\"개\"]}]],\"fOluHh\":[\"JType will create independent custom rows from the current assignee groups. Card assignee values will stay unchanged.\"],\"fVlS4-\":[\"Swimlane\"],\"fYcKtB\":[\"정렬: 마감\"],\"fdEjOR\":[\"Copy row ID\"],\"fvImQM\":[[\"0\"],\" selected\"],\"fwTn8F\":[\"Row color\"],\"g8JmSC\":[\"Next month\"],\"gANddk\":[\"Uploading…\"],\"gLDJuJ\":[\"제목 없는 카드\"],\"guQk4e\":[\"Columns: Status\"],\"gzZWjO\":[\"No assigned values to convert.\"],\"h8DugX\":[\"Labels\"],\"hL5-_P\":[\"Rows\"],\"hNQgyI\":[\"Columns: Priority\"],\"hNmOZ7\":[\"Set priority\"],\"he3ygx\":[\"Copy\"],\"hh4sEG\":[\"Relates\"],\"hnK1gR\":[\"PDF 문서\"],\"hyVzII\":[\"Swimlanes\"],\"i4_LY_\":[\"작성\"],\"iSLA_r\":[\"Move left\"],\"iTylMl\":[\"템플릿\"],\"iYVqZq\":[\"열 이름\"],\"jUbC3Z\":[\"Swimlane: Priority\"],\"jZlrte\":[\"색상\"],\"jzy1b8\":[\"Make swimlanes editable\"],\"k4b5_X\":[\"edited\"],\"kBRFD0\":[\"Create editable rows\"],\"kMqzL_\":[\"Row name\"],\"kZlRKE\":[\"Mermaid 소스\"],\"kryGs-\":[\"카드\"],\"lCF0wC\":[\"새로고침\"],\"lEQWoB\":[\"Add stable horizontal groups that stay visible even when they have no cards.\"],\"lHxVTh\":[\"Swimlane: Assignee\"],\"lUeOk0\":[\"Horizontal groups for this board. Names can change; card mapping stays attached.\"],\"l_g7se\":[\"Resume conversion\"],\"lqoy3F\":[\"Missing row\"],\"lt2UOc\":[\"Rows: None\"],\"ltF1xa\":[\"병합 결과 저장\"],\"m16xKo\":[\"Add\"],\"mPINe9\":[\"Duplicate row name \\\"\",[\"0\"],\"\\\". Names should be unique.\"],\"nNGN_D\":[\"Custom swimlanes\"],\"nabda1\":[\"카드 삭제\"],\"nfhh60\":[\"Make priority swimlanes editable?\"],\"njJFtc\":[\"Delete comment\"],\"o7J4JM\":[\"필터\"],\"o8va6N\":[\"Restored\"],\"obId50\":[\"Filters, \",[\"activeCount\"],\" active\"],\"ojKCLU\":[\"담당자\"],\"p4rTvq\":[\"Rows: Priority\"],\"p9yTeb\":[\"정렬: 제목\"],\"pKKcSl\":[\"Show resolved thread\"],\"pKztsX\":[\"전체 에디터에서 열기\"],\"pdVZUg\":[\"WIP \",[\"0\"]],\"pip_Rq\":[\"Manage custom swimlanes\"],\"pnrmSP\":[\"새 카드\"],\"pwN6Ae\":[\"열 접기\"],\"pzutoc\":[\"기울임꼴\"],\"qZd_ph\":[\"Add row\"],\"qpGDiV\":[\"Copy lane ID\"],\"rF8SEQ\":[\"Edit comment\"],\"rK_KGj\":[\"Optional horizontal groups for this board. Names can change; cards stay mapped by row ID.\"],\"rRubBJ\":[\"Lane details\"],\"rT-mCe\":[\"Remove filter: \",[\"0\"]],\"rdUucN\":[\"미리보기\"],\"rn2_2V\":[\"Remove filter\"],\"rvpMpc\":[\"Manage statuses\"],\"s8QaQC\":[\"Vertical columns for this board. Names can change; cards stay mapped by swimlane ID.\"],\"sCzmvQ\":[\"개 카드\"],\"sQpDn6\":[\"전체 화면 종료\"],\"sujToP\":[\"Parent\"],\"tF-_sn\":[[\"cardCount\",\"plural\",{\"one\":[\"카드 \",\"#\",\"개\"],\"other\":[\"카드 \",\"#\",\"개\"]}]],\"tK2x9T\":[\"⚠ 해결할 충돌 \",[\"0\"],\"건\",[\"1\"]],\"tYS8HY\":[\"Status columns stay available when they are used as columns or swimlanes.\"],\"t_YqKh\":[\"Remove\"],\"tfDRzk\":[\"Save\"],\"u2IprG\":[\"카드 제목 (Enter로 추가, Esc로 취소)\"],\"u36sC2\":[\"Make rows editable\"],\"uAP6ov\":[\"Delete swimlane\"],\"uAQUqI\":[\"상태\"],\"uH1U8v\":[\"Manage swimlanes\"],\"uWPalN\":[\"Duplicate swimlane name \\\"\",[\"0\"],\"\\\". Names should be unique.\"],\"uaR_cz\":[[\"total\",\"plural\",{\"one\":[\"카드 \",\"#\",\"개\"],\"other\":[\"카드 \",\"#\",\"개\"]}]],\"ucJg3u\":[\"Swimlane: Status\"],\"vIKvqQ\":[[\"missingCount\"],\" card(s) refer to deleted swimlanes.\"],\"vJvZPY\":[\"Assignee: \",[\"0\"]],\"vMTOsC\":[\"Make assignee swimlanes editable?\"],\"vfYjJ_\":[\"복사하지 못했습니다.\"],\"w7E-FA\":[\"Unsafe link blocked: \",[\"url\"]],\"wGM_xy\":[\"Rows: Custom\"],\"w_Sphq\":[\"Attachments\"],\"wf6Djn\":[\"기울임꼴 (Ctrl+I)\"],\"wp-2ZK\":[\"Rows: Status\"],\"wtw-au\":[\"완료 열로 설정\"],\"wwu18a\":[\"아이콘\"],\"x52RAh\":[\"Blocked by \",[\"blockedCount\"],\" unfinished card(s)\"],\"xDsmP9\":[\"Agenda\"],\"xUOPoQ\":[\"Used by\"],\"xX5QVp\":[\"Choose another row, then update the cards first.\"],\"y1eoq1\":[\"링크 복사\"],\"y9cj46\":[\"그룹: 우선순위\"],\"yEbJGs\":[\"+ Add field\"],\"yYxB17\":[\"Clear all\"],\"ybGQtY\":[\"← 목록으로\"],\"yjeGpt\":[\"Columns: Assignee\"],\"yz7wBu\":[\"닫기\"],\"yzF66j\":[\"링크\"],\"zOc0vf\":[\"아이콘 없음\"],\"zga9sT\":[\"확인\"]}")
 };
-function km(e) {
-	V.load(e, Om[e] ?? Om.en), V.activate(e);
+function Am(e) {
+	V.load(e, km[e] ?? km.en), V.activate(e);
 }
 //#endregion
 //#region src/strings.ts
-var Am = {
+var jm = {
 	en: {
 		loading: "Loading board…",
 		live: "Live",
@@ -11212,7 +10838,7 @@ var Am = {
 		close: "Close",
 		cardReadOnlyHint: "Read-only card view",
 		status: "Status",
-		swimlane: "Row",
+		swimlane: "Swimlane",
 		unassigned: "Unassigned",
 		priority: "Priority",
 		assignee: "Assignee",
@@ -11242,7 +10868,7 @@ var Am = {
 		close: "关闭",
 		cardReadOnlyHint: "只读卡片视图",
 		status: "状态",
-		swimlane: "横向分组",
+		swimlane: "泳道",
 		unassigned: "未分配",
 		priority: "优先级",
 		assignee: "负责人",
@@ -11272,7 +10898,7 @@ var Am = {
 		close: "閉じる",
 		cardReadOnlyHint: "読み取り専用のカード表示",
 		status: "ステータス",
-		swimlane: "行グループ",
+		swimlane: "スイムレーン",
 		unassigned: "未割り当て",
 		priority: "優先度",
 		assignee: "担当者",
@@ -11302,7 +10928,7 @@ var Am = {
 		close: "닫기",
 		cardReadOnlyHint: "읽기 전용 카드 보기",
 		status: "상태",
-		swimlane: "행 그룹",
+		swimlane: "스윔레인",
 		unassigned: "미할당",
 		priority: "우선순위",
 		assignee: "담당자",
@@ -11323,18 +10949,18 @@ var Am = {
 		errGeneric: (e) => `보드를 불러오지 못했습니다: ${e}`
 	}
 };
-function jm(e) {
-	return Am[e] ?? Am.en;
+function Mm(e) {
+	return jm[e] ?? jm.en;
 }
 //#endregion
 //#region src/JTypeBoard.tsx
-function Mm() {
+function Nm() {
 	return Math.random().toString(36).slice(2, 6);
 }
-function Nm({ workspaceId: e, boardRef: t, baseUrl: n, token: r, client: i, readOnly: a = !1, currentUser: o, live: s = !0, pollIntervalMs: c = 3e4, onCardOpen: l, onConnectionChange: u, locale: d, className: p, style: m }) {
-	let h = d ?? "en", _ = jm(h), b = v(null);
-	b.current !== h && (b.current = h, km(h));
-	let w = i && (n || r) ? _.errPropsBoth : !i && (!n || !r) ? _.errPropsNone : null, T = g(() => w ? null : i || _m({
+function Pm({ workspaceId: e, boardRef: t, baseUrl: n, token: r, client: i, readOnly: a = !1, currentUser: o, live: s = !0, pollIntervalMs: c = 3e4, onCardOpen: l, onConnectionChange: u, locale: d, className: p, style: m }) {
+	let h = d ?? "en", _ = Mm(h), b = v(null);
+	b.current !== h && (b.current = h, Am(h));
+	let w = i && (n || r) ? _.errPropsBoth : !i && (!n || !r) ? _.errPropsNone : null, T = g(() => w ? null : i || vm({
 		baseUrl: n,
 		token: r
 	}), [
@@ -11348,7 +10974,7 @@ function Nm({ workspaceId: e, boardRef: t, baseUrl: n, token: r, client: i, read
 	ie.current = _;
 	let ae = (e) => {
 		let n = ie.current;
-		return e instanceof vm ? e.code === "board_not_found" ? n.errBoardNotFound(t) : e.code === "board_ref_ambiguous" ? n.errBoardAmbiguous(t, e.candidates) : e.code === "board_config_invalid" ? n.errBoardConfigInvalid : n.errGeneric(e.message) : e instanceof gm ? e.status === 401 || e.status === 403 ? n.errUnauthorized : e.status === 0 && e.code === "network_error" ? n.errNetwork : n.errGeneric(e.code) : n.errGeneric(e instanceof Error ? e.message : String(e));
+		return e instanceof ym ? e.code === "board_not_found" ? n.errBoardNotFound(t) : e.code === "board_ref_ambiguous" ? n.errBoardAmbiguous(t, e.candidates) : e.code === "board_config_invalid" ? n.errBoardConfigInvalid : n.errGeneric(e.message) : e instanceof _m ? e.status === 401 || e.status === 403 ? n.errUnauthorized : e.status === 0 && e.code === "network_error" ? n.errNetwork : n.errGeneric(e.code) : n.errGeneric(e instanceof Error ? e.message : String(e));
 	}, oe = v(ae);
 	oe.current = ae, f(() => {
 		if (!T) return;
@@ -11358,7 +10984,7 @@ function Nm({ workspaceId: e, boardRef: t, baseUrl: n, token: r, client: i, read
 			n || (P(e), ne.current !== e && (ne.current = e, re.current?.(e)));
 		}, d = async () => {
 			try {
-				let r = await Em(T, e, t, B.current);
+				let r = await Dm(T, e, t, B.current);
 				return n ? null : (z.current = r, O(r), A(""), M(""), u(c ? "live" : "polling"), r);
 			} catch (e) {
 				if (n) return null;
@@ -11435,7 +11061,7 @@ function Nm({ workspaceId: e, boardRef: t, baseUrl: n, token: r, client: i, read
 					let r = z.current;
 					if (!r || !T) return;
 					if (a) {
-						R((e) => Tm(e, n));
+						R((e) => Em(e, n));
 						return;
 					}
 					let i = {
@@ -11455,17 +11081,15 @@ function Nm({ workspaceId: e, boardRef: t, baseUrl: n, token: r, client: i, read
 			createCard: async (n, r) => {
 				let i = z.current;
 				if (!(!i || !T)) try {
-					let a = i.config.groupBy || "status", o = i.cards.filter((e) => (a === "status" ? e.columnKey : a === "priority" ? e.priority || "none" : e.assignee || "") === n).reduce((e, t) => Math.max(e, t.position), -1) + 1, s = {
+					let a = Op(i.config), o = i.cards.filter((e) => Fp(e, i.config) === n).reduce((e, t) => Math.max(e, t.position), -1) + 1, s = wm(Qf("", {
 						title: r,
 						board: i.config.id,
 						status: a === "status" ? n : i.config.columns[0]?.key ?? "todo",
 						position: String(o)
-					};
-					a !== "status" && (s[a] = n);
-					let c = `${i.boardDir}/${wp(r)}.md`;
-					return i.metaByPath.has(c) && (c = `${i.boardDir}/${wp(r)}-${Mm()}.md`), await T.saveDocument(e, {
+					}), kp(a, n)), c = `${i.boardDir}/${wp(r)}.md`;
+					return i.metaByPath.has(c) && (c = `${i.boardDir}/${wp(r)}-${Nm()}.md`), await T.saveDocument(e, {
 						relativePath: c,
-						content: Qf("", s)
+						content: s
 					}), await t(), c;
 				} catch (e) {
 					M(oe.current(e));
@@ -11474,7 +11098,7 @@ function Nm({ workspaceId: e, boardRef: t, baseUrl: n, token: r, client: i, read
 			},
 			updateCard: (e, i) => n(async () => {
 				let n = z.current, a = n?.metaByPath.get(e);
-				!n || !a || (await r(e, Cm(a.content, i)), await t());
+				!n || !a || (await r(e, wm(a.content, i)), await t());
 			}),
 			updateCards: async (e, n) => {
 				try {
@@ -11486,7 +11110,7 @@ function Nm({ workspaceId: e, boardRef: t, baseUrl: n, token: r, client: i, read
 					let s = 0;
 					for (let t of e) {
 						let a = i.metaByPath.get(t.cardId);
-						await r(t.cardId, Cm(a.content, t.patch)), s += 1, n?.(s, e.length);
+						await r(t.cardId, wm(a.content, t.patch)), s += 1, n?.(s, e.length);
 					}
 					await t();
 				} catch (e) {
@@ -11496,16 +11120,12 @@ function Nm({ workspaceId: e, boardRef: t, baseUrl: n, token: r, client: i, read
 			moveCard: (e, i, a) => n(async () => {
 				let n = z.current;
 				if (!n || !T) return;
-				let o = n.config.groupBy || "status", s = n.metaByPath.get(e);
+				let o = Op(n.config), s = n.metaByPath.get(e);
 				if (!s) return;
 				if (o !== "status") {
 					let a = n.cards.find((t) => t.id === e);
-					if ((o === "priority" ? a?.priority || "none" : a?.assignee || "") === i) return;
-					let { data: c, body: l } = Zf(s.content);
-					await r(e, Qf(l, {
-						...c,
-						[o]: i
-					})), await t();
+					if (!a || Fp(a, n.config) === i) return;
+					await r(e, wm(s.content, kp(o, i))), await t();
 					return;
 				}
 				let c = n.cards.filter((t) => t.columnKey === i && t.id !== e).sort((e, t) => e.position - t.position), l = n.cards.find((t) => t.id === e);
@@ -11548,8 +11168,8 @@ function Nm({ workspaceId: e, boardRef: t, baseUrl: n, token: r, client: i, read
 		D,
 		a,
 		L
-	]), le = g(() => D && ce ? xm(ce, D.boardDir) : null, [D, ce]), ue = F ? D?.cards.find((e) => e.id === F) ?? null : null, de = l ?? ((e) => I(e.id)), fe;
-	return fe = w ? /* @__PURE__ */ S(Pm, { message: w }) : !D && k ? /* @__PURE__ */ S(Pm, {
+	]), le = g(() => D && ce ? Sm(ce, D.boardDir) : null, [D, ce]), ue = F ? D?.cards.find((e) => e.id === F) ?? null : null, de = l ?? ((e) => I(e.id)), fe;
+	return fe = w ? /* @__PURE__ */ S(Fm, { message: w }) : !D && k ? /* @__PURE__ */ S(Fm, {
 		message: k,
 		retryLabel: _.retry,
 		onRetry: () => void te.current?.()
@@ -11559,7 +11179,7 @@ function Nm({ workspaceId: e, boardRef: t, baseUrl: n, token: r, client: i, read
 	}) : /* @__PURE__ */ C(x, { children: [
 		/* @__PURE__ */ S(ee, {
 			i18n: V,
-			children: /* @__PURE__ */ S(hm, {
+			children: /* @__PURE__ */ S(gm, {
 				config: le,
 				cards: D.cards,
 				actions: se,
@@ -11570,13 +11190,13 @@ function Nm({ workspaceId: e, boardRef: t, baseUrl: n, token: r, client: i, read
 				portalClassName: "jtb-scope"
 			})
 		}),
-		ue && !l && ce && /* @__PURE__ */ S(Dm, {
+		ue && !l && ce && /* @__PURE__ */ S(Om, {
 			card: ue,
 			config: ce,
 			strings: _,
 			onClose: () => I(null)
 		}),
-		/* @__PURE__ */ S(Fm, {
+		/* @__PURE__ */ S(Im, {
 			state: N,
 			strings: _,
 			pollSecs: Math.round(E / 1e3),
@@ -11589,7 +11209,7 @@ function Nm({ workspaceId: e, boardRef: t, baseUrl: n, token: r, client: i, read
 		children: fe
 	});
 }
-function Pm({ message: e, retryLabel: t, onRetry: n }) {
+function Fm({ message: e, retryLabel: t, onRetry: n }) {
 	return /* @__PURE__ */ C("div", {
 		className: "flex h-full flex-col items-center justify-center gap-3 bg-[#fbfdfb] p-8 text-center",
 		children: [
@@ -11619,7 +11239,7 @@ function Pm({ message: e, retryLabel: t, onRetry: n }) {
 		]
 	});
 }
-function Fm({ state: e, strings: t, pollSecs: n, liveWanted: r }) {
+function Im({ state: e, strings: t, pollSecs: n, liveWanted: r }) {
 	let i = e === "live" ? t.live : e === "polling" ? t.polling(n) : t.connectionError, a = e === "live" ? "bg-emerald-500" : e === "polling" ? "bg-stone-400" : "bg-red-500";
 	return /* @__PURE__ */ C("div", {
 		className: "pointer-events-none absolute bottom-2 right-2 z-40 inline-flex items-center gap-1.5 rounded-full border border-black/[0.06] bg-white/90 px-2 py-0.5 text-[11px] text-stone-500 shadow-sm",
@@ -11631,4 +11251,4 @@ function Fm({ state: e, strings: t, pollSecs: n, liveWanted: r }) {
 	});
 }
 //#endregion
-export { gm as JTypeApiError, Nm as JTypeBoard, vm as JTypeBoardError, _m as createJTypeClient, ym as resolveBoardDoc };
+export { _m as JTypeApiError, Pm as JTypeBoard, ym as JTypeBoardError, vm as createJTypeClient, bm as resolveBoardDoc };

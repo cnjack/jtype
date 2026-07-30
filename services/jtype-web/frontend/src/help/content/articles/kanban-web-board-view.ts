@@ -12,8 +12,8 @@ const article: ArticleMeta = {
     zh: '网页看板视图',
   },
   summary: {
-    en: 'Open a board in the web app: manage status columns, drag cards, add optional rows, and combine lightweight filters.',
-    zh: '在网页应用中打开看板：管理状态列、拖拽卡片、添加可选横向分组，并组合轻量筛选。',
+    en: 'Open a board in the web app: choose vertical swimlanes, drag cards between them, and combine lightweight filters.',
+    zh: '在网页应用中打开看板：选择纵向泳道、跨泳道拖拽卡片，并组合轻量筛选。',
   },
   body: { en, zh },
 }

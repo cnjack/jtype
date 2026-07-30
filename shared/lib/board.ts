@@ -61,11 +61,12 @@ export type BoardViewConfig = {
   /** Board ticket-id prefix (e.g. `OCCSV`) for per-card `OCCSV-3371` ticket links. */
   ticketKey?: string;
   /**
-   * Second grouping dimension rendered as horizontal swimlanes (rows) in the
-   * board view. Must differ from `groupBy`; unset = no swimlanes.
+   * Active custom swimlane mode. Historical configs may also contain
+   * status/priority/assignee here from the retired two-dimensional layout;
+   * those values now render as the single vertical swimlane dimension.
    */
   swimlaneBy?: BoardSwimlaneGroupKey;
-  /** Persistent definitions used when `swimlaneBy === "custom"`. */
+  /** Persistent definitions used by custom vertical swimlanes. */
   swimlanes?: BoardSwimlane[];
   /** Present only while a derived-lane conversion is incomplete/retryable. */
   swimlaneMigration?: SwimlaneMigration;
@@ -511,6 +512,30 @@ export function normalizeSwimlaneBy(value: unknown): BoardSwimlaneGroupKey | und
     : undefined;
 }
 
+/**
+ * The one grouping dimension rendered as vertical swimlane columns.
+ *
+ * `swimlaneBy` wins for backward compatibility with boards saved by the
+ * retired two-dimensional layout. New non-custom selections use `groupBy`;
+ * custom swimlanes continue using the existing persisted `swimlaneBy` field.
+ */
+export function activeBoardLaneKey(
+  config: Pick<BoardViewConfig, "groupBy" | "swimlaneBy">,
+): BoardSwimlaneGroupKey {
+  return normalizeSwimlaneBy(config.swimlaneBy) ?? normalizeGroupBy(config.groupBy);
+}
+
+/** Map a vertical swimlane drop target to the normalized card field it owns. */
+export function cardPatchForLaneValue(
+  laneBy: BoardSwimlaneGroupKey,
+  value: string,
+): Partial<BoardViewCard> {
+  if (laneBy === "status") return { columnKey: value };
+  if (laneBy === "priority") return { priority: value === "none" ? null : value };
+  if (laneBy === "assignee") return { assignee: value || null };
+  return { swimlaneKey: value || null };
+}
+
 /** Create a collision-resistant immutable custom swimlane key. */
 export function newSwimlaneKey(name: string, existingKeys: Iterable<string> = []): string {
   const taken = new Set(existingKeys);
@@ -533,12 +558,12 @@ export function validateSwimlaneName(
   excludingKey?: string,
 ): string | null {
   const trimmed = name.trim();
-  if (!trimmed) return "Row name is required.";
-  if (trimmed.length > 80) return "Row names can be at most 80 characters.";
+  if (!trimmed) return "Swimlane name is required.";
+  if (trimmed.length > 80) return "Swimlane names can be at most 80 characters.";
   const duplicate = lanes.some(
     (lane) => lane.key !== excludingKey && lane.name.trim().toLocaleLowerCase() === trimmed.toLocaleLowerCase(),
   );
-  return duplicate ? "Row names must be unique on this board." : null;
+  return duplicate ? "Swimlane names must be unique on this board." : null;
 }
 
 /** The normalized custom swimlane identity used for bucketing and selection. */
@@ -602,6 +627,27 @@ export function groupValueOf(card: BoardViewCard, groupBy: BoardSwimlaneGroupKey
   return card.columnKey || "";
 }
 
+/**
+ * The rendered lane value for a card. Deleted or unknown custom swimlane IDs
+ * are collected in Unassigned while the original ID stays on the card so the
+ * mapping remains recoverable.
+ */
+export function boardLaneValueOf(
+  card: BoardViewCard,
+  config: Pick<BoardViewConfig, "groupBy" | "swimlaneBy" | "swimlanes">,
+): string {
+  const laneBy = activeBoardLaneKey(config);
+  const value = groupValueOf(card, laneBy);
+  if (
+    laneBy === "custom" &&
+    value &&
+    !(config.swimlanes ?? []).some((lane) => lane.key === value)
+  ) {
+    return "";
+  }
+  return value;
+}
+
 /** Derive the columns to render for the active grouping. */
 export function effectiveColumns(
   config: BoardViewConfig,
@@ -619,7 +665,9 @@ export function effectiveColumns(
           : `${key.charAt(0).toUpperCase()}${key.slice(1)}`,
     }));
   }
-  const vals = new Set<string>();
+  // Assignee boards always expose Unassigned so an empty board still has a
+  // valid create/drop target and assigned cards can be cleared by dragging.
+  const vals = new Set<string>([""]);
   for (const c of cards) vals.add(groupValueOf(c, groupBy));
   return [...vals]
     .sort((a, b) => (a === "" ? 1 : b === "" ? -1 : a.localeCompare(b)))
@@ -636,8 +684,9 @@ export function hasDanglingSwimlane(
 }
 
 /**
- * Derive swimlane rows. Custom lanes come from persistent definitions so empty
- * lanes remain visible; Unassigned is a system row shown only when cards need it.
+ * Derive vertical swimlane columns. Custom lanes come from persistent
+ * definitions so empty lanes remain visible; Unassigned always remains a
+ * valid create/drop target, including on empty and read-only boards.
  */
 export function effectiveSwimlanes(
   config: BoardViewConfig,
@@ -654,19 +703,16 @@ export function effectiveSwimlanes(
     seen.add(lane.key);
     return true;
   });
-  const valid = new Set(definitions.map((lane) => lane.key));
-  const needsUnassigned = cards.some((card) => !card.swimlaneKey || !valid.has(card.swimlaneKey));
   return [
     ...definitions.map((lane) => ({ key: lane.key, name: lane.name, color: lane.color })),
-    ...(needsUnassigned ? [{ key: "", name: unassignedLabel }] : []),
+    { key: "", name: unassignedLabel },
   ];
 }
 
 /**
- * Bucket cards into a swimlane grid: laneValue → columnValue → cards. Lane and
- * column values come from `groupValueOf` under the two grouping dimensions. The
- * board view renders rows (lanes) × columns from this. Order within a cell is the
- * caller's responsibility (pre-sort, e.g. with sortCards).
+ * Legacy two-dimensional partition helper retained for persisted-layout data
+ * tests and compatibility tooling. The current board renders one vertical
+ * swimlane dimension and does not call this helper.
  */
 export function partitionSwimlanes(
   cards: BoardViewCard[],

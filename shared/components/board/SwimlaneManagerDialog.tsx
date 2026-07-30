@@ -307,10 +307,10 @@ export function SwimlaneManagerDialog({
               </span>
               <div className="min-w-0 flex-1">
                 <DialogTitle className="text-base font-semibold tracking-tight text-stone-900">
-                  <Trans>Manage custom rows</Trans>
+                  <Trans>Manage custom swimlanes</Trans>
                 </DialogTitle>
                 <p id="swimlane-manager-description" className="mt-1 text-xs leading-5 text-brand-gray">
-                  <Trans>Optional horizontal groups for this board. Names can change; cards stay mapped by row ID.</Trans>
+                  <Trans>Vertical columns for this board. Names can change; cards stay mapped by swimlane ID.</Trans>
                 </p>
                 <span className="sr-only" aria-live="polite">{announcement}</span>
               </div>
@@ -329,7 +329,7 @@ export function SwimlaneManagerDialog({
             </div>
 
             <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
-              <ul aria-label={t`Custom rows`} className="space-y-1">
+              <ul aria-label={t`Custom swimlanes`} className="space-y-1">
                 {lanes.map((lane, index) => {
                   const error = rowError?.key === lane.key ? rowError.message : null;
                   return (
@@ -367,7 +367,7 @@ export function SwimlaneManagerDialog({
                             className={`z-50 w-52 rounded-xl border border-line bg-white p-3 shadow-lg shadow-emerald-950/10 [--anchor-gap:4px] focus:outline-none${portal}`}
                           >
                             <p className="text-[11px] font-medium text-brand-gray">
-                              <Trans>Row color</Trans>
+                              <Trans>Swimlane color</Trans>
                             </p>
                             <div className="mt-2 flex flex-wrap gap-2">
                               {COLUMN_COLORS.map((color) => (
@@ -416,7 +416,7 @@ export function SwimlaneManagerDialog({
                                   setRowError(null);
                                 }
                               }}
-                              aria-label={t`Row name`}
+                              aria-label={t`Swimlane name`}
                               className="h-8 w-full rounded-lg border border-brand/40 bg-white px-2 text-xs font-medium text-stone-800 outline-none ring-2 ring-brand/10"
                             />
                           </form>
@@ -437,7 +437,7 @@ export function SwimlaneManagerDialog({
 
                         <Menu as="div" className="relative shrink-0">
                           <MenuButton
-                            title={t`Row actions`}
+                            title={t`Swimlane actions`}
                             aria-label={t`Actions for ${lane.name}`}
                             className="flex h-9 w-9 items-center justify-center rounded-lg text-stone-400 opacity-100 hover:bg-white hover:text-stone-600 md:opacity-0 md:group-hover:opacity-100 md:data-[open]:opacity-100"
                           >
@@ -540,8 +540,8 @@ export function SwimlaneManagerDialog({
                           setRowError(null);
                         }
                       }}
-                      placeholder={t`Row name`}
-                      aria-label={t`Row name`}
+                      placeholder={t`Swimlane name`}
+                      aria-label={t`Swimlane name`}
                       className="h-8 min-w-0 flex-1 rounded-lg border border-stone-200 bg-white px-2 text-xs text-stone-800 outline-none focus:border-brand focus:ring-2 focus:ring-brand/10"
                     />
                     <button
@@ -580,7 +580,7 @@ export function SwimlaneManagerDialog({
                   className="mt-2 flex min-h-11 w-full items-center gap-2 rounded-xl border border-dashed border-brand/20 bg-brand-soft/20 px-3 text-left text-xs font-semibold text-brand-dark hover:border-brand/40 hover:bg-brand-soft/40"
                 >
                   <PlusIcon className="h-4 w-4" />
-                  <Trans>Add row</Trans>
+                  <Trans>Add swimlane</Trans>
                 </button>
               )}
 
@@ -599,8 +599,8 @@ export function SwimlaneManagerDialog({
                         <ExclamationTriangleIcon className="h-4 w-4 shrink-0" />
                         <span>
                           {issue.kind === "duplicate_swimlane_key"
-                            ? t`Duplicate row ID "${issue.key}". The first definition is used.`
-                            : t`Duplicate row name "${issue.name}". Names should be unique.`}
+                            ? t`Duplicate swimlane ID "${issue.key}". The first definition is used.`
+                            : t`Duplicate swimlane name "${issue.name}". Names should be unique.`}
                         </span>
                       </div>
                     ))}
@@ -608,7 +608,7 @@ export function SwimlaneManagerDialog({
                       <div className="flex min-h-11 items-center gap-2 rounded-xl bg-amber-50 px-3 text-xs text-amber-800">
                         <ExclamationTriangleIcon className="h-4 w-4 shrink-0" />
                         <span className="min-w-0 flex-1">
-                          {t`${danglingCount} card(s) refer to deleted rows.`}
+                          {t`${danglingCount} card(s) refer to deleted swimlanes.`}
                         </span>
                         <button
                           type="button"

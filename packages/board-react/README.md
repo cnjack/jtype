@@ -21,9 +21,10 @@ import 'jtype-board-react/style.css'
 
 The component resolves `boardRef` to the `.board` config document itself
 (exact path first, then unique basename anywhere in the workspace), scans the
-board folder's card documents, and gives you the full board: editable status
-columns, cards, drag-to-move (with document writeback), optional horizontal
-rows, multi-select filters, search/sort, Board/Table/Calendar views, and a
+board folder's card documents, and gives you the full board: selectable
+vertical swimlanes (status, priority, assignee, or custom), cards,
+drag-to-move (with document writeback), multi-select filters, search/sort,
+Board/Table/Calendar views, and a
 built-in read-only card detail.
 
 The wrapper fills its container — **give the parent element a height.**
@@ -132,10 +133,12 @@ successful poll.
 
 ## MVP scope
 
-Included: status-column management, drag to move/reorder cards (frontmatter
-`status`/`position` writeback), card create/delete, board/table/calendar,
-optional horizontal rows, multi-select filters, search/sort, read-only card
-detail, and localized chrome.
+Included: vertical swimlane management and drag-to-move with `status`,
+`priority`, `assignee`, or custom `swimlane` frontmatter writeback. Manual
+within-lane reorder applies to Status swimlanes; alternate dimensions move
+cards between lanes without rewriting workflow order. Also included: card
+create/delete, board/table/calendar, multi-select filters, search/sort,
+read-only card detail, and localized chrome.
 Not yet (flag-gated later): members/assignee options, versions/activity,
 ticket badges (the `OCCSV-####` chip — the embed client has no ticket-index
 endpoint, so cards never show it even when the board configures `ticketKey`),

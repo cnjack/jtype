@@ -72,7 +72,7 @@ test("due filters distinguish overdue, today, next seven days, and no due date",
     .toEqual(["none"]);
 });
 
-test("blocked and missing-row filters compose without mutating cards", () => {
+test("blocked and missing-swimlane filters compose without mutating cards", () => {
   const cards = [
     card("matching", {
       blockedBy: ["dependency"],

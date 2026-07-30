@@ -20,106 +20,104 @@ msgstr ""
 
 #. placeholder {0}: counts.get(lane.key) ?? 0
 #. placeholder {0}: row.cardCount
-#: shared/components/board/SwimlaneConversionDialog.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: ../../../shared/components/board/SwimlaneConversionDialog.tsx
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
 msgid "{0, plural, one {# card} other {# cards}}"
 msgstr "{0, plural, one {# 张卡片} other {# 张卡片}}"
 
 #. placeholder {0}: lane.name
 #. placeholder {1}: to + 1
 #. placeholder {2}: lanes.length
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
 msgid "{0} moved to position {1} of {2}."
 msgstr "已将 {0} 移到第 {1} 位，共 {2} 项。"
 
 #. placeholder {0}: prog.done
 #. placeholder {1}: prog.total
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "{0} of {1} sub-cards done"
 msgstr "{1} 张子卡中已完成 {0} 张"
 
 #. placeholder {0}: multiSel.size
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "{0} selected"
 msgstr "已选择 {0} 项"
 
-#: shared/components/board/LaneDetailsPopover.tsx
+#: ../../../shared/components/board/LaneDetailsPopover.tsx
 msgid "{cardCount, plural, one {# card} other {# cards}}"
 msgstr "{cardCount, plural, one {# 张卡片} other {# 张卡片}}"
 
 #: shared/components/board/SwimlaneDeleteDialog.tsx
-msgid "{cardCount} card(s) currently use this row."
-msgstr "当前有 {cardCount} 张卡片使用此横向分组。"
+#~ msgid "{cardCount} card(s) currently use this row."
+#~ msgstr "当前有 {cardCount} 张卡片使用此横向分组。"
 
-#: shared/components/board/SwimlaneDeleteDialog.tsx
-#~ msgid "{cardCount} card(s) currently use this swimlane."
-#~ msgstr "当前有 {cardCount} 张卡片使用此泳道。"
-
-#: shared/components/board/SwimlaneManagerDialog.tsx
-msgid "{danglingCount} card(s) refer to deleted rows."
-msgstr "有 {danglingCount} 张卡片引用了已删除的横向分组。"
+#: ../../../shared/components/board/SwimlaneDeleteDialog.tsx
+msgid "{cardCount} card(s) currently use this swimlane."
+msgstr "当前有 {cardCount} 张卡片使用此泳道。"
 
 #: shared/components/board/SwimlaneManagerDialog.tsx
-#~ msgid "{danglingCount} card(s) refer to deleted swimlanes."
-#~ msgstr "有 {danglingCount} 张卡片引用了已删除的泳道。"
+#~ msgid "{danglingCount} card(s) refer to deleted rows."
+#~ msgstr "有 {danglingCount} 张卡片引用了已删除的横向分组。"
+
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
+msgid "{danglingCount} card(s) refer to deleted swimlanes."
+msgstr "有 {danglingCount} 张卡片引用了已删除的泳道。"
 
 #: shared/components/board/BoardSwimlanes.tsx
-msgid "{missingCount} card(s) refer to deleted rows."
-msgstr "有 {missingCount} 张卡片引用了已删除的横向分组。"
+#~ msgid "{missingCount} card(s) refer to deleted rows."
+#~ msgstr "有 {missingCount} 张卡片引用了已删除的横向分组。"
 
 #: shared/components/board/BoardSwimlanes.tsx
 #~ msgid "{missingCount} card(s) refer to deleted swimlanes."
 #~ msgstr "有 {missingCount} 张卡片引用了已删除的泳道。"
 
 #: shared/components/board/BoardSwimlanes.tsx
-msgid "{total, plural, one {# card} other {# cards}}"
-msgstr "{total, plural, one {# 张卡片} other {# 张卡片}}"
+#~ msgid "{total, plural, one {# card} other {# cards}}"
+#~ msgstr "{total, plural, one {# 张卡片} other {# 张卡片}}"
 
-#: shared/components/board/BoardFilterPopover.tsx
+#: ../../../shared/components/board/BoardFilterPopover.tsx
 msgid "{visibleCount} of {totalCount} cards shown"
 msgstr "显示 {visibleCount}/{totalCount} 张卡片"
 
-#: shared/components/ConflictResolver.tsx
+#: ../../../shared/components/ConflictResolver.tsx
 msgid "← Back to list"
 msgstr "← 返回列表"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "+ Add field"
 msgstr "+ 添加字段"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "+ Add sub-card"
 msgstr "+ 添加子卡片"
 
 #. placeholder {0}: conflicts.length
 #. placeholder {1}: conflicts.length > 1 ? "s" : ""
-#: shared/components/ConflictResolver.tsx
+#: ../../../shared/components/ConflictResolver.tsx
 msgid "⚠ {0} Conflict{1} to Resolve"
 msgstr "⚠ {0} 个冲突{1}待解决"
 
-#: shared/components/ConflictResolver.tsx
+#: ../../../shared/components/ConflictResolver.tsx
 msgid "Accept cloud"
 msgstr "接受云端"
 
-#: shared/components/ConflictResolver.tsx
+#: ../../../shared/components/ConflictResolver.tsx
 msgid "Accept local"
 msgstr "接受本地"
 
 #. placeholder {0}: column.name
 #. placeholder {0}: lane.name
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusActionsMenu.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: ../../../shared/components/board/StatusActionsMenu.tsx
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Actions for {0}"
 msgstr "{0} 的操作"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Activity"
 msgstr "活动"
 
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusManagerDialog.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: ../../../shared/components/board/StatusManagerDialog.tsx
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Add"
 msgstr "添加"
 
@@ -127,7 +125,7 @@ msgstr "添加"
 #~ msgid "Add a comment…"
 #~ msgstr "添加评论…"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Add a comment… (Markdown supported)"
 msgstr "添加评论…（支持 Markdown）"
 
@@ -135,154 +133,154 @@ msgstr "添加评论…（支持 Markdown）"
 #~ msgid "Add column"
 #~ msgstr "添加列"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Add details..."
 msgstr "添加详情..."
 
-#: shared/components/board/controls.tsx
+#: ../../../shared/components/board/controls.tsx
 msgid "Add labels"
 msgstr "添加标签"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Add reaction"
 msgstr "添加回应"
 
 #: shared/components/board/BoardSwimlanes.tsx
 #: shared/components/board/SwimlaneManagerDialog.tsx
-msgid "Add row"
-msgstr "添加横向分组"
+#~ msgid "Add row"
+#~ msgstr "添加横向分组"
 
 #: shared/components/board/BoardSwimlanes.tsx
-msgid "Add stable horizontal groups that stay visible even when they have no "
-"cards."
-msgstr "添加稳定的横向分组，即使没有卡片也会保持显示。"
+#~ msgid "Add stable horizontal groups that stay visible even when they have no cards."
+#~ msgstr "添加稳定的横向分组，即使没有卡片也会保持显示。"
 
-#: shared/components/board/BoardSurface.tsx
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusManagerDialog.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/StatusManagerDialog.tsx
 msgid "Add status"
 msgstr "添加状态"
 
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
-#~ msgid "Add swimlane"
-#~ msgstr "添加泳道"
+#: ../../../shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Add swimlane"
+msgstr "添加泳道"
 
-#: shared/components/board/BoardCalendar.tsx
+#: ../../../shared/components/board/BoardCalendar.tsx
 msgid "Agenda"
 msgstr "日程"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Archived"
 msgstr "归档"
 
-#: shared/components/board/BoardFilterPopover.tsx
-#: shared/components/board/BoardPeek.tsx
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/BoardTable.tsx
+#: ../../../shared/components/board/BoardFilterPopover.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardTable.tsx
 msgid "Assignee"
 msgstr "负责人"
 
 #. placeholder {0}: filters.assignees .map((assignee) => assignee || t`Unassigned`) .join(", ")
-#: shared/components/board/BoardFilterPopover.tsx
+#: ../../../shared/components/board/BoardFilterPopover.tsx
 msgid "Assignee: {0}"
 msgstr "负责人：{0}"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Attachments"
 msgstr "附件"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Blank card"
 msgstr "空白卡片"
 
-#: shared/components/board/BoardFilterPopover.tsx
+#: ../../../shared/components/board/BoardFilterPopover.tsx
 msgid "Blocked"
 msgstr "被阻塞"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Blocked by"
 msgstr "被阻塞于"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Blocked by {blockedCount} unfinished card(s)"
 msgstr "被 {blockedCount} 张未完成卡片阻塞"
 
-#: shared/components/board/BoardFilterPopover.tsx
+#: ../../../shared/components/board/BoardFilterPopover.tsx
 msgid "Blocked cards"
 msgstr "被阻塞的卡片"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Blocks"
 msgstr "阻塞"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Board"
 msgstr "看板"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Board settings"
 msgstr "看板设置"
 
-#: shared/components/EditorToolbar.tsx
+#: ../../../shared/components/EditorToolbar.tsx
 msgid "Bold"
 msgstr "粗体"
 
-#: shared/components/EditorToolbar.tsx
+#: ../../../shared/components/EditorToolbar.tsx
 msgid "Bold (Ctrl+B)"
 msgstr "粗体 (Ctrl+B)"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Calendar"
 msgstr "日历"
 
-#: shared/components/board/BoardPeek.tsx
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/SwimlaneConversionDialog.tsx
-#: shared/components/board/SwimlaneDeleteDialog.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
-#: shared/components/ConfirmDialog.tsx
-#: shared/components/PromptDialog.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/SwimlaneConversionDialog.tsx
+#: ../../../shared/components/board/SwimlaneDeleteDialog.tsx
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
+#: ../../../shared/components/ConfirmDialog.tsx
+#: ../../../shared/components/PromptDialog.tsx
 msgid "Cancel"
 msgstr "取消"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Card"
 msgstr "卡片"
 
-#: shared/components/board/BoardFilterPopover.tsx
+#: ../../../shared/components/board/BoardFilterPopover.tsx
 msgid "Card state"
 msgstr "卡片状态"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Card title (Enter to add, Esc to cancel)"
 msgstr "卡片标题(回车添加,Esc 取消)"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "cards"
 msgstr "张卡片"
 
 #: shared/components/board/BoardFilterPopover.tsx
-msgid "Cards with a missing row"
-msgstr "横向分组缺失的卡片"
+#~ msgid "Cards with a missing row"
+#~ msgstr "横向分组缺失的卡片"
 
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: ../../../shared/components/board/BoardFilterPopover.tsx
+msgid "Cards with a missing swimlane"
+msgstr "泳道映射缺失的卡片"
+
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Change color"
 msgstr "更改颜色"
 
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Changes save automatically."
 msgstr "更改会自动保存。"
 
 #: shared/components/board/SwimlaneDeleteDialog.tsx
-msgid "Choose another row, then update the cards first."
-msgstr "选择另一个横向分组，然后先更新卡片。"
+#~ msgid "Choose another row, then update the cards first."
+#~ msgstr "选择另一个横向分组，然后先更新卡片。"
 
-#: shared/components/board/SwimlaneDeleteDialog.tsx
-#~ msgid "Choose another swimlane, then update the cards first."
-#~ msgstr "选择另一个泳道，然后先更新卡片。"
+#: ../../../shared/components/board/SwimlaneDeleteDialog.tsx
+msgid "Choose another swimlane, then update the cards first."
+msgstr "选择另一个泳道，然后先更新卡片。"
 
-#: shared/components/board/BoardFilterPopover.tsx
+#: ../../../shared/components/board/BoardFilterPopover.tsx
 msgid "Clear all"
 msgstr "清除全部"
 
@@ -290,39 +288,38 @@ msgstr "清除全部"
 #~ msgid "Clear filter"
 #~ msgstr "清除筛选"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Clear selection"
 msgstr "清除选择"
 
-#: shared/components/board/BoardPeek.tsx
-#: shared/components/board/StatusManagerDialog.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/StatusManagerDialog.tsx
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Close"
 msgstr "关闭"
 
-#: shared/components/ConflictResolver.tsx
+#: ../../../shared/components/ConflictResolver.tsx
 msgid "Cloud (remote)"
 msgstr "云端（远程）"
 
-#: shared/components/EditorToolbar.tsx
+#: ../../../shared/components/EditorToolbar.tsx
 msgid "Code"
 msgstr "代码"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Collapse column"
 msgstr "折叠列"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Collapse resolved thread"
 msgstr "折叠已解决话题"
 
-#: shared/components/board/BoardSurface.tsx
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusActionsMenu.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/StatusActionsMenu.tsx
 msgid "Color"
 msgstr "颜色"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Color columns"
 msgstr "彩色列"
 
@@ -331,47 +328,46 @@ msgstr "彩色列"
 #~ msgstr "列名称"
 
 #: shared/components/board/BoardSurface.tsx
-msgid "Columns: Assignee"
-msgstr "列：负责人"
+#~ msgid "Columns: Assignee"
+#~ msgstr "列：负责人"
 
 #: shared/components/board/BoardSurface.tsx
-msgid "Columns: Priority"
-msgstr "列：优先级"
+#~ msgid "Columns: Priority"
+#~ msgstr "列：优先级"
 
 #: shared/components/board/BoardSurface.tsx
-msgid "Columns: Status"
-msgstr "列：状态"
+#~ msgid "Columns: Status"
+#~ msgstr "列：状态"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "comma, separated"
 msgstr "用逗号分隔"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Comment"
 msgstr "评论"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Comments"
 msgstr "评论"
 
-#: shared/components/ConfirmDialog.tsx
+#: ../../../shared/components/ConfirmDialog.tsx
 msgid "Confirm"
 msgstr "确认"
 
-#: shared/components/board/BoardSurface.tsx
-msgid "Conversion stopped because card updates did not persist. Refresh and try "
-"again."
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Conversion stopped because card updates did not persist. Refresh and try again."
 msgstr "卡片更新未能持久化，转换已停止。请刷新后重试。"
 
-#: shared/components/board/LaneDetailsPopover.tsx
+#: ../../../shared/components/board/LaneDetailsPopover.tsx
 msgid "Copied"
 msgstr "已复制"
 
-#: shared/components/board/LaneDetailsPopover.tsx
+#: ../../../shared/components/board/LaneDetailsPopover.tsx
 msgid "Copy"
 msgstr "复制"
 
-#: shared/components/board/LaneDetailsPopover.tsx
+#: ../../../shared/components/board/LaneDetailsPopover.tsx
 msgid "Copy failed."
 msgstr "复制失败。"
 
@@ -379,176 +375,184 @@ msgstr "复制失败。"
 #~ msgid "Copy lane ID"
 #~ msgstr "复制泳道 ID"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Copy link"
 msgstr "复制链接"
 
 #: shared/components/board/LaneDetailsPopover.tsx
-msgid "Copy row ID"
-msgstr "复制横向分组 ID"
+#~ msgid "Copy row ID"
+#~ msgstr "复制横向分组 ID"
 
-#: shared/components/viewers/SwaggerView.tsx
+#: ../../../shared/components/board/LaneDetailsPopover.tsx
+msgid "Copy swimlane ID"
+msgstr "复制泳道 ID"
+
+#: ../../../shared/components/viewers/SwaggerView.tsx
 msgid "Could not render this API specification."
 msgstr "无法渲染此 API 规范。"
 
-#: shared/components/viewers/DrawioView.tsx
+#: ../../../shared/components/viewers/DrawioView.tsx
 msgid "Could not render this Draw.io diagram."
 msgstr "无法渲染此 Draw.io 图表。"
 
-#: shared/components/viewers/PdfView.tsx
+#: ../../../shared/components/viewers/PdfView.tsx
 msgid "Could not render this PDF."
 msgstr "无法渲染此 PDF。"
 
 #: shared/components/board/SwimlaneConversionDialog.tsx
-msgid "Create editable rows"
-msgstr "创建可编辑横向分组"
+#~ msgid "Create editable rows"
+#~ msgstr "创建可编辑横向分组"
 
-#: shared/components/board/SwimlaneConversionDialog.tsx
-#~ msgid "Create editable swimlanes"
-#~ msgstr "创建可编辑泳道"
+#: ../../../shared/components/board/SwimlaneConversionDialog.tsx
+msgid "Create editable swimlanes"
+msgstr "创建可编辑泳道"
 
 #: shared/components/board/BoardSwimlanes.tsx
-msgid "Create your first custom row"
-msgstr "创建第一个自定义横向分组"
+#~ msgid "Create your first custom row"
+#~ msgstr "创建第一个自定义横向分组"
 
 #: shared/components/board/BoardSwimlanes.tsx
 #~ msgid "Create your first swimlane"
 #~ msgstr "创建第一条泳道"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Created"
 msgstr "创建"
 
 #: shared/components/board/BoardSwimlanes.tsx
-msgid "Custom"
-msgstr "自定义"
+#~ msgid "Custom"
+#~ msgstr "自定义"
 
 #: shared/components/board/SwimlaneManagerDialog.tsx
-msgid "Custom rows"
-msgstr "自定义横向分组"
+#~ msgid "Custom rows"
+#~ msgstr "自定义横向分组"
 
-#: shared/components/board/BoardSurface.tsx
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusActionsMenu.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Custom swimlanes"
+msgstr "自定义泳道"
+
+#: ../../../shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/StatusActionsMenu.tsx
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Delete"
 msgstr "删除"
 
 #. placeholder {0}: lane.name
-#: shared/components/board/SwimlaneDeleteDialog.tsx
+#: ../../../shared/components/board/SwimlaneDeleteDialog.tsx
 msgid "Delete \"{0}\"?"
 msgstr "删除“{0}”？"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Delete card"
 msgstr "删除卡片"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Delete comment"
 msgstr "删除评论"
 
 #: shared/components/board/SwimlaneDeleteDialog.tsx
-msgid "Delete only the row. Card references remain recoverable."
-msgstr "仅删除横向分组。卡片引用仍可恢复。"
+#~ msgid "Delete only the row. Card references remain recoverable."
+#~ msgstr "仅删除横向分组。卡片引用仍可恢复。"
+
+#: ../../../shared/components/board/SwimlaneDeleteDialog.tsx
+msgid "Delete only the swimlane. Card references remain recoverable."
+msgstr "仅删除泳道。卡片引用仍可恢复。"
 
 #: shared/components/board/SwimlaneDeleteDialog.tsx
-#~ msgid "Delete only the swimlane. Card references remain recoverable."
-#~ msgstr "仅删除泳道。卡片引用仍可恢复。"
+#~ msgid "Delete row"
+#~ msgstr "删除横向分组"
 
-#: shared/components/board/SwimlaneDeleteDialog.tsx
-msgid "Delete row"
-msgstr "删除横向分组"
-
-#: shared/components/board/SwimlaneDeleteDialog.tsx
-#~ msgid "Delete swimlane"
-#~ msgstr "删除泳道"
+#: ../../../shared/components/board/SwimlaneDeleteDialog.tsx
+msgid "Delete swimlane"
+msgstr "删除泳道"
 
 #: shared/components/board/BoardSwimlanes.tsx
 #: shared/components/board/SwimlaneManagerDialog.tsx
 #~ msgid "Details"
 #~ msgstr "详情"
 
-#: shared/components/viewers/MermaidView.tsx
+#: ../../../shared/components/viewers/MermaidView.tsx
 msgid "Diagram error"
 msgstr "图表错误"
 
-#: shared/components/board/SwimlaneDeleteDialog.tsx
+#: ../../../shared/components/board/SwimlaneDeleteDialog.tsx
 msgid "Do not close this dialog."
 msgstr "请勿关闭此对话框。"
 
-#: shared/components/board/StatusManagerDialog.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: ../../../shared/components/board/StatusManagerDialog.tsx
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Done"
 msgstr "完成"
 
-#: shared/components/board/BoardSurface.tsx
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusManagerDialog.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/StatusManagerDialog.tsx
 msgid "Done column"
 msgstr "完成列"
 
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Drag to reorder"
 msgstr "拖动以重新排序"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Drag to resize"
 msgstr "拖动调整宽度"
 
-#: shared/components/viewers/DrawioView.tsx
+#: ../../../shared/components/viewers/DrawioView.tsx
 msgid "Draw.io diagram"
 msgstr "Draw.io 图表"
 
-#: shared/components/board/BoardPeek.tsx
-#: shared/components/board/BoardTable.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardTable.tsx
 msgid "Due"
 msgstr "截止日期"
 
-#: shared/components/board/BoardFilterPopover.tsx
+#: ../../../shared/components/board/BoardFilterPopover.tsx
 msgid "Due date"
 msgstr "截止日期"
 
-#: shared/components/board/BoardFilterPopover.tsx
+#: ../../../shared/components/board/BoardFilterPopover.tsx
 msgid "Due today"
 msgstr "今天到期"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Duplicate"
 msgstr "复制卡片"
 
-#. placeholder {0}: issue.key
 #: shared/components/board/SwimlaneManagerDialog.tsx
 #~ msgid "Duplicate lane ID \"{0}\". The first definition is used."
 #~ msgstr "泳道 ID“{0}”重复。将使用第一条定义。"
 
+#: shared/components/board/SwimlaneManagerDialog.tsx
+#~ msgid "Duplicate row ID \"{0}\". The first definition is used."
+#~ msgstr "横向分组 ID“{0}”重复。将使用第一条定义。"
+
+#: shared/components/board/SwimlaneManagerDialog.tsx
+#~ msgid "Duplicate row name \"{0}\". Names should be unique."
+#~ msgstr "横向分组名称“{0}”重复。名称应保持唯一。"
+
 #. placeholder {0}: issue.key
-#: shared/components/board/SwimlaneManagerDialog.tsx
-msgid "Duplicate row ID \"{0}\". The first definition is used."
-msgstr "横向分组 ID“{0}”重复。将使用第一条定义。"
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Duplicate swimlane ID \"{0}\". The first definition is used."
+msgstr "泳道 ID“{0}”重复。将使用第一个定义。"
 
 #. placeholder {0}: issue.name
-#: shared/components/board/SwimlaneManagerDialog.tsx
-msgid "Duplicate row name \"{0}\". Names should be unique."
-msgstr "横向分组名称“{0}”重复。名称应保持唯一。"
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Duplicate swimlane name \"{0}\". Names should be unique."
+msgstr "泳道名称“{0}”重复。名称应保持唯一。"
 
-#. placeholder {0}: issue.name
-#: shared/components/board/SwimlaneManagerDialog.tsx
-#~ msgid "Duplicate swimlane name \"{0}\". Names should be unique."
-#~ msgstr "泳道名称“{0}”重复。名称应保持唯一。"
-
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Edit comment"
 msgstr "编辑评论"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "edited"
 msgstr "已编辑"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Exit fullscreen"
 msgstr "退出全屏"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Expand column"
 msgstr "展开列"
 
@@ -556,25 +560,27 @@ msgstr "展开列"
 #~ msgid "Filter"
 #~ msgstr "筛选"
 
-#: shared/components/board/BoardFilterPopover.tsx
+#: ../../../shared/components/board/BoardFilterPopover.tsx
 msgid "Filter cards"
 msgstr "筛选卡片"
 
-#: shared/components/board/BoardFilterPopover.tsx
+#: ../../../shared/components/board/BoardFilterPopover.tsx
 msgid "Filters"
 msgstr "筛选"
 
-#: shared/components/board/BoardFilterPopover.tsx
+#: ../../../shared/components/board/BoardFilterPopover.tsx
 msgid "Filters, {activeCount} active"
 msgstr "筛选，已启用 {activeCount} 项"
 
-#: shared/components/viewers/MermaidView.tsx
-msgid "flowchart TD\n"
+#: ../../../shared/components/viewers/MermaidView.tsx
+msgid ""
+"flowchart TD\n"
 "  A[Start] --> B[End]"
-msgstr "flowchart TD\n"
+msgstr ""
+"flowchart TD\n"
 "  A[开始] --> B[结束]"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Fullscreen"
 msgstr "全屏"
 
@@ -591,70 +597,75 @@ msgstr "全屏"
 #~ msgstr "分组:状态"
 
 #: shared/components/board/SwimlaneManagerDialog.tsx
-#~ msgid "Horizontal groups for this board. Names can change; card mapping stays "
-#~ "attached."
+#~ msgid "Horizontal groups for this board. Names can change; card mapping stays attached."
 #~ msgstr "此看板的横向分组。名称可以更改，卡片映射会保持关联。"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Icon"
 msgstr "图标"
 
-#: shared/components/EditorToolbar.tsx
+#: ../../../shared/components/EditorToolbar.tsx
 msgid "Inline Code"
 msgstr "行内代码"
 
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Issues"
 msgstr "问题"
 
-#: shared/components/EditorToolbar.tsx
+#: ../../../shared/components/EditorToolbar.tsx
 msgid "Italic"
 msgstr "斜体"
 
-#: shared/components/EditorToolbar.tsx
+#: ../../../shared/components/EditorToolbar.tsx
 msgid "Italic (Ctrl+I)"
 msgstr "斜体 (Ctrl+I)"
 
 #: shared/components/board/SwimlaneConversionDialog.tsx
-msgid "JType will create independent custom rows from the current assignee "
-"groups. Card assignee values will stay unchanged."
-msgstr "JType 会根据当前负责人分组创建独立的自定义横向分组。卡片的负责人不会改变。"
+#~ msgid "JType will create independent custom rows from the current assignee groups. Card assignee values will stay unchanged."
+#~ msgstr "JType 会根据当前负责人分组创建独立的自定义横向分组。卡片的负责人不会改变。"
 
 #: shared/components/board/SwimlaneConversionDialog.tsx
-msgid "JType will create independent custom rows from the current priority "
-"groups. Card priority values will stay unchanged."
-msgstr "JType 会根据当前优先级分组创建独立的自定义横向分组。卡片的优先级不会改变。"
+#~ msgid "JType will create independent custom rows from the current priority groups. Card priority values will stay unchanged."
+#~ msgstr "JType 会根据当前优先级分组创建独立的自定义横向分组。卡片的优先级不会改变。"
+
+#: ../../../shared/components/board/SwimlaneConversionDialog.tsx
+msgid "JType will create independent custom swimlanes from the current assignee columns. Card assignee values will stay unchanged."
+msgstr "JType 将根据当前负责人列创建独立的自定义泳道。卡片的负责人值保持不变。"
+
+#: ../../../shared/components/board/SwimlaneConversionDialog.tsx
+msgid "JType will create independent custom swimlanes from the current priority columns. Card priority values will stay unchanged."
+msgstr "JType 将根据当前优先级列创建独立的自定义泳道。卡片的优先级值保持不变。"
 
 #: shared/components/board/SwimlaneConversionDialog.tsx
-#~ msgid "JType will create independent swimlanes from the current assignee rows. "
-#~ "Card assignee values will stay unchanged."
+#~ msgid "JType will create independent swimlanes from the current assignee rows. Card assignee values will stay unchanged."
 #~ msgstr "JType 将根据当前负责人行创建独立泳道。卡片的负责人值不会改变。"
 
 #: shared/components/board/SwimlaneConversionDialog.tsx
-#~ msgid "JType will create independent swimlanes from the current priority rows. "
-#~ "Card priority values will stay unchanged."
+#~ msgid "JType will create independent swimlanes from the current priority rows. Card priority values will stay unchanged."
 #~ msgstr "JType 将根据当前优先级行创建独立泳道。卡片的优先级值不会改变。"
 
 #: shared/components/board/SwimlaneConversionDialog.tsx
-#~ msgid "JType will reuse the existing lane IDs and continue unfinished card "
-#~ "updates."
+#~ msgid "JType will reuse the existing lane IDs and continue unfinished card updates."
 #~ msgstr "JType 将复用现有泳道 ID，并继续未完成的卡片更新。"
 
 #: shared/components/board/SwimlaneConversionDialog.tsx
-msgid "JType will reuse the existing row IDs and continue unfinished card "
-"updates."
-msgstr "JType 会复用现有横向分组 ID，并继续完成尚未结束的卡片更新。"
+#~ msgid "JType will reuse the existing row IDs and continue unfinished card updates."
+#~ msgstr "JType 会复用现有横向分组 ID，并继续完成尚未结束的卡片更新。"
 
-#: shared/components/board/SwimlaneDeleteDialog.tsx
+#: ../../../shared/components/board/SwimlaneConversionDialog.tsx
+msgid "JType will reuse the existing swimlane IDs and continue unfinished card updates."
+msgstr "JType 将复用现有泳道 ID，并继续尚未完成的卡片更新。"
+
+#: ../../../shared/components/board/SwimlaneDeleteDialog.tsx
 msgid "Keep cards in Unassigned"
 msgstr "将卡片保留在未分配"
 
-#: shared/components/board/BoardFilterPopover.tsx
+#: ../../../shared/components/board/BoardFilterPopover.tsx
 msgid "Labels"
 msgstr "标签"
 
 #. placeholder {0}: filters.tags.join(", ")
-#: shared/components/board/BoardFilterPopover.tsx
+#: ../../../shared/components/board/BoardFilterPopover.tsx
 msgid "Labels: {0}"
 msgstr "标签：{0}"
 
@@ -662,7 +673,6 @@ msgstr "标签：{0}"
 #~ msgid "Lane details"
 #~ msgstr "泳道详情"
 
-#. placeholder {0}: lane.name
 #: shared/components/board/LaneDetailsPopover.tsx
 #~ msgid "Lane details for {0}"
 #~ msgstr "{0} 的泳道详情"
@@ -671,49 +681,54 @@ msgstr "标签：{0}"
 #~ msgid "Lane ID"
 #~ msgstr "泳道 ID"
 
-#: shared/components/EditorToolbar.tsx
+#: ../../../shared/components/EditorToolbar.tsx
 msgid "Link"
 msgstr "链接"
 
-#: shared/components/EditorToolbar.tsx
+#: ../../../shared/components/EditorToolbar.tsx
 msgid "Link (Ctrl+K)"
 msgstr "链接 (Ctrl+K)"
 
-#: shared/components/ConflictResolver.tsx
+#: ../../../shared/components/ConflictResolver.tsx
 msgid "Local (yours)"
 msgstr "本地（我的）"
 
 #: shared/components/board/SwimlaneConversionDialog.tsx
-msgid "Make assignee rows editable?"
-msgstr "将负责人横向分组转为可编辑？"
+#~ msgid "Make assignee rows editable?"
+#~ msgstr "将负责人横向分组转为可编辑？"
+
+#: ../../../shared/components/board/SwimlaneConversionDialog.tsx
+msgid "Make assignee swimlanes editable?"
+msgstr "将负责人泳道转为可编辑？"
 
 #: shared/components/board/SwimlaneConversionDialog.tsx
-#~ msgid "Make assignee swimlanes editable?"
-#~ msgstr "将负责人泳道转为可编辑？"
+#~ msgid "Make priority rows editable?"
+#~ msgstr "将优先级横向分组转为可编辑？"
 
-#: shared/components/board/SwimlaneConversionDialog.tsx
-msgid "Make priority rows editable?"
-msgstr "将优先级横向分组转为可编辑？"
-
-#: shared/components/board/SwimlaneConversionDialog.tsx
-#~ msgid "Make priority swimlanes editable?"
-#~ msgstr "将优先级泳道转为可编辑？"
+#: ../../../shared/components/board/SwimlaneConversionDialog.tsx
+msgid "Make priority swimlanes editable?"
+msgstr "将优先级泳道转为可编辑？"
 
 #: shared/components/board/BoardSurface.tsx
-msgid "Make rows editable"
-msgstr "转为可编辑横向分组"
+#~ msgid "Make rows editable"
+#~ msgstr "转为可编辑横向分组"
 
-#: shared/components/board/BoardSurface.tsx
-#~ msgid "Make swimlanes editable"
-#~ msgstr "将泳道转为可编辑"
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Make swimlanes editable"
+msgstr "将泳道转为可编辑"
 
 #: shared/components/board/BoardSurface.tsx
 #: shared/components/board/SwimlaneManagerDialog.tsx
-msgid "Manage custom rows"
-msgstr "管理自定义横向分组"
+#~ msgid "Manage custom rows"
+#~ msgstr "管理自定义横向分组"
 
-#: shared/components/board/BoardSurface.tsx
-#: shared/components/board/StatusManagerDialog.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Manage custom swimlanes"
+msgstr "管理自定义泳道"
+
+#: ../../../shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/StatusManagerDialog.tsx
 msgid "Manage statuses"
 msgstr "管理状态"
 
@@ -722,466 +737,470 @@ msgstr "管理状态"
 #~ msgid "Manage swimlanes"
 #~ msgstr "管理泳道"
 
-#: shared/components/viewers/MermaidView.tsx
+#: ../../../shared/components/viewers/MermaidView.tsx
 msgid "Mermaid diagram"
 msgstr "Mermaid 图表"
 
-#: shared/components/viewers/MermaidView.tsx
+#: ../../../shared/components/viewers/MermaidView.tsx
 msgid "Mermaid source"
 msgstr "Mermaid 源码"
 
 #: shared/components/board/BoardFilterPopover.tsx
-msgid "Missing row"
-msgstr "横向分组缺失"
+#~ msgid "Missing row"
+#~ msgstr "横向分组缺失"
 
-#: shared/components/board/BoardCalendar.tsx
+#: ../../../shared/components/board/BoardFilterPopover.tsx
+msgid "Missing swimlane"
+msgstr "泳道缺失"
+
+#: ../../../shared/components/board/BoardCalendar.tsx
 msgid "Month"
 msgstr "月"
 
-#: shared/components/board/SwimlaneDeleteDialog.tsx
+#: ../../../shared/components/board/SwimlaneDeleteDialog.tsx
 msgid "Move cards and delete"
 msgstr "移动卡片并删除"
 
-#: shared/components/board/SwimlaneDeleteDialog.tsx
+#: ../../../shared/components/board/SwimlaneDeleteDialog.tsx
 msgid "Move cards before deleting"
 msgstr "删除前移动卡片"
 
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusActionsMenu.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: ../../../shared/components/board/StatusActionsMenu.tsx
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Move down"
 msgstr "下移"
 
-#: shared/components/board/StatusActionsMenu.tsx
+#: ../../../shared/components/board/StatusActionsMenu.tsx
 msgid "Move left"
 msgstr "左移"
 
-#: shared/components/board/StatusActionsMenu.tsx
+#: ../../../shared/components/board/StatusActionsMenu.tsx
 msgid "Move right"
 msgstr "右移"
 
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusActionsMenu.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: ../../../shared/components/board/StatusActionsMenu.tsx
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Move up"
 msgstr "上移"
 
-#: shared/components/board/SwimlaneDeleteDialog.tsx
+#: ../../../shared/components/board/SwimlaneDeleteDialog.tsx
 msgid "Moving cards…"
 msgstr "正在移动卡片…"
 
-#: shared/components/board/BoardFilterPopover.tsx
+#: ../../../shared/components/board/BoardFilterPopover.tsx
 msgid "My cards"
 msgstr "我的卡片"
 
-#: shared/components/board/LaneDetailsPopover.tsx
+#: ../../../shared/components/board/LaneDetailsPopover.tsx
 msgid "Name"
 msgstr "名称"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "New card"
 msgstr "新建卡片"
 
-#: shared/components/board/BoardFilterPopover.tsx
+#: ../../../shared/components/board/BoardFilterPopover.tsx
 msgid "Next 7 days"
 msgstr "未来 7 天"
 
-#: shared/components/board/BoardCalendar.tsx
+#: ../../../shared/components/board/BoardCalendar.tsx
 msgid "Next month"
 msgstr "下个月"
 
-#: shared/components/board/SwimlaneConversionDialog.tsx
+#: ../../../shared/components/board/SwimlaneConversionDialog.tsx
 msgid "No assigned values to convert."
 msgstr "没有可转换的已分配值。"
 
-#: shared/components/board/BoardCalendar.tsx
-#: shared/components/board/BoardTable.tsx
+#: ../../../shared/components/board/BoardCalendar.tsx
+#: ../../../shared/components/board/BoardTable.tsx
 msgid "No cards"
 msgstr "暂无卡片"
 
-#: shared/components/board/BoardSurface.tsx
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusActionsMenu.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/StatusActionsMenu.tsx
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
 msgid "No color"
 msgstr "无颜色"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "No comments yet"
 msgstr "暂无评论"
 
-#: shared/components/board/BoardFilterPopover.tsx
+#: ../../../shared/components/board/BoardFilterPopover.tsx
 msgid "No due date"
 msgstr "无截止日期"
 
-#: shared/components/board/controls.tsx
+#: ../../../shared/components/board/controls.tsx
 msgid "No icon"
 msgstr "无图标"
 
-#: shared/components/board/controls.tsx
+#: ../../../shared/components/board/controls.tsx
 msgid "No labels"
 msgstr "暂无标签"
 
-#: shared/components/board/BoardFilterPopover.tsx
+#: ../../../shared/components/board/BoardFilterPopover.tsx
 msgid "No priority"
 msgstr "无优先级"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Notes"
 msgstr "备注"
 
-#: shared/components/ConfirmDialog.tsx
-#: shared/components/PromptDialog.tsx
+#: ../../../shared/components/ConfirmDialog.tsx
+#: ../../../shared/components/PromptDialog.tsx
 msgid "OK"
 msgstr "确定"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Open in editor"
 msgstr "在编辑器中打开"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Open in full editor"
 msgstr "在完整编辑器中打开"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Open sub-card"
 msgstr "打开子卡片"
 
 #: shared/components/board/SwimlaneManagerDialog.tsx
-msgid "Optional horizontal groups for this board. Names can change; cards stay "
-"mapped by row ID."
-msgstr "看板的可选横向分组。名称可以修改，卡片仍通过横向分组 ID 保持映射。"
+#~ msgid "Optional horizontal groups for this board. Names can change; cards stay mapped by row ID."
+#~ msgstr "看板的可选横向分组。名称可以修改，卡片仍通过横向分组 ID 保持映射。"
 
-#: shared/components/board/BoardFilterPopover.tsx
+#: ../../../shared/components/board/BoardFilterPopover.tsx
 msgid "Overdue"
 msgstr "已逾期"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Parent"
 msgstr "父卡片"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Paste a URL or path"
 msgstr "粘贴 URL 或路径"
 
-#: shared/components/viewers/PdfView.tsx
+#: ../../../shared/components/viewers/PdfView.tsx
 msgid "PDF document"
 msgstr "PDF 文档"
 
-#: shared/components/PromptDialog.tsx
+#: ../../../shared/components/PromptDialog.tsx
 msgid "Please enter a value."
 msgstr "请输入内容。"
 
-#: shared/components/board/BoardPeek.tsx
-#: shared/components/ViewModeToggle.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/ViewModeToggle.tsx
 msgid "Preview"
 msgstr "预览"
 
-#: shared/components/board/BoardCalendar.tsx
+#: ../../../shared/components/board/BoardCalendar.tsx
 msgid "Previous month"
 msgstr "上个月"
 
 #: shared/components/board/BoardSurface.tsx
-msgid "Previous row missing"
-msgstr "原横向分组已缺失"
+#~ msgid "Previous row missing"
+#~ msgstr "原横向分组已缺失"
 
-#: shared/components/board/BoardSurface.tsx
-#~ msgid "Previous swimlane missing"
-#~ msgstr "原泳道已不存在"
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Previous swimlane missing"
+msgstr "原泳道已不存在"
 
-#: shared/components/board/BoardFilterPopover.tsx
-#: shared/components/board/BoardPeek.tsx
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/BoardTable.tsx
+#: ../../../shared/components/board/BoardFilterPopover.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardTable.tsx
 msgid "Priority"
 msgstr "优先级"
 
-#. placeholder {0}: filters.priorities.join(", ")
-#: shared/components/board/BoardFilterPopover.tsx
+#. placeholder {0}: priorities.join(", ")
+#: ../../../shared/components/board/BoardFilterPopover.tsx
 msgid "Priority: {0}"
 msgstr "优先级：{0}"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Priority…"
 msgstr "优先级…"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "React"
 msgstr "回应"
 
-#: shared/components/board/SwimlaneDeleteDialog.tsx
+#: ../../../shared/components/board/SwimlaneDeleteDialog.tsx
 msgid "Recommended"
 msgstr "推荐"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Refresh"
 msgstr "刷新"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Relates"
 msgstr "相关"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Remove"
 msgstr "移除"
 
-#: shared/components/board/BoardFilterPopover.tsx
+#: ../../../shared/components/board/BoardFilterPopover.tsx
 msgid "Remove filter"
 msgstr "移除筛选"
 
 #. placeholder {0}: chip.label
-#: shared/components/board/BoardFilterPopover.tsx
+#: ../../../shared/components/board/BoardFilterPopover.tsx
 msgid "Remove filter: {0}"
 msgstr "移除筛选：{0}"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Remove your reaction"
 msgstr "撤回你的回应"
 
-#: shared/components/board/BoardSurface.tsx
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusActionsMenu.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/StatusActionsMenu.tsx
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Rename"
 msgstr "重命名"
 
 #. placeholder {0}: lane.name
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Reorder {0}"
 msgstr "重新排序 {0}"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Reply"
 msgstr "回复"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Reply…"
 msgstr "回复…"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Resolve thread"
 msgstr "解决话题"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Resolved"
 msgstr "已解决"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Restored"
 msgstr "恢复"
 
-#: shared/components/ConflictResolver.tsx
+#: ../../../shared/components/ConflictResolver.tsx
 msgid "Result (editable)"
 msgstr "结果（可编辑）"
 
-#: shared/components/board/SwimlaneConversionDialog.tsx
+#: ../../../shared/components/board/SwimlaneConversionDialog.tsx
 msgid "Resume conversion"
 msgstr "继续转换"
 
 #: shared/components/board/SwimlaneConversionDialog.tsx
-msgid "Resume row conversion?"
-msgstr "继续转换横向分组？"
+#~ msgid "Resume row conversion?"
+#~ msgstr "继续转换横向分组？"
 
-#: shared/components/board/SwimlaneConversionDialog.tsx
-#~ msgid "Resume swimlane conversion?"
-#~ msgstr "继续泳道转换？"
+#: ../../../shared/components/board/SwimlaneConversionDialog.tsx
+msgid "Resume swimlane conversion?"
+msgstr "继续泳道转换？"
 
 #: shared/components/board/BoardPeek.tsx
-msgid "Row"
-msgstr "横向分组"
+#~ msgid "Row"
+#~ msgstr "横向分组"
 
 #: shared/components/board/BoardSwimlanes.tsx
 #: shared/components/board/SwimlaneManagerDialog.tsx
-msgid "Row actions"
-msgstr "横向分组操作"
+#~ msgid "Row actions"
+#~ msgstr "横向分组操作"
 
 #: shared/components/board/SwimlaneManagerDialog.tsx
-msgid "Row color"
-msgstr "横向分组颜色"
+#~ msgid "Row color"
+#~ msgstr "横向分组颜色"
 
 #: shared/components/board/LaneDetailsPopover.tsx
-msgid "Row details"
-msgstr "横向分组详情"
-
-#. placeholder {0}: lane.name
-#: shared/components/board/LaneDetailsPopover.tsx
-msgid "Row details for {0}"
-msgstr "{0} 的横向分组详情"
+#~ msgid "Row details"
+#~ msgstr "横向分组详情"
 
 #: shared/components/board/LaneDetailsPopover.tsx
-msgid "Row ID"
-msgstr "横向分组 ID"
+#~ msgid "Row details for {0}"
+#~ msgstr "{0} 的横向分组详情"
+
+#: shared/components/board/LaneDetailsPopover.tsx
+#~ msgid "Row ID"
+#~ msgstr "横向分组 ID"
 
 #: shared/components/board/SwimlaneManagerDialog.tsx
-msgid "Row name"
-msgstr "横向分组名称"
+#~ msgid "Row name"
+#~ msgstr "横向分组名称"
 
 #: shared/components/board/BoardSwimlanes.tsx
-msgid "Rows"
-msgstr "横向分组"
+#~ msgid "Rows"
+#~ msgstr "横向分组"
 
 #: shared/components/board/SwimlaneConversionDialog.tsx
-msgid "Rows to create"
-msgstr "将创建的横向分组"
+#~ msgid "Rows to create"
+#~ msgstr "将创建的横向分组"
 
 #: shared/components/board/BoardSurface.tsx
-msgid "Rows: Assignee"
-msgstr "横向分组：负责人"
+#~ msgid "Rows: Assignee"
+#~ msgstr "横向分组：负责人"
 
 #: shared/components/board/BoardSurface.tsx
-msgid "Rows: Custom"
-msgstr "横向分组：自定义"
+#~ msgid "Rows: Custom"
+#~ msgstr "横向分组：自定义"
 
 #: shared/components/board/BoardSurface.tsx
-msgid "Rows: None"
-msgstr "横向分组：无"
+#~ msgid "Rows: None"
+#~ msgstr "横向分组：无"
 
 #: shared/components/board/BoardSurface.tsx
-msgid "Rows: Priority"
-msgstr "横向分组：优先级"
+#~ msgid "Rows: Priority"
+#~ msgstr "横向分组：优先级"
 
 #: shared/components/board/BoardSurface.tsx
-msgid "Rows: Status"
-msgstr "横向分组：状态"
+#~ msgid "Rows: Status"
+#~ msgstr "横向分组：状态"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Save"
 msgstr "保存"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Save as template"
 msgstr "存为模板"
 
-#: shared/components/ConflictResolver.tsx
+#: ../../../shared/components/ConflictResolver.tsx
 msgid "Save merged result"
 msgstr "保存合并结果"
 
-#: shared/components/board/SwimlaneManagerDialog.tsx
-#: shared/components/ConflictResolver.tsx
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
+#: ../../../shared/components/ConflictResolver.tsx
 msgid "Saving…"
 msgstr "保存中…"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Search cards"
 msgstr "搜索卡片"
 
-#: shared/components/board/BoardSurface.tsx
-#: shared/components/board/StatusActionsMenu.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/StatusActionsMenu.tsx
 msgid "Set as done column"
 msgstr "设为完成列"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Set priority"
 msgstr "设置优先级"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Set status"
 msgstr "设置状态"
 
-#: shared/components/board/BoardSurface.tsx
-#: shared/components/board/StatusActionsMenu.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/StatusActionsMenu.tsx
 msgid "Set WIP limit"
 msgstr "设置 WIP 限制"
 
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Show affected cards"
 msgstr "显示受影响的卡片"
 
 #: shared/components/board/BoardSwimlanes.tsx
-msgid "Show cards with missing rows"
-msgstr "显示横向分组缺失的卡片"
+#~ msgid "Show cards with missing rows"
+#~ msgstr "显示横向分组缺失的卡片"
 
 #: shared/components/board/BoardSwimlanes.tsx
 #~ msgid "Show cards with missing swimlanes"
 #~ msgstr "显示泳道缺失的卡片"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Show resolved thread"
 msgstr "显示已解决话题"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Someone"
 msgstr "某人"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Sort: Due"
 msgstr "排序:截止"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Sort: Manual"
 msgstr "排序:手动"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Sort: Priority"
 msgstr "排序:优先级"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Sort: Title"
 msgstr "排序:标题"
 
-#: shared/components/ViewModeToggle.tsx
+#: ../../../shared/components/ViewModeToggle.tsx
 msgid "Split"
 msgstr "分栏"
 
-#: shared/components/board/BoardPeek.tsx
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/BoardTable.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardTable.tsx
 msgid "Status"
 msgstr "状态"
 
-#: shared/components/board/StatusActionsMenu.tsx
+#: ../../../shared/components/board/StatusActionsMenu.tsx
 msgid "Status actions"
 msgstr "状态操作"
 
 #: shared/components/board/StatusManagerDialog.tsx
-#~ msgid "Status columns stay available when they are used as columns or "
-#~ "swimlanes."
+#~ msgid "Status columns stay available when they are used as columns or swimlanes."
 #~ msgstr "无论作为列还是泳道使用，状态列都可以继续管理。"
 
-#: shared/components/board/StatusManagerDialog.tsx
+#: ../../../shared/components/board/StatusManagerDialog.tsx
 msgid "Status ID"
 msgstr "状态 ID"
 
-#: shared/components/board/BoardSurface.tsx
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusManagerDialog.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/StatusManagerDialog.tsx
 msgid "Status name"
 msgstr "状态名称"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Status…"
 msgstr "状态…"
 
-#: shared/components/board/StatusManagerDialog.tsx
+#: ../../../shared/components/board/StatusManagerDialog.tsx
 msgid "Statuses"
 msgstr "状态"
 
-#: shared/components/board/StatusManagerDialog.tsx
-msgid "Statuses define the card workflow. Rename or reorder them freely; cards "
-"stay mapped by status ID."
+#: ../../../shared/components/board/StatusManagerDialog.tsx
+msgid "Statuses define the card workflow. Rename or reorder them freely; cards stay mapped by status ID."
 msgstr "状态定义卡片工作流。可自由重命名或排序；卡片始终通过状态 ID 保持映射。"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Sub-cards"
 msgstr "子卡片"
 
-#: shared/components/board/BoardPeek.tsx
-#: shared/components/board/BoardSwimlanes.tsx
-#~ msgid "Swimlane"
-#~ msgstr "泳道"
+#: ../../../shared/components/board/BoardPeek.tsx
+msgid "Swimlane"
+msgstr "泳道"
 
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
-#~ msgid "Swimlane actions"
-#~ msgstr "泳道操作"
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Swimlane actions"
+msgstr "泳道操作"
 
-#: shared/components/board/SwimlaneManagerDialog.tsx
-#~ msgid "Swimlane color"
-#~ msgstr "泳道颜色"
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Swimlane color"
+msgstr "泳道颜色"
 
-#: shared/components/board/SwimlaneManagerDialog.tsx
-#~ msgid "Swimlane name"
-#~ msgstr "泳道名称"
+#: ../../../shared/components/board/LaneDetailsPopover.tsx
+msgid "Swimlane details"
+msgstr "泳道详情"
+
+#. placeholder {0}: lane.name
+#: ../../../shared/components/board/LaneDetailsPopover.tsx
+msgid "Swimlane details for {0}"
+msgstr "{0} 的泳道详情"
+
+#: ../../../shared/components/board/LaneDetailsPopover.tsx
+msgid "Swimlane ID"
+msgstr "泳道 ID"
+
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Swimlane name"
+msgstr "泳道名称"
 
 #: shared/components/board/BoardSurface.tsx
 #~ msgid "Swimlane: Assignee"
@@ -1211,119 +1230,139 @@ msgstr "子卡片"
 #~ msgid "Swimlanes"
 #~ msgstr "泳道"
 
-#: shared/components/board/SwimlaneConversionDialog.tsx
-#~ msgid "Swimlanes to create"
-#~ msgstr "将创建的泳道"
+#: ../../../shared/components/board/SwimlaneConversionDialog.tsx
+msgid "Swimlanes to create"
+msgstr "将创建的泳道"
 
-#: shared/components/board/BoardSurface.tsx
-#: shared/components/EditorToolbar.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Swimlanes: Assignee"
+msgstr "泳道：负责人"
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Swimlanes: Custom"
+msgstr "泳道：自定义"
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Swimlanes: Priority"
+msgstr "泳道：优先级"
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Swimlanes: Status"
+msgstr "泳道：状态"
+
+#: ../../../shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/EditorToolbar.tsx
 msgid "Table"
 msgstr "表格"
 
-#: shared/components/board/BoardPeek.tsx
-#: shared/components/board/BoardTable.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardTable.tsx
 msgid "Tags"
 msgstr "标签"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Templates"
 msgstr "模板"
 
 #: shared/components/board/SwimlaneDeleteDialog.tsx
-msgid "This empty row will be removed from the board."
-msgstr "此空横向分组将从看板中移除。"
+#~ msgid "This empty row will be removed from the board."
+#~ msgstr "此空横向分组将从看板中移除。"
 
-#: shared/components/board/SwimlaneDeleteDialog.tsx
-#~ msgid "This empty swimlane will be removed from the board."
-#~ msgstr "此空泳道将从看板中移除。"
+#: ../../../shared/components/board/SwimlaneDeleteDialog.tsx
+msgid "This empty swimlane will be removed from the board."
+msgstr "此空泳道将从看板中移除。"
 
-#: shared/components/viewers/DiagramView.tsx
+#: ../../../shared/components/viewers/DiagramView.tsx
 msgid "This file type can not be previewed yet."
 msgstr "暂不支持预览此文件类型。"
 
-#: shared/components/board/BoardTable.tsx
+#: ../../../shared/components/board/BoardTable.tsx
 msgid "Title"
 msgstr "标题"
 
-#: shared/components/board/BoardCalendar.tsx
+#: ../../../shared/components/board/BoardCalendar.tsx
 msgid "Today"
 msgstr "今天"
 
-#: shared/components/board/BoardFilterPopover.tsx
-#: shared/components/board/BoardSurface.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: ../../../shared/components/board/BoardFilterPopover.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Unassigned"
 msgstr "未分配"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Unresolve thread"
 msgstr "取消解决"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "unsafe"
 msgstr "不安全"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Unsafe link blocked: {url}"
 msgstr "已拦截不安全链接：{url}"
 
-#: shared/components/board/BoardCalendar.tsx
+#: ../../../shared/components/board/BoardCalendar.tsx
 msgid "Unscheduled"
 msgstr "未排期"
 
-#: shared/components/board/BoardSurface.tsx
-#: shared/components/board/StatusActionsMenu.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/StatusActionsMenu.tsx
 msgid "Unset done column"
 msgstr "取消完成列"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Untitled card"
 msgstr "未命名卡片"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Updated"
 msgstr "更新"
 
-#: shared/components/board/SwimlaneConversionDialog.tsx
+#: ../../../shared/components/board/SwimlaneConversionDialog.tsx
 msgid "Updating cards…"
 msgstr "正在更新卡片…"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Upload"
 msgstr "上传"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Uploading…"
 msgstr "上传中…"
 
-#: shared/components/ConflictResolver.tsx
+#: ../../../shared/components/ConflictResolver.tsx
 msgid "Use this"
 msgstr "使用此版本"
 
-#: shared/components/board/LaneDetailsPopover.tsx
+#: ../../../shared/components/board/LaneDetailsPopover.tsx
 msgid "Used by"
 msgstr "使用情况"
 
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Vertical columns for this board. Names can change; cards stay mapped by swimlane ID."
+msgstr "此看板的纵向列。名称可以修改；卡片始终通过泳道 ID 保持映射。"
+
 #. placeholder {0}: column.limit
-#: shared/components/board/StatusManagerDialog.tsx
+#: ../../../shared/components/board/StatusManagerDialog.tsx
 msgid "WIP {0}"
 msgstr "在制品 {0}"
 
 #. placeholder {0}: col.limit
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "WIP limit {0}"
 msgstr "WIP 限制 {0}"
 
-#: shared/components/board/SwimlaneConversionDialog.tsx
-#: shared/components/board/SwimlaneDeleteDialog.tsx
+#: ../../../shared/components/board/SwimlaneConversionDialog.tsx
+#: ../../../shared/components/board/SwimlaneDeleteDialog.tsx
 msgid "Working…"
 msgstr "正在处理…"
 
-#: shared/components/board/BoardPeek.tsx
-#: shared/components/ViewModeToggle.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/ViewModeToggle.tsx
 msgid "Write"
 msgstr "写作"
 
-#: shared/components/viewers/MermaidView.tsx
+#: ../../../shared/components/viewers/MermaidView.tsx
 msgid "Write Mermaid syntax to see the diagram."
 msgstr "输入 Mermaid 语法以查看图表。"

@@ -2,7 +2,14 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactEle
 import { I18nProvider } from '@lingui/react'
 import { BoardSurface } from '@shared/components/board/BoardSurface'
 import type { BoardActions } from '@shared/components/board/types'
-import { slugify, type BoardViewCard, type BoardViewConfig } from '@shared/lib/board'
+import {
+  activeBoardLaneKey,
+  boardLaneValueOf,
+  cardPatchForLaneValue,
+  slugify,
+  type BoardViewCard,
+  type BoardViewConfig,
+} from '@shared/lib/board'
 import { parseFrontmatter, writeFrontmatter } from '@shared/lib/frontmatter'
 import { createJTypeClient, JTypeApiError, type JTypeBoardDataClient } from './client'
 import { JTypeBoardError } from './resolveBoard'
@@ -316,28 +323,24 @@ export function JTypeBoard({
         const snap = snapRef.current
         if (!snap || !client) return
         try {
-          const groupKey = snap.config.groupBy || 'status'
+          const laneKey = activeBoardLaneKey(snap.config)
           const pos =
             snap.cards
-              .filter(
-                (c) =>
-                  (groupKey === 'status'
-                    ? c.columnKey
-                    : groupKey === 'priority'
-                      ? c.priority || 'none'
-                      : c.assignee || '') === colKey,
-              )
+              .filter((card) => boardLaneValueOf(card, snap.config) === colKey)
               .reduce((m, c) => Math.max(m, c.position), -1) + 1
           const data: Record<string, string> = {
             title,
             board: snap.config.id,
-            status: groupKey === 'status' ? colKey : snap.config.columns[0]?.key ?? 'todo',
+            status: laneKey === 'status' ? colKey : snap.config.columns[0]?.key ?? 'todo',
             position: String(pos),
           }
-          if (groupKey !== 'status') data[groupKey] = colKey
+          const content = applyCardPatch(
+            writeFrontmatter('', data),
+            cardPatchForLaneValue(laneKey, colKey),
+          )
           let rel = `${snap.boardDir}/${slugify(title)}.md`
           if (snap.metaByPath.has(rel)) rel = `${snap.boardDir}/${slugify(title)}-${rand()}.md`
-          await client.saveDocument(workspaceId, { relativePath: rel, content: writeFrontmatter('', data) })
+          await client.saveDocument(workspaceId, { relativePath: rel, content })
           await reload()
           return rel
         } catch (e) {
@@ -378,15 +381,16 @@ export function JTypeBoard({
         withErr(async () => {
           const snap = snapRef.current
           if (!snap || !client) return
-          const groupKey = snap.config.groupBy || 'status'
+          const laneKey = activeBoardLaneKey(snap.config)
           const movedMeta = snap.metaByPath.get(id)
           if (!movedMeta) return
-          if (groupKey !== 'status') {
+          if (laneKey !== 'status') {
             const moved = snap.cards.find((c) => c.id === id)
-            const cur = groupKey === 'priority' ? moved?.priority || 'none' : moved?.assignee || ''
-            if (cur === toCol) return
-            const { data, body } = parseFrontmatter(movedMeta.content)
-            await saveDocContent(id, writeFrontmatter(body, { ...data, [groupKey]: toCol }))
+            if (!moved || boardLaneValueOf(moved, snap.config) === toCol) return
+            await saveDocContent(
+              id,
+              applyCardPatch(movedMeta.content, cardPatchForLaneValue(laneKey, toCol)),
+            )
             await reload()
             return
           }

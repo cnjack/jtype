@@ -20,106 +20,104 @@ msgstr ""
 
 #. placeholder {0}: counts.get(lane.key) ?? 0
 #. placeholder {0}: row.cardCount
-#: shared/components/board/SwimlaneConversionDialog.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: ../../../shared/components/board/SwimlaneConversionDialog.tsx
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
 msgid "{0, plural, one {# card} other {# cards}}"
 msgstr "{0, plural, one {# 件のカード} other {# 件のカード}}"
 
 #. placeholder {0}: lane.name
 #. placeholder {1}: to + 1
 #. placeholder {2}: lanes.length
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
 msgid "{0} moved to position {1} of {2}."
 msgstr "{0}を{2}件中{1}番目に移動しました。"
 
 #. placeholder {0}: prog.done
 #. placeholder {1}: prog.total
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "{0} of {1} sub-cards done"
 msgstr ""
 
 #. placeholder {0}: multiSel.size
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "{0} selected"
 msgstr ""
 
-#: shared/components/board/LaneDetailsPopover.tsx
+#: ../../../shared/components/board/LaneDetailsPopover.tsx
 msgid "{cardCount, plural, one {# card} other {# cards}}"
 msgstr "{cardCount, plural, one {# 件のカード} other {# 件のカード}}"
 
 #: shared/components/board/SwimlaneDeleteDialog.tsx
-msgid "{cardCount} card(s) currently use this row."
-msgstr ""
+#~ msgid "{cardCount} card(s) currently use this row."
+#~ msgstr ""
 
-#: shared/components/board/SwimlaneDeleteDialog.tsx
-#~ msgid "{cardCount} card(s) currently use this swimlane."
-#~ msgstr "現在{cardCount}枚のカードがこのスイムレーンを使用しています。"
-
-#: shared/components/board/SwimlaneManagerDialog.tsx
-msgid "{danglingCount} card(s) refer to deleted rows."
-msgstr ""
+#: ../../../shared/components/board/SwimlaneDeleteDialog.tsx
+msgid "{cardCount} card(s) currently use this swimlane."
+msgstr "現在{cardCount}枚のカードがこのスイムレーンを使用しています。"
 
 #: shared/components/board/SwimlaneManagerDialog.tsx
-#~ msgid "{danglingCount} card(s) refer to deleted swimlanes."
-#~ msgstr "{danglingCount}枚のカードが削除済みのスイムレーンを参照しています。"
+#~ msgid "{danglingCount} card(s) refer to deleted rows."
+#~ msgstr ""
+
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
+msgid "{danglingCount} card(s) refer to deleted swimlanes."
+msgstr "{danglingCount}枚のカードが削除済みのスイムレーンを参照しています。"
 
 #: shared/components/board/BoardSwimlanes.tsx
-msgid "{missingCount} card(s) refer to deleted rows."
-msgstr ""
+#~ msgid "{missingCount} card(s) refer to deleted rows."
+#~ msgstr ""
 
 #: shared/components/board/BoardSwimlanes.tsx
 #~ msgid "{missingCount} card(s) refer to deleted swimlanes."
 #~ msgstr "{missingCount}枚のカードが削除済みのスイムレーンを参照しています。"
 
 #: shared/components/board/BoardSwimlanes.tsx
-msgid "{total, plural, one {# card} other {# cards}}"
-msgstr "{total, plural, one {# 件のカード} other {# 件のカード}}"
+#~ msgid "{total, plural, one {# card} other {# cards}}"
+#~ msgstr "{total, plural, one {# 件のカード} other {# 件のカード}}"
 
-#: shared/components/board/BoardFilterPopover.tsx
+#: ../../../shared/components/board/BoardFilterPopover.tsx
 msgid "{visibleCount} of {totalCount} cards shown"
 msgstr ""
 
-#: shared/components/ConflictResolver.tsx
+#: ../../../shared/components/ConflictResolver.tsx
 msgid "← Back to list"
 msgstr "← リストに戻る"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "+ Add field"
 msgstr ""
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "+ Add sub-card"
 msgstr ""
 
 #. placeholder {0}: conflicts.length
 #. placeholder {1}: conflicts.length > 1 ? "s" : ""
-#: shared/components/ConflictResolver.tsx
+#: ../../../shared/components/ConflictResolver.tsx
 msgid "⚠ {0} Conflict{1} to Resolve"
 msgstr "⚠ {0} 件の競合{1}を解決中"
 
-#: shared/components/ConflictResolver.tsx
+#: ../../../shared/components/ConflictResolver.tsx
 msgid "Accept cloud"
 msgstr "クラウドを採用"
 
-#: shared/components/ConflictResolver.tsx
+#: ../../../shared/components/ConflictResolver.tsx
 msgid "Accept local"
 msgstr "ローカルを採用"
 
 #. placeholder {0}: column.name
 #. placeholder {0}: lane.name
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusActionsMenu.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: ../../../shared/components/board/StatusActionsMenu.tsx
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Actions for {0}"
 msgstr "{0}の操作"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Activity"
 msgstr ""
 
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusManagerDialog.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: ../../../shared/components/board/StatusManagerDialog.tsx
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Add"
 msgstr "追加"
 
@@ -127,7 +125,7 @@ msgstr "追加"
 #~ msgid "Add a comment…"
 #~ msgstr ""
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Add a comment… (Markdown supported)"
 msgstr ""
 
@@ -135,154 +133,154 @@ msgstr ""
 #~ msgid "Add column"
 #~ msgstr "列を追加"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Add details..."
 msgstr "詳細を追加..."
 
-#: shared/components/board/controls.tsx
+#: ../../../shared/components/board/controls.tsx
 msgid "Add labels"
 msgstr "ラベルを追加"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Add reaction"
 msgstr ""
 
 #: shared/components/board/BoardSwimlanes.tsx
 #: shared/components/board/SwimlaneManagerDialog.tsx
-msgid "Add row"
-msgstr ""
+#~ msgid "Add row"
+#~ msgstr ""
 
 #: shared/components/board/BoardSwimlanes.tsx
-msgid "Add stable horizontal groups that stay visible even when they have no "
-"cards."
-msgstr "カードがなくても表示され続ける横方向のグループを追加します。"
+#~ msgid "Add stable horizontal groups that stay visible even when they have no cards."
+#~ msgstr "カードがなくても表示され続ける横方向のグループを追加します。"
 
-#: shared/components/board/BoardSurface.tsx
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusManagerDialog.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/StatusManagerDialog.tsx
 msgid "Add status"
 msgstr "ステータスを追加"
 
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
-#~ msgid "Add swimlane"
-#~ msgstr "スイムレーンを追加"
+#: ../../../shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Add swimlane"
+msgstr "スイムレーンを追加"
 
-#: shared/components/board/BoardCalendar.tsx
+#: ../../../shared/components/board/BoardCalendar.tsx
 msgid "Agenda"
 msgstr ""
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Archived"
 msgstr ""
 
-#: shared/components/board/BoardFilterPopover.tsx
-#: shared/components/board/BoardPeek.tsx
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/BoardTable.tsx
+#: ../../../shared/components/board/BoardFilterPopover.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardTable.tsx
 msgid "Assignee"
 msgstr "担当者"
 
 #. placeholder {0}: filters.assignees .map((assignee) => assignee || t`Unassigned`) .join(", ")
-#: shared/components/board/BoardFilterPopover.tsx
+#: ../../../shared/components/board/BoardFilterPopover.tsx
 msgid "Assignee: {0}"
 msgstr ""
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Attachments"
 msgstr ""
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Blank card"
 msgstr "空のカード"
 
-#: shared/components/board/BoardFilterPopover.tsx
+#: ../../../shared/components/board/BoardFilterPopover.tsx
 msgid "Blocked"
 msgstr ""
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Blocked by"
 msgstr ""
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Blocked by {blockedCount} unfinished card(s)"
 msgstr ""
 
-#: shared/components/board/BoardFilterPopover.tsx
+#: ../../../shared/components/board/BoardFilterPopover.tsx
 msgid "Blocked cards"
 msgstr ""
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Blocks"
 msgstr ""
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Board"
 msgstr "ボード"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Board settings"
 msgstr ""
 
-#: shared/components/EditorToolbar.tsx
+#: ../../../shared/components/EditorToolbar.tsx
 msgid "Bold"
 msgstr "太字"
 
-#: shared/components/EditorToolbar.tsx
+#: ../../../shared/components/EditorToolbar.tsx
 msgid "Bold (Ctrl+B)"
 msgstr "太字 (Ctrl+B)"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Calendar"
 msgstr ""
 
-#: shared/components/board/BoardPeek.tsx
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/SwimlaneConversionDialog.tsx
-#: shared/components/board/SwimlaneDeleteDialog.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
-#: shared/components/ConfirmDialog.tsx
-#: shared/components/PromptDialog.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/SwimlaneConversionDialog.tsx
+#: ../../../shared/components/board/SwimlaneDeleteDialog.tsx
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
+#: ../../../shared/components/ConfirmDialog.tsx
+#: ../../../shared/components/PromptDialog.tsx
 msgid "Cancel"
 msgstr "キャンセル"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Card"
 msgstr "カード"
 
-#: shared/components/board/BoardFilterPopover.tsx
+#: ../../../shared/components/board/BoardFilterPopover.tsx
 msgid "Card state"
 msgstr ""
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Card title (Enter to add, Esc to cancel)"
 msgstr "カードのタイトル（Enter で追加、Esc でキャンセル）"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "cards"
 msgstr "枚のカード"
 
 #: shared/components/board/BoardFilterPopover.tsx
-msgid "Cards with a missing row"
+#~ msgid "Cards with a missing row"
+#~ msgstr ""
+
+#: ../../../shared/components/board/BoardFilterPopover.tsx
+msgid "Cards with a missing swimlane"
 msgstr ""
 
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Change color"
 msgstr "色を変更"
 
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Changes save automatically."
 msgstr "変更は自動的に保存されます。"
 
 #: shared/components/board/SwimlaneDeleteDialog.tsx
-msgid "Choose another row, then update the cards first."
-msgstr ""
+#~ msgid "Choose another row, then update the cards first."
+#~ msgstr ""
 
-#: shared/components/board/SwimlaneDeleteDialog.tsx
-#~ msgid "Choose another swimlane, then update the cards first."
-#~ msgstr "別のスイムレーンを選び、先にカードを更新します。"
+#: ../../../shared/components/board/SwimlaneDeleteDialog.tsx
+msgid "Choose another swimlane, then update the cards first."
+msgstr "別のスイムレーンを選び、先にカードを更新します。"
 
-#: shared/components/board/BoardFilterPopover.tsx
+#: ../../../shared/components/board/BoardFilterPopover.tsx
 msgid "Clear all"
 msgstr ""
 
@@ -290,39 +288,38 @@ msgstr ""
 #~ msgid "Clear filter"
 #~ msgstr "フィルターをクリア"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Clear selection"
 msgstr ""
 
-#: shared/components/board/BoardPeek.tsx
-#: shared/components/board/StatusManagerDialog.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/StatusManagerDialog.tsx
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Close"
 msgstr "閉じる"
 
-#: shared/components/ConflictResolver.tsx
+#: ../../../shared/components/ConflictResolver.tsx
 msgid "Cloud (remote)"
 msgstr "クラウド（リモート）"
 
-#: shared/components/EditorToolbar.tsx
+#: ../../../shared/components/EditorToolbar.tsx
 msgid "Code"
 msgstr "コード"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Collapse column"
 msgstr "列を折りたたむ"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Collapse resolved thread"
 msgstr ""
 
-#: shared/components/board/BoardSurface.tsx
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusActionsMenu.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/StatusActionsMenu.tsx
 msgid "Color"
 msgstr "カラー"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Color columns"
 msgstr "色付き列"
 
@@ -331,47 +328,46 @@ msgstr "色付き列"
 #~ msgstr "列名"
 
 #: shared/components/board/BoardSurface.tsx
-msgid "Columns: Assignee"
-msgstr ""
+#~ msgid "Columns: Assignee"
+#~ msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
-msgid "Columns: Priority"
-msgstr ""
+#~ msgid "Columns: Priority"
+#~ msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
-msgid "Columns: Status"
-msgstr ""
+#~ msgid "Columns: Status"
+#~ msgstr ""
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "comma, separated"
 msgstr "カンマ区切り"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Comment"
 msgstr ""
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Comments"
 msgstr ""
 
-#: shared/components/ConfirmDialog.tsx
+#: ../../../shared/components/ConfirmDialog.tsx
 msgid "Confirm"
 msgstr "確認"
 
-#: shared/components/board/BoardSurface.tsx
-msgid "Conversion stopped because card updates did not persist. Refresh and try "
-"again."
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Conversion stopped because card updates did not persist. Refresh and try again."
 msgstr "カードの更新が保存されなかったため、変換を停止しました。更新して再試行してください。"
 
-#: shared/components/board/LaneDetailsPopover.tsx
+#: ../../../shared/components/board/LaneDetailsPopover.tsx
 msgid "Copied"
 msgstr "コピーしました"
 
-#: shared/components/board/LaneDetailsPopover.tsx
+#: ../../../shared/components/board/LaneDetailsPopover.tsx
 msgid "Copy"
 msgstr "コピー"
 
-#: shared/components/board/LaneDetailsPopover.tsx
+#: ../../../shared/components/board/LaneDetailsPopover.tsx
 msgid "Copy failed."
 msgstr "コピーに失敗しました。"
 
@@ -379,176 +375,184 @@ msgstr "コピーに失敗しました。"
 #~ msgid "Copy lane ID"
 #~ msgstr "スイムレーン ID をコピー"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Copy link"
 msgstr "リンクをコピー"
 
 #: shared/components/board/LaneDetailsPopover.tsx
-msgid "Copy row ID"
+#~ msgid "Copy row ID"
+#~ msgstr ""
+
+#: ../../../shared/components/board/LaneDetailsPopover.tsx
+msgid "Copy swimlane ID"
 msgstr ""
 
-#: shared/components/viewers/SwaggerView.tsx
+#: ../../../shared/components/viewers/SwaggerView.tsx
 msgid "Could not render this API specification."
 msgstr "この API 仕様をレンダリングできませんでした。"
 
-#: shared/components/viewers/DrawioView.tsx
+#: ../../../shared/components/viewers/DrawioView.tsx
 msgid "Could not render this Draw.io diagram."
 msgstr "この Draw.io 図をレンダリングできませんでした。"
 
-#: shared/components/viewers/PdfView.tsx
+#: ../../../shared/components/viewers/PdfView.tsx
 msgid "Could not render this PDF."
 msgstr "この PDF をレンダリングできませんでした。"
 
 #: shared/components/board/SwimlaneConversionDialog.tsx
-msgid "Create editable rows"
-msgstr ""
+#~ msgid "Create editable rows"
+#~ msgstr ""
 
-#: shared/components/board/SwimlaneConversionDialog.tsx
-#~ msgid "Create editable swimlanes"
-#~ msgstr "編集可能なスイムレーンを作成"
+#: ../../../shared/components/board/SwimlaneConversionDialog.tsx
+msgid "Create editable swimlanes"
+msgstr "編集可能なスイムレーンを作成"
 
 #: shared/components/board/BoardSwimlanes.tsx
-msgid "Create your first custom row"
-msgstr ""
+#~ msgid "Create your first custom row"
+#~ msgstr ""
 
 #: shared/components/board/BoardSwimlanes.tsx
 #~ msgid "Create your first swimlane"
 #~ msgstr "最初のスイムレーンを作成"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Created"
 msgstr ""
 
 #: shared/components/board/BoardSwimlanes.tsx
-msgid "Custom"
-msgstr "カスタム"
+#~ msgid "Custom"
+#~ msgstr "カスタム"
 
 #: shared/components/board/SwimlaneManagerDialog.tsx
-msgid "Custom rows"
+#~ msgid "Custom rows"
+#~ msgstr ""
+
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Custom swimlanes"
 msgstr ""
 
-#: shared/components/board/BoardSurface.tsx
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusActionsMenu.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/StatusActionsMenu.tsx
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Delete"
 msgstr "削除"
 
 #. placeholder {0}: lane.name
-#: shared/components/board/SwimlaneDeleteDialog.tsx
+#: ../../../shared/components/board/SwimlaneDeleteDialog.tsx
 msgid "Delete \"{0}\"?"
 msgstr "「{0}」を削除しますか？"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Delete card"
 msgstr "カードを削除"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Delete comment"
 msgstr ""
 
 #: shared/components/board/SwimlaneDeleteDialog.tsx
-msgid "Delete only the row. Card references remain recoverable."
-msgstr ""
+#~ msgid "Delete only the row. Card references remain recoverable."
+#~ msgstr ""
+
+#: ../../../shared/components/board/SwimlaneDeleteDialog.tsx
+msgid "Delete only the swimlane. Card references remain recoverable."
+msgstr "スイムレーンだけを削除します。カードの参照は復元できます。"
 
 #: shared/components/board/SwimlaneDeleteDialog.tsx
-#~ msgid "Delete only the swimlane. Card references remain recoverable."
-#~ msgstr "スイムレーンだけを削除します。カードの参照は復元できます。"
+#~ msgid "Delete row"
+#~ msgstr ""
 
-#: shared/components/board/SwimlaneDeleteDialog.tsx
-msgid "Delete row"
-msgstr ""
-
-#: shared/components/board/SwimlaneDeleteDialog.tsx
-#~ msgid "Delete swimlane"
-#~ msgstr "スイムレーンを削除"
+#: ../../../shared/components/board/SwimlaneDeleteDialog.tsx
+msgid "Delete swimlane"
+msgstr "スイムレーンを削除"
 
 #: shared/components/board/BoardSwimlanes.tsx
 #: shared/components/board/SwimlaneManagerDialog.tsx
 #~ msgid "Details"
 #~ msgstr "詳細"
 
-#: shared/components/viewers/MermaidView.tsx
+#: ../../../shared/components/viewers/MermaidView.tsx
 msgid "Diagram error"
 msgstr "図のエラー"
 
-#: shared/components/board/SwimlaneDeleteDialog.tsx
+#: ../../../shared/components/board/SwimlaneDeleteDialog.tsx
 msgid "Do not close this dialog."
 msgstr "このダイアログを閉じないでください。"
 
-#: shared/components/board/StatusManagerDialog.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: ../../../shared/components/board/StatusManagerDialog.tsx
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Done"
 msgstr "完了"
 
-#: shared/components/board/BoardSurface.tsx
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusManagerDialog.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/StatusManagerDialog.tsx
 msgid "Done column"
 msgstr "完了列"
 
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Drag to reorder"
 msgstr "ドラッグして並べ替え"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Drag to resize"
 msgstr "ドラッグしてサイズ変更"
 
-#: shared/components/viewers/DrawioView.tsx
+#: ../../../shared/components/viewers/DrawioView.tsx
 msgid "Draw.io diagram"
 msgstr "Draw.io 図"
 
-#: shared/components/board/BoardPeek.tsx
-#: shared/components/board/BoardTable.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardTable.tsx
 msgid "Due"
 msgstr "期限"
 
-#: shared/components/board/BoardFilterPopover.tsx
+#: ../../../shared/components/board/BoardFilterPopover.tsx
 msgid "Due date"
 msgstr ""
 
-#: shared/components/board/BoardFilterPopover.tsx
+#: ../../../shared/components/board/BoardFilterPopover.tsx
 msgid "Due today"
 msgstr ""
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Duplicate"
 msgstr "複製"
 
-#. placeholder {0}: issue.key
 #: shared/components/board/SwimlaneManagerDialog.tsx
 #~ msgid "Duplicate lane ID \"{0}\". The first definition is used."
 #~ msgstr "スイムレーン ID「{0}」が重複しています。最初の定義を使用します。"
 
+#: shared/components/board/SwimlaneManagerDialog.tsx
+#~ msgid "Duplicate row ID \"{0}\". The first definition is used."
+#~ msgstr ""
+
+#: shared/components/board/SwimlaneManagerDialog.tsx
+#~ msgid "Duplicate row name \"{0}\". Names should be unique."
+#~ msgstr ""
+
 #. placeholder {0}: issue.key
-#: shared/components/board/SwimlaneManagerDialog.tsx
-msgid "Duplicate row ID \"{0}\". The first definition is used."
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Duplicate swimlane ID \"{0}\". The first definition is used."
 msgstr ""
 
 #. placeholder {0}: issue.name
-#: shared/components/board/SwimlaneManagerDialog.tsx
-msgid "Duplicate row name \"{0}\". Names should be unique."
-msgstr ""
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Duplicate swimlane name \"{0}\". Names should be unique."
+msgstr "スイムレーン名「{0}」が重複しています。名前は一意にしてください。"
 
-#. placeholder {0}: issue.name
-#: shared/components/board/SwimlaneManagerDialog.tsx
-#~ msgid "Duplicate swimlane name \"{0}\". Names should be unique."
-#~ msgstr "スイムレーン名「{0}」が重複しています。名前は一意にしてください。"
-
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Edit comment"
 msgstr ""
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "edited"
 msgstr ""
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Exit fullscreen"
 msgstr "全画面表示を終了"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Expand column"
 msgstr "列を展開"
 
@@ -556,25 +560,27 @@ msgstr "列を展開"
 #~ msgid "Filter"
 #~ msgstr "フィルター"
 
-#: shared/components/board/BoardFilterPopover.tsx
+#: ../../../shared/components/board/BoardFilterPopover.tsx
 msgid "Filter cards"
 msgstr ""
 
-#: shared/components/board/BoardFilterPopover.tsx
+#: ../../../shared/components/board/BoardFilterPopover.tsx
 msgid "Filters"
 msgstr ""
 
-#: shared/components/board/BoardFilterPopover.tsx
+#: ../../../shared/components/board/BoardFilterPopover.tsx
 msgid "Filters, {activeCount} active"
 msgstr ""
 
-#: shared/components/viewers/MermaidView.tsx
-msgid "flowchart TD\n"
+#: ../../../shared/components/viewers/MermaidView.tsx
+msgid ""
+"flowchart TD\n"
 "  A[Start] --> B[End]"
-msgstr "flowchart TD\n"
+msgstr ""
+"flowchart TD\n"
 "  A[開始] --> B[終了]"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Fullscreen"
 msgstr "全画面表示"
 
@@ -591,70 +597,75 @@ msgstr "全画面表示"
 #~ msgstr "グループ：ステータス"
 
 #: shared/components/board/SwimlaneManagerDialog.tsx
-#~ msgid "Horizontal groups for this board. Names can change; card mapping stays "
-#~ "attached."
+#~ msgid "Horizontal groups for this board. Names can change; card mapping stays attached."
 #~ msgstr "このボードの横方向グループです。名前を変更しても、カードの関連付けは維持されます。"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Icon"
 msgstr "アイコン"
 
-#: shared/components/EditorToolbar.tsx
+#: ../../../shared/components/EditorToolbar.tsx
 msgid "Inline Code"
 msgstr "インラインコード"
 
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Issues"
 msgstr "問題"
 
-#: shared/components/EditorToolbar.tsx
+#: ../../../shared/components/EditorToolbar.tsx
 msgid "Italic"
 msgstr "イタリック"
 
-#: shared/components/EditorToolbar.tsx
+#: ../../../shared/components/EditorToolbar.tsx
 msgid "Italic (Ctrl+I)"
 msgstr "イタリック (Ctrl+I)"
 
 #: shared/components/board/SwimlaneConversionDialog.tsx
-msgid "JType will create independent custom rows from the current assignee "
-"groups. Card assignee values will stay unchanged."
+#~ msgid "JType will create independent custom rows from the current assignee groups. Card assignee values will stay unchanged."
+#~ msgstr ""
+
+#: shared/components/board/SwimlaneConversionDialog.tsx
+#~ msgid "JType will create independent custom rows from the current priority groups. Card priority values will stay unchanged."
+#~ msgstr ""
+
+#: ../../../shared/components/board/SwimlaneConversionDialog.tsx
+msgid "JType will create independent custom swimlanes from the current assignee columns. Card assignee values will stay unchanged."
+msgstr ""
+
+#: ../../../shared/components/board/SwimlaneConversionDialog.tsx
+msgid "JType will create independent custom swimlanes from the current priority columns. Card priority values will stay unchanged."
 msgstr ""
 
 #: shared/components/board/SwimlaneConversionDialog.tsx
-msgid "JType will create independent custom rows from the current priority "
-"groups. Card priority values will stay unchanged."
-msgstr ""
-
-#: shared/components/board/SwimlaneConversionDialog.tsx
-#~ msgid "JType will create independent swimlanes from the current assignee rows. "
-#~ "Card assignee values will stay unchanged."
+#~ msgid "JType will create independent swimlanes from the current assignee rows. Card assignee values will stay unchanged."
 #~ msgstr "JType は現在の担当者行から独立したスイムレーンを作成します。カードの担当者は変更されません。"
 
 #: shared/components/board/SwimlaneConversionDialog.tsx
-#~ msgid "JType will create independent swimlanes from the current priority rows. "
-#~ "Card priority values will stay unchanged."
+#~ msgid "JType will create independent swimlanes from the current priority rows. Card priority values will stay unchanged."
 #~ msgstr "JType は現在の優先度行から独立したスイムレーンを作成します。カードの優先度は変更されません。"
 
 #: shared/components/board/SwimlaneConversionDialog.tsx
-#~ msgid "JType will reuse the existing lane IDs and continue unfinished card "
-#~ "updates."
+#~ msgid "JType will reuse the existing lane IDs and continue unfinished card updates."
 #~ msgstr "JType は既存のスイムレーン ID を再利用し、未完了のカード更新を続行します。"
 
 #: shared/components/board/SwimlaneConversionDialog.tsx
-msgid "JType will reuse the existing row IDs and continue unfinished card "
-"updates."
+#~ msgid "JType will reuse the existing row IDs and continue unfinished card updates."
+#~ msgstr ""
+
+#: ../../../shared/components/board/SwimlaneConversionDialog.tsx
+msgid "JType will reuse the existing swimlane IDs and continue unfinished card updates."
 msgstr ""
 
-#: shared/components/board/SwimlaneDeleteDialog.tsx
+#: ../../../shared/components/board/SwimlaneDeleteDialog.tsx
 msgid "Keep cards in Unassigned"
 msgstr "カードを未割り当てに残す"
 
-#: shared/components/board/BoardFilterPopover.tsx
+#: ../../../shared/components/board/BoardFilterPopover.tsx
 msgid "Labels"
 msgstr ""
 
 #. placeholder {0}: filters.tags.join(", ")
-#: shared/components/board/BoardFilterPopover.tsx
+#: ../../../shared/components/board/BoardFilterPopover.tsx
 msgid "Labels: {0}"
 msgstr ""
 
@@ -662,7 +673,6 @@ msgstr ""
 #~ msgid "Lane details"
 #~ msgstr "スイムレーンの詳細"
 
-#. placeholder {0}: lane.name
 #: shared/components/board/LaneDetailsPopover.tsx
 #~ msgid "Lane details for {0}"
 #~ msgstr "{0} のレーン詳細"
@@ -671,49 +681,54 @@ msgstr ""
 #~ msgid "Lane ID"
 #~ msgstr "スイムレーン ID"
 
-#: shared/components/EditorToolbar.tsx
+#: ../../../shared/components/EditorToolbar.tsx
 msgid "Link"
 msgstr "リンク"
 
-#: shared/components/EditorToolbar.tsx
+#: ../../../shared/components/EditorToolbar.tsx
 msgid "Link (Ctrl+K)"
 msgstr "リンク (Ctrl+K)"
 
-#: shared/components/ConflictResolver.tsx
+#: ../../../shared/components/ConflictResolver.tsx
 msgid "Local (yours)"
 msgstr "ローカル（自分の）"
 
 #: shared/components/board/SwimlaneConversionDialog.tsx
-msgid "Make assignee rows editable?"
-msgstr ""
+#~ msgid "Make assignee rows editable?"
+#~ msgstr ""
+
+#: ../../../shared/components/board/SwimlaneConversionDialog.tsx
+msgid "Make assignee swimlanes editable?"
+msgstr "担当者スイムレーンを編集可能にしますか？"
 
 #: shared/components/board/SwimlaneConversionDialog.tsx
-#~ msgid "Make assignee swimlanes editable?"
-#~ msgstr "担当者スイムレーンを編集可能にしますか？"
+#~ msgid "Make priority rows editable?"
+#~ msgstr ""
 
-#: shared/components/board/SwimlaneConversionDialog.tsx
-msgid "Make priority rows editable?"
-msgstr ""
-
-#: shared/components/board/SwimlaneConversionDialog.tsx
-#~ msgid "Make priority swimlanes editable?"
-#~ msgstr "優先度スイムレーンを編集可能にしますか？"
+#: ../../../shared/components/board/SwimlaneConversionDialog.tsx
+msgid "Make priority swimlanes editable?"
+msgstr "優先度スイムレーンを編集可能にしますか？"
 
 #: shared/components/board/BoardSurface.tsx
-msgid "Make rows editable"
-msgstr ""
+#~ msgid "Make rows editable"
+#~ msgstr ""
 
-#: shared/components/board/BoardSurface.tsx
-#~ msgid "Make swimlanes editable"
-#~ msgstr "スイムレーンを編集可能にする"
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Make swimlanes editable"
+msgstr "スイムレーンを編集可能にする"
 
 #: shared/components/board/BoardSurface.tsx
 #: shared/components/board/SwimlaneManagerDialog.tsx
-msgid "Manage custom rows"
+#~ msgid "Manage custom rows"
+#~ msgstr ""
+
+#: ../../../shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Manage custom swimlanes"
 msgstr ""
 
-#: shared/components/board/BoardSurface.tsx
-#: shared/components/board/StatusManagerDialog.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/StatusManagerDialog.tsx
 msgid "Manage statuses"
 msgstr "ステータスを管理"
 
@@ -722,466 +737,470 @@ msgstr "ステータスを管理"
 #~ msgid "Manage swimlanes"
 #~ msgstr "スイムレーンを管理"
 
-#: shared/components/viewers/MermaidView.tsx
+#: ../../../shared/components/viewers/MermaidView.tsx
 msgid "Mermaid diagram"
 msgstr "Mermaid 図"
 
-#: shared/components/viewers/MermaidView.tsx
+#: ../../../shared/components/viewers/MermaidView.tsx
 msgid "Mermaid source"
 msgstr "Mermaid ソース"
 
 #: shared/components/board/BoardFilterPopover.tsx
-msgid "Missing row"
+#~ msgid "Missing row"
+#~ msgstr ""
+
+#: ../../../shared/components/board/BoardFilterPopover.tsx
+msgid "Missing swimlane"
 msgstr ""
 
-#: shared/components/board/BoardCalendar.tsx
+#: ../../../shared/components/board/BoardCalendar.tsx
 msgid "Month"
 msgstr ""
 
-#: shared/components/board/SwimlaneDeleteDialog.tsx
+#: ../../../shared/components/board/SwimlaneDeleteDialog.tsx
 msgid "Move cards and delete"
 msgstr "カードを移動して削除"
 
-#: shared/components/board/SwimlaneDeleteDialog.tsx
+#: ../../../shared/components/board/SwimlaneDeleteDialog.tsx
 msgid "Move cards before deleting"
 msgstr "削除前にカードを移動"
 
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusActionsMenu.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: ../../../shared/components/board/StatusActionsMenu.tsx
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Move down"
 msgstr "下へ移動"
 
-#: shared/components/board/StatusActionsMenu.tsx
+#: ../../../shared/components/board/StatusActionsMenu.tsx
 msgid "Move left"
 msgstr "左へ移動"
 
-#: shared/components/board/StatusActionsMenu.tsx
+#: ../../../shared/components/board/StatusActionsMenu.tsx
 msgid "Move right"
 msgstr "右へ移動"
 
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusActionsMenu.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: ../../../shared/components/board/StatusActionsMenu.tsx
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Move up"
 msgstr "上へ移動"
 
-#: shared/components/board/SwimlaneDeleteDialog.tsx
+#: ../../../shared/components/board/SwimlaneDeleteDialog.tsx
 msgid "Moving cards…"
 msgstr "カードを移動中…"
 
-#: shared/components/board/BoardFilterPopover.tsx
+#: ../../../shared/components/board/BoardFilterPopover.tsx
 msgid "My cards"
 msgstr ""
 
-#: shared/components/board/LaneDetailsPopover.tsx
+#: ../../../shared/components/board/LaneDetailsPopover.tsx
 msgid "Name"
 msgstr "名前"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "New card"
 msgstr "新規カード"
 
-#: shared/components/board/BoardFilterPopover.tsx
+#: ../../../shared/components/board/BoardFilterPopover.tsx
 msgid "Next 7 days"
 msgstr ""
 
-#: shared/components/board/BoardCalendar.tsx
+#: ../../../shared/components/board/BoardCalendar.tsx
 msgid "Next month"
 msgstr ""
 
-#: shared/components/board/SwimlaneConversionDialog.tsx
+#: ../../../shared/components/board/SwimlaneConversionDialog.tsx
 msgid "No assigned values to convert."
 msgstr "変換できる割り当て済みの値がありません。"
 
-#: shared/components/board/BoardCalendar.tsx
-#: shared/components/board/BoardTable.tsx
+#: ../../../shared/components/board/BoardCalendar.tsx
+#: ../../../shared/components/board/BoardTable.tsx
 msgid "No cards"
 msgstr "カードなし"
 
-#: shared/components/board/BoardSurface.tsx
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusActionsMenu.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/StatusActionsMenu.tsx
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
 msgid "No color"
 msgstr "色なし"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "No comments yet"
 msgstr ""
 
-#: shared/components/board/BoardFilterPopover.tsx
+#: ../../../shared/components/board/BoardFilterPopover.tsx
 msgid "No due date"
 msgstr ""
 
-#: shared/components/board/controls.tsx
+#: ../../../shared/components/board/controls.tsx
 msgid "No icon"
 msgstr "アイコンなし"
 
-#: shared/components/board/controls.tsx
+#: ../../../shared/components/board/controls.tsx
 msgid "No labels"
 msgstr "ラベルなし"
 
-#: shared/components/board/BoardFilterPopover.tsx
+#: ../../../shared/components/board/BoardFilterPopover.tsx
 msgid "No priority"
 msgstr ""
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Notes"
 msgstr "ノート"
 
-#: shared/components/ConfirmDialog.tsx
-#: shared/components/PromptDialog.tsx
+#: ../../../shared/components/ConfirmDialog.tsx
+#: ../../../shared/components/PromptDialog.tsx
 msgid "OK"
 msgstr "OK"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Open in editor"
 msgstr "エディターで開く"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Open in full editor"
 msgstr "フルエディターで開く"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Open sub-card"
 msgstr ""
 
 #: shared/components/board/SwimlaneManagerDialog.tsx
-msgid "Optional horizontal groups for this board. Names can change; cards stay "
-"mapped by row ID."
-msgstr ""
+#~ msgid "Optional horizontal groups for this board. Names can change; cards stay mapped by row ID."
+#~ msgstr ""
 
-#: shared/components/board/BoardFilterPopover.tsx
+#: ../../../shared/components/board/BoardFilterPopover.tsx
 msgid "Overdue"
 msgstr ""
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Parent"
 msgstr ""
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Paste a URL or path"
 msgstr ""
 
-#: shared/components/viewers/PdfView.tsx
+#: ../../../shared/components/viewers/PdfView.tsx
 msgid "PDF document"
 msgstr "PDF ドキュメント"
 
-#: shared/components/PromptDialog.tsx
+#: ../../../shared/components/PromptDialog.tsx
 msgid "Please enter a value."
 msgstr "値を入力してください。"
 
-#: shared/components/board/BoardPeek.tsx
-#: shared/components/ViewModeToggle.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/ViewModeToggle.tsx
 msgid "Preview"
 msgstr "プレビュー"
 
-#: shared/components/board/BoardCalendar.tsx
+#: ../../../shared/components/board/BoardCalendar.tsx
 msgid "Previous month"
 msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
-msgid "Previous row missing"
-msgstr ""
+#~ msgid "Previous row missing"
+#~ msgstr ""
 
-#: shared/components/board/BoardSurface.tsx
-#~ msgid "Previous swimlane missing"
-#~ msgstr "以前のスイムレーンが見つかりません"
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Previous swimlane missing"
+msgstr "以前のスイムレーンが見つかりません"
 
-#: shared/components/board/BoardFilterPopover.tsx
-#: shared/components/board/BoardPeek.tsx
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/BoardTable.tsx
+#: ../../../shared/components/board/BoardFilterPopover.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardTable.tsx
 msgid "Priority"
 msgstr "優先度"
 
-#. placeholder {0}: filters.priorities.join(", ")
-#: shared/components/board/BoardFilterPopover.tsx
+#. placeholder {0}: priorities.join(", ")
+#: ../../../shared/components/board/BoardFilterPopover.tsx
 msgid "Priority: {0}"
 msgstr ""
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Priority…"
 msgstr ""
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "React"
 msgstr ""
 
-#: shared/components/board/SwimlaneDeleteDialog.tsx
+#: ../../../shared/components/board/SwimlaneDeleteDialog.tsx
 msgid "Recommended"
 msgstr "推奨"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Refresh"
 msgstr "更新"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Relates"
 msgstr ""
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Remove"
 msgstr ""
 
-#: shared/components/board/BoardFilterPopover.tsx
+#: ../../../shared/components/board/BoardFilterPopover.tsx
 msgid "Remove filter"
 msgstr ""
 
 #. placeholder {0}: chip.label
-#: shared/components/board/BoardFilterPopover.tsx
+#: ../../../shared/components/board/BoardFilterPopover.tsx
 msgid "Remove filter: {0}"
 msgstr ""
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Remove your reaction"
 msgstr ""
 
-#: shared/components/board/BoardSurface.tsx
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusActionsMenu.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/StatusActionsMenu.tsx
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Rename"
 msgstr "名前を変更"
 
 #. placeholder {0}: lane.name
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Reorder {0}"
 msgstr "{0}を並べ替え"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Reply"
 msgstr ""
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Reply…"
 msgstr ""
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Resolve thread"
 msgstr ""
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Resolved"
 msgstr ""
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Restored"
 msgstr ""
 
-#: shared/components/ConflictResolver.tsx
+#: ../../../shared/components/ConflictResolver.tsx
 msgid "Result (editable)"
 msgstr "結果（編集可能）"
 
-#: shared/components/board/SwimlaneConversionDialog.tsx
+#: ../../../shared/components/board/SwimlaneConversionDialog.tsx
 msgid "Resume conversion"
 msgstr "変換を再開"
 
 #: shared/components/board/SwimlaneConversionDialog.tsx
-msgid "Resume row conversion?"
-msgstr ""
+#~ msgid "Resume row conversion?"
+#~ msgstr ""
 
-#: shared/components/board/SwimlaneConversionDialog.tsx
-#~ msgid "Resume swimlane conversion?"
-#~ msgstr "スイムレーンの変換を再開しますか？"
+#: ../../../shared/components/board/SwimlaneConversionDialog.tsx
+msgid "Resume swimlane conversion?"
+msgstr "スイムレーンの変換を再開しますか？"
 
 #: shared/components/board/BoardPeek.tsx
-msgid "Row"
-msgstr ""
+#~ msgid "Row"
+#~ msgstr ""
 
 #: shared/components/board/BoardSwimlanes.tsx
 #: shared/components/board/SwimlaneManagerDialog.tsx
-msgid "Row actions"
-msgstr ""
+#~ msgid "Row actions"
+#~ msgstr ""
 
 #: shared/components/board/SwimlaneManagerDialog.tsx
-msgid "Row color"
-msgstr ""
+#~ msgid "Row color"
+#~ msgstr ""
 
 #: shared/components/board/LaneDetailsPopover.tsx
-msgid "Row details"
-msgstr ""
-
-#. placeholder {0}: lane.name
-#: shared/components/board/LaneDetailsPopover.tsx
-msgid "Row details for {0}"
-msgstr ""
+#~ msgid "Row details"
+#~ msgstr ""
 
 #: shared/components/board/LaneDetailsPopover.tsx
-msgid "Row ID"
-msgstr ""
+#~ msgid "Row details for {0}"
+#~ msgstr ""
+
+#: shared/components/board/LaneDetailsPopover.tsx
+#~ msgid "Row ID"
+#~ msgstr ""
 
 #: shared/components/board/SwimlaneManagerDialog.tsx
-msgid "Row name"
-msgstr ""
+#~ msgid "Row name"
+#~ msgstr ""
 
 #: shared/components/board/BoardSwimlanes.tsx
-msgid "Rows"
-msgstr ""
+#~ msgid "Rows"
+#~ msgstr ""
 
 #: shared/components/board/SwimlaneConversionDialog.tsx
-msgid "Rows to create"
-msgstr ""
+#~ msgid "Rows to create"
+#~ msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
-msgid "Rows: Assignee"
-msgstr ""
+#~ msgid "Rows: Assignee"
+#~ msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
-msgid "Rows: Custom"
-msgstr ""
+#~ msgid "Rows: Custom"
+#~ msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
-msgid "Rows: None"
-msgstr ""
+#~ msgid "Rows: None"
+#~ msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
-msgid "Rows: Priority"
-msgstr ""
+#~ msgid "Rows: Priority"
+#~ msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
-msgid "Rows: Status"
-msgstr ""
+#~ msgid "Rows: Status"
+#~ msgstr ""
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Save"
 msgstr ""
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Save as template"
 msgstr "テンプレートとして保存"
 
-#: shared/components/ConflictResolver.tsx
+#: ../../../shared/components/ConflictResolver.tsx
 msgid "Save merged result"
 msgstr "マージ結果を保存"
 
-#: shared/components/board/SwimlaneManagerDialog.tsx
-#: shared/components/ConflictResolver.tsx
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
+#: ../../../shared/components/ConflictResolver.tsx
 msgid "Saving…"
 msgstr "保存中…"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Search cards"
 msgstr "カードを検索"
 
-#: shared/components/board/BoardSurface.tsx
-#: shared/components/board/StatusActionsMenu.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/StatusActionsMenu.tsx
 msgid "Set as done column"
 msgstr "完了列に設定"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Set priority"
 msgstr ""
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Set status"
 msgstr ""
 
-#: shared/components/board/BoardSurface.tsx
-#: shared/components/board/StatusActionsMenu.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/StatusActionsMenu.tsx
 msgid "Set WIP limit"
 msgstr "WIP 制限を設定"
 
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Show affected cards"
 msgstr "影響を受けるカードを表示"
 
 #: shared/components/board/BoardSwimlanes.tsx
-msgid "Show cards with missing rows"
-msgstr ""
+#~ msgid "Show cards with missing rows"
+#~ msgstr ""
 
 #: shared/components/board/BoardSwimlanes.tsx
 #~ msgid "Show cards with missing swimlanes"
 #~ msgstr "スイムレーンが見つからないカードを表示"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Show resolved thread"
 msgstr ""
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Someone"
 msgstr ""
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Sort: Due"
 msgstr "並べ替え：期限"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Sort: Manual"
 msgstr "並べ替え：手動"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Sort: Priority"
 msgstr "並べ替え：優先度"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Sort: Title"
 msgstr "並べ替え：タイトル"
 
-#: shared/components/ViewModeToggle.tsx
+#: ../../../shared/components/ViewModeToggle.tsx
 msgid "Split"
 msgstr "分割"
 
-#: shared/components/board/BoardPeek.tsx
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/BoardTable.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardTable.tsx
 msgid "Status"
 msgstr "ステータス"
 
-#: shared/components/board/StatusActionsMenu.tsx
+#: ../../../shared/components/board/StatusActionsMenu.tsx
 msgid "Status actions"
 msgstr "ステータスの操作"
 
 #: shared/components/board/StatusManagerDialog.tsx
-#~ msgid "Status columns stay available when they are used as columns or "
-#~ "swimlanes."
+#~ msgid "Status columns stay available when they are used as columns or swimlanes."
 #~ msgstr "ステータス列は、列またはスイムレーンとして使用中でも管理できます。"
 
-#: shared/components/board/StatusManagerDialog.tsx
+#: ../../../shared/components/board/StatusManagerDialog.tsx
 msgid "Status ID"
 msgstr ""
 
-#: shared/components/board/BoardSurface.tsx
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/StatusManagerDialog.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/StatusManagerDialog.tsx
 msgid "Status name"
 msgstr "ステータス名"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Status…"
 msgstr ""
 
-#: shared/components/board/StatusManagerDialog.tsx
+#: ../../../shared/components/board/StatusManagerDialog.tsx
 msgid "Statuses"
 msgstr "ステータス"
 
-#: shared/components/board/StatusManagerDialog.tsx
-msgid "Statuses define the card workflow. Rename or reorder them freely; cards "
-"stay mapped by status ID."
+#: ../../../shared/components/board/StatusManagerDialog.tsx
+msgid "Statuses define the card workflow. Rename or reorder them freely; cards stay mapped by status ID."
 msgstr ""
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Sub-cards"
 msgstr ""
 
-#: shared/components/board/BoardPeek.tsx
-#: shared/components/board/BoardSwimlanes.tsx
-#~ msgid "Swimlane"
-#~ msgstr "スイムレーン"
+#: ../../../shared/components/board/BoardPeek.tsx
+msgid "Swimlane"
+msgstr "スイムレーン"
 
-#: shared/components/board/BoardSwimlanes.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
-#~ msgid "Swimlane actions"
-#~ msgstr "スイムレーンの操作"
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Swimlane actions"
+msgstr "スイムレーンの操作"
 
-#: shared/components/board/SwimlaneManagerDialog.tsx
-#~ msgid "Swimlane color"
-#~ msgstr "スイムレーンの色"
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Swimlane color"
+msgstr "スイムレーンの色"
 
-#: shared/components/board/SwimlaneManagerDialog.tsx
-#~ msgid "Swimlane name"
-#~ msgstr "スイムレーン名"
+#: ../../../shared/components/board/LaneDetailsPopover.tsx
+msgid "Swimlane details"
+msgstr ""
+
+#. placeholder {0}: lane.name
+#: ../../../shared/components/board/LaneDetailsPopover.tsx
+msgid "Swimlane details for {0}"
+msgstr ""
+
+#: ../../../shared/components/board/LaneDetailsPopover.tsx
+msgid "Swimlane ID"
+msgstr ""
+
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Swimlane name"
+msgstr "スイムレーン名"
 
 #: shared/components/board/BoardSurface.tsx
 #~ msgid "Swimlane: Assignee"
@@ -1211,119 +1230,139 @@ msgstr ""
 #~ msgid "Swimlanes"
 #~ msgstr "スイムレーン"
 
-#: shared/components/board/SwimlaneConversionDialog.tsx
-#~ msgid "Swimlanes to create"
-#~ msgstr "作成するスイムレーン"
+#: ../../../shared/components/board/SwimlaneConversionDialog.tsx
+msgid "Swimlanes to create"
+msgstr "作成するスイムレーン"
 
-#: shared/components/board/BoardSurface.tsx
-#: shared/components/EditorToolbar.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Swimlanes: Assignee"
+msgstr ""
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Swimlanes: Custom"
+msgstr ""
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Swimlanes: Priority"
+msgstr ""
+
+#: ../../../shared/components/board/BoardSurface.tsx
+msgid "Swimlanes: Status"
+msgstr ""
+
+#: ../../../shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/EditorToolbar.tsx
 msgid "Table"
 msgstr "表"
 
-#: shared/components/board/BoardPeek.tsx
-#: shared/components/board/BoardTable.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardTable.tsx
 msgid "Tags"
 msgstr "タグ"
 
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "Templates"
 msgstr "テンプレート"
 
 #: shared/components/board/SwimlaneDeleteDialog.tsx
-msgid "This empty row will be removed from the board."
-msgstr ""
+#~ msgid "This empty row will be removed from the board."
+#~ msgstr ""
 
-#: shared/components/board/SwimlaneDeleteDialog.tsx
-#~ msgid "This empty swimlane will be removed from the board."
-#~ msgstr "この空のスイムレーンをボードから削除します。"
+#: ../../../shared/components/board/SwimlaneDeleteDialog.tsx
+msgid "This empty swimlane will be removed from the board."
+msgstr "この空のスイムレーンをボードから削除します。"
 
-#: shared/components/viewers/DiagramView.tsx
+#: ../../../shared/components/viewers/DiagramView.tsx
 msgid "This file type can not be previewed yet."
 msgstr "このファイル形式はまだプレビューできません。"
 
-#: shared/components/board/BoardTable.tsx
+#: ../../../shared/components/board/BoardTable.tsx
 msgid "Title"
 msgstr "タイトル"
 
-#: shared/components/board/BoardCalendar.tsx
+#: ../../../shared/components/board/BoardCalendar.tsx
 msgid "Today"
 msgstr ""
 
-#: shared/components/board/BoardFilterPopover.tsx
-#: shared/components/board/BoardSurface.tsx
-#: shared/components/board/SwimlaneManagerDialog.tsx
+#: ../../../shared/components/board/BoardFilterPopover.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Unassigned"
 msgstr "未割り当て"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Unresolve thread"
 msgstr ""
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "unsafe"
 msgstr ""
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Unsafe link blocked: {url}"
 msgstr ""
 
-#: shared/components/board/BoardCalendar.tsx
+#: ../../../shared/components/board/BoardCalendar.tsx
 msgid "Unscheduled"
 msgstr ""
 
-#: shared/components/board/BoardSurface.tsx
-#: shared/components/board/StatusActionsMenu.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/StatusActionsMenu.tsx
 msgid "Unset done column"
 msgstr "完了列を解除"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Untitled card"
 msgstr "無題のカード"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Updated"
 msgstr ""
 
-#: shared/components/board/SwimlaneConversionDialog.tsx
+#: ../../../shared/components/board/SwimlaneConversionDialog.tsx
 msgid "Updating cards…"
 msgstr "カードを更新中…"
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Upload"
 msgstr ""
 
-#: shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
 msgid "Uploading…"
 msgstr ""
 
-#: shared/components/ConflictResolver.tsx
+#: ../../../shared/components/ConflictResolver.tsx
 msgid "Use this"
 msgstr "これを使用"
 
-#: shared/components/board/LaneDetailsPopover.tsx
+#: ../../../shared/components/board/LaneDetailsPopover.tsx
 msgid "Used by"
 msgstr "使用状況"
 
+#: ../../../shared/components/board/SwimlaneManagerDialog.tsx
+msgid "Vertical columns for this board. Names can change; cards stay mapped by swimlane ID."
+msgstr ""
+
 #. placeholder {0}: column.limit
-#: shared/components/board/StatusManagerDialog.tsx
+#: ../../../shared/components/board/StatusManagerDialog.tsx
 msgid "WIP {0}"
 msgstr "WIP {0}"
 
 #. placeholder {0}: col.limit
-#: shared/components/board/BoardSurface.tsx
+#: ../../../shared/components/board/BoardSurface.tsx
 msgid "WIP limit {0}"
 msgstr "WIP 制限 {0}"
 
-#: shared/components/board/SwimlaneConversionDialog.tsx
-#: shared/components/board/SwimlaneDeleteDialog.tsx
+#: ../../../shared/components/board/SwimlaneConversionDialog.tsx
+#: ../../../shared/components/board/SwimlaneDeleteDialog.tsx
 msgid "Working…"
 msgstr "処理中…"
 
-#: shared/components/board/BoardPeek.tsx
-#: shared/components/ViewModeToggle.tsx
+#: ../../../shared/components/board/BoardPeek.tsx
+#: ../../../shared/components/ViewModeToggle.tsx
 msgid "Write"
 msgstr "記述"
 
-#: shared/components/viewers/MermaidView.tsx
+#: ../../../shared/components/viewers/MermaidView.tsx
 msgid "Write Mermaid syntax to see the diagram."
 msgstr "Mermaid 構文を書くと図が表示されます。"

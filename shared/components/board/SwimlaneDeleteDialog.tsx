@@ -77,8 +77,8 @@ export function SwimlaneDeleteDialog({
                 </DialogTitle>
                 <p id="swimlane-delete-description" className="mt-1 text-xs leading-5 text-brand-gray">
                   {cardCount > 0
-                    ? t`${cardCount} card(s) currently use this row.`
-                    : t`This empty row will be removed from the board.`}
+                    ? t`${cardCount} card(s) currently use this swimlane.`
+                    : t`This empty swimlane will be removed from the board.`}
                 </p>
 
                 {cardCount > 0 && (
@@ -98,7 +98,7 @@ export function SwimlaneDeleteDialog({
                           </span>
                         </span>
                         <span className="mt-1 block text-[11px] leading-4 text-brand-gray">
-                          <Trans>Delete only the row. Card references remain recoverable.</Trans>
+                          <Trans>Delete only the swimlane. Card references remain recoverable.</Trans>
                         </span>
                       </span>
                     </Radio>
@@ -114,7 +114,7 @@ export function SwimlaneDeleteDialog({
                           <Trans>Move cards before deleting</Trans>
                         </span>
                         <span className="mt-1 block text-[11px] leading-4 text-brand-gray">
-                          <Trans>Choose another row, then update the cards first.</Trans>
+                          <Trans>Choose another swimlane, then update the cards first.</Trans>
                         </span>
                       </span>
                     </Radio>
@@ -186,7 +186,7 @@ export function SwimlaneDeleteDialog({
                     ? t`Working…`
                     : cardCount > 0 && mode === "move"
                       ? t`Move cards and delete`
-                      : t`Delete row`}
+                      : t`Delete swimlane`}
                 </button>
               </div>
             </>

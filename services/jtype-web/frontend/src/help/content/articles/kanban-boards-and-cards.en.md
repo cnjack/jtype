@@ -4,9 +4,9 @@ If you want Web or team access and haven't connected a workspace yet, start with
 
 ## Boards and columns
 
-A **board** belongs to one workspace and groups related work — a roadmap, a sprint, a content calendar. Every new board starts with three statuses: **To do**, **Doing**, and **Done**, normally displayed as columns. You can rename, recolor, and reorder statuses, and give each one an optional WIP (work-in-progress) limit as a gentle hint. The limit is advisory only — JType never blocks you from adding one more card.
+A **board** belongs to one workspace and groups related work — a roadmap, a sprint, a content calendar. Every new board starts with three statuses: **To do**, **Doing**, and **Done**, displayed as vertical swimlanes. You can rename, recolor, and reorder statuses, and give each one an optional WIP (work-in-progress) limit as a gentle hint. The limit is advisory only — JType never blocks you from adding one more card.
 
-Each status has a stable ID stored in the card's `status` frontmatter field, so renaming a status does not disconnect its cards. The visual board can also add optional horizontal **Rows** by priority, assignee, status, or a custom row ID. Rows organize the view; they do not replace status.
+Each status has a stable ID stored in the card's `status` frontmatter field, so renaming a status does not disconnect its cards. Status is the default swimlane choice, but you can switch the same vertical columns to **Priority**, **Assignee**, or **Custom**. Dragging a card between swimlanes updates the field that owns the current view: `status`, `priority`, `assignee`, or the stable custom `swimlane` ID.
 
 To see the boards in a workspace from the terminal:
 
@@ -48,7 +48,7 @@ A couple of rules worth knowing: an assignee has to be an active member of the w
 
 ## How cards relate to notes
 
-This is the part people miss: **a card is not a separate database row you can never reach again.** In JType's unified model, a card *is* a Markdown note in your vault. Its kanban fields — which board, which column, priority, assignee — live in the note's frontmatter, and its body is the card's description:
+This is the part people miss: **a card is not a separate database row you can never reach again.** In JType's unified model, a card *is* a Markdown note in your vault. Its kanban fields — which board, which swimlane, priority, assignee — live in the note's frontmatter, and its body is the card's description:
 
 ```markdown
 ---

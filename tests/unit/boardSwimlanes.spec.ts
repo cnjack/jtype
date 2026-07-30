@@ -1,6 +1,10 @@
 import { test, expect } from "@playwright/test";
 import {
+  activeBoardLaneKey,
   applyBoardCardPatch,
+  boardLaneValueOf,
+  cardPatchForLaneValue,
+  effectiveColumns,
   effectiveSwimlanes,
   hasDanglingSwimlane,
   normalizeSwimlaneBy,
@@ -13,12 +17,47 @@ import {
 } from "../../shared/lib/board";
 import { parseFrontmatter } from "../../shared/lib/frontmatter";
 
-// Pure-logic acceptance for C4 swimlanes: the 2-D board view buckets cards into
-// laneValue → columnValue → cards, which partitionSwimlanes computes.
+// Pure-logic acceptance for vertical swimlanes. The partition tests below
+// preserve compatibility coverage for boards saved by the retired 2-D layout.
 
 function c(id: string, columnKey: string, extra: Partial<BoardViewCard> = {}): BoardViewCard {
   return { id, columnKey, position: 0, title: id, tags: [], ...extra };
 }
+
+test("one active vertical swimlane dimension is selected with legacy compatibility", () => {
+  expect(activeBoardLaneKey({})).toBe("status");
+  expect(activeBoardLaneKey({ groupBy: "priority" })).toBe("priority");
+  expect(activeBoardLaneKey({ groupBy: "status", swimlaneBy: "custom" })).toBe("custom");
+  expect(activeBoardLaneKey({ groupBy: "status", swimlaneBy: "assignee" })).toBe("assignee");
+});
+
+test("vertical swimlane drops patch the field owned by the selected dimension", () => {
+  expect(cardPatchForLaneValue("status", "doing")).toEqual({ columnKey: "doing" });
+  expect(cardPatchForLaneValue("priority", "high")).toEqual({ priority: "high" });
+  expect(cardPatchForLaneValue("priority", "none")).toEqual({ priority: null });
+  expect(cardPatchForLaneValue("assignee", "Jack")).toEqual({ assignee: "Jack" });
+  expect(cardPatchForLaneValue("assignee", "")).toEqual({ assignee: null });
+  expect(cardPatchForLaneValue("custom", "lane_platform_12345678")).toEqual({
+    swimlaneKey: "lane_platform_12345678",
+  });
+  expect(cardPatchForLaneValue("custom", "")).toEqual({ swimlaneKey: null });
+});
+
+test("assignee swimlanes always include an Unassigned create and drop target", () => {
+  const config: BoardViewConfig = {
+    title: "Roadmap",
+    columns: [{ key: "todo", name: "To do" }],
+  };
+  expect(effectiveColumns(config, [], "assignee", "Unassigned")).toEqual([
+    { key: "", name: "Unassigned" },
+  ]);
+  expect(
+    effectiveColumns(config, [c("assigned", "todo", { assignee: "Jack" })], "assignee", "Unassigned"),
+  ).toEqual([
+    { key: "Jack", name: "Jack" },
+    { key: "", name: "Unassigned" },
+  ]);
+});
 
 test("partitionSwimlanes buckets by lane (swimlane dim) then column (group dim)", () => {
   const cards = [
@@ -74,6 +113,20 @@ test("custom swimlanes keep empty definitions and bucket dangling card keys into
   expect(grid.get("lane_platform_12345678")!.get("todo")!.map((card) => card.id)).toEqual(["valid"]);
   expect(grid.get("")!.get("todo")!.map((card) => card.id).sort()).toEqual(["missing", "none"]);
   expect(hasDanglingSwimlane(cards[1]!, config.swimlanes)).toBe(true);
+  expect(boardLaneValueOf(cards[0]!, config)).toBe("lane_platform_12345678");
+  expect(boardLaneValueOf(cards[1]!, config)).toBe("");
+  expect(boardLaneValueOf(cards[2]!, config)).toBe("");
+});
+
+test("an empty custom board still exposes an Unassigned create and drop target", () => {
+  expect(
+    effectiveSwimlanes(
+      { title: "Empty", columns: [], swimlaneBy: "custom", swimlanes: [] },
+      [],
+      "custom",
+      "Unassigned",
+    ),
+  ).toEqual([{ key: "", name: "Unassigned" }]);
 });
 
 test("Missing swimlane filter finds only dangling references", () => {

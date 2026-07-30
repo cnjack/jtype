@@ -6,8 +6,11 @@ import { BoardSurface, BoardPeek, type BoardActions } from '@shared/components/b
 import { useWorkspaceSocket } from '../hooks/useWorkspaceSocket'
 import {
   DEFAULT_DONE_COLUMN,
+  activeBoardLaneKey,
   applyBoardCardPatch,
+  boardLaneValueOf,
   bodyExcerpt,
+  cardPatchForLaneValue,
   countTasks,
   parseAttachments,
   parseLinks,
@@ -334,16 +337,21 @@ export function WebBoardView({
       },
       createCard: async (colKey, title) => {
         if (!config) return
-        const groupKey = config.groupBy || 'status'
-        const pos = cards.filter((c) => (groupKey === 'status' ? c.columnKey : groupKey === 'priority' ? c.priority || 'none' : c.assignee || '') === colKey).reduce((m, c) => Math.max(m, c.position), -1) + 1
+        const laneKey = activeBoardLaneKey(config)
+        const pos = cards
+          .filter((card) => boardLaneValueOf(card, config) === colKey)
+          .reduce((max, card) => Math.max(max, card.position), -1) + 1
         const data: Record<string, string> = {
           title,
           board: config.id,
-          status: groupKey === 'status' ? colKey : config.columns[0]?.key ?? 'todo',
+          status: laneKey === 'status' ? colKey : config.columns[0]?.key ?? 'todo',
           position: String(pos),
         }
-        if (groupKey !== 'status') data[groupKey] = colKey
-        const rel = await createCardDoc(title, data)
+        const content = applyBoardCardPatch(
+          writeFrontmatter('', data),
+          cardPatchForLaneValue(laneKey, colKey),
+        )
+        const rel = await createCardDoc(title, parseFrontmatter(content).data)
         await load()
         return rel
       },
@@ -397,16 +405,19 @@ export function WebBoardView({
       },
       moveCard: async (id, toCol, index) => {
         if (!config) return
-        const groupKey = config.groupBy || 'status'
+        const laneKey = activeBoardLaneKey(config)
         const movedMeta = metaByPath.get(id)
         if (!movedMeta) return
         try {
-          if (groupKey !== 'status') {
+          if (laneKey !== 'status') {
             const moved = cards.find((c) => c.id === id)
-            const cur = groupKey === 'priority' ? moved?.priority || 'none' : moved?.assignee || ''
-            if (cur === toCol) return
-            const { data, body } = parseFrontmatter(movedMeta.content)
-            await saveCard(id, { ...data, [groupKey]: toCol }, body)
+            if (!moved || boardLaneValueOf(moved, config) === toCol) return
+            const patched = applyBoardCardPatch(
+              movedMeta.content,
+              cardPatchForLaneValue(laneKey, toCol),
+            )
+            const { data, body } = parseFrontmatter(patched)
+            await saveCard(id, data, body)
             await load()
             return
           }

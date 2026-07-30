@@ -544,7 +544,8 @@ test("opens a desktop board and manages status columns from the shared toolbar",
   await page.locator("#workspace-sidebar").getByRole("button", { name: /roadmap\.board/ }).click();
 
   await expect(page.getByText("Product roadmap")).toBeVisible();
-  await expect(page.locator('option[value="status"]').first()).toHaveText("Columns: Status");
+  const swimlanes = page.getByLabel("Swimlanes", { exact: true });
+  await expect(swimlanes.locator('option[value="status"]')).toHaveText("Swimlanes: Status");
   await page.getByRole("button", { name: "Manage statuses" }).click();
 
   const dialog = page.getByRole("dialog", { name: "Manage statuses" });
@@ -558,6 +559,34 @@ test("opens a desktop board and manages status columns from the shared toolbar",
       page.evaluate(() => JSON.parse(window.__E2E_FS__["C:/workspace/roadmap.board"]).columns.map((column: { name: string }) => column.name)),
     )
     .toContain("Review");
+  await dialog.getByRole("button", { name: "Done", exact: true }).click();
+
+  await swimlanes.selectOption("priority");
+  await expect
+    .poll(() =>
+      page.evaluate(() => JSON.parse(window.__E2E_FS__["C:/workspace/roadmap.board"]).groupBy),
+    )
+    .toBe("priority");
+  const card = page.locator('[data-card-id="C:/workspace/roadmap/desktop-card.md"]');
+  const target = page.locator('[data-col-key="urgent"]');
+  const cardBox = await card.boundingBox();
+  const targetBox = await target.boundingBox();
+  expect(cardBox).not.toBeNull();
+  expect(targetBox).not.toBeNull();
+
+  await page.mouse.move(cardBox!.x + cardBox!.width / 2, cardBox!.y + cardBox!.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(cardBox!.x + cardBox!.width / 2 + 8, cardBox!.y + cardBox!.height / 2, { steps: 4 });
+  await expect(card).toHaveClass(/opacity-40/);
+  await page.mouse.move(targetBox!.x + targetBox!.width / 2, targetBox!.y + 80, { steps: 12 });
+  await expect(target).toHaveClass(/border-brand\/40/);
+  await page.mouse.up();
+
+  await expect
+    .poll(() =>
+      page.evaluate(() => window.__E2E_FS__["C:/workspace/roadmap/desktop-card.md"] ?? ""),
+    )
+    .toContain("priority: urgent");
 });
 
 test("opens an initial markdown file passed by the OS", async ({ page }) => {

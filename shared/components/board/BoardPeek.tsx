@@ -288,7 +288,7 @@ export function BoardPeek({
           {swimlaneOptions && (
             <>
               <span className="text-xs text-brand-gray">
-                <Trans>Row</Trans>
+                <Trans>Swimlane</Trans>
               </span>
               <ListboxSelect
                 value={draft.swimlaneKey ?? ""}

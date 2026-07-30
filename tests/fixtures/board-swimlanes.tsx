@@ -3,8 +3,10 @@ import { createRoot } from "react-dom/client";
 import { I18nProvider } from "@lingui/react";
 import { BoardPeek, BoardSurface, type BoardActions } from "@shared/components/board";
 import {
+  activeBoardLaneKey,
+  boardLaneValueOf,
+  cardPatchForLaneValue,
   slugify,
-  type BoardSwimlane,
   type BoardViewCard,
   type BoardViewConfig,
 } from "@shared/lib/board";
@@ -111,18 +113,20 @@ function Harness() {
         });
         setConfig((current) => ({ ...current, ...patch }));
       },
-      createCard: async (columnKey, title) => {
+      createCard: async (laneKey, title) => {
         const id = `roadmap/${slugify(title)}.md`;
+        const activeLane = activeBoardLaneKey(config);
         setCards((current) => [
           ...current,
           {
             id,
-            columnKey,
+            columnKey: activeLane === "status" ? laneKey : config.columns[0]?.key ?? "todo",
             position: current.length,
             title,
             priority: "none",
             swimlaneKey: null,
             tags: [],
+            ...cardPatchForLaneValue(activeLane, laneKey),
           },
         ]);
         return id;
@@ -154,10 +158,21 @@ function Harness() {
           onProgress?.(completed, updates.length);
         }
       },
-      moveCard: async (cardId, columnKey, position) => {
+      moveCard: async (cardId, laneKey, position) => {
+        const activeLane = activeBoardLaneKey(config);
         setCards((current) =>
           current.map((card) =>
-            card.id === cardId ? { ...card, columnKey, position } : card,
+            card.id === cardId
+              ? {
+                  ...card,
+                  ...cardPatchForLaneValue(activeLane, laneKey),
+                  position:
+                    activeLane === "status" ||
+                    boardLaneValueOf(card, config) === laneKey
+                      ? position
+                      : card.position,
+                }
+              : card,
           ),
         );
       },
@@ -219,7 +234,7 @@ function Harness() {
         }));
       },
     }),
-    [],
+    [config],
   );
 
   return (
