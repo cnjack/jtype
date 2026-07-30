@@ -1,5 +1,7 @@
 # Kanban 泳道管理 UI 设计
 
+> **已于 2026-07-30 被取代。** 本文保留早期左侧横向泳道 UI 的历史记录；当前产品使用顶部标题的单一纵向泳道。现行设计见 [Vertical swimlanes and lightweight filters](./status-columns-filter-redesign.md)。
+
 状态：Grok + Kimi 评审完成，推荐方案已确认并实现
 
 日期：2026-07-29

@@ -8,7 +8,10 @@ import { BoardSurface, BoardPeek } from "@shared/components/board";
 import type { BoardActions } from "@shared/components/board";
 import {
   DEFAULT_DONE_COLUMN,
+  activeBoardLaneKey,
   applyBoardCardPatch,
+  boardLaneValueOf,
+  cardPatchForLaneValue,
   normalizeGroupBy,
   normalizeSwimlaneBy,
   pickCustomFields,
@@ -253,16 +256,22 @@ export function BoardView({ boardPath, boardRelativePath }: { boardPath: string;
       },
       createCard: async (colKey, title) => {
         if (!config || !rootPath) return;
-        const groupKey = config.groupBy || "status";
-        const pos = rawCards.filter((c) => (groupKey === "status" ? c.status : groupKey === "priority" ? c.priority || "none" : c.assignee || "") === colKey).reduce((m, c) => Math.max(m, c.position), -1) + 1;
+        const laneKey = activeBoardLaneKey(config);
+        const pos =
+          cards
+            .filter((card) => boardLaneValueOf(card, config) === colKey)
+            .reduce((max, card) => Math.max(max, card.position), -1) + 1;
         const data: Record<string, string> = {
           title,
           board: config.id,
-          status: groupKey === "status" ? colKey : config.columns[0]?.key ?? "todo",
+          status: laneKey === "status" ? colKey : config.columns[0]?.key ?? "todo",
           position: String(pos),
         };
-        if (groupKey !== "status") data[groupKey] = colKey;
-        const path = await writeNew(slugify(title), writeFrontmatter("", data));
+        const content = applyBoardCardPatch(
+          writeFrontmatter("", data),
+          cardPatchForLaneValue(laneKey, colKey),
+        );
+        const path = await writeNew(slugify(title), content);
         await load();
         return path;
       },
@@ -294,15 +303,20 @@ export function BoardView({ boardPath, boardRelativePath }: { boardPath: string;
       },
       moveCard: async (id, toCol, index) => {
         if (!config) return;
-        const groupKey = config.groupBy || "status";
+        const laneKey = activeBoardLaneKey(config);
         const moved = rawById.get(id);
         if (!moved) return;
         try {
-          if (groupKey !== "status") {
-            const cur = groupKey === "priority" ? moved.priority || "none" : moved.assignee || "";
-            if (cur === toCol) return;
-            const { data, body } = parseFrontmatter(await tauri.readFile(id));
-            await tauri.writeFile(id, writeFrontmatter(body, { ...data, [groupKey]: toCol }));
+          if (laneKey !== "status") {
+            const movedCard = cards.find((card) => card.id === id);
+            if (!movedCard || boardLaneValueOf(movedCard, config) === toCol) return;
+            await tauri.writeFile(
+              id,
+              applyBoardCardPatch(
+                await tauri.readFile(id),
+                cardPatchForLaneValue(laneKey, toCol),
+              ),
+            );
             await load();
             return;
           }
@@ -465,7 +479,7 @@ export function BoardView({ boardPath, boardRelativePath }: { boardPath: string;
       },
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [config, rawCards, rawById, rootPath, cardsDir, load, saveConfig, writeNew, prompt, confirm, dispatch],
+    [config, cards, rawCards, rawById, rootPath, cardsDir, load, saveConfig, writeNew, prompt, confirm, dispatch],
   );
 
   const createFromTemplate = useCallback(
@@ -474,25 +488,33 @@ export function BoardView({ boardPath, boardRelativePath }: { boardPath: string;
       const tpl = templates.find((tp) => tp.path === templateId);
       if (!tpl) return;
       try {
-        const groupKey = config.groupBy || "status";
+        const laneKey = activeBoardLaneKey(config);
         const { data, body } = parseFrontmatter(await tauri.readFile(tpl.path));
-        const pos = rawCards.filter((c) => c.status === (groupKey === "status" ? colKey : config.columns[0]?.key)).reduce((m, c) => Math.max(m, c.position), -1) + 1;
+        const pos =
+          cards
+            .filter((card) => boardLaneValueOf(card, config) === colKey)
+            .reduce((max, card) => Math.max(max, card.position), -1) + 1;
         const next: Record<string, string> = {
           ...data,
           title: tpl.name,
           board: config.id,
-          status: groupKey === "status" ? colKey : config.columns[0]?.key ?? "todo",
+          status: laneKey === "status" ? colKey : config.columns[0]?.key ?? "todo",
           position: String(pos),
         };
+        // Templates do not carry a previous board's custom-lane identity.
+        // A custom active lane is assigned explicitly by the patch below.
         delete next.swimlane;
-        if (groupKey !== "status") next[groupKey] = colKey;
-        await writeNew(slugify(tpl.name), writeFrontmatter(body, next));
+        const content = applyBoardCardPatch(
+          writeFrontmatter(body, next),
+          cardPatchForLaneValue(laneKey, colKey),
+        );
+        await writeNew(slugify(tpl.name), content);
         await load();
       } catch (e) {
         setError(String(e));
       }
     },
-    [config, rootPath, templates, rawCards, writeNew, load],
+    [config, rootPath, templates, cards, writeNew, load],
   );
 
   const loadNotes = useCallback(async (id: string) => {

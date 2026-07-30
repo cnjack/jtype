@@ -61,11 +61,12 @@ export type BoardViewConfig = {
   /** Board ticket-id prefix (e.g. `OCCSV`) for per-card `OCCSV-3371` ticket links. */
   ticketKey?: string;
   /**
-   * Second grouping dimension rendered as horizontal swimlanes (rows) in the
-   * board view. Must differ from `groupBy`; unset = no swimlanes.
+   * Active custom swimlane mode. Historical configs may also contain
+   * status/priority/assignee here from the retired two-dimensional layout;
+   * those values now render as the single vertical swimlane dimension.
    */
   swimlaneBy?: BoardSwimlaneGroupKey;
-  /** Persistent definitions used when `swimlaneBy === "custom"`. */
+  /** Persistent definitions used by custom vertical swimlanes. */
   swimlanes?: BoardSwimlane[];
   /** Present only while a derived-lane conversion is incomplete/retryable. */
   swimlaneMigration?: SwimlaneMigration;
@@ -233,9 +234,39 @@ export function pickCustomFields(
   return out;
 }
 
+/**
+ * Legacy single-filter shape kept for consumers that imported it before the
+ * structured filter UI shipped. New code should use {@link BoardFilters}.
+ */
 export type CardFilter =
   | { prop: "priority" | "assignee" | "tag"; value: string }
   | { prop: "swimlaneIssue"; value: "dangling" };
+
+export type BoardDueFilter = "overdue" | "today" | "nextSevenDays" | "none";
+
+/**
+ * Personal, view-only board filters. Values within one dimension are ORed;
+ * populated dimensions are ANDed together.
+ */
+export type BoardFilters = {
+  priorities?: string[];
+  assignees?: string[];
+  tags?: string[];
+  due?: BoardDueFilter;
+  blocked?: boolean;
+  mine?: boolean;
+  /** Recovery-only filter for cards that reference a deleted custom row. */
+  missingRow?: boolean;
+};
+
+export type BoardFilterContext = {
+  config?: Pick<BoardViewConfig, "swimlanes">;
+  currentUser?: string;
+  /** Injectable for deterministic tests; defaults to the local current day. */
+  today?: string;
+  /** Resolved unfinished dependencies, including reverse `blocks` links. */
+  blockedCardIds?: ReadonlySet<string>;
+};
 
 /** One emoji reaction summary on a comment. */
 export type CommentReaction = { emoji: string; count: number; mine: boolean };
@@ -481,6 +512,30 @@ export function normalizeSwimlaneBy(value: unknown): BoardSwimlaneGroupKey | und
     : undefined;
 }
 
+/**
+ * The one grouping dimension rendered as vertical swimlane columns.
+ *
+ * `swimlaneBy` wins for backward compatibility with boards saved by the
+ * retired two-dimensional layout. New non-custom selections use `groupBy`;
+ * custom swimlanes continue using the existing persisted `swimlaneBy` field.
+ */
+export function activeBoardLaneKey(
+  config: Pick<BoardViewConfig, "groupBy" | "swimlaneBy">,
+): BoardSwimlaneGroupKey {
+  return normalizeSwimlaneBy(config.swimlaneBy) ?? normalizeGroupBy(config.groupBy);
+}
+
+/** Map a vertical swimlane drop target to the normalized card field it owns. */
+export function cardPatchForLaneValue(
+  laneBy: BoardSwimlaneGroupKey,
+  value: string,
+): Partial<BoardViewCard> {
+  if (laneBy === "status") return { columnKey: value };
+  if (laneBy === "priority") return { priority: value === "none" ? null : value };
+  if (laneBy === "assignee") return { assignee: value || null };
+  return { swimlaneKey: value || null };
+}
+
 /** Create a collision-resistant immutable custom swimlane key. */
 export function newSwimlaneKey(name: string, existingKeys: Iterable<string> = []): string {
   const taken = new Set(existingKeys);
@@ -572,6 +627,27 @@ export function groupValueOf(card: BoardViewCard, groupBy: BoardSwimlaneGroupKey
   return card.columnKey || "";
 }
 
+/**
+ * The rendered lane value for a card. Deleted or unknown custom swimlane IDs
+ * are collected in Unassigned while the original ID stays on the card so the
+ * mapping remains recoverable.
+ */
+export function boardLaneValueOf(
+  card: BoardViewCard,
+  config: Pick<BoardViewConfig, "groupBy" | "swimlaneBy" | "swimlanes">,
+): string {
+  const laneBy = activeBoardLaneKey(config);
+  const value = groupValueOf(card, laneBy);
+  if (
+    laneBy === "custom" &&
+    value &&
+    !(config.swimlanes ?? []).some((lane) => lane.key === value)
+  ) {
+    return "";
+  }
+  return value;
+}
+
 /** Derive the columns to render for the active grouping. */
 export function effectiveColumns(
   config: BoardViewConfig,
@@ -589,7 +665,9 @@ export function effectiveColumns(
           : `${key.charAt(0).toUpperCase()}${key.slice(1)}`,
     }));
   }
-  const vals = new Set<string>();
+  // Assignee boards always expose Unassigned so an empty board still has a
+  // valid create/drop target and assigned cards can be cleared by dragging.
+  const vals = new Set<string>([""]);
   for (const c of cards) vals.add(groupValueOf(c, groupBy));
   return [...vals]
     .sort((a, b) => (a === "" ? 1 : b === "" ? -1 : a.localeCompare(b)))
@@ -606,8 +684,9 @@ export function hasDanglingSwimlane(
 }
 
 /**
- * Derive swimlane rows. Custom lanes come from persistent definitions so empty
- * lanes remain visible; Unassigned is a system row shown only when cards need it.
+ * Derive vertical swimlane columns. Custom lanes come from persistent
+ * definitions so empty lanes remain visible; Unassigned always remains a
+ * valid create/drop target, including on empty and read-only boards.
  */
 export function effectiveSwimlanes(
   config: BoardViewConfig,
@@ -624,19 +703,16 @@ export function effectiveSwimlanes(
     seen.add(lane.key);
     return true;
   });
-  const valid = new Set(definitions.map((lane) => lane.key));
-  const needsUnassigned = cards.some((card) => !card.swimlaneKey || !valid.has(card.swimlaneKey));
   return [
     ...definitions.map((lane) => ({ key: lane.key, name: lane.name, color: lane.color })),
-    ...(needsUnassigned ? [{ key: "", name: unassignedLabel }] : []),
+    { key: "", name: unassignedLabel },
   ];
 }
 
 /**
- * Bucket cards into a swimlane grid: laneValue → columnValue → cards. Lane and
- * column values come from `groupValueOf` under the two grouping dimensions. The
- * board view renders rows (lanes) × columns from this. Order within a cell is the
- * caller's responsibility (pre-sort, e.g. with sortCards).
+ * Legacy two-dimensional partition helper retained for persisted-layout data
+ * tests and compatibility tooling. The current board renders one vertical
+ * swimlane dimension and does not call this helper.
  */
 export function partitionSwimlanes(
   cards: BoardViewCard[],
@@ -663,7 +739,7 @@ export function partitionSwimlanes(
   return grid;
 }
 
-/** Test one card against a normalized board filter, including dangling lane references. */
+/** Test one card against a legacy single filter. */
 export function cardMatchesFilter(
   card: BoardViewCard,
   filter: CardFilter | null,
@@ -674,6 +750,106 @@ export function cardMatchesFilter(
   if (filter.prop === "priority") return (card.priority || "none") === filter.value;
   if (filter.prop === "assignee") return (card.assignee || "") === filter.value;
   if (filter.prop === "tag") return card.tags.some((t) => t.label === filter.value);
+  return true;
+}
+
+function normalizedFilterValues(values: string[] | undefined): Set<string> {
+  return new Set((values ?? []).map((value) => value.trim().toLowerCase()));
+}
+
+function offsetIsoDay(day: string, offset: number): string {
+  const [year, month, date] = day.split("-").map(Number);
+  return isoDay(new Date(year!, month! - 1, date! + offset));
+}
+
+/** Whether a structured filter object has any active criteria. */
+export function hasBoardFilters(filters: BoardFilters): boolean {
+  return !!(
+    filters.priorities?.length ||
+    filters.assignees?.length ||
+    filters.tags?.length ||
+    filters.due ||
+    filters.blocked ||
+    filters.mine ||
+    filters.missingRow
+  );
+}
+
+/** Number of active filter dimensions, used by the toolbar count badge. */
+export function activeBoardFilterCount(filters: BoardFilters): number {
+  return [
+    !!filters.priorities?.length,
+    !!filters.assignees?.length,
+    !!filters.tags?.length,
+    !!filters.due,
+    !!filters.blocked,
+    !!filters.mine,
+    !!filters.missingRow,
+  ].filter(Boolean).length;
+}
+
+/**
+ * Test one card against structured board filters. Selected values within a
+ * dimension are ORed; dimensions are ANDed.
+ */
+export function cardMatchesFilters(
+  card: BoardViewCard,
+  filters: BoardFilters,
+  context: BoardFilterContext = {},
+): boolean {
+  const priorities = normalizedFilterValues(filters.priorities);
+  if (priorities.size > 0 && !priorities.has((card.priority || "none").toLowerCase())) {
+    return false;
+  }
+
+  const assignees = normalizedFilterValues(filters.assignees);
+  if (assignees.size > 0 && !assignees.has((card.assignee || "").trim().toLowerCase())) {
+    return false;
+  }
+
+  const tags = normalizedFilterValues(filters.tags);
+  if (
+    tags.size > 0 &&
+    !card.tags.some((tag) => tags.has(tag.label.trim().toLowerCase()))
+  ) {
+    return false;
+  }
+
+  if (filters.due) {
+    const due = card.due && isIsoDate(card.due) ? card.due : null;
+    const today = context.today && isIsoDate(context.today) ? context.today : todayStr();
+    if (filters.due === "none" && due) return false;
+    if (filters.due !== "none" && !due) return false;
+    if (due) {
+      if (filters.due === "overdue" && due >= today) return false;
+      if (filters.due === "today" && due !== today) return false;
+      if (
+        filters.due === "nextSevenDays" &&
+        (due < today || due > offsetIsoDay(today, 6))
+      ) {
+        return false;
+      }
+    }
+  }
+
+  if (
+    filters.blocked &&
+    !(context.blockedCardIds
+      ? context.blockedCardIds.has(card.id)
+      : (card.blockedBy?.length ?? 0) > 0)
+  ) {
+    return false;
+  }
+  if (filters.mine) {
+    const currentUser = context.currentUser?.trim().toLowerCase();
+    if (!currentUser || card.assignee?.trim().toLowerCase() !== currentUser) return false;
+  }
+  if (
+    filters.missingRow &&
+    !hasDanglingSwimlane(card, context.config?.swimlanes)
+  ) {
+    return false;
+  }
   return true;
 }
 
@@ -689,17 +865,31 @@ export function cardMatchesSearch(card: BoardViewCard, q: string): boolean {
   return false;
 }
 
-/** Apply the board's text query and structured filter to its authoritative card list. */
+/** Convert the pre-structured single-filter API into the new filter model. */
+function normalizeBoardFilters(filters: BoardFilters | CardFilter | null): BoardFilters {
+  if (!filters) return {};
+  if ("prop" in filters) {
+    if (filters.prop === "priority") return { priorities: [filters.value] };
+    if (filters.prop === "assignee") return { assignees: [filters.value] };
+    if (filters.prop === "tag") return { tags: [filters.value] };
+    return { missingRow: true };
+  }
+  return filters;
+}
+
+/** Apply the board's text query and structured filters to its authoritative card list. */
 export function visibleCards(
   cards: BoardViewCard[],
   search: string,
-  filter: CardFilter | null,
+  filters: BoardFilters | CardFilter | null,
   config?: Pick<BoardViewConfig, "swimlanes">,
+  context: Omit<BoardFilterContext, "config"> = {},
 ): BoardViewCard[] {
   const q = search.trim().toLowerCase();
+  const normalized = normalizeBoardFilters(filters);
   return cards.filter((c) => {
     if (q && !cardMatchesSearch(c, q)) return false;
-    return cardMatchesFilter(c, filter, config);
+    return cardMatchesFilters(c, normalized, { ...context, config });
   });
 }
 

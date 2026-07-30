@@ -63,10 +63,10 @@ export function SwimlaneConversionDialog({
             </DialogTitle>
             <p id="swimlane-conversion-description" className="mt-1 text-xs leading-5 text-brand-gray">
               {resume
-                ? t`JType will reuse the existing lane IDs and continue unfinished card updates.`
+                ? t`JType will reuse the existing swimlane IDs and continue unfinished card updates.`
                 : source === "priority"
-                  ? t`JType will create independent swimlanes from the current priority rows. Card priority values will stay unchanged.`
-                  : t`JType will create independent swimlanes from the current assignee rows. Card assignee values will stay unchanged.`}
+                  ? t`JType will create independent custom swimlanes from the current priority columns. Card priority values will stay unchanged.`
+                  : t`JType will create independent custom swimlanes from the current assignee columns. Card assignee values will stay unchanged.`}
             </p>
 
             <ul className="mt-4 divide-y divide-line" aria-label={t`Swimlanes to create`}>

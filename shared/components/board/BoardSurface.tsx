@@ -24,19 +24,21 @@ import {
   MagnifyingGlassIcon,
   FunnelIcon,
   BarsArrowDownIcon,
-  Bars3Icon,
   RectangleGroupIcon,
   XMarkIcon,
   TableCellsIcon,
   BookmarkIcon,
   Cog6ToothIcon,
   AdjustmentsHorizontalIcon,
+  PencilSquareIcon,
 } from "@heroicons/react/24/outline";
 import {
   COLUMN_COLORS,
   DEFAULT_DONE_COLUMN,
   PRIORITY_ORDER,
   PRIORITY_STYLE,
+  activeBoardLaneKey,
+  boardLaneValueOf,
   blockedCounts,
   cardSlug,
   childCardsByParent,
@@ -44,14 +46,13 @@ import {
   effectiveColumns,
   effectiveSwimlanes,
   groupValueOf,
+  hasBoardFilters,
   newSwimlaneKey,
-  normalizeSwimlaneBy,
   RESERVED_CARD_KEYS,
   slugify,
   sortCards as sortCardsFn,
   todayStr,
   visibleCards as visibleCardsFn,
-  type BoardGroupKey,
   type BoardSortKey,
   type BoardSwimlane,
   type BoardSwimlaneGroupKey,
@@ -59,11 +60,11 @@ import {
   type BoardViewCard,
   type BoardViewColumn,
   type BoardViewConfig,
-  type CardFilter,
+  type BoardFilters,
 } from "../../lib/board";
+import { BoardFilterPopover } from "./BoardFilterPopover";
 import { BoardTable } from "./BoardTable";
 import { BoardCalendar } from "./BoardCalendar";
-import { BoardSwimlanes } from "./BoardSwimlanes";
 import { StatusManagerDialog } from "./StatusManagerDialog";
 import { SwimlaneManagerDialog } from "./SwimlaneManagerDialog";
 import {
@@ -118,33 +119,27 @@ export function BoardSurface({
   const [colDraft, setColDraft] = useState("");
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<BoardSortKey>("manual");
-  const [filter, setFilter] = useState<CardFilter | null>(null);
+  const [filters, setFilters] = useState<BoardFilters>({});
   const [peekWidth, setPeekWidth] = useState(360);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [draggingCol, setDraggingCol] = useState<string | null>(null);
   const [dragPos, setDragPos] = useState<{ x: number; y: number } | null>(null);
   const [swimlaneManagerOpen, setSwimlaneManagerOpen] = useState(false);
   const [statusManagerOpen, setStatusManagerOpen] = useState(false);
-  const [laneFocusRequest, setLaneFocusRequest] = useState<{
-    id: number;
-    laneKey: string;
-    action: "rename" | "delete";
-  }>();
   const [conversionOpen, setConversionOpen] = useState(false);
   const [conversionSource, setConversionSource] = useState<"priority" | "assignee">("priority");
   const [conversionRequested, setConversionRequested] = useState(false);
   const [conversionProgress, setConversionProgress] = useState<{ completed: number; total: number } | null>(null);
   const [conversionError, setConversionError] = useState("");
   const [conversionPass, setConversionPass] = useState(0);
-  const [customLaneMutationPending, setCustomLaneMutationPending] = useState(false);
   const cardDrag = useRef<{ id: string; startX: number; startY: number; moved: boolean } | null>(null);
   const colDrag = useRef<{ key: string; startX: number; startY: number; moved: boolean } | null>(null);
   const conversionStepBusy = useRef(false);
   const conversionAttemptRef = useRef<{ signature: string; writes: number } | null>(null);
-  const customLaneMutationBusy = useRef(false);
 
-  const groupKey: BoardGroupKey = config.groupBy ?? "status";
+  const groupKey = activeBoardLaneKey(config);
   const editableColumns = groupKey === "status";
+  const customSwimlanes = groupKey === "custom";
   const viewType = config.viewType ?? "board";
   const doneKey = config.doneColumn ?? DEFAULT_DONE_COLUMN;
   const colorColumns = (config.colorColumns ?? false) && editableColumns && viewType === "board";
@@ -153,7 +148,7 @@ export function BoardSurface({
     editableColumns &&
     viewType === "board" &&
     !search.trim() &&
-    !filter;
+    !hasBoardFilters(filters);
   const today = todayStr();
 
   // Escape exits fullscreen — but only when no card peek is open (BoardPeek
@@ -178,22 +173,24 @@ export function BoardSurface({
   }, [multiSel.size]);
 
   const columns = useMemo(
-    () => effectiveColumns(config, cards, groupKey, t`Unassigned`),
+    () =>
+      groupKey === "custom"
+        ? effectiveSwimlanes(config, cards, groupKey, t`Unassigned`)
+        : effectiveColumns(config, cards, groupKey, t`Unassigned`),
     [config, cards, groupKey],
   );
-  // Swimlanes: a second grouping dimension rendered as rows (must differ from
-  // the column dimension). Only meaningful in the board view.
-  const normalizedSwimlaneBy = normalizeSwimlaneBy(config.swimlaneBy);
-  const swimlaneKey: BoardSwimlaneGroupKey | null =
-    normalizedSwimlaneBy && normalizedSwimlaneBy !== groupKey ? normalizedSwimlaneBy : null;
-  const swimlaneActive = viewType === "board" && !!swimlaneKey;
-  const lanes = useMemo(
-    () => (swimlaneKey ? effectiveSwimlanes(config, cards, swimlaneKey, t`Unassigned`) : []),
-    [config, cards, swimlaneKey],
-  );
-  const vis = useMemo(() => visibleCardsFn(cards, search, filter, config), [cards, search, filter, config]);
   // Blocker counts resolve against ALL cards (a blocker may be filtered out of view).
   const blockers = useMemo(() => blockedCounts(cards, config.doneColumn), [cards, config.doneColumn]);
+  const blockedCardIds = useMemo(() => new Set(blockers.keys()), [blockers]);
+  const vis = useMemo(
+    () =>
+      visibleCardsFn(cards, search, filters, config, {
+        currentUser,
+        today,
+        blockedCardIds,
+      }),
+    [cards, search, filters, config, currentUser, today, blockedCardIds],
+  );
   // Sub-cards resolve against ALL cards too (children may be filtered from view).
   const childrenMap = useMemo(() => childCardsByParent(cards), [cards]);
   const assignees = useMemo(() => [...new Set(cards.map((c) => c.assignee).filter(Boolean) as string[])], [cards]);
@@ -362,6 +359,7 @@ export function BoardSurface({
         }
 
         await actions.setConfig({
+          groupBy: "status",
           swimlanes: definitions,
           swimlaneBy: "custom",
           swimlaneMigration: undefined,
@@ -407,50 +405,11 @@ export function BoardSurface({
   const saveCustomLanes = async (next: BoardSwimlane[]) => {
     await actions.setConfig({ swimlanes: next });
   };
-  const moveCustomLane = (laneKey: string, delta: -1 | 1) => {
-    if (customLaneMutationBusy.current) return;
-    const definitions = [...(config.swimlanes ?? [])];
-    const from = definitions.findIndex((lane) => lane.key === laneKey);
-    const to = from + delta;
-    if (from < 0 || to < 0 || to >= definitions.length) return;
-    const [lane] = definitions.splice(from, 1);
-    if (!lane) return;
-    definitions.splice(to, 0, lane);
-    customLaneMutationBusy.current = true;
-    setCustomLaneMutationPending(true);
-    void Promise.resolve(actions.setConfig({ swimlanes: definitions }))
-      .catch(() => {
-        // Platform adapter surfaces the save failure.
-      })
-      .finally(() => {
-        customLaneMutationBusy.current = false;
-        setCustomLaneMutationPending(false);
-      });
-  };
-  const setCustomLaneColor = (laneKey: string, color: string | null) => {
-    if (customLaneMutationBusy.current) return;
-    customLaneMutationBusy.current = true;
-    setCustomLaneMutationPending(true);
-    void Promise.resolve(
-      actions.setConfig({
-        swimlanes: (config.swimlanes ?? []).map((lane) =>
-          lane.key === laneKey ? { ...lane, color } : lane,
-        ),
-      }),
-    )
-      .catch(() => {
-        // Platform adapter surfaces the save failure.
-      })
-      .finally(() => {
-        customLaneMutationBusy.current = false;
-        setCustomLaneMutationPending(false);
-      });
-  };
   const showMissingSwimlanes = () => {
-    setFilter({ prop: "swimlaneIssue", value: "dangling" });
+    setFilters((current) => ({ ...current, missingRow: true }));
     window.setTimeout(() => {
       document
-        .querySelector<HTMLElement>("[data-swimlane-unassigned]")
+        .querySelector<HTMLElement>('[data-col-key=""]')
         ?.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
     }, 80);
   };
@@ -529,7 +488,7 @@ export function BoardSurface({
             ? cards.filter(
                 (candidate) =>
                   candidate.id !== card.id &&
-                  groupValueOf(candidate, groupKey) === target.col,
+                  boardLaneValueOf(candidate, config) === target.col,
               ).length
             : target.index;
         void actions.moveCard(card.id, target.col, targetIndex);
@@ -727,30 +686,22 @@ export function BoardSurface({
               <RectangleGroupIcon className="h-3.5 w-3.5" />
               <select
                 className={ctrlCls}
+                aria-label={t`Swimlanes`}
                 value={groupKey}
                 disabled={conversionRequested}
-                onChange={(e) => setConfigSafely({ groupBy: e.target.value as BoardGroupKey })}
-              >
-                <option value="status">{t`Group: Status`}</option>
-                <option value="priority">{t`Group: Priority`}</option>
-                <option value="assignee">{t`Group: Assignee`}</option>
-              </select>
-            </label>
-          )}
-          {viewType === "board" && (
-            <label className="inline-flex items-center gap-1 text-xs text-brand-gray">
-              <Bars3Icon className="h-3.5 w-3.5" />
-              <select
-                className={ctrlCls}
-                value={swimlaneKey ?? ""}
-                disabled={conversionRequested}
                 onChange={(e) => {
-                  const next = (e.target.value || undefined) as
-                    | BoardSwimlaneGroupKey
-                    | undefined;
-                  void Promise.resolve(actions.setConfig({ swimlaneBy: next }))
+                  const next = e.target.value as BoardSwimlaneGroupKey;
+                  const patch =
+                    next === "custom"
+                      ? { groupBy: "status" as const, swimlaneBy: "custom" as const }
+                      : { groupBy: next, swimlaneBy: undefined };
+                  void Promise.resolve(actions.setConfig(patch))
                     .then(() => {
-                      if (next === "custom" && (config.swimlanes?.length ?? 0) === 0 && !readOnly) {
+                      if (
+                        next === "custom" &&
+                        (config.swimlanes?.length ?? 0) === 0 &&
+                        !readOnly
+                      ) {
                         setSwimlaneManagerOpen(true);
                       }
                     })
@@ -759,46 +710,47 @@ export function BoardSurface({
                     });
                 }}
               >
-                <option value="">{t`Swimlane: None`}</option>
-                {(["status", "priority", "assignee"] as BoardGroupKey[])
-                  .filter((k) => k !== groupKey)
-                  .map((k) => (
-                    <option key={k} value={k}>
-                      {k === "status" ? t`Swimlane: Status` : k === "priority" ? t`Swimlane: Priority` : t`Swimlane: Assignee`}
-                    </option>
-                  ))}
-                <option value="custom">{t`Swimlane: Custom`}</option>
+                <option value="status">{t`Swimlanes: Status`}</option>
+                <option value="priority">{t`Swimlanes: Priority`}</option>
+                <option value="assignee">{t`Swimlanes: Assignee`}</option>
+                <option value="custom">{t`Swimlanes: Custom`}</option>
               </select>
             </label>
           )}
-          {viewType === "board" && swimlaneKey && !readOnly && (
+          {viewType === "board" && groupKey === "status" && !readOnly && (
+            <button
+              type="button"
+              disabled={conversionRequested}
+              onClick={() => setStatusManagerOpen(true)}
+              title={t`Manage statuses`}
+              aria-label={t`Manage statuses`}
+              className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-stone-200 bg-white text-stone-500 transition hover:border-brand/40 hover:text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand/20 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <PencilSquareIcon className="h-3.5 w-3.5" />
+            </button>
+          )}
+          {viewType === "board" && groupKey !== "status" && !readOnly && (
             <button
               type="button"
               disabled={conversionRequested}
               onClick={() => {
-                if (swimlaneKey === "custom") {
+                if (groupKey === "custom") {
                   setSwimlaneManagerOpen(true);
-                } else if (swimlaneKey === "status") {
-                  setStatusManagerOpen(true);
                 } else {
-                  setConversionSource(config.swimlaneMigration?.source ?? swimlaneKey);
+                  setConversionSource(config.swimlaneMigration?.source ?? groupKey);
                   setConversionError("");
                   setConversionOpen(true);
                 }
               }}
               title={
-                swimlaneKey === "custom"
-                  ? t`Manage swimlanes`
-                  : swimlaneKey === "status"
-                    ? t`Manage statuses`
-                    : t`Make swimlanes editable`
+                groupKey === "custom"
+                  ? t`Manage custom swimlanes`
+                  : t`Make swimlanes editable`
               }
               aria-label={
-                swimlaneKey === "custom"
-                  ? t`Manage swimlanes`
-                  : swimlaneKey === "status"
-                    ? t`Manage statuses`
-                    : t`Make swimlanes editable`
+                groupKey === "custom"
+                  ? t`Manage custom swimlanes`
+                  : t`Make swimlanes editable`
               }
               className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-stone-200 bg-white text-stone-500 transition hover:border-brand/40 hover:text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand/20 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50"
             >
@@ -817,74 +769,16 @@ export function BoardSurface({
             </label>
           )}
 
-          <Menu as="div" className="relative">
-            <MenuButton
-              className={`inline-flex h-7 items-center gap-1 rounded-md border px-2 text-xs ${
-                filter ? "border-brand/40 bg-brand-soft/50 text-brand-dark" : "border-stone-200 text-stone-600 hover:border-brand/40"
-              }`}
-            >
-              <FunnelIcon className="h-3.5 w-3.5" />
-              {filter ? (
-                filter.prop === "swimlaneIssue"
-                  ? t`Swimlane: Missing`
-                  : `${filter.prop}: ${filter.value || t`Unassigned`}`
-              ) : (
-                <Trans>Filter</Trans>
-              )}
-            </MenuButton>
-            <MenuItems anchor="bottom start" className={`z-30 w-52 rounded-lg border border-black/[0.06] bg-white py-1 text-sm shadow-lg [--anchor-gap:4px] focus:outline-none${portalCls}`}>
-              {filter && (
-                <>
-                  <MenuItem>
-                    <button type="button" className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-stone-700 data-[focus]:bg-stone-100" onClick={() => setFilter(null)}>
-                      <XMarkIcon className="h-3.5 w-3.5" />
-                      <Trans>Clear filter</Trans>
-                    </button>
-                  </MenuItem>
-                  <div className="my-1 border-t border-black/[0.05]" />
-                </>
-              )}
-              <div className="px-3 py-0.5 text-[11px] uppercase tracking-wide text-stone-400">
-                <Trans>Priority</Trans>
-              </div>
-              {PRIORITY_ORDER.map((p) => (
-                <MenuItem key={p}>
-                  <button type="button" className="flex w-full items-center px-3 py-1 text-left text-stone-700 data-[focus]:bg-stone-100" onClick={() => setFilter({ prop: "priority", value: p })}>
-                    {p}
-                  </button>
-                </MenuItem>
-              ))}
-              {assignees.length > 0 && (
-                <>
-                  <div className="px-3 py-0.5 text-[11px] uppercase tracking-wide text-stone-400">
-                    <Trans>Assignee</Trans>
-                  </div>
-                  {assignees.map((a) => (
-                    <MenuItem key={a}>
-                      <button type="button" className="flex w-full items-center px-3 py-1 text-left text-stone-700 data-[focus]:bg-stone-100" onClick={() => setFilter({ prop: "assignee", value: a })}>
-                        {a}
-                      </button>
-                    </MenuItem>
-                  ))}
-                </>
-              )}
-              {allTags.length > 0 && (
-                <>
-                  <div className="px-3 py-0.5 text-[11px] uppercase tracking-wide text-stone-400">
-                    <Trans>Tags</Trans>
-                  </div>
-                  {allTags.map((tag) => (
-                    <MenuItem key={tag}>
-                      <button type="button" className="flex w-full items-center gap-1 px-3 py-1 text-left text-stone-700 data-[focus]:bg-stone-100" onClick={() => setFilter({ prop: "tag", value: tag })}>
-                        <TagIcon className="h-3 w-3" />
-                        {tag}
-                      </button>
-                    </MenuItem>
-                  ))}
-                </>
-              )}
-            </MenuItems>
-          </Menu>
+          <BoardFilterPopover
+            filters={filters}
+            onChange={setFilters}
+            assignees={assignees}
+            tags={allTags}
+            currentUser={currentUser}
+            visibleCount={vis.length}
+            totalCount={cards.length}
+            portalClassName={portalClassName}
+          />
 
           <div className="relative ml-auto">
             <MagnifyingGlassIcon className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-stone-400" />
@@ -918,36 +812,13 @@ export function BoardSurface({
             selectedId={selected?.id}
             onSelect={openCard}
           />
-        ) : swimlaneActive && swimlaneKey ? (
-          <BoardSwimlanes
-            cards={vis}
-            columns={columns}
-            lanes={lanes}
-            config={config}
-            groupKey={groupKey}
-            swimlaneKey={swimlaneKey}
-            sortBy={sortBy}
-            today={today}
-            doneKey={doneKey}
-            selectedId={selected?.id}
-            actions={actions}
-            readOnly={readOnly || conversionRequested}
-            customLaneMutationPending={customLaneMutationPending}
-            portalClassName={portalClassName}
-            onSelect={openCard}
-            onOpenManager={() => setSwimlaneManagerOpen(true)}
-            onManageLane={({ laneKey, action }) => {
-              setLaneFocusRequest({ id: Date.now(), laneKey, action });
-              setSwimlaneManagerOpen(true);
-            }}
-            onMoveCustomLane={moveCustomLane}
-            onSetCustomLaneColor={setCustomLaneColor}
-            onShowMissing={showMissingSwimlanes}
-          />
         ) : (
           <div className="flex min-h-0 flex-1 items-stretch gap-3 overflow-x-auto p-4">
             {columns.map((col, colIndex) => {
-              const colCards = sortCardsFn(vis.filter((c) => groupValueOf(c, groupKey) === col.key), sortBy);
+              const colCards = sortCardsFn(
+                vis.filter((card) => boardLaneValueOf(card, config) === col.key),
+                sortBy,
+              );
               const showLine = (idx: number) => !!draggingId && manualSort && dropTarget?.col === col.key && dropTarget.index === idx;
               const isDoneCol = editableColumns && doneKey === col.key;
               const isColDrop = colDropTarget === col.key;
@@ -1325,7 +1196,7 @@ export function BoardSurface({
                 <input
                   autoFocus
                   className="w-44 shrink-0 self-start rounded-xl border border-brand/40 px-3 py-2 text-sm text-stone-800 focus:outline-none focus:ring-2 focus:ring-brand/40"
-                  placeholder={t`Column name`}
+                  placeholder={t`Status name`}
                   value={colDraft}
                   onChange={(e) => setColDraft(e.target.value)}
                   onKeyDown={(e) => {
@@ -1357,9 +1228,19 @@ export function BoardSurface({
                   }}
                 >
                   <PlusIcon className="h-4 w-4" />
-                  <Trans>Add column</Trans>
+                  <Trans>Add status</Trans>
                 </button>
               ))}
+            {customSwimlanes && !readOnly && (
+              <button
+                type="button"
+                className="flex w-72 shrink-0 self-start items-center gap-1.5 rounded-xl border border-dashed border-stone-300 px-3 py-2 text-sm text-stone-400 transition hover:border-brand/40 hover:bg-brand-soft/20 hover:text-brand-dark active:translate-y-px"
+                onClick={() => setSwimlaneManagerOpen(true)}
+              >
+                <PlusIcon className="h-4 w-4" />
+                <Trans>Add swimlane</Trans>
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -1503,9 +1384,13 @@ export function BoardSurface({
               readOnly
                 ? undefined
                 : async (title) => {
-                    // Sub-cards start in the first status column, not the parent's.
-                    const startCol = editableColumns ? config.columns[0]?.key ?? selected.columnKey : selected.columnKey;
-                    const newId = await actions.createCard(startCol, title);
+                    // Status sub-cards enter the first workflow state; other
+                    // dimensions keep the new card beside its parent.
+                    const startLane =
+                      groupKey === "status"
+                        ? config.columns[0]?.key ?? selected.columnKey
+                        : boardLaneValueOf(selected, config);
+                    const newId = await actions.createCard(startLane, title);
                     if (typeof newId === "string") {
                       await actions.updateCard(newId, { parent: cardSlug(selected) });
                     }
@@ -1533,12 +1418,8 @@ export function BoardSurface({
         open={swimlaneManagerOpen}
         lanes={config.swimlanes ?? []}
         cards={cards}
-        focusRequest={laneFocusRequest}
         portalClassName={portalClassName}
-        onClose={() => {
-          setSwimlaneManagerOpen(false);
-          setLaneFocusRequest(undefined);
-        }}
+        onClose={() => setSwimlaneManagerOpen(false)}
         onSaveLanes={saveCustomLanes}
         onUpdateCards={updateManyCards}
         onShowAffected={showMissingSwimlanes}

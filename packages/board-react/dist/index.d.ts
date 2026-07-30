@@ -118,11 +118,12 @@ declare type BoardViewConfig = {
     /** Board ticket-id prefix (e.g. `OCCSV`) for per-card `OCCSV-3371` ticket links. */
     ticketKey?: string;
     /**
-     * Second grouping dimension rendered as horizontal swimlanes (rows) in the
-     * board view. Must differ from `groupBy`; unset = no swimlanes.
+     * Active custom swimlane mode. Historical configs may also contain
+     * status/priority/assignee here from the retired two-dimensional layout;
+     * those values now render as the single vertical swimlane dimension.
      */
     swimlaneBy?: BoardSwimlaneGroupKey;
-    /** Persistent definitions used when `swimlaneBy === "custom"`. */
+    /** Persistent definitions used by custom vertical swimlanes. */
     swimlanes?: BoardSwimlane[];
     /** Present only while a derived-lane conversion is incomplete/retryable. */
     swimlaneMigration?: SwimlaneMigration;
@@ -159,7 +160,7 @@ export declare class JTypeApiError extends Error {
  * `client`) plus `workspaceId`+`boardRef` and it renders the same shared
  * BoardSurface the jtype desktop + web apps use, backed by the document API.
  */
-export declare function JTypeBoard({ workspaceId, boardRef, baseUrl, token, client: injectedClient, readOnly, live, pollIntervalMs, onCardOpen, onConnectionChange, locale, className, style, }: JTypeBoardProps): ReactElement;
+export declare function JTypeBoard({ workspaceId, boardRef, baseUrl, token, client: injectedClient, readOnly, currentUser, live, pollIntervalMs, onCardOpen, onConnectionChange, locale, className, style, }: JTypeBoardProps): ReactElement;
 
 export declare type JTypeBoardConnection = 'live' | 'polling' | 'error';
 
@@ -216,6 +217,8 @@ export declare type JTypeBoardProps = {
     client?: JTypeBoardDataClient;
     /** Hide all mutation affordances (view-only board). Default false. */
     readOnly?: boolean;
+    /** Current user's display name; enables the personal "My cards" filter. */
+    currentUser?: string;
     /**
      * Try the live SSE feed (default true). Post PR #45 the feed requires a
      * full-scope session token — with an mcp-scoped token the server answers

@@ -121,7 +121,7 @@ export type BoardSurfaceProps = {
   deleteComment?: (commentId: string) => Promise<void>;
   toggleReaction?: (commentId: string, emoji: string) => Promise<BoardComment>;
   resolveComment?: (commentId: string, resolved: boolean) => Promise<BoardComment>;
-  /** Current user's display name, to show delete only on their own comments. */
+  /** Current user's display name, used by comments and the "My cards" filter. */
   currentUser?: string;
   /** Load a card's activity timeline (DB board); omit to hide the Activity section. */
   loadActivity?: (cardId: string) => Promise<BoardActivityEvent[]>;

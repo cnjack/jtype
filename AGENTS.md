@@ -220,3 +220,141 @@ Shared component CSS classes live in `shared/styles/components.css`. Both fronte
 - Changes to `shared/` affect both Desktop and Web. Verify both builds pass.
 - When adding a new shared component, follow the Props-in/Callbacks-out pattern.
 - When a shared component needs platform-specific behavior, add a slot prop — do not add platform detection.
+
+## New Feature Workflow
+
+Do not assume that every feature belongs on every surface. Before implementation,
+analyze where the capability belongs, which layers it affects, what can be
+shared, and which artifacts or documentation must follow it. The result may be
+Desktop-only, Web-only, shared across both, package-only, or backend-only.
+
+### 1. Feature Impact Analysis
+
+Before editing code, add an impact matrix to the implementation notes or PR.
+Mark every row **Yes**, **No**, or **N/A**, and give a short reason. A "No"
+decision is valid; it just must be deliberate.
+
+| Area | Questions to answer |
+|------|---------------------|
+| Desktop app | Does this support local-first/offline vault work, local files, Tauri capabilities, or a focused desktop workflow? What is its entry point and persistence adapter? |
+| Web app | Does this require cloud workspaces, collaboration, members/roles, admin, publishing, browser access, or server-owned data? What is its entry point and permission behavior? |
+| Shared model/utilities | Do Desktop, Web, the board package, CLI, MCP, or backend need the same types, validation, IDs, parsing, or transformations? |
+| Shared UI | Is the interaction and information architecture materially the same on Desktop and Web? Can it stay props-in/callbacks-out without platform branches? |
+| Web service/API | Does it change HTTP contracts, auth, persistence, migrations, events, sync, conflicts, budgets, webhooks, or storage? |
+| `packages/board-react` | Does the embeddable Kanban package expose or persist the affected board capability? Does its public API, types, bundle, example, or README need to change? |
+| CLI/MCP | Should automation or headless users be able to read or mutate the feature? Do tool schemas or help text need updates? |
+| In-app Help | Does the feature add or change a user-visible workflow, setting, limitation, or concept covered by the Help Center? |
+| Other docs | Do README, API docs, internal design docs, screenshots, examples, or release notes become inaccurate? |
+| Release/deployment | Which artifacts must be rebuilt or promoted: Desktop installers, Web image, board package, CLI binaries, or none? |
+
+Use repository searches to support the matrix. Do not infer that a change is
+isolated from its filename.
+
+### 2. Surface Decision Rules
+
+Choose surfaces based on product responsibility, not symmetry:
+
+- Prefer **Desktop** for local vault and filesystem workflows, offline behavior,
+  native OS integration, and single-file editing.
+- Prefer **Web** for cloud collaboration, member/role-aware behavior, admin,
+  publishing, and server-only capabilities.
+- Implement on **both** when the same user-owned document or board can be opened
+  and edited on both surfaces and inconsistent behavior would corrupt, hide, or
+  surprise users.
+- A feature can intentionally differ by surface. Keep the domain model
+  compatible, then document the UX difference and its reason.
+- Do not add placeholder UI to a surface that cannot provide the real behavior.
+
+For each affected surface, define the entry point, default/empty state,
+existing-data state, read-only/permission state, persistence path, error
+recovery, and user-visible acceptance criteria.
+
+### 3. Decide What To Share
+
+Share the smallest stable layer that is genuinely common:
+
+- Put common types, parsing, validation, stable IDs, migrations, and pure
+  transformations in `shared/lib/` when multiple consumers need them.
+- Put UI in `shared/components/` only when Desktop and Web have substantially
+  the same interaction. Shared UI must remain props-in/callbacks-out.
+- Keep platform data access in adapters: Tauri/filesystem behavior in `src/`,
+  Web API behavior in `services/jtype-web/frontend/src/`.
+- If workflows differ, share primitives or the domain model instead of forcing
+  a single component full of platform conditionals.
+- A shared component is not proof of integration. Each selected host still
+  needs an explicit entry point, adapter, and persistence test.
+
+### 4. Decide Whether Kanban Package Changes
+
+Update `packages/board-react` when the feature changes board data or behavior
+that external embedded boards should expose. In that case:
+
+- Update package source, public props/types, adapters, and localized strings as
+  applicable.
+- Update `packages/board-react/README.md` and the example when consumers need new
+  setup or behavior guidance.
+- Rebuild the checked-in `packages/board-react/dist/` output.
+- Run `npm run build` and `npm test` from `packages/board-react/`.
+
+Do not update the package for app-shell-only behavior, Desktop filesystem
+features, Web admin UI, or other capabilities the embeddable board cannot use.
+Record that decision in the impact matrix.
+
+### 5. Decide Whether Documentation Changes
+
+Update documentation when the feature changes what a user can do, how they find
+it, its data model, configuration, permissions, limitations, or recovery flow.
+
+- In-app Help lives in
+  `services/jtype-web/frontend/src/help/content/`. Update the relevant article
+  source and maintained locale variants when the user workflow changes.
+- Update `packages/board-react/README.md` for public package behavior.
+- Update API docs for contract or tool changes.
+- Update internal design/ADR material when the architectural decision changes.
+- Update screenshots, examples, and release notes when old material would
+  misrepresent the product.
+
+Docs are not required for invisible refactors with no behavior or contract
+change. State why docs are unchanged in the impact matrix.
+
+### 6. Implement And Test The Selected Scope
+
+Implementation and verification follow the matrix; unaffected surfaces are not
+modified merely for parity.
+
+- Add unit tests for shared models and transformations.
+- Add a real Desktop entry-point/persistence test when Desktop is **Yes**.
+- Add a real Web entry-point/API persistence test when Web is **Yes**.
+- Add package tests and rebuild `dist/` when `packages/board-react` is **Yes**.
+- Add API/Rust tests when service contracts or persistence are **Yes**.
+- Test discoverability from the normal default state, not only a fixture where
+  the feature is already enabled.
+- A shared fixture is useful for component behavior but does not replace the
+  selected host integration tests.
+
+### 7. Review, Release, And Verify
+
+- The PR must include the completed impact matrix, acceptance criteria, tests
+  run, documentation decisions, migration notes, and visuals for each changed UI
+  surface.
+- Review the user flow from its real entry point and default state.
+- Build and release only the affected artifacts identified in the matrix.
+- Verify every released artifact comes from a commit containing the change.
+- Promote Kubernetes changes with an explicit context and namespace.
+- `/health` proves service availability, not feature completion. Run a
+  feature-specific smoke test on every promoted or published surface, including
+  persistence after reload where applicable.
+
+### Definition Of Done
+
+A feature is complete when:
+
+- Every impact area has a Yes/No/N/A decision with rationale.
+- Every **Yes** area is implemented, tested, documented, and released as needed.
+- Shared code is used only where the model or interaction is genuinely shared.
+- Every selected UI surface exposes the feature from a discoverable real entry
+  point and handles its relevant states.
+- Package bundles, public types, examples, and Help content are updated when
+  their impact rows are **Yes**.
+- Feature-specific verification passes on the artifacts and environments that
+  were actually released.

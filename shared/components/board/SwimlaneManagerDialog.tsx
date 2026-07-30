@@ -307,10 +307,10 @@ export function SwimlaneManagerDialog({
               </span>
               <div className="min-w-0 flex-1">
                 <DialogTitle className="text-base font-semibold tracking-tight text-stone-900">
-                  <Trans>Manage swimlanes</Trans>
+                  <Trans>Manage custom swimlanes</Trans>
                 </DialogTitle>
                 <p id="swimlane-manager-description" className="mt-1 text-xs leading-5 text-brand-gray">
-                  <Trans>Horizontal groups for this board. Names can change; card mapping stays attached.</Trans>
+                  <Trans>Vertical columns for this board. Names can change; cards stay mapped by swimlane ID.</Trans>
                 </p>
                 <span className="sr-only" aria-live="polite">{announcement}</span>
               </div>
@@ -329,7 +329,7 @@ export function SwimlaneManagerDialog({
             </div>
 
             <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
-              <ul aria-label={t`Swimlanes`} className="space-y-1">
+              <ul aria-label={t`Custom swimlanes`} className="space-y-1">
                 {lanes.map((lane, index) => {
                   const error = rowError?.key === lane.key ? rowError.message : null;
                   return (
@@ -599,7 +599,7 @@ export function SwimlaneManagerDialog({
                         <ExclamationTriangleIcon className="h-4 w-4 shrink-0" />
                         <span>
                           {issue.kind === "duplicate_swimlane_key"
-                            ? t`Duplicate lane ID "${issue.key}". The first definition is used.`
+                            ? t`Duplicate swimlane ID "${issue.key}". The first definition is used.`
                             : t`Duplicate swimlane name "${issue.name}". Names should be unique.`}
                         </span>
                       </div>

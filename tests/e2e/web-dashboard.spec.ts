@@ -16,6 +16,16 @@ function mockApi(page: Page, options: { emptyWorkspaces?: boolean } = {}) {
     { id: "folder-1", relativePath: "guides", updatedClock: 2 },
   ];
   const trashItems: Array<Record<string, string>> = [];
+  let cardContent = "---\nboard: infra-web\nstatus: todo\nposition: 0\ntitle: Todo card\npriority: high\nassignee: testuser\ntags: frontend\ndue: 2026-08-02\nblocked_by: dependency\n---\n\nVerify the pull cursor.";
+  let boardContent = JSON.stringify({
+    id: "infra-web",
+    title: "Infra Web",
+    columns: [
+      { key: "todo", name: "Todo" },
+      { key: "done", name: "Done" },
+    ],
+    doneColumn: "done",
+  });
 
   return page.route("**/api/**", async (route) => {
     const url = route.request().url();
@@ -397,15 +407,7 @@ function mockApi(page: Page, options: { emptyWorkspaces?: boolean } = {}) {
             relativePath: "infra-web.board",
             title: "infra-web",
             status: "draft",
-            content: JSON.stringify({
-              id: "infra-web",
-              title: "Infra Web",
-              columns: [
-                { key: "todo", name: "Todo" },
-                { key: "done", name: "Done" },
-              ],
-              doneColumn: "done",
-            }),
+            content: boardContent,
             contentHash: "board-hash",
             versionId: "v-board",
             updatedClock: 8,
@@ -420,7 +422,7 @@ function mockApi(page: Page, options: { emptyWorkspaces?: boolean } = {}) {
             relativePath: "infra-web/todo-card.md",
             title: "Todo card",
             status: "draft",
-            content: "---\nboard: infra-web\nstatus: todo\nposition: 0\ntitle: Todo card\n---\n\nVerify the pull cursor.",
+            content: cardContent,
             contentHash: "card-hash",
             versionId: "v-card",
             updatedClock: 9,
@@ -443,6 +445,8 @@ function mockApi(page: Page, options: { emptyWorkspaces?: boolean } = {}) {
     }
     if (url.match(/\/api\/v1\/workspaces\/[^/]+\/documents\/save$/) && method === "POST") {
       const relativePath = body?.relativePath || "new.md";
+      if (relativePath === "infra-web.board") boardContent = body?.content || boardContent;
+      if (relativePath === "infra-web/todo-card.md") cardContent = body?.content || cardContent;
       const existing = documents.find((doc) => doc.relativePath === relativePath);
       const saved = {
         id: existing?.id || `doc-${documents.length + 1}`,
@@ -711,6 +715,61 @@ test.describe("Workspace Documents", () => {
 });
 
 test.describe("Kanban sequence pull", () => {
+  test("uses vertical swimlanes and the filter toolbar in the real web board", async ({ page }) => {
+    await mockApi(page);
+    await page.addInitScript(() => {
+      localStorage.setItem("jtype.token", "tok_test");
+      localStorage.setItem("jtype.username", "testuser");
+    });
+    await page.goto("/workspaces/ws-1");
+
+    await page.getByRole("button", { name: /infra-web\.board/ }).click();
+    const swimlanes = page.getByLabel("Swimlanes", { exact: true });
+    await expect(swimlanes.locator('option[value="status"]')).toHaveText("Swimlanes: Status");
+    await expect(swimlanes.locator('option[value="custom"]')).toHaveText("Swimlanes: Custom");
+
+    await page.getByRole("button", { name: "Manage statuses" }).click();
+    const dialog = page.getByRole("dialog", { name: "Manage statuses" });
+    await dialog.getByRole("button", { name: "Add status" }).click();
+    await dialog.getByRole("textbox", { name: "Status name" }).fill("Review");
+    await dialog.getByRole("button", { name: "Add", exact: true }).click();
+    await expect(dialog.getByText("Review", { exact: true })).toBeVisible();
+    await dialog.getByRole("button", { name: "Done", exact: true }).click();
+
+    await page.getByRole("button", { name: "Filters" }).click();
+    await page.getByRole("checkbox", { name: "high" }).click();
+    await page.getByRole("checkbox", { name: "My cards" }).click();
+    await expect(page.getByText("1 of 1 cards shown")).toBeVisible();
+
+    await page.getByRole("checkbox", { name: "high" }).click();
+    await page.getByRole("checkbox", { name: "My cards" }).click();
+    await page.getByRole("button", { name: "Filters" }).click();
+    await swimlanes.selectOption("priority");
+    await expect(swimlanes).toHaveValue("priority");
+    const card = page.locator('[data-card-id="infra-web/todo-card.md"]');
+    const target = page.locator('[data-col-key="urgent"]');
+    const cardBox = await card.boundingBox();
+    const targetBox = await target.boundingBox();
+    expect(cardBox).not.toBeNull();
+    expect(targetBox).not.toBeNull();
+    const cardSave = page.waitForRequest((request) => {
+      if (!request.url().includes("/documents/save") || request.method() !== "POST") return false;
+      const payload = request.postDataJSON();
+      return payload?.relativePath === "infra-web/todo-card.md";
+    });
+
+    await page.mouse.move(cardBox!.x + cardBox!.width / 2, cardBox!.y + cardBox!.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(cardBox!.x + cardBox!.width / 2 + 8, cardBox!.y + cardBox!.height / 2, { steps: 4 });
+    await expect(card).toHaveClass(/opacity-40/);
+    await page.mouse.move(targetBox!.x + targetBox!.width / 2, targetBox!.y + 80, { steps: 12 });
+    await expect(target).toHaveClass(/border-brand\/40/);
+    await page.mouse.up();
+
+    expect((await cardSave).postDataJSON()?.content).toContain("priority: urgent");
+    await expect(target).toContainText("Todo card");
+  });
+
   test("continues from the last successful sequence", async ({ page }) => {
     await mockApi(page);
     await page.addInitScript(() => {
@@ -741,6 +800,14 @@ test.describe("Kanban sequence pull", () => {
 });
 
 test.describe("Help center", () => {
+  test("documents vertical swimlanes and lightweight filters", async ({ page }) => {
+    await page.goto("/help/c/kanban/web-board-view");
+
+    await expect(page.getByRole("heading", { name: "Manage the status workflow" })).toBeVisible();
+    await expect(page.getByText("Each status has a stable internal ID.")).toBeVisible();
+    await expect(page.getByText(/Swimlanes.*choose the one vertical dimension/)).toBeVisible();
+  });
+
   test("publishes the Kanban automation guide in app", async ({ page }) => {
     await page.goto("/help/c/kanban");
 

@@ -43,5 +43,6 @@ An `mcp` token is an **account credential**: whoever holds it can read and write
 ## Good to know
 
 - **Read-only embeds**: set `readOnly` to show a board without any edit or drag affordances.
-- **What renders today**: columns, cards, drag to move/reorder, board/table/calendar and swimlane views, search/filter/sort, and a read-only card detail. Card notes show as plain text, and members, versions, comments and ticket badges aren't in the embed yet.
+- **What renders today**: selectable vertical swimlanes (status, priority, assignee, or custom), cards, drag to move/reorder, board/table/calendar, multi-select filters, search/sort, and a read-only card detail. Card notes show as plain text, and members, versions, comments and ticket badges aren't in the embed yet.
+- **Personal filter**: pass `currentUser` to enable **My cards** in the filter popover.
 - **Revoking access**: because the embed uses an ordinary token, you can revoke it any time from your token list — the embed simply stops loading and shows an error state, never stale data.

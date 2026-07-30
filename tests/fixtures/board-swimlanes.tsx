@@ -3,8 +3,10 @@ import { createRoot } from "react-dom/client";
 import { I18nProvider } from "@lingui/react";
 import { BoardPeek, BoardSurface, type BoardActions } from "@shared/components/board";
 import {
+  activeBoardLaneKey,
+  boardLaneValueOf,
+  cardPatchForLaneValue,
   slugify,
-  type BoardSwimlane,
   type BoardViewCard,
   type BoardViewConfig,
 } from "@shared/lib/board";
@@ -50,8 +52,11 @@ const initialCards: BoardViewCard[] = [
     position: 0,
     title: "Offline conflict indicator",
     priority: "high",
+    assignee: "Jack",
+    due: "2026-08-02",
     swimlaneKey: "lane_platform_11111111",
-    tags: [],
+    tags: [{ label: "frontend" }],
+    blockedBy: ["roadmap/dependency"],
   },
   {
     id: "roadmap/analytics.md",
@@ -59,8 +64,10 @@ const initialCards: BoardViewCard[] = [
     position: 0,
     title: "Publishing analytics",
     priority: "medium",
+    assignee: "Kim",
+    due: "2026-08-05",
     swimlaneKey: "lane_growth_22222222",
-    tags: [],
+    tags: [{ label: "analytics" }],
   },
   {
     id: "roadmap/legacy.md",
@@ -68,6 +75,7 @@ const initialCards: BoardViewCard[] = [
     position: 0,
     title: "Legacy lane cleanup",
     priority: "low",
+    assignee: "Jack",
     swimlaneKey: "lane_deleted_99999999",
     tags: [],
   },
@@ -105,18 +113,20 @@ function Harness() {
         });
         setConfig((current) => ({ ...current, ...patch }));
       },
-      createCard: async (columnKey, title) => {
+      createCard: async (laneKey, title) => {
         const id = `roadmap/${slugify(title)}.md`;
+        const activeLane = activeBoardLaneKey(config);
         setCards((current) => [
           ...current,
           {
             id,
-            columnKey,
+            columnKey: activeLane === "status" ? laneKey : config.columns[0]?.key ?? "todo",
             position: current.length,
             title,
             priority: "none",
             swimlaneKey: null,
             tags: [],
+            ...cardPatchForLaneValue(activeLane, laneKey),
           },
         ]);
         return id;
@@ -148,10 +158,21 @@ function Harness() {
           onProgress?.(completed, updates.length);
         }
       },
-      moveCard: async (cardId, columnKey, position) => {
+      moveCard: async (cardId, laneKey, position) => {
+        const activeLane = activeBoardLaneKey(config);
         setCards((current) =>
           current.map((card) =>
-            card.id === cardId ? { ...card, columnKey, position } : card,
+            card.id === cardId
+              ? {
+                  ...card,
+                  ...cardPatchForLaneValue(activeLane, laneKey),
+                  position:
+                    activeLane === "status" ||
+                    boardLaneValueOf(card, config) === laneKey
+                      ? position
+                      : card.position,
+                }
+              : card,
           ),
         );
       },
@@ -213,7 +234,7 @@ function Harness() {
         }));
       },
     }),
-    [],
+    [config],
   );
 
   return (
@@ -221,6 +242,7 @@ function Harness() {
       config={config}
       cards={cards}
       actions={actions}
+      currentUser="Jack"
       peekComponent={BoardPeek}
     />
   );

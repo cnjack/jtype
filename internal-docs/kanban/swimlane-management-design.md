@@ -1,5 +1,7 @@
 # Kanban 可编辑泳道设计
 
+> **已于 2026-07-30 被取代。** 本文保留早期二维数据方案的历史记录；当前产品使用顶部标题的单一纵向泳道，不再渲染左侧横向行。现行设计见 [Vertical swimlanes and lightweight filters](./status-columns-filter-redesign.md)。
+
 状态：Grok + Kimi 评审完成，已实现并通过 Desktop / Web / board-react 验证
 日期：2026-07-29
 
