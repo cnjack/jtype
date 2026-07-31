@@ -175,6 +175,10 @@ msgstr "Add status"
 msgid "Add swimlane"
 msgstr "Add swimlane"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Additional information"
+msgstr "Additional information"
+
 #: shared/components/board/BoardCalendar.tsx
 msgid "Agenda"
 msgstr "Agenda"

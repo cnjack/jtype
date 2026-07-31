@@ -1,6 +1,6 @@
 {
   "name": "jtype-board-react",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Embeddable React kanban board for jtype cloud workspaces (the shared BoardSurface behind the desktop + web boards, wired to an instance-based API client).",
   "type": "module",
   "files": [

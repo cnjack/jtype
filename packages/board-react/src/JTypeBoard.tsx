@@ -1,4 +1,12 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactElement } from 'react'
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactElement,
+  type ReactNode,
+} from 'react'
 import { I18nProvider } from '@lingui/react'
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline'
 import { BoardPeek } from '@shared/components/board/BoardPeek'
@@ -63,6 +71,11 @@ export type JTypeBoardProps = {
   pollIntervalMs?: number
   /** Intercept card opens (replaces the built-in editable/read-only detail). */
   onCardOpen?: (card: BoardViewCard) => void
+  /**
+   * Add host-owned content after native Properties and Relations without
+   * replacing jtype's editor. Not rendered for read-only or intercepted opens.
+   */
+  renderCardSupplement?: (card: BoardViewCard) => ReactNode
   /** Observe live/polling/error transitions. */
   onConnectionChange?: (state: JTypeBoardConnection) => void
   /** Board chrome locale (default 'en'). Shared across instances (see README). */
@@ -91,6 +104,7 @@ export function JTypeBoard({
   live = true,
   pollIntervalMs = 30000,
   onCardOpen,
+  renderCardSupplement,
   onConnectionChange,
   locale,
   className,
@@ -482,6 +496,7 @@ export function JTypeBoard({
             currentUser={currentUser}
             onCardOpen={handleCardOpen}
             peekComponent={!readOnly && !onCardOpen ? BoardPeek : undefined}
+            renderCardSupplement={renderCardSupplement}
             // Dropdown panels mount in body-level portals; carry the scope
             // class so ONLY our portals pick up the package styles (never the
             // host's own Headless UI portals).

@@ -40,6 +40,7 @@ test("editable package embed uses the shared card editor inside a bounded Cloud-
   await expect(dialog.getByText("Description", { exact: true })).toBeVisible();
   await expect(dialog.getByText("Properties", { exact: true })).toBeVisible();
   await expect(dialog.getByPlaceholder("Add details...")).toBeVisible();
+  await expect(dialog.getByTestId("host-card-supplement")).toHaveCount(0);
 
   const dialogBox = await dialog.boundingBox();
   expect(dialogBox).not.toBeNull();
@@ -154,12 +155,41 @@ test("editable package embed uses the shared card editor inside a bounded Cloud-
     .toBe(true);
 });
 
+test("editable package embed adds a host supplement without replacing the native card editor", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/tests/fixtures/board-react-embed.html?supplement=1");
+  await expect(page.getByText("Jcode", { exact: true })).toBeVisible();
+
+  await page.getByText(cardTitles[0]!, { exact: true }).click();
+
+  const dialog = page.getByRole("dialog", { name: "Card details" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByText("Description", { exact: true })).toBeVisible();
+  await expect(dialog.getByText("Properties", { exact: true })).toBeVisible();
+  await expect(dialog.getByTestId("host-card-supplement")).toContainText(
+    `Cloud executions for ${cardTitles[0]}`,
+  );
+  await expect(dialog.getByRole("region", { name: "Additional information" })).toBeVisible();
+});
+
 test("explicit readOnly package embed keeps the non-editable detail path", async ({ page }) => {
   await openEmbed(page, { readOnly: true });
 
   await page.getByText(cardTitles[0]!, { exact: true }).click();
   await expect(page.getByLabel("Read-only card view")).toBeVisible();
   await expect(page.getByRole("dialog", { name: "Card details" })).toHaveCount(0);
+});
+
+test("readOnly package embed does not render the editable Card supplement", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/tests/fixtures/board-react-embed.html?readonly=1&supplement=1");
+  await expect(page.getByText("Jcode", { exact: true })).toBeVisible();
+
+  await page.getByText(cardTitles[0]!, { exact: true }).click();
+  await expect(page.getByLabel("Read-only card view")).toBeVisible();
+  await expect(page.getByTestId("host-card-supplement")).toHaveCount(0);
 });
 
 test("host onCardOpen intercepts the built-in editable detail", async ({ page }) => {
@@ -173,6 +203,18 @@ test("host onCardOpen intercepts the built-in editable detail", async ({ page })
     .toBe(cardTitles[0]);
   await expect(page.getByRole("dialog", { name: "Card details" })).toHaveCount(0);
   await expect(page.getByLabel("Read-only card view")).toHaveCount(0);
+});
+
+test("host onCardOpen interception also suppresses the Card supplement", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/tests/fixtures/board-react-embed.html?intercept=1&supplement=1");
+  await expect(page.getByText("Jcode", { exact: true })).toBeVisible();
+
+  await page.getByText(cardTitles[0]!, { exact: true }).click();
+  await expect
+    .poll(() => page.evaluate(() => window.__BOARD_EMBED_TEST__?.openedCardTitle))
+    .toBe(cardTitles[0]);
+  await expect(page.getByTestId("host-card-supplement")).toHaveCount(0);
 });
 
 const cardTitles = [

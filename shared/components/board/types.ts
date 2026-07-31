@@ -1,4 +1,4 @@
-import type { ComponentType } from "react";
+import type { ComponentType, ReactNode } from "react";
 import type {
   BoardViewCard,
   BoardViewConfig,
@@ -115,6 +115,8 @@ export type BoardPeekProps = {
   renderMarkdownToHtml?: (source: string) => Promise<string>;
   /** Scope class for nested Headless UI dropdown portals in style-isolated embeds. */
   portalClassName?: string;
+  /** Host-owned content appended after native Card properties and relations. */
+  supplement?: ReactNode;
   onChange: (patch: Partial<BoardViewCard>) => void;
   onClose: () => void;
   onDelete: () => void;
@@ -177,6 +179,11 @@ export type BoardSurfaceProps = {
    * built-in editable peek (desktop + web).
    */
   onCardOpen?: (card: BoardViewCard) => void;
+  /**
+   * Render host-owned content in the native Card detail. This is additive:
+   * jtype keeps ownership of the editor and all Card mutations.
+   */
+  renderCardSupplement?: (card: BoardViewCard) => ReactNode;
   /**
    * The card-detail implementation, injected by the platform (desktop + web
    * pass the shared {@link BoardPeekProps}-shaped BoardPeek). A slot rather than
