@@ -42,6 +42,7 @@ The wrapper fills its container — **give the parent element a height.**
 | `currentUser` | `string` | — | Current user's display name. Enables the personal **My cards** filter. |
 | `live` | `boolean` | `true` | Try the live SSE feed; see *Live updates* below. |
 | `pollIntervalMs` | `number` | `30000` | Polling cadence (min 5000). |
+| `initialCardPath` | `string` | — | Opens the matching Card once after the initial snapshot loads. Closing it does not make polling reopen it. |
 | `onCardOpen` | `(card: BoardViewCard) => void` | — | Intercept card opens; replaces the built-in read-only detail panel. |
 | `renderCardSupplement` | `(card: BoardViewCard) => ReactNode` | — | Add host-owned content after native Properties and Relations in the built-in editable Card detail. It is not rendered for `readOnly` or intercepted opens. |
 | `onConnectionChange` | `(s: 'live' \| 'polling' \| 'error') => void` | — | Observe transport state transitions. |

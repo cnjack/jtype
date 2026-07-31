@@ -69,6 +69,8 @@ export type JTypeBoardProps = {
   live?: boolean
   /** Polling cadence in ms (default 30000, min 5000). */
   pollIntervalMs?: number
+  /** Open this Card path once after the initial board snapshot resolves. */
+  initialCardPath?: string
   /** Intercept card opens (replaces the built-in editable/read-only detail). */
   onCardOpen?: (card: BoardViewCard) => void
   /**
@@ -103,6 +105,7 @@ export function JTypeBoard({
   currentUser,
   live = true,
   pollIntervalMs = 30000,
+  initialCardPath,
   onCardOpen,
   renderCardSupplement,
   onConnectionChange,
@@ -465,6 +468,10 @@ export function JTypeBoard({
   const selectedCard = selectedCardId
     ? snapshot?.cards.find((c) => c.id === selectedCardId) ?? null
     : null
+  const initialCardError =
+    initialCardPath && snapshot && !snapshot.cards.some((card) => card.id === initialCardPath)
+      ? S.errCardNotFound(initialCardPath)
+      : ''
   // Editable embeds use the same focused editor as the desktop and web apps.
   // Only an explicitly read-only embed needs the lightweight, non-mutating
   // package detail. A host-supplied handler always wins over both defaults.
@@ -491,7 +498,8 @@ export function JTypeBoard({
             config={viewConfig}
             cards={snapshot.cards}
             actions={actions}
-            error={banner || undefined}
+            error={banner || initialCardError || undefined}
+            initialCardId={initialCardPath}
             readOnly={readOnly}
             currentUser={currentUser}
             onCardOpen={handleCardOpen}

@@ -128,6 +128,11 @@ export type BoardSurfaceProps = {
   cards: BoardViewCard[];
   actions: BoardActions;
   error?: string;
+  /**
+   * Open this Card once when the surface mounts and the Card is present.
+   * Later card refreshes must not reopen a detail that the user closed.
+   */
+  initialCardId?: string;
   /** Templates for "new from template" (web may omit). */
   templates?: { id: string; name: string }[];
   createFromTemplate?: (columnKey: string, templateId: string) => Promise<void> | void;

@@ -166,7 +166,7 @@ export declare class JTypeApiError extends Error {
  * `client`) plus `workspaceId`+`boardRef` and it renders the same shared
  * BoardSurface the jtype desktop + web apps use, backed by the document API.
  */
-export declare function JTypeBoard({ workspaceId, boardRef, baseUrl, token, client: injectedClient, readOnly, currentUser, live, pollIntervalMs, onCardOpen, renderCardSupplement, onConnectionChange, locale, className, style, }: JTypeBoardProps): ReactElement;
+export declare function JTypeBoard({ workspaceId, boardRef, baseUrl, token, client: injectedClient, readOnly, currentUser, live, pollIntervalMs, initialCardPath, onCardOpen, renderCardSupplement, onConnectionChange, locale, className, style, }: JTypeBoardProps): ReactElement;
 
 export declare type JTypeBoardConnection = 'live' | 'polling' | 'error';
 
@@ -234,6 +234,8 @@ export declare type JTypeBoardProps = {
     live?: boolean;
     /** Polling cadence in ms (default 30000, min 5000). */
     pollIntervalMs?: number;
+    /** Open this Card path once after the initial board snapshot resolves. */
+    initialCardPath?: string;
     /** Intercept card opens (replaces the built-in editable/read-only detail). */
     onCardOpen?: (card: BoardViewCard) => void;
     /**

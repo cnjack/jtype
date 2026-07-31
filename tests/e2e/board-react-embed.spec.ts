@@ -174,6 +174,27 @@ test("editable package embed adds a host supplement without replacing the native
   await expect(dialog.getByRole("region", { name: "Additional information" })).toBeVisible();
 });
 
+test("editable package embed opens an exact Card deep link once", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/tests/fixtures/board-react-embed.html?card=jcode%2Fcard-0.md");
+  await expect(page.getByTestId("cloud-board-host").getByText("Jcode", { exact: true })).toBeVisible();
+
+  const dialog = page.getByRole("dialog", { name: "Card details" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByPlaceholder("Untitled card")).toHaveValue(cardTitles[0]!);
+
+  await dialog.getByRole("button", { name: "Close" }).click();
+  await expect(dialog).toBeHidden();
+  await page.waitForTimeout(5_100);
+  await expect(dialog).toBeHidden();
+});
+
+test("editable package embed exposes a missing Card deep link", async ({ page }) => {
+  await page.goto("/tests/fixtures/board-react-embed.html?card=jcode%2Fmissing.md");
+  await expect(page.getByText('Card "jcode/missing.md" was not found on this board.')).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Card details" })).toHaveCount(0);
+});
+
 test("explicit readOnly package embed keeps the non-editable detail path", async ({ page }) => {
   await openEmbed(page, { readOnly: true });
 

@@ -31,6 +31,7 @@ export type UiStrings = {
   errBoardNotFound: (ref: string) => string
   errBoardAmbiguous: (ref: string, candidates: string[]) => string
   errBoardConfigInvalid: string
+  errCardNotFound: (path: string) => string
   errUnauthorized: string
   errNetwork: string
   errGeneric: (detail: string) => string
@@ -62,6 +63,7 @@ const en: UiStrings = {
   errBoardNotFound: (ref) => `Board "${ref}" was not found in this workspace.`,
   errBoardAmbiguous: (ref, cands) => `Board name "${ref}" is ambiguous: ${cands.join(', ')}. Use the full path.`,
   errBoardConfigInvalid: 'The board configuration document could not be parsed.',
+  errCardNotFound: (path) => `Card "${path}" was not found on this board.`,
   errUnauthorized: 'The token was rejected (invalid, expired, or no access to this workspace).',
   errNetwork: 'Could not reach the jtype server.',
   errGeneric: (detail) => `Board failed to load: ${detail}`,
@@ -93,6 +95,7 @@ const zh: UiStrings = {
   errBoardNotFound: (ref) => `在该工作区中找不到看板“${ref}”。`,
   errBoardAmbiguous: (ref, cands) => `看板名“${ref}”有歧义：${cands.join('、')}。请使用完整路径。`,
   errBoardConfigInvalid: '看板配置文档无法解析。',
+  errCardNotFound: (path) => `在该看板中找不到卡片“${path}”。`,
   errUnauthorized: '令牌被拒绝（无效、过期或无该工作区权限）。',
   errNetwork: '无法连接 jtype 服务器。',
   errGeneric: (detail) => `看板加载失败：${detail}`,
@@ -124,6 +127,7 @@ const ja: UiStrings = {
   errBoardNotFound: (ref) => `ワークスペースにボード「${ref}」が見つかりません。`,
   errBoardAmbiguous: (ref, cands) => `ボード名「${ref}」が曖昧です：${cands.join('、')}。フルパスを使用してください。`,
   errBoardConfigInvalid: 'ボード設定ドキュメントを解析できませんでした。',
+  errCardNotFound: (path) => `このボードにカード「${path}」が見つかりません。`,
   errUnauthorized: 'トークンが拒否されました（無効・期限切れ・権限なし）。',
   errNetwork: 'jtype サーバーに接続できません。',
   errGeneric: (detail) => `ボードの読み込みに失敗しました：${detail}`,
@@ -155,6 +159,7 @@ const ko: UiStrings = {
   errBoardNotFound: (ref) => `워크스페이스에서 보드 "${ref}"을(를) 찾을 수 없습니다.`,
   errBoardAmbiguous: (ref, cands) => `보드 이름 "${ref}"이(가) 모호합니다: ${cands.join(', ')}. 전체 경로를 사용하세요.`,
   errBoardConfigInvalid: '보드 설정 문서를 해석할 수 없습니다.',
+  errCardNotFound: (path) => `이 보드에서 카드 "${path}"을(를) 찾을 수 없습니다.`,
   errUnauthorized: '토큰이 거부되었습니다(무효, 만료 또는 권한 없음).',
   errNetwork: 'jtype 서버에 연결할 수 없습니다.',
   errGeneric: (detail) => `보드를 불러오지 못했습니다: ${detail}`,
