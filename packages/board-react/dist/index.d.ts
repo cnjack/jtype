@@ -240,7 +240,7 @@ export declare type JTypeBoardProps = {
     onCardOpen?: (card: BoardViewCard) => void;
     /**
      * Add host-owned content after native Properties and Relations without
-     * replacing jtype's editor. Not rendered for read-only or intercepted opens.
+     * replacing jtype's detail. Not rendered for intercepted opens.
      */
     renderCardSupplement?: (card: BoardViewCard) => ReactNode;
     /** Observe live/polling/error transitions. */

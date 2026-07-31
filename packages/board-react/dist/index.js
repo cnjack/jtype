@@ -12141,16 +12141,16 @@ async function fh(e, t, n, r) {
 }
 //#endregion
 //#region src/CardDetail.tsx
-function ph({ card: e, config: t, strings: n, onClose: r }) {
+function ph({ card: e, config: t, strings: n, supplement: r, onClose: i }) {
 	f(() => {
 		let e = (e) => {
-			e.key === "Escape" && r();
+			e.key === "Escape" && i();
 		};
 		return window.addEventListener("keydown", e), () => window.removeEventListener("keydown", e);
-	}, [r]);
-	let i = t.columns.find((t) => t.key === e.columnKey)?.name || e.columnKey, a = e.swimlaneKey ? t.swimlanes?.find((t) => t.key === e.swimlaneKey)?.name ?? n.unassigned : n.unassigned, o = [
-		[n.status, i],
-		...t.swimlaneBy === "custom" || (t.swimlanes?.length ?? 0) > 0 ? [[n.swimlane, a]] : [],
+	}, [i]);
+	let a = t.columns.find((t) => t.key === e.columnKey)?.name || e.columnKey, o = e.swimlaneKey ? t.swimlanes?.find((t) => t.key === e.swimlaneKey)?.name ?? n.unassigned : n.unassigned, s = [
+		[n.status, a],
+		...t.swimlaneBy === "custom" || (t.swimlanes?.length ?? 0) > 0 ? [[n.swimlane, o]] : [],
 		...e.priority && e.priority !== "none" ? [[n.priority, e.priority]] : [],
 		...e.assignee ? [[n.assignee, e.assignee]] : [],
 		...e.due ? [[n.due, e.due]] : [],
@@ -12166,7 +12166,7 @@ function ph({ card: e, config: t, strings: n, onClose: r }) {
 				children: n.cardReadOnlyHint
 			}), /* @__PURE__ */ S("button", {
 				type: "button",
-				onClick: r,
+				onClick: i,
 				title: n.close,
 				"aria-label": n.close,
 				className: "rounded p-1 text-stone-400 hover:bg-stone-100",
@@ -12191,7 +12191,7 @@ function ph({ card: e, config: t, strings: n, onClose: r }) {
 				}),
 				/* @__PURE__ */ C("dl", {
 					className: "mt-3 grid grid-cols-[88px_minmax(0,1fr)] items-baseline gap-x-2 gap-y-1.5",
-					children: [o.map(([e, t]) => /* @__PURE__ */ C("div", {
+					children: [s.map(([e, t]) => /* @__PURE__ */ C("div", {
 						className: "contents",
 						children: [/* @__PURE__ */ S("dt", {
 							className: "truncate text-xs text-brand-gray",
@@ -12263,6 +12263,11 @@ function ph({ card: e, config: t, strings: n, onClose: r }) {
 						className: "mt-1.5 whitespace-pre-wrap rounded-lg border border-stone-100 bg-stone-50/60 p-2 font-mono text-[12px] leading-5 text-stone-800",
 						children: e.notes
 					})]
+				}),
+				r != null && r !== !1 && r !== "" && /* @__PURE__ */ S("section", {
+					"aria-label": n.additionalInformation,
+					className: "mt-4 border-t border-stone-100 pt-4",
+					children: r
 				})
 			]
 		})]
@@ -12291,6 +12296,7 @@ var gh = {
 		retry: "Retry",
 		close: "Close",
 		cardReadOnlyHint: "Read-only card view",
+		additionalInformation: "Additional information",
 		status: "Status",
 		swimlane: "Swimlane",
 		unassigned: "Unassigned",
@@ -12322,6 +12328,7 @@ var gh = {
 		retry: "重试",
 		close: "关闭",
 		cardReadOnlyHint: "只读卡片视图",
+		additionalInformation: "附加信息",
 		status: "状态",
 		swimlane: "泳道",
 		unassigned: "未分配",
@@ -12353,6 +12360,7 @@ var gh = {
 		retry: "再試行",
 		close: "閉じる",
 		cardReadOnlyHint: "読み取り専用のカード表示",
+		additionalInformation: "追加情報",
 		status: "ステータス",
 		swimlane: "スイムレーン",
 		unassigned: "未割り当て",
@@ -12384,6 +12392,7 @@ var gh = {
 		retry: "다시 시도",
 		close: "닫기",
 		cardReadOnlyHint: "읽기 전용 카드 보기",
+		additionalInformation: "추가 정보",
 		status: "상태",
 		swimlane: "스윔레인",
 		unassigned: "미할당",
@@ -12654,6 +12663,7 @@ function yh({ workspaceId: e, boardRef: t, baseUrl: n, token: r, client: i, read
 			card: le,
 			config: se,
 			strings: w,
+			supplement: d?.(le),
 			onClose: () => R(null)
 		}),
 		/* @__PURE__ */ S(xh, {

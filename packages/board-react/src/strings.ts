@@ -14,6 +14,7 @@ export type UiStrings = {
   retry: string
   close: string
   cardReadOnlyHint: string
+  additionalInformation: string
   status: string
   swimlane: string
   unassigned: string
@@ -46,6 +47,7 @@ const en: UiStrings = {
   retry: 'Retry',
   close: 'Close',
   cardReadOnlyHint: 'Read-only card view',
+  additionalInformation: 'Additional information',
   status: 'Status',
   swimlane: 'Swimlane',
   unassigned: 'Unassigned',
@@ -78,6 +80,7 @@ const zh: UiStrings = {
   retry: '重试',
   close: '关闭',
   cardReadOnlyHint: '只读卡片视图',
+  additionalInformation: '附加信息',
   status: '状态',
   swimlane: '泳道',
   unassigned: '未分配',
@@ -110,6 +113,7 @@ const ja: UiStrings = {
   retry: '再試行',
   close: '閉じる',
   cardReadOnlyHint: '読み取り専用のカード表示',
+  additionalInformation: '追加情報',
   status: 'ステータス',
   swimlane: 'スイムレーン',
   unassigned: '未割り当て',
@@ -142,6 +146,7 @@ const ko: UiStrings = {
   retry: '다시 시도',
   close: '닫기',
   cardReadOnlyHint: '읽기 전용 카드 보기',
+  additionalInformation: '추가 정보',
   status: '상태',
   swimlane: '스윔레인',
   unassigned: '미할당',
