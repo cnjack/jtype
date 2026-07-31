@@ -121,15 +121,17 @@ export type DocCache = Map<string, { contentHash: string; doc: JTypeCloudDocumen
 
 /**
  * One full board read: list documents, resolve the `.board` doc, then fetch the
- * config + every card doc under the board folder — but only re-download
- * documents whose `contentHash` changed since the previous snapshot (the list
- * endpoint carries the hash), so the 30s poll stays cheap on quiet boards.
+ * config + every card doc under the board folder or an explicit additional
+ * Card root — but only re-download documents whose `contentHash` changed since
+ * the previous snapshot (the list endpoint carries the hash), so the 30s poll
+ * stays cheap on quiet boards.
  */
 export async function loadBoardSnapshot(
   client: JTypeBoardDataClient,
   workspaceId: string,
   boardRef: string,
   cache: DocCache,
+  additionalCardRoots: readonly string[] = [],
 ): Promise<BoardSnapshot> {
   const docs = await client.listDocuments(workspaceId)
   const resolved = resolveBoardDoc(docs, boardRef)
@@ -156,7 +158,10 @@ export async function loadBoardSnapshot(
 
   const cardItems = docs.filter(
     (d) =>
-      d.relativePath.startsWith(`${resolved.boardDir}/`) &&
+      (
+        d.relativePath.startsWith(`${resolved.boardDir}/`) ||
+        additionalCardRoots.some((root) => d.relativePath.startsWith(`${root}/`))
+      ) &&
       d.relativePath.toLowerCase().endsWith('.md'),
   )
   const loaded = await Promise.all(

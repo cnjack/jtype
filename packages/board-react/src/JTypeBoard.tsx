@@ -71,6 +71,11 @@ export type JTypeBoardProps = {
   pollIntervalMs?: number
   /** Open this Card path once after the initial board snapshot resolves. */
   initialCardPath?: string
+  /**
+   * Additional relative directories to scan for Cards belonging to this board.
+   * The Card's `board` frontmatter must still match the resolved board id.
+   */
+  additionalCardRoots?: readonly string[]
   /** Intercept card opens (replaces the built-in editable/read-only detail). */
   onCardOpen?: (card: BoardViewCard) => void
   /**
@@ -106,6 +111,7 @@ export function JTypeBoard({
   live = true,
   pollIntervalMs = 30000,
   initialCardPath,
+  additionalCardRoots,
   onCardOpen,
   renderCardSupplement,
   onConnectionChange,
@@ -138,6 +144,18 @@ export function JTypeBoard({
   }, [injectedClient, baseUrl, token, propsError])
 
   const pollMs = Math.max(5000, pollIntervalMs)
+  const additionalCardRootsKey = (additionalCardRoots ?? [])
+    .map((value) => value.trim().replace(/\\/g, '/').replace(/^\.\/+/, '').replace(/\/+$/, ''))
+    .filter((value) =>
+      value !== '' &&
+      !value.startsWith('/') &&
+      value.split('/').every((part) => part !== '' && part !== '.' && part !== '..'))
+    .filter((value, index, values) => values.indexOf(value) === index)
+    .join('\0')
+  const normalizedAdditionalCardRoots = useMemo(
+    () => (additionalCardRootsKey ? additionalCardRootsKey.split('\0') : []),
+    [additionalCardRootsKey],
+  )
 
   // --- state -----------------------------------------------------------------
   const [snapshot, setSnapshot] = useState<BoardSnapshot | null>(null)
@@ -206,7 +224,13 @@ export function JTypeBoard({
 
     const load = async (): Promise<BoardSnapshot | null> => {
       try {
-        const snap = await loadBoardSnapshot(client, workspaceId, boardRef, cacheRef.current)
+        const snap = await loadBoardSnapshot(
+          client,
+          workspaceId,
+          boardRef,
+          cacheRef.current,
+          normalizedAdditionalCardRoots,
+        )
         if (cancelled) return null
         snapRef.current = snap
         setSnapshot(snap)
@@ -277,7 +301,7 @@ export function JTypeBoard({
       sseUnsub?.()
       loadRef.current = null
     }
-  }, [client, workspaceId, boardRef, live, pollMs])
+  }, [client, workspaceId, boardRef, live, pollMs, normalizedAdditionalCardRoots])
 
   // --- actions adapter (same document-writeback semantics as WebBoardView) ---
   const actions: BoardActions = useMemo(() => {

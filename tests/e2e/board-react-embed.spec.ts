@@ -176,12 +176,16 @@ test("editable package embed adds a host supplement without replacing the native
 
 test("editable package embed opens an exact Card deep link once", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto("/tests/fixtures/board-react-embed.html?card=jcode%2Fcard-0.md");
+  await page.goto(
+    "/tests/fixtures/board-react-embed.html?managed=1&card=jcode-automation%2Fauto-1%2Fexec-1.md",
+  );
   await expect(page.getByTestId("cloud-board-host").getByText("Jcode", { exact: true })).toBeVisible();
 
   const dialog = page.getByRole("dialog", { name: "Card details" });
   await expect(dialog).toBeVisible();
-  await expect(dialog.getByPlaceholder("Untitled card")).toHaveValue(cardTitles[0]!);
+  await expect(dialog.getByPlaceholder("Untitled card")).toHaveValue(
+    "Automation-created payment review",
+  );
 
   await dialog.getByRole("button", { name: "Close" }).click();
   await expect(dialog).toBeHidden();

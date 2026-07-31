@@ -43,6 +43,7 @@ The wrapper fills its container — **give the parent element a height.**
 | `live` | `boolean` | `true` | Try the live SSE feed; see *Live updates* below. |
 | `pollIntervalMs` | `number` | `30000` | Polling cadence (min 5000). |
 | `initialCardPath` | `string` | — | Opens the matching Card once after the initial snapshot loads. Closing it does not make polling reopen it. |
+| `additionalCardRoots` | `readonly string[]` | — | Additional relative directories to scan for Cards. Matching `board` frontmatter is still required. |
 | `onCardOpen` | `(card: BoardViewCard) => void` | — | Intercept card opens; replaces the built-in read-only detail panel. |
 | `renderCardSupplement` | `(card: BoardViewCard) => ReactNode` | — | Add host-owned content after native Card fields in the built-in editable or read-only detail. It is not rendered for intercepted opens. |
 | `onConnectionChange` | `(s: 'live' \| 'polling' \| 'error') => void` | — | Observe transport state transitions. |
