@@ -141,6 +141,10 @@ msgstr "アクセント"
 msgid "Accept invitation"
 msgstr "招待を受け入れる"
 
+#: src/pages/DeviceOAuth.tsx
+msgid "Access approved. You can return to the app that requested access."
+msgstr "アクセスを承認しました。アクセスを要求したアプリに戻れます。"
+
 #: src/pages/Admin.tsx
 msgid "Access key"
 msgstr "アクセスキー"
@@ -220,6 +224,14 @@ msgstr "AI 対応"
 msgid "All case studies"
 msgstr "すべてのケーススタディ"
 
+#: src/pages/DeviceOAuth.tsx
+msgid "Allow access"
+msgstr "アクセスを許可"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Allow full access"
+msgstr "フルアクセスを許可"
+
 #: src/pages/InviteAccept.tsx
 msgid "Already accepted"
 msgstr "承諾済み"
@@ -256,6 +268,10 @@ msgstr "認証に失敗しました"
 #: src/pages/DeviceOAuth.tsx
 msgid "Authorization failed"
 msgstr "承認に失敗しました"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Authorization request not found"
+msgstr "認可リクエストが見つかりません"
 
 #: src/pages/DeviceOAuth.tsx
 #~ msgid "Authorize Desktop"
@@ -686,8 +702,8 @@ msgid "Detected save, queued push."
 msgstr "保存を検出し、プッシュをキューに入れました。"
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Device authorized! You can return to the JType desktop app."
-msgstr "デバイスが承認されました！JType デスクトップアプリに戻れます。"
+#~ msgid "Device authorized! You can return to the JType desktop app."
+#~ msgstr "デバイスが承認されました！JType デスクトップアプリに戻れます。"
 
 #: src/pages/DeviceOAuth.tsx
 msgid "Device code"
@@ -863,8 +879,8 @@ msgstr ""
 #~ msgstr ""
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Enter the code shown in your JType desktop app"
-msgstr "JType デスクトップアプリに表示されたコードを入力"
+#~ msgid "Enter the code shown in your JType desktop app"
+#~ msgstr "JType デスクトップアプリに表示されたコードを入力"
 
 #: src/pages/Login.tsx
 #~ msgid "Enter the code to sign in."
@@ -961,6 +977,10 @@ msgstr ""
 #: src/pages/Admin.tsx
 msgid "from env"
 msgstr "環境変数から"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Full account access"
+msgstr "アカウントへのフルアクセス"
 
 #: src/pages/Workspace.tsx
 msgid "General"
@@ -1739,6 +1759,10 @@ msgstr "クイックオープン"
 msgid "Re-enter new password"
 msgstr ""
 
+#: src/pages/DeviceOAuth.tsx
+msgid "Read and manage your documents and kanban boards."
+msgstr "ドキュメントとカンバンボードを読み取り、管理します。"
+
 #: src/help/pages/CasesIndex.tsx
 msgid "Read case study"
 msgstr "ケーススタディを読む"
@@ -1746,6 +1770,10 @@ msgstr "ケーススタディを読む"
 #: src/pages/Workspace.tsx
 msgid "Read-only"
 msgstr "読み取り専用"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Read, create, update, and delete documents and kanban cards"
+msgstr "ドキュメントとカンバンカードの読み取り、作成、更新、削除"
 
 #: src/pages/Landing.tsx
 msgid "Ready for the cloud layer"
@@ -1831,6 +1859,10 @@ msgstr "公開済みドキュメントを再公開"
 msgid "Request failed"
 msgstr "リクエストに失敗しました"
 
+#: src/pages/DeviceOAuth.tsx
+msgid "requests access to your JType account."
+msgstr "があなたの JType アカウントへのアクセスを要求しています。"
+
 #: src/pages/Login.tsx
 msgid "Resend code"
 msgstr ""
@@ -1866,6 +1898,10 @@ msgstr "クラウドドキュメントを復元または削除"
 #: src/pages/Admin.tsx
 msgid "Review accounts, roles, and enabled status."
 msgstr "アカウント、ロール、有効ステータスを確認します。"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Review and approve an app requesting access to JType"
+msgstr "JType へのアクセスを要求するアプリを確認して承認"
 
 #: src/pages/Admin.tsx
 msgid "Review published custom domains and SSL state."
@@ -2082,8 +2118,8 @@ msgid "Signed in as <0>{loggedInName}</0>"
 msgstr ""
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Signed in. Ready to authorize device."
-msgstr "サインイン済み。デバイスを承認する準備ができています。"
+#~ msgid "Signed in. Ready to authorize device."
+#~ msgstr "サインイン済み。デバイスを承認する準備ができています。"
 
 #: src/pages/Login.tsx
 msgid "Signing in..."
@@ -2404,6 +2440,10 @@ msgstr "ブラウザの外でも JType を"
 msgid "Use password instead"
 msgstr ""
 
+#: src/pages/DeviceOAuth.tsx
+msgid "Use your workspace and administrator permissions"
+msgstr "既存のワークスペース権限と管理者権限を使用"
+
 #: src/pages/Admin.tsx
 msgid "User"
 msgstr "ユーザー"
@@ -2468,6 +2508,10 @@ msgstr "DNS を確認"
 #: src/pages/VerifyEmail.tsx
 msgid "Verifying…"
 msgstr ""
+
+#: src/pages/DeviceOAuth.tsx
+msgid "View and manage all cloud workspaces you can access"
+msgstr "アクセス可能なすべてのクラウドワークスペースを表示、管理"
 
 #: src/pages/Admin.tsx
 msgid "View latest release notes →"
@@ -2593,47 +2637,3 @@ msgstr "レンダリングされたドキュメントがここに表示されま
 #: src/components/SiteThemePanel.tsx
 msgid "Your theme"
 msgstr "あなたのテーマ"
-
-#: src/pages/DeviceOAuth.tsx
-msgid "Access approved. You can return to the app that requested access."
-msgstr "アクセスを承認しました。アクセスを要求したアプリに戻れます。"
-
-#: src/pages/DeviceOAuth.tsx
-msgid "Allow access"
-msgstr "アクセスを許可"
-
-#: src/pages/DeviceOAuth.tsx
-msgid "Allow full access"
-msgstr "フルアクセスを許可"
-
-#: src/pages/DeviceOAuth.tsx
-msgid "Authorization request not found"
-msgstr "認可リクエストが見つかりません"
-
-#: src/pages/DeviceOAuth.tsx
-msgid "Full account access"
-msgstr "アカウントへのフルアクセス"
-
-#: src/pages/DeviceOAuth.tsx
-msgid "Read and manage your documents and kanban boards."
-msgstr "ドキュメントとカンバンボードを読み取り、管理します。"
-
-#: src/pages/DeviceOAuth.tsx
-msgid "Read, create, update, and delete documents and kanban cards"
-msgstr "ドキュメントとカンバンカードの読み取り、作成、更新、削除"
-
-#: src/pages/DeviceOAuth.tsx
-msgid "requests access to your JType account."
-msgstr "があなたの JType アカウントへのアクセスを要求しています。"
-
-#: src/pages/DeviceOAuth.tsx
-msgid "Review and approve an app requesting access to JType"
-msgstr "JType へのアクセスを要求するアプリを確認して承認"
-
-#: src/pages/DeviceOAuth.tsx
-msgid "Use your workspace and administrator permissions"
-msgstr "既存のワークスペース権限と管理者権限を使用"
-
-#: src/pages/DeviceOAuth.tsx
-msgid "View and manage all cloud workspaces you can access"
-msgstr "アクセス可能なすべてのクラウドワークスペースを表示、管理"

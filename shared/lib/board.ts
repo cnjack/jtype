@@ -88,8 +88,13 @@ export type BoardTag = { id?: string; label: string; color?: string | null };
 export type BoardLabelDef = { label: string; color?: string | null };
 
 export type BoardViewCard = {
-  /** Stable id — desktop: file path; web: card id. */
+  /** Stable id — desktop: absolute file path; web/embed: relative document path. */
   id: string;
+  /**
+   * Portable vault-relative document path used by persisted card relations.
+   * Desktop supplies this separately because `id` is an absolute filesystem path.
+   */
+  relationKey?: string;
   /** Allocated ticket id (e.g. `OCCSV-3371`), cloud-indexed; shown as a card badge. */
   ticket?: string | null;
   /** The grouping value under the default (status) grouping. */
@@ -142,6 +147,7 @@ export function serializeAttachments(list: string[]): string {
  */
 const RESERVED_CARD_FRONTMATTER_KEYS = new Set([
   "id",
+  "relationKey",
   "board",
   "ticket",
   "title",
@@ -309,6 +315,7 @@ export const DEFAULT_DONE_COLUMN = "done";
  */
 export const RESERVED_CARD_KEYS = [
   "title",
+  "relationKey",
   "board",
   "status",
   "position",
@@ -420,6 +427,53 @@ export function cardSlug(card: BoardViewCard): string {
 }
 
 /**
+ * Collision-resistant identity persisted by new dependency and parent writes.
+ * Existing basename-only links remain readable through the resolver below.
+ */
+export function cardRelationKey(card: BoardViewCard): string {
+  return (card.relationKey ?? card.id)
+    .replace(/\\/g, "/")
+    .replace(/^\.\/+/, "")
+    .replace(/\.md$/i, "");
+}
+
+function cardReferenceResolver(cards: BoardViewCard[]): (reference: string) => BoardViewCard | undefined {
+  const byKey = new Map<string, BoardViewCard>();
+  const byBasename = new Map<string, BoardViewCard[]>();
+  const bySuffix = new Map<string, BoardViewCard | null>();
+  for (const card of cards) {
+    const key = cardRelationKey(card);
+    byKey.set(key, card);
+    const parts = key.split("/").filter(Boolean);
+    const basename = parts[parts.length - 1] ?? key;
+    const matches = byBasename.get(basename);
+    if (matches) matches.push(card);
+    else byBasename.set(basename, [card]);
+    for (let index = 1; index < parts.length - 1; index += 1) {
+      const suffix = parts.slice(index).join("/");
+      const existing = bySuffix.get(suffix);
+      bySuffix.set(suffix, existing === undefined || existing === card ? card : null);
+    }
+  }
+
+  return (reference) => {
+    const normalized = reference.replace(/\\/g, "/").replace(/^\.\/+/, "").replace(/\.md$/i, "");
+    const exact = byKey.get(normalized);
+    if (exact) return exact;
+
+    // Accept a path relative to a board root when it has exactly one suffix
+    // match (e.g. `feature/login` resolving `roadmap/feature/login.md`).
+    if (normalized.includes("/")) {
+      return bySuffix.get(normalized) ?? undefined;
+    }
+
+    // Legacy `[[basename]]` values are safe only while unique.
+    const basenameMatches = byBasename.get(normalized) ?? [];
+    return basenameMatches.length === 1 ? basenameMatches[0] : undefined;
+  };
+}
+
+/**
  * For each card, how many distinct *unfinished* cards block it — combining its own
  * `blockedBy` with the reverse `blocks` edges of other cards. A card counts as
  * unfinished when it is not in the done column. Slugs that resolve to no card (or
@@ -427,8 +481,7 @@ export function cardSlug(card: BoardViewCard): string {
  */
 export function blockedCounts(cards: BoardViewCard[], doneColumn?: string): Map<string, number> {
   const doneKey = doneColumn || DEFAULT_DONE_COLUMN;
-  const bySlug = new Map<string, BoardViewCard>();
-  for (const c of cards) bySlug.set(cardSlug(c), c);
+  const resolveReference = cardReferenceResolver(cards);
   const unfinished = (c: BoardViewCard | undefined): c is BoardViewCard => !!c && c.columnKey !== doneKey;
   // cardId -> set of blocker card ids (dedups blockedBy + reverse blocks).
   const blockers = new Map<string, Set<string>>();
@@ -439,14 +492,14 @@ export function blockedCounts(cards: BoardViewCard[], doneColumn?: string): Map<
   };
   for (const c of cards) {
     for (const slug of c.blockedBy ?? []) {
-      const b = bySlug.get(slug);
+      const b = resolveReference(slug);
       if (unfinished(b) && b.id !== c.id) add(c.id, b);
     }
   }
   for (const y of cards) {
     if (!unfinished(y)) continue;
     for (const slug of y.blocks ?? []) {
-      const x = bySlug.get(slug);
+      const x = resolveReference(slug);
       if (x && x.id !== y.id) add(x.id, y);
     }
   }
@@ -461,12 +514,11 @@ export function blockedCounts(cards: BoardViewCard[], doneColumn?: string): Map<
  * nesting is allowed in data but progress is computed per level (no recursion).
  */
 export function childCardsByParent(cards: BoardViewCard[]): Map<string, BoardViewCard[]> {
-  const bySlug = new Map<string, BoardViewCard>();
-  for (const c of cards) bySlug.set(cardSlug(c), c);
+  const resolveReference = cardReferenceResolver(cards);
   const map = new Map<string, BoardViewCard[]>();
   for (const c of cards) {
     if (!c.parent) continue;
-    const parent = bySlug.get(c.parent);
+    const parent = resolveReference(c.parent);
     if (!parent || parent.id === c.id) continue;
     const list = map.get(parent.id);
     if (list) list.push(c);
@@ -534,6 +586,32 @@ export function cardPatchForLaneValue(
   if (laneBy === "priority") return { priority: value === "none" ? null : value };
   if (laneBy === "assignee") return { assignee: value || null };
   return { swimlaneKey: value || null };
+}
+
+/**
+ * Resolve the lane a new card will actually occupy after its create-dialog
+ * patch is applied. Nullable fields need an own-property check: `null` means
+ * "Unassigned/none", while an absent key means "keep the clicked lane".
+ */
+export function newCardLaneValue(
+  laneBy: BoardSwimlaneGroupKey,
+  clickedLane: string,
+  initial: Partial<BoardViewCard> = {},
+): string {
+  if (laneBy === "status") return initial.columnKey ?? clickedLane;
+  if (laneBy === "priority") {
+    return Object.prototype.hasOwnProperty.call(initial, "priority")
+      ? initial.priority || "none"
+      : clickedLane;
+  }
+  if (laneBy === "assignee") {
+    return Object.prototype.hasOwnProperty.call(initial, "assignee")
+      ? initial.assignee || ""
+      : clickedLane;
+  }
+  return Object.prototype.hasOwnProperty.call(initial, "swimlaneKey")
+    ? initial.swimlaneKey || ""
+    : clickedLane;
 }
 
 /** Create a collision-resistant immutable custom swimlane key. */

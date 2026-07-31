@@ -204,7 +204,7 @@ enum CardCmd {
         assignee: Option<String>,
         #[arg(long)]
         due: Option<String>,
-        /// Parent card slug (filename without .md) — makes this a sub-card.
+        /// Parent card reference (relative path without .md; unique legacy basename accepted).
         #[arg(long)]
         parent: Option<String>,
     },
@@ -232,7 +232,7 @@ enum CardCmd {
         assignee: Option<String>,
         #[arg(long)]
         due: Option<String>,
-        /// Parent card slug (sub-card); empty string detaches.
+        /// Parent card reference (relative path without .md); empty string detaches.
         #[arg(long)]
         parent: Option<String>,
     },

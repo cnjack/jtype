@@ -138,13 +138,18 @@ Included: vertical swimlane management and drag-to-move with `status`,
 within-lane reorder applies to Status swimlanes; alternate dimensions move
 cards between lanes without rewriting workflow order. Also included: card
 create/delete, board/table/calendar, multi-select filters, search/sort,
-read-only card detail, and localized chrome.
+read-only card detail, and localized chrome. Editable embeds use the shared
+focused quick-create and card-detail dialogs, including description,
+properties, relations, and sub-cards. Explicitly read-only embeds keep the
+non-mutating detail; a host `onCardOpen` callback still replaces either
+built-in path.
 Not yet (flag-gated later): members/assignee options, versions/activity,
 ticket badges (the `OCCSV-####` chip — the embed client has no ticket-index
 endpoint, so cards never show it even when the board configures `ticketKey`),
-comments, attachments upload, markdown-rendered notes (notes show as plain
-text — the markdown renderer chain is deliberately excluded to keep the bundle
-small).
+comments, attachments upload, and rich Markdown preview. Notes remain fully
+editable Markdown, while the package's Preview uses safe plain text so the
+KaTeX/Mermaid document-renderer chain is deliberately excluded from the
+embed bundle.
 
 ## Installing from git
 
@@ -171,7 +176,7 @@ the CSS scoping invariant and emits `dist/index.js`, `dist/index.d.ts`,
 cd packages/board-react
 npm install
 npm run build      # tsc --noEmit && vite build && scope-css
-npm test           # unit tests (run from the repo root playwright-unit runner)
+npm test           # unit tests + real Cloud-sized embed browser regression
 ```
 
 A manual-verification host lives in `example/` (React 18 consumer):

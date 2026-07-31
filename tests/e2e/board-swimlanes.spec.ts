@@ -12,6 +12,11 @@ type HarnessState = {
     id: string;
     title: string;
     priority?: string | null;
+    columnKey?: string;
+    assignee?: string | null;
+    due?: string | null;
+    notes?: string;
+    tags?: Array<{ label: string }>;
     swimlaneKey?: string | null;
   }>;
   actions: Array<{
@@ -132,6 +137,79 @@ test("Peek changes card mapping by stable lane key", async ({ page }) => {
     .toBe("Offline conflict state");
 });
 
+test("quick create captures card details and opens the full detail dialog", async ({ page }) => {
+  await openHarness(page);
+  const platform = page.locator('[data-col-key="lane_platform_11111111"]');
+  await platform.getByRole("button", { name: "New card" }).click();
+
+  const createDialog = page.getByRole("dialog", { name: "New card" });
+  await expect(createDialog.getByText("Product roadmap")).toBeVisible();
+  await expect(createDialog.getByText("Platform", { exact: true })).toBeVisible();
+  await createDialog.getByRole("textbox", { name: "Card title" }).fill("Polished create flow");
+  await createDialog.getByRole("textbox", { name: "Description" }).fill("A focused Markdown description.");
+  await createDialog.getByRole("button", { name: "To do" }).click();
+  await page.getByRole("option", { name: "Doing" }).click();
+  await createDialog.getByRole("button", { name: "none" }).click();
+  await page.getByRole("option", { name: "high" }).click();
+  await createDialog.getByRole("textbox", { name: "Assignee" }).fill("Maya");
+  await createDialog.getByRole("textbox", { name: "Tags" }).fill("design, frontend");
+  await createDialog.getByLabel("Due").fill("2026-08-14");
+  await createDialog.getByRole("button", { name: "Create card" }).click();
+
+  await expect(page.getByRole("dialog", { name: "Card details" })).toBeVisible();
+  await expect(page.getByPlaceholder("Untitled card")).toHaveValue("Polished create flow");
+  await expect
+    .poll(async () => (await state(page)).cards.find((card) => card.title === "Polished create flow"))
+    .toMatchObject({
+      columnKey: "doing",
+      priority: "high",
+      assignee: "Maya",
+      due: "2026-08-14",
+      notes: "A focused Markdown description.",
+      tags: [{ label: "design" }, { label: "frontend" }],
+      swimlaneKey: "lane_platform_11111111",
+    });
+});
+
+test("quick create preserves the draft when saving fails", async ({ page }) => {
+  await page.addInitScript(() => {
+    (window as unknown as { __BOARD_TEST_CREATE_FAILURE__: boolean }).__BOARD_TEST_CREATE_FAILURE__ = true;
+  });
+  await openHarness(page);
+  const platform = page.locator('[data-col-key="lane_platform_11111111"]');
+  await platform.getByRole("button", { name: "New card" }).click();
+
+  const createDialog = page.getByRole("dialog", { name: "New card" });
+  const title = createDialog.getByRole("textbox", { name: "Card title" });
+  await title.fill("Keep this draft");
+  await createDialog.getByRole("button", { name: "Create card" }).click();
+
+  await expect(createDialog.getByRole("alert")).toHaveText("Could not create card. Try again.");
+  await expect(title).toHaveValue("Keep this draft");
+  await expect
+    .poll(async () => (await state(page)).cards.some((card) => card.title === "Keep this draft"))
+    .toBe(false);
+});
+
+test("sub-card creation persists the parent in the initial write", async ({ page }) => {
+  await openHarness(page);
+  await page.getByRole("button", { name: /Offline conflict indicator/ }).click();
+
+  const detail = page.getByRole("dialog", { name: "Card details" });
+  const childInput = detail.getByPlaceholder("+ Add sub-card");
+  await childInput.fill("Write conflict guide");
+  await childInput.press("Enter");
+
+  await expect
+    .poll(async () => (await state(page)).cards.find((card) => card.title === "Write conflict guide"))
+    .toMatchObject({
+      parent: "roadmap/offline",
+      columnKey: "todo",
+      swimlaneKey: "lane_platform_11111111",
+    });
+  await expect(detail.getByRole("button", { name: /Write conflict guide/ })).toBeVisible();
+});
+
 test("default swimlane delete preserves card key and surfaces the dangling mapping", async ({ page }) => {
   await openHarness(page);
   await page.getByRole("button", { name: "Manage custom swimlanes" }).click();
@@ -244,7 +322,10 @@ test("lightweight filters OR values within a section and AND across sections", a
   await priorityChip.click();
   await expect(page.getByText("Publishing analytics")).toBeHidden();
   await expect(page.getByText("Legacy lane cleanup")).toBeVisible();
-  await mineChip.click();
+  // This chip removes itself synchronously. Dispatching the semantic click
+  // avoids Playwright retrying an action whose target correctly disappears
+  // between the event handler and post-action stability check.
+  await mineChip.dispatchEvent("click");
   await expect(page.getByText("Publishing analytics")).toBeVisible();
 });
 

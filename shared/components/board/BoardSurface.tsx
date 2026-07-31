@@ -1,7 +1,16 @@
 import { Fragment, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
+import {
+  Dialog,
+  DialogBackdrop,
+  DialogPanel,
+  DialogTitle,
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuItems,
+} from "@headlessui/react";
 import {
   PlusIcon,
   ViewColumnsIcon,
@@ -40,7 +49,7 @@ import {
   activeBoardLaneKey,
   boardLaneValueOf,
   blockedCounts,
-  cardSlug,
+  cardRelationKey,
   childCardsByParent,
   childProgress,
   effectiveColumns,
@@ -65,6 +74,7 @@ import {
 import { BoardFilterPopover } from "./BoardFilterPopover";
 import { BoardTable } from "./BoardTable";
 import { BoardCalendar } from "./BoardCalendar";
+import { CardCreateDialog, type CardCreateDraft } from "./CardCreateDialog";
 import { StatusManagerDialog } from "./StatusManagerDialog";
 import { SwimlaneManagerDialog } from "./SwimlaneManagerDialog";
 import {
@@ -77,8 +87,8 @@ type DropTarget = { col: string; index: number };
 
 /**
  * The platform-agnostic kanban surface: toolbar (group/sort/filter/search +
- * Board/Table), columns with pointer drag, inline composer, column ops, and the
- * side peek — all driven by a normalized model + an actions adapter. Desktop and
+ * Board/Table), columns with pointer drag, focused card creation/detail, and
+ * column ops — all driven by a normalized model + an actions adapter. Desktop and
  * web each provide their own adapter. See internal-docs/web-board-alignment.
  */
 export function BoardSurface({
@@ -100,6 +110,8 @@ export function BoardSurface({
   resolveComment,
   currentUser,
   loadActivity,
+  renderMarkdownToContainer,
+  renderMarkdownToHtml,
   fullscreen,
   onToggleFullscreen,
   onOpenSettings,
@@ -114,13 +126,11 @@ export function BoardSurface({
   const [colDropTarget, setColDropTarget] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [addingIn, setAddingIn] = useState<string | null>(null);
-  const [draftTitle, setDraftTitle] = useState("");
   const [addingColumn, setAddingColumn] = useState(false);
   const [colDraft, setColDraft] = useState("");
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<BoardSortKey>("manual");
   const [filters, setFilters] = useState<BoardFilters>({});
-  const [peekWidth, setPeekWidth] = useState(360);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [draggingCol, setDraggingCol] = useState<string | null>(null);
   const [dragPos, setDragPos] = useState<{ x: number; y: number } | null>(null);
@@ -136,6 +146,7 @@ export function BoardSurface({
   const colDrag = useRef<{ key: string; startX: number; startY: number; moved: boolean } | null>(null);
   const conversionStepBusy = useRef(false);
   const conversionAttemptRef = useRef<{ signature: string; writes: number } | null>(null);
+  const cardUpdateQueues = useRef(new Map<string, Promise<void>>());
 
   const groupKey = activeBoardLaneKey(config);
   const editableColumns = groupKey === "status";
@@ -150,6 +161,23 @@ export function BoardSurface({
     !search.trim() &&
     !hasBoardFilters(filters);
   const today = todayStr();
+
+  const queueCardUpdate = (cardId: string, patch: Partial<BoardViewCard>): Promise<void> => {
+    const previous = cardUpdateQueues.current.get(cardId) ?? Promise.resolve();
+    const task = previous
+      .catch(() => undefined)
+      .then(() => actions.updateCard(cardId, patch))
+      // Platform adapters surface their own error state. Keep the queue usable
+      // after a rejected write and avoid an unhandled promise from field edits.
+      .catch(() => undefined);
+    cardUpdateQueues.current.set(cardId, task);
+    void task.then(() => {
+      if (cardUpdateQueues.current.get(cardId) === task) {
+        cardUpdateQueues.current.delete(cardId);
+      }
+    });
+    return task;
+  };
 
   // Escape exits fullscreen — but only when no card peek is open (BoardPeek
   // handles its own Escape) and no multi-selection is active (cleared below).
@@ -415,7 +443,7 @@ export function BoardSurface({
   };
 
   // Opening a card goes through the host when it intercepts (embeds render
-  // their own detail); otherwise the built-in side peek.
+  // their own detail); otherwise the built-in focused detail.
   const openCard = (card: BoardViewCard) => {
     if (onCardOpen) onCardOpen(card);
     else setSelectedId(card.id);
@@ -559,13 +587,15 @@ export function BoardSurface({
       return next;
     });
 
-  const commitCreate = async (colKey: string, title: string) => {
-    const trimmed = title.trim();
-    if (!trimmed) return;
-    const newId = await actions.createCard(colKey, trimmed);
-    // Only auto-open the built-in peek; a host intercepting opens (onCardOpen)
+  const commitCreate = async (colKey: string, draft: CardCreateDraft) => {
+    const trimmed = draft.title.trim();
+    if (!trimmed) return false;
+    const { title: _title, ...initial } = draft;
+    const newId = await actions.createCard(colKey, trimmed, initial);
+    // Only auto-open the built-in detail; a host intercepting opens (onCardOpen)
     // gets a card object per open, which doesn't exist in `cards` yet here.
     if (typeof newId === "string" && !onCardOpen) setSelectedId(newId);
+    return true;
   };
 
   if (error && config.columns.length === 0) {
@@ -1124,34 +1154,7 @@ export function BoardSurface({
                         )
                       : showLine(colCards.length) && <div className="mx-1 h-0.5 rounded bg-brand" />}
 
-                    {readOnly ? null : addingIn === col.key ? (
-                      <textarea
-                        autoFocus
-                        rows={2}
-                        className="w-full resize-none rounded-lg bg-white p-2 text-sm text-stone-800 shadow-sm ring-1 ring-brand/40 focus:outline-none focus:ring-2 focus:ring-brand/40"
-                        placeholder={t`Card title (Enter to add, Esc to cancel)`}
-                        value={draftTitle}
-                        onChange={(e) => setDraftTitle(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" && !e.shiftKey) {
-                            e.preventDefault();
-                            const title = draftTitle;
-                            setDraftTitle("");
-                            setAddingIn(null);
-                            void commitCreate(col.key, title);
-                          }
-                          if (e.key === "Escape") {
-                            setDraftTitle("");
-                            setAddingIn(null);
-                          }
-                        }}
-                        onBlur={() => {
-                          if (draftTitle.trim()) void commitCreate(col.key, draftTitle);
-                          setDraftTitle("");
-                          setAddingIn(null);
-                        }}
-                      />
-                    ) : templates && templates.length > 0 && createFromTemplate ? (
+                    {readOnly ? null : templates && templates.length > 0 && createFromTemplate ? (
                       <Menu as="div" className="relative">
                         <MenuButton className="flex w-full items-center gap-1.5 rounded-lg px-2 py-1.5 text-left text-sm text-stone-400 hover:bg-white hover:text-brand-dark">
                           <PlusIcon className="h-4 w-4" />
@@ -1159,7 +1162,7 @@ export function BoardSurface({
                         </MenuButton>
                         <MenuItems anchor="bottom start" className={`z-30 w-52 rounded-lg border border-black/[0.06] bg-white py-1 text-sm shadow-lg [--anchor-gap:4px] focus:outline-none${portalCls}`}>
                           <MenuItem>
-                            <button type="button" className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-stone-700 data-[focus]:bg-stone-100" onClick={() => { setDraftTitle(""); setAddingIn(col.key); }}>
+                            <button type="button" className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-stone-700 data-[focus]:bg-stone-100" onClick={() => setAddingIn(col.key)}>
                               <PencilIcon className="h-3.5 w-3.5" />
                               <Trans>Blank card</Trans>
                             </button>
@@ -1179,7 +1182,7 @@ export function BoardSurface({
                         </MenuItems>
                       </Menu>
                     ) : (
-                      <button type="button" className="flex w-full items-center gap-1.5 rounded-lg px-2 py-1.5 text-left text-sm text-stone-400 hover:bg-white hover:text-brand-dark" onClick={() => { setDraftTitle(""); setAddingIn(col.key); }}>
+                      <button type="button" className="flex w-full items-center gap-1.5 rounded-lg px-2 py-1.5 text-left text-sm text-stone-400 hover:bg-white hover:text-brand-dark" onClick={() => setAddingIn(col.key)}>
                         <PlusIcon className="h-4 w-4" />
                         <Trans>New card</Trans>
                       </button>
@@ -1312,106 +1315,129 @@ export function BoardSurface({
         </div>
       )}
 
+      <CardCreateDialog
+        open={addingIn != null}
+        boardTitle={config.title}
+        laneName={columns.find((column) => column.key === addingIn)?.name ?? t`Unassigned`}
+        initialStatus={groupKey === "status" ? addingIn ?? config.columns[0]?.key ?? "" : config.columns[0]?.key ?? ""}
+        initialPriority={groupKey === "priority" ? addingIn ?? "none" : "none"}
+        initialAssignee={groupKey === "assignee" ? addingIn ?? "" : ""}
+        statusOptions={config.columns.map((column) => ({
+          value: column.key,
+          label: column.name,
+          color: column.color,
+        }))}
+        assigneeOptions={assigneeOptions}
+        tagOptions={tagOptions}
+        portalClassName={portalClassName}
+        onClose={() => setAddingIn(null)}
+        onCreate={(draft) => (addingIn == null ? undefined : commitCreate(addingIn, draft))}
+      />
+
       {selected && PeekComponent && (
-        <div className="absolute right-0 top-0 z-30 h-full shadow-[-10px_0_30px_rgba(0,0,0,0.07)]" style={{ width: peekWidth }}>
-          <div
-            onMouseDown={(e) => {
-              e.preventDefault();
-              const startX = e.clientX;
-              const startW = peekWidth;
-              const onMove = (ev: MouseEvent) => setPeekWidth(Math.min(640, Math.max(300, startW + (startX - ev.clientX))));
-              const onUp = () => {
-                window.removeEventListener("mousemove", onMove);
-                window.removeEventListener("mouseup", onUp);
-              };
-              window.addEventListener("mousemove", onMove);
-              window.addEventListener("mouseup", onUp);
-            }}
-            title={t`Drag to resize`}
-            className="absolute left-0 top-0 z-10 h-full w-1.5 -translate-x-1/2 cursor-col-resize transition-colors hover:bg-brand/40"
-          />
-          <PeekComponent
-            card={selected}
-            statusOptions={config.columns.map((c) => ({ value: c.key, label: c.name }))}
-            swimlaneOptions={
-              config.swimlaneBy === "custom" || (config.swimlanes?.length ?? 0) > 0
-                ? [
-                    { value: "", label: t`Unassigned` },
-                    ...(config.swimlanes ?? []).map((lane) => ({
-                      value: lane.key,
-                      label: lane.name,
-                      color: lane.color,
-                    })),
-                    ...(selected.swimlaneKey &&
-                    !(config.swimlanes ?? []).some((lane) => lane.key === selected.swimlaneKey)
-                      ? [
-                          {
-                            value: selected.swimlaneKey,
-                            label: t`Previous swimlane missing`,
-                            warning: true,
-                          },
-                        ]
-                      : []),
-                  ]
-                : undefined
-            }
-            swimlaneDisabled={conversionRequested}
-            assigneeOptions={assigneeOptions}
-            tagOptions={tagOptions}
-            fields={config.fields}
-            onAddField={(label) => {
-              // Seed with the reserved card keys so a custom field can never
-              // collide with (and clobber) a core frontmatter attribute.
-              const existing = new Set([...RESERVED_CARD_KEYS, ...(config.fields ?? []).map((f) => f.key)]);
-              let key = slugify(label);
-              if (existing.has(key)) {
-                let n = 2;
-                while (existing.has(`${key}-${n}`)) n += 1;
-                key = `${key}-${n}`;
-              }
-              setConfigSafely({ fields: [...(config.fields ?? []), { key, label }] });
-            }}
-            dependencyCards={cards.filter((c) => c.id !== selected.id).map((c) => ({ slug: cardSlug(c), title: c.title }))}
-            childCards={(childrenMap.get(selected.id) ?? []).map((c) => ({
-              id: c.id,
-              title: c.title,
-              icon: c.icon,
-              statusName: statusName(c.columnKey),
-              done: c.columnKey === doneKey,
-            }))}
-            onOpenCard={(cardId) => setSelectedId(cardId)}
-            onAddChild={
-              readOnly
-                ? undefined
-                : async (title) => {
-                    // Status sub-cards enter the first workflow state; other
-                    // dimensions keep the new card beside its parent.
-                    const startLane =
-                      groupKey === "status"
-                        ? config.columns[0]?.key ?? selected.columnKey
-                        : boardLaneValueOf(selected, config);
-                    const newId = await actions.createCard(startLane, title);
-                    if (typeof newId === "string") {
-                      await actions.updateCard(newId, { parent: cardSlug(selected) });
-                    }
+        <Dialog
+          open
+          onClose={() => setSelectedId(null)}
+          className={`fixed inset-0 z-50${portalCls}`}
+        >
+          <DialogBackdrop className={`fixed inset-0 bg-stone-950/20 backdrop-blur-[2px]${portalCls}`} />
+          <div className={`fixed inset-0 flex items-center justify-center overflow-hidden p-2 sm:p-5${portalCls}`}>
+            <DialogPanel
+              className={`h-full max-h-[900px] w-full max-w-6xl overflow-hidden rounded-2xl bg-white shadow-[0_30px_100px_rgba(28,25,23,0.24)] ring-1 ring-black/[0.06]${portalCls}`}
+            >
+              <DialogTitle className="sr-only">
+                <Trans>Card details</Trans>
+              </DialogTitle>
+              <PeekComponent
+                card={selected}
+                boardTitle={config.title}
+                statusOptions={config.columns.map((c) => ({ value: c.key, label: c.name }))}
+                swimlaneOptions={
+                  config.swimlaneBy === "custom" || (config.swimlanes?.length ?? 0) > 0
+                    ? [
+                        { value: "", label: t`Unassigned` },
+                        ...(config.swimlanes ?? []).map((lane) => ({
+                          value: lane.key,
+                          label: lane.name,
+                          color: lane.color,
+                        })),
+                        ...(selected.swimlaneKey &&
+                        !(config.swimlanes ?? []).some((lane) => lane.key === selected.swimlaneKey)
+                          ? [
+                              {
+                                value: selected.swimlaneKey,
+                                label: t`Previous swimlane missing`,
+                                warning: true,
+                              },
+                            ]
+                          : []),
+                      ]
+                    : undefined
+                }
+                swimlaneDisabled={conversionRequested}
+                assigneeOptions={assigneeOptions}
+                tagOptions={tagOptions}
+                fields={config.fields}
+                onAddField={(label) => {
+                  // Seed with the reserved card keys so a custom field can never
+                  // collide with (and clobber) a core frontmatter attribute.
+                  const existing = new Set([...RESERVED_CARD_KEYS, ...(config.fields ?? []).map((f) => f.key)]);
+                  let key = slugify(label);
+                  if (existing.has(key)) {
+                    let n = 2;
+                    while (existing.has(`${key}-${n}`)) n += 1;
+                    key = `${key}-${n}`;
                   }
-            }
-            loadNotes={loadNotes}
-            onUploadAttachment={onUploadAttachment}
-            loadComments={loadComments}
-            addComment={addComment}
-            updateComment={updateComment}
-            deleteComment={deleteComment}
-            toggleReaction={toggleReaction}
-            resolveComment={resolveComment}
-            currentUser={currentUser}
-            loadActivity={loadActivity}
-            onChange={(patch) => void actions.updateCard(selected.id, patch)}
-            onClose={() => setSelectedId(null)}
-            onDelete={() => void actions.deleteCard(selected)}
-            onOpenFull={actions.openCardFull ? () => actions.openCardFull?.(selected) : undefined}
-          />
-        </div>
+                  setConfigSafely({ fields: [...(config.fields ?? []), { key, label }] });
+                }}
+                dependencyCards={cards
+                  .filter((c) => c.id !== selected.id)
+                  .map((c) => ({ slug: cardRelationKey(c), title: c.title }))}
+                childCards={(childrenMap.get(selected.id) ?? []).map((c) => ({
+                  id: c.id,
+                  title: c.title,
+                  icon: c.icon,
+                  statusName: statusName(c.columnKey),
+                  done: c.columnKey === doneKey,
+                }))}
+                onOpenCard={(cardId) => setSelectedId(cardId)}
+                onAddChild={
+                  readOnly
+                    ? undefined
+                    : async (title) => {
+                        await cardUpdateQueues.current.get(selected.id);
+                        // Status sub-cards enter the first workflow state; other
+                        // dimensions keep the new card beside its parent.
+                        const startLane =
+                          groupKey === "status"
+                            ? config.columns[0]?.key ?? selected.columnKey
+                            : boardLaneValueOf(selected, config);
+                        await actions.createCard(startLane, title, {
+                          parent: cardRelationKey(selected),
+                        });
+                      }
+                }
+                loadNotes={loadNotes}
+                onUploadAttachment={onUploadAttachment}
+                loadComments={loadComments}
+                addComment={addComment}
+                updateComment={updateComment}
+                deleteComment={deleteComment}
+                toggleReaction={toggleReaction}
+                resolveComment={resolveComment}
+                currentUser={currentUser}
+                loadActivity={loadActivity}
+                renderMarkdownToContainer={renderMarkdownToContainer}
+                renderMarkdownToHtml={renderMarkdownToHtml}
+                portalClassName={portalClassName}
+                onChange={(patch) => void queueCardUpdate(selected.id, patch)}
+                onClose={() => setSelectedId(null)}
+                onDelete={() => void actions.deleteCard(selected)}
+                onOpenFull={actions.openCardFull ? () => actions.openCardFull?.(selected) : undefined}
+              />
+            </DialogPanel>
+          </div>
+        </Dialog>
       )}
 
       <SwimlaneManagerDialog

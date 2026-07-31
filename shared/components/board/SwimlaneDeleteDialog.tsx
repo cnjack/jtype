@@ -127,6 +127,7 @@ export function SwimlaneDeleteDialog({
                       options={targets}
                       disabled={mode !== "move"}
                       onChange={setTargetKey}
+                      portalClassName={portalClassName}
                     />
                   </div>
                 )}

@@ -4,6 +4,7 @@ import { useAppDispatch, useAppState } from "../app/AppState";
 import { useFileSystem } from "../hooks";
 import { usePrompt, useConfirm } from "@shared/components/PromptDialogContext";
 import { parseFrontmatter, writeFrontmatter } from "@shared/lib/frontmatter";
+import { renderMarkdownToHtml, renderToContainer } from "@shared/lib/markdown";
 import { BoardSurface, BoardPeek } from "@shared/components/board";
 import type { BoardActions } from "@shared/components/board";
 import {
@@ -12,6 +13,7 @@ import {
   applyBoardCardPatch,
   boardLaneValueOf,
   cardPatchForLaneValue,
+  newCardLaneValue,
   normalizeGroupBy,
   normalizeSwimlaneBy,
   pickCustomFields,
@@ -168,6 +170,7 @@ export function BoardView({ boardPath, boardRelativePath }: { boardPath: string;
     () =>
       rawCards.map((c) => ({
         id: c.path,
+        relationKey: c.relativePath,
         columnKey: c.status,
         position: c.position,
         title: c.title,
@@ -254,22 +257,26 @@ export function BoardView({ boardPath, boardRelativePath }: { boardPath: string;
         if (!latest) return;
         await saveConfig({ ...latest, ...patch }, true);
       },
-      createCard: async (colKey, title) => {
+      createCard: async (colKey, title, initial) => {
         if (!config || !rootPath) return;
         const laneKey = activeBoardLaneKey(config);
+        const targetLane = newCardLaneValue(laneKey, colKey, initial);
         const pos =
           cards
-            .filter((card) => boardLaneValueOf(card, config) === colKey)
+            .filter((card) => boardLaneValueOf(card, config) === targetLane)
             .reduce((max, card) => Math.max(max, card.position), -1) + 1;
         const data: Record<string, string> = {
           title,
           board: config.id,
-          status: laneKey === "status" ? colKey : config.columns[0]?.key ?? "todo",
+          status: laneKey === "status" ? targetLane : config.columns[0]?.key ?? "todo",
           position: String(pos),
         };
         const content = applyBoardCardPatch(
-          writeFrontmatter("", data),
-          cardPatchForLaneValue(laneKey, colKey),
+          applyBoardCardPatch(
+            writeFrontmatter("", data),
+            cardPatchForLaneValue(laneKey, targetLane),
+          ),
+          initial ?? {},
         );
         const path = await writeNew(slugify(title), content);
         await load();
@@ -537,6 +544,8 @@ export function BoardView({ boardPath, boardRelativePath }: { boardPath: string;
       {...commentProps}
       fullscreen={state.focusMode}
       onToggleFullscreen={() => dispatch({ type: "TOGGLE_FOCUS_MODE" })}
+      renderMarkdownToContainer={renderToContainer}
+      renderMarkdownToHtml={renderMarkdownToHtml}
       peekComponent={BoardPeek}
     />
   );

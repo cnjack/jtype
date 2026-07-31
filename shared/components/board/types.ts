@@ -11,8 +11,16 @@ import type {
 /** Mutations the board surface performs; each platform wires these to its data layer. */
 export type BoardActions = {
   moveCard: (cardId: string, toColumnKey: string, index: number) => Promise<void> | void;
-  /** Create a card; may return the new card id so the board opens its peek. */
-  createCard: (columnKey: string, title: string) => Promise<string | void> | string | void;
+  /**
+   * Create a card; may return the new card id so the board opens its detail.
+   * `initial` lets the quick-create dialog persist properties and description
+   * in the same write instead of racing a follow-up update against a reload.
+   */
+  createCard: (
+    columnKey: string,
+    title: string,
+    initial?: Partial<BoardViewCard>,
+  ) => Promise<string | void> | string | void;
   /** Apply a partial edit to a card (status/priority/assignee/due/tags/icon/title/notes). */
   updateCard: (cardId: string, patch: Partial<BoardViewCard>) => Promise<void> | void;
   /**
@@ -57,13 +65,14 @@ export type BoardOption = {
 };
 
 /**
- * Props of the card side peek. Lives here (not in BoardPeek.tsx) so the surface
+ * Props of the focused card detail. Lives here (not in BoardPeek.tsx) so the surface
  * can type its `peekComponent` slot without importing the peek implementation —
  * the peek pulls the markdown renderer (katex/marked/dompurify), which embeds
  * that never render it must be able to leave out of their bundle.
  */
 export type BoardPeekProps = {
   card: BoardViewCard;
+  boardTitle?: string;
   statusOptions: BoardOption[];
   /** Custom swimlane definitions; omit to hide the field. */
   swimlaneOptions?: BoardOption[];
@@ -93,6 +102,19 @@ export type BoardPeekProps = {
   resolveComment?: (commentId: string, resolved: boolean) => Promise<BoardComment>;
   currentUser?: string;
   loadActivity?: (id: string) => Promise<BoardActivityEvent[]>;
+  /**
+   * Optional host markdown renderer. Desktop/Web provide the full shared
+   * document pipeline; lightweight embeds may omit it and get a safe,
+   * whitespace-preserving plain-text preview instead.
+   */
+  renderMarkdownToContainer?: (
+    source: string,
+    container: HTMLElement,
+  ) => Promise<unknown> | void;
+  /** Optional sanitized HTML renderer for comment bodies. */
+  renderMarkdownToHtml?: (source: string) => Promise<string>;
+  /** Scope class for nested Headless UI dropdown portals in style-isolated embeds. */
+  portalClassName?: string;
   onChange: (patch: Partial<BoardViewCard>) => void;
   onClose: () => void;
   onDelete: () => void;
@@ -125,6 +147,10 @@ export type BoardSurfaceProps = {
   currentUser?: string;
   /** Load a card's activity timeline (DB board); omit to hide the Activity section. */
   loadActivity?: (cardId: string) => Promise<BoardActivityEvent[]>;
+  /** Host-supplied markdown preview renderer forwarded to the card detail. */
+  renderMarkdownToContainer?: BoardPeekProps["renderMarkdownToContainer"];
+  /** Host-supplied sanitized comment renderer forwarded to the card detail. */
+  renderMarkdownToHtml?: BoardPeekProps["renderMarkdownToHtml"];
   /**
    * Fullscreen ("focus mode") state, owned by the platform shell. When provided,
    * the surface shows a toggle button. Both platforms hide the sidebar + keep the
@@ -146,13 +172,13 @@ export type BoardSurfaceProps = {
   /**
    * Intercept a card open. When provided, tapping a card (or pressing Enter, or
    * selecting one in the table/calendar) calls this instead of opening the
-   * built-in side peek — so a platform can render its own card detail (e.g. an
+   * built-in card detail — so a platform can render its own card detail (e.g. an
    * embed with a read-only detail, or a host-supplied handler). Omit to keep the
    * built-in editable peek (desktop + web).
    */
   onCardOpen?: (card: BoardViewCard) => void;
   /**
-   * The card side-peek implementation, injected by the platform (desktop + web
+   * The card-detail implementation, injected by the platform (desktop + web
    * pass the shared {@link BoardPeekProps}-shaped BoardPeek). A slot rather than
    * a direct import so embeds that intercept opens via `onCardOpen` don't carry
    * the peek's markdown-renderer dependency chain. Omit = no built-in peek.

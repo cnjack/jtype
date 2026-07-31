@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactElement } from 'react'
 import { I18nProvider } from '@lingui/react'
+import { ExclamationTriangleIcon } from '@heroicons/react/24/outline'
+import { BoardPeek } from '@shared/components/board/BoardPeek'
 import { BoardSurface } from '@shared/components/board/BoardSurface'
 import type { BoardActions } from '@shared/components/board/types'
 import {
   activeBoardLaneKey,
   boardLaneValueOf,
   cardPatchForLaneValue,
+  newCardLaneValue,
   slugify,
   type BoardViewCard,
   type BoardViewConfig,
@@ -58,7 +61,7 @@ export type JTypeBoardProps = {
   live?: boolean
   /** Polling cadence in ms (default 30000, min 5000). */
   pollIntervalMs?: number
-  /** Intercept card opens (replaces the built-in read-only detail panel). */
+  /** Intercept card opens (replaces the built-in editable/read-only detail). */
   onCardOpen?: (card: BoardViewCard) => void
   /** Observe live/polling/error transitions. */
   onConnectionChange?: (state: JTypeBoardConnection) => void
@@ -319,24 +322,28 @@ export function JTypeBoard({
           throw e
         }
       },
-      createCard: async (colKey, title) => {
+      createCard: async (colKey, title, initial) => {
         const snap = snapRef.current
         if (!snap || !client) return
         try {
           const laneKey = activeBoardLaneKey(snap.config)
+          const targetLane = newCardLaneValue(laneKey, colKey, initial)
           const pos =
             snap.cards
-              .filter((card) => boardLaneValueOf(card, snap.config) === colKey)
+              .filter((card) => boardLaneValueOf(card, snap.config) === targetLane)
               .reduce((m, c) => Math.max(m, c.position), -1) + 1
           const data: Record<string, string> = {
             title,
             board: snap.config.id,
-            status: laneKey === 'status' ? colKey : snap.config.columns[0]?.key ?? 'todo',
+            status: laneKey === 'status' ? targetLane : snap.config.columns[0]?.key ?? 'todo',
             position: String(pos),
           }
           const content = applyCardPatch(
-            writeFrontmatter('', data),
-            cardPatchForLaneValue(laneKey, colKey),
+            applyCardPatch(
+              writeFrontmatter('', data),
+              cardPatchForLaneValue(laneKey, targetLane),
+            ),
+            initial ?? {},
           )
           let rel = `${snap.boardDir}/${slugify(title)}.md`
           if (snap.metaByPath.has(rel)) rel = `${snap.boardDir}/${slugify(title)}-${rand()}.md`
@@ -345,7 +352,7 @@ export function JTypeBoard({
           return rel
         } catch (e) {
           setBanner(describeErrorRef.current(e))
-          return
+          throw e
         }
       },
       updateCard: (id, patch) =>
@@ -444,7 +451,12 @@ export function JTypeBoard({
   const selectedCard = selectedCardId
     ? snapshot?.cards.find((c) => c.id === selectedCardId) ?? null
     : null
-  const handleCardOpen = onCardOpen ?? ((card: BoardViewCard) => setSelectedCardId(card.id))
+  // Editable embeds use the same focused editor as the desktop and web apps.
+  // Only an explicitly read-only embed needs the lightweight, non-mutating
+  // package detail. A host-supplied handler always wins over both defaults.
+  const handleCardOpen =
+    onCardOpen ??
+    (readOnly ? (card: BoardViewCard) => setSelectedCardId(card.id) : undefined)
 
   let content: ReactElement
   if (propsError) {
@@ -469,13 +481,14 @@ export function JTypeBoard({
             readOnly={readOnly}
             currentUser={currentUser}
             onCardOpen={handleCardOpen}
+            peekComponent={!readOnly && !onCardOpen ? BoardPeek : undefined}
             // Dropdown panels mount in body-level portals; carry the scope
             // class so ONLY our portals pick up the package styles (never the
             // host's own Headless UI portals).
             portalClassName="jtb-scope"
           />
         </I18nProvider>
-        {selectedCard && !onCardOpen && effectiveConfig && (
+        {selectedCard && readOnly && !onCardOpen && effectiveConfig && (
           <CardDetail
             card={selectedCard}
             config={effectiveConfig}
@@ -508,13 +521,7 @@ function ErrorPanel({
 }) {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-3 bg-[#fbfdfb] p-8 text-center">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-9 w-9 text-amber-500" aria-hidden>
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"
-        />
-      </svg>
+      <ExclamationTriangleIcon className="h-9 w-9 text-amber-500" aria-hidden />
       <p className="max-w-md break-words text-sm text-stone-600">{message}</p>
       {onRetry && retryLabel && (
         <button

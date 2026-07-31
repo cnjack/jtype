@@ -142,7 +142,7 @@ pub fn catalog() -> Value {
                 "priority": json!({ "type": "string", "enum": ["none","low","medium","high","urgent"], "description": "Optional priority" }),
                 "assignee": p_str("Optional assignee (free text or member handle)"),
                 "due": p_str("Optional due date (YYYY-MM-DD)"),
-                "parent": p_str("Optional parent card slug (filename without .md) — makes this a sub-card"),
+                "parent": p_str("Optional parent card reference (relative path without .md; unique legacy basename accepted) — makes this a sub-card"),
             }),
             &["workspace_id", "board", "status", "title"]
         ),
@@ -167,7 +167,7 @@ pub fn catalog() -> Value {
                 "priority": json!({ "type": "string", "enum": ["none","low","medium","high","urgent"] }),
                 "assignee": p_str("New assignee, or empty string to clear"),
                 "due": p_str("New due date, or empty string to clear"),
-                "parent": p_str("Parent card slug (sub-card), or empty string to detach"),
+                "parent": p_str("Parent card reference (relative path without .md; unique legacy basename accepted), or empty string to detach"),
             }),
             &["workspace_id", "path"]
         ),
@@ -264,7 +264,7 @@ pub fn pinned_catalog() -> Value {
                 "priority": json!({ "type": "string", "enum": ["none","low","medium","high","urgent"] }),
                 "assignee": p_str("Optional assignee"),
                 "due": p_str("Optional due date (YYYY-MM-DD)"),
-                "parent": p_str("Optional parent card slug")
+                "parent": p_str("Optional parent card reference (relative path without .md; unique legacy basename accepted)")
             }),
             &["status", "title"],
             card.clone()
@@ -280,7 +280,7 @@ pub fn pinned_catalog() -> Value {
                 "priority": json!({ "type": "string", "enum": ["none","low","medium","high","urgent"] }),
                 "assignee": p_str("New assignee, or empty string to clear"),
                 "due": p_str("New due date, or empty string to clear"),
-                "parent": p_str("Parent card slug, or empty string to detach")
+                "parent": p_str("Parent card reference (relative path without .md; unique legacy basename accepted), or empty string to detach")
             }),
             &["document_id"],
             card.clone()

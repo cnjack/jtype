@@ -30,11 +30,13 @@ export function ListboxSelect({
   options,
   onChange,
   disabled = false,
+  portalClassName,
 }: {
   value: string;
   options: BoardOption[];
   onChange: (v: string) => void;
   disabled?: boolean;
+  portalClassName?: string;
 }) {
   // No `?? options[0]` fallback: an unmatched non-empty value (e.g. an assignee
   // who isn't in the current member roster) must render itself, not collapse to
@@ -55,7 +57,7 @@ export function ListboxSelect({
       </ListboxButton>
       <ListboxOptions
         anchor="bottom start"
-        className="z-[60] w-[var(--button-width)] rounded-md border border-black/[0.06] bg-white py-1 text-xs shadow-lg [--anchor-gap:4px] focus:outline-none"
+        className={`z-[60] w-[var(--button-width)] rounded-md border border-black/[0.06] bg-white py-1 text-xs shadow-lg [--anchor-gap:4px] focus:outline-none${portalClassName ? ` ${portalClassName}` : ""}`}
       >
         {options.map((o) => (
           <ListboxOption
@@ -80,7 +82,15 @@ export function ListboxSelect({
 }
 
 /** A compact emoji button + picker for the card icon. */
-export function EmojiField({ value, onChange }: { value?: string | null; onChange: (v: string) => void }) {
+export function EmojiField({
+  value,
+  onChange,
+  portalClassName,
+}: {
+  value?: string | null;
+  onChange: (v: string) => void;
+  portalClassName?: string;
+}) {
   return (
     <div>
       <Menu as="div" className="relative inline-block">
@@ -89,7 +99,7 @@ export function EmojiField({ value, onChange }: { value?: string | null; onChang
         </MenuButton>
         <MenuItems
           anchor="bottom start"
-          className="z-[60] w-[232px] rounded-lg border border-black/[0.06] bg-white p-2 shadow-lg [--anchor-gap:4px] focus:outline-none"
+          className={`z-[60] w-[232px] rounded-lg border border-black/[0.06] bg-white p-2 shadow-lg [--anchor-gap:4px] focus:outline-none${portalClassName ? ` ${portalClassName}` : ""}`}
         >
           <div className="grid grid-cols-8 gap-0.5">
             {CARD_EMOJIS.map((e) => (
@@ -127,40 +137,57 @@ export function TagMultiSelect({
   value,
   options,
   onChange,
+  portalClassName,
 }: {
   value: string[];
-  options: { label: string; color?: string | null }[];
+  options: { value?: string; label: string; color?: string | null }[];
   onChange: (next: string[]) => void;
+  portalClassName?: string;
 }) {
-  const toggle = (label: string) =>
-    onChange(value.includes(label) ? value.filter((v) => v !== label) : [...value, label]);
+  const optionValue = (option: { value?: string; label: string }) => option.value ?? option.label;
+  const optionByValue = new Map(options.map((option) => [optionValue(option), option]));
+  const selectableOptions = [
+    ...options,
+    ...value
+      .filter((selected) => !optionByValue.has(selected))
+      .map((selected) => ({ value: selected, label: selected, color: null })),
+  ];
+  const toggle = (selected: string) =>
+    onChange(value.includes(selected) ? value.filter((v) => v !== selected) : [...value, selected]);
   return (
     <Menu as="div" className="relative inline-block w-full">
       <MenuButton className={`${fieldCls} flex w-full items-center justify-between gap-1`}>
-        <span className="truncate">{value.length ? value.join(", ") : t`Add labels`}</span>
+        <span className="truncate">
+          {value.length
+            ? value.map((selected) => optionByValue.get(selected)?.label ?? selected).join(", ")
+            : t`Add labels`}
+        </span>
         <ChevronUpDownIcon className="h-3.5 w-3.5 shrink-0 text-stone-400" />
       </MenuButton>
       <MenuItems
         anchor="bottom start"
-        className="z-[60] max-h-56 w-[var(--button-width)] overflow-y-auto rounded-md border border-black/[0.06] bg-white py-1 text-xs shadow-lg [--anchor-gap:4px] focus:outline-none"
+        className={`z-[60] max-h-56 w-[var(--button-width)] overflow-y-auto rounded-md border border-black/[0.06] bg-white py-1 text-xs shadow-lg [--anchor-gap:4px] focus:outline-none${portalClassName ? ` ${portalClassName}` : ""}`}
       >
-        {options.length === 0 && <div className="px-2 py-1 text-stone-400">{t`No labels`}</div>}
-        {options.map((o) => (
-          <MenuItem key={o.label}>
+        {selectableOptions.length === 0 && <div className="px-2 py-1 text-stone-400">{t`No labels`}</div>}
+        {selectableOptions.map((o) => {
+          const selected = optionValue(o);
+          return (
+          <MenuItem key={selected}>
             <button
               type="button"
               onClick={(e) => {
                 e.preventDefault();
-                toggle(o.label);
+                toggle(selected);
               }}
               className="flex w-full items-center gap-1.5 px-2 py-1 text-stone-700 data-[focus]:bg-stone-100"
             >
               <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: o.color ?? "#d6d3d1" }} />
               <span className="flex-1 truncate text-left">{o.label}</span>
-              {value.includes(o.label) && <CheckIcon className="h-3.5 w-3.5 text-brand" />}
+              {value.includes(selected) && <CheckIcon className="h-3.5 w-3.5 text-brand" />}
             </button>
           </MenuItem>
-        ))}
+          );
+        })}
       </MenuItems>
     </Menu>
   );
