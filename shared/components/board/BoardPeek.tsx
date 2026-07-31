@@ -58,6 +58,7 @@ export function BoardPeek({
   renderMarkdownToContainer,
   renderMarkdownToHtml,
   portalClassName,
+  supplement,
   onChange,
   onClose,
   onDelete,
@@ -794,6 +795,15 @@ export function BoardPeek({
                 </RelationField>
               </div>
             </div>
+          )}
+
+          {supplement != null && supplement !== false && supplement !== "" && (
+            <section
+              aria-label={t`Additional information`}
+              className="mt-6 border-t border-line pt-5"
+            >
+              {supplement}
+            </section>
           )}
         </aside>
       </div>

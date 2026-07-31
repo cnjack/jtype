@@ -43,6 +43,7 @@ The wrapper fills its container — **give the parent element a height.**
 | `live` | `boolean` | `true` | Try the live SSE feed; see *Live updates* below. |
 | `pollIntervalMs` | `number` | `30000` | Polling cadence (min 5000). |
 | `onCardOpen` | `(card: BoardViewCard) => void` | — | Intercept card opens; replaces the built-in read-only detail panel. |
+| `renderCardSupplement` | `(card: BoardViewCard) => ReactNode` | — | Add host-owned content after native Properties and Relations in the built-in editable Card detail. It is not rendered for `readOnly` or intercepted opens. |
 | `onConnectionChange` | `(s: 'live' \| 'polling' \| 'error') => void` | — | Observe transport state transitions. |
 | `locale` | `'en' \| 'zh' \| 'ja' \| 'ko'` | `'en'` | Board chrome language. The lingui instance is bundle-wide, so multiple boards on one page share the last-set locale. |
 | `className`, `style` | | — | Extra class/style for the wrapper element. |
@@ -142,7 +143,9 @@ read-only card detail, and localized chrome. Editable embeds use the shared
 focused quick-create and card-detail dialogs, including description,
 properties, relations, and sub-cards. Explicitly read-only embeds keep the
 non-mutating detail; a host `onCardOpen` callback still replaces either
-built-in path.
+built-in path. Hosts that need execution receipts or other contextual data
+without replacing the editor can use `renderCardSupplement`. The slot is
+additive: jtype retains ownership of Card editing and mutations.
 Not yet (flag-gated later): members/assignee options, versions/activity,
 ticket badges (the `OCCSV-####` chip — the embed client has no ticket-index
 endpoint, so cards never show it even when the board configures `ticketKey`),

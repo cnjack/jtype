@@ -148,6 +148,7 @@ const client: JTypeBoardDataClient = {
 
 const readOnly = new URLSearchParams(window.location.search).get("readonly") === "1";
 const interceptOpen = new URLSearchParams(window.location.search).get("intercept") === "1";
+const showSupplement = new URLSearchParams(window.location.search).get("supplement") === "1";
 
 createRoot(document.getElementById("root")!).render(
   <div className="cloud-shell">
@@ -166,6 +167,15 @@ createRoot(document.getElementById("root")!).render(
           live={false}
           locale="en"
           readOnly={readOnly}
+          renderCardSupplement={
+            showSupplement
+              ? (card) => (
+                  <section data-testid="host-card-supplement">
+                    Cloud executions for {card.title}
+                  </section>
+                )
+              : undefined
+          }
           onCardOpen={
             interceptOpen
               ? (card) => {

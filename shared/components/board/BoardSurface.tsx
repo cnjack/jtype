@@ -117,6 +117,7 @@ export function BoardSurface({
   onOpenSettings,
   readOnly,
   onCardOpen,
+  renderCardSupplement,
   peekComponent: PeekComponent,
   portalClassName,
 }: BoardSurfaceProps) {
@@ -1430,6 +1431,7 @@ export function BoardSurface({
                 renderMarkdownToContainer={renderMarkdownToContainer}
                 renderMarkdownToHtml={renderMarkdownToHtml}
                 portalClassName={portalClassName}
+                supplement={renderCardSupplement?.(selected)}
                 onChange={(patch) => void queueCardUpdate(selected.id, patch)}
                 onClose={() => setSelectedId(null)}
                 onDelete={() => void actions.deleteCard(selected)}
