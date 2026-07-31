@@ -69,11 +69,18 @@ export type JTypeBoardProps = {
   live?: boolean
   /** Polling cadence in ms (default 30000, min 5000). */
   pollIntervalMs?: number
+  /** Open this Card path once after the initial board snapshot resolves. */
+  initialCardPath?: string
+  /**
+   * Additional relative directories to scan for Cards belonging to this board.
+   * The Card's `board` frontmatter must still match the resolved board id.
+   */
+  additionalCardRoots?: readonly string[]
   /** Intercept card opens (replaces the built-in editable/read-only detail). */
   onCardOpen?: (card: BoardViewCard) => void
   /**
    * Add host-owned content after native Properties and Relations without
-   * replacing jtype's editor. Not rendered for read-only or intercepted opens.
+   * replacing jtype's detail. Not rendered for intercepted opens.
    */
   renderCardSupplement?: (card: BoardViewCard) => ReactNode
   /** Observe live/polling/error transitions. */
@@ -103,6 +110,8 @@ export function JTypeBoard({
   currentUser,
   live = true,
   pollIntervalMs = 30000,
+  initialCardPath,
+  additionalCardRoots,
   onCardOpen,
   renderCardSupplement,
   onConnectionChange,
@@ -135,6 +144,18 @@ export function JTypeBoard({
   }, [injectedClient, baseUrl, token, propsError])
 
   const pollMs = Math.max(5000, pollIntervalMs)
+  const additionalCardRootsKey = (additionalCardRoots ?? [])
+    .map((value) => value.trim().replace(/\\/g, '/').replace(/^\.\/+/, '').replace(/\/+$/, ''))
+    .filter((value) =>
+      value !== '' &&
+      !value.startsWith('/') &&
+      value.split('/').every((part) => part !== '' && part !== '.' && part !== '..'))
+    .filter((value, index, values) => values.indexOf(value) === index)
+    .join('\0')
+  const normalizedAdditionalCardRoots = useMemo(
+    () => (additionalCardRootsKey ? additionalCardRootsKey.split('\0') : []),
+    [additionalCardRootsKey],
+  )
 
   // --- state -----------------------------------------------------------------
   const [snapshot, setSnapshot] = useState<BoardSnapshot | null>(null)
@@ -203,7 +224,13 @@ export function JTypeBoard({
 
     const load = async (): Promise<BoardSnapshot | null> => {
       try {
-        const snap = await loadBoardSnapshot(client, workspaceId, boardRef, cacheRef.current)
+        const snap = await loadBoardSnapshot(
+          client,
+          workspaceId,
+          boardRef,
+          cacheRef.current,
+          normalizedAdditionalCardRoots,
+        )
         if (cancelled) return null
         snapRef.current = snap
         setSnapshot(snap)
@@ -274,7 +301,7 @@ export function JTypeBoard({
       sseUnsub?.()
       loadRef.current = null
     }
-  }, [client, workspaceId, boardRef, live, pollMs])
+  }, [client, workspaceId, boardRef, live, pollMs, normalizedAdditionalCardRoots])
 
   // --- actions adapter (same document-writeback semantics as WebBoardView) ---
   const actions: BoardActions = useMemo(() => {
@@ -465,6 +492,10 @@ export function JTypeBoard({
   const selectedCard = selectedCardId
     ? snapshot?.cards.find((c) => c.id === selectedCardId) ?? null
     : null
+  const initialCardError =
+    initialCardPath && snapshot && !snapshot.cards.some((card) => card.id === initialCardPath)
+      ? S.errCardNotFound(initialCardPath)
+      : ''
   // Editable embeds use the same focused editor as the desktop and web apps.
   // Only an explicitly read-only embed needs the lightweight, non-mutating
   // package detail. A host-supplied handler always wins over both defaults.
@@ -491,7 +522,8 @@ export function JTypeBoard({
             config={viewConfig}
             cards={snapshot.cards}
             actions={actions}
-            error={banner || undefined}
+            error={banner || initialCardError || undefined}
+            initialCardId={initialCardPath}
             readOnly={readOnly}
             currentUser={currentUser}
             onCardOpen={handleCardOpen}
@@ -508,6 +540,7 @@ export function JTypeBoard({
             card={selectedCard}
             config={effectiveConfig}
             strings={S}
+            supplement={renderCardSupplement?.(selectedCard)}
             onClose={() => setSelectedCardId(null)}
           />
         )}

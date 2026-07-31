@@ -166,7 +166,7 @@ export declare class JTypeApiError extends Error {
  * `client`) plus `workspaceId`+`boardRef` and it renders the same shared
  * BoardSurface the jtype desktop + web apps use, backed by the document API.
  */
-export declare function JTypeBoard({ workspaceId, boardRef, baseUrl, token, client: injectedClient, readOnly, currentUser, live, pollIntervalMs, onCardOpen, renderCardSupplement, onConnectionChange, locale, className, style, }: JTypeBoardProps): ReactElement;
+export declare function JTypeBoard({ workspaceId, boardRef, baseUrl, token, client: injectedClient, readOnly, currentUser, live, pollIntervalMs, initialCardPath, additionalCardRoots, onCardOpen, renderCardSupplement, onConnectionChange, locale, className, style, }: JTypeBoardProps): ReactElement;
 
 export declare type JTypeBoardConnection = 'live' | 'polling' | 'error';
 
@@ -234,11 +234,18 @@ export declare type JTypeBoardProps = {
     live?: boolean;
     /** Polling cadence in ms (default 30000, min 5000). */
     pollIntervalMs?: number;
+    /** Open this Card path once after the initial board snapshot resolves. */
+    initialCardPath?: string;
+    /**
+     * Additional relative directories to scan for Cards belonging to this board.
+     * The Card's `board` frontmatter must still match the resolved board id.
+     */
+    additionalCardRoots?: readonly string[];
     /** Intercept card opens (replaces the built-in editable/read-only detail). */
     onCardOpen?: (card: BoardViewCard) => void;
     /**
      * Add host-owned content after native Properties and Relations without
-     * replacing jtype's editor. Not rendered for read-only or intercepted opens.
+     * replacing jtype's detail. Not rendered for intercepted opens.
      */
     renderCardSupplement?: (card: BoardViewCard) => ReactNode;
     /** Observe live/polling/error transitions. */

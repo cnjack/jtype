@@ -96,6 +96,7 @@ export function BoardSurface({
   cards,
   actions,
   error,
+  initialCardId,
   templates,
   createFromTemplate,
   assigneeOptions,
@@ -148,6 +149,18 @@ export function BoardSurface({
   const conversionStepBusy = useRef(false);
   const conversionAttemptRef = useRef<{ signature: string; writes: number } | null>(null);
   const cardUpdateQueues = useRef(new Map<string, Promise<void>>());
+  const initialCardHandled = useRef(false);
+
+  useEffect(() => {
+    if (initialCardHandled.current || !initialCardId) return;
+    if (!cards.some((card) => card.id === initialCardId)) return;
+    initialCardHandled.current = true;
+    if (onCardOpen) {
+      onCardOpen(cards.find((card) => card.id === initialCardId)!);
+      return;
+    }
+    setSelectedId(initialCardId);
+  }, [cards, initialCardId, onCardOpen]);
 
   const groupKey = activeBoardLaneKey(config);
   const editableColumns = groupKey === "status";

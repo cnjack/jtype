@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, type ReactNode } from 'react'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 import { attachmentName, isSafeAttachmentUrl, PRIORITY_STYLE, type BoardViewCard } from '@shared/lib/board'
 import type { BoardConfigJSON } from './boardData'
@@ -15,11 +15,13 @@ export function CardDetail({
   card,
   config,
   strings,
+  supplement,
   onClose,
 }: {
   card: BoardViewCard
   config: BoardConfigJSON
   strings: UiStrings
+  supplement?: ReactNode
   onClose: () => void
 }) {
   useEffect(() => {
@@ -139,6 +141,15 @@ export function CardDetail({
               {card.notes}
             </pre>
           </div>
+        )}
+
+        {supplement != null && supplement !== false && supplement !== '' && (
+          <section
+            aria-label={strings.additionalInformation}
+            className="mt-4 border-t border-stone-100 pt-4"
+          >
+            {supplement}
+          </section>
         )}
       </div>
     </aside>

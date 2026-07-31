@@ -42,6 +42,7 @@ const cardTitles = [
   "Finish remaining review tasks",
   "Package a scoped board UI for host applications",
 ];
+const managedCardTitle = "Automation-created payment review";
 
 function cardContent(title: string, index: number): string {
   const priority = index === 0 ? "urgent" : index < 5 ? "high" : "medium";
@@ -104,6 +105,12 @@ put(
   "Shared dependency",
   cardContent("Shared dependency", 22),
 );
+put(
+  "doc-managed",
+  "jcode-automation/auto-1/exec-1.md",
+  managedCardTitle,
+  cardContent(managedCardTitle, 23),
+);
 
 const saveCalls: JTypeSaveDocumentRequest[] = [];
 window.__BOARD_EMBED_TEST__ = { saveCalls };
@@ -146,9 +153,14 @@ const client: JTypeBoardDataClient = {
   },
 };
 
-const readOnly = new URLSearchParams(window.location.search).get("readonly") === "1";
-const interceptOpen = new URLSearchParams(window.location.search).get("intercept") === "1";
-const showSupplement = new URLSearchParams(window.location.search).get("supplement") === "1";
+const query = new URLSearchParams(window.location.search);
+const readOnly = query.get("readonly") === "1";
+const interceptOpen = query.get("intercept") === "1";
+const showSupplement = query.get("supplement") === "1";
+const initialCardPath = query.get("card") ?? undefined;
+const additionalCardRoots = query.get("managed") === "1"
+  ? ["jcode-automation"]
+  : undefined;
 
 createRoot(document.getElementById("root")!).render(
   <div className="cloud-shell">
@@ -167,6 +179,9 @@ createRoot(document.getElementById("root")!).render(
           live={false}
           locale="en"
           readOnly={readOnly}
+          initialCardPath={initialCardPath}
+          additionalCardRoots={additionalCardRoots}
+          pollIntervalMs={initialCardPath ? 5_000 : undefined}
           renderCardSupplement={
             showSupplement
               ? (card) => (

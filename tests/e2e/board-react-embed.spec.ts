@@ -174,6 +174,31 @@ test("editable package embed adds a host supplement without replacing the native
   await expect(dialog.getByRole("region", { name: "Additional information" })).toBeVisible();
 });
 
+test("editable package embed opens an exact Card deep link once", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(
+    "/tests/fixtures/board-react-embed.html?managed=1&card=jcode-automation%2Fauto-1%2Fexec-1.md",
+  );
+  await expect(page.getByTestId("cloud-board-host").getByText("Jcode", { exact: true })).toBeVisible();
+
+  const dialog = page.getByRole("dialog", { name: "Card details" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByPlaceholder("Untitled card")).toHaveValue(
+    "Automation-created payment review",
+  );
+
+  await dialog.getByRole("button", { name: "Close" }).click();
+  await expect(dialog).toBeHidden();
+  await page.waitForTimeout(5_100);
+  await expect(dialog).toBeHidden();
+});
+
+test("editable package embed exposes a missing Card deep link", async ({ page }) => {
+  await page.goto("/tests/fixtures/board-react-embed.html?card=jcode%2Fmissing.md");
+  await expect(page.getByText('Card "jcode/missing.md" was not found on this board.')).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Card details" })).toHaveCount(0);
+});
+
 test("explicit readOnly package embed keeps the non-editable detail path", async ({ page }) => {
   await openEmbed(page, { readOnly: true });
 
@@ -182,14 +207,19 @@ test("explicit readOnly package embed keeps the non-editable detail path", async
   await expect(page.getByRole("dialog", { name: "Card details" })).toHaveCount(0);
 });
 
-test("readOnly package embed does not render the editable Card supplement", async ({ page }) => {
+test("readOnly package embed renders the host Card supplement without mutation affordances", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/tests/fixtures/board-react-embed.html?readonly=1&supplement=1");
   await expect(page.getByText("Jcode", { exact: true })).toBeVisible();
 
   await page.getByText(cardTitles[0]!, { exact: true }).click();
-  await expect(page.getByLabel("Read-only card view")).toBeVisible();
-  await expect(page.getByTestId("host-card-supplement")).toHaveCount(0);
+  const detail = page.getByLabel("Read-only card view");
+  await expect(detail).toBeVisible();
+  await expect(detail.getByTestId("host-card-supplement")).toContainText(
+    `Cloud executions for ${cardTitles[0]}`,
+  );
+  await expect(detail.getByRole("region", { name: "Additional information" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Card details" })).toHaveCount(0);
 });
 
 test("host onCardOpen intercepts the built-in editable detail", async ({ page }) => {
