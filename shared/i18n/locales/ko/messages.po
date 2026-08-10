@@ -43,6 +43,12 @@ msgstr ""
 msgid "{0} selected"
 msgstr ""
 
+#. placeholder {0}: bulkProgress.completed
+#. placeholder {1}: bulkProgress.total
+#: shared/components/board/BoardSurface.tsx
+msgid "{0}/{1}"
+msgstr ""
+
 #: shared/components/board/LaneDetailsPopover.tsx
 msgid "{cardCount, plural, one {# card} other {# cards}}"
 msgstr "{cardCount, plural, one {카드 #개} other {카드 #개}}"
@@ -112,6 +118,15 @@ msgstr "로컈 수낙"
 msgid "Actions for {0}"
 msgstr ""
 
+#: shared/components/board/BoardFilterPopover.tsx
+#: shared/components/board/BoardPeek.tsx
+msgid "Active"
+msgstr ""
+
+#: shared/components/board/BoardFilterPopover.tsx
+msgid "Active and archived"
+msgstr ""
+
 #: shared/components/board/BoardPeek.tsx
 msgid "Activity"
 msgstr ""
@@ -145,6 +160,7 @@ msgstr "설명 추가…"
 msgid "Add details..."
 msgstr "세부정보 추가..."
 
+#: shared/components/board/BoardSurface.tsx
 #: shared/components/board/CardCreateDialog.tsx
 #: shared/components/board/controls.tsx
 msgid "Add labels"
@@ -152,6 +168,10 @@ msgstr "라벨 추가"
 
 #: shared/components/board/BoardPeek.tsx
 msgid "Add reaction"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Add relation"
 msgstr ""
 
 #: shared/components/board/BoardSwimlanes.tsx
@@ -174,6 +194,15 @@ msgstr ""
 msgid "Add swimlane"
 msgstr ""
 
+#: shared/components/board/BoardBacklog.tsx
+#: shared/components/board/BoardWorkScope.tsx
+msgid "Add to selection"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Added comment"
+msgstr ""
+
 #: shared/components/board/BoardPeek.tsx
 msgid "Additional information"
 msgstr "추가 정보"
@@ -182,8 +211,31 @@ msgstr "추가 정보"
 msgid "Agenda"
 msgstr ""
 
+#: shared/components/board/BoardFilterPopover.tsx
+#: shared/components/board/BoardSurface.tsx
+msgid "All"
+msgstr ""
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Archive"
+msgstr ""
+
+#: shared/components/board/BoardFilterPopover.tsx
+msgid "Archive state"
+msgstr ""
+
+#: shared/components/board/BoardBacklog.tsx
+#: shared/components/board/BoardFilterPopover.tsx
 #: shared/components/board/BoardPeek.tsx
 msgid "Archived"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Archived card"
+msgstr ""
+
+#: shared/components/board/BoardFilterPopover.tsx
+msgid "Archived cards"
 msgstr ""
 
 #: shared/components/board/BoardFilterPopover.tsx
@@ -198,15 +250,29 @@ msgstr "담당자"
 msgid "Assignee: {0}"
 msgstr ""
 
+#: shared/components/board/BoardSurface.tsx
+msgid "Assignee…"
+msgstr ""
+
 #: shared/components/board/BoardPeek.tsx
 msgid "Attachments"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Back to previous card"
+msgstr ""
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Backlog"
 msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
 msgid "Blank card"
 msgstr "빈 카드"
 
+#: shared/components/board/BoardBacklog.tsx
 #: shared/components/board/BoardFilterPopover.tsx
+#: shared/components/board/BoardWorkScope.tsx
 msgid "Blocked"
 msgstr ""
 
@@ -234,6 +300,10 @@ msgstr "보드"
 msgid "Board settings"
 msgstr ""
 
+#: shared/components/board/BoardSurface.tsx
+msgid "Board view"
+msgstr ""
+
 #: shared/components/EditorToolbar.tsx
 msgid "Bold"
 msgstr "굵게"
@@ -247,6 +317,7 @@ msgid "Calendar"
 msgstr ""
 
 #: shared/components/board/BoardPeek.tsx
+#: shared/components/board/ProjectSettingsDialog.tsx
 #: shared/components/board/SwimlaneConversionDialog.tsx
 #: shared/components/board/SwimlaneDeleteDialog.tsx
 #: shared/components/board/SwimlaneManagerDialog.tsx
@@ -258,6 +329,11 @@ msgstr "취소"
 #: shared/components/board/BoardPeek.tsx
 msgid "Card"
 msgstr "카드"
+
+#. placeholder {0}: card.title
+#: shared/components/board/BoardSurface.tsx
+msgid "Card actions for {0}"
+msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
 msgid "Card details"
@@ -279,6 +355,10 @@ msgstr "카드 제목"
 msgid "cards"
 msgstr "개 카드"
 
+#: shared/components/board/BoardWorkScope.tsx
+msgid "Cards assigned to you across this project appear here."
+msgstr ""
+
 #: shared/components/board/BoardFilterPopover.tsx
 #~ msgid "Cards with a missing row"
 #~ msgstr ""
@@ -289,6 +369,26 @@ msgstr ""
 
 #: shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Change color"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Changed assignee"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Changed dependencies"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Changed labels"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Changed schedule"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Changed status"
 msgstr ""
 
 #: shared/components/board/SwimlaneManagerDialog.tsx
@@ -308,6 +408,10 @@ msgid "Clear all"
 msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
+msgid "Clear due date"
+msgstr ""
+
+#: shared/components/board/BoardSurface.tsx
 #~ msgid "Clear filter"
 #~ msgstr "필터 지우기"
 
@@ -317,6 +421,7 @@ msgstr ""
 
 #: shared/components/board/BoardPeek.tsx
 #: shared/components/board/CardCreateDialog.tsx
+#: shared/components/board/ProjectSettingsDialog.tsx
 #: shared/components/board/StatusManagerDialog.tsx
 #: shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Close"
@@ -420,6 +525,14 @@ msgstr "카드를 만들 수 없습니다. 다시 시도해 주세요."
 msgid "Could not create sub-card. Try again."
 msgstr "하위 카드를 만들 수 없습니다. 다시 시도하세요."
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Could not load activity."
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Could not load comments."
+msgstr ""
+
 #: shared/components/viewers/SwaggerView.tsx
 msgid "Could not render this API specification."
 msgstr "이 API 명세를 렌더링할 수 없습니다."
@@ -431,6 +544,14 @@ msgstr "이 Draw.io 다이어그램을 렌더링할 수 없습니다."
 #: shared/components/viewers/PdfView.tsx
 msgid "Could not render this PDF."
 msgstr "이 PDF를 렌더링할 수 없습니다."
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Could not save changes."
+msgstr ""
+
+#: shared/components/board/ProjectSettingsDialog.tsx
+msgid "Could not save project settings."
+msgstr ""
 
 #: shared/components/board/CardCreateDialog.tsx
 msgid "Create card"
@@ -454,6 +575,10 @@ msgstr ""
 
 #: shared/components/board/BoardPeek.tsx
 msgid "Created"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Created card"
 msgstr ""
 
 #: shared/components/board/CardCreateDialog.tsx
@@ -512,6 +637,18 @@ msgid "Delete swimlane"
 msgstr ""
 
 #: shared/components/board/BoardPeek.tsx
+msgid "Deleted card"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Deleted comment"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Dependencies"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
 #: shared/components/board/CardCreateDialog.tsx
 msgid "Description"
 msgstr "설명"
@@ -524,6 +661,15 @@ msgstr "설명"
 #: shared/components/viewers/MermaidView.tsx
 msgid "Diagram error"
 msgstr "다이어그램 오류"
+
+#: shared/components/board/BoardWorkScope.tsx
+msgid "Dismiss"
+msgstr ""
+
+#. placeholder {0}: item.title
+#: shared/components/board/BoardWorkScope.tsx
+msgid "Dismiss {0}"
+msgstr ""
 
 #: shared/components/board/SwimlaneDeleteDialog.tsx
 msgid "Do not close this dialog."
@@ -558,10 +704,12 @@ msgid "Due"
 msgstr "마감"
 
 #: shared/components/board/BoardFilterPopover.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Due date"
 msgstr ""
 
 #: shared/components/board/BoardFilterPopover.tsx
+#: shared/components/board/BoardWorkScope.tsx
 msgid "Due today"
 msgstr ""
 
@@ -591,12 +739,20 @@ msgstr ""
 msgid "Duplicate swimlane name \"{0}\". Names should be unique."
 msgstr ""
 
+#: shared/components/board/ProjectSettingsDialog.tsx
+msgid "e.g. JT"
+msgstr ""
+
 #: shared/components/board/BoardPeek.tsx
 msgid "Edit comment"
 msgstr ""
 
 #: shared/components/board/BoardPeek.tsx
 msgid "edited"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Edited comment"
 msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
@@ -634,6 +790,10 @@ msgid "Fullscreen"
 msgstr "전체 화면"
 
 #: shared/components/board/BoardSurface.tsx
+msgid "Gantt"
+msgstr ""
+
+#: shared/components/board/BoardSurface.tsx
 #~ msgid "Group: Assignee"
 #~ msgstr "그룹: 담당자"
 
@@ -653,6 +813,14 @@ msgstr "전체 화면"
 #: shared/components/board/BoardPeek.tsx
 msgid "Icon"
 msgstr "아이콘"
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Inbox"
+msgstr ""
+
+#: shared/components/board/BoardWorkScope.tsx
+msgid "Inbox zero"
+msgstr ""
 
 #: shared/components/EditorToolbar.tsx
 msgid "Inline Code"
@@ -720,6 +888,7 @@ msgid "Keep cards in Unassigned"
 msgstr ""
 
 #: shared/components/board/BoardFilterPopover.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Labels"
 msgstr ""
 
@@ -740,6 +909,10 @@ msgstr ""
 #~ msgid "Lane ID"
 #~ msgstr ""
 
+#: shared/components/board/ProjectSettingsDialog.tsx
+msgid "Lightweight planning metadata shared by every board view."
+msgstr ""
+
 #: shared/components/EditorToolbar.tsx
 msgid "Link"
 msgstr "링크"
@@ -747,6 +920,18 @@ msgstr "링크"
 #: shared/components/EditorToolbar.tsx
 msgid "Link (Ctrl+K)"
 msgstr "링크 (Ctrl+K)"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Loading activity"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Loading comments"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Loading…"
+msgstr ""
 
 #: shared/components/ConflictResolver.tsx
 msgid "Local (yours)"
@@ -800,6 +985,15 @@ msgstr ""
 msgid "Markdown is supported"
 msgstr "Markdown 지원"
 
+#. placeholder {0}: currentUser?.trim() ?? ""
+#: shared/components/board/BoardWorkScope.tsx
+msgid "Mentioned @{0}"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Mentioned someone"
+msgstr ""
+
 #: shared/components/viewers/MermaidView.tsx
 msgid "Mermaid diagram"
 msgstr "Mermaid 다이어그램"
@@ -807,6 +1001,10 @@ msgstr "Mermaid 다이어그램"
 #: shared/components/viewers/MermaidView.tsx
 msgid "Mermaid source"
 msgstr "Mermaid 소스"
+
+#: shared/components/board/BoardGantt.tsx
+msgid "milestone"
+msgstr ""
 
 #: shared/components/board/BoardFilterPopover.tsx
 #~ msgid "Missing row"
@@ -854,6 +1052,15 @@ msgstr ""
 msgid "My cards"
 msgstr ""
 
+#: shared/components/board/BoardSurface.tsx
+msgid "My work"
+msgstr ""
+
+#: shared/components/board/BoardWorkScope.tsx
+msgid "My Work and Inbox use your identity to find assigned cards, mentions and "
+"reminders."
+msgstr ""
+
 #: shared/components/board/LaneDetailsPopover.tsx
 msgid "Name"
 msgstr ""
@@ -871,14 +1078,27 @@ msgstr ""
 msgid "Next month"
 msgstr ""
 
+#: shared/components/board/BoardPeek.tsx
+msgid "No activity yet"
+msgstr ""
+
 #: shared/components/board/SwimlaneConversionDialog.tsx
 msgid "No assigned values to convert."
 msgstr ""
 
+#: shared/components/board/BoardWorkScope.tsx
+msgid "No assigned work"
+msgstr ""
+
 #: shared/components/board/BoardCalendar.tsx
+#: shared/components/board/BoardPeek.tsx
 #: shared/components/board/BoardTable.tsx
 msgid "No cards"
 msgstr "카드 없음"
+
+#: shared/components/board/BoardBacklog.tsx
+msgid "No cards in this status"
+msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
 #: shared/components/board/StatusActionsMenu.tsx
@@ -898,12 +1118,17 @@ msgstr ""
 msgid "No icon"
 msgstr "아이콘 없음"
 
+#: shared/components/board/BoardSurface.tsx
 #: shared/components/board/controls.tsx
 msgid "No labels"
 msgstr "라벨 없음"
 
 #: shared/components/board/BoardFilterPopover.tsx
 msgid "No priority"
+msgstr ""
+
+#: shared/components/board/BoardGantt.tsx
+msgid "No scheduled cards yet"
 msgstr ""
 
 #: ../../../shared/components/board/BoardPeek.tsx
@@ -932,12 +1157,21 @@ msgstr ""
 #~ "mapped by row ID."
 #~ msgstr ""
 
+#: shared/components/board/BoardGantt.tsx
+msgid "Outside timeline"
+msgstr ""
+
 #: shared/components/board/BoardFilterPopover.tsx
+#: shared/components/board/BoardWorkScope.tsx
 msgid "Overdue"
 msgstr ""
 
 #: shared/components/board/BoardPeek.tsx
 msgid "Parent"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Parent card"
 msgstr ""
 
 #: shared/components/board/BoardPeek.tsx
@@ -988,6 +1222,27 @@ msgstr ""
 msgid "Priority…"
 msgstr ""
 
+#: shared/components/board/ProjectSettingsDialog.tsx
+msgid "Project key"
+msgstr ""
+
+#: shared/components/board/ProjectSettingsDialog.tsx
+msgid "Project key can be at most 32 characters."
+msgstr ""
+
+#: shared/components/board/BoardSurface.tsx
+#: shared/components/board/ProjectSettingsDialog.tsx
+msgid "Project settings"
+msgstr ""
+
+#: shared/components/board/ProjectSettingsDialog.tsx
+msgid "Project summary can be at most 280 characters."
+msgstr ""
+
+#: shared/components/board/BoardGantt.tsx
+msgid "Project timeline"
+msgstr ""
+
 #: shared/components/board/BoardPeek.tsx
 msgid "Properties"
 msgstr "속성"
@@ -1005,12 +1260,24 @@ msgid "Refresh"
 msgstr "새로고침"
 
 #: shared/components/board/BoardPeek.tsx
+msgid "Related cards"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
 msgid "Relates"
 msgstr ""
 
 #: shared/components/board/BoardPeek.tsx
 msgid "Relations"
 msgstr "관계"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Reminder"
+msgstr ""
+
+#: shared/components/board/BoardWorkScope.tsx
+msgid "Reminder due"
+msgstr ""
 
 #: shared/components/board/BoardPeek.tsx
 msgid "Remove"
@@ -1025,6 +1292,11 @@ msgstr ""
 msgid "Remove filter: {0}"
 msgstr ""
 
+#: shared/components/board/BoardBacklog.tsx
+#: shared/components/board/BoardWorkScope.tsx
+msgid "Remove from selection"
+msgstr ""
+
 #: shared/components/board/BoardPeek.tsx
 msgid "Remove your reaction"
 msgstr ""
@@ -1034,6 +1306,10 @@ msgstr ""
 #: shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Rename"
 msgstr "이름 변경"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Reopened comment thread"
+msgstr ""
 
 #. placeholder {0}: lane.name
 #: shared/components/board/SwimlaneManagerDialog.tsx
@@ -1057,7 +1333,19 @@ msgid "Resolved"
 msgstr ""
 
 #: shared/components/board/BoardPeek.tsx
+msgid "Resolved comment thread"
+msgstr ""
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Restore"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
 msgid "Restored"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Restored card"
 msgstr ""
 
 #: shared/components/ConflictResolver.tsx
@@ -1074,6 +1362,10 @@ msgstr ""
 
 #: shared/components/board/SwimlaneConversionDialog.tsx
 msgid "Resume swimlane conversion?"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Retry"
 msgstr ""
 
 #: shared/components/board/BoardPeek.tsx
@@ -1145,6 +1437,15 @@ msgstr "템플릿으로 저장"
 msgid "Save merged result"
 msgstr "병합 결과 저장"
 
+#: shared/components/board/ProjectSettingsDialog.tsx
+msgid "Save project"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Saving changes…"
+msgstr ""
+
+#: shared/components/board/ProjectSettingsDialog.tsx
 #: shared/components/board/SwimlaneManagerDialog.tsx
 #: shared/components/ConflictResolver.tsx
 msgid "Saving…"
@@ -1158,6 +1459,14 @@ msgstr "카드 검색"
 #: shared/components/board/StatusActionsMenu.tsx
 msgid "Set as done column"
 msgstr "완료 열로 설정"
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Set assignee"
+msgstr ""
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Set due date"
+msgstr ""
 
 #: shared/components/board/BoardSurface.tsx
 msgid "Set priority"
@@ -1188,6 +1497,10 @@ msgstr ""
 msgid "Show resolved thread"
 msgstr ""
 
+#: shared/components/board/BoardWorkScope.tsx
+msgid "Sign in to see personal work"
+msgstr ""
+
 #: shared/components/board/BoardPeek.tsx
 msgid "Someone"
 msgstr ""
@@ -1211,6 +1524,19 @@ msgstr "정렬: 제목"
 #: shared/components/ViewModeToggle.tsx
 msgid "Split"
 msgstr "스플릿"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Start"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
+#: shared/components/board/ProjectSettingsDialog.tsx
+msgid "Start date"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
+msgid "State"
+msgstr ""
 
 #: shared/components/board/BoardPeek.tsx
 #: shared/components/board/BoardTable.tsx
@@ -1250,6 +1576,10 @@ msgstr ""
 
 #: shared/components/board/BoardPeek.tsx
 msgid "Sub-cards"
+msgstr ""
+
+#: shared/components/board/ProjectSettingsDialog.tsx
+msgid "Summary"
 msgstr ""
 
 #: shared/components/board/BoardPeek.tsx
@@ -1340,9 +1670,21 @@ msgstr "테이블"
 msgid "Tags"
 msgstr "태그"
 
+#: shared/components/board/ProjectSettingsDialog.tsx
+msgid "Target date"
+msgstr ""
+
+#: shared/components/board/ProjectSettingsDialog.tsx
+msgid "Target date must be on or after the start date."
+msgstr ""
+
 #: shared/components/board/BoardSurface.tsx
 msgid "Templates"
 msgstr "템플릿"
+
+#: shared/components/board/BoardSurface.tsx
+msgid "This board is read-only."
+msgstr ""
 
 #: shared/components/board/SwimlaneDeleteDialog.tsx
 #~ msgid "This empty row will be removed from the board."
@@ -1356,9 +1698,14 @@ msgstr ""
 msgid "This file type can not be previewed yet."
 msgstr "이 파일 형식은 아직 미리볼 수 없습니다."
 
+#: shared/components/board/BoardPeek.tsx
 #: shared/components/board/BoardTable.tsx
 msgid "Title"
 msgstr "제목"
+
+#: shared/components/board/BoardGantt.tsx
+msgid "to"
+msgstr ""
 
 #: shared/components/board/BoardCalendar.tsx
 msgid "Today"
@@ -1373,6 +1720,10 @@ msgid "Unassigned"
 msgstr "미할당"
 
 #: shared/components/board/BoardPeek.tsx
+msgid "Unknown actor"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
 msgid "Unresolve thread"
 msgstr ""
 
@@ -1385,6 +1736,7 @@ msgid "Unsafe link blocked: {url}"
 msgstr ""
 
 #: shared/components/board/BoardCalendar.tsx
+#: shared/components/board/BoardGantt.tsx
 msgid "Unscheduled"
 msgstr ""
 
@@ -1399,6 +1751,10 @@ msgstr "제목 없는 카드"
 
 #: shared/components/board/BoardPeek.tsx
 msgid "Updated"
+msgstr ""
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Updated card"
 msgstr ""
 
 #: shared/components/board/SwimlaneConversionDialog.tsx
@@ -1426,6 +1782,10 @@ msgid "Vertical columns for this board. Names can change; cards stay mapped by "
 "swimlane ID."
 msgstr ""
 
+#: shared/components/board/ProjectSettingsDialog.tsx
+msgid "What outcome is this project driving?"
+msgstr ""
+
 #. placeholder {0}: column.limit
 #: shared/components/board/StatusManagerDialog.tsx
 msgid "WIP {0}"
@@ -1435,6 +1795,14 @@ msgstr ""
 #: shared/components/board/BoardSurface.tsx
 msgid "WIP limit {0}"
 msgstr "WIP 한도 {0}"
+
+#: shared/components/board/BoardWorkScope.tsx
+msgid "Work is blocked"
+msgstr ""
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Work scope"
+msgstr ""
 
 #: shared/components/board/SwimlaneConversionDialog.tsx
 #: shared/components/board/SwimlaneDeleteDialog.tsx
@@ -1449,3 +1817,8 @@ msgstr "작성"
 #: shared/components/viewers/MermaidView.tsx
 msgid "Write Mermaid syntax to see the diagram."
 msgstr "Mermaid 구문을 작성하면 다이어그램이 표시됩니다."
+
+#: shared/components/board/BoardWorkScope.tsx
+msgid "You're caught up. New mentions, reminders, due work and blockers appear "
+"here."
+msgstr ""

@@ -17,4 +17,4 @@ export type { BoardResolution } from './resolveBoard'
 export type { BoardConfigJSON } from './boardData'
 export type { BoardLocale } from './i18n'
 // The normalized card model, for onCardOpen handlers.
-export type { BoardViewCard, BoardTag } from '@shared/lib/board'
+export type { BoardPersonalViewState, BoardViewCard, BoardTag } from '@shared/lib/board'

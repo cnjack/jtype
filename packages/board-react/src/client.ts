@@ -34,6 +34,8 @@ export type JTypeSaveDocumentRequest = {
   content: string
   baseContentHash?: string
   baseContent?: string
+  /** Atomically fail with 409 if the path already exists. Required for creates. */
+  createOnly?: boolean
 }
 
 export type JTypeSaveDocumentResponse = {
@@ -103,7 +105,7 @@ export class JTypeApiError extends Error {
 export type CreateClientOptions = {
   /** Origin of the jtype server, e.g. `https://jtype.nightc.com`. */
   baseUrl: string
-  /** A session token (typically mcp-scoped, minted via the OAuth device flow). */
+  /** REST-capable user/session token. Board-pinned MCP tokens are not REST tokens. */
   token: string
   /** Override fetch (tests, custom agents). Defaults to the global fetch. */
   fetchImpl?: typeof fetch

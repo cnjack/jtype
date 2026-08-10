@@ -40,6 +40,11 @@ import {
   Cog6ToothIcon,
   AdjustmentsHorizontalIcon,
   PencilSquareIcon,
+  InboxIcon,
+  QueueListIcon,
+  ChartBarIcon,
+  BriefcaseIcon,
+  ClipboardDocumentListIcon,
 } from "@heroicons/react/24/outline";
 import {
   COLUMN_COLORS,
@@ -49,6 +54,7 @@ import {
   activeBoardLaneKey,
   boardLaneValueOf,
   blockedCounts,
+  blockingCardIds,
   cardRelationKey,
   childCardsByParent,
   childProgress,
@@ -56,6 +62,7 @@ import {
   effectiveSwimlanes,
   groupValueOf,
   hasBoardFilters,
+  isIsoDate,
   newSwimlaneKey,
   RESERVED_CARD_KEYS,
   slugify,
@@ -70,10 +77,23 @@ import {
   type BoardViewColumn,
   type BoardViewConfig,
   type BoardFilters,
+  type BoardPersonalViewState,
+  type BoardViewType,
+  type BoardWorkScope,
 } from "../../lib/board";
+import {
+  boardPersonalViewDefaults,
+  mergeBoardPersonalViewState,
+  normalizeBoardPersonalViewState,
+} from "../../lib/boardViewState";
+import { boardInboxItems, reconcileDismissedInboxKeys } from "../../lib/boardPlanning";
 import { BoardFilterPopover } from "./BoardFilterPopover";
 import { BoardTable } from "./BoardTable";
 import { BoardCalendar } from "./BoardCalendar";
+import { BoardBacklog } from "./BoardBacklog";
+import { BoardGantt } from "./BoardGantt";
+import { BoardWorkScopeView } from "./BoardWorkScope";
+import { ProjectSettingsDialog } from "./ProjectSettingsDialog";
 import { CardCreateDialog, type CardCreateDraft } from "./CardCreateDialog";
 import { StatusManagerDialog } from "./StatusManagerDialog";
 import { SwimlaneManagerDialog } from "./SwimlaneManagerDialog";
@@ -95,6 +115,8 @@ export function BoardSurface({
   config,
   cards,
   actions,
+  viewState,
+  onViewStateChange,
   error,
   initialCardId,
   templates,
@@ -123,22 +145,26 @@ export function BoardSurface({
   portalClassName,
 }: BoardSurfaceProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [detailStack, setDetailStack] = useState<string[]>([]);
   const [multiSel, setMultiSel] = useState<Set<string>>(new Set());
   const [dropTarget, setDropTarget] = useState<DropTarget | null>(null);
   const [colDropTarget, setColDropTarget] = useState<string | null>(null);
-  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [addingIn, setAddingIn] = useState<string | null>(null);
   const [addingColumn, setAddingColumn] = useState(false);
   const [colDraft, setColDraft] = useState("");
   const [search, setSearch] = useState("");
-  const [sortBy, setSortBy] = useState<BoardSortKey>("manual");
-  const [filters, setFilters] = useState<BoardFilters>({});
+  const [localViewState, setLocalViewState] = useState<BoardPersonalViewState>(() =>
+    boardPersonalViewDefaults(config),
+  );
+  const [bulkProgress, setBulkProgress] = useState<{ completed: number; total: number } | null>(null);
+  const [bulkError, setBulkError] = useState("");
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [draggingCol, setDraggingCol] = useState<string | null>(null);
   const [dragPos, setDragPos] = useState<{ x: number; y: number } | null>(null);
   const [swimlaneManagerOpen, setSwimlaneManagerOpen] = useState(false);
   const [statusManagerOpen, setStatusManagerOpen] = useState(false);
   const [conversionOpen, setConversionOpen] = useState(false);
+  const [projectSettingsOpen, setProjectSettingsOpen] = useState(false);
   const [conversionSource, setConversionSource] = useState<"priority" | "assignee">("priority");
   const [conversionRequested, setConversionRequested] = useState(false);
   const [conversionProgress, setConversionProgress] = useState<{ completed: number; total: number } | null>(null);
@@ -150,6 +176,25 @@ export function BoardSurface({
   const conversionAttemptRef = useRef<{ signature: string; writes: number } | null>(null);
   const cardUpdateQueues = useRef(new Map<string, Promise<void>>());
   const initialCardHandled = useRef(false);
+  const detailReturnFocus = useRef<HTMLElement | null>(null);
+  const detailReturnCardId = useRef<string | null>(null);
+  const detailCloseRequest = useRef<(() => void) | null>(null);
+  const surfaceRef = useRef<HTMLDivElement | null>(null);
+  const readOnlyRef = useRef(!!readOnly);
+  readOnlyRef.current = !!readOnly;
+
+  const personalViewState = useMemo(
+    () => viewState ? normalizeBoardPersonalViewState(viewState) : localViewState,
+    [localViewState, viewState],
+  );
+  const patchViewState = (patch: Partial<BoardPersonalViewState>) => {
+    const next = mergeBoardPersonalViewState(personalViewState, patch);
+    if (!viewState) setLocalViewState(next);
+    void Promise.resolve().then(() => onViewStateChange?.(next)).catch(() => {
+      // Persistence failures are surfaced by the host; the controlled value
+      // remains authoritative on its next render.
+    });
+  };
 
   useEffect(() => {
     if (initialCardHandled.current || !initialCardId) return;
@@ -160,12 +205,41 @@ export function BoardSurface({
       return;
     }
     setSelectedId(initialCardId);
+    setDetailStack([initialCardId]);
   }, [cards, initialCardId, onCardOpen]);
 
-  const groupKey = activeBoardLaneKey(config);
+  const effectiveConfig = useMemo<BoardViewConfig>(() => ({
+    ...config,
+    groupBy: personalViewState.groupBy ?? config.groupBy,
+    swimlaneBy: personalViewState.swimlaneBy ?? (personalViewState.groupBy ? undefined : config.swimlaneBy),
+    calendarMode: personalViewState.calendarMode ?? config.calendarMode,
+    viewType: personalViewState.viewType ?? config.viewType,
+  }), [config, personalViewState.calendarMode, personalViewState.groupBy, personalViewState.swimlaneBy, personalViewState.viewType]);
+  const groupKey = activeBoardLaneKey(effectiveConfig);
   const editableColumns = groupKey === "status";
   const customSwimlanes = groupKey === "custom";
-  const viewType = config.viewType ?? "board";
+  const viewType = personalViewState.viewType ?? "board";
+  const scope = personalViewState.scope ?? "all";
+  const sortBy = personalViewState.sortBy ?? "manual";
+  const filters: BoardFilters = personalViewState.filters ?? { archived: "active" };
+  const collapsed = useMemo(
+    () => new Set(personalViewState.collapsedGroupKeys ?? []),
+    [personalViewState.collapsedGroupKeys],
+  );
+  // Backlog is always grouped by workflow status, regardless of the Board
+  // projection's active swimlane field.
+  const collapseGroupKey = viewType === "backlog" ? "status" : groupKey;
+  const collapseNamespace = `${viewType}:${collapseGroupKey}:`;
+  const collapsedForView = useMemo(() => {
+    const next = new Set<string>();
+    for (const key of collapsed) {
+      if (key.startsWith(collapseNamespace)) next.add(key.slice(collapseNamespace.length));
+      // Pre-project-workspace state only represented Board columns. Preserve
+      // those legacy keys there without letting them collapse Backlog/groups.
+      else if (viewType === "board" && !key.includes(":")) next.add(key);
+    }
+    return next;
+  }, [collapseNamespace, collapsed, viewType]);
   const doneKey = config.doneColumn ?? DEFAULT_DONE_COLUMN;
   const colorColumns = (config.colorColumns ?? false) && editableColumns && viewType === "board";
   const manualSort =
@@ -177,19 +251,21 @@ export function BoardSurface({
   const today = todayStr();
 
   const queueCardUpdate = (cardId: string, patch: Partial<BoardViewCard>): Promise<void> => {
+    if (readOnlyRef.current) return Promise.resolve();
     const previous = cardUpdateQueues.current.get(cardId) ?? Promise.resolve();
     const task = previous
       .catch(() => undefined)
-      .then(() => actions.updateCard(cardId, patch))
-      // Platform adapters surface their own error state. Keep the queue usable
-      // after a rejected write and avoid an unhandled promise from field edits.
-      .catch(() => undefined);
+      .then(() => {
+        if (readOnlyRef.current) return;
+        return actions.updateCard(cardId, patch);
+      });
     cardUpdateQueues.current.set(cardId, task);
-    void task.then(() => {
+    const cleanUp = () => {
       if (cardUpdateQueues.current.get(cardId) === task) {
         cardUpdateQueues.current.delete(cardId);
       }
-    });
+    };
+    void task.then(cleanUp, cleanUp);
     return task;
   };
 
@@ -217,28 +293,90 @@ export function BoardSurface({
   const columns = useMemo(
     () =>
       groupKey === "custom"
-        ? effectiveSwimlanes(config, cards, groupKey, t`Unassigned`)
-        : effectiveColumns(config, cards, groupKey, t`Unassigned`),
-    [config, cards, groupKey],
+        ? effectiveSwimlanes(effectiveConfig, cards, groupKey, t`Unassigned`)
+        : effectiveColumns(effectiveConfig, cards, groupKey, t`Unassigned`),
+    [effectiveConfig, cards, groupKey],
   );
   // Blocker counts resolve against ALL cards (a blocker may be filtered out of view).
+  const blockerCardIds = useMemo(() => blockingCardIds(cards, config.doneColumn), [cards, config.doneColumn]);
   const blockers = useMemo(() => blockedCounts(cards, config.doneColumn), [cards, config.doneColumn]);
   const blockedCardIds = useMemo(() => new Set(blockers.keys()), [blockers]);
   const vis = useMemo(
     () =>
-      visibleCardsFn(cards, search, filters, config, {
+      visibleCardsFn(cards, search, filters, effectiveConfig, {
         currentUser,
         today,
         blockedCardIds,
       }),
-    [cards, search, filters, config, currentUser, today, blockedCardIds],
+    [cards, search, filters, effectiveConfig, currentUser, today, blockedCardIds],
   );
+  const activeInboxItems = useMemo(
+    () => boardInboxItems({
+      cards,
+      currentUser,
+      today,
+      blockedCardIds,
+      blockerCardIds,
+      doneColumn: doneKey,
+    }),
+    [blockedCardIds, blockerCardIds, cards, currentUser, doneKey, today],
+  );
+  const dismissedInboxKeys = useMemo(
+    () => new Set(personalViewState.dismissedInboxItemKeys ?? []),
+    [personalViewState.dismissedInboxItemKeys],
+  );
+  const inboxItems = useMemo(
+    () => activeInboxItems.filter((item) => !dismissedInboxKeys.has(item.key)),
+    [activeInboxItems, dismissedInboxKeys],
+  );
+
+  // A dismissal belongs to one concrete signal, not forever to a Card. Once
+  // the underlying mention/reminder/dependency disappears, forget its key so
+  // the same reason can notify again when it is reintroduced later.
+  useEffect(() => {
+    const existing = personalViewState.dismissedInboxItemKeys ?? [];
+    if (existing.length === 0) return;
+    const nextKeys = reconcileDismissedInboxKeys(existing, activeInboxItems);
+    if (nextKeys.length === existing.length) return;
+    const next = mergeBoardPersonalViewState(personalViewState, { dismissedInboxItemKeys: nextKeys });
+    if (!viewState) setLocalViewState(next);
+    void Promise.resolve().then(() => onViewStateChange?.(next)).catch(() => undefined);
+  }, [activeInboxItems, onViewStateChange, personalViewState, viewState]);
   // Sub-cards resolve against ALL cards too (children may be filtered from view).
   const childrenMap = useMemo(() => childCardsByParent(cards), [cards]);
   const assignees = useMemo(() => [...new Set(cards.map((c) => c.assignee).filter(Boolean) as string[])], [cards]);
   const allTags = useMemo(() => [...new Set(cards.flatMap((c) => c.tags.map((tg) => tg.label)))], [cards]);
+  const bulkTagOptions = useMemo(
+    () => tagOptions?.length ? tagOptions : allTags.map((label) => ({ label, color: null })),
+    [allTags, tagOptions],
+  );
   const statusName = (key: string) => config.columns.find((c) => c.key === key)?.name || key || t`Unassigned`;
   const selected = selectedId ? cards.find((c) => c.id === selectedId) ?? null : null;
+
+  useEffect(() => {
+    if (!selectedId || selected) return;
+    setSelectedId(null);
+    setDetailStack([]);
+  }, [selected, selectedId]);
+
+  useEffect(() => {
+    const available = new Set(cards.map((card) => card.id));
+    setMultiSel((selection) => {
+      const next = new Set([...selection].filter((id) => available.has(id)));
+      return next.size === selection.size ? selection : next;
+    });
+  }, [cards]);
+
+  useEffect(() => {
+    if (!readOnly) return;
+    setMultiSel(new Set());
+    setAddingIn(null);
+    setAddingColumn(false);
+    setStatusManagerOpen(false);
+    setSwimlaneManagerOpen(false);
+    setConversionOpen(false);
+    setProjectSettingsOpen(false);
+  }, [readOnly]);
 
   const conversionRows: DerivedSwimlanePreview[] = useMemo(() => {
     const derived = effectiveColumns(config, cards, conversionSource, t`Unassigned`);
@@ -258,6 +396,7 @@ export function BoardSurface({
     updates: Array<{ cardId: string; patch: Partial<BoardViewCard> }>,
     onProgress?: (completed: number, total: number) => void,
   ) => {
+    if (readOnlyRef.current) throw new Error(t`This board is read-only.`);
     if (actions.updateCards) {
       await actions.updateCards(updates, onProgress);
       return;
@@ -271,7 +410,7 @@ export function BoardSurface({
   };
 
   const startConversion = async () => {
-    if (conversionRequested) return;
+    if (conversionRequested || readOnlyRef.current) return;
     setConversionError("");
     conversionAttemptRef.current = null;
     const existingMarker =
@@ -317,11 +456,13 @@ export function BoardSurface({
   // cards. New source values extend the persisted marker before the final flip.
   useEffect(() => {
     if (!conversionRequested || conversionStepBusy.current) return;
+    if (readOnlyRef.current) return;
     const marker = config.swimlaneMigration;
     if (!marker || marker.source !== conversionSource) return;
     conversionStepBusy.current = true;
     void (async () => {
       try {
+        if (readOnlyRef.current) throw new Error(t`This board is read-only.`);
         const mapping = [...marker.mapping];
         const definitions = [...(config.swimlanes ?? [])];
         const mappedValues = new Set(mapping.map((item) => item.value));
@@ -400,12 +541,8 @@ export function BoardSurface({
           return;
         }
 
-        await actions.setConfig({
-          groupBy: "status",
-          swimlanes: definitions,
-          swimlaneBy: "custom",
-          swimlaneMigration: undefined,
-        });
+        await actions.setConfig({ swimlanes: definitions, swimlaneMigration: undefined });
+        patchViewState({ groupBy: "status", swimlaneBy: "custom" });
         conversionAttemptRef.current = null;
         setConversionRequested(false);
         setConversionProgress(null);
@@ -438,20 +575,21 @@ export function BoardSurface({
   // append the platform's portal scope class there (empty for desktop/web).
   const portalCls = portalClassName ? ` ${portalClassName}` : "";
   const setConfigSafely = (patch: Partial<BoardViewConfig>) => {
-    if (conversionRequested) return;
+    if (conversionRequested || readOnlyRef.current) return;
     void Promise.resolve(actions.setConfig(patch)).catch(() => {
       // Platform adapters expose the same failure through the board error banner.
     });
   };
 
   const saveCustomLanes = async (next: BoardSwimlane[]) => {
+    if (readOnlyRef.current) return;
     await actions.setConfig({ swimlanes: next });
   };
   const showMissingSwimlanes = () => {
-    setFilters((current) => ({ ...current, missingRow: true }));
+    patchViewState({ filters: { ...filters, missingRow: true } });
     window.setTimeout(() => {
-      document
-        .querySelector<HTMLElement>('[data-col-key=""]')
+      surfaceRef.current
+        ?.querySelector<HTMLElement>('[data-col-key=""]')
         ?.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
     }, 80);
   };
@@ -460,7 +598,50 @@ export function BoardSurface({
   // their own detail); otherwise the built-in focused detail.
   const openCard = (card: BoardViewCard) => {
     if (onCardOpen) onCardOpen(card);
-    else setSelectedId(card.id);
+    else {
+      const renderedCard = [...(surfaceRef.current?.querySelectorAll<HTMLElement>("[data-card-id]") ?? [])]
+        .find((element) => element.dataset.cardId === card.id);
+      renderedCard?.focus({ preventScroll: true });
+      detailReturnFocus.current = renderedCard ?? (document.activeElement instanceof HTMLElement ? document.activeElement : null);
+      detailReturnCardId.current = card.id;
+      setDetailStack([card.id]);
+      setSelectedId(card.id);
+    }
+  };
+  const openNestedCard = (cardId: string) => {
+    if (!cards.some((card) => card.id === cardId)) return;
+    setDetailStack((stack) => [...stack, cardId]);
+    setSelectedId(cardId);
+  };
+  const closeDetail = () => {
+    const returnCardId = detailReturnCardId.current;
+    const restoreFocus = () => {
+      const connectedTarget = detailReturnFocus.current?.isConnected ? detailReturnFocus.current : null;
+      const currentCard = returnCardId
+        ? [...(surfaceRef.current?.querySelectorAll<HTMLElement>("[data-card-id]") ?? [])].find((element) => element.dataset.cardId === returnCardId)
+        : null;
+      (connectedTarget ?? currentCard)?.focus({ preventScroll: true });
+    };
+    setSelectedId(null);
+    setDetailStack([]);
+    window.setTimeout(restoreFocus, 0);
+    window.setTimeout(restoreFocus, 80);
+  };
+  const backDetail = () => {
+    setDetailStack((stack) => {
+      const next = stack.slice(0, -1);
+      setSelectedId(next.length > 0 ? next[next.length - 1]! : null);
+      return next;
+    });
+  };
+  const toggleSelection = (cardId: string) => {
+    if (readOnly) return;
+    setMultiSel((selection) => {
+      const next = new Set(selection);
+      if (next.has(cardId)) next.delete(cardId);
+      else next.add(cardId);
+      return next;
+    });
   };
   // Column ops menu only makes sense when at least one op is wired (embeds wire none).
   const hasColumnOps = !!(
@@ -530,35 +711,62 @@ export function BoardSurface({
             ? cards.filter(
                 (candidate) =>
                   candidate.id !== card.id &&
-                  boardLaneValueOf(candidate, config) === target.col,
+                  boardLaneValueOf(candidate, effectiveConfig) === target.col,
               ).length
             : target.index;
-        void actions.moveCard(card.id, target.col, targetIndex);
+        if (!readOnly) void actions.moveCard(card.id, target.col, targetIndex);
       }
     } else if (d) {
       // Cmd/Ctrl-click toggles multi-selection instead of opening the peek.
       if ((e.metaKey || e.ctrlKey) && !readOnly) {
-        setMultiSel((s) => {
-          const next = new Set(s);
-          if (next.has(card.id)) next.delete(card.id);
-          else next.add(card.id);
-          return next;
-        });
+        toggleSelection(card.id);
         return;
       }
       openCard(card);
     }
   };
 
-  /** Apply a patch to every multi-selected card that still exists. */
-  const applyBulk = (patch: Partial<BoardViewCard>) => {
-    for (const id of multiSel) {
-      if (cards.some((c) => c.id === id)) void actions.updateCard(id, patch);
+  /** Apply a single batched operation; failed selections stay available to retry. */
+  const applyBulk = async (
+    patchForCard: Partial<BoardViewCard> | ((card: BoardViewCard) => Partial<BoardViewCard>),
+  ) => {
+    if (readOnly || bulkProgress) return;
+    const targets = cards.filter((card) => multiSel.has(card.id));
+    if (targets.length === 0) return;
+    const updates = targets.map((card) => ({
+      cardId: card.id,
+      patch: typeof patchForCard === "function" ? patchForCard(card) : patchForCard,
+    }));
+    setBulkError("");
+    setBulkProgress({ completed: 0, total: updates.length });
+    try {
+      await updateManyCards(updates, (completed, total) => setBulkProgress({ completed, total }));
+      setMultiSel(new Set());
+    } catch (error) {
+      setBulkError(error instanceof Error ? error.message : String(error));
+    } finally {
+      setBulkProgress(null);
+    }
+  };
+
+  const applyBulkDelete = async () => {
+    if (readOnly || bulkProgress || !actions.deleteCards) return;
+    const targets = cards.filter((card) => multiSel.has(card.id));
+    if (targets.length === 0) return;
+    setBulkError("");
+    setBulkProgress({ completed: 0, total: targets.length });
+    try {
+      const deleted = await actions.deleteCards(targets);
+      if (deleted !== false) setMultiSel(new Set());
+    } catch (error) {
+      setBulkError(error instanceof Error ? error.message : String(error));
+    } finally {
+      setBulkProgress(null);
     }
   };
 
   const onColPointerDown = (e: ReactPointerEvent, col: BoardViewColumn) => {
-    if (!editableColumns || !actions.reorderColumns || e.button !== 0) return;
+    if (readOnly || !editableColumns || !actions.reorderColumns || e.button !== 0) return;
     if ((e.target as HTMLElement).closest("button")) return;
     colDrag.current = { key: col.key, startX: e.clientX, startY: e.clientY, moved: false };
     try {
@@ -568,6 +776,7 @@ export function BoardSurface({
     }
   };
   const onColPointerMove = (e: ReactPointerEvent, col: BoardViewColumn) => {
+    if (readOnly) return;
     const d = colDrag.current;
     if (!d || d.key !== col.key) return;
     if (!d.moved) {
@@ -589,28 +798,48 @@ export function BoardSurface({
     setColDropTarget(null);
     if (d?.moved) {
       const target = hitTestColumn(e.clientX, e.clientY);
-      if (target && target !== col.key) void actions.reorderColumns?.(col.key, target);
+      if (!readOnly && target && target !== col.key) void actions.reorderColumns?.(col.key, target);
     }
   };
 
   const toggleCollapse = (key: string) =>
-    setCollapsed((s) => {
-      const next = new Set(s);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
+    (() => {
+      const next = new Set(collapsed);
+      const storedKey = `${collapseNamespace}${key}`;
+      const isCollapsed = collapsedForView.has(key);
+      next.delete(key);
+      if (isCollapsed) next.delete(storedKey);
+      else next.add(storedKey);
+      patchViewState({ collapsedGroupKeys: [...next] });
+    })();
 
   const commitCreate = async (colKey: string, draft: CardCreateDraft) => {
+    if (readOnly) return false;
     const trimmed = draft.title.trim();
     if (!trimmed) return false;
     const { title: _title, ...initial } = draft;
     const newId = await actions.createCard(colKey, trimmed, initial);
     // Only auto-open the built-in detail; a host intercepting opens (onCardOpen)
     // gets a card object per open, which doesn't exist in `cards` yet here.
-    if (typeof newId === "string" && !onCardOpen) setSelectedId(newId);
+    if (typeof newId === "string" && !onCardOpen) {
+      setDetailStack([newId]);
+      setSelectedId(newId);
+    }
     return true;
   };
+
+  const scopeOptions: Array<{ value: BoardWorkScope; label: string; icon: typeof ViewColumnsIcon; count?: number }> = [
+    { value: "all", label: t`All`, icon: Squares2X2Icon },
+    { value: "my-work", label: t`My work`, icon: BriefcaseIcon },
+    { value: "inbox", label: t`Inbox`, icon: InboxIcon, count: inboxItems.length },
+  ];
+  const viewOptions: Array<{ value: BoardViewType; label: string; icon: typeof ViewColumnsIcon }> = [
+    { value: "board", label: t`Board`, icon: ViewColumnsIcon },
+    { value: "table", label: t`Table`, icon: TableCellsIcon },
+    { value: "calendar", label: t`Calendar`, icon: CalendarDaysIcon },
+    { value: "backlog", label: t`Backlog`, icon: QueueListIcon },
+    { value: "gantt", label: t`Gantt`, icon: ChartBarIcon },
+  ];
 
   if (error && config.columns.length === 0) {
     return (
@@ -622,7 +851,7 @@ export function BoardSurface({
   }
 
   return (
-    <div className="relative flex h-full min-h-0 bg-stone-50">
+    <div ref={surfaceRef} className="relative flex h-full min-h-0 bg-stone-50">
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         {/* Header */}
         <div className="flex flex-wrap items-center gap-2.5 border-b border-black/[0.05] bg-white/70 px-5 py-2.5">
@@ -630,47 +859,58 @@ export function BoardSurface({
             <ViewColumnsIcon className="h-4 w-4" />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-stone-900">{config.title}</p>
-            <p className="truncate text-xs text-brand-gray">
-              <Trans>Board</Trans>
-              <span aria-hidden> · </span>
-              {vis.length}
-              {vis.length !== cards.length ? `/${cards.length}` : ""} <Trans>cards</Trans>
+            <div className="flex min-w-0 items-center gap-2">
+              {config.project?.key && <span className="shrink-0 rounded bg-brand-soft px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-brand-dark">{config.project.key}</span>}
+              <p className="truncate text-sm font-semibold text-stone-900">{config.title}</p>
+            </div>
+            {config.project?.summary && <p className="truncate text-xs text-stone-600">{config.project.summary}</p>}
+            <p className="truncate text-[11px] text-brand-gray">
+              {config.project?.startDate || config.project?.targetDate ? (
+                <><span>{config.project.startDate || "—"} → {config.project.targetDate || "—"}</span><span aria-hidden> · </span></>
+              ) : <><Trans>Board</Trans><span aria-hidden> · </span></>}
+              {vis.length}{vis.length !== cards.length ? `/${cards.length}` : ""} <Trans>cards</Trans>
             </p>
           </div>
-          <div className="flex items-center gap-2.5 max-md:w-full">
-          <div className="inline-flex items-center rounded-lg border border-stone-200 p-0.5">
-            <button
-              type="button"
-              onClick={() => setConfigSafely({ viewType: "board" })}
-              className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium ${
-                viewType === "board" ? "bg-brand-soft text-brand-dark" : "text-stone-500 hover:text-brand-dark"
-              }`}
-            >
-              <ViewColumnsIcon className="h-3.5 w-3.5" />
-              <Trans>Board</Trans>
-            </button>
-            <button
-              type="button"
-              onClick={() => setConfigSafely({ viewType: "table" })}
-              className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium ${
-                viewType === "table" ? "bg-brand-soft text-brand-dark" : "text-stone-500 hover:text-brand-dark"
-              }`}
-            >
-              <TableCellsIcon className="h-3.5 w-3.5" />
-              <Trans>Table</Trans>
-            </button>
-            <button
-              type="button"
-              onClick={() => setConfigSafely({ viewType: "calendar" })}
-              className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium ${
-                viewType === "calendar" ? "bg-brand-soft text-brand-dark" : "text-stone-500 hover:text-brand-dark"
-              }`}
-            >
-              <CalendarDaysIcon className="h-3.5 w-3.5" />
-              <Trans>Calendar</Trans>
-            </button>
+          <div className="flex min-w-0 items-center gap-2.5 max-md:w-full">
+          <div className="flex shrink-0 items-center rounded-lg border border-stone-200 bg-white p-0.5" aria-label={t`Work scope`}>
+            {scopeOptions.map((option) => {
+              const Icon = option.icon;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  aria-label={option.label}
+                  aria-pressed={scope === option.value}
+                  onClick={() => patchViewState({ scope: option.value })}
+                  className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium outline-none focus-visible:ring-2 focus-visible:ring-brand ${scope === option.value ? "bg-brand-soft text-brand-dark" : "text-stone-500 hover:text-brand-dark"}`}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">{option.label}</span>
+                  {option.count ? <span className="rounded-full bg-brand px-1.5 text-[9px] text-white">{option.count}</span> : null}
+                </button>
+              );
+            })}
           </div>
+          {scope === "all" && (
+            <div className="flex min-w-0 items-center overflow-x-auto rounded-lg border border-stone-200 bg-white p-0.5" aria-label={t`Board view`}>
+              {viewOptions.map((option) => {
+                const Icon = option.icon;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    aria-label={option.label}
+                    aria-pressed={viewType === option.value}
+                    onClick={() => patchViewState({ viewType: option.value })}
+                    className={`inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-xs font-medium outline-none focus-visible:ring-2 focus-visible:ring-brand ${viewType === option.value ? "bg-brand-soft text-brand-dark" : "text-stone-500 hover:text-brand-dark"}`}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    <span className="hidden lg:inline">{option.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
           {editableColumns && viewType === "board" && !readOnly && (
             <button
               type="button"
@@ -684,6 +924,17 @@ export function BoardSurface({
               <Trans>Color</Trans>
             </button>
           )}
+          {!readOnly && (
+            <button
+              type="button"
+              className={`inline-flex items-center justify-center rounded-lg border p-1.5 outline-none focus-visible:ring-2 focus-visible:ring-brand ${config.project ? "border-brand/30 bg-brand-soft/40 text-brand-dark" : "border-stone-200 text-stone-600 hover:border-brand/40 hover:text-brand-dark"}`}
+              onClick={() => setProjectSettingsOpen(true)}
+              title={t`Project settings`}
+              aria-label={t`Project settings`}
+            >
+              <ClipboardDocumentListIcon className="h-3.5 w-3.5" />
+            </button>
+          )}
           {actions.refresh && (
             <button
               type="button"
@@ -695,7 +946,7 @@ export function BoardSurface({
               <Trans>Refresh</Trans>
             </button>
           )}
-          {onOpenSettings && (
+          {onOpenSettings && !readOnly && (
             <button
               type="button"
               className="inline-flex items-center justify-center rounded-lg border border-stone-200 p-1.5 text-stone-600 hover:border-brand/40 hover:text-brand-dark"
@@ -724,7 +975,7 @@ export function BoardSurface({
         </div>
 
         {/* Toolbar */}
-        <div className="flex flex-wrap items-center gap-2 border-b border-black/[0.04] bg-white/40 px-5 py-1.5">
+        {scope === "all" && <div className="flex flex-wrap items-center gap-2 border-b border-black/[0.04] bg-white/40 px-5 py-1.5">
           {viewType === "board" && (
             <label className="inline-flex items-center gap-1 text-xs text-brand-gray">
               <RectangleGroupIcon className="h-3.5 w-3.5" />
@@ -739,19 +990,10 @@ export function BoardSurface({
                     next === "custom"
                       ? { groupBy: "status" as const, swimlaneBy: "custom" as const }
                       : { groupBy: next, swimlaneBy: undefined };
-                  void Promise.resolve(actions.setConfig(patch))
-                    .then(() => {
-                      if (
-                        next === "custom" &&
-                        (config.swimlanes?.length ?? 0) === 0 &&
-                        !readOnly
-                      ) {
-                        setSwimlaneManagerOpen(true);
-                      }
-                    })
-                    .catch(() => {
-                      // Platform adapter already surfaced the failure.
-                    });
+                  patchViewState(patch);
+                  if (next === "custom" && (config.swimlanes?.length ?? 0) === 0 && !readOnly) {
+                    setSwimlaneManagerOpen(true);
+                  }
                 }}
               >
                 <option value="status">{t`Swimlanes: Status`}</option>
@@ -804,7 +1046,7 @@ export function BoardSurface({
           {viewType !== "calendar" && (
             <label className="inline-flex items-center gap-1 text-xs text-brand-gray">
               <BarsArrowDownIcon className="h-3.5 w-3.5" />
-              <select className={ctrlCls} value={sortBy} onChange={(e) => setSortBy(e.target.value as BoardSortKey)}>
+              <select className={ctrlCls} value={sortBy} onChange={(e) => patchViewState({ sortBy: e.target.value as BoardSortKey })}>
                 <option value="manual">{t`Sort: Manual`}</option>
                 <option value="due">{t`Sort: Due`}</option>
                 <option value="priority">{t`Sort: Priority`}</option>
@@ -815,7 +1057,7 @@ export function BoardSurface({
 
           <BoardFilterPopover
             filters={filters}
-            onChange={setFilters}
+            onChange={(next) => patchViewState({ filters: next })}
             assignees={assignees}
             tags={allTags}
             currentUser={currentUser}
@@ -828,7 +1070,7 @@ export function BoardSurface({
             <MagnifyingGlassIcon className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-stone-400" />
             <input className={`${ctrlCls} w-44 pl-7`} placeholder={t`Search cards`} value={search} onChange={(e) => setSearch(e.target.value)} />
           </div>
-        </div>
+        </div>}
 
         {error && (
           <div className="bg-amber-50 px-5 py-1.5 text-xs text-amber-700">
@@ -836,8 +1078,27 @@ export function BoardSurface({
           </div>
         )}
 
-        {/* Body: table, calendar, or columns */}
-        {viewType === "table" ? (
+        {/* Body: personal scopes or a projection of the same Markdown Cards. */}
+        {scope !== "all" ? (
+          <BoardWorkScopeView
+            scope={scope}
+            cards={cards}
+            inboxItems={inboxItems}
+            currentUser={currentUser}
+            selectedId={selected?.id}
+            selectedIds={multiSel}
+            readOnly={readOnly}
+            statusName={statusName}
+            doneKey={doneKey}
+            today={today}
+            blockedCardIds={blockedCardIds}
+            onSelect={openCard}
+            onToggleSelect={toggleSelection}
+            onDismissInbox={(key) => patchViewState({
+              dismissedInboxItemKeys: [...new Set([...(personalViewState.dismissedInboxItemKeys ?? []), key])],
+            })}
+          />
+        ) : viewType === "table" ? (
           <BoardTable
             cards={sortCardsFn(vis, sortBy)}
             statusName={statusName}
@@ -848,11 +1109,32 @@ export function BoardSurface({
           />
         ) : viewType === "calendar" ? (
           <BoardCalendar
-            cards={vis}
+            cards={sortCardsFn(vis, sortBy)}
             today={today}
             doneKey={doneKey}
-            mode={config.calendarMode ?? "month"}
-            onModeChange={(m) => setConfigSafely({ calendarMode: m })}
+            mode={personalViewState.calendarMode ?? "month"}
+            onModeChange={(m) => patchViewState({ calendarMode: m })}
+            selectedId={selected?.id}
+            onSelect={openCard}
+          />
+        ) : viewType === "backlog" ? (
+          <BoardBacklog
+            cards={sortCardsFn(vis, sortBy)}
+            columns={config.columns}
+            selectedId={selected?.id}
+            selectedIds={multiSel}
+            readOnly={readOnly}
+            blockedCardIds={blockedCardIds}
+            collapsedGroupKeys={collapsedForView}
+            onSelect={openCard}
+            onToggleSelect={toggleSelection}
+            onToggleCollapsed={toggleCollapse}
+          />
+        ) : viewType === "gantt" ? (
+          <BoardGantt
+            cards={sortCardsFn(vis, sortBy)}
+            project={config.project}
+            today={today}
             selectedId={selected?.id}
             onSelect={openCard}
           />
@@ -860,7 +1142,7 @@ export function BoardSurface({
           <div className="flex min-h-0 flex-1 items-stretch gap-3 overflow-x-auto p-4">
             {columns.map((col, colIndex) => {
               const colCards = sortCardsFn(
-                vis.filter((card) => boardLaneValueOf(card, config) === col.key),
+                vis.filter((card) => boardLaneValueOf(card, effectiveConfig) === col.key),
                 sortBy,
               );
               const showLine = (idx: number) => !!draggingId && manualSort && dropTarget?.col === col.key && dropTarget.index === idx;
@@ -869,7 +1151,7 @@ export function BoardSurface({
               const overLimit = editableColumns && col.limit != null && colCards.length > col.limit;
               const tintColor = col.color ?? COLUMN_COLORS[colIndex % COLUMN_COLORS.length];
 
-              if (collapsed.has(col.key)) {
+              if (collapsedForView.has(col.key)) {
                 return (
                   <button
                     key={col.key}
@@ -988,7 +1270,7 @@ export function BoardSurface({
 
                   <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-2">
                     {colCards.map((card, idx) => {
-                      const overdue = card.due && card.due < today && card.columnKey !== doneKey;
+                      const overdue = isIsoDate(card.due) && card.due < today && card.columnKey !== doneKey;
                       const blockedCount = blockers.get(card.id) ?? 0;
                       const children = childrenMap.get(card.id);
                       const hasMeta =
@@ -1003,17 +1285,10 @@ export function BoardSurface({
                         <Fragment key={card.id}>
                           {showLine(idx) && <div className="mx-1 h-0.5 rounded bg-brand" />}
                           <div
-                            role="button"
-                            tabIndex={0}
-                            data-card-id={card.id}
-                            data-card-index={idx}
                             onPointerDown={(e) => onCardPointerDown(e, card)}
                             onPointerMove={(e) => onCardPointerMove(e, card)}
                             onPointerUp={(e) => onCardPointerUp(e, card)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") openCard(card);
-                            }}
-                            className={`group relative block w-full cursor-pointer touch-none select-none rounded-lg bg-white p-2.5 text-left shadow-sm transition hover:ring-brand/30 ${
+                            className={`group relative block w-full rounded-lg bg-white text-left shadow-sm transition hover:ring-brand/30 ${readOnly ? "touch-pan-y" : "touch-none select-none"} ${
                               draggingId === card.id ? "opacity-40" : ""
                             } ${
                               multiSel.has(card.id)
@@ -1031,7 +1306,11 @@ export function BoardSurface({
                               onPointerDown={(e) => e.stopPropagation()}
                             >
                               <Menu as="div">
-                                <MenuButton className="rounded p-0.5 text-stone-400 hover:bg-stone-100 hover:text-stone-600">
+                                <MenuButton
+                                  title={t`Card actions for ${card.title}`}
+                                  aria-label={t`Card actions for ${card.title}`}
+                                  className="rounded p-0.5 text-stone-400 outline-none hover:bg-stone-100 hover:text-stone-600 focus-visible:ring-2 focus-visible:ring-brand"
+                                >
                                   <EllipsisHorizontalIcon className="h-4 w-4" />
                                 </MenuButton>
                                 <MenuItems anchor="bottom end" className={`z-30 w-44 rounded-lg border border-black/[0.06] bg-white py-1 text-sm shadow-lg [--anchor-gap:4px] focus:outline-none${portalCls}`}>
@@ -1078,6 +1357,19 @@ export function BoardSurface({
                               </Menu>
                             </div>
                             )}
+
+                            <button
+                              type="button"
+                              data-card-id={card.id}
+                              data-card-index={idx}
+                              onClick={(event) => {
+                                // Pointer activation is handled after the drag
+                                // threshold in onCardPointerUp; detail=0 is
+                                // keyboard/assistive-tech activation.
+                                if (event.detail === 0) openCard(card);
+                              }}
+                              className="block w-full cursor-pointer rounded-lg p-2.5 pr-7 text-left outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                            >
 
                             {card.ticket && (
                               <span className="mb-0.5 inline-block rounded bg-stone-100 px-1 py-0.5 font-mono text-[10px] font-medium tracking-tight text-stone-500">
@@ -1158,6 +1450,7 @@ export function BoardSurface({
                                 )}
                               </span>
                             )}
+                            </button>
                           </div>
                         </Fragment>
                       );
@@ -1263,63 +1556,74 @@ export function BoardSurface({
       </div>
 
       {multiSel.size > 0 && !readOnly && (
-        <div className="absolute bottom-4 left-1/2 z-40 flex -translate-x-1/2 items-center gap-2 rounded-xl border border-black/[0.08] bg-white/95 px-3 py-2 shadow-xl backdrop-blur">
-          <span className="text-xs font-medium text-stone-600">
-            <Trans>{multiSel.size} selected</Trans>
+        <div className="absolute inset-x-2 bottom-3 z-40 mx-auto flex w-fit max-w-[calc(100%-1rem)] flex-wrap items-center justify-center gap-2 rounded-xl border border-black/[0.08] bg-white/95 px-3 py-2 shadow-xl backdrop-blur">
+          <span className="whitespace-nowrap text-xs font-medium text-stone-600">
+            {bulkProgress ? <Trans>{bulkProgress.completed}/{bulkProgress.total}</Trans> : <Trans>{multiSel.size} selected</Trans>}
           </span>
-          <select
-            className={ctrlCls}
-            value=""
-            aria-label={t`Set status`}
-            onChange={(e) => {
-              if (e.target.value) applyBulk({ columnKey: e.target.value });
-              e.target.value = "";
-            }}
-          >
-            <option value="" disabled>
-              {t`Status…`}
-            </option>
-            {config.columns.map((c) => (
-              <option key={c.key} value={c.key}>
-                {c.name}
-              </option>
-            ))}
+          <select disabled={!!bulkProgress} className={ctrlCls} value="" aria-label={t`Set status`} onChange={(e) => { if (e.target.value) void applyBulk({ columnKey: e.target.value }); e.target.value = ""; }}>
+            <option value="" disabled>{t`Status…`}</option>
+            {config.columns.map((c) => <option key={c.key} value={c.key}>{c.name}</option>)}
           </select>
-          <select
-            className={ctrlCls}
-            value=""
-            aria-label={t`Set priority`}
-            onChange={(e) => {
-              if (e.target.value) applyBulk({ priority: e.target.value });
-              e.target.value = "";
-            }}
-          >
-            <option value="" disabled>
-              {t`Priority…`}
-            </option>
-            {PRIORITY_ORDER.map((p) => (
-              <option key={p} value={p}>
-                {p}
-              </option>
-            ))}
+          <select disabled={!!bulkProgress} className={ctrlCls} value="" aria-label={t`Set priority`} onChange={(e) => { if (e.target.value) void applyBulk({ priority: e.target.value }); e.target.value = ""; }}>
+            <option value="" disabled>{t`Priority…`}</option>
+            {PRIORITY_ORDER.map((p) => <option key={p} value={p}>{p}</option>)}
           </select>
+          <select disabled={!!bulkProgress} className={ctrlCls} value="" aria-label={t`Set assignee`} onChange={(e) => { if (e.target.value !== "") void applyBulk({ assignee: e.target.value === "__none__" ? null : e.target.value }); e.target.value = ""; }}>
+            <option value="" disabled>{t`Assignee…`}</option>
+            <option value="__none__">{t`Unassigned`}</option>
+            {(assigneeOptions?.length ? assigneeOptions : assignees.map((value) => ({ value, label: value }))).filter((option) => option.value !== "").map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+          </select>
+          <Menu as="div" className="relative">
+            <MenuButton disabled={!!bulkProgress} className={`${ctrlCls} inline-flex items-center gap-1 disabled:opacity-50`}><TagIcon className="h-3.5 w-3.5" /><Trans>Add labels</Trans></MenuButton>
+            <MenuItems anchor="top start" className={`z-50 max-h-56 w-52 overflow-y-auto rounded-lg border border-line bg-white py-1 text-xs shadow-xl [--anchor-gap:6px] focus:outline-none${portalCls}`}>
+              {bulkTagOptions.length === 0 ? <div className="px-3 py-2 text-stone-400"><Trans>No labels</Trans></div> : bulkTagOptions.map((tag) => (
+                <MenuItem key={tag.label}>
+                  <button type="button" onClick={() => void applyBulk((card) => ({ tags: card.tags.some((item) => item.label === tag.label) ? card.tags : [...card.tags, tag] }))} className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-stone-700 data-[focus]:bg-stone-100">
+                    <span className={`h-2.5 w-2.5 rounded-full ${tag.color ? "" : "bg-stone-300"}`} style={tag.color ? { backgroundColor: tag.color } : undefined} />
+                    <span className="truncate">{tag.label}</span>
+                  </button>
+                </MenuItem>
+              ))}
+            </MenuItems>
+          </Menu>
+          <label className="inline-flex items-center gap-1 text-[10px] text-brand-gray">
+            <CalendarDaysIcon className="h-3.5 w-3.5" />
+            <input disabled={!!bulkProgress} type="date" aria-label={t`Set due date`} className={`${ctrlCls} w-[8.4rem]`} onChange={(e) => { void applyBulk({ due: e.target.value || null }); e.currentTarget.value = ""; }} />
+          </label>
+          <button
+            type="button"
+            disabled={!!bulkProgress}
+            onClick={() => void applyBulk({ due: null })}
+            title={t`Clear due date`}
+            aria-label={t`Clear due date`}
+            className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-stone-200 text-stone-500 outline-none hover:border-brand/40 hover:text-brand-dark focus-visible:ring-2 focus-visible:ring-brand disabled:opacity-50"
+          >
+            <XMarkIcon className="h-3.5 w-3.5" />
+          </button>
+          <button
+            type="button"
+            disabled={!!bulkProgress}
+            onClick={() => void applyBulk({ archived: !cards.filter((card) => multiSel.has(card.id)).every((card) => card.archived) })}
+            className="inline-flex h-7 items-center gap-1 rounded-md border border-stone-200 px-2 text-xs font-medium text-stone-600 outline-none hover:border-brand/40 hover:text-brand-dark focus-visible:ring-2 focus-visible:ring-brand disabled:opacity-50"
+          >
+            {cards.filter((card) => multiSel.has(card.id)).every((card) => card.archived) ? <Trans>Restore</Trans> : <Trans>Archive</Trans>}
+          </button>
           {actions.deleteCards && (
             <button
               type="button"
-              className="inline-flex items-center gap-1 rounded-md border border-red-200 bg-white px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
-              onClick={() => {
-                const targets = cards.filter((c) => multiSel.has(c.id));
-                setMultiSel(new Set());
-                void actions.deleteCards?.(targets);
-              }}
+              disabled={!!bulkProgress}
+              className="inline-flex items-center gap-1 rounded-md border border-red-200 bg-white px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+              onClick={() => void applyBulkDelete()}
             >
               <TrashIcon className="h-3.5 w-3.5" />
               <Trans>Delete</Trans>
             </button>
           )}
+          {bulkError && <span role="alert" className="max-w-48 truncate text-[10px] text-red-600" title={bulkError}>{bulkError}</span>}
           <button
             type="button"
-            className="rounded p-1 text-stone-400 hover:bg-stone-100"
+            disabled={!!bulkProgress}
+            className="rounded p-1 text-stone-400 outline-none hover:bg-stone-100 focus-visible:ring-2 focus-visible:ring-brand disabled:opacity-50"
             title={t`Clear selection`}
             aria-label={t`Clear selection`}
             onClick={() => setMultiSel(new Set())}
@@ -1330,7 +1634,7 @@ export function BoardSurface({
       )}
 
       <CardCreateDialog
-        open={addingIn != null}
+        open={addingIn != null && !readOnly}
         boardTitle={config.title}
         laneName={columns.find((column) => column.key === addingIn)?.name ?? t`Unassigned`}
         initialStatus={groupKey === "status" ? addingIn ?? config.columns[0]?.key ?? "" : config.columns[0]?.key ?? ""}
@@ -1351,13 +1655,14 @@ export function BoardSurface({
       {selected && PeekComponent && (
         <Dialog
           open
-          onClose={() => setSelectedId(null)}
+          onClose={() => (detailCloseRequest.current ? detailCloseRequest.current() : closeDetail())}
           className={`fixed inset-0 z-50${portalCls}`}
         >
-          <DialogBackdrop className={`fixed inset-0 bg-stone-950/20 backdrop-blur-[2px]${portalCls}`} />
-          <div className={`fixed inset-0 flex items-center justify-center overflow-hidden p-2 sm:p-5${portalCls}`}>
+          <DialogBackdrop className={`fixed inset-0 bg-stone-950/12 transition-opacity${portalCls}`} />
+          <div className={`fixed inset-0 flex justify-end overflow-hidden${portalCls}`}>
             <DialogPanel
-              className={`h-full max-h-[900px] w-full max-w-6xl overflow-hidden rounded-2xl bg-white shadow-[0_30px_100px_rgba(28,25,23,0.24)] ring-1 ring-black/[0.06]${portalCls}`}
+              data-testid="card-detail-sheet"
+              className={`h-full w-full overflow-hidden bg-white shadow-[-24px_0_80px_rgba(28,25,23,0.18)] ring-1 ring-black/[0.06] sm:max-w-[52rem] sm:rounded-l-2xl${portalCls}`}
             >
               <DialogTitle className="sr-only">
                 <Trans>Card details</Trans>
@@ -1367,7 +1672,7 @@ export function BoardSurface({
                 boardTitle={config.title}
                 statusOptions={config.columns.map((c) => ({ value: c.key, label: c.name }))}
                 swimlaneOptions={
-                  config.swimlaneBy === "custom" || (config.swimlanes?.length ?? 0) > 0
+                  groupKey === "custom" || (config.swimlanes?.length ?? 0) > 0
                     ? [
                         { value: "", label: t`Unassigned` },
                         ...(config.swimlanes ?? []).map((lane) => ({
@@ -1388,11 +1693,11 @@ export function BoardSurface({
                       ]
                     : undefined
                 }
-                swimlaneDisabled={conversionRequested}
+                swimlaneDisabled={conversionRequested || readOnly}
                 assigneeOptions={assigneeOptions}
                 tagOptions={tagOptions}
                 fields={config.fields}
-                onAddField={(label) => {
+                onAddField={readOnly ? undefined : (label) => {
                   // Seed with the reserved card keys so a custom field can never
                   // collide with (and clobber) a core frontmatter attribute.
                   const existing = new Set([...RESERVED_CARD_KEYS, ...(config.fields ?? []).map((f) => f.key)]);
@@ -1414,7 +1719,7 @@ export function BoardSurface({
                   statusName: statusName(c.columnKey),
                   done: c.columnKey === doneKey,
                 }))}
-                onOpenCard={(cardId) => setSelectedId(cardId)}
+                onOpenCard={openNestedCard}
                 onAddChild={
                   readOnly
                     ? undefined
@@ -1425,30 +1730,33 @@ export function BoardSurface({
                         const startLane =
                           groupKey === "status"
                             ? config.columns[0]?.key ?? selected.columnKey
-                            : boardLaneValueOf(selected, config);
+                            : boardLaneValueOf(selected, effectiveConfig);
                         await actions.createCard(startLane, title, {
                           parent: cardRelationKey(selected),
                         });
                       }
                 }
                 loadNotes={loadNotes}
-                onUploadAttachment={onUploadAttachment}
+                onUploadAttachment={readOnly ? undefined : onUploadAttachment}
                 loadComments={loadComments}
-                addComment={addComment}
-                updateComment={updateComment}
-                deleteComment={deleteComment}
-                toggleReaction={toggleReaction}
-                resolveComment={resolveComment}
+                addComment={readOnly ? undefined : addComment}
+                updateComment={readOnly ? undefined : updateComment}
+                deleteComment={readOnly ? undefined : deleteComment}
+                toggleReaction={readOnly ? undefined : toggleReaction}
+                resolveComment={readOnly ? undefined : resolveComment}
                 currentUser={currentUser}
                 loadActivity={loadActivity}
                 renderMarkdownToContainer={renderMarkdownToContainer}
                 renderMarkdownToHtml={renderMarkdownToHtml}
                 portalClassName={portalClassName}
                 supplement={renderCardSupplement?.(selected)}
-                onChange={(patch) => void queueCardUpdate(selected.id, patch)}
-                onClose={() => setSelectedId(null)}
-                onDelete={() => void actions.deleteCard(selected)}
-                onOpenFull={actions.openCardFull ? () => actions.openCardFull?.(selected) : undefined}
+                readOnly={readOnly}
+                onBack={detailStack.length > 1 ? backDetail : undefined}
+                onChange={(patch) => queueCardUpdate(selected.id, patch)}
+                onCloseRequestReady={(request) => { detailCloseRequest.current = request; }}
+                onClose={closeDetail}
+                onDelete={readOnly ? undefined : () => Promise.resolve(actions.deleteCard(selected))}
+                onOpenFull={!readOnly && actions.openCardFull ? () => actions.openCardFull?.(selected) : undefined}
               />
             </DialogPanel>
           </div>
@@ -1456,7 +1764,7 @@ export function BoardSurface({
       )}
 
       <SwimlaneManagerDialog
-        open={swimlaneManagerOpen}
+        open={swimlaneManagerOpen && !readOnly}
         lanes={config.swimlanes ?? []}
         cards={cards}
         portalClassName={portalClassName}
@@ -1466,8 +1774,19 @@ export function BoardSurface({
         onShowAffected={showMissingSwimlanes}
       />
 
+      <ProjectSettingsDialog
+        open={projectSettingsOpen && !readOnly}
+        project={config.project}
+        portalClassName={portalClassName}
+        onClose={() => setProjectSettingsOpen(false)}
+        onSave={async (project) => {
+          if (readOnly) throw new Error(t`This board is read-only.`);
+          await actions.setConfig({ project });
+        }}
+      />
+
       <StatusManagerDialog
-        open={statusManagerOpen}
+        open={statusManagerOpen && !readOnly}
         config={config}
         actions={actions}
         portalClassName={portalClassName}
@@ -1477,7 +1796,7 @@ export function BoardSurface({
       <SwimlaneConversionDialog
         source={conversionSource}
         rows={conversionRows}
-        open={conversionOpen}
+        open={conversionOpen && !readOnly}
         busy={conversionRequested}
         resume={config.swimlaneMigration?.source === conversionSource}
         progress={conversionProgress}

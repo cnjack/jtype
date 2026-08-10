@@ -33,10 +33,14 @@ Sub-cards are ordinary cards: they appear in their own columns, move and filter 
 
 - **Status…** moves every selected card to a column.
 - **Priority…** sets the priority on all of them.
+- **Assignee…** assigns or unassigns the selection.
+- **Add labels** adds a chosen label to every selected Card without removing their other labels.
+- **Due…** sets or clears one due date across the selection.
+- **Archive** removes the selection from active views while keeping every Markdown Card recoverable through the Archived filter.
 - **Delete** trashes the whole selection after a single confirmation.
 - **Escape** or the ✕ clears the selection.
 
-Cmd-clicking a selected card removes it from the selection. Batch edits use the same per-card save path as single edits, so cloud sync and board webhooks see each change.
+Cmd-clicking a selected card removes it from the selection. Batch edits use the same per-card save path as single edits, so cloud sync, field-level Activity, and board webhooks see each change. A failure stays visible with the selection intact, so you can retry rather than losing track of the affected Cards.
 
 ## Full-text card search
 

@@ -124,7 +124,7 @@ async fn pull_with_trash_clock_returns_trash() {
 // 5. push_new_document — push with one document, assert 200, accepted=1, doc in response
 #[tokio::test]
 async fn push_new_document() {
-    let (app, _pool) = common::setup().await;
+    let (app, pool) = common::setup().await;
     let (token, _) = common::register_user(app.clone(), &common::uid()).await;
     let ws_id = common::create_workspace(app.clone(), &token, &common::wname()).await;
 
@@ -137,7 +137,7 @@ async fn push_new_document() {
             "documents": [
                 {
                     "relativePath": "pushed.md",
-                    "content": "# Pushed",
+                    "content": "---\ntitle: Pushed\nboard: sync-created\nstatus: todo\n---\n\n# Pushed",
                     "title": "pushed"
                 }
             ]
@@ -160,16 +160,33 @@ async fn push_new_document() {
         .iter()
         .any(|d| d["relativePath"].as_str() == Some("pushed.md"));
     assert!(found, "pushed document should appear in response");
+    let document_id = docs[0]["documentId"].as_str().unwrap();
+    let projected_board: String = sqlx::query_scalar(
+        "SELECT CAST(board_ref AS CHAR CHARACTER SET utf8mb4) FROM board_document_memberships WHERE workspace_id = ? AND document_id = ?",
+    )
+    .bind(&ws_id)
+    .bind(document_id)
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+    assert_eq!(projected_board, "sync-created");
 }
 
 // 6. push_updates_existing — save doc via PUT, push same path with new content, assert accepted=1
 #[tokio::test]
 async fn push_updates_existing() {
-    let (app, _pool) = common::setup().await;
+    let (app, pool) = common::setup().await;
     let (token, _) = common::register_user(app.clone(), &common::uid()).await;
     let ws_id = common::create_workspace(app.clone(), &token, &common::wname()).await;
 
-    let saved = common::save_doc(app.clone(), &token, &ws_id, "existing.md", "# Original").await;
+    let saved = common::save_doc(
+        app.clone(),
+        &token,
+        &ws_id,
+        "existing.md",
+        "---\ntitle: Existing\nboard: sync-old\nstatus: todo\n---\n\n# Original",
+    )
+    .await;
     let content_hash = saved["contentHash"].as_str().unwrap_or("").to_string();
 
     let (status, body) = common::req(
@@ -181,7 +198,7 @@ async fn push_updates_existing() {
             "documents": [
                 {
                     "relativePath": "existing.md",
-                    "content": "# Updated via push",
+                    "content": "---\ntitle: Existing\nboard: sync-new\nstatus: todo\n---\n\n# Updated via push",
                     "title": "existing",
                     "baseContentHash": content_hash
                 }
@@ -200,19 +217,37 @@ async fn push_updates_existing() {
         1,
         "update should be accepted"
     );
+    let document_id = saved["documentId"].as_str().unwrap();
+    let projected_board: String = sqlx::query_scalar(
+        "SELECT CAST(board_ref AS CHAR CHARACTER SET utf8mb4) FROM board_document_memberships WHERE workspace_id = ? AND document_id = ?",
+    )
+    .bind(&ws_id)
+    .bind(document_id)
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+    assert_eq!(projected_board, "sync-new");
 }
 
 // 7. push_deleted_paths — save doc, push with deletedPaths=[{relativePath}], assert 200
 #[tokio::test]
 async fn push_deleted_paths() {
-    let (app, _pool) = common::setup().await;
+    let (app, pool) = common::setup().await;
     let (token, _) = common::register_user(app.clone(), &common::uid()).await;
     let ws_id = common::create_workspace(app.clone(), &token, &common::wname()).await;
 
-    common::save_doc(app.clone(), &token, &ws_id, "to-delete.md", "# Delete me").await;
+    let saved = common::save_doc(
+        app.clone(),
+        &token,
+        &ws_id,
+        "to-delete.md",
+        "---\ntitle: Delete me\nboard: sync-board\nstatus: todo\n---\n\nDelete me",
+    )
+    .await;
+    let document_id = saved["documentId"].as_str().unwrap().to_string();
 
     let (status, body) = common::req(
-        app,
+        app.clone(),
         "POST",
         &format!("/api/v1/workspaces/{ws_id}/sync/push"),
         Some(&token),
@@ -229,6 +264,27 @@ async fn push_deleted_paths() {
         "push with deletedPaths should return 200: {body}"
     );
     assert_eq!(body["workspaceId"].as_str().unwrap(), ws_id);
+
+    let (activity_status, activity) = common::req(
+        app,
+        "GET",
+        &format!("/api/v1/workspaces/{ws_id}/documents/{document_id}/activity"),
+        Some(&token),
+        None,
+    )
+    .await;
+    assert_eq!(activity_status, StatusCode::OK, "{activity}");
+    assert_eq!(activity["events"][0]["kind"], "card.deleted");
+    assert_eq!(activity["events"][0]["client"]["kind"], "desktop");
+    let membership_count: i64 = sqlx::query_scalar(
+        "SELECT COUNT(*) FROM board_document_memberships WHERE workspace_id = ? AND document_id = ?",
+    )
+    .bind(&ws_id)
+    .bind(&document_id)
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+    assert_eq!(membership_count, 0);
 }
 
 // 8. push_unauthorized — push without token, assert 401

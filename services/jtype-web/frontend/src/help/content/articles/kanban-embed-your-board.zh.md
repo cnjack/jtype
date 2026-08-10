@@ -4,7 +4,7 @@
 
 - 某个工作区里的一块**看板**（见[看板与卡片](/help/c/kanban/boards-and-cards)）。
 - 它的 **workspace id** 和 **board 名**——workspace id 就是打开工作区时地址栏 `…/workspaces/<id>` 里的那段;board 名就是看板文件去掉 `.board` 后缀的名字（例如文件 `roadmap.board` 的名字是 `roadmap`）。
-- 一个**令牌（token）**，好让组件能访问你的数据。任何 `mcp` scope 的令牌都可以——像给 AI 客户端铸令牌那样铸一个即可（见[把你的 AI 连接到 JType](/help/c/ai-mcp/connect-your-ai) 与 [OAuth 与受限令牌](/help/c/ai-mcp/oauth-vs-token)）。React 应用可以直接持有该令牌;若面向公开访问，**推荐把令牌留在你自己的服务端**（见下方"保护好你的令牌"）。
+- 一个能访问文档 REST API 的**用户/session token**，或者一个代理同一套 API 的 `client`。从**看板设置 → MCP access**生成的单看板 token 只能用于 MCP；传给本包使用的 REST 与实时端点会返回 `403`。生产环境应把 session token 留在服务端，通过 `client` 接入（见下方“保护好你的令牌”）。
 
 ## 加进一个 React 应用
 
@@ -22,7 +22,7 @@ export function MyBoard() {
   return (
     <JTypeBoard
       baseUrl="https://jtype.nightc.com"
-      token={yourMcpToken}
+      token={yourSessionToken}
       workspaceId="3eec2a30-…"
       boardRef="roadmap"
     />
@@ -34,15 +34,15 @@ export function MyBoard() {
 
 ## 实时更新 vs 自动刷新
 
-如果看板能建立实时连接，队友一移动卡片它就即时更新。但**受限的 `mcp` 令牌无法开启实时通道**，因此看板会退化为**每 30 秒自动刷新**，并在角落显示一个小小的"自动刷新"徽章——它绝不会在并非实时的时候假装实时。你可以用 `onConnectionChange` 这个 prop 观察它当前处于哪种模式（`'live'` / `'polling'`）。
+如果看板能建立实时连接，队友一移动卡片它就即时更新。实时连接不可用时，看板会退化为**每 30 秒自动刷新**，并在角落显示“自动刷新”徽章——它绝不会在并非实时的时候假装实时。你可以用 `onConnectionChange` 观察 `'live'`、`'polling'` 或 `'error'` 状态。单看板 MCP token 连首次 REST 快照都无权读取；轮询不是绕过授权的方式。
 
 ## 保护好你的令牌
 
-`mcp` 令牌是一份**账号级凭据**：只要它有效，持有者就能读写你能访问的所有笔记与看板。把裸令牌放进页面的 JavaScript 里，对可信站点上的内部工具是可以的;但面向公开访问时，**不要把令牌下发到浏览器**。改为给组件传入一个 `client`，让它的请求经过你自己的服务端转发，令牌就留在那里——这种模式下浏览器根本看不到 JType 令牌。（你的开发者可以在包的 README 里找到 `client` prop 与完整的 prop 列表。）
+完整 session token 是一份**账号级凭据**：只要它有效，持有者就能调用该用户有权访问的文档 API。只有可信、自托管的内部工具才适合把它放进页面 JavaScript；面向公开访问时，**不要把 token 下发到浏览器**。请给组件传入一个 `client`，让请求经过你自己的服务端并在服务端限制 workspace/board 边界。这样浏览器不会接触 JType token。（包 README 也说明了 `createOnly` 等完整 client 合同。）
 
 ## 值得一提
 
 - **只读嵌入**：设置 `readOnly` 即可展示一块没有任何编辑/拖拽入口的看板。
-- **当前能渲染什么**：可选择的纵向泳道（状态、优先级、负责人或自定义）、卡片、拖拽移动/排序、Board/Table/Calendar、多选筛选、搜索/排序，以及只读的卡片详情。卡片正文暂以纯文本显示;成员、版本、评论与 ticket 徽章尚未进入嵌入版。
-- **个人筛选**：传入 `currentUser` 即可在筛选面板中启用**我的卡片**。
+- **当前能渲染什么**：可选择的纵向泳道（状态、优先级、负责人或自定义）、Board/Table/Calendar/Backlog/Gantt 投影、拖拽移动/排序、多选与批量编辑、搜索/排序/筛选，以及可编辑或只读的卡片详情。内置 client 不提供成员、评论、服务端 Activity、上传与 ticket 徽章。
+- **个人工作**：传入 `currentUser` 即可启用 **My Work** 与由卡片推导的 **Inbox** 信号。
 - **撤销访问**：因为嵌入用的是一枚普通令牌，你随时可以在令牌列表里吊销它——嵌入的看板会随即停止加载并显示错误态，绝不会展示过时数据。

@@ -1,6 +1,6 @@
 import { Trans } from "@lingui/react/macro";
 import { UserIcon, CalendarDaysIcon, CheckCircleIcon, TagIcon } from "@heroicons/react/24/outline";
-import { PRIORITY_STYLE, type BoardViewCard } from "../../lib/board";
+import { isIsoDate, PRIORITY_STYLE, type BoardViewCard } from "../../lib/board";
 
 /**
  * Table view over the same cards (Notion's "one data, many views"): a flat,
@@ -28,7 +28,7 @@ export function BoardTable({
   return (
     <div className="min-h-0 flex-1 overflow-auto p-4">
       <table className="w-full border-collapse text-sm">
-        <thead className="sticky top-0 bg-[#fbfdfb]">
+        <thead className="sticky top-0 bg-stone-50">
           <tr className="border-b border-black/[0.08]">
             <th className={th}>
               <Trans>Title</Trans>
@@ -52,7 +52,7 @@ export function BoardTable({
         </thead>
         <tbody>
           {cards.map((card) => {
-            const overdue = card.due && card.due < today && card.columnKey !== doneKey;
+            const overdue = isIsoDate(card.due) && card.due < today && card.columnKey !== doneKey;
             return (
               <tr
                 key={card.id}
@@ -60,9 +60,12 @@ export function BoardTable({
                 tabIndex={0}
                 onClick={() => onSelect(card)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") onSelect(card);
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onSelect(card);
+                  }
                 }}
-                className={`cursor-pointer border-b border-black/[0.04] transition-colors hover:bg-brand-soft/30 ${
+                className={`cursor-pointer border-b border-black/[0.04] outline-none transition-colors hover:bg-brand-soft/30 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand ${
                   selectedId === card.id ? "bg-brand-soft/40" : ""
                 }`}
               >

@@ -942,7 +942,12 @@ export function EditorShell() {
 
       <div id="workbench-body" className={`workbench-body grid min-h-0 flex-1 bg-[#fbfdfb] ${showDocumentPanel ? "grid-cols-[minmax(0,1fr)_340px]" : "grid-cols-[minmax(0,1fr)]"}`}>
         {isBoardView ? (
-          <BoardView boardPath={state.currentPath} boardRelativePath={state.currentRelativePath} />
+          <BoardView
+            key={state.currentPath}
+            boardPath={state.currentPath}
+            boardRelativePath={state.currentRelativePath}
+            readOnly={isCloudViewer}
+          />
         ) : isAssetView ? (
           <ResourceViewer path={state.currentPath} relativePath={state.currentRelativePath} />
         ) : isDiagramView ? (

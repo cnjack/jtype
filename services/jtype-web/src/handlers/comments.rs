@@ -29,7 +29,11 @@ use serde::{Deserialize, Serialize};
 use sqlx::Row;
 use uuid::Uuid;
 
+use crate::domain_events::{
+    audit_provenance, extract_mentions, normalize_authenticated_source, FieldChange,
+};
 use crate::error::AppError;
+use crate::handlers::document::next_workspace_clock;
 use crate::handlers::workspace::require_workspace_role;
 use crate::middleware::auth::extract_user;
 use crate::AppState;
@@ -189,6 +193,158 @@ async fn load_comment(
         .ok_or(AppError::NotFound)
 }
 
+#[derive(Debug)]
+struct ActivityDocument {
+    document_id: String,
+    relative_path: String,
+    title: String,
+    board_ref: String,
+    status: String,
+}
+
+async fn load_activity_document(
+    tx: &mut sqlx::Transaction<'_, sqlx::MySql>,
+    workspace_id: &str,
+    document_id: &str,
+) -> Result<ActivityDocument, AppError> {
+    let row = sqlx::query(
+        r#"SELECT id, relative_path, title, content
+           FROM documents
+           WHERE id = ? AND workspace_id = ?
+           FOR UPDATE"#,
+    )
+    .bind(document_id)
+    .bind(workspace_id)
+    .fetch_optional(&mut **tx)
+    .await?
+    .ok_or(AppError::NotFound)?;
+    let content: String = row.try_get("content")?;
+    let frontmatter = jtype_core::parse_frontmatter(&content);
+    Ok(ActivityDocument {
+        document_id: row.try_get("id")?,
+        relative_path: row.try_get("relative_path")?,
+        title: frontmatter
+            .get("title")
+            .cloned()
+            .unwrap_or(row.try_get("title")?),
+        board_ref: frontmatter.get("board").cloned().unwrap_or_default(),
+        status: frontmatter.get("status").cloned().unwrap_or_default(),
+    })
+}
+
+fn client_source(headers: &HeaderMap, user: &crate::db::models::AuthUser) -> &'static str {
+    normalize_authenticated_source(
+        user,
+        headers
+            .get("x-client-type")
+            .and_then(|value| value.to_str().ok())
+            .unwrap_or("web"),
+    )
+}
+
+async fn persist_comment_activity(
+    tx: &mut sqlx::Transaction<'_, sqlx::MySql>,
+    workspace_id: &str,
+    document: &ActivityDocument,
+    comment_id: &str,
+    parent_id: Option<&str>,
+    user: &crate::db::models::AuthUser,
+    source: &str,
+    sequence: i64,
+    kind: &str,
+    changes: Vec<FieldChange>,
+) -> Result<(), AppError> {
+    let event_id = Uuid::new_v4().to_string();
+    let provenance = audit_provenance(user, source);
+    let actor = serde_json::to_value(&provenance.actor)
+        .map_err(|error| AppError::Server(format!("serialize activity actor: {error}")))?;
+    let changes = serde_json::to_value(changes)
+        .map_err(|error| AppError::Server(format!("serialize activity changes: {error}")))?;
+    let mut payload = serde_json::json!({
+        "eventId": event_id,
+        "sequence": sequence,
+        "event": kind,
+        "domainEvent": kind,
+        "workspaceId": workspace_id,
+        "board": document.board_ref,
+        "card": {
+            "documentId": document.document_id,
+            "path": document.relative_path,
+            "title": document.title,
+            "status": document.status,
+        },
+        "comment": {
+            "id": comment_id,
+            "parentId": parent_id,
+        },
+        "actor": actor.clone(),
+        "client": provenance.client,
+        "changes": changes.clone(),
+        "updatedClock": sequence,
+    });
+    if let Some(token) = provenance.token {
+        payload
+            .as_object_mut()
+            .expect("comment event payload is an object")
+            .insert(
+                "token".to_string(),
+                serde_json::to_value(token).map_err(|error| {
+                    AppError::Server(format!("serialize activity token: {error}"))
+                })?,
+            );
+    }
+    crate::handlers::kanban_events::persist(
+        tx,
+        &event_id,
+        workspace_id,
+        &document.board_ref,
+        Some(&document.document_id),
+        sequence,
+        kind,
+        &actor,
+        &changes,
+        &payload,
+    )
+    .await
+}
+
+async fn newly_mentioned_members(
+    tx: &mut sqlx::Transaction<'_, sqlx::MySql>,
+    workspace_id: &str,
+    author_username: &str,
+    before: &str,
+    after: &str,
+) -> Result<Vec<(String, String)>, AppError> {
+    let old = extract_mentions(before);
+    let new = extract_mentions(after);
+    let added: std::collections::BTreeSet<String> = new
+        .difference(&old)
+        .filter(|username| !username.eq_ignore_ascii_case(author_username))
+        .cloned()
+        .collect();
+    if added.is_empty() {
+        return Ok(Vec::new());
+    }
+
+    let rows = sqlx::query(
+        r#"SELECT u.id, u.username
+           FROM workspace_members m
+           JOIN users u ON u.id = m.user_id
+           WHERE m.workspace_id = ? AND m.status = 'active' AND u.disabled_at IS NULL"#,
+    )
+    .bind(workspace_id)
+    .fetch_all(&mut **tx)
+    .await?;
+    let mut members = Vec::new();
+    for row in rows {
+        let username: String = row.try_get("username")?;
+        if added.contains(&username.to_ascii_lowercase()) {
+            members.push((row.try_get("id")?, username));
+        }
+    }
+    Ok(members)
+}
+
 pub async fn list_comments(
     State(state): State<AppState>,
     headers: HeaderMap,
@@ -215,19 +371,29 @@ pub async fn create_comment(
 ) -> Result<Response, AppError> {
     let user = extract_user(&state.pool, &headers).await?;
     require_workspace_role(&state.pool, &workspace_id, &user.id, &["owner", "admin", "editor"]).await?;
-    ensure_document_in_workspace(&state.pool, &workspace_id, &document_id).await?;
 
     let body = clamp_str(payload.body.trim(), MAX_COMMENT);
     if body.is_empty() {
         return Err(AppError::BadRequest("comment cannot be empty".into()));
     }
 
+    let mut tx = state.pool.begin().await?;
+    let sequence = next_workspace_clock(&mut tx, &workspace_id).await?;
+    let document = load_activity_document(&mut tx, &workspace_id, &document_id).await?;
+
     // Replies attach to the thread ROOT: replying to a reply re-parents so
     // threading stays one level deep.
     let parent_id = match payload.parent_id.as_deref().filter(|p| !p.is_empty()) {
         None => None,
         Some(pid) => {
-            let parent = load_comment(&state.pool, &workspace_id, pid).await?;
+            let parent = sqlx::query(
+                "SELECT document_id, parent_id FROM card_comments WHERE id = ? AND workspace_id = ? FOR UPDATE",
+            )
+            .bind(pid)
+            .bind(&workspace_id)
+            .fetch_optional(&mut *tx)
+            .await?
+            .ok_or(AppError::NotFound)?;
             let parent_doc: String = parent.try_get("document_id")?;
             if parent_doc != document_id {
                 return Err(AppError::BadRequest("parent comment belongs to another card".into()));
@@ -245,8 +411,53 @@ pub async fn create_comment(
         .bind(&user.id)
         .bind(&body)
         .bind(&parent_id)
-        .execute(&state.pool)
+        .execute(&mut *tx)
         .await?;
+
+    persist_comment_activity(
+        &mut tx,
+        &workspace_id,
+        &document,
+        &id,
+        parent_id.as_deref(),
+        &user,
+        client_source(&headers, &user),
+        sequence,
+        "comment.created",
+        vec![FieldChange {
+            field: "comment".to_string(),
+            before: None,
+            after: Some(serde_json::Value::Bool(true)),
+        }],
+    )
+    .await?;
+
+    for (mentioned_user_id, mentioned_username) in
+        newly_mentioned_members(&mut tx, &workspace_id, &user.username, "", &body).await?
+    {
+        let mention_sequence = next_workspace_clock(&mut tx, &workspace_id).await?;
+        persist_comment_activity(
+            &mut tx,
+            &workspace_id,
+            &document,
+            &id,
+            parent_id.as_deref(),
+            &user,
+            client_source(&headers, &user),
+            mention_sequence,
+            "mention.created",
+            vec![FieldChange {
+                field: "mention".to_string(),
+                before: None,
+                after: Some(serde_json::json!({
+                    "userId": mentioned_user_id,
+                    "username": mentioned_username,
+                })),
+            }],
+        )
+        .await?;
+    }
+    tx.commit().await?;
 
     let row = sqlx::query(&format!("{SELECT_COMMENT} WHERE c.id = ?"))
         .bind(&id)
@@ -264,23 +475,99 @@ pub async fn update_comment(
     let user = extract_user(&state.pool, &headers).await?;
     require_workspace_role(&state.pool, &workspace_id, &user.id, &["owner", "admin", "editor"]).await?;
 
-    let row = load_comment(&state.pool, &workspace_id, &comment_id).await?;
-    let author: String = row.try_get("author_user_id")?;
+    let body = clamp_str(payload.body.trim(), MAX_COMMENT);
+    if body.is_empty() {
+        return Err(AppError::BadRequest("comment cannot be empty".into()));
+    }
+
+    let mut tx = state.pool.begin().await?;
+    let sequence = next_workspace_clock(&mut tx, &workspace_id).await?;
+    let current = sqlx::query(
+        r#"SELECT document_id, author_user_id, parent_id, body
+           FROM card_comments
+           WHERE id = ? AND workspace_id = ?
+           FOR UPDATE"#,
+    )
+    .bind(&comment_id)
+    .bind(&workspace_id)
+    .fetch_optional(&mut *tx)
+    .await?
+    .ok_or(AppError::NotFound)?;
+    let author: String = current.try_get("author_user_id")?;
     // Only the author edits their comment (unlike delete, no admin override —
     // moderation is removal, not rewriting someone's words).
     if author != user.id {
         return Err(AppError::Forbidden);
     }
-
-    let body = clamp_str(payload.body.trim(), MAX_COMMENT);
-    if body.is_empty() {
-        return Err(AppError::BadRequest("comment cannot be empty".into()));
+    let document_id: String = current.try_get("document_id")?;
+    let parent_id: Option<String> = current.try_get("parent_id")?;
+    let previous_body: String = current.try_get("body")?;
+    if previous_body == body {
+        tx.rollback().await?;
+        let row = sqlx::query(&format!("{SELECT_COMMENT} WHERE c.id = ?"))
+            .bind(&comment_id)
+            .fetch_one(&state.pool)
+            .await?;
+        let mut out = vec![row_to_comment(&row)?];
+        attach_reactions(&state.pool, &mut out, &user.id).await?;
+        return Ok(Json(out.remove(0)).into_response());
     }
+    let document = load_activity_document(&mut tx, &workspace_id, &document_id).await?;
     sqlx::query("UPDATE card_comments SET body = ? WHERE id = ?")
         .bind(&body)
         .bind(&comment_id)
-        .execute(&state.pool)
+        .execute(&mut *tx)
         .await?;
+
+    persist_comment_activity(
+        &mut tx,
+        &workspace_id,
+        &document,
+        &comment_id,
+        parent_id.as_deref(),
+        &user,
+        client_source(&headers, &user),
+        sequence,
+        "comment.updated",
+        vec![FieldChange {
+            field: "comment".to_string(),
+            before: None,
+            after: Some(serde_json::Value::Bool(true)),
+        }],
+    )
+    .await?;
+    for (mentioned_user_id, mentioned_username) in newly_mentioned_members(
+        &mut tx,
+        &workspace_id,
+        &user.username,
+        &previous_body,
+        &body,
+    )
+    .await?
+    {
+        let mention_sequence = next_workspace_clock(&mut tx, &workspace_id).await?;
+        persist_comment_activity(
+            &mut tx,
+            &workspace_id,
+            &document,
+            &comment_id,
+            parent_id.as_deref(),
+            &user,
+            client_source(&headers, &user),
+            mention_sequence,
+            "mention.created",
+            vec![FieldChange {
+                field: "mention".to_string(),
+                before: None,
+                after: Some(serde_json::json!({
+                    "userId": mentioned_user_id,
+                    "username": mentioned_username,
+                })),
+            }],
+        )
+        .await?;
+    }
+    tx.commit().await?;
 
     let row = sqlx::query(&format!("{SELECT_COMMENT} WHERE c.id = ?"))
         .bind(&comment_id)
@@ -299,17 +586,85 @@ pub async fn delete_comment(
     let user = extract_user(&state.pool, &headers).await?;
     require_workspace_role(&state.pool, &workspace_id, &user.id, &["owner", "admin", "editor"]).await?;
 
-    let row = load_comment(&state.pool, &workspace_id, &comment_id).await?;
+    let mut tx = state.pool.begin().await?;
+    let sequence = next_workspace_clock(&mut tx, &workspace_id).await?;
+    let row = sqlx::query(
+        r#"SELECT document_id, author_user_id, parent_id
+           FROM card_comments
+           WHERE id = ? AND workspace_id = ?
+           FOR UPDATE"#,
+    )
+    .bind(&comment_id)
+    .bind(&workspace_id)
+    .fetch_optional(&mut *tx)
+    .await?
+    .ok_or(AppError::NotFound)?;
     let author: String = row.try_get("author_user_id")?;
     // Authors delete their own; admins/owners may delete any.
     if author != user.id {
         require_workspace_role(&state.pool, &workspace_id, &user.id, &["owner", "admin"]).await?;
     }
+    let document_id: String = row.try_get("document_id")?;
+    let parent_id: Option<String> = row.try_get("parent_id")?;
+    let document = load_activity_document(&mut tx, &workspace_id, &document_id).await?;
+    // Deleting a root cascades to its replies. Capture them under lock so the
+    // audit log reflects every comment the transaction actually removes.
+    let replies = if parent_id.is_none() {
+        sqlx::query(
+            "SELECT id, parent_id FROM card_comments WHERE workspace_id = ? AND parent_id = ? FOR UPDATE",
+        )
+        .bind(&workspace_id)
+        .bind(&comment_id)
+        .fetch_all(&mut *tx)
+        .await?
+    } else {
+        Vec::new()
+    };
 
     sqlx::query("DELETE FROM card_comments WHERE id = ?")
         .bind(&comment_id)
-        .execute(&state.pool)
+        .execute(&mut *tx)
         .await?;
+    persist_comment_activity(
+        &mut tx,
+        &workspace_id,
+        &document,
+        &comment_id,
+        parent_id.as_deref(),
+        &user,
+        client_source(&headers, &user),
+        sequence,
+        "comment.deleted",
+        vec![FieldChange {
+            field: "comment".to_string(),
+            before: Some(serde_json::Value::Bool(true)),
+            after: None,
+        }],
+    )
+    .await?;
+    for reply in replies {
+        let reply_id: String = reply.try_get("id")?;
+        let reply_parent_id: Option<String> = reply.try_get("parent_id")?;
+        let reply_sequence = next_workspace_clock(&mut tx, &workspace_id).await?;
+        persist_comment_activity(
+            &mut tx,
+            &workspace_id,
+            &document,
+            &reply_id,
+            reply_parent_id.as_deref(),
+            &user,
+            client_source(&headers, &user),
+            reply_sequence,
+            "comment.deleted",
+            vec![FieldChange {
+                field: "comment".to_string(),
+                before: Some(serde_json::Value::Bool(true)),
+                after: None,
+            }],
+        )
+        .await?;
+    }
+    tx.commit().await?;
     Ok(axum::http::StatusCode::NO_CONTENT.into_response())
 }
 
@@ -368,22 +723,80 @@ pub async fn resolve_comment(
     let user = extract_user(&state.pool, &headers).await?;
     require_workspace_role(&state.pool, &workspace_id, &user.id, &["owner", "admin", "editor"]).await?;
 
-    let row = load_comment(&state.pool, &workspace_id, &comment_id).await?;
+    let mut tx = state.pool.begin().await?;
+    let sequence = next_workspace_clock(&mut tx, &workspace_id).await?;
+    let row = sqlx::query(
+        "SELECT parent_id FROM card_comments WHERE id = ? AND workspace_id = ? FOR UPDATE",
+    )
+    .bind(&comment_id)
+    .bind(&workspace_id)
+    .fetch_optional(&mut *tx)
+    .await?
+    .ok_or(AppError::NotFound)?;
     let parent: Option<String> = row.try_get("parent_id")?;
     let root_id = parent.unwrap_or_else(|| comment_id.clone());
+
+    let root = sqlx::query(
+        r#"SELECT document_id, CAST(resolved_at AS CHAR) AS resolved_at
+           FROM card_comments
+           WHERE id = ? AND workspace_id = ?
+           FOR UPDATE"#,
+    )
+    .bind(&root_id)
+    .bind(&workspace_id)
+    .fetch_optional(&mut *tx)
+    .await?
+    .ok_or(AppError::NotFound)?;
+    let document_id: String = root.try_get("document_id")?;
+    let was_resolved = root.try_get::<Option<String>, _>("resolved_at")?.is_some();
+
+    if was_resolved == payload.resolved {
+        tx.rollback().await?;
+        let row = sqlx::query(&format!("{SELECT_COMMENT} WHERE c.id = ?"))
+            .bind(&root_id)
+            .fetch_one(&state.pool)
+            .await?;
+        let mut out = vec![row_to_comment(&row)?];
+        attach_reactions(&state.pool, &mut out, &user.id).await?;
+        return Ok(Json(out.remove(0)).into_response());
+    }
+
+    let document = load_activity_document(&mut tx, &workspace_id, &document_id).await?;
 
     if payload.resolved {
         sqlx::query("UPDATE card_comments SET resolved_at = CURRENT_TIMESTAMP, resolved_by = ? WHERE id = ?")
             .bind(&user.id)
             .bind(&root_id)
-            .execute(&state.pool)
+            .execute(&mut *tx)
             .await?;
     } else {
         sqlx::query("UPDATE card_comments SET resolved_at = NULL, resolved_by = NULL WHERE id = ?")
             .bind(&root_id)
-            .execute(&state.pool)
+            .execute(&mut *tx)
             .await?;
     }
+    persist_comment_activity(
+        &mut tx,
+        &workspace_id,
+        &document,
+        &root_id,
+        None,
+        &user,
+        client_source(&headers, &user),
+        sequence,
+        if payload.resolved {
+            "comment.resolved"
+        } else {
+            "comment.reopened"
+        },
+        vec![FieldChange {
+            field: "resolved".to_string(),
+            before: Some(serde_json::Value::Bool(was_resolved)),
+            after: Some(serde_json::Value::Bool(payload.resolved)),
+        }],
+    )
+    .await?;
+    tx.commit().await?;
 
     let row = sqlx::query(&format!("{SELECT_COMMENT} WHERE c.id = ?"))
         .bind(&root_id)

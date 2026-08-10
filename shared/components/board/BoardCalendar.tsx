@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { t } from "@lingui/core/macro";
+import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
 import { ChevronLeftIcon, ChevronRightIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
 import {
@@ -13,11 +14,6 @@ import {
   type BoardViewCard,
   type CalendarMode,
 } from "../../lib/board";
-
-/** Localized short weekday labels, Sunday-first (2023-01-01 was a Sunday). */
-const WEEKDAYS = Array.from({ length: 7 }, (_, i) =>
-  new Date(2023, 0, 1 + i).toLocaleDateString(undefined, { weekday: "short" }),
-);
 
 /**
  * Calendar view over the same cards (Notion's "one data, many views"): a month
@@ -42,17 +38,25 @@ export function BoardCalendar({
   selectedId?: string;
   onSelect: (card: BoardViewCard) => void;
 }) {
+  const { i18n } = useLingui();
+  const locale = i18n.locale || undefined;
   const [month, setMonth] = useState(() => currentMonth());
   const byDay = groupCardsByDay(cards);
   const [ys, ms] = month.split("-");
-  const monthLabel = new Date(Number(ys), Number(ms) - 1, 1).toLocaleDateString(undefined, { year: "numeric", month: "long" });
+  const monthLabel = new Date(Number(ys), Number(ms) - 1, 1).toLocaleDateString(locale, { year: "numeric", month: "long" });
+  const weekdays = useMemo(
+    () => Array.from({ length: 7 }, (_, index) =>
+      new Date(2023, 0, 1 + index).toLocaleDateString(locale, { weekday: "short" }),
+    ),
+    [locale],
+  );
 
-  const isOverdue = (c: BoardViewCard) => !!c.due && c.due < today && c.columnKey !== doneKey;
+  const isOverdue = (c: BoardViewCard) => isIsoDate(c.due) && c.due < today && c.columnKey !== doneKey;
 
   const navBtn =
-    "inline-flex h-7 w-7 items-center justify-center rounded-md border border-stone-200 text-stone-500 hover:border-brand/40 hover:text-brand-dark";
+    "inline-flex h-7 w-7 items-center justify-center rounded-md border border-stone-200 text-stone-500 outline-none hover:border-brand/40 hover:text-brand-dark focus-visible:ring-2 focus-visible:ring-brand";
   const modeBtn = (m: CalendarMode) =>
-    `rounded-md px-2 py-1 text-xs font-medium ${
+    `rounded-md px-2 py-1 text-xs font-medium outline-none focus-visible:ring-2 focus-visible:ring-brand ${
       mode === m ? "bg-brand-soft text-brand-dark" : "text-stone-500 hover:text-brand-dark"
     }`;
 
@@ -64,7 +68,7 @@ export function BoardCalendar({
         type="button"
         onClick={() => onSelect(card)}
         title={card.title}
-        className={`flex w-full items-center gap-1 rounded px-1 py-0.5 text-left text-[11px] transition-colors ${
+        className={`flex w-full items-center gap-1 rounded px-1 py-0.5 text-left text-[11px] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-brand ${
           selectedId === card.id ? "bg-brand-soft/60" : "bg-stone-100/70 hover:bg-brand-soft/40"
         } ${overdue ? "text-red-600" : "text-stone-700"}`}
       >
@@ -164,9 +168,9 @@ export function BoardCalendar({
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       {header}
-      <div className="grid grid-cols-7 border-b border-black/[0.04] bg-[#fbfdfb]">
-        {WEEKDAYS.map((w) => (
-          <div key={w} className="px-2 py-1 text-center text-[11px] font-medium uppercase tracking-wide text-brand-gray">
+      <div className="grid grid-cols-7 border-b border-black/[0.04] bg-stone-50">
+        {weekdays.map((w, index) => (
+          <div key={index} className="px-2 py-1 text-center text-[11px] font-medium uppercase tracking-wide text-brand-gray">
             {w}
           </div>
         ))}

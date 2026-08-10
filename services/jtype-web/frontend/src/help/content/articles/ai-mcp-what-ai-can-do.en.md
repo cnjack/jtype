@@ -1,4 +1,4 @@
-Once you've [connected an assistant](/help/c/ai-mcp/connect-your-ai), the tools it sees depend on the endpoint you connect. The notes endpoint exposes note tools; a board-scoped endpoint generated from Board settings exposes exactly **nine tools for that board**. Every write respects your role in the cloud workspace.
+Once you've [connected an assistant](/help/c/ai-mcp/connect-your-ai), the tools it sees depend on the endpoint you connect. The notes endpoint exposes note tools; a board-scoped endpoint generated from Board settings exposes exactly **17 tools for that board**. Every write respects your role in the cloud workspace.
 
 ## Notes tools
 
@@ -22,14 +22,22 @@ Read tools return plain Markdown, so the assistant sees your notes exactly as th
 | `get_board` | reads | Returns the pinned board and its cards. |
 | `list_cards` | reads | Lists cards on a board, optionally in one column. |
 | `get_card` | reads | Gets one card by its `documentId`. |
-| `create_card` | writes | Creates a card and returns its `documentId` (stable while the card exists). |
-| `update_card` | writes | Edits title, Markdown body, status, priority, assignee, due date, or parent by `documentId`. |
+| `create_card` | writes | Creates a card with workflow, schedule, labels, attachments, and relations, then returns its stable `documentId`. |
+| `update_card` | writes | Patches Card Markdown and project fields by `documentId`. |
 | `move_card` | writes | Moves a card to another column or position. |
+| `delete_card` | writes | Moves a Card's Markdown document to recoverable trash. |
+| `set_card_labels` | writes | Replaces, adds, or removes labels. |
+| `add_card_attachment` | writes | Adds one safe HTTPS or vault-relative attachment reference. |
+| `remove_card_attachment` | writes | Removes one exact attachment reference. |
+| `set_card_relations` | writes | Replaces parent, blocker, blocks, or related-Card links after validating Board scope. |
+| `bulk_update_cards` | writes | Applies up to 100 independent Card patches and returns per-item receipts. |
+| `list_statuses` | reads | Lists ordered statuses and the done status. |
+| `set_board_statuses` | writes | Replaces statuses, optionally selects the done status, and safely migrates Cards through an explicit fallback. |
 | `list_card_comments` | reads | Lists the comment threads on a card. |
 | `comment_card` | writes | Adds a comment or reply to a card. |
 | `resolve_card_comment` | writes | Resolves or reopens a comment thread. |
 
-The endpoint URL and token are both pinned to one board. These schemas contain no workspace, board, or path override. A card created by `create_card` returns `documentId` immediately, and all later card-content operations use that ID.
+The endpoint URL and token are both pinned to one board. These schemas contain no workspace, board, path, or optimistic-hash override. A card created by `create_card` returns `documentId` immediately, and all later card-content operations use that ID. Batch and status replacement are intentionally non-atomic; the assistant must inspect their per-item migration receipts.
 
 ## What AI can never do
 

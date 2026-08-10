@@ -19,6 +19,8 @@ pub enum AppError {
     #[error("not found")]
     NotFound,
     #[error("{0}")]
+    Conflict(String),
+    #[error("{0}")]
     BadRequest(String),
     #[error("server error: {0}")]
     Server(String),
@@ -35,6 +37,7 @@ impl IntoResponse for AppError {
             AppError::Unauthorized => StatusCode::UNAUTHORIZED,
             AppError::Forbidden => StatusCode::FORBIDDEN,
             AppError::NotFound => StatusCode::NOT_FOUND,
+            AppError::Conflict(_) => StatusCode::CONFLICT,
             AppError::BadRequest(_) | AppError::Password => StatusCode::BAD_REQUEST,
             AppError::Database(_) | AppError::Server(_) => StatusCode::INTERNAL_SERVER_ERROR,
         };

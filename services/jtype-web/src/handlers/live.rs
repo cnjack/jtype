@@ -92,7 +92,9 @@ pub async fn ws_upgrade(
     )
     .await?;
     let session_id = Uuid::new_v4().to_string();
-    let client_type = auth.client_type.unwrap_or_else(|| "desktop".to_string());
+    let requested_client = auth.client_type.unwrap_or_else(|| "desktop".to_string());
+    let client_type =
+        crate::domain_events::normalize_authenticated_source(&user, &requested_client).to_string();
 
     Ok(ws.on_upgrade(move |socket| {
         handle_ws(
@@ -101,6 +103,7 @@ pub async fn ws_upgrade(
             workspace_id,
             user.id,
             user.username,
+            user.session_label,
             session_id,
             client_type,
             auth.device_id,
@@ -118,7 +121,9 @@ pub async fn ws_upgrade_user(
 ) -> Result<impl IntoResponse, AppError> {
     let user = validate_ws_token(&state.pool, &auth.token).await?;
     let session_id = Uuid::new_v4().to_string();
-    let client_type = auth.client_type.unwrap_or_else(|| "desktop".to_string());
+    let requested_client = auth.client_type.unwrap_or_else(|| "desktop".to_string());
+    let client_type =
+        crate::domain_events::normalize_authenticated_source(&user, &requested_client).to_string();
 
     Ok(ws.on_upgrade(move |socket| {
         handle_user_ws(
@@ -126,6 +131,7 @@ pub async fn ws_upgrade_user(
             state,
             user.id,
             user.username,
+            user.session_label,
             session_id,
             client_type,
             auth.device_id,
@@ -145,7 +151,7 @@ async fn validate_ws_token(
 ) -> Result<AuthUser, AppError> {
     let token_hash = sha256_hex(token);
     let row = sqlx::query(
-        r#"SELECT u.id, u.username, u.role, u.disabled_at, s.scope
+        r#"SELECT u.id, u.username, u.role, u.disabled_at, s.scope, s.label AS session_label
            FROM sessions s
            JOIN users u ON u.id = s.user_id
            WHERE s.token_hash = ?
@@ -172,6 +178,7 @@ async fn validate_ws_token(
         username: row.try_get("username")?,
         role: row.try_get("role")?,
         scope,
+        session_label: row.try_get("session_label")?,
     })
 }
 
@@ -181,6 +188,7 @@ async fn handle_ws(
     workspace_id: String,
     user_id: String,
     username: String,
+    session_label: Option<String>,
     session_id: String,
     client_type: String,
     device_id: Option<String>,
@@ -250,6 +258,7 @@ async fn handle_ws(
     let wid_b = workspace_id.clone();
     let uid = user_id.clone();
     let uname = username.clone();
+    let token_label = session_label.clone();
     let sid = session_id.clone();
     let ct = client_type.clone();
     let did = device_id.clone();
@@ -260,7 +269,17 @@ async fn handle_ws(
             match msg {
                 Message::Text(text) => {
                     handle_ws_text(
-                        &text, &state_b, &wid_b, &uid, &uname, &sid, &ct, &did, &r, &out_tx,
+                        &text,
+                        &state_b,
+                        &wid_b,
+                        &uid,
+                        &uname,
+                        &token_label,
+                        &sid,
+                        &ct,
+                        &did,
+                        &r,
+                        &out_tx,
                     )
                     .await;
                 }
@@ -291,6 +310,7 @@ async fn handle_ws_text(
     workspace_id: &str,
     user_id: &str,
     username: &str,
+    session_label: &Option<String>,
     session_id: &str,
     client_type: &str,
     device_id: &Option<String>,
@@ -314,6 +334,7 @@ async fn handle_ws_text(
                 workspace_id,
                 user_id,
                 username,
+                session_label,
                 session_id,
                 client_type,
                 device_id,
@@ -562,6 +583,7 @@ async fn handle_ws_text(
                 workspace_id,
                 user_id,
                 username,
+                session_label,
                 session_id,
                 device_id,
                 role,
@@ -584,6 +606,7 @@ async fn handle_doc_save(
     workspace_id: &str,
     user_id: &str,
     username: &str,
+    session_label: &Option<String>,
     session_id: &str,
     client_type: &str,
     device_id: &Option<String>,
@@ -625,27 +648,30 @@ async fn handle_doc_save(
         username: username.to_string(),
         role: role.to_string(),
         scope: "full".to_string(),
+        session_label: session_label.clone(),
     };
 
     match save_document_version(&state.pool, workspace_id, &auth_user, payload, client_type).await {
-        Ok(SaveDocumentOutcome::Saved(doc, _, _)) => {
-            state
-                .hub
-                .publish_to_workspace(
-                    workspace_id,
-                    WorkspaceEvent::DocumentChanged {
-                        workspace_id: workspace_id.to_string(),
-                        source_session_id: Some(session_id.to_string()),
-                        relative_path: doc.relative_path.clone(),
-                        content_hash: doc.content_hash.clone(),
-                        updated_clock: doc.updated_clock,
-                        edited_by: username.to_string(),
-                        source: client_type.to_string(),
-                        device_id: device_id.clone(),
-                    },
-                    Some(session_id),
-                )
-                .await;
+        Ok(SaveDocumentOutcome::Saved(doc, status, _, _)) => {
+            if status != crate::handlers::document::MergeStatus::Unchanged {
+                state
+                    .hub
+                    .publish_to_workspace(
+                        workspace_id,
+                        WorkspaceEvent::DocumentChanged {
+                            workspace_id: workspace_id.to_string(),
+                            source_session_id: Some(session_id.to_string()),
+                            relative_path: doc.relative_path.clone(),
+                            content_hash: doc.content_hash.clone(),
+                            updated_clock: doc.updated_clock,
+                            edited_by: username.to_string(),
+                            source: client_type.to_string(),
+                            device_id: device_id.clone(),
+                        },
+                        Some(session_id),
+                    )
+                    .await;
+            }
 
             let ack = serde_json::json!({
                 "type": "ack",
@@ -691,6 +717,7 @@ async fn handle_trash_operation(
     workspace_id: &str,
     user_id: &str,
     username: &str,
+    session_label: &Option<String>,
     session_id: &str,
     device_id: &Option<String>,
     role: &str,
@@ -738,6 +765,7 @@ async fn handle_trash_operation(
         username: username.to_string(),
         role: role.to_string(),
         scope: "full".to_string(),
+        session_label: session_label.clone(),
     };
 
     match crate::handlers::sync::process_trash_operation(
@@ -803,6 +831,7 @@ async fn handle_user_ws(
     state: AppState,
     user_id: String,
     username: String,
+    session_label: Option<String>,
     session_id: String,
     client_type: String,
     device_id: Option<String>,
@@ -871,6 +900,7 @@ async fn handle_user_ws(
     let state_b = state.clone();
     let uid = user_id.clone();
     let uname = username.clone();
+    let token_label = session_label.clone();
     let sid = session_id.clone();
     let ct = client_type.clone();
     let did = device_id.clone();
@@ -880,7 +910,15 @@ async fn handle_user_ws(
             match msg {
                 Message::Text(text) => {
                     handle_user_ws_text(
-                        &text, &state_b, &uid, &uname, &sid, &ct, &did, &out_tx,
+                        &text,
+                        &state_b,
+                        &uid,
+                        &uname,
+                        &token_label,
+                        &sid,
+                        &ct,
+                        &did,
+                        &out_tx,
                     )
                     .await;
                 }
@@ -913,6 +951,7 @@ async fn handle_user_ws_text(
     state: &AppState,
     user_id: &str,
     username: &str,
+    session_label: &Option<String>,
     session_id: &str,
     client_type: &str,
     device_id: &Option<String>,
@@ -969,8 +1008,17 @@ async fn handle_user_ws_text(
     };
 
     handle_ws_text(
-        text, state, &workspace_id, user_id, username, session_id, client_type, device_id,
-        &role, sender,
+        text,
+        state,
+        &workspace_id,
+        user_id,
+        username,
+        session_label,
+        session_id,
+        client_type,
+        device_id,
+        &role,
+        sender,
     )
     .await;
 }
