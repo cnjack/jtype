@@ -251,6 +251,17 @@ pub(super) async fn api_post(st: &McpState, token: &str, uri: &str, body: Value)
     }
 }
 
+pub(super) async fn api_delete(st: &McpState, token: &str, uri: &str) -> Result<Value, String> {
+    let (status, resp) = call_api(&st.api, Method::DELETE, uri, token, None)
+        .await
+        .map_err(|e| e.to_string())?;
+    if status.is_success() {
+        Ok(resp)
+    } else {
+        Err(api_err(status.as_u16(), &resp))
+    }
+}
+
 fn api_err(status: u16, body: &Value) -> String {
     let msg = body
         .get("error")

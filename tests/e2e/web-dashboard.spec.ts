@@ -5,13 +5,17 @@ import { expect, test, type Page } from "@playwright/test";
  * These mock all /api/* calls so no real backend is required.
  */
 
-function mockApi(page: Page, options: { emptyWorkspaces?: boolean } = {}) {
+function mockApi(page: Page, options: { emptyWorkspaces?: boolean; workspaceRole?: "owner" | "editor" | "viewer"; ticketKey?: string; outOfFolderCard?: boolean; cardFetchDelayMs?: number; createCollisionOnce?: boolean } = {}) {
+  const workspaceRole = options.workspaceRole ?? "owner";
   const documents = [
     { id: "doc-1", relativePath: "intro.md", title: "Intro", status: "published", contentHash: "abc", updatedClock: 5, versionId: "v1" },
     { id: "doc-2", relativePath: "guides/setup.md", title: "Setup Guide", status: "draft", contentHash: "def", updatedClock: 3, versionId: "v2" },
     { id: "doc-board", relativePath: "infra-web.board", title: "infra-web", status: "draft", contentHash: "board-hash", updatedClock: 8, versionId: "v-board" },
     { id: "doc-card", relativePath: "infra-web/todo-card.md", title: "Todo card", status: "draft", contentHash: "card-hash", updatedClock: 9, versionId: "v-card" },
   ];
+  if (options.outOfFolderCard) {
+    documents.push({ id: "doc-shared-card", relativePath: "shared/cross-card.md", title: "Cross folder card", status: "draft", contentHash: "shared-hash", updatedClock: 10, versionId: "v-shared" });
+  }
   const folders = [
     { id: "folder-1", relativePath: "guides", updatedClock: 2 },
   ];
@@ -25,7 +29,9 @@ function mockApi(page: Page, options: { emptyWorkspaces?: boolean } = {}) {
       { key: "done", name: "Done" },
     ],
     doneColumn: "done",
+    ...(options.ticketKey ? { ticketKey: options.ticketKey } : {}),
   });
+  let createCollisionReturned = false;
 
   return page.route("**/api/**", async (route) => {
     const url = route.request().url();
@@ -239,7 +245,7 @@ function mockApi(page: Page, options: { emptyWorkspaces?: boolean } = {}) {
           workspaces: options.emptyWorkspaces
             ? []
             : [
-                { id: "ws-1", name: "notes", slug: "notes", publishTitle: "Notes", role: "owner", documentCount: 5, storageBudgetBytes: 536870912, storageUsedBytes: 52428800 },
+                { id: "ws-1", name: "notes", slug: "notes", publishTitle: "Notes", role: workspaceRole, documentCount: 5, storageBudgetBytes: 536870912, storageUsedBytes: 52428800 },
                 { id: "ws-2", name: "blog", slug: "blog", publishTitle: "Blog", role: "editor", documentCount: 3, storageBudgetBytes: 536870912, storageUsedBytes: 10485760 },
               ],
         }),
@@ -286,7 +292,7 @@ function mockApi(page: Page, options: { emptyWorkspaces?: boolean } = {}) {
           name: "notes",
           slug: "notes",
           publishTitle: "Notes",
-          role: "owner",
+          role: workspaceRole,
           documentCount: 2,
           storageBudgetBytes: 536870912,
           storageUsedBytes: 52428800,
@@ -356,6 +362,37 @@ function mockApi(page: Page, options: { emptyWorkspaces?: boolean } = {}) {
         ]),
       });
     }
+    if (url.match(/\/api\/v1\/workspaces\/[^/]+\/tickets$/) && method === "GET") {
+      return route.fulfill({ status: 200, contentType: "application/json", body: "[]" });
+    }
+    if (url.match(/\/api\/v1\/workspaces\/[^/]+\/boards\/[^/]+\/cards$/) && method === "GET") {
+      if (options.cardFetchDelayMs) await new Promise((resolve) => setTimeout(resolve, options.cardFetchDelayMs));
+      const boardCards = [
+        {
+          documentId: "doc-card",
+          relativePath: "infra-web/todo-card.md",
+          title: "Todo card",
+          isPublished: false,
+          content: cardContent,
+          contentHash: "card-hash",
+          versionId: "v-card",
+          updatedClock: 9,
+        },
+      ];
+      if (options.outOfFolderCard) {
+        boardCards.push({
+          documentId: "doc-shared-card",
+          relativePath: "shared/cross-card.md",
+          title: "Cross folder card",
+          isPublished: false,
+          content: "---\nboard: infra-web\nstatus: todo\nposition: 1\ntitle: Cross folder card\n---\n\nShared across project folders.",
+          contentHash: "shared-hash",
+          versionId: "v-shared",
+          updatedClock: 10,
+        });
+      }
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(boardCards) });
+    }
     if (url.match(/\/api\/v1\/workspaces\/[^/]+\/folders$/) && method === "POST") {
       const folder = {
         id: `folder-${folders.length + 1}`,
@@ -415,6 +452,7 @@ function mockApi(page: Page, options: { emptyWorkspaces?: boolean } = {}) {
         });
       }
       if (docId === "doc-card") {
+        if (options.cardFetchDelayMs) await new Promise((resolve) => setTimeout(resolve, options.cardFetchDelayMs));
         return route.fulfill({
           status: 200,
           contentType: "application/json",
@@ -426,6 +464,21 @@ function mockApi(page: Page, options: { emptyWorkspaces?: boolean } = {}) {
             contentHash: "card-hash",
             versionId: "v-card",
             updatedClock: 9,
+          }),
+        });
+      }
+      if (docId === "doc-shared-card") {
+        return route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            relativePath: "shared/cross-card.md",
+            title: "Cross folder card",
+            status: "draft",
+            content: "---\nboard: infra-web\nstatus: todo\nposition: 1\ntitle: Cross folder card\n---\n\nShared across project folders.",
+            contentHash: "shared-hash",
+            versionId: "v-shared",
+            updatedClock: 10,
           }),
         });
       }
@@ -445,6 +498,14 @@ function mockApi(page: Page, options: { emptyWorkspaces?: boolean } = {}) {
     }
     if (url.match(/\/api\/v1\/workspaces\/[^/]+\/documents\/save$/) && method === "POST") {
       const relativePath = body?.relativePath || "new.md";
+      if (options.createCollisionOnce && body?.createOnly === true && relativePath === "infra-web/collision-card.md" && !createCollisionReturned) {
+        createCollisionReturned = true;
+        return route.fulfill({
+          status: 400,
+          contentType: "application/json",
+          body: JSON.stringify({ error: "document path already exists; retry with another path" }),
+        });
+      }
       if (relativePath === "infra-web.board") boardContent = body?.content || boardContent;
       if (relativePath === "infra-web/todo-card.md") cardContent = body?.content || cardContent;
       const existing = documents.find((doc) => doc.relativePath === relativePath);
@@ -462,6 +523,27 @@ function mockApi(page: Page, options: { emptyWorkspaces?: boolean } = {}) {
         status: 200,
         contentType: "application/json",
         body: JSON.stringify({ ...saved, content: body?.content || "" }),
+      });
+    }
+    if (url.match(/\/api\/v1\/workspaces\/[^/]+\/documents\/[^/]+\/activity\?/) && method === "GET") {
+      return route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          events: [
+            {
+              id: "event-1",
+              kind: "card.status_changed",
+              at: "2026-08-11T09:30:00Z",
+              actor: { kind: "user", id: "user-1", label: "Test User" },
+              client: { kind: "mcp" },
+              token: { id: "token-1", label: "Roadmap automation" },
+              changes: [{ field: "status", before: "todo", after: "doing" }],
+            },
+          ],
+          nextSequence: 1,
+          hasMore: false,
+        }),
       });
     }
     if (url.match(/\/api\/v1\/workspaces\/[^/]+\/webhooks$/) && method === "GET") {
@@ -715,6 +797,63 @@ test.describe("Workspace Documents", () => {
 });
 
 test.describe("Kanban sequence pull", () => {
+  test("quick create uses create-only writes and retries a path collision without overwriting", async ({ page }) => {
+    const creates: Array<{ relativePath: string; createOnly?: boolean }> = [];
+    page.on("request", (request) => {
+      if (!request.url().endsWith("/documents/save") || request.method() !== "POST") return;
+      const payload = request.postDataJSON();
+      if (payload?.createOnly) creates.push({ relativePath: payload.relativePath, createOnly: payload.createOnly });
+    });
+    await mockApi(page, { createCollisionOnce: true });
+    await page.addInitScript(() => {
+      localStorage.setItem("jtype.token", "tok_test");
+      localStorage.setItem("jtype.username", "testuser");
+    });
+    await page.goto("/workspaces/ws-1");
+    await page.getByRole("button", { name: /infra-web\.board/ }).click();
+    await page.getByRole("button", { name: "New card" }).first().click();
+    const dialog = page.getByRole("dialog", { name: "New card" });
+    await dialog.getByRole("textbox", { name: "Card title" }).fill("Collision card");
+    await dialog.getByRole("button", { name: "Create card" }).click();
+
+    await expect.poll(() => creates.length).toBe(2);
+    expect(creates[0]).toEqual({ relativePath: "infra-web/collision-card.md", createOnly: true });
+    expect(creates[1]?.createOnly).toBe(true);
+    expect(creates[1]?.relativePath).not.toBe(creates[0]?.relativePath);
+  });
+
+  test("keeps persisted Inbox dismissals while a Card snapshot is still loading", async ({ page }) => {
+    await mockApi(page, { cardFetchDelayMs: 250 });
+    await page.addInitScript(() => {
+      localStorage.setItem("jtype.token", "tok_test");
+      localStorage.setItem("jtype.username", "testuser");
+      localStorage.setItem(
+        "jtype.board-view.v1:testuser:ws-1:infra-web",
+        JSON.stringify({ version: 1, scope: "inbox", dismissedInboxItemKeys: ["infra-web/todo-card.md:due:2026-08-02"] }),
+      );
+    });
+    await page.goto("/workspaces/ws-1");
+    await page.getByRole("button", { name: /infra-web\.board/ }).click();
+
+    await expect(page.getByText("Inbox zero")).toBeVisible();
+    await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("jtype.board-view.v1:testuser:ws-1:infra-web") ?? "{}").dismissedInboxItemKeys))
+      .toEqual(["infra-web/todo-card.md:due:2026-08-02"]);
+  });
+
+  test("projects matching Markdown Cards from outside the board-named folder", async ({ page }) => {
+    await mockApi(page, { outOfFolderCard: true });
+    await page.addInitScript(() => {
+      localStorage.setItem("jtype.token", "tok_test");
+      localStorage.setItem("jtype.username", "testuser");
+    });
+    await page.goto("/workspaces/ws-1");
+
+    await page.getByRole("button", { name: /infra-web\.board/ }).click();
+    await expect(page.getByText("Cross folder card")).toBeVisible();
+    await page.getByRole("button", { name: "Table" }).click();
+    await expect(page.getByRole("button", { name: /Cross folder card/ })).toBeVisible();
+  });
+
   test("uses vertical swimlanes and the filter toolbar in the real web board", async ({ page }) => {
     await mockApi(page);
     await page.addInitScript(() => {
@@ -747,6 +886,7 @@ test.describe("Kanban sequence pull", () => {
     await swimlanes.selectOption("priority");
     await expect(swimlanes).toHaveValue("priority");
     const card = page.locator('[data-card-id="infra-web/todo-card.md"]');
+    const cardShell = card.locator("..");
     const target = page.locator('[data-col-key="urgent"]');
     const cardBox = await card.boundingBox();
     const targetBox = await target.boundingBox();
@@ -761,13 +901,59 @@ test.describe("Kanban sequence pull", () => {
     await page.mouse.move(cardBox!.x + cardBox!.width / 2, cardBox!.y + cardBox!.height / 2);
     await page.mouse.down();
     await page.mouse.move(cardBox!.x + cardBox!.width / 2 + 8, cardBox!.y + cardBox!.height / 2, { steps: 4 });
-    await expect(card).toHaveClass(/opacity-40/);
+    await expect(cardShell).toHaveClass(/opacity-40/);
     await page.mouse.move(targetBox!.x + targetBox!.width / 2, targetBox!.y + 80, { steps: 12 });
     await expect(target).toHaveClass(/border-brand\/40/);
     await page.mouse.up();
 
     expect((await cardSave).postDataJSON()?.content).toContain("priority: urgent");
     await expect(target).toContainText("Todo card");
+  });
+
+  test("keeps a viewer read-only while persisting personal views and exposing audited activity", async ({ page }) => {
+    const mutationRequests: string[] = [];
+    page.on("request", (request) => {
+      if (
+        request.url().includes("/api/v1/workspaces/ws-1/") &&
+        request.method() !== "GET"
+      ) {
+        mutationRequests.push(`${request.method()} ${request.url()}`);
+      }
+    });
+    await mockApi(page, { workspaceRole: "viewer", ticketKey: "OCCSV" });
+    await page.addInitScript(() => {
+      localStorage.setItem("jtype.token", "tok_test");
+      localStorage.setItem("jtype.username", "testuser");
+    });
+    await page.goto("/workspaces/ws-1");
+
+    await page.getByRole("button", { name: /infra-web\.board/ }).click();
+    await expect(page.getByText("Todo card")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Project settings" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Manage statuses" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "New card" })).toHaveCount(0);
+
+    await page.getByRole("button", { name: "Table" }).click();
+    await expect(page.getByRole("button", { name: "Table" })).toHaveAttribute("aria-pressed", "true");
+    await expect.poll(() =>
+      page.evaluate(() => {
+        const key = Object.keys(localStorage).find((item) => item.startsWith("jtype.board-view.v1:testuser:ws-1:"));
+        return key ? JSON.parse(localStorage.getItem(key) ?? "{}").viewType : null;
+      }),
+    ).toBe("table");
+
+    await page.reload();
+    await page.getByRole("button", { name: /infra-web\.board/ }).click();
+    await expect(page.getByRole("button", { name: "Table" })).toHaveAttribute("aria-pressed", "true");
+    await page.getByRole("button", { name: /Todo card/ }).click();
+    const detail = page.getByRole("dialog", { name: "Card details" });
+    await expect(detail.getByPlaceholder("Untitled card")).toHaveAttribute("readonly", "");
+    await expect(detail.getByRole("button", { name: "Delete card" })).toHaveCount(0);
+    await expect(detail.getByText("Changed status")).toBeVisible();
+    await expect(detail.getByText("Test User")).toBeVisible();
+    await expect(detail.getByText("MCP", { exact: true })).toBeVisible();
+    await expect(detail.getByText("Roadmap automation")).toBeVisible();
+    expect(mutationRequests).toEqual([]);
   });
 
   test("continues from the last successful sequence", async ({ page }) => {

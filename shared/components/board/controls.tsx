@@ -85,16 +85,18 @@ export function ListboxSelect({
 export function EmojiField({
   value,
   onChange,
+  disabled = false,
   portalClassName,
 }: {
   value?: string | null;
   onChange: (v: string) => void;
+  disabled?: boolean;
   portalClassName?: string;
 }) {
   return (
     <div>
       <Menu as="div" className="relative inline-block">
-        <MenuButton className="flex h-7 w-9 items-center justify-center rounded-md border border-stone-200 bg-white text-base leading-none hover:border-brand focus:outline-none focus:ring-1 focus:ring-brand">
+        <MenuButton disabled={disabled} className="flex h-7 w-9 items-center justify-center rounded-md border border-stone-200 bg-white text-base leading-none hover:border-brand focus:outline-none focus:ring-1 focus:ring-brand disabled:cursor-not-allowed disabled:bg-stone-50 disabled:opacity-60">
           {value ? <span>{value}</span> : <FaceSmileIcon className="h-4 w-4 text-stone-400" />}
         </MenuButton>
         <MenuItems
@@ -137,12 +139,18 @@ export function TagMultiSelect({
   value,
   options,
   onChange,
+  disabled = false,
   portalClassName,
+  emptyLabel,
+  emptyMessage,
 }: {
   value: string[];
   options: { value?: string; label: string; color?: string | null }[];
   onChange: (next: string[]) => void;
+  disabled?: boolean;
   portalClassName?: string;
+  emptyLabel?: string;
+  emptyMessage?: string;
 }) {
   const optionValue = (option: { value?: string; label: string }) => option.value ?? option.label;
   const optionByValue = new Map(options.map((option) => [optionValue(option), option]));
@@ -156,11 +164,11 @@ export function TagMultiSelect({
     onChange(value.includes(selected) ? value.filter((v) => v !== selected) : [...value, selected]);
   return (
     <Menu as="div" className="relative inline-block w-full">
-      <MenuButton className={`${fieldCls} flex w-full items-center justify-between gap-1`}>
+      <MenuButton disabled={disabled} className={`${fieldCls} flex w-full items-center justify-between gap-1 disabled:cursor-not-allowed disabled:bg-stone-50 disabled:opacity-60`}>
         <span className="truncate">
           {value.length
             ? value.map((selected) => optionByValue.get(selected)?.label ?? selected).join(", ")
-            : t`Add labels`}
+            : emptyLabel ?? t`Add labels`}
         </span>
         <ChevronUpDownIcon className="h-3.5 w-3.5 shrink-0 text-stone-400" />
       </MenuButton>
@@ -168,7 +176,7 @@ export function TagMultiSelect({
         anchor="bottom start"
         className={`z-[60] max-h-56 w-[var(--button-width)] overflow-y-auto rounded-md border border-black/[0.06] bg-white py-1 text-xs shadow-lg [--anchor-gap:4px] focus:outline-none${portalClassName ? ` ${portalClassName}` : ""}`}
       >
-        {selectableOptions.length === 0 && <div className="px-2 py-1 text-stone-400">{t`No labels`}</div>}
+        {selectableOptions.length === 0 && <div className="px-2 py-1 text-stone-400">{emptyMessage ?? t`No labels`}</div>}
         {selectableOptions.map((o) => {
           const selected = optionValue(o);
           return (
@@ -181,7 +189,7 @@ export function TagMultiSelect({
               }}
               className="flex w-full items-center gap-1.5 px-2 py-1 text-stone-700 data-[focus]:bg-stone-100"
             >
-              <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: o.color ?? "#d6d3d1" }} />
+              <span className={`h-2.5 w-2.5 rounded-full ${o.color ? "" : "bg-stone-300"}`} style={o.color ? { backgroundColor: o.color } : undefined} />
               <span className="flex-1 truncate text-left">{o.label}</span>
               {value.includes(selected) && <CheckIcon className="h-3.5 w-3.5 text-brand" />}
             </button>

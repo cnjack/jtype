@@ -104,21 +104,29 @@ pub async fn pull(
 /// Append one immutable event to the durable pull log.
 pub async fn persist(
     tx: &mut sqlx::Transaction<'_, sqlx::MySql>,
+    event_id: &str,
     workspace_id: &str,
     board_ref: &str,
+    document_id: Option<&str>,
     sequence: i64,
     event_type: &str,
+    actor: &JsonValue,
+    changes: &JsonValue,
     payload: &JsonValue,
 ) -> Result<(), AppError> {
     sqlx::query(
         r#"INSERT INTO kanban_events
-           (workspace_id, sequence, board_ref, event_type, payload)
-           VALUES (?, ?, ?, ?, ?)"#,
+           (id, workspace_id, sequence, board_ref, document_id, event_type, actor, changes, payload)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"#,
     )
+    .bind(event_id)
     .bind(workspace_id)
     .bind(sequence)
     .bind(board_ref)
+    .bind(document_id)
     .bind(event_type)
+    .bind(actor)
+    .bind(changes)
     .bind(payload)
     .execute(&mut **tx)
     .await?;

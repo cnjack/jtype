@@ -1,4 +1,5 @@
 import {
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -11,28 +12,31 @@ import { I18nProvider } from '@lingui/react'
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline'
 import { BoardPeek } from '@shared/components/board/BoardPeek'
 import { BoardSurface } from '@shared/components/board/BoardSurface'
-import type { BoardActions } from '@shared/components/board/types'
+import { guardBoardActions, type BoardActions } from '@shared/components/board/types'
 import {
   activeBoardLaneKey,
   boardLaneValueOf,
   cardPatchForLaneValue,
   newCardLaneValue,
   slugify,
+  type BoardPersonalViewState,
   type BoardViewCard,
   type BoardViewConfig,
 } from '@shared/lib/board'
+import {
+  boardPersonalViewDefaults,
+  normalizeBoardPersonalViewState,
+} from '@shared/lib/boardViewState'
 import { parseFrontmatter, writeFrontmatter } from '@shared/lib/frontmatter'
 import { createJTypeClient, JTypeApiError, type JTypeBoardDataClient } from './client'
 import { JTypeBoardError } from './resolveBoard'
 import {
   applyCardPatch,
-  applyLocalViewPatch,
   loadBoardSnapshot,
   toViewConfig,
   type BoardConfigJSON,
   type BoardSnapshot,
   type DocCache,
-  type LocalViewPatch,
 } from './boardData'
 import { CardDetail } from './CardDetail'
 import { activateBoardLocale, i18n, type BoardLocale } from './i18n'
@@ -47,7 +51,7 @@ export type JTypeBoardProps = {
   boardRef: string
   /** jtype server origin. XOR with `client`. */
   baseUrl?: string
-  /** Session token (typically mcp-scoped). XOR with `client`. */
+  /** REST-capable user/session token. Board-pinned MCP tokens are not REST tokens. */
   token?: string
   /**
    * Injected data client. When set, EVERY request (loads, polling, writes,
@@ -58,12 +62,16 @@ export type JTypeBoardProps = {
   client?: JTypeBoardDataClient
   /** Hide all mutation affordances (view-only board). Default false. */
   readOnly?: boolean
-  /** Current user's display name; enables the personal "My cards" filter. */
+  /** Current user's display name; enables My Work and project Inbox signals. */
   currentUser?: string
+  /** Host-controlled personal display state. The package never uses host storage. */
+  viewState?: Partial<BoardPersonalViewState>
+  /** Persist or observe personal display-state patches in the host application. */
+  onViewStateChange?: (patch: Partial<BoardPersonalViewState>) => void
   /**
-   * Try the live SSE feed (default true). Post PR #45 the feed requires a
-   * full-scope session token — with an mcp-scoped token the server answers
-   * 403 and the board VISIBLY falls back to polling (connection chip +
+   * Try the live SSE feed (default true). The direct adapter requires a full
+   * REST session token; board-pinned MCP credentials cannot be used here.
+   * A rejected stream visibly falls back to polling (connection chip plus
    * onConnectionChange('polling')). Never a silent fake-live.
    */
   live?: boolean
@@ -72,8 +80,9 @@ export type JTypeBoardProps = {
   /** Open this Card path once after the initial board snapshot resolves. */
   initialCardPath?: string
   /**
-   * Additional relative directories to scan for Cards belonging to this board.
-   * The Card's `board` frontmatter must still match the resolved board id.
+   * Bound Card discovery to the board folder plus these relative directories.
+   * Omit to discover matching Cards across the workspace. The Card's `board`
+   * frontmatter must always match the resolved board id.
    */
   additionalCardRoots?: readonly string[]
   /** Intercept card opens (replaces the built-in editable/read-only detail). */
@@ -91,8 +100,26 @@ export type JTypeBoardProps = {
   style?: CSSProperties
 }
 
-function rand() {
-  return Math.random().toString(36).slice(2, 6)
+const CREATE_CARD_PATH_ATTEMPTS = 8
+
+function createCardRelativePath(boardDir: string, slug: string, attempt: number): string {
+  return `${boardDir}/${slug}${attempt === 0 ? '' : `-${attempt + 1}`}.md`
+}
+
+function isDocumentCreateConflict(error: unknown): boolean {
+  if (error instanceof JTypeApiError) {
+    return error.status === 409 || error.code.toLowerCase().includes('conflict')
+  }
+  if (!error || typeof error !== 'object') return false
+  const candidate = error as { status?: unknown; code?: unknown }
+  return (
+    candidate.status === 409 ||
+    (typeof candidate.code === 'string' && candidate.code.toLowerCase().includes('conflict'))
+  )
+}
+
+function personalViewStateSignature(state: Partial<BoardPersonalViewState>): string {
+  return JSON.stringify(normalizeBoardPersonalViewState({ ...state, version: 1 }))
 }
 
 /**
@@ -108,6 +135,8 @@ export function JTypeBoard({
   client: injectedClient,
   readOnly = false,
   currentUser,
+  viewState: controlledViewState,
+  onViewStateChange,
   live = true,
   pollIntervalMs = 30000,
   initialCardPath,
@@ -152,9 +181,15 @@ export function JTypeBoard({
       value.split('/').every((part) => part !== '' && part !== '.' && part !== '..'))
     .filter((value, index, values) => values.indexOf(value) === index)
     .join('\0')
+  const hasExplicitCardRoots = additionalCardRoots !== undefined
   const normalizedAdditionalCardRoots = useMemo(
-    () => (additionalCardRootsKey ? additionalCardRootsKey.split('\0') : []),
-    [additionalCardRootsKey],
+    () =>
+      hasExplicitCardRoots
+        ? additionalCardRootsKey
+          ? additionalCardRootsKey.split('\0')
+          : []
+        : undefined,
+    [additionalCardRootsKey, hasExplicitCardRoots],
   )
 
   // --- state -----------------------------------------------------------------
@@ -163,9 +198,35 @@ export function JTypeBoard({
   const [banner, setBanner] = useState('')
   const [conn, setConn] = useState<JTypeBoardConnection>('polling')
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null)
-  // readOnly view preference (Board/Table/Calendar, grouping…), kept locally
-  // and merged over every fresh server snapshot so it survives the poll cycle.
-  const [localView, setLocalView] = useState<LocalViewPatch>({})
+  const [pendingInitialCardPath, setPendingInitialCardPath] = useState(initialCardPath)
+  const [localViewState, setLocalViewState] = useState<BoardPersonalViewState>({ version: 1 })
+  const seededViewState = useMemo<BoardPersonalViewState>(
+    () => snapshot
+      ? boardPersonalViewDefaults(toViewConfig(snapshot.config, snapshot.boardDir))
+      : { version: 1 },
+    [snapshot],
+  )
+  const effectiveViewState = useMemo(
+    () => normalizeBoardPersonalViewState({
+      ...seededViewState,
+      ...localViewState,
+      ...(controlledViewState ?? {}),
+      version: 1,
+    }),
+    [controlledViewState, localViewState, seededViewState],
+  )
+  const isViewStateControlled = controlledViewState !== undefined
+  const controlledViewStateSignature = useMemo(
+    () => controlledViewState ? personalViewStateSignature(controlledViewState) : '',
+    [controlledViewState],
+  )
+  const lastEmittedViewStateSignature = useRef('')
+  const effectiveViewStateRef = useRef(effectiveViewState)
+  effectiveViewStateRef.current = effectiveViewState
+  const readOnlyRef = useRef(readOnly)
+  readOnlyRef.current = readOnly
+  const initializedViewBoard = useRef('')
+  const readOnlyDetailReturnFocus = useRef<HTMLElement | null>(null)
 
   const snapRef = useRef<BoardSnapshot | null>(null)
   const cacheRef = useRef<DocCache>(new Map())
@@ -175,6 +236,25 @@ export function JTypeBoard({
   onConnectionChangeRef.current = onConnectionChange
   const stringsRef = useRef(S)
   stringsRef.current = S
+
+  useEffect(() => {
+    setPendingInitialCardPath(initialCardPath)
+  }, [client, workspaceId, boardRef, initialCardPath])
+
+  useEffect(() => {
+    lastEmittedViewStateSignature.current = ''
+  }, [boardRef, controlledViewStateSignature, workspaceId])
+
+  useEffect(() => {
+    if (
+      !pendingInitialCardPath ||
+      !snapshot?.cards.some((card) => card.id === pendingInitialCardPath)
+    ) return
+    // Let BoardSurface consume the deep link in this commit, then remove it.
+    // This keeps "open once" true even if a host remounts the surface on poll.
+    const timer = window.setTimeout(() => setPendingInitialCardPath(undefined), 0)
+    return () => window.clearTimeout(timer)
+  }, [pendingInitialCardPath, snapshot])
 
   const describeError = (e: unknown): string => {
     const str = stringsRef.current
@@ -211,7 +291,8 @@ export function JTypeBoard({
     setFatal('')
     setBanner('')
     setSelectedCardId(null)
-    setLocalView({})
+    setLocalViewState({ version: 1 })
+    initializedViewBoard.current = ''
 
     const announce = (c: JTypeBoardConnection) => {
       if (cancelled) return
@@ -306,6 +387,18 @@ export function JTypeBoard({
   // --- actions adapter (same document-writeback semantics as WebBoardView) ---
   const actions: BoardActions = useMemo(() => {
     const reload = () => loadRef.current?.() ?? Promise.resolve(null)
+    const assertWritable = () => {
+      if (readOnlyRef.current) throw new Error('This board is read-only.')
+    }
+    const actionConfig = (snap: BoardSnapshot): BoardConfigJSON => {
+      const personal = effectiveViewStateRef.current
+      return {
+        ...snap.config,
+        groupBy: personal.groupBy ?? snap.config.groupBy,
+        swimlaneBy:
+          personal.swimlaneBy ?? (personal.groupBy ? undefined : snap.config.swimlaneBy),
+      }
+    }
     const withErr = async (fn: () => Promise<void>) => {
       try {
         await fn()
@@ -316,6 +409,7 @@ export function JTypeBoard({
     const saveDocContent = async (relativePath: string, content: string) => {
       const snap = snapRef.current
       if (!snap || !client) return
+      assertWritable()
       const meta = snap.metaByPath.get(relativePath)
       const saved = await client.saveDocument(workspaceId, {
         relativePath,
@@ -343,13 +437,7 @@ export function JTypeBoard({
         try {
           const snap = snapRef.current
           if (!snap || !client) return
-          if (readOnly) {
-            // View preference (Board/Table/Calendar, grouping…): keep it in
-            // the poll-surviving local override — a read-only embed never
-            // writes the shared .board doc.
-            setLocalView((cur) => applyLocalViewPatch(cur, patch as Record<string, unknown>))
-            return
-          }
+          assertWritable()
           const next = { ...snap.config, ...patch } as BoardConfigJSON
           await client.saveDocument(workspaceId, {
             relativePath: snap.boardRelativePath,
@@ -367,11 +455,13 @@ export function JTypeBoard({
         const snap = snapRef.current
         if (!snap || !client) return
         try {
-          const laneKey = activeBoardLaneKey(snap.config)
+          assertWritable()
+          const projected = actionConfig(snap)
+          const laneKey = activeBoardLaneKey(projected)
           const targetLane = newCardLaneValue(laneKey, colKey, initial)
           const pos =
             snap.cards
-              .filter((card) => boardLaneValueOf(card, snap.config) === targetLane)
+              .filter((card) => boardLaneValueOf(card, projected) === targetLane)
               .reduce((m, c) => Math.max(m, c.position), -1) + 1
           const data: Record<string, string> = {
             title,
@@ -386,27 +476,48 @@ export function JTypeBoard({
             ),
             initial ?? {},
           )
-          let rel = `${snap.boardDir}/${slugify(title)}.md`
-          if (snap.metaByPath.has(rel)) rel = `${snap.boardDir}/${slugify(title)}-${rand()}.md`
-          await client.saveDocument(workspaceId, { relativePath: rel, content })
-          await reload()
-          return rel
+          const slug = slugify(title)
+          let lastConflict: unknown = null
+          for (let attempt = 0; attempt < CREATE_CARD_PATH_ATTEMPTS; attempt += 1) {
+            assertWritable()
+            const rel = createCardRelativePath(snap.boardDir, slug, attempt)
+            // Avoid a known same-board collision without spending a request;
+            // createOnly still protects paths hidden by board membership filters.
+            if (snap.metaByPath.has(rel)) continue
+            try {
+              await client.saveDocument(workspaceId, {
+                relativePath: rel,
+                content,
+                createOnly: true,
+              })
+              await reload()
+              return rel
+            } catch (error) {
+              if (!isDocumentCreateConflict(error)) throw error
+              lastConflict = error
+            }
+          }
+          throw lastConflict ?? new Error('Could not allocate a unique Card path.')
         } catch (e) {
           setBanner(describeErrorRef.current(e))
           throw e
         }
       },
-      updateCard: (id, patch) =>
-        withErr(async () => {
+      updateCard: async (id, patch) => {
+        try {
           const snap = snapRef.current
           const meta = snap?.metaByPath.get(id)
           if (!snap || !meta) return
           await saveDocContent(id, applyCardPatch(meta.content, patch))
           await reload()
-        }),
+        } catch (e) {
+          setBanner(describeErrorRef.current(e))
+          throw e
+        }
+      },
       updateCards: async (updates, onProgress) => {
         try {
-          if (readOnly) return
+          assertWritable()
           const snap = snapRef.current
           if (!snap) return
           const missing = updates.find((update) => !snap.metaByPath.has(update.cardId))
@@ -429,12 +540,13 @@ export function JTypeBoard({
         withErr(async () => {
           const snap = snapRef.current
           if (!snap || !client) return
-          const laneKey = activeBoardLaneKey(snap.config)
+          const projected = actionConfig(snap)
+          const laneKey = activeBoardLaneKey(projected)
           const movedMeta = snap.metaByPath.get(id)
           if (!movedMeta) return
           if (laneKey !== 'status') {
             const moved = snap.cards.find((c) => c.id === id)
-            if (!moved || boardLaneValueOf(moved, snap.config) === toCol) return
+            if (!moved || boardLaneValueOf(moved, projected) === toCol) return
             await saveDocContent(
               id,
               applyCardPatch(movedMeta.content, cardPatchForLaneValue(laneKey, toCol)),
@@ -470,25 +582,40 @@ export function JTypeBoard({
         }
         if (!window.confirm(stringsRef.current.confirmDeleteCard(card.title))) return
         await withErr(async () => {
+          assertWritable()
           await client.deleteDocument!(workspaceId, meta.id)
           await reload()
         })
       },
     }
   }, [client, workspaceId, readOnly])
+  const surfaceActions = useMemo(
+    () => guardBoardActions(actions, () => readOnlyRef.current),
+    [actions],
+  )
 
   // --- render ------------------------------------------------------------------
-  // In readOnly the locally-kept view preference wins over the server config
-  // (a fresh poll snapshot must not snap the view back).
-  const effectiveConfig = useMemo(
-    () =>
-      snapshot ? (readOnly ? ({ ...snapshot.config, ...localView } as BoardConfigJSON) : snapshot.config) : null,
-    [snapshot, readOnly, localView],
-  )
   const viewConfig = useMemo(
-    () => (snapshot && effectiveConfig ? toViewConfig(effectiveConfig, snapshot.boardDir) : null),
-    [snapshot, effectiveConfig],
+    () => (snapshot ? toViewConfig(snapshot.config, snapshot.boardDir) : null),
+    [snapshot],
   )
+  useEffect(() => {
+    if (!snapshot || !viewConfig || initializedViewBoard.current === snapshot.config.id) return
+    initializedViewBoard.current = snapshot.config.id
+    setLocalViewState(boardPersonalViewDefaults(viewConfig))
+  }, [snapshot, viewConfig])
+  const updateViewState = useCallback((next: BoardPersonalViewState) => {
+    const normalized = normalizeBoardPersonalViewState(next)
+    const signature = personalViewStateSignature(normalized)
+    if (!isViewStateControlled) {
+      setLocalViewState((current) =>
+        personalViewStateSignature(current) === signature ? current : normalized,
+      )
+    }
+    if (lastEmittedViewStateSignature.current === signature) return
+    lastEmittedViewStateSignature.current = signature
+    onViewStateChange?.(normalized)
+  }, [isViewStateControlled, onViewStateChange])
   const selectedCard = selectedCardId
     ? snapshot?.cards.find((c) => c.id === selectedCardId) ?? null
     : null
@@ -499,9 +626,22 @@ export function JTypeBoard({
   // Editable embeds use the same focused editor as the desktop and web apps.
   // Only an explicitly read-only embed needs the lightweight, non-mutating
   // package detail. A host-supplied handler always wins over both defaults.
+  const closeReadOnlyDetail = () => {
+    setSelectedCardId(null)
+    const returnTo = readOnlyDetailReturnFocus.current
+    readOnlyDetailReturnFocus.current = null
+    if (returnTo) requestAnimationFrame(() => returnTo.focus())
+  }
   const handleCardOpen =
     onCardOpen ??
-    (readOnly ? (card: BoardViewCard) => setSelectedCardId(card.id) : undefined)
+    (readOnly
+      ? (card: BoardViewCard) => {
+          readOnlyDetailReturnFocus.current = document.activeElement instanceof HTMLElement
+            ? document.activeElement
+            : null
+          setSelectedCardId(card.id)
+        }
+      : undefined)
 
   let content: ReactElement
   if (propsError) {
@@ -521,9 +661,11 @@ export function JTypeBoard({
           <BoardSurface
             config={viewConfig}
             cards={snapshot.cards}
-            actions={actions}
+            actions={surfaceActions}
+            viewState={effectiveViewState}
+            onViewStateChange={updateViewState}
             error={banner || initialCardError || undefined}
-            initialCardId={initialCardPath}
+            initialCardId={pendingInitialCardPath}
             readOnly={readOnly}
             currentUser={currentUser}
             onCardOpen={handleCardOpen}
@@ -535,13 +677,13 @@ export function JTypeBoard({
             portalClassName="jtb-scope"
           />
         </I18nProvider>
-        {selectedCard && readOnly && !onCardOpen && effectiveConfig && (
+        {selectedCard && readOnly && !onCardOpen && snapshot && (
           <CardDetail
             card={selectedCard}
-            config={effectiveConfig}
+            config={snapshot.config}
             strings={S}
             supplement={renderCardSupplement?.(selectedCard)}
-            onClose={() => setSelectedCardId(null)}
+            onClose={closeReadOnlyDetail}
           />
         )}
         <ConnectionChip state={conn} strings={S} pollSecs={Math.round(pollMs / 1000)} liveWanted={live} />

@@ -9,6 +9,14 @@ const openEmbed = async (
   await expect(page.getByText("Jcode", { exact: true })).toBeVisible();
 };
 
+const quickCreate = async (page: import("@playwright/test").Page, title: string) => {
+  await page.locator('[data-col-key="todo"]').getByText("New card", { exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "New card" });
+  await dialog.getByLabel("Card title").fill(title);
+  await dialog.getByRole("button", { name: "Create card", exact: true }).click();
+  await expect(dialog).toBeHidden();
+};
+
 test("editable package embed uses the shared card editor inside a bounded Cloud-style host", async ({
   page,
 }) => {
@@ -174,10 +182,186 @@ test("editable package embed adds a host supplement without replacing the native
   await expect(dialog.getByRole("region", { name: "Additional information" })).toBeVisible();
 });
 
-test("editable package embed opens an exact Card deep link once", async ({ page }) => {
+test("editable package Card update failures stay visible and can be retried", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/tests/fixtures/board-react-embed.html?failupdate=1");
+  await expect(page.getByText("Jcode", { exact: true })).toBeVisible();
+
+  await page.getByText(cardTitles[0]!, { exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Card details" });
+  await dialog.getByRole("button", { name: "To do", exact: true }).click();
+  await page.getByRole("listbox").getByRole("option", { name: "Doing", exact: true }).click();
+
+  const saveFailure = dialog.getByRole("alert");
+  await expect(saveFailure).toContainText("simulated Card update failure");
+  await saveFailure.getByRole("button", { name: "Retry" }).click();
+
+  await expect(saveFailure).toBeHidden();
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        window.__BOARD_EMBED_TEST__?.saveCalls.some(
+          (call) =>
+            call.relativePath === "jcode/card-0.md" && call.content.includes("status: doing"),
+        ),
+      ),
+    )
+    .toBe(true);
+});
+
+test("quick-create preserves an ordinary Markdown note at the requested Card path", async ({
+  page,
+}) => {
+  await openEmbed(page);
+  const original = await page.evaluate(() =>
+    window.__BOARD_EMBED_TEST__?.contentAt("jcode/collision-note.md"),
+  );
+
+  await quickCreate(page, "Collision note");
+
+  const result = await page.evaluate(() => ({
+    attempts: window.__BOARD_EMBED_TEST__?.saveAttempts
+      .filter((call) => call.content.includes("title: Collision note"))
+      .map((call) => ({ path: call.relativePath, createOnly: call.createOnly })),
+    original: window.__BOARD_EMBED_TEST__?.contentAt("jcode/collision-note.md"),
+    created: window.__BOARD_EMBED_TEST__?.contentAt("jcode/collision-note-2.md"),
+  }));
+  expect(result.attempts).toEqual([
+    { path: "jcode/collision-note.md", createOnly: true },
+    { path: "jcode/collision-note-2.md", createOnly: true },
+  ]);
+  expect(result.original).toBe(original);
+  expect(result.created).toContain("board: b_jcode");
+});
+
+test("quick-create preserves a same-path Card owned by another board", async ({ page }) => {
+  await openEmbed(page);
+  const original = await page.evaluate(() =>
+    window.__BOARD_EMBED_TEST__?.contentAt("jcode/collision-board.md"),
+  );
+
+  await quickCreate(page, "Collision board");
+
+  const result = await page.evaluate(() => ({
+    attempts: window.__BOARD_EMBED_TEST__?.saveAttempts
+      .filter((call) => call.content.includes("title: Collision board"))
+      .map((call) => ({ path: call.relativePath, createOnly: call.createOnly })),
+    original: window.__BOARD_EMBED_TEST__?.contentAt("jcode/collision-board.md"),
+    created: window.__BOARD_EMBED_TEST__?.contentAt("jcode/collision-board-2.md"),
+  }));
+  expect(result.attempts).toEqual([
+    { path: "jcode/collision-board.md", createOnly: true },
+    { path: "jcode/collision-board-2.md", createOnly: true },
+  ]);
+  expect(result.original).toBe(original);
+  expect(result.original).toContain("board: b_other");
+  expect(result.created).toContain("board: b_jcode");
+});
+
+test("an editable-to-readOnly transition stops a mutable batch before its next write", async ({
+  page,
+}) => {
+  await openEmbed(page);
+  await page.evaluate(() => window.__BOARD_EMBED_TEST__?.pauseNextCardWrite());
+
+  await page.locator('[data-card-id="jcode/card-0.md"]').click({ modifiers: ["Control"] });
+  await page.locator('[data-card-id="jcode/card-5.md"]').click({ modifiers: ["Control"] });
+  await expect(page.getByText("2 selected")).toBeVisible();
+  await page.getByLabel("Set priority").selectOption("low");
+  await expect.poll(() =>
+    page.evaluate(() => window.__BOARD_EMBED_TEST__?.cardWritePaused),
+  ).toBe(true);
+
+  await page.evaluate(() => window.__BOARD_EMBED_TEST__?.setReadOnly?.(true));
+  await expect(page.getByText("New card", { exact: true })).toHaveCount(0);
+  await page.evaluate(() => window.__BOARD_EMBED_TEST__?.releaseCardWrite());
+
+  await expect(page.getByText(/This board is read-only\./)).toBeVisible();
+  await expect.poll(() =>
+    page.evaluate(() =>
+      window.__BOARD_EMBED_TEST__?.saveAttempts.filter((call) =>
+        call.relativePath === "jcode/card-0.md" || call.relativePath === "jcode/card-5.md"
+      ).length,
+    ),
+  ).toBe(1);
+});
+
+test("an ignored controlled viewState reconciliation emits once without looping", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/tests/fixtures/board-react-embed.html?controlled-view=ignored");
+  await expect(page.getByText("Jcode", { exact: true })).toBeVisible();
+
+  await expect.poll(() =>
+    page.evaluate(() => window.__BOARD_EMBED_TEST__?.viewStateChanges.length),
+  ).toBe(1);
+  await page.waitForTimeout(300);
+  expect(await page.evaluate(() => window.__BOARD_EMBED_TEST__?.viewStateChanges.length)).toBe(1);
+  expect(await page.evaluate(() =>
+    window.__BOARD_EMBED_TEST__?.viewStateChanges[0]?.dismissedInboxItemKeys ?? [],
+  )).toEqual([]);
+});
+
+test("a controlled viewState without a change callback remains responsive", async ({ page }) => {
+  const consoleErrors: string[] = [];
+  page.on("console", (message) => {
+    if (message.type() === "error") consoleErrors.push(message.text());
+  });
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/tests/fixtures/board-react-embed.html?controlled-view=missing");
+  await expect(page.getByText("Jcode", { exact: true })).toBeVisible();
+  await page.waitForTimeout(300);
+  await page.evaluate(() =>
+    new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))),
+  );
+
+  expect(consoleErrors.some((message) => message.includes("Maximum update depth"))).toBe(false);
+  expect(await page.evaluate(() => window.__BOARD_EMBED_TEST__?.viewStateChanges.length)).toBe(0);
+});
+
+test("Calendar dates follow the package locale instead of the browser locale", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/tests/fixtures/board-react-embed.html?locale=zh");
+  await expect(page.getByText("Jcode", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "日历", exact: true }).click();
+  await expect(page.getByText("周日", { exact: true })).toBeVisible();
+  await expect(page.getByText(/\d{4}年\d{1,2}月/)).toBeVisible();
+});
+
+test("package personal swimlane view drives Card writes without changing the shared board", async ({
+  page,
+}) => {
+  await openEmbed(page);
+  await page.getByLabel("Swimlanes", { exact: true }).selectOption("priority");
+
+  const card = page.locator('[data-card-id="jcode/card-0.md"]');
+  const target = page.locator('[data-col-key="medium"]');
+  const cardBox = await card.boundingBox();
+  const targetBox = await target.boundingBox();
+  expect(cardBox).not.toBeNull();
+  expect(targetBox).not.toBeNull();
+
+  await page.mouse.move(cardBox!.x + cardBox!.width / 2, cardBox!.y + cardBox!.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(cardBox!.x + cardBox!.width / 2 + 8, cardBox!.y + cardBox!.height / 2, { steps: 4 });
+  await page.mouse.move(targetBox!.x + targetBox!.width / 2, targetBox!.y + 80, { steps: 12 });
+  await page.mouse.up();
+
+  await expect.poll(() =>
+    page.evaluate(() =>
+      window.__BOARD_EMBED_TEST__?.saveCalls.some(
+        (call) => call.relativePath === "jcode/card-0.md" && call.content.includes("priority: medium"),
+      ),
+    ),
+  ).toBe(true);
+  expect(await page.evaluate(() =>
+    window.__BOARD_EMBED_TEST__?.saveCalls.some((call) => call.relativePath === "jcode.board"),
+  )).toBe(false);
+});
+
+test("default package discovery opens a matching Card outside the board folder", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(
-    "/tests/fixtures/board-react-embed.html?managed=1&card=jcode-automation%2Fauto-1%2Fexec-1.md",
+    "/tests/fixtures/board-react-embed.html?card=jcode-automation%2Fauto-1%2Fexec-1.md",
   );
   await expect(page.getByTestId("cloud-board-host").getByText("Jcode", { exact: true })).toBeVisible();
 
@@ -186,11 +370,36 @@ test("editable package embed opens an exact Card deep link once", async ({ page 
   await expect(dialog.getByPlaceholder("Untitled card")).toHaveValue(
     "Automation-created payment review",
   );
+});
 
-  await dialog.getByRole("button", { name: "Close" }).click();
-  await expect(dialog).toBeHidden();
+test("explicit Card roots keep discovery bounded", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(
+    "/tests/fixtures/board-react-embed.html?limited=1&card=jcode-automation%2Fauto-1%2Fexec-1.md",
+  );
+  await expect(page.getByText(cardTitles[0]!, { exact: true })).toBeVisible();
+  await expect(
+    page.getByText(
+      'Card "jcode-automation/auto-1/exec-1.md" was not found on this board.',
+    ),
+  ).toBeVisible();
+  await expect(page.getByText("Automation-created payment review", { exact: true })).toHaveCount(0);
+});
+
+test("explicit additional Card roots open an exact deep link once", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(
+    "/tests/fixtures/board-react-embed.html?managed=1&intercept=1&card=jcode-automation%2Fauto-1%2Fexec-1.md",
+  );
+  await expect(page.getByTestId("cloud-board-host").getByText("Jcode", { exact: true })).toBeVisible();
+  await expect.poll(() =>
+    page.evaluate(() => window.__BOARD_EMBED_TEST__?.openedCardCount),
+  ).toBe(1);
+  expect(await page.evaluate(() => window.__BOARD_EMBED_TEST__?.openedCardTitle)).toBe(
+    "Automation-created payment review",
+  );
   await page.waitForTimeout(5_100);
-  await expect(dialog).toBeHidden();
+  expect(await page.evaluate(() => window.__BOARD_EMBED_TEST__?.openedCardCount)).toBe(1);
 });
 
 test("editable package embed exposes a missing Card deep link", async ({ page }) => {
@@ -205,6 +414,35 @@ test("explicit readOnly package embed keeps the non-editable detail path", async
   await page.getByText(cardTitles[0]!, { exact: true }).click();
   await expect(page.getByLabel("Read-only card view")).toBeVisible();
   await expect(page.getByRole("dialog", { name: "Card details" })).toHaveCount(0);
+});
+
+test("readOnly Card detail traps Tab, closes with Escape, and restores Card focus", async ({ page }) => {
+  await openEmbed(page, { readOnly: true });
+
+  const trigger = page.locator('[data-card-id="jcode/card-0.md"]');
+  await trigger.focus();
+  await trigger.click();
+
+  const detail = page.getByRole("dialog", { name: "Read-only card view" });
+  const close = detail.getByRole("button", { name: "Close" });
+  await expect(detail).toBeVisible();
+  await expect(detail).toHaveClass(/jtb-scope/);
+  await expect(close).toBeFocused();
+
+  for (const key of ["Tab", "Shift+Tab", "Tab"]) {
+    await page.keyboard.press(key);
+    await expect
+      .poll(() =>
+        page.evaluate(() =>
+          Boolean(document.activeElement?.closest('[data-testid="read-only-card-detail"]')),
+        ),
+      )
+      .toBe(true);
+  }
+
+  await page.keyboard.press("Escape");
+  await expect(detail).toBeHidden();
+  await expect(trigger).toBeFocused();
 });
 
 test("readOnly package embed renders the host Card supplement without mutation affordances", async ({ page }) => {

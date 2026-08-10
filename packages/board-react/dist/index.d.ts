@@ -2,6 +2,8 @@ import { CSSProperties } from 'react';
 import { ReactElement } from 'react';
 import { ReactNode } from 'react';
 
+declare type BoardArchiveFilter = "active" | "archived" | "all";
+
 /** Shape of the `.board` JSON config document (mirrors WebBoardView). */
 export declare type BoardConfigJSON = BoardDocumentConfig;
 
@@ -9,6 +11,8 @@ export declare type BoardConfigJSON = BoardDocumentConfig;
 declare type BoardDocumentConfig = BoardViewConfig & {
     id: string;
 };
+
+declare type BoardDueFilter = "overdue" | "today" | "nextSevenDays" | "none";
 
 /** A user-defined custom field on a board's cards (stored in frontmatter / properties). */
 declare type BoardFieldDef = {
@@ -18,6 +22,23 @@ declare type BoardFieldDef = {
 };
 
 declare type BoardFieldType = "text" | "number" | "date";
+
+/**
+ * Personal, view-only board filters. Values within one dimension are ORed;
+ * populated dimensions are ANDed together.
+ */
+declare type BoardFilters = {
+    priorities?: string[];
+    assignees?: string[];
+    tags?: string[];
+    due?: BoardDueFilter;
+    blocked?: boolean;
+    mine?: boolean;
+    /** Active is the implicit default, so archived Cards never disappear forever. */
+    archived?: BoardArchiveFilter;
+    /** Recovery-only filter for cards that reference a deleted custom row. */
+    missingRow?: boolean;
+};
 
 declare type BoardGroupKey = "status" | "priority" | "assignee";
 
@@ -29,12 +50,36 @@ declare type BoardLabelDef = {
 
 export declare type BoardLocale = 'en' | 'zh' | 'ja' | 'ko';
 
+/** Device/user-owned display state. Never serialize this into `.board`. */
+export declare type BoardPersonalViewState = {
+    version: 1;
+    viewType?: BoardViewType;
+    groupBy?: BoardGroupKey;
+    swimlaneBy?: BoardSwimlaneGroupKey;
+    calendarMode?: CalendarMode;
+    sortBy?: BoardSortKey;
+    filters?: BoardFilters;
+    collapsedGroupKeys?: string[];
+    scope?: BoardWorkScope;
+    dismissedInboxItemKeys?: string[];
+};
+
+/** Lightweight project facts stored in the `.board` document. */
+declare type BoardProjectMetadata = {
+    key?: string;
+    summary?: string;
+    startDate?: string;
+    targetDate?: string;
+};
+
 export declare type BoardResolution = {
     boardDocId: string;
     boardRelativePath: string;
     /** Folder holding the board's card `.md` documents. */
     boardDir: string;
 };
+
+declare type BoardSortKey = "manual" | "due" | "priority" | "title";
 
 /** Persistent, user-editable swimlane definition stored in a `.board` file. */
 declare type BoardSwimlane = {
@@ -72,7 +117,13 @@ export declare type BoardViewCard = {
     assignee?: string | null;
     /** Stable custom swimlane identity from card frontmatter `swimlane`. */
     swimlaneKey?: string | null;
+    /** Planned start day (`YYYY-MM-DD`), used by the Gantt projection. */
+    start?: string | null;
     due?: string | null;
+    /** Portable project reminder day (`YYYY-MM-DD`). */
+    reminder?: string | null;
+    /** Archived Cards remain Markdown documents but leave active projections. */
+    archived?: boolean;
     tags: BoardTag[];
     /** Markdown body / description. */
     notes?: string;
@@ -104,6 +155,8 @@ declare type BoardViewColumn = {
 declare type BoardViewConfig = {
     title: string;
     columns: BoardViewColumn[];
+    /** Shared project facts; personal display state is intentionally separate. */
+    project?: BoardProjectMetadata;
     /** Column key treated as terminal/done (suppresses overdue styling). */
     doneColumn?: string;
     /** Tint each column header by its (or an auto) color. */
@@ -135,14 +188,16 @@ declare type BoardViewConfig = {
     swimlaneMigration?: SwimlaneMigration;
 };
 
-declare type BoardViewType = "board" | "table" | "calendar";
+declare type BoardViewType = "board" | "table" | "calendar" | "backlog" | "gantt";
+
+declare type BoardWorkScope = "all" | "my-work" | "inbox";
 
 declare type CalendarMode = "month" | "agenda";
 
 export declare type CreateClientOptions = {
     /** Origin of the jtype server, e.g. `https://jtype.nightc.com`. */
     baseUrl: string;
-    /** A session token (typically mcp-scoped, minted via the OAuth device flow). */
+    /** REST-capable user/session token. Board-pinned MCP tokens are not REST tokens. */
     token: string;
     /** Override fetch (tests, custom agents). Defaults to the global fetch. */
     fetchImpl?: typeof fetch;
@@ -166,7 +221,7 @@ export declare class JTypeApiError extends Error {
  * `client`) plus `workspaceId`+`boardRef` and it renders the same shared
  * BoardSurface the jtype desktop + web apps use, backed by the document API.
  */
-export declare function JTypeBoard({ workspaceId, boardRef, baseUrl, token, client: injectedClient, readOnly, currentUser, live, pollIntervalMs, initialCardPath, additionalCardRoots, onCardOpen, renderCardSupplement, onConnectionChange, locale, className, style, }: JTypeBoardProps): ReactElement;
+export declare function JTypeBoard({ workspaceId, boardRef, baseUrl, token, client: injectedClient, readOnly, currentUser, viewState: controlledViewState, onViewStateChange, live, pollIntervalMs, initialCardPath, additionalCardRoots, onCardOpen, renderCardSupplement, onConnectionChange, locale, className, style, }: JTypeBoardProps): ReactElement;
 
 export declare type JTypeBoardConnection = 'live' | 'polling' | 'error';
 
@@ -212,7 +267,7 @@ export declare type JTypeBoardProps = {
     boardRef: string;
     /** jtype server origin. XOR with `client`. */
     baseUrl?: string;
-    /** Session token (typically mcp-scoped). XOR with `client`. */
+    /** REST-capable user/session token. Board-pinned MCP tokens are not REST tokens. */
     token?: string;
     /**
      * Injected data client. When set, EVERY request (loads, polling, writes,
@@ -223,12 +278,16 @@ export declare type JTypeBoardProps = {
     client?: JTypeBoardDataClient;
     /** Hide all mutation affordances (view-only board). Default false. */
     readOnly?: boolean;
-    /** Current user's display name; enables the personal "My cards" filter. */
+    /** Current user's display name; enables My Work and project Inbox signals. */
     currentUser?: string;
+    /** Host-controlled personal display state. The package never uses host storage. */
+    viewState?: Partial<BoardPersonalViewState>;
+    /** Persist or observe personal display-state patches in the host application. */
+    onViewStateChange?: (patch: Partial<BoardPersonalViewState>) => void;
     /**
-     * Try the live SSE feed (default true). Post PR #45 the feed requires a
-     * full-scope session token — with an mcp-scoped token the server answers
-     * 403 and the board VISIBLY falls back to polling (connection chip +
+     * Try the live SSE feed (default true). The direct adapter requires a full
+     * REST session token; board-pinned MCP credentials cannot be used here.
+     * A rejected stream visibly falls back to polling (connection chip plus
      * onConnectionChange('polling')). Never a silent fake-live.
      */
     live?: boolean;
@@ -237,8 +296,9 @@ export declare type JTypeBoardProps = {
     /** Open this Card path once after the initial board snapshot resolves. */
     initialCardPath?: string;
     /**
-     * Additional relative directories to scan for Cards belonging to this board.
-     * The Card's `board` frontmatter must still match the resolved board id.
+     * Bound Card discovery to the board folder plus these relative directories.
+     * Omit to discover matching Cards across the workspace. The Card's `board`
+     * frontmatter must always match the resolved board id.
      */
     additionalCardRoots?: readonly string[];
     /** Intercept card opens (replaces the built-in editable/read-only detail). */
@@ -282,6 +342,8 @@ export declare type JTypeSaveDocumentRequest = {
     content: string;
     baseContentHash?: string;
     baseContent?: string;
+    /** Atomically fail with 409 if the path already exists. Required for creates. */
+    createOnly?: boolean;
 };
 
 export declare type JTypeSaveDocumentResponse = {

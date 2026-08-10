@@ -127,12 +127,10 @@ async fn pinned_board_endpoint_advertises_oauth_for_auto_login() {
         .await
         .unwrap();
     assert_eq!(general.status(), StatusCode::UNAUTHORIZED);
-    assert!(
-        general
-            .headers()
-            .get(axum::http::header::WWW_AUTHENTICATE)
-            .is_some()
-    );
+    assert!(general
+        .headers()
+        .get(axum::http::header::WWW_AUTHENTICATE)
+        .is_some());
 }
 
 #[tokio::test]
@@ -194,6 +192,20 @@ async fn mcp_tools_list_has_all_tools() {
 /// Send a JSON-RPC message to `/mcp/kanban` with a bearer token; return (status, json).
 async fn mcp_kanban(app: Router, token: Option<&str>, body: Value) -> (StatusCode, Value) {
     common::req(app, "POST", "/mcp/kanban", token, Some(body)).await
+}
+
+async fn kanban_tool_call(app: Router, token: &str, name: &str, args: Value) -> Value {
+    let (status, body) = mcp_kanban(
+        app,
+        Some(token),
+        json!({
+            "jsonrpc": "2.0", "id": 1, "method": "tools/call",
+            "params": { "name": name, "arguments": args }
+        }),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK, "{name} transport status: {body}");
+    body["result"].clone()
 }
 
 async fn mcp_kanban_pinned(
@@ -292,13 +304,21 @@ fn tool_names(body: &Value) -> Vec<&str> {
 }
 
 /// Board/card tools — exposed by `/mcp/kanban`, must be absent from `/mcp`.
-const KANBAN_TOOLS: [&str; 6] = [
+const KANBAN_TOOLS: [&str; 14] = [
     "list_boards",
     "get_board",
     "list_cards",
     "create_card",
     "move_card",
     "update_card",
+    "delete_card",
+    "set_card_labels",
+    "add_card_attachment",
+    "remove_card_attachment",
+    "set_card_relations",
+    "bulk_update_cards",
+    "list_statuses",
+    "set_board_statuses",
 ];
 
 #[tokio::test]
@@ -350,6 +370,37 @@ async fn mcp_kanban_catalog_has_board_card_tools() {
             "/mcp/kanban leaked note tool {note}; got {names:?}"
         );
     }
+    let tools = body["result"]["tools"].as_array().unwrap();
+    for name in [
+        "move_card",
+        "update_card",
+        "delete_card",
+        "set_card_labels",
+        "add_card_attachment",
+        "remove_card_attachment",
+        "set_card_relations",
+    ] {
+        let required = tools.iter().find(|tool| tool["name"] == name).unwrap()["inputSchema"]
+            ["required"]
+            .as_array()
+            .unwrap();
+        assert!(
+            required.iter().any(|field| field == "document_id"),
+            "{name}"
+        );
+        assert!(
+            required.iter().any(|field| field == "base_content_hash"),
+            "{name} must require optimistic concurrency"
+        );
+    }
+    let status_properties = tools
+        .iter()
+        .find(|tool| tool["name"] == "set_board_statuses")
+        .unwrap()["inputSchema"]["properties"]
+        .as_object()
+        .unwrap();
+    assert!(status_properties.contains_key("done_status"));
+    assert!(!status_properties.contains_key("doneColumn"));
 }
 
 #[tokio::test]
@@ -392,6 +443,14 @@ async fn mcp_pinned_catalog_is_board_only_and_scope_free() {
             "create_card",
             "update_card",
             "move_card",
+            "delete_card",
+            "set_card_labels",
+            "add_card_attachment",
+            "remove_card_attachment",
+            "set_card_relations",
+            "bulk_update_cards",
+            "list_statuses",
+            "set_board_statuses",
             "list_card_comments",
             "comment_card",
             "resolve_card_comment"
@@ -408,6 +467,14 @@ async fn mcp_pinned_catalog_is_board_only_and_scope_free() {
         assert!(!properties.contains_key("board"), "{tool}");
         assert!(!properties.contains_key("path"), "{tool}");
     }
+    let status_properties = tools
+        .iter()
+        .find(|tool| tool["name"] == "set_board_statuses")
+        .unwrap()["inputSchema"]["properties"]
+        .as_object()
+        .unwrap();
+    assert!(status_properties.contains_key("done_status"));
+    assert!(!status_properties.contains_key("doneColumn"));
     for name in ["comment_card", "resolve_card_comment"] {
         let schema = tools
             .iter()
@@ -417,6 +484,28 @@ async fn mcp_pinned_catalog_is_board_only_and_scope_free() {
         assert_eq!(schema["properties"]["documentId"]["type"], "string");
         assert_eq!(schema["properties"]["id"]["type"], "string");
         assert_eq!(schema["additionalProperties"], false);
+    }
+    let card_schema = tools
+        .iter()
+        .find(|tool| tool["name"] == "get_card")
+        .map(|tool| &tool["outputSchema"])
+        .unwrap();
+    for field in [
+        "start",
+        "due",
+        "reminder",
+        "archived",
+        "tags",
+        "attachments",
+        "blockedBy",
+        "blocks",
+        "relates",
+        "parent",
+    ] {
+        assert!(
+            card_schema["properties"].get(field).is_some(),
+            "card output schema missing {field}"
+        );
     }
 }
 
@@ -654,8 +743,22 @@ async fn mcp_pinned_rejects_frontmatter_injection_without_side_effects() {
     let workspace_id = common::create_workspace(app.clone(), &full_token, &common::wname()).await;
     let board_a = format!("b_{}", common::uid());
     let board_b = format!("b_{}", common::uid());
-    make_board(app.clone(), &full_token, &workspace_id, &board_a, "safe-a.board").await;
-    make_board(app.clone(), &full_token, &workspace_id, &board_b, "safe-b.board").await;
+    make_board(
+        app.clone(),
+        &full_token,
+        &workspace_id,
+        &board_a,
+        "safe-a.board",
+    )
+    .await;
+    make_board(
+        app.clone(),
+        &full_token,
+        &workspace_id,
+        &board_b,
+        "safe-b.board",
+    )
+    .await;
     let board_token = mint_board_token(app.clone(), &full_token, &workspace_id, &board_a).await;
 
     let injected_scalar = pinned_tool_call(
@@ -717,7 +820,14 @@ async fn mcp_pinned_concurrent_same_title_creates_distinct_cards() {
     let (full_token, _) = common::register_user(app.clone(), &username).await;
     let workspace_id = common::create_workspace(app.clone(), &full_token, &common::wname()).await;
     let board = format!("b_{}", common::uid());
-    make_board(app.clone(), &full_token, &workspace_id, &board, "race.board").await;
+    make_board(
+        app.clone(),
+        &full_token,
+        &workspace_id,
+        &board,
+        "race.board",
+    )
+    .await;
     let board_token = mint_board_token(app.clone(), &full_token, &workspace_id, &board).await;
 
     let first = pinned_tool_call(
@@ -781,6 +891,20 @@ async fn mcp_pinned_rejects_cross_board_document_and_comment_ids() {
     .await;
     assert_eq!(status, StatusCode::OK, "{foreign_comment}");
     let foreign_comment_id = foreign_comment["id"].as_str().unwrap();
+    let local = pinned_tool_call(
+        app.clone(),
+        &board_token,
+        &workspace_id,
+        &board_a,
+        "create_card",
+        json!({ "title": "Local", "status": "todo" }),
+    )
+    .await;
+    assert_ok(&local, "local card");
+    let local_document_id = local["structuredContent"]["documentId"]
+        .as_str()
+        .unwrap()
+        .to_string();
 
     for (name, arguments) in [
         (
@@ -789,7 +913,23 @@ async fn mcp_pinned_rejects_cross_board_document_and_comment_ids() {
         ),
         (
             "comment_card",
-            json!({ "document_id": other_document_id, "body": "intrusion" }),
+            json!({ "document_id": other_document_id.clone(), "body": "intrusion" }),
+        ),
+        (
+            "delete_card",
+            json!({ "document_id": other_document_id.clone() }),
+        ),
+        (
+            "set_card_labels",
+            json!({ "document_id": other_document_id.clone(), "labels": ["intrusion"] }),
+        ),
+        (
+            "add_card_attachment",
+            json!({ "document_id": other_document_id.clone(), "attachment": "assets/nope.txt" }),
+        ),
+        (
+            "set_card_relations",
+            json!({ "document_id": other_document_id.clone(), "relates": [] }),
         ),
         (
             "resolve_card_comment",
@@ -812,6 +952,780 @@ async fn mcp_pinned_rejects_cross_board_document_and_comment_ids() {
             tool_text(&result)
         );
     }
+
+    let foreign_relation = pinned_tool_call(
+        app.clone(),
+        &board_token,
+        &workspace_id,
+        &board_a,
+        "set_card_relations",
+        json!({
+            "document_id": local_document_id,
+            "relates": [other_document_id.clone()]
+        }),
+    )
+    .await;
+    assert_eq!(foreign_relation["isError"], true);
+    assert!(tool_text(&foreign_relation).contains("does not resolve"));
+
+    let bulk = pinned_tool_call(
+        app,
+        &board_token,
+        &workspace_id,
+        &board_a,
+        "bulk_update_cards",
+        json!({ "updates": [{ "document_id": other_document_id, "status": "done" }] }),
+    )
+    .await;
+    assert_ok(&bulk, "cross-board bulk receipt");
+    assert_eq!(bulk["structuredContent"]["failed"], 1);
+    assert!(bulk["structuredContent"]["items"][0]["error"]
+        .as_str()
+        .unwrap()
+        .contains("does not belong"));
+}
+
+#[tokio::test]
+async fn mcp_pinned_extended_card_operations_are_safe_and_receipted() {
+    let (app, _pool) = common::setup().await;
+    let username = common::uid();
+    let (full_token, _) = common::register_user(app.clone(), &username).await;
+    let workspace_id = common::create_workspace(app.clone(), &full_token, &common::wname()).await;
+    let board = format!("b_{}", common::uid());
+    make_board(
+        app.clone(),
+        &full_token,
+        &workspace_id,
+        &board,
+        "planning.board",
+    )
+    .await;
+    let board_token = mint_board_token(app.clone(), &full_token, &workspace_id, &board).await;
+
+    let parent = pinned_tool_call(
+        app.clone(),
+        &board_token,
+        &workspace_id,
+        &board,
+        "create_card",
+        json!({ "title": "Parent", "status": "todo" }),
+    )
+    .await;
+    assert_ok(&parent, "create parent");
+    let parent_id = parent["structuredContent"]["documentId"]
+        .as_str()
+        .unwrap()
+        .to_string();
+
+    let card = pinned_tool_call(
+        app.clone(),
+        &board_token,
+        &workspace_id,
+        &board,
+        "create_card",
+        json!({
+            "title": "Release plan",
+            "body": "Ship safely",
+            "status": "todo",
+            "start": "2026-09-01",
+            "due": "2026-09-20",
+            "reminder": "2026-09-18",
+            "archived": true,
+            "tags": ["planning", "agent"],
+            "attachments": ["https://example.com/spec.pdf", "assets/release-plan.pdf"],
+            "parent": parent_id,
+            "blocked_by": [parent_id],
+            "relates": [parent_id]
+        }),
+    )
+    .await;
+    assert_ok(&card, "create extended card");
+    let card_id = card["structuredContent"]["documentId"]
+        .as_str()
+        .unwrap()
+        .to_string();
+    assert_eq!(card["structuredContent"]["start"], "2026-09-01");
+    assert_eq!(card["structuredContent"]["reminder"], "2026-09-18");
+    assert_eq!(card["structuredContent"]["archived"], true);
+    assert_eq!(
+        card["structuredContent"]["tags"],
+        json!(["planning", "agent"])
+    );
+    assert_eq!(
+        card["structuredContent"]["attachments"]
+            .as_array()
+            .unwrap()
+            .len(),
+        2
+    );
+    assert_eq!(card["structuredContent"]["parent"], "planning/parent");
+
+    let labels = pinned_tool_call(
+        app.clone(),
+        &board_token,
+        &workspace_id,
+        &board,
+        "set_card_labels",
+        json!({ "document_id": card_id, "labels": ["backend"], "mode": "add" }),
+    )
+    .await;
+    assert_ok(&labels, "add label");
+    assert_eq!(
+        labels["structuredContent"]["tags"],
+        json!(["planning", "agent", "backend"])
+    );
+    let labels = pinned_tool_call(
+        app.clone(),
+        &board_token,
+        &workspace_id,
+        &board,
+        "set_card_labels",
+        json!({ "document_id": card_id, "labels": ["planning"], "mode": "remove" }),
+    )
+    .await;
+    assert_ok(&labels, "remove label");
+    assert_eq!(
+        labels["structuredContent"]["tags"],
+        json!(["agent", "backend"])
+    );
+
+    let relations = pinned_tool_call(
+        app.clone(),
+        &board_token,
+        &workspace_id,
+        &board,
+        "set_card_relations",
+        json!({
+            "document_id": card_id,
+            "blocked_by": [],
+            "blocks": [parent_id],
+            "relates": []
+        }),
+    )
+    .await;
+    assert_ok(&relations, "set relations");
+    assert_eq!(relations["structuredContent"]["blockedBy"], json!([]));
+    assert_eq!(
+        relations["structuredContent"]["blocks"],
+        json!(["planning/parent"])
+    );
+
+    let attached = pinned_tool_call(
+        app.clone(),
+        &board_token,
+        &workspace_id,
+        &board,
+        "add_card_attachment",
+        json!({ "document_id": card_id, "attachment": "assets/checklist.txt" }),
+    )
+    .await;
+    assert_ok(&attached, "add attachment");
+    assert!(attached["structuredContent"]["attachments"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|value| value == "assets/checklist.txt"));
+
+    for unsafe_reference in [
+        "javascript:alert(1)",
+        "http://example.com/file",
+        "../outside.txt",
+        "assets/evil\r\nboard: other",
+        "https://example.com/%0d%0aheader",
+        "assets/%2e%2e/outside.txt",
+        "\0bad",
+    ] {
+        let rejected = pinned_tool_call(
+            app.clone(),
+            &board_token,
+            &workspace_id,
+            &board,
+            "add_card_attachment",
+            json!({ "document_id": card_id, "attachment": unsafe_reference }),
+        )
+        .await;
+        assert_eq!(rejected["isError"], true, "{unsafe_reference}: {rejected}");
+    }
+
+    let self_relation = pinned_tool_call(
+        app.clone(),
+        &board_token,
+        &workspace_id,
+        &board,
+        "set_card_relations",
+        json!({ "document_id": card_id, "blocks": [card_id] }),
+    )
+    .await;
+    assert_eq!(self_relation["isError"], true);
+    assert!(tool_text(&self_relation).contains("itself"));
+
+    let parent_cycle = pinned_tool_call(
+        app.clone(),
+        &board_token,
+        &workspace_id,
+        &board,
+        "set_card_relations",
+        json!({ "document_id": parent_id, "parent": card_id }),
+    )
+    .await;
+    assert_eq!(parent_cycle["isError"], true);
+    assert!(tool_text(&parent_cycle).contains("cycle"));
+
+    let dependency_cycle = pinned_tool_call(
+        app.clone(),
+        &board_token,
+        &workspace_id,
+        &board,
+        "set_card_relations",
+        json!({ "document_id": parent_id, "blocks": [card_id] }),
+    )
+    .await;
+    assert_eq!(dependency_cycle["isError"], true);
+    assert!(tool_text(&dependency_cycle).contains("cycle"));
+
+    let nested_scope_override = pinned_tool_call(
+        app.clone(),
+        &board_token,
+        &workspace_id,
+        &board,
+        "bulk_update_cards",
+        json!({
+            "updates": [{ "document_id": card_id, "board": "escape", "status": "done" }]
+        }),
+    )
+    .await;
+    assert_eq!(nested_scope_override["isError"], true);
+    assert!(tool_text(&nested_scope_override).contains("cannot be overridden"));
+
+    let bulk = pinned_tool_call(
+        app.clone(),
+        &board_token,
+        &workspace_id,
+        &board,
+        "bulk_update_cards",
+        json!({
+            "updates": [
+                { "document_id": card_id, "archived": false, "due": "2026-09-21" },
+                { "document_id": parent_id, "status": "doing" },
+                { "document_id": "missing-card", "status": "done" }
+            ]
+        }),
+    )
+    .await;
+    assert_ok(&bulk, "bulk update");
+    assert_eq!(bulk["structuredContent"]["atomic"], false);
+    assert_eq!(bulk["structuredContent"]["succeeded"], 2);
+    assert_eq!(bulk["structuredContent"]["failed"], 1);
+    assert_eq!(
+        bulk["structuredContent"]["items"].as_array().unwrap().len(),
+        3
+    );
+
+    let too_many_updates = (0..101)
+        .map(|_| json!({ "document_id": card_id, "status": "done" }))
+        .collect::<Vec<_>>();
+    let too_many = pinned_tool_call(
+        app.clone(),
+        &board_token,
+        &workspace_id,
+        &board,
+        "bulk_update_cards",
+        json!({ "updates": too_many_updates }),
+    )
+    .await;
+    assert_eq!(too_many["isError"], true);
+    assert!(tool_text(&too_many).contains("between 1 and 100"));
+
+    let listed_statuses = pinned_tool_call(
+        app.clone(),
+        &board_token,
+        &workspace_id,
+        &board,
+        "list_statuses",
+        json!({}),
+    )
+    .await;
+    assert_ok(&listed_statuses, "list statuses");
+    assert_eq!(listed_statuses["structuredContent"]["doneColumn"], "done");
+
+    let camel_case_done = pinned_tool_call(
+        app.clone(),
+        &board_token,
+        &workspace_id,
+        &board,
+        "set_board_statuses",
+        json!({
+            "statuses": [
+                { "key": "todo", "name": "To do" },
+                { "key": "doing", "name": "Doing" },
+                { "key": "done", "name": "Done" }
+            ],
+            "doneColumn": "todo"
+        }),
+    )
+    .await;
+    assert_eq!(camel_case_done["isError"], true);
+    assert!(tool_text(&camel_case_done).contains("unexpected argument 'doneColumn'"));
+
+    let removed_done = pinned_tool_call(
+        app.clone(),
+        &board_token,
+        &workspace_id,
+        &board,
+        "set_board_statuses",
+        json!({
+            "statuses": [
+                { "key": "todo", "name": "To do" },
+                { "key": "doing", "name": "Doing" }
+            ]
+        }),
+    )
+    .await;
+    assert_eq!(removed_done["isError"], true);
+    assert!(tool_text(&removed_done).contains("without selecting done_status"));
+
+    let no_fallback = pinned_tool_call(
+        app.clone(),
+        &board_token,
+        &workspace_id,
+        &board,
+        "set_board_statuses",
+        json!({
+            "statuses": [
+                { "key": "todo", "name": "To do" },
+                { "key": "done", "name": "Done" }
+            ]
+        }),
+    )
+    .await;
+    assert_eq!(no_fallback["isError"], true);
+    assert!(tool_text(&no_fallback).contains("fallback_status"));
+
+    let statuses = pinned_tool_call(
+        app.clone(),
+        &board_token,
+        &workspace_id,
+        &board,
+        "set_board_statuses",
+        json!({
+            "statuses": [
+                { "key": "todo", "name": "Backlog" },
+                { "key": "done", "name": "Done" }
+            ],
+            "done_status": "todo",
+            "fallback_status": "todo"
+        }),
+    )
+    .await;
+    assert_ok(&statuses, "set statuses");
+    assert_eq!(statuses["structuredContent"]["applied"], true);
+    assert_eq!(statuses["structuredContent"]["doneColumn"], "todo");
+    assert_eq!(statuses["structuredContent"]["migrations"][0]["ok"], true);
+
+    let relisted_statuses = pinned_tool_call(
+        app.clone(),
+        &board_token,
+        &workspace_id,
+        &board,
+        "list_statuses",
+        json!({}),
+    )
+    .await;
+    assert_ok(&relisted_statuses, "relist statuses");
+    assert_eq!(relisted_statuses["structuredContent"]["doneColumn"], "todo");
+
+    let removed = pinned_tool_call(
+        app.clone(),
+        &board_token,
+        &workspace_id,
+        &board,
+        "remove_card_attachment",
+        json!({ "document_id": card_id, "attachment": "assets/checklist.txt" }),
+    )
+    .await;
+    assert_ok(&removed, "remove attachment");
+    assert!(!removed["structuredContent"]["attachments"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|value| value == "assets/checklist.txt"));
+
+    let deleted = pinned_tool_call(
+        app.clone(),
+        &board_token,
+        &workspace_id,
+        &board,
+        "delete_card",
+        json!({ "document_id": card_id }),
+    )
+    .await;
+    assert_ok(&deleted, "delete card");
+    assert_eq!(deleted["structuredContent"]["recovery"], "workspace-trash");
+    let missing = pinned_tool_call(
+        app,
+        &board_token,
+        &workspace_id,
+        &board,
+        "get_card",
+        json!({ "document_id": card_id }),
+    )
+    .await;
+    assert_eq!(missing["isError"], true);
+}
+
+#[tokio::test]
+async fn mcp_unpinned_card_writes_require_fresh_document_identity_and_hash() {
+    let (app, _pool) = common::setup().await;
+    let username = common::uid();
+    let (token, _) = common::register_user(app.clone(), &username).await;
+    let workspace_id = common::create_workspace(app.clone(), &token, &common::wname()).await;
+    let board = format!("b_{}", common::uid());
+    make_board(app.clone(), &token, &workspace_id, &board, "cas.board").await;
+
+    let created = kanban_tool_call(
+        app.clone(),
+        &token,
+        "create_card",
+        json!({
+            "workspace_id": workspace_id,
+            "board": board,
+            "title": "CAS card",
+            "status": "todo",
+            "start": "2026-10-01",
+            "due": "2026-10-02",
+            "tags": ["mcp"],
+            "attachments": ["assets/cas.txt"]
+        }),
+    )
+    .await;
+    assert_ok(&created, "unpinned create");
+    let document_id = created["structuredContent"]["documentId"]
+        .as_str()
+        .unwrap()
+        .to_string();
+    let content_hash = created["structuredContent"]["contentHash"]
+        .as_str()
+        .unwrap()
+        .to_string();
+
+    let missing_cas = kanban_tool_call(
+        app.clone(),
+        &token,
+        "update_card",
+        json!({
+            "workspace_id": workspace_id,
+            "board": board,
+            "document_id": document_id,
+            "status": "doing"
+        }),
+    )
+    .await;
+    assert_eq!(missing_cas["isError"], true);
+    assert!(tool_text(&missing_cas).contains("base_content_hash"));
+
+    let stale = kanban_tool_call(
+        app.clone(),
+        &token,
+        "update_card",
+        json!({
+            "workspace_id": workspace_id,
+            "board": board,
+            "document_id": document_id,
+            "base_content_hash": "stale",
+            "status": "doing"
+        }),
+    )
+    .await;
+    assert_eq!(stale["isError"], true);
+    assert!(tool_text(&stale).contains("stale baseContentHash"));
+
+    let updated = kanban_tool_call(
+        app.clone(),
+        &token,
+        "update_card",
+        json!({
+            "workspace_id": workspace_id,
+            "board": board,
+            "document_id": document_id,
+            "base_content_hash": content_hash,
+            "status": "doing",
+            "reminder": "2026-10-01",
+            "archived": true,
+            "tags": ["mcp", "cas"]
+        }),
+    )
+    .await;
+    assert_ok(&updated, "unpinned CAS update");
+    assert_eq!(updated["structuredContent"]["status"], "doing");
+    assert_eq!(updated["structuredContent"]["archived"], true);
+    assert_eq!(updated["structuredContent"]["tags"], json!(["mcp", "cas"]));
+
+    let statuses = kanban_tool_call(
+        app.clone(),
+        &token,
+        "list_statuses",
+        json!({ "workspace_id": workspace_id, "board": board }),
+    )
+    .await;
+    assert_ok(&statuses, "list statuses");
+    assert_eq!(statuses["structuredContent"]["doneColumn"], "done");
+    let board_document_id = statuses["structuredContent"]["documentId"]
+        .as_str()
+        .unwrap();
+    let board_hash = statuses["structuredContent"]["contentHash"]
+        .as_str()
+        .unwrap();
+    let changed = kanban_tool_call(
+        app.clone(),
+        &token,
+        "set_board_statuses",
+        json!({
+            "workspace_id": workspace_id,
+            "board": board,
+            "board_document_id": board_document_id,
+            "base_content_hash": board_hash,
+            "statuses": [
+                { "key": "todo", "name": "Backlog" },
+                { "key": "done", "name": "Done" }
+            ],
+            "fallback_status": "todo"
+        }),
+    )
+    .await;
+    assert_ok(&changed, "unpinned set statuses");
+    assert_eq!(changed["structuredContent"]["applied"], true);
+    assert_eq!(changed["structuredContent"]["doneColumn"], "done");
+
+    let stale_delete = kanban_tool_call(
+        app.clone(),
+        &token,
+        "delete_card",
+        json!({
+            "workspace_id": workspace_id,
+            "board": board,
+            "document_id": document_id,
+            "base_content_hash": updated["structuredContent"]["contentHash"]
+        }),
+    )
+    .await;
+    assert_eq!(stale_delete["isError"], true);
+    assert!(tool_text(&stale_delete).contains("stale baseContentHash"));
+
+    let cards = kanban_tool_call(
+        app.clone(),
+        &token,
+        "list_cards",
+        json!({ "workspace_id": workspace_id, "board": board }),
+    )
+    .await;
+    let fresh_hash = cards["structuredContent"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|card| card["documentId"] == document_id)
+        .unwrap()["contentHash"]
+        .as_str()
+        .unwrap();
+    let deleted = kanban_tool_call(
+        app,
+        &token,
+        "delete_card",
+        json!({
+            "workspace_id": workspace_id,
+            "board": board,
+            "document_id": document_id,
+            "base_content_hash": fresh_hash
+        }),
+    )
+    .await;
+    assert_ok(&deleted, "unpinned delete");
+    assert_eq!(deleted["structuredContent"]["recovery"], "workspace-trash");
+}
+
+#[tokio::test]
+async fn mcp_statuses_preserve_done_column_and_board_metadata_with_cas() {
+    let (app, _pool) = common::setup().await;
+    let username = common::uid();
+    let (token, _) = common::register_user(app.clone(), &username).await;
+    let workspace_id = common::create_workspace(app.clone(), &token, &common::wname()).await;
+    let board = format!("b_{}", common::uid());
+    let saved = common::save_doc(
+        app.clone(),
+        &token,
+        &workspace_id,
+        "project.board",
+        &json!({
+            "id": board,
+            "title": "Project delivery",
+            "columns": [
+                { "key": "todo", "name": "To do" },
+                { "key": "doing", "name": "Doing" },
+                { "key": "done", "name": "Done" }
+            ],
+            "groupBy": "assignee",
+            "project": { "key": "phoenix", "cadence": "weekly" },
+            "filters": { "priority": ["high"] }
+        })
+        .to_string(),
+    )
+    .await;
+    let board_document_id = saved["documentId"].as_str().unwrap().to_string();
+
+    let listed = kanban_tool_call(
+        app.clone(),
+        &token,
+        "list_statuses",
+        json!({ "workspace_id": workspace_id, "board": board }),
+    )
+    .await;
+    assert_ok(&listed, "list legacy statuses");
+    assert_eq!(listed["structuredContent"]["doneColumn"], "done");
+    let original_hash = listed["structuredContent"]["contentHash"]
+        .as_str()
+        .unwrap()
+        .to_string();
+
+    let camel_case_done = kanban_tool_call(
+        app.clone(),
+        &token,
+        "set_board_statuses",
+        json!({
+            "workspace_id": workspace_id,
+            "board": board,
+            "board_document_id": board_document_id,
+            "base_content_hash": original_hash,
+            "statuses": [
+                { "key": "todo", "name": "To do" },
+                { "key": "done", "name": "Done" }
+            ],
+            "doneColumn": "todo"
+        }),
+    )
+    .await;
+    assert_eq!(camel_case_done["isError"], true);
+    assert!(tool_text(&camel_case_done).contains("use snake_case 'done_status'"));
+
+    let removed_done = kanban_tool_call(
+        app.clone(),
+        &token,
+        "set_board_statuses",
+        json!({
+            "workspace_id": workspace_id,
+            "board": board,
+            "board_document_id": board_document_id,
+            "base_content_hash": original_hash,
+            "statuses": [
+                { "key": "todo", "name": "To do" },
+                { "key": "doing", "name": "Doing" }
+            ]
+        }),
+    )
+    .await;
+    assert_eq!(removed_done["isError"], true);
+    assert!(tool_text(&removed_done).contains("without selecting done_status"));
+
+    let unknown_done = kanban_tool_call(
+        app.clone(),
+        &token,
+        "set_board_statuses",
+        json!({
+            "workspace_id": workspace_id,
+            "board": board,
+            "board_document_id": board_document_id,
+            "base_content_hash": original_hash,
+            "statuses": [
+                { "key": "todo", "name": "To do" },
+                { "key": "done", "name": "Done" }
+            ],
+            "done_status": "missing"
+        }),
+    )
+    .await;
+    assert_eq!(unknown_done["isError"], true);
+    assert!(tool_text(&unknown_done).contains("must exist in the new status list"));
+
+    let migrated = kanban_tool_call(
+        app.clone(),
+        &token,
+        "set_board_statuses",
+        json!({
+            "workspace_id": workspace_id,
+            "board": board,
+            "board_document_id": board_document_id,
+            "base_content_hash": original_hash,
+            "statuses": [
+                { "key": "todo", "name": "Backlog" },
+                { "key": "doing", "name": "In progress" },
+                { "key": "shipped", "name": "Shipped" }
+            ],
+            "done_status": "shipped"
+        }),
+    )
+    .await;
+    assert_ok(&migrated, "migrate done status");
+    assert_eq!(migrated["structuredContent"]["applied"], true);
+    assert_eq!(migrated["structuredContent"]["doneColumn"], "shipped");
+    let migrated_hash = migrated["structuredContent"]["contentHash"]
+        .as_str()
+        .unwrap()
+        .to_string();
+
+    let preserved = kanban_tool_call(
+        app.clone(),
+        &token,
+        "set_board_statuses",
+        json!({
+            "workspace_id": workspace_id,
+            "board": board,
+            "board_document_id": board_document_id,
+            "base_content_hash": migrated_hash,
+            "statuses": [
+                { "key": "todo", "name": "Ready" },
+                { "key": "doing", "name": "Building" },
+                { "key": "shipped", "name": "Released" }
+            ]
+        }),
+    )
+    .await;
+    assert_ok(&preserved, "preserve done status");
+    assert_eq!(preserved["structuredContent"]["doneColumn"], "shipped");
+
+    let stale = kanban_tool_call(
+        app.clone(),
+        &token,
+        "set_board_statuses",
+        json!({
+            "workspace_id": workspace_id,
+            "board": board,
+            "board_document_id": board_document_id,
+            "base_content_hash": original_hash,
+            "statuses": [
+                { "key": "todo", "name": "To do" },
+                { "key": "shipped", "name": "Shipped" }
+            ],
+            "done_status": "todo"
+        }),
+    )
+    .await;
+    assert_eq!(stale["isError"], true);
+    assert!(tool_text(&stale).contains("stale baseContentHash"));
+
+    let (status, board_doc) = common::req(
+        app,
+        "GET",
+        &format!("/api/v1/workspaces/{workspace_id}/documents/{board_document_id}"),
+        Some(&token),
+        None,
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK, "{board_doc}");
+    let persisted: Value = serde_json::from_str(board_doc["content"].as_str().unwrap()).unwrap();
+    assert_eq!(persisted["doneColumn"], "shipped");
+    assert_eq!(persisted["groupBy"], "assignee");
+    assert_eq!(persisted["project"]["key"], "phoenix");
+    assert_eq!(persisted["project"]["cadence"], "weekly");
+    assert_eq!(persisted["filters"]["priority"], json!(["high"]));
+    assert_eq!(persisted["columns"][0]["name"], "Ready");
 }
 
 // ── Notes happy path ────────────────────────────────────────────────────────

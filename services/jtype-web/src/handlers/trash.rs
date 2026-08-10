@@ -111,7 +111,7 @@ pub async fn restore_trash_item_core(
     exclude_session: Option<&str>,
 ) -> Result<CloudDocument, AppError> {
     let row = sqlx::query(
-        r#"SELECT document_id, relative_path, title, content, content_hash, version_id
+        r#"SELECT relative_path, content
            FROM document_trash
            WHERE id = ? AND workspace_id = ? AND restored_at IS NULL"#,
     )
@@ -121,37 +121,58 @@ pub async fn restore_trash_item_core(
     .await?
     .ok_or(AppError::NotFound)?;
 
+    let budget_relative_path: String = row.try_get("relative_path")?;
+    let budget_content: String = row.try_get("content")?;
+    super::document::ensure_workspace_budget(
+        pool,
+        workspace_id,
+        &budget_relative_path,
+        &budget_content,
+    )
+    .await?;
+
+    let mut tx = pool.begin().await?;
+    let next_clock = super::document::next_workspace_clock(&mut tx, workspace_id).await?;
+
+    // Re-check and lock after taking the workspace clock. This serializes two
+    // restores and keeps the trash row, path-conflict decision, restored
+    // document, its board projection, and the workspace clock in one
+    // transaction. A path conflict returns 409 and rolls the entire
+    // transaction back; silently replacing the current document would cascade
+    // through its versions, comments, reactions, and open conflicts.
+    let row = sqlx::query(
+        r#"SELECT relative_path, title, content, content_hash
+           FROM document_trash
+           WHERE id = ? AND workspace_id = ? AND restored_at IS NULL
+           FOR UPDATE"#,
+    )
+    .bind(trash_id)
+    .bind(workspace_id)
+    .fetch_optional(&mut *tx)
+    .await?
+    .ok_or(AppError::NotFound)?;
     let relative_path: String = row.try_get("relative_path")?;
     let title: String = row.try_get("title")?;
     let content: String = row.try_get("content")?;
     let content_hash: String = row.try_get("content_hash")?;
 
-    let existing =
-        sqlx::query("SELECT id FROM documents WHERE workspace_id = ? AND relative_path = ?")
-            .bind(workspace_id)
-            .bind(&relative_path)
-            .fetch_optional(pool)
-            .await?;
-
-    if existing.is_some() {
-        sqlx::query("DELETE FROM documents WHERE workspace_id = ? AND relative_path = ?")
-            .bind(workspace_id)
-            .bind(&relative_path)
-            .execute(pool)
-            .await?;
+    if sqlx::query(
+        "SELECT id FROM documents WHERE workspace_id = ? AND relative_path = ? FOR UPDATE",
+    )
+    .bind(workspace_id)
+    .bind(&relative_path)
+    .fetch_optional(&mut *tx)
+    .await?
+    .is_some()
+    {
+        return Err(AppError::Conflict(format!(
+            "cannot restore '{}': a current document already exists at that path",
+            relative_path
+        )));
     }
-
-    let final_relative_path = relative_path.clone();
 
     let document_id = Uuid::new_v4().to_string();
     let version_id = Uuid::new_v4().to_string();
-
-    super::document::ensure_workspace_budget(pool, workspace_id, &final_relative_path, &content)
-        .await?;
-
-    let mut tx = pool.begin().await?;
-
-    let next_clock = super::document::next_workspace_clock(&mut tx, workspace_id).await?;
 
     sqlx::query(
         r#"INSERT INTO documents (id, workspace_id, relative_path, title, content_hash, content, updated_clock, current_version_id)
@@ -159,13 +180,22 @@ pub async fn restore_trash_item_core(
     )
     .bind(&document_id)
     .bind(workspace_id)
-    .bind(&final_relative_path)
+    .bind(&relative_path)
     .bind(&title)
     .bind(&content_hash)
     .bind(&content)
     .bind(next_clock)
     .bind(&version_id)
     .execute(&mut *tx)
+    .await?;
+
+    crate::db::board_memberships::sync_document(
+        &mut tx,
+        workspace_id,
+        &document_id,
+        &relative_path,
+        &content,
+    )
     .await?;
 
     sqlx::query(
@@ -184,12 +214,13 @@ pub async fn restore_trash_item_core(
     sqlx::query(
         r#"UPDATE document_trash SET restored_at = CURRENT_TIMESTAMP,
            restored_by_device_id = ?, restored_by_user_id = ?, restored_clock = ?
-           WHERE id = ?"#,
+           WHERE id = ? AND workspace_id = ? AND restored_at IS NULL"#,
     )
     .bind(device_id)
     .bind(user_id)
     .bind(next_clock)
     .bind(trash_id)
+    .bind(workspace_id)
     .execute(&mut *tx)
     .await?;
 
@@ -200,7 +231,7 @@ pub async fn restore_trash_item_core(
         WorkspaceEvent::DocumentTrashed {
             workspace_id: workspace_id.to_string(),
             source_session_id: exclude_session.map(|s| s.to_string()),
-            relative_path,
+            relative_path: relative_path.clone(),
             action: "restored".to_string(),
             event_clock: next_clock,
             source: "api".to_string(),
@@ -212,7 +243,7 @@ pub async fn restore_trash_item_core(
 
     Ok(CloudDocument {
         document_id,
-        relative_path: final_relative_path,
+        relative_path,
         title,
         is_published: false,
         content,

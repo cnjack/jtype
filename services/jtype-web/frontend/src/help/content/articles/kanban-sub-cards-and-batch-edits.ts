@@ -6,14 +6,14 @@ const article: ArticleMeta = {
   id: 'sub-cards-and-batch-edits',
   categoryId: 'kanban',
   order: 5,
-  updated: '2026-07-16',
+  updated: '2026-08-11',
   title: {
     en: 'Sub-cards, batch edits, and full-text search',
     zh: '子卡片、批量编辑与全文搜索',
   },
   summary: {
-    en: 'Break an epic into sub-cards with a progress ring, edit many cards at once with multi-select, and search across card bodies, tags, and tickets.',
-    zh: '用子卡片拆解大任务并查看完成度圆环，多选批量编辑卡片，并在卡片正文、标签与工单号中全文搜索。',
+    en: 'Break an epic into sub-cards, batch status, priority, assignee, added labels, due dates or archive state, and search full Card bodies.',
+    zh: '用子卡片拆解大任务，批量修改状态、优先级、负责人、标签、截止日期或归档状态，并搜索完整卡片正文。',
   },
   body: { en, zh },
 }
