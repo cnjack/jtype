@@ -15,7 +15,7 @@ Cline，任何会说 MCP 的客户端）可以通过标准协议读写它们。*
   <img alt="Rust" src="https://img.shields.io/badge/Rust-Axum%20+%20Tauri-000000?style=flat-square&logo=rust">
   <img alt="React 19" src="https://img.shields.io/badge/React-19-149ECA?style=flat-square&logo=react">
   <img alt="Tauri 2" src="https://img.shields.io/badge/Tauri-2-24C8DB?style=flat-square&logo=tauri">
-  <img alt="MCP — 14 tools" src="https://img.shields.io/badge/MCP-14%20tools-7C3AED?style=flat-square">
+  <img alt="MCP — 笔记与看板" src="https://img.shields.io/badge/MCP-notes%20%2B%20Kanban-7C3AED?style=flat-square">
   <img alt="Platforms" src="https://img.shields.io/badge/macOS%20·%20Windows%20·%20Linux-555?style=flat-square">
 </p>
 
@@ -50,9 +50,9 @@ JType 拒绝这个二选一。
 
 JType 提供的是一套真实、已测试的 AI 能力，而非藏在 roadmap 里的占位：
 
-- **MCP server** —— `POST /mcp`（Streamable HTTP，JSON-RPC），**14 个工具**，覆盖笔记
-  （`list/get/search/create/update/append`）与看板
-  （`list_boards/get_board/list_cards/create_card/update_card/move_card/list_members`）。
+- **MCP servers** —— `POST /mcp` 提供笔记工具，`POST /mcp/kanban` 提供完整的看板生命周期、
+  标签、附件、关系、批量更新、状态与评论能力。看板设置还可生成固定到单一看板的、更严格的
+  **17 工具 endpoint**。
 - **OAuth device flow**（RFC 8628）—— `jtype login` 打开浏览器，授权一次，存下带作用域的
   token。客户端不收集密码。
 - **CLI** —— `jtype` 二进制以当前目录的 vault 为准、本地优先工作，`bind` + `sync` 做云端
@@ -61,7 +61,7 @@ JType 提供的是一套真实、已测试的 AI 能力，而非藏在 roadmap �
 
 ```mermaid
 flowchart LR
-    A["AI agent<br/>Claude · Cursor · Cline"] -- "MCP / HTTP" --> M["JType MCP server<br/>14 个工具"]
+    A["AI agent<br/>Claude · Cursor · Cline"] -- "MCP / HTTP" --> M["JType MCP servers<br/>笔记 · 看板"]
     M -- 笔记 --> N["list · get · search<br/>create · update · append"]
     M -- 看板 --> K["boards · cards<br/>move · assign"]
     N --> WS[("云端 workspace")]
@@ -74,9 +74,14 @@ flowchart LR
 ```jsonc
 // 例如 ~/.jcode/config.json 或任意 MCP 客户端
 "mcp_servers": {
-  "jtype": {
+  "jtype-notes": {
     "type": "http",
     "url": "http://localhost:13345/mcp",
+    "headers": { "Authorization": "Bearer <来自 `jtype login` 的 token>" }
+  },
+  "jtype-kanban": {
+    "type": "http",
+    "url": "http://localhost:13345/mcp/kanban",
     "headers": { "Authorization": "Bearer <来自 `jtype login` 的 token>" }
   }
 }
@@ -84,10 +89,9 @@ flowchart LR
 
 完整流程见 [Connect your AI](docs/connect-your-ai.md)。
 
-> 范围说明：当前 AI 能力（MCP/CLI/Skills）驱动的是**云端 workspace**——笔记与云端看板。
-> 桌面端的 `.board` 文件是另一套基于文件的看板模型，详见
-> [看板缺口与路线图](internal-docs/kanban/gaps-and-roadmap.md)。桌面 App 内的 AI UI 目前
-> 仍刻意隐藏。
+> 范围说明：云端 MCP 与本地 CLI 使用同一个可移植模型：`.board` 项目配置加 Markdown
+> 卡片。云端自动化带审计并遵循角色权限，本地 CLI 仍以文件系统为先。桌面 App 内的 AI UI
+> 会继续隐藏，直到真正的用户 AI 工作流启用。
 
 ## 你能得到什么
 
@@ -95,8 +99,9 @@ flowchart LR
   frontmatter，wikilink（`[[Note|Label]]`），KaTeX 数学公式。
 - **vault 内的图与富文件** —— Mermaid（fenced 或 `.mmd`）、Excalidraw（完整画布编辑）、
   Draw.io、PlantUML、Swagger/OpenAPI、PDF 文档、内联图片。
-- **看板** —— 云端 board，含列、卡片、标签、优先级、负责人、到期日、拖拽、WebSocket 实时
-  同步、软删除 + 30 天回收站、乐观锁。
+- **项目工作区** —— 一个 `.board` 加一批 Markdown 卡片，可投影为 Board、Table、Calendar、
+  Backlog 与 Gantt，并提供 My Work、Inbox、字段 Activity、批量编辑、实时同步、可恢复回收站、
+  乐观锁与 MCP 自动化。
 - **发布** —— 把 workspace 变成 `/u/:username/:page_path` 的只读站点，带服务端主题引擎与已
   验证的自定义域名。
 - **三端，一个 vault** —— 本地优先桌面端（Tauri 2）、云端 Web App、CLI。
@@ -191,7 +196,7 @@ flowchart TB
 
     subgraph cloud["Web 服务 · Axum (Rust)"]
         API["REST + WebSocket API<br/>认证 · 同步 · 发布 · 管理"]
-        MCP["MCP server<br/>14 个工具"]
+        MCP["MCP servers<br/>笔记 · 看板"]
         DB[("MySQL")]
         OBJ[("S3 / RustFS<br/>资产 + blob")]
     end

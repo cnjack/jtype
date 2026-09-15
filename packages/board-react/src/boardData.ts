@@ -8,6 +8,7 @@ import {
   bodyExcerpt,
   countTasks,
   parseAttachments,
+  parseBoardDocumentConfig,
   parseLinks,
   parseTagList,
   pickCustomFields,
@@ -41,6 +42,7 @@ export function toViewConfig(config: BoardConfigJSON, boardDir: string): BoardVi
   return {
     title: config.title || boardDir,
     columns: config.columns,
+    project: config.project,
     doneColumn: config.doneColumn,
     colorColumns: config.colorColumns,
     viewType: config.viewType,
@@ -73,7 +75,10 @@ export function cardFromDoc(
     priority: fm.data.priority || null,
     assignee: fm.data.assignee || null,
     swimlaneKey: fm.data.swimlane || null,
+    start: fm.data.start || null,
     due: fm.data.due || null,
+    reminder: fm.data.reminder || null,
+    archived: ['true', '1', 'yes'].includes((fm.data.archived || '').toLowerCase()),
     tags: resolveTags(fm.data.tags ? parseTagList(fm.data.tags) : [], config.labels),
     notes: fm.body,
     taskDone: tasks.done,
@@ -119,19 +124,42 @@ export function applyLocalViewPatch(current: LocalViewPatch, patch: Record<strin
 /** Per-instance fetch cache: docId → last seen contentHash + document. */
 export type DocCache = Map<string, { contentHash: string; doc: JTypeCloudDocument }>
 
+const CARD_FETCH_CONCURRENCY = 8
+
+async function mapConcurrent<T, R>(
+  values: readonly T[],
+  limit: number,
+  map: (value: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  const results = new Array<R>(values.length)
+  let cursor = 0
+  const worker = async () => {
+    while (cursor < values.length) {
+      const index = cursor
+      cursor += 1
+      results[index] = await map(values[index]!, index)
+    }
+  }
+  await Promise.all(
+    Array.from({ length: Math.min(limit, values.length) }, () => worker()),
+  )
+  return results
+}
+
 /**
  * One full board read: list documents, resolve the `.board` doc, then fetch the
- * config + every card doc under the board folder or an explicit additional
- * Card root — but only re-download documents whose `contentHash` changed since
- * the previous snapshot (the list endpoint carries the hash), so the 30s poll
- * stays cheap on quiet boards.
+ * config + matching Card docs. With no explicit roots the whole workspace is
+ * inspected so Cards managed outside the board folder are still members. When
+ * roots are supplied, discovery stays bounded to the board folder plus those
+ * roots. Only documents whose `contentHash` changed are re-downloaded, so the
+ * 30s poll stays cheap on quiet boards after the initial discovery.
  */
 export async function loadBoardSnapshot(
   client: JTypeBoardDataClient,
   workspaceId: string,
   boardRef: string,
   cache: DocCache,
-  additionalCardRoots: readonly string[] = [],
+  additionalCardRoots?: readonly string[],
 ): Promise<BoardSnapshot> {
   const docs = await client.listDocuments(workspaceId)
   const resolved = resolveBoardDoc(docs, boardRef)
@@ -148,24 +176,22 @@ export async function loadBoardSnapshot(
   const boardDocFull = await getCached(boardItem.id, boardItem.contentHash)
   let config: BoardConfigJSON
   try {
-    config = JSON.parse(boardDocFull.content) as BoardConfigJSON
-    if (!config || typeof config !== 'object' || !Array.isArray(config.columns)) {
-      throw new Error('missing columns')
-    }
+    config = parseBoardDocumentConfig(boardDocFull.content, resolved.boardDir) as BoardConfigJSON
   } catch (e) {
     throw new JTypeBoardError('board_config_invalid', `${resolved.boardRelativePath}: ${String(e)}`)
   }
 
   const cardItems = docs.filter(
     (d) =>
-      (
+      d.relativePath.toLowerCase().endsWith('.md') &&
+      (additionalCardRoots === undefined ||
         d.relativePath.startsWith(`${resolved.boardDir}/`) ||
-        additionalCardRoots.some((root) => d.relativePath.startsWith(`${root}/`))
-      ) &&
-      d.relativePath.toLowerCase().endsWith('.md'),
+        additionalCardRoots.some((root) => d.relativePath.startsWith(`${root}/`))),
   )
-  const loaded = await Promise.all(
-    cardItems.map(async (d) => ({ item: d, doc: await getCached(d.id, d.contentHash) })),
+  const loaded = await mapConcurrent(
+    cardItems,
+    CARD_FETCH_CONCURRENCY,
+    async (d) => ({ item: d, doc: await getCached(d.id, d.contentHash) }),
   )
 
   const metaByPath = new Map<string, CardMeta>()

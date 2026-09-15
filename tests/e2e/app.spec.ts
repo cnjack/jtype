@@ -7,6 +7,13 @@ declare global {
     __SYNC_BASES__: Record<string, string>;
     __SYNC_FOLDER_BASES__: string[];
     __SYNC_PUSH_ERROR__: string | null;
+    __BOARD_WRITE_REQUESTS__: Array<{ path: string; content: string }>;
+    __DEFER_BOARD_READS__: boolean;
+    __DEFER_BOARD_SCANS__: boolean;
+    __BOARD_READ_COUNT__: number;
+    __BOARD_SCAN_COUNT__: number;
+    __RELEASE_BOARD_READS__: () => void;
+    __RELEASE_BOARD_SCANS__: () => void;
     __TRASH_METADATA__: {
       lastSyncedClock: number;
       pendingTrashOps: Array<{ type: string; trashId?: string }>;
@@ -80,6 +87,8 @@ test.beforeEach(async ({ page }) => {
 
     let callbackId = 0;
     let eventId = 0;
+    const pendingBoardReads: Array<() => void> = [];
+    const pendingBoardScans: Array<() => void> = [];
     const trashItems: Array<{ trashId: string; relativePath: string; name: string; trashedAt: number; content: string }> = [];
     const workspaceSnapshot = () => JSON.parse(JSON.stringify(workspace));
     const removeWorkspaceEntry = (entries: Array<{ relativePath: string; path: string; children: unknown[] }>, relativePath: string): boolean => {
@@ -103,6 +112,19 @@ test.beforeEach(async ({ page }) => {
       __SYNC_BASES__: {},
       __SYNC_FOLDER_BASES__: [],
       __SYNC_PUSH_ERROR__: null,
+      __BOARD_WRITE_REQUESTS__: [],
+      __DEFER_BOARD_READS__: false,
+      __DEFER_BOARD_SCANS__: false,
+      __BOARD_READ_COUNT__: 0,
+      __BOARD_SCAN_COUNT__: 0,
+      __RELEASE_BOARD_READS__: () => {
+        window.__DEFER_BOARD_READS__ = false;
+        pendingBoardReads.splice(0).forEach((resolve) => resolve());
+      },
+      __RELEASE_BOARD_SCANS__: () => {
+        window.__DEFER_BOARD_SCANS__ = false;
+        pendingBoardScans.splice(0).forEach((resolve) => resolve());
+      },
       __TRASH_METADATA__: { lastSyncedClock: 0, pendingTrashOps: [] },
       __VAULT_BINDINGS__: [],
       __VAULT_SETTINGS__: {
@@ -180,12 +202,25 @@ test.beforeEach(async ({ page }) => {
             return path;
           }
           if (cmd === "open_workspace") return workspaceSnapshot();
-          if (cmd === "read_board_file") return files[String(args.path)] ?? "";
+          if (cmd === "read_board_file") {
+            window.__BOARD_READ_COUNT__ += 1;
+            if (window.__DEFER_BOARD_READS__) {
+              await new Promise<void>((resolve) => pendingBoardReads.push(resolve));
+            }
+            return files[String(args.path)] ?? "";
+          }
           if (cmd === "write_board_file") {
-            files[String(args.path)] = String(args.content);
+            const path = String(args.path);
+            const content = String(args.content);
+            window.__BOARD_WRITE_REQUESTS__.push({ path, content });
+            files[path] = content;
             return null;
           }
           if (cmd === "scan_board_cards") {
+            window.__BOARD_SCAN_COUNT__ += 1;
+            if (window.__DEFER_BOARD_SCANS__) {
+              await new Promise<void>((resolve) => pendingBoardScans.push(resolve));
+            }
             return [
               {
                 relativePath: "roadmap/desktop-card.md",
@@ -552,22 +587,36 @@ test("opens a desktop board and manages status columns from the shared toolbar",
   await dialog.getByRole("button", { name: "Add status" }).click();
   await dialog.getByRole("textbox", { name: "Status name" }).fill("Review");
   await dialog.getByRole("button", { name: "Add", exact: true }).click();
-  await expect(dialog.getByText("Review", { exact: true })).toBeVisible();
 
   await expect
     .poll(async () =>
       page.evaluate(() => JSON.parse(window.__E2E_FS__["C:/workspace/roadmap.board"]).columns.map((column: { name: string }) => column.name)),
     )
     .toContain("Review");
-  await dialog.getByRole("button", { name: "Done", exact: true }).click();
+  await expect(dialog).toBeHidden();
+  await expect(page.locator('[data-col-key="review"]')).toBeVisible();
 
+  const boardBeforePersonalChange = await page.evaluate(
+    () => window.__E2E_FS__["C:/workspace/roadmap.board"],
+  );
   await swimlanes.selectOption("priority");
   await expect
     .poll(() =>
-      page.evaluate(() => JSON.parse(window.__E2E_FS__["C:/workspace/roadmap.board"]).groupBy),
+      page.evaluate(() => {
+        const key = Object.keys(localStorage).find((item) => item.startsWith("jtype.board-view.v1:"));
+        return key ? JSON.parse(localStorage.getItem(key) ?? "{}").groupBy : null;
+      }),
     )
     .toBe("priority");
+  expect(await page.evaluate(() => window.__E2E_FS__["C:/workspace/roadmap.board"])).toBe(
+    boardBeforePersonalChange,
+  );
+
+  await page.locator("#workspace-sidebar").getByRole("button", { name: /intro\.md/ }).click();
+  await page.locator("#workspace-sidebar").getByRole("button", { name: /roadmap\.board/ }).click();
+  await expect(page.getByLabel("Swimlanes", { exact: true })).toHaveValue("priority");
   const card = page.locator('[data-card-id="C:/workspace/roadmap/desktop-card.md"]');
+  const cardShell = card.locator("..");
   const target = page.locator('[data-col-key="urgent"]');
   const cardBox = await card.boundingBox();
   const targetBox = await target.boundingBox();
@@ -577,7 +626,7 @@ test("opens a desktop board and manages status columns from the shared toolbar",
   await page.mouse.move(cardBox!.x + cardBox!.width / 2, cardBox!.y + cardBox!.height / 2);
   await page.mouse.down();
   await page.mouse.move(cardBox!.x + cardBox!.width / 2 + 8, cardBox!.y + cardBox!.height / 2, { steps: 4 });
-  await expect(card).toHaveClass(/opacity-40/);
+  await expect(cardShell).toHaveClass(/opacity-40/);
   await page.mouse.move(targetBox!.x + targetBox!.width / 2, targetBox!.y + 80, { steps: 12 });
   await expect(target).toHaveClass(/border-brand\/40/);
   await page.mouse.up();
@@ -587,6 +636,173 @@ test("opens a desktop board and manages status columns from the shared toolbar",
       page.evaluate(() => window.__E2E_FS__["C:/workspace/roadmap/desktop-card.md"] ?? ""),
     )
     .toContain("priority: urgent");
+});
+
+test("a failed desktop board refresh disables stale mutations until a valid snapshot loads", async ({ page }) => {
+  const boardPath = "C:/workspace/roadmap.board";
+  await openWorkspace(page);
+  await page.locator("#workspace-sidebar").getByRole("button", { name: /roadmap\.board/ }).click();
+  await expect(page.getByText("Product roadmap")).toBeVisible();
+
+  const validBoard = await page.evaluate((path) => window.__E2E_FS__[path], boardPath);
+  const invalidBoard = JSON.stringify({ id: "roadmap", title: "Broken", columns: "invalid" });
+
+  // Leave a config mutation waiting for user confirmation. This models an old
+  // UI action that started while the snapshot was still valid.
+  const todoHeader = page.locator('[data-col-key="todo"] > div').first();
+  await todoHeader.locator("button").nth(1).click();
+  await page.getByRole("menuitem", { name: "Rename", exact: true }).click();
+  const rename = page.getByRole("dialog", { name: "Rename column" });
+  const renameInput = rename.locator("input");
+  await expect(renameInput).toBeVisible();
+  await renameInput.fill("Must not overwrite");
+
+  // Simulate another process leaving the .board invalid, then invoke the real
+  // toolbar refresh underneath the pending prompt.
+  await page.evaluate(({ path, content }) => {
+    window.__E2E_FS__[path] = content;
+    const refresh = document.querySelector<HTMLButtonElement>('button[title="Refresh"]');
+    if (!refresh) throw new Error("Board refresh button was not found");
+    refresh.click();
+  }, { path: boardPath, content: invalidBoard });
+
+  await expect(page.getByText(/latest board snapshot could not be loaded/i)).toBeVisible();
+  await expect(page.getByText("Desktop card", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Manage statuses" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "New card" })).toHaveCount(0);
+
+  // Completing the already-open prompt must hit the dynamic writable guard,
+  // not persist the stale config over the externally invalid document.
+  await rename.getByRole("button", { name: "OK" }).click();
+  await expect(renameInput).toBeHidden();
+  await page.waitForTimeout(100);
+  expect(await page.evaluate(() => window.__BOARD_WRITE_REQUESTS__)).toEqual([]);
+  expect(await page.evaluate((path) => window.__E2E_FS__[path], boardPath)).toBe(invalidBoard);
+
+  // A successful real refresh is the only transition that makes mutations
+  // available again.
+  await page.evaluate(
+    ({ path, content }) => {
+      window.__E2E_FS__[path] = content;
+    },
+    { path: boardPath, content: validBoard },
+  );
+  await page.getByRole("button", { name: "Refresh" }).click();
+  await expect(page.getByText(/latest board snapshot could not be loaded/i)).toBeHidden();
+  await expect(page.getByRole("button", { name: "Manage statuses" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Manage statuses" }).click();
+  const recovered = page.getByRole("dialog", { name: "Manage statuses" });
+  await recovered.getByRole("button", { name: "Add status" }).click();
+  await recovered.getByRole("textbox", { name: "Status name" }).fill("Recovered");
+  await recovered.getByRole("button", { name: "Add", exact: true }).click();
+
+  await expect
+    .poll(() => page.evaluate(() => window.__BOARD_WRITE_REQUESTS__.length))
+    .toBe(1);
+  await expect
+    .poll(() =>
+      page.evaluate((path) =>
+        JSON.parse(window.__E2E_FS__[path]).columns.map((column: { name: string }) => column.name),
+      boardPath),
+    )
+    .toContain("Recovered");
+});
+
+test("a desktop board refresh revokes write trust while config and cards are loading", async ({ page }) => {
+  const boardPath = "C:/workspace/roadmap.board";
+  await openWorkspace(page);
+  await page.locator("#workspace-sidebar").getByRole("button", { name: /roadmap\.board/ }).click();
+  await expect(page.getByText("Product roadmap")).toBeVisible();
+
+  // Start a config edit against the current generation, but leave its prompt
+  // open while an external writer changes the board document.
+  const todoHeader = page.locator('[data-col-key="todo"] > div').first();
+  await todoHeader.locator("button").nth(1).click();
+  await page.getByRole("menuitem", { name: "Rename", exact: true }).click();
+  const rename = page.getByRole("dialog", { name: "Rename column" });
+  const renameInput = rename.locator("input");
+  await renameInput.fill("Must stay stale");
+
+  const baseline = await page.evaluate(() => ({
+    reads: window.__BOARD_READ_COUNT__,
+    scans: window.__BOARD_SCAN_COUNT__,
+  }));
+  await page.evaluate((path) => {
+    const external = JSON.parse(window.__E2E_FS__[path]);
+    external.title = "Concurrent roadmap";
+    window.__E2E_FS__[path] = JSON.stringify(external);
+    window.__DEFER_BOARD_READS__ = true;
+    window.__DEFER_BOARD_SCANS__ = true;
+    const refresh = document.querySelector<HTMLButtonElement>('button[title="Refresh"]');
+    if (!refresh) throw new Error("Board refresh button was not found");
+    refresh.click();
+  }, boardPath);
+
+  // Trust is revoked synchronously, before the deferred board read resolves.
+  await expect
+    .poll(() => page.evaluate(() => window.__BOARD_READ_COUNT__))
+    .toBeGreaterThan(baseline.reads);
+  await expect(page.getByRole("button", { name: "Manage statuses" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "New card" })).toHaveCount(0);
+
+  // Completing an edit that began under the old generation must hit the
+  // dynamic guard. It may request a recovery reload, but it cannot write.
+  await rename.getByRole("button", { name: "OK" }).click();
+  await expect(renameInput).toBeHidden();
+  await page.waitForTimeout(50);
+  expect(await page.evaluate(() => window.__BOARD_WRITE_REQUESTS__)).toEqual([]);
+
+  // Releasing only the config read is not enough: the card scan is part of the
+  // same snapshot generation, so the old UI remains read-only until it lands.
+  await page.evaluate(() => window.__RELEASE_BOARD_READS__());
+  await expect
+    .poll(() => page.evaluate(() => window.__BOARD_SCAN_COUNT__))
+    .toBeGreaterThan(baseline.scans);
+  await expect(page.getByRole("button", { name: "Manage statuses" })).toHaveCount(0);
+  expect(await page.evaluate(() => window.__BOARD_WRITE_REQUESTS__)).toEqual([]);
+
+  await page.evaluate(() => window.__RELEASE_BOARD_SCANS__());
+  await expect(page.getByText("Concurrent roadmap")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Manage statuses" })).toBeVisible();
+  expect(await page.evaluate(() => window.__BOARD_WRITE_REQUESTS__)).toEqual([]);
+
+  // The successful latest generation restores mutations.
+  await page.getByRole("button", { name: "Manage statuses" }).click();
+  const recovered = page.getByRole("dialog", { name: "Manage statuses" });
+  await recovered.getByRole("button", { name: "Add status" }).click();
+  await recovered.getByRole("textbox", { name: "Status name" }).fill("Recovered after load");
+  await recovered.getByRole("button", { name: "Add", exact: true }).click();
+  await expect
+    .poll(() => page.evaluate(() => window.__BOARD_WRITE_REQUESTS__.length))
+    .toBe(1);
+});
+
+test("an initially invalid desktop board keeps a discoverable refresh path", async ({ page }) => {
+  const boardPath = "C:/workspace/roadmap.board";
+  const validBoard = await page.evaluate((path) => window.__E2E_FS__[path], boardPath);
+  await page.evaluate((path) => {
+    window.__E2E_FS__[path] = JSON.stringify({ id: "roadmap", columns: "invalid" });
+  }, boardPath);
+
+  await openWorkspace(page);
+  await page.locator("#workspace-sidebar").getByRole("button", { name: /roadmap\.board/ }).click();
+
+  await expect(page.getByRole("alert")).toContainText(/latest board snapshot could not be loaded/i);
+  const retry = page.getByRole("button", { name: "Refresh", exact: true });
+  await expect(retry).toBeVisible();
+  await expect(page.getByRole("button", { name: "Manage statuses" })).toHaveCount(0);
+
+  await page.evaluate(
+    ({ path, content }) => {
+      window.__E2E_FS__[path] = content;
+    },
+    { path: boardPath, content: validBoard },
+  );
+  await retry.click();
+
+  await expect(page.getByText("Product roadmap")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Manage statuses" })).toBeVisible();
 });
 
 test("opens an initial markdown file passed by the OS", async ({ page }) => {

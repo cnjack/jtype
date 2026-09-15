@@ -6,6 +6,7 @@ import type {
   BoardComment,
   BoardActivityEvent,
   BoardFieldDef,
+  BoardPersonalViewState,
 } from "../../lib/board";
 
 /** Mutations the board surface performs; each platform wires these to its data layer. */
@@ -34,7 +35,7 @@ export type BoardActions = {
   deleteCard: (card: BoardViewCard) => Promise<void> | void;
   /** Bulk delete with a single confirmation (multi-select toolbar). Omit to
    *  hide the bulk Delete action. */
-  deleteCards?: (cards: BoardViewCard[]) => Promise<void> | void;
+  deleteCards?: (cards: BoardViewCard[]) => Promise<boolean | void> | boolean | void;
   duplicateCard?: (card: BoardViewCard) => Promise<void> | void;
   copyCardLink?: (card: BoardViewCard) => Promise<void> | void;
   saveAsTemplate?: (card: BoardViewCard) => Promise<void> | void;
@@ -54,6 +55,35 @@ export type BoardActions = {
   setConfig: (patch: Partial<BoardViewConfig>) => Promise<void> | void;
   refresh?: () => Promise<void> | void;
 };
+
+/** Defense-in-depth wrapper for hosts whose permission can change while an edit is queued. */
+export function guardBoardActions(actions: BoardActions, isReadOnly: () => boolean): BoardActions {
+  const guard = <T extends (...args: never[]) => unknown>(action: T | undefined): T | undefined =>
+    action
+      ? (((...args: Parameters<T>) => (isReadOnly() ? undefined : action(...args))) as T)
+      : undefined;
+  return {
+    ...actions,
+    moveCard: guard(actions.moveCard)!,
+    createCard: guard(actions.createCard)!,
+    updateCard: guard(actions.updateCard)!,
+    updateCards: guard(actions.updateCards),
+    deleteCard: guard(actions.deleteCard)!,
+    deleteCards: guard(actions.deleteCards),
+    duplicateCard: guard(actions.duplicateCard),
+    copyCardLink: guard(actions.copyCardLink),
+    saveAsTemplate: guard(actions.saveAsTemplate),
+    openCardFull: guard(actions.openCardFull),
+    reorderColumns: guard(actions.reorderColumns),
+    addColumn: guard(actions.addColumn),
+    renameColumn: guard(actions.renameColumn),
+    deleteColumn: guard(actions.deleteColumn),
+    setColumnColor: guard(actions.setColumnColor),
+    setColumnLimit: guard(actions.setColumnLimit),
+    toggleDoneColumn: guard(actions.toggleDoneColumn),
+    setConfig: guard(actions.setConfig)!,
+  };
+}
 
 export type BoardOption = {
   value: string;
@@ -117,16 +147,29 @@ export type BoardPeekProps = {
   portalClassName?: string;
   /** Host-owned content appended after native Card properties and relations. */
   supplement?: ReactNode;
-  onChange: (patch: Partial<BoardViewCard>) => void;
+  /** Disable every mutation while retaining navigation, preview and activity. */
+  readOnly?: boolean;
+  /** Navigate to the previous Card in a nested detail stack. */
+  onBack?: () => void;
+  onChange: (patch: Partial<BoardViewCard>) => Promise<void> | void;
+  /** Lets the owning Headless UI Dialog route Escape/backdrop close through
+   * the detail's pending-save guard. */
+  onCloseRequestReady?: (request: (() => void) | null) => void;
   onClose: () => void;
-  onDelete: () => void;
-  onOpenFull?: () => void;
+  onDelete?: () => Promise<void> | void;
+  onOpenFull?: () => Promise<void> | void;
 };
 
 export type BoardSurfaceProps = {
   config: BoardViewConfig;
   cards: BoardViewCard[];
   actions: BoardActions;
+  /**
+   * User-owned projection preferences. Hosts persist this separately from the
+   * shared `.board` model; legacy board config is only the adapter's seed.
+   */
+  viewState?: BoardPersonalViewState;
+  onViewStateChange?: (state: BoardPersonalViewState) => Promise<void> | void;
   error?: string;
   /**
    * Open this Card once when the surface mounts and the Card is present.

@@ -12,7 +12,7 @@ import 'jtype-board-react/style.css'
 <div style={{ height: 600 }}>
   <JTypeBoard
     baseUrl="https://jtype.example.com"
-    token={token}            // mcp-scope session token; XOR with `client`
+    token={token}            // full REST session token; XOR with `client`
     workspaceId="f006b727-…"
     boardRef="jcloud-dev"    // board name or .board relative path
   />
@@ -20,12 +20,14 @@ import 'jtype-board-react/style.css'
 ```
 
 The component resolves `boardRef` to the `.board` config document itself
-(exact path first, then unique basename anywhere in the workspace), scans the
-board folder's card documents, and gives you the full board: selectable
+(exact path first, then unique basename anywhere in the workspace), discovers
+Markdown Cards whose `board` frontmatter matches that config, and gives you the
+full board even when automation stores Cards outside the board folder: selectable
 vertical swimlanes (status, priority, assignee, or custom), cards,
 drag-to-move (with document writeback), multi-select filters, search/sort,
-Board/Table/Calendar views, and a
-built-in read-only card detail.
+Board/Table/Calendar/Backlog/Gantt projections, My Work and Inbox scopes, and
+a contextual side-sheet Card detail. All views operate on the same Markdown
+Cards; Backlog and Gantt do not create a second planning data model.
 
 The wrapper fills its container — **give the parent element a height.**
 
@@ -36,26 +38,42 @@ The wrapper fills its container — **give the parent element a height.**
 | `workspaceId` | `string` | required | Cloud workspace id (UUID). |
 | `boardRef` | `string` | required | Board name (`jcloud-dev`) or `.board` relative path (`team/sprint.board`). Ambiguous names fail visibly, listing candidates. |
 | `baseUrl` | `string` | — | jtype server origin. Use together with `token`; XOR with `client`. |
-| `token` | `string` | — | Session token, typically `mcp`-scoped (mint via the OAuth device flow or the board Settings → MCP access panel). |
+| `token` | `string` | — | Full session token accepted by the document REST API. A board-pinned token from **Settings → MCP access** is MCP-only and returns `403` here. Prefer `client` for production. |
 | `client` | `JTypeBoardDataClient` | — | Injected data client; replaces `baseUrl`+`token`. **Memoize it** — a new identity per render remounts the board. |
 | `readOnly` | `boolean` | `false` | Hides every mutation affordance (drag, composers, menus). View switching stays usable but is kept local, never written back. |
-| `currentUser` | `string` | — | Current user's display name. Enables the personal **My cards** filter. |
+| `currentUser` | `string` | — | Current user's display name. Enables **My Work**, mentions, and personal due, reminder, and blocker Inbox signals. |
+| `viewState` | `Partial<BoardPersonalViewState>` | — | Host-controlled personal display state: supplied keys are authoritative; omitted keys use the board-seeded in-memory defaults. It is never serialized into `.board`. |
+| `onViewStateChange` | `(next: Partial<BoardPersonalViewState>) => void` | — | Receives a normalized next view state for the host to persist and feed back through `viewState`. Equal repeated reconciliation updates are deduplicated; omitting or ignoring this callback never creates a render loop. Without `viewState`, the package keeps an in-memory fallback. |
 | `live` | `boolean` | `true` | Try the live SSE feed; see *Live updates* below. |
 | `pollIntervalMs` | `number` | `30000` | Polling cadence (min 5000). |
 | `initialCardPath` | `string` | — | Opens the matching Card once after the initial snapshot loads. Closing it does not make polling reopen it. |
-| `additionalCardRoots` | `readonly string[]` | — | Additional relative directories to scan for Cards. Matching `board` frontmatter is still required. |
-| `onCardOpen` | `(card: BoardViewCard) => void` | — | Intercept card opens; replaces the built-in read-only detail panel. |
+| `additionalCardRoots` | `readonly string[]` | — | Omit to discover matching Cards across the workspace. Supply it to bound discovery to the board folder plus these relative roots; `[]` means the board folder only. Matching `board` frontmatter is always required. |
+| `onCardOpen` | `(card: BoardViewCard) => void` | — | Intercept Card opens; replaces the built-in editable/read-only detail. |
 | `renderCardSupplement` | `(card: BoardViewCard) => ReactNode` | — | Add host-owned content after native Card fields in the built-in editable or read-only detail. It is not rendered for intercepted opens. |
 | `onConnectionChange` | `(s: 'live' \| 'polling' \| 'error') => void` | — | Observe transport state transitions. |
 | `locale` | `'en' \| 'zh' \| 'ja' \| 'ko'` | `'en'` | Board chrome language. The lingui instance is bundle-wide, so multiple boards on one page share the last-set locale. |
 | `className`, `style` | | — | Extra class/style for the wrapper element. |
 
+### Card discovery boundaries
+
+By default the first snapshot inspects every Markdown document in the cloud
+workspace and includes only documents whose `board` frontmatter equals the
+resolved board id. This preserves membership when Cards are created in
+automation or execution directories rather than beside the `.board` file.
+Unchanged documents are served from the package's `contentHash` cache on later
+polls.
+
+For a deliberately bounded embed, pass `additionalCardRoots`. The board's own
+folder is always included; only the supplied roots are added. Passing an empty
+array restricts discovery to the board folder. Invalid absolute or traversing
+roots are ignored.
+
 ## Live updates vs polling (post kanban-unification-v2)
 
-Since jtype PR #45 (commit `a4d2a31`), the live WS/SSE surfaces — including the
-per-board SSE feed `GET /api/v1/workspaces/:id/boards/:boardRef/events` — only
-accept **full-scope session tokens**. An `mcp`-scoped token (the kind an embed
-normally holds) gets **403** there, while the REST document API accepts it.
+The document REST API used by the bundled client and the per-board SSE feed
+`GET /api/v1/workspaces/:id/boards/:boardRef/events` require a **full session
+token**. A board-pinned MCP credential is deliberately limited to the MCP
+transport and gets **403** on these ordinary REST/SSE routes.
 
 So the embed's strategy is:
 
@@ -70,21 +88,25 @@ So the embed's strategy is:
 4. Polling is cheap: each tick lists documents and re-downloads only those
    whose `contentHash` changed.
 
-With a full-scope session token (or an injected client whose backend holds
-one and implements `subscribeBoardEvents`), the board goes properly live.
+With a full session token (or an injected client whose backend holds one and
+implements `subscribeBoardEvents`), the board goes properly live.
 
 ## Security notes
 
-- **A raw `mcp` token in the host page grants that user's full notes + kanban
-  access for its lifetime (90 days by default).** The board-pinned MCP URL is
-  a convenience default, *not* an access boundary. Treat the token like a
-  password. Embedding it directly is acceptable only for trusted, self-hosted
-  host pages.
+- **Do not paste a board-pinned MCP token into `token`.** It is intentionally
+  unusable with this package's REST adapter. A full browser/session token is
+  broader: it can access the documents available to that user, so treat it
+  like a password and expose it only in a trusted, self-hosted page.
 - **Recommended pattern: client injection.** Implement `JTypeBoardDataClient`
   against your own backend proxy and pass it as `client` — the jtype token
   stays server-side and the browser never talks to jtype directly. Every code
   path (initial load, polling, writes, the live subscription) goes through the
   injected client; there is no bypass.
+
+  The proxy must forward `saveDocument`'s `createOnly: true` flag and enforce
+  it atomically with a `409` response. Quick-create uses that contract and
+  retries a bounded sequence of suffixed paths, so an ordinary Markdown note
+  or a Card belonging to another board can never be overwritten.
 
   ```tsx
   import { JTypeBoard, type JTypeBoardDataClient } from 'jtype-board-react'
@@ -107,6 +129,9 @@ one and implements `subscribeBoardEvents`), the board goes properly live.
   jtype server*. The injected-client pattern avoids this entirely.
 - The default `createJTypeClient` uses no localStorage and no globals —
   N instances with different servers/tokens coexist on one page.
+- Personal view preferences follow the same rule: pass `viewState` and persist
+  `onViewStateChange` yourself. This keeps identity and retention decisions in
+  the host instead of creating a hidden cross-app preference store.
 
 ## Errors are first-class
 
@@ -139,19 +164,24 @@ successful poll.
 Included: vertical swimlane management and drag-to-move with `status`,
 `priority`, `assignee`, or custom `swimlane` frontmatter writeback. Manual
 within-lane reorder applies to Status swimlanes; alternate dimensions move
-cards between lanes without rewriting workflow order. Also included: card
-create/delete, board/table/calendar, multi-select filters, search/sort,
-read-only card detail, and localized chrome. Editable embeds use the shared
+cards between lanes without rewriting workflow order. Also included: Card
+create/delete/archive, Board/Table/Calendar/Backlog/Gantt views, My Work and
+Inbox scopes, multi-select filters, search/sort, side-sheet detail, schedule
+fields, labels, relations, attachments references, and localized chrome.
+Editable embeds use the shared
 focused quick-create and card-detail dialogs, including description,
-properties, relations, and sub-cards. Explicitly read-only embeds keep the
+properties, relations, and sub-cards. The project-workspace chrome is fully
+translated in English and Simplified Chinese; Japanese and Korean currently
+fall back to English for newly added strings. Explicitly read-only embeds keep the
 non-mutating detail; a host `onCardOpen` callback still replaces either
 built-in path. Hosts that need execution receipts or other contextual data
 without replacing the editor can use `renderCardSupplement`. The slot is
 additive: jtype retains ownership of Card editing and mutations.
-Not yet (flag-gated later): members/assignee options, versions/activity,
+Not yet: member-directory assignee options, server Activity/comments in the
+standalone package,
 ticket badges (the `OCCSV-####` chip — the embed client has no ticket-index
 endpoint, so cards never show it even when the board configures `ticketKey`),
-comments, attachments upload, and rich Markdown preview. Notes remain fully
+attachment upload, and rich Markdown preview. Notes remain fully
 editable Markdown, while the package's Preview uses safe plain text so the
 KaTeX/Mermaid document-renderer chain is deliberately excluded from the
 embed bundle.

@@ -17,7 +17,10 @@ export type BoardCard = {
   position: number;
   priority?: string | null;
   assignee?: string | null;
+  start?: string | null;
   due?: string | null;
+  reminder?: string | null;
+  archived?: boolean;
   tags?: string[];
   taskDone?: number;
   taskTotal?: number;

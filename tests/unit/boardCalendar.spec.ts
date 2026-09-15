@@ -20,6 +20,8 @@ test("isIsoDate accepts only zero-padded YYYY-MM-DD", () => {
   expect(isIsoDate("2026-06-22")).toBe(true);
   expect(isIsoDate("2026-6-2")).toBe(false); // not zero-padded
   expect(isIsoDate("2026/06/22")).toBe(false);
+  expect(isIsoDate("2026-02-31")).toBe(false);
+  expect(isIsoDate("2026-99-99")).toBe(false);
   expect(isIsoDate("")).toBe(false);
   expect(isIsoDate(null)).toBe(false);
   expect(isIsoDate(undefined)).toBe(false);

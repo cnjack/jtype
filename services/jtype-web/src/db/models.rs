@@ -26,6 +26,9 @@ pub struct AuthUser {
     /// Session scope: `full` (login/desktop) or `mcp` (agent token). MCP-scoped
     /// tokens can manage notes/kanban but are barred from admin endpoints.
     pub scope: String,
+    /// Operator/client-assigned display label for this session. This is safe
+    /// audit metadata; credentials and token hashes never enter AuthUser.
+    pub session_label: Option<String>,
 }
 
 // ── Auth ──

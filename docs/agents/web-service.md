@@ -50,6 +50,8 @@ Desktop UI copy should say "Connect in browser"; desktop should not ask for pass
 - `GET /api/v1/workspaces/:id`: workspace details.
 - `GET /api/v1/workspaces/:id/manifest`: document metadata list.
 - `PUT /api/v1/workspaces/:id/documents`: save a document from web editor.
+- `GET /api/v1/workspaces/:id/documents/:document_id/activity`: viewer-readable,
+  newest-first structured Card Activity with legacy version fallback.
 
 ### Invites
 
@@ -82,6 +84,15 @@ Do not add public routes at bare `/:username`; those conflict with SPA routes.
 - Core auth: `users`, `sessions`, `oauth_device_codes`
 - Workspaces: `workspaces`, `workspace_members`, `workspace_invites`, `workspace_sync_cursors`
 - Documents: `documents`, `document_versions`, `sync_conflicts`
+- Board Card projection: `board_document_memberships`; Markdown frontmatter is
+  authoritative, while this transactionally maintained exact-match index keeps
+  board snapshot reads proportional to the selected board instead of the whole
+  cloud workspace. `board_membership_projection_state` records a workspace
+  clock watermark so reads can incrementally repair writes accepted by an older
+  service instance during rolling deployment.
+- Card Activity/audit: the existing `kanban_events` workspace sequence log;
+  Markdown remains authoritative and delete events intentionally retain a
+  nullable, non-FK `document_id` after the document moves to trash.
 - Publishing/domains: `publish_targets`, `publish_revisions`, custom domain/certificate tables
 - AI-ready storage: `ai_chunks`
 

@@ -9,6 +9,7 @@ import {
   LockClosedIcon,
   UserCircleIcon,
   XMarkIcon,
+  ArchiveBoxIcon,
 } from "@heroicons/react/24/outline";
 import {
   PRIORITY_ORDER,
@@ -24,6 +25,7 @@ type FilterDimension =
   | "due"
   | "blocked"
   | "mine"
+  | "archived"
   | "missingRow";
 
 function toggleValue(values: string[] | undefined, value: string): string[] | undefined {
@@ -145,6 +147,12 @@ export function BoardFilterPopover({
   if (filters.due) chips.push({ key: "due", label: dueLabel(filters.due) });
   if (filters.blocked) chips.push({ key: "blocked", label: t`Blocked` });
   if (filters.mine) chips.push({ key: "mine", label: t`My cards` });
+  if (filters.archived && filters.archived !== "active") {
+    chips.push({
+      key: "archived",
+      label: filters.archived === "archived" ? t`Archived cards` : t`Active and archived`,
+    });
+  }
   if (filters.missingRow) chips.push({ key: "missingRow", label: t`Missing swimlane` });
 
   return (
@@ -279,6 +287,21 @@ export function BoardFilterPopover({
             </FilterSection>
 
             <FilterSection title={<Trans>Card state</Trans>}>
+              <div className="mb-2 grid grid-cols-3 gap-1" role="radiogroup" aria-label={t`Archive state`}>
+                {(["active", "archived", "all"] as const).map((mode) => (
+                  <OptionButton
+                    key={mode}
+                    selected={(filters.archived ?? "active") === mode}
+                    selectionRole="radio"
+                    onClick={() => update("archived", mode)}
+                  >
+                    <span className="inline-flex items-center gap-1">
+                      <ArchiveBoxIcon className="h-3.5 w-3.5" />
+                      {mode === "active" ? t`Active` : mode === "archived" ? t`Archived` : t`All`}
+                    </span>
+                  </OptionButton>
+                ))}
+              </div>
               <OptionButton
                 selected={!!filters.blocked}
                 onClick={() => update("blocked", filters.blocked ? undefined : true)}

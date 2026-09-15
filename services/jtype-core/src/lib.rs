@@ -1343,7 +1343,13 @@ pub struct BoardCardInfo {
     pub position: i64,
     pub priority: Option<String>,
     pub assignee: Option<String>,
+    /// Planned start day (`YYYY-MM-DD`) used by the Gantt projection.
+    pub start: Option<String>,
     pub due: Option<String>,
+    /// Shared project reminder day (`YYYY-MM-DD`).
+    pub reminder: Option<String>,
+    /// Archived Cards stay in Markdown but are hidden from active projections.
+    pub archived: bool,
     pub tags: Vec<String>,
     pub task_done: i64,
     pub task_total: i64,
@@ -1519,7 +1525,13 @@ fn scan_board_cards_inner(
                     .unwrap_or(0),
                 priority: fm.get("priority").cloned().filter(|v| !v.is_empty()),
                 assignee: fm.get("assignee").cloned().filter(|v| !v.is_empty()),
+                start: fm.get("start").cloned().filter(|v| !v.is_empty()),
                 due: fm.get("due").cloned().filter(|v| !v.is_empty()),
+                reminder: fm.get("reminder").cloned().filter(|v| !v.is_empty()),
+                archived: fm
+                    .get("archived")
+                    .map(|value| matches!(value.trim().to_ascii_lowercase().as_str(), "true" | "1" | "yes"))
+                    .unwrap_or(false),
                 tags: fm.get("tags").map(|v| parse_card_tags(v)).unwrap_or_default(),
                 task_done,
                 task_total,
@@ -2873,7 +2885,7 @@ mod tests {
         let root = dir.path();
         fs::write(
             root.join("login.md"),
-            "---\ntitle: Login\nboard: proj\nstatus: todo\nblocked_by: [[design]], [[api]]\nblocks: [[release]]\nrelates: [[research]]\n---\nbody",
+            "---\ntitle: Login\nboard: proj\nstatus: todo\nstart: 2026-08-11\ndue: 2026-08-18\nreminder: 2026-08-15\narchived: true\nblocked_by: [[design]], [[api]]\nblocks: [[release]]\nrelates: [[research]]\n---\nbody",
         )
         .unwrap();
         fs::write(
@@ -2887,6 +2899,10 @@ mod tests {
         assert_eq!(login.blocked_by, vec!["design", "api"]);
         assert_eq!(login.blocks, vec!["release"]);
         assert_eq!(login.relates, vec!["research"]);
+        assert_eq!(login.start.as_deref(), Some("2026-08-11"));
+        assert_eq!(login.due.as_deref(), Some("2026-08-18"));
+        assert_eq!(login.reminder.as_deref(), Some("2026-08-15"));
+        assert!(login.archived);
         // A card without the keys yields empty vecs (not missing).
         let design = cards.iter().find(|c| c.title == "Design").unwrap();
         assert!(design.blocked_by.is_empty());

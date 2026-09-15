@@ -4,7 +4,7 @@ The boards you create in a workspace come alive in the web app. It's the place t
 
 Sign in to the web app and pick your workspace, then open the **Kanban** area. Your boards are listed there; click one to open it. You'll see vertical swimlanes left to right — **To do**, **Doing**, **Done**, plus any you've added — each holding a stack of cards.
 
-Click any card to open the **peek panel** on the side. It's a resizable detail view where you can edit the title, status, priority, assignee, due date, labels, and the Markdown description without leaving the board.
+Click any card to open the **Card detail sheet** on the side. It keeps the board visible and remembers the scroll, selection, filters, and focused Card you came from. Closing the sheet — or returning from a related Card — restores that context and keyboard focus. Editors can change the title, schedule, status, priority, assignee, labels, relations, attachments, reminder, archive state, and Markdown description there. Viewers get the same context without mutation controls.
 
 ## Drag cards across swimlanes
 
@@ -19,7 +19,7 @@ When the board uses Status swimlanes, a sideways drop changes `status`; Priority
 
 Statuses are the default swimlanes of a JType board. Open **Manage statuses** beside the **Swimlanes** control to add, rename, reorder, recolor, or delete them, set a WIP limit, and choose which status counts as done.
 
-Each status has a stable internal ID. Renaming **Doing** to **In progress**, for example, changes the label without losing its cards. When you delete a status that still has cards, JType asks where those cards should move before it removes the status.
+Each status has a stable internal ID. Renaming **Doing** to **In progress**, for example, changes the label without losing its cards. When you delete a status that still has cards, the confirmation names the first remaining status that will receive them; cancel if that fallback is not the workflow you want.
 
 ## Realtime updates
 
@@ -39,7 +39,19 @@ A real board gets crowded. The toolbar above the columns gives you several ways 
 - **Manage** — status swimlanes manage workflow states; custom swimlanes have stable IDs and editable names, colors, and order. Priority or Assignee can be converted to editable custom swimlanes.
 - **Search** — type to narrow to cards whose title or text matches.
 
-Active filters appear as removable chips, and the filter panel shows how many cards remain visible. There's also a **Table** view if you'd rather scan everything as records. Filters and search run instantly in your browser and are personal: they change *your* view only and never move cards.
+Active filters appear as removable chips, and the filter panel shows how many cards remain visible. Switch among **Board**, **Table**, **Calendar**, **Backlog**, and **Gantt** without creating a second copy of the work. Filters and search run instantly in your browser and are personal: they change *your* view only and never move cards. JType also persists your view, scope, grouping, sorting, filters, and collapsed groups for this board; those preferences do not rewrite the shared `.board` file.
+
+## My Work and Inbox
+
+Choose **My Work** to project the Cards assigned to you in the current project. Choose **Inbox** for actionable signals derived from the same Cards: an `@mention`, a due reminder, work due today or overdue, or an assigned Card whose dependencies still block it. Dismissing an Inbox item is a personal, same-device view action; changing the underlying mention, date, or dependency produces a new signal.
+
+## Batch changes
+
+Select multiple Cards to set the assignee, labels, due date, or archive state in one pass. The selection toolbar states the number of affected Cards and read-only members never see mutation actions. If an operation fails, JType shows the failure and keeps the selection so you can retry rather than pretending the whole batch succeeded.
+
+## Field-level Activity
+
+The **Activity** tab explains what changed instead of showing only opaque save versions. Each entry can include field-level before/after values plus the server-derived actor, client, and token label — for example, “Maya changed Status from To do to Doing · Web” or “Release agent added label `blocked` · MCP · nightly-triage”. Raw tokens, token hashes, and fingerprints are never displayed. Older Cards without structured events fall back to their version history.
 
 ## Where to go next
 

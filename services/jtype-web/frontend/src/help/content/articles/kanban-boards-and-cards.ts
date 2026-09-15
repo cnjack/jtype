@@ -6,14 +6,14 @@ const article: ArticleMeta = {
   id: 'boards-and-cards',
   categoryId: 'kanban',
   order: 1,
-  updated: '2026-07-31',
+  updated: '2026-08-11',
   title: {
     en: 'Boards & cards: turning a workspace into kanban',
     zh: '看板与卡片：把工作区变成看板',
   },
   summary: {
-    en: 'Create boards with draggable vertical swimlanes and cards that remain ordinary Markdown notes.',
-    zh: '创建带可拖拽纵向泳道的看板，并了解卡片如何保持为普通 Markdown 笔记。',
+    en: 'Plan one Markdown-native project through Board, Table, Calendar, Backlog, and Gantt projections.',
+    zh: '用看板、表格、日历、Backlog 与 Gantt 投影规划同一个 Markdown 原生项目。',
   },
   body: { en, zh },
 }

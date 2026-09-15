@@ -1,3 +1,4 @@
+pub mod activity;
 pub mod admin;
 pub mod assets;
 pub mod blobs;

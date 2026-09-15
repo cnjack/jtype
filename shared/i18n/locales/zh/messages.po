@@ -43,6 +43,12 @@ msgstr "{1} 张子卡中已完成 {0} 张"
 msgid "{0} selected"
 msgstr "已选择 {0} 项"
 
+#. placeholder {0}: bulkProgress.completed
+#. placeholder {1}: bulkProgress.total
+#: shared/components/board/BoardSurface.tsx
+msgid "{0}/{1}"
+msgstr "{0}/{1}"
+
 #: shared/components/board/LaneDetailsPopover.tsx
 msgid "{cardCount, plural, one {# card} other {# cards}}"
 msgstr "{cardCount, plural, one {# 张卡片} other {# 张卡片}}"
@@ -112,6 +118,15 @@ msgstr "接受本地"
 msgid "Actions for {0}"
 msgstr "{0} 的操作"
 
+#: shared/components/board/BoardFilterPopover.tsx
+#: shared/components/board/BoardPeek.tsx
+msgid "Active"
+msgstr "活跃"
+
+#: shared/components/board/BoardFilterPopover.tsx
+msgid "Active and archived"
+msgstr "活跃与已归档"
+
 #: shared/components/board/BoardPeek.tsx
 msgid "Activity"
 msgstr "活动"
@@ -145,6 +160,7 @@ msgstr "添加描述…"
 msgid "Add details..."
 msgstr "添加详情..."
 
+#: shared/components/board/BoardSurface.tsx
 #: shared/components/board/CardCreateDialog.tsx
 #: shared/components/board/controls.tsx
 msgid "Add labels"
@@ -153,6 +169,10 @@ msgstr "添加标签"
 #: shared/components/board/BoardPeek.tsx
 msgid "Add reaction"
 msgstr "添加回应"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Add relation"
+msgstr "添加关联"
 
 #: shared/components/board/BoardSwimlanes.tsx
 #: shared/components/board/SwimlaneManagerDialog.tsx
@@ -174,6 +194,15 @@ msgstr "添加状态"
 msgid "Add swimlane"
 msgstr "添加泳道"
 
+#: shared/components/board/BoardBacklog.tsx
+#: shared/components/board/BoardWorkScope.tsx
+msgid "Add to selection"
+msgstr "加入选择"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Added comment"
+msgstr "添加了评论"
+
 #: shared/components/board/BoardPeek.tsx
 msgid "Additional information"
 msgstr "附加信息"
@@ -182,9 +211,32 @@ msgstr "附加信息"
 msgid "Agenda"
 msgstr "日程"
 
+#: shared/components/board/BoardFilterPopover.tsx
+#: shared/components/board/BoardSurface.tsx
+msgid "All"
+msgstr "全部"
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Archive"
+msgstr "归档"
+
+#: shared/components/board/BoardFilterPopover.tsx
+msgid "Archive state"
+msgstr "归档状态"
+
+#: shared/components/board/BoardBacklog.tsx
+#: shared/components/board/BoardFilterPopover.tsx
 #: shared/components/board/BoardPeek.tsx
 msgid "Archived"
 msgstr "归档"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Archived card"
+msgstr "归档了卡片"
+
+#: shared/components/board/BoardFilterPopover.tsx
+msgid "Archived cards"
+msgstr "已归档卡片"
 
 #: shared/components/board/BoardFilterPopover.tsx
 #: shared/components/board/BoardPeek.tsx
@@ -198,15 +250,29 @@ msgstr "负责人"
 msgid "Assignee: {0}"
 msgstr "负责人：{0}"
 
+#: shared/components/board/BoardSurface.tsx
+msgid "Assignee…"
+msgstr "负责人…"
+
 #: shared/components/board/BoardPeek.tsx
 msgid "Attachments"
 msgstr "附件"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Back to previous card"
+msgstr "返回上一张卡片"
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Backlog"
+msgstr "待办列表"
 
 #: shared/components/board/BoardSurface.tsx
 msgid "Blank card"
 msgstr "空白卡片"
 
+#: shared/components/board/BoardBacklog.tsx
 #: shared/components/board/BoardFilterPopover.tsx
+#: shared/components/board/BoardWorkScope.tsx
 msgid "Blocked"
 msgstr "被阻塞"
 
@@ -234,6 +300,10 @@ msgstr "看板"
 msgid "Board settings"
 msgstr "看板设置"
 
+#: shared/components/board/BoardSurface.tsx
+msgid "Board view"
+msgstr "看板视图"
+
 #: shared/components/EditorToolbar.tsx
 msgid "Bold"
 msgstr "粗体"
@@ -247,6 +317,7 @@ msgid "Calendar"
 msgstr "日历"
 
 #: shared/components/board/BoardPeek.tsx
+#: shared/components/board/ProjectSettingsDialog.tsx
 #: shared/components/board/SwimlaneConversionDialog.tsx
 #: shared/components/board/SwimlaneDeleteDialog.tsx
 #: shared/components/board/SwimlaneManagerDialog.tsx
@@ -258,6 +329,11 @@ msgstr "取消"
 #: shared/components/board/BoardPeek.tsx
 msgid "Card"
 msgstr "卡片"
+
+#. placeholder {0}: card.title
+#: shared/components/board/BoardSurface.tsx
+msgid "Card actions for {0}"
+msgstr "{0} 的卡片操作"
 
 #: shared/components/board/BoardSurface.tsx
 msgid "Card details"
@@ -279,6 +355,10 @@ msgstr "卡片标题"
 msgid "cards"
 msgstr "张卡片"
 
+#: shared/components/board/BoardWorkScope.tsx
+msgid "Cards assigned to you across this project appear here."
+msgstr "这个项目中分配给你的卡片会显示在这里。"
+
 #: shared/components/board/BoardFilterPopover.tsx
 #~ msgid "Cards with a missing row"
 #~ msgstr "横向分组缺失的卡片"
@@ -290,6 +370,26 @@ msgstr "泳道映射缺失的卡片"
 #: shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Change color"
 msgstr "更改颜色"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Changed assignee"
+msgstr "更改了负责人"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Changed dependencies"
+msgstr "更改了依赖关系"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Changed labels"
+msgstr "更改了标签"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Changed schedule"
+msgstr "更改了计划日期"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Changed status"
+msgstr "更改了状态"
 
 #: shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Changes save automatically."
@@ -308,6 +408,10 @@ msgid "Clear all"
 msgstr "清除全部"
 
 #: shared/components/board/BoardSurface.tsx
+msgid "Clear due date"
+msgstr "清除截止日期"
+
+#: shared/components/board/BoardSurface.tsx
 #~ msgid "Clear filter"
 #~ msgstr "清除筛选"
 
@@ -317,6 +421,7 @@ msgstr "清除选择"
 
 #: shared/components/board/BoardPeek.tsx
 #: shared/components/board/CardCreateDialog.tsx
+#: shared/components/board/ProjectSettingsDialog.tsx
 #: shared/components/board/StatusManagerDialog.tsx
 #: shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Close"
@@ -420,6 +525,14 @@ msgstr "无法创建卡片，请重试。"
 msgid "Could not create sub-card. Try again."
 msgstr "无法创建子卡片，请重试。"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "Could not load activity."
+msgstr "无法加载动态。"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Could not load comments."
+msgstr "无法加载评论。"
+
 #: shared/components/viewers/SwaggerView.tsx
 msgid "Could not render this API specification."
 msgstr "无法渲染此 API 规范。"
@@ -431,6 +544,14 @@ msgstr "无法渲染此 Draw.io 图表。"
 #: shared/components/viewers/PdfView.tsx
 msgid "Could not render this PDF."
 msgstr "无法渲染此 PDF。"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Could not save changes."
+msgstr "无法保存更改。"
+
+#: shared/components/board/ProjectSettingsDialog.tsx
+msgid "Could not save project settings."
+msgstr "无法保存项目设置。"
 
 #: shared/components/board/CardCreateDialog.tsx
 msgid "Create card"
@@ -455,6 +576,10 @@ msgstr "创建可编辑泳道"
 #: shared/components/board/BoardPeek.tsx
 msgid "Created"
 msgstr "创建"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Created card"
+msgstr "创建了卡片"
 
 #: shared/components/board/CardCreateDialog.tsx
 msgid "Creating…"
@@ -512,6 +637,18 @@ msgid "Delete swimlane"
 msgstr "删除泳道"
 
 #: shared/components/board/BoardPeek.tsx
+msgid "Deleted card"
+msgstr "删除了卡片"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Deleted comment"
+msgstr "删除了评论"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Dependencies"
+msgstr "依赖关系"
+
+#: shared/components/board/BoardPeek.tsx
 #: shared/components/board/CardCreateDialog.tsx
 msgid "Description"
 msgstr "描述"
@@ -524,6 +661,15 @@ msgstr "描述"
 #: shared/components/viewers/MermaidView.tsx
 msgid "Diagram error"
 msgstr "图表错误"
+
+#: shared/components/board/BoardWorkScope.tsx
+msgid "Dismiss"
+msgstr "忽略"
+
+#. placeholder {0}: item.title
+#: shared/components/board/BoardWorkScope.tsx
+msgid "Dismiss {0}"
+msgstr "忽略“{0}”"
 
 #: shared/components/board/SwimlaneDeleteDialog.tsx
 msgid "Do not close this dialog."
@@ -558,10 +704,12 @@ msgid "Due"
 msgstr "截止日期"
 
 #: shared/components/board/BoardFilterPopover.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Due date"
 msgstr "截止日期"
 
 #: shared/components/board/BoardFilterPopover.tsx
+#: shared/components/board/BoardWorkScope.tsx
 msgid "Due today"
 msgstr "今天到期"
 
@@ -591,6 +739,10 @@ msgstr "泳道 ID“{0}”重复。将使用第一个定义。"
 msgid "Duplicate swimlane name \"{0}\". Names should be unique."
 msgstr "泳道名称“{0}”重复。名称应保持唯一。"
 
+#: shared/components/board/ProjectSettingsDialog.tsx
+msgid "e.g. JT"
+msgstr "例如 JT"
+
 #: shared/components/board/BoardPeek.tsx
 msgid "Edit comment"
 msgstr "编辑评论"
@@ -598,6 +750,10 @@ msgstr "编辑评论"
 #: shared/components/board/BoardPeek.tsx
 msgid "edited"
 msgstr "已编辑"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Edited comment"
+msgstr "编辑了评论"
 
 #: shared/components/board/BoardSurface.tsx
 msgid "Exit fullscreen"
@@ -634,6 +790,10 @@ msgid "Fullscreen"
 msgstr "全屏"
 
 #: shared/components/board/BoardSurface.tsx
+msgid "Gantt"
+msgstr "甘特图"
+
+#: shared/components/board/BoardSurface.tsx
 #~ msgid "Group: Assignee"
 #~ msgstr "分组:负责人"
 
@@ -653,6 +813,14 @@ msgstr "全屏"
 #: shared/components/board/BoardPeek.tsx
 msgid "Icon"
 msgstr "图标"
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Inbox"
+msgstr "收件箱"
+
+#: shared/components/board/BoardWorkScope.tsx
+msgid "Inbox zero"
+msgstr "收件箱已清空"
 
 #: shared/components/EditorToolbar.tsx
 msgid "Inline Code"
@@ -720,6 +888,7 @@ msgid "Keep cards in Unassigned"
 msgstr "将卡片保留在未分配"
 
 #: shared/components/board/BoardFilterPopover.tsx
+#: shared/components/board/BoardPeek.tsx
 msgid "Labels"
 msgstr "标签"
 
@@ -740,6 +909,10 @@ msgstr "标签：{0}"
 #~ msgid "Lane ID"
 #~ msgstr "泳道 ID"
 
+#: shared/components/board/ProjectSettingsDialog.tsx
+msgid "Lightweight planning metadata shared by every board view."
+msgstr "由所有看板视图共享的轻量项目计划信息。"
+
 #: shared/components/EditorToolbar.tsx
 msgid "Link"
 msgstr "链接"
@@ -747,6 +920,18 @@ msgstr "链接"
 #: shared/components/EditorToolbar.tsx
 msgid "Link (Ctrl+K)"
 msgstr "链接 (Ctrl+K)"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Loading activity"
+msgstr "正在加载动态"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Loading comments"
+msgstr "正在加载评论"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Loading…"
+msgstr "正在加载…"
 
 #: shared/components/ConflictResolver.tsx
 msgid "Local (yours)"
@@ -800,6 +985,15 @@ msgstr "管理状态"
 msgid "Markdown is supported"
 msgstr "支持 Markdown"
 
+#. placeholder {0}: currentUser?.trim() ?? ""
+#: shared/components/board/BoardWorkScope.tsx
+msgid "Mentioned @{0}"
+msgstr "提及了 @{0}"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Mentioned someone"
+msgstr "提及了成员"
+
 #: shared/components/viewers/MermaidView.tsx
 msgid "Mermaid diagram"
 msgstr "Mermaid 图表"
@@ -807,6 +1001,10 @@ msgstr "Mermaid 图表"
 #: shared/components/viewers/MermaidView.tsx
 msgid "Mermaid source"
 msgstr "Mermaid 源码"
+
+#: shared/components/board/BoardGantt.tsx
+msgid "milestone"
+msgstr "里程碑"
 
 #: shared/components/board/BoardFilterPopover.tsx
 #~ msgid "Missing row"
@@ -854,6 +1052,15 @@ msgstr "正在移动卡片…"
 msgid "My cards"
 msgstr "我的卡片"
 
+#: shared/components/board/BoardSurface.tsx
+msgid "My work"
+msgstr "我的工作"
+
+#: shared/components/board/BoardWorkScope.tsx
+msgid "My Work and Inbox use your identity to find assigned cards, mentions and "
+"reminders."
+msgstr "我的工作和收件箱会根据你的身份查找分配给你的卡片、提及和提醒。"
+
 #: shared/components/board/LaneDetailsPopover.tsx
 msgid "Name"
 msgstr "名称"
@@ -871,14 +1078,27 @@ msgstr "未来 7 天"
 msgid "Next month"
 msgstr "下个月"
 
+#: shared/components/board/BoardPeek.tsx
+msgid "No activity yet"
+msgstr "暂无动态"
+
 #: shared/components/board/SwimlaneConversionDialog.tsx
 msgid "No assigned values to convert."
 msgstr "没有可转换的已分配值。"
 
+#: shared/components/board/BoardWorkScope.tsx
+msgid "No assigned work"
+msgstr "暂无分配给你的工作"
+
 #: shared/components/board/BoardCalendar.tsx
+#: shared/components/board/BoardPeek.tsx
 #: shared/components/board/BoardTable.tsx
 msgid "No cards"
 msgstr "暂无卡片"
+
+#: shared/components/board/BoardBacklog.tsx
+msgid "No cards in this status"
+msgstr "此状态下没有卡片"
 
 #: shared/components/board/BoardSurface.tsx
 #: shared/components/board/StatusActionsMenu.tsx
@@ -898,6 +1118,7 @@ msgstr "无截止日期"
 msgid "No icon"
 msgstr "无图标"
 
+#: shared/components/board/BoardSurface.tsx
 #: shared/components/board/controls.tsx
 msgid "No labels"
 msgstr "暂无标签"
@@ -905,6 +1126,10 @@ msgstr "暂无标签"
 #: shared/components/board/BoardFilterPopover.tsx
 msgid "No priority"
 msgstr "无优先级"
+
+#: shared/components/board/BoardGantt.tsx
+msgid "No scheduled cards yet"
+msgstr "暂无已排期卡片"
 
 #: ../../../shared/components/board/BoardPeek.tsx
 #~ msgid "Notes"
@@ -932,12 +1157,21 @@ msgstr "打开子卡片"
 #~ "mapped by row ID."
 #~ msgstr "看板的可选横向分组。名称可以修改，卡片仍通过横向分组 ID 保持映射。"
 
+#: shared/components/board/BoardGantt.tsx
+msgid "Outside timeline"
+msgstr "时间范围外"
+
 #: shared/components/board/BoardFilterPopover.tsx
+#: shared/components/board/BoardWorkScope.tsx
 msgid "Overdue"
 msgstr "已逾期"
 
 #: shared/components/board/BoardPeek.tsx
 msgid "Parent"
+msgstr "父卡片"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Parent card"
 msgstr "父卡片"
 
 #: shared/components/board/BoardPeek.tsx
@@ -988,6 +1222,27 @@ msgstr "优先级：{0}"
 msgid "Priority…"
 msgstr "优先级…"
 
+#: shared/components/board/ProjectSettingsDialog.tsx
+msgid "Project key"
+msgstr "项目标识"
+
+#: shared/components/board/ProjectSettingsDialog.tsx
+msgid "Project key can be at most 32 characters."
+msgstr "项目标识最多 32 个字符。"
+
+#: shared/components/board/BoardSurface.tsx
+#: shared/components/board/ProjectSettingsDialog.tsx
+msgid "Project settings"
+msgstr "项目设置"
+
+#: shared/components/board/ProjectSettingsDialog.tsx
+msgid "Project summary can be at most 280 characters."
+msgstr "项目简介最多 280 个字符。"
+
+#: shared/components/board/BoardGantt.tsx
+msgid "Project timeline"
+msgstr "项目时间线"
+
 #: shared/components/board/BoardPeek.tsx
 msgid "Properties"
 msgstr "属性"
@@ -1005,12 +1260,24 @@ msgid "Refresh"
 msgstr "刷新"
 
 #: shared/components/board/BoardPeek.tsx
+msgid "Related cards"
+msgstr "相关卡片"
+
+#: shared/components/board/BoardPeek.tsx
 msgid "Relates"
 msgstr "相关"
 
 #: shared/components/board/BoardPeek.tsx
 msgid "Relations"
 msgstr "关联"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Reminder"
+msgstr "提醒"
+
+#: shared/components/board/BoardWorkScope.tsx
+msgid "Reminder due"
+msgstr "提醒到期"
 
 #: shared/components/board/BoardPeek.tsx
 msgid "Remove"
@@ -1025,6 +1292,11 @@ msgstr "移除筛选"
 msgid "Remove filter: {0}"
 msgstr "移除筛选：{0}"
 
+#: shared/components/board/BoardBacklog.tsx
+#: shared/components/board/BoardWorkScope.tsx
+msgid "Remove from selection"
+msgstr "从选择中移除"
+
 #: shared/components/board/BoardPeek.tsx
 msgid "Remove your reaction"
 msgstr "撤回你的回应"
@@ -1034,6 +1306,10 @@ msgstr "撤回你的回应"
 #: shared/components/board/SwimlaneManagerDialog.tsx
 msgid "Rename"
 msgstr "重命名"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Reopened comment thread"
+msgstr "重新打开了评论讨论"
 
 #. placeholder {0}: lane.name
 #: shared/components/board/SwimlaneManagerDialog.tsx
@@ -1057,8 +1333,20 @@ msgid "Resolved"
 msgstr "已解决"
 
 #: shared/components/board/BoardPeek.tsx
+msgid "Resolved comment thread"
+msgstr "解决了评论讨论"
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Restore"
+msgstr "恢复"
+
+#: shared/components/board/BoardPeek.tsx
 msgid "Restored"
 msgstr "恢复"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Restored card"
+msgstr "恢复了卡片"
 
 #: shared/components/ConflictResolver.tsx
 msgid "Result (editable)"
@@ -1075,6 +1363,10 @@ msgstr "继续转换"
 #: shared/components/board/SwimlaneConversionDialog.tsx
 msgid "Resume swimlane conversion?"
 msgstr "继续泳道转换？"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Retry"
+msgstr "重试"
 
 #: shared/components/board/BoardPeek.tsx
 #~ msgid "Row"
@@ -1145,6 +1437,15 @@ msgstr "存为模板"
 msgid "Save merged result"
 msgstr "保存合并结果"
 
+#: shared/components/board/ProjectSettingsDialog.tsx
+msgid "Save project"
+msgstr "保存项目"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Saving changes…"
+msgstr "正在保存更改…"
+
+#: shared/components/board/ProjectSettingsDialog.tsx
 #: shared/components/board/SwimlaneManagerDialog.tsx
 #: shared/components/ConflictResolver.tsx
 msgid "Saving…"
@@ -1158,6 +1459,14 @@ msgstr "搜索卡片"
 #: shared/components/board/StatusActionsMenu.tsx
 msgid "Set as done column"
 msgstr "设为完成列"
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Set assignee"
+msgstr "设置负责人"
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Set due date"
+msgstr "设置截止日期"
 
 #: shared/components/board/BoardSurface.tsx
 msgid "Set priority"
@@ -1188,6 +1497,10 @@ msgstr "显示受影响的卡片"
 msgid "Show resolved thread"
 msgstr "显示已解决话题"
 
+#: shared/components/board/BoardWorkScope.tsx
+msgid "Sign in to see personal work"
+msgstr "登录后查看个人工作"
+
 #: shared/components/board/BoardPeek.tsx
 msgid "Someone"
 msgstr "某人"
@@ -1211,6 +1524,19 @@ msgstr "排序:标题"
 #: shared/components/ViewModeToggle.tsx
 msgid "Split"
 msgstr "分栏"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Start"
+msgstr "开始"
+
+#: shared/components/board/BoardPeek.tsx
+#: shared/components/board/ProjectSettingsDialog.tsx
+msgid "Start date"
+msgstr "开始日期"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "State"
+msgstr "状态"
 
 #: shared/components/board/BoardPeek.tsx
 #: shared/components/board/BoardTable.tsx
@@ -1251,6 +1577,10 @@ msgstr "状态定义卡片工作流。可自由重命名或排序；卡片始终
 #: shared/components/board/BoardPeek.tsx
 msgid "Sub-cards"
 msgstr "子卡片"
+
+#: shared/components/board/ProjectSettingsDialog.tsx
+msgid "Summary"
+msgstr "简介"
 
 #: shared/components/board/BoardPeek.tsx
 msgid "Swimlane"
@@ -1340,9 +1670,21 @@ msgstr "表格"
 msgid "Tags"
 msgstr "标签"
 
+#: shared/components/board/ProjectSettingsDialog.tsx
+msgid "Target date"
+msgstr "目标日期"
+
+#: shared/components/board/ProjectSettingsDialog.tsx
+msgid "Target date must be on or after the start date."
+msgstr "目标日期必须不早于开始日期。"
+
 #: shared/components/board/BoardSurface.tsx
 msgid "Templates"
 msgstr "模板"
+
+#: shared/components/board/BoardSurface.tsx
+msgid "This board is read-only."
+msgstr "此看板为只读。"
 
 #: shared/components/board/SwimlaneDeleteDialog.tsx
 #~ msgid "This empty row will be removed from the board."
@@ -1356,9 +1698,14 @@ msgstr "此空泳道将从看板中移除。"
 msgid "This file type can not be previewed yet."
 msgstr "暂不支持预览此文件类型。"
 
+#: shared/components/board/BoardPeek.tsx
 #: shared/components/board/BoardTable.tsx
 msgid "Title"
 msgstr "标题"
+
+#: shared/components/board/BoardGantt.tsx
+msgid "to"
+msgstr "至"
 
 #: shared/components/board/BoardCalendar.tsx
 msgid "Today"
@@ -1373,6 +1720,10 @@ msgid "Unassigned"
 msgstr "未分配"
 
 #: shared/components/board/BoardPeek.tsx
+msgid "Unknown actor"
+msgstr "未知操作者"
+
+#: shared/components/board/BoardPeek.tsx
 msgid "Unresolve thread"
 msgstr "取消解决"
 
@@ -1385,6 +1736,7 @@ msgid "Unsafe link blocked: {url}"
 msgstr "已拦截不安全链接：{url}"
 
 #: shared/components/board/BoardCalendar.tsx
+#: shared/components/board/BoardGantt.tsx
 msgid "Unscheduled"
 msgstr "未排期"
 
@@ -1400,6 +1752,10 @@ msgstr "未命名卡片"
 #: shared/components/board/BoardPeek.tsx
 msgid "Updated"
 msgstr "更新"
+
+#: shared/components/board/BoardPeek.tsx
+msgid "Updated card"
+msgstr "更新了卡片"
 
 #: shared/components/board/SwimlaneConversionDialog.tsx
 msgid "Updating cards…"
@@ -1426,6 +1782,10 @@ msgid "Vertical columns for this board. Names can change; cards stay mapped by "
 "swimlane ID."
 msgstr "此看板的纵向列。名称可以修改；卡片始终通过泳道 ID 保持映射。"
 
+#: shared/components/board/ProjectSettingsDialog.tsx
+msgid "What outcome is this project driving?"
+msgstr "这个项目希望推动什么结果？"
+
 #. placeholder {0}: column.limit
 #: shared/components/board/StatusManagerDialog.tsx
 msgid "WIP {0}"
@@ -1435,6 +1795,14 @@ msgstr "在制品 {0}"
 #: shared/components/board/BoardSurface.tsx
 msgid "WIP limit {0}"
 msgstr "WIP 限制 {0}"
+
+#: shared/components/board/BoardWorkScope.tsx
+msgid "Work is blocked"
+msgstr "工作受阻"
+
+#: shared/components/board/BoardSurface.tsx
+msgid "Work scope"
+msgstr "工作范围"
 
 #: shared/components/board/SwimlaneConversionDialog.tsx
 #: shared/components/board/SwimlaneDeleteDialog.tsx
@@ -1449,3 +1817,8 @@ msgstr "写作"
 #: shared/components/viewers/MermaidView.tsx
 msgid "Write Mermaid syntax to see the diagram."
 msgstr "输入 Mermaid 语法以查看图表。"
+
+#: shared/components/board/BoardWorkScope.tsx
+msgid "You're caught up. New mentions, reminders, due work and blockers appear "
+"here."
+msgstr "你已处理完毕。新的提及、提醒、到期工作和阻塞项会显示在这里。"

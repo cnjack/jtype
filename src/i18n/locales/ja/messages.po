@@ -186,6 +186,10 @@ msgstr ""
 msgid "Board name"
 msgstr "ボード名"
 
+#: src/components/BoardView.tsx
+msgid "Board statuses changed while the confirmation was open. Try again."
+msgstr ""
+
 #: src/components/editor/EditorShell.tsx
 msgid "Bold"
 msgstr "太字"
@@ -471,8 +475,8 @@ msgstr "カード \"{0}\" を削除しますか？ゴミ箱に移動します。
 msgid "Delete column \"{colName}\"?"
 msgstr "列 \"{colName}\" を削除しますか？"
 
-#. placeholder {0}: inCol.length
-#. placeholder {1}: fallback.name
+#. placeholder {0}: initialCards.length
+#. placeholder {1}: initialFallback.name
 #: src/components/BoardView.tsx
 msgid "Delete column \"{colName}\"? Its {0} card(s) move to \"{1}\"."
 msgstr "列 \"{colName}\" を削除しますか？{0} 枚のカードは \"{1}\" に移動します。"
@@ -1195,8 +1199,9 @@ msgstr "読み取り専用"
 msgid "Recent"
 msgstr "最近"
 
-#~ msgid "Refresh"
-#~ msgstr ""
+#: src/components/BoardView.tsx
+msgid "Refresh"
+msgstr ""
 
 #: src/components/modals/DeviceAuthWaiting.tsx
 msgid "remaining"
@@ -1451,6 +1456,11 @@ msgstr "テンプレート名"
 #~ msgid "Templates"
 #~ msgstr ""
 
+#: src/components/BoardView.tsx
+msgid "The latest board snapshot could not be loaded. Editing is disabled until "
+"refresh succeeds."
+msgstr ""
+
 #: src/components/editor/EditorShell.tsx
 msgid "The public snapshot is behind the current document."
 msgstr "公開スナップショットが現在のドキュメントより古くなっています。"
@@ -1458,6 +1468,10 @@ msgstr "公開スナップショットが現在のドキュメントより古く
 #: src/components/modals/AccountDialog.tsx
 msgid "Then run `jtype login` to sign in."
 msgstr "その後 `jtype login` を実行してサインインします。"
+
+#: src/components/BoardView.tsx
+msgid "This board is read-only."
+msgstr ""
 
 #: src/components/modals/DeleteFolderDialog.tsx
 msgid "This folder is empty."

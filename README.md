@@ -16,7 +16,7 @@ English · [中文](README.zh-CN.md)
   <img alt="Rust" src="https://img.shields.io/badge/Rust-Axum%20+%20Tauri-000000?style=flat-square&logo=rust">
   <img alt="React 19" src="https://img.shields.io/badge/React-19-149ECA?style=flat-square&logo=react">
   <img alt="Tauri 2" src="https://img.shields.io/badge/Tauri-2-24C8DB?style=flat-square&logo=tauri">
-  <img alt="MCP — 14 tools" src="https://img.shields.io/badge/MCP-14%20tools-7C3AED?style=flat-square">
+  <img alt="MCP — notes and Kanban" src="https://img.shields.io/badge/MCP-notes%20%2B%20Kanban-7C3AED?style=flat-square">
   <img alt="Platforms" src="https://img.shields.io/badge/macOS%20·%20Windows%20·%20Linux-555?style=flat-square">
 </p>
 
@@ -51,8 +51,9 @@ exposes your notes and Kanban boards to agents over the wire.
 
 JType ships a real, tested AI surface — not a hidden roadmap item:
 
-- **MCP server** — `POST /mcp` (Streamable HTTP, JSON-RPC) with **14 tools** covering notes
-  (`list/get/search/create/update/append`) and Kanban (`list_boards/get_board/list_cards/create_card/update_card/move_card/list_members`).
+- **MCP servers** — `POST /mcp` exposes note tools, while `POST /mcp/kanban` exposes the full
+  Kanban lifecycle, labels, attachments, relations, batch updates, statuses, and comments. Board
+  settings can mint a stricter **17-tool** endpoint pinned to one Board.
 - **OAuth device flow** (RFC 8628) — `jtype login` opens a browser, approves once, and stores
   a scoped token. No passwords on the client.
 - **CLI** — the `jtype` binary works local-first over the vault in your current directory,
@@ -62,7 +63,7 @@ JType ships a real, tested AI surface — not a hidden roadmap item:
 
 ```mermaid
 flowchart LR
-    A["AI agent<br/>Claude · Cursor · Cline"] -- "MCP / HTTP" --> M["JType MCP server<br/>14 tools"]
+    A["AI agent<br/>Claude · Cursor · Cline"] -- "MCP / HTTP" --> M["JType MCP servers<br/>notes · Kanban"]
     M -- notes --> N["list · get · search<br/>create · update · append"]
     M -- kanban --> K["boards · cards<br/>move · assign"]
     N --> WS[("Cloud workspace")]
@@ -75,9 +76,14 @@ Point an agent at your workspace in one block of config:
 ```jsonc
 // e.g. ~/.jcode/config.json or any MCP client
 "mcp_servers": {
-  "jtype": {
+  "jtype-notes": {
     "type": "http",
     "url": "http://localhost:13345/mcp",
+    "headers": { "Authorization": "Bearer <token from `jtype login`>" }
+  },
+  "jtype-kanban": {
+    "type": "http",
+    "url": "http://localhost:13345/mcp/kanban",
     "headers": { "Authorization": "Bearer <token from `jtype login`>" }
   }
 }
@@ -85,10 +91,10 @@ Point an agent at your workspace in one block of config:
 
 Full walkthrough: [Connect your AI](docs/connect-your-ai.md).
 
-> Scope note: the AI surface (MCP/CLI/Skills) currently drives the **cloud workspace** —
-> notes and the cloud Kanban. The desktop app's `.board` files are a separate, file-based
-> board model; see [Kanban gaps & roadmap](internal-docs/kanban/gaps-and-roadmap.md). The
-> desktop in-app AI UI is intentionally still hidden.
+> Scope note: cloud MCP and local CLI operate on the same portable model: `.board` project
+> configuration plus Markdown Cards. Cloud automation is audited and role-aware; local CLI work
+> remains filesystem-first. Desktop in-app AI UI stays hidden until a real user-facing AI workflow
+> is enabled.
 
 ## What you get
 
@@ -96,8 +102,9 @@ Full walkthrough: [Connect your AI](docs/connect-your-ai.md).
   rendering, YAML frontmatter, wikilinks (`[[Note|Label]]`), and KaTeX math.
 - **Diagrams & rich files in the vault** — Mermaid (fenced or `.mmd`), Excalidraw (full
   in-app canvas), Draw.io, PlantUML, Swagger/OpenAPI, PDF documents, and inline images.
-- **Kanban** — cloud boards with columns, cards, labels, priorities, assignees, due dates,
-  drag-and-drop, real-time WebSocket sync, soft-delete + 30-day trash, and optimistic locking.
+- **Project workspace** — one `.board` plus Markdown Cards projected as Board, Table, Calendar,
+  Backlog, and Gantt, with My Work, Inbox, field Activity, batch edits, real-time sync, recoverable
+  trash, optimistic locking, and MCP automation.
 - **Publishing** — turn a workspace into a read-only site at `/u/:username/:page_path`, with
   a server-side theme engine and verified custom domains.
 - **Three surfaces, one vault** — local-first desktop (Tauri 2), a cloud web app, and the CLI.
@@ -195,7 +202,7 @@ flowchart TB
 
     subgraph cloud["Web service · Axum (Rust)"]
         API["REST + WebSocket API<br/>auth · sync · publishing · admin"]
-        MCP["MCP server<br/>14 tools"]
+        MCP["MCP servers<br/>notes · Kanban"]
         DB[("MySQL")]
         OBJ[("S3 / RustFS<br/>assets + blobs")]
     end

@@ -16,8 +16,9 @@ export type BoardViewColumn = {
 export type BoardGroupKey = "status" | "priority" | "assignee";
 export type BoardSwimlaneGroupKey = BoardGroupKey | "custom";
 export type BoardSortKey = "manual" | "due" | "priority" | "title";
-export type BoardViewType = "board" | "table" | "calendar";
+export type BoardViewType = "board" | "table" | "calendar" | "backlog" | "gantt";
 export type CalendarMode = "month" | "agenda";
+export type BoardWorkScope = "all" | "my-work" | "inbox";
 
 /** Persistent, user-editable swimlane definition stored in a `.board` file. */
 export type BoardSwimlane = {
@@ -38,9 +39,19 @@ export type BoardFieldType = "text" | "number" | "date";
 /** A user-defined custom field on a board's cards (stored in frontmatter / properties). */
 export type BoardFieldDef = { key: string; label: string; type?: BoardFieldType };
 
+/** Lightweight project facts stored in the `.board` document. */
+export type BoardProjectMetadata = {
+  key?: string;
+  summary?: string;
+  startDate?: string;
+  targetDate?: string;
+};
+
 export type BoardViewConfig = {
   title: string;
   columns: BoardViewColumn[];
+  /** Shared project facts; personal display state is intentionally separate. */
+  project?: BoardProjectMetadata;
   /** Column key treated as terminal/done (suppresses overdue styling). */
   doneColumn?: string;
   /** Tint each column header by its (or an auto) color. */
@@ -77,6 +88,53 @@ export type BoardDocumentConfig = BoardViewConfig & {
   id: string;
 };
 
+/** Parse the shared `.board` JSON contract and reject shapes that would crash a surface. */
+export function parseBoardDocumentConfig(content: string, fallbackTitle = "Untitled board"): BoardDocumentConfig {
+  const value: unknown = JSON.parse(content);
+  const isRecord = (candidate: unknown): candidate is Record<string, unknown> =>
+    typeof candidate === "object" && candidate !== null && !Array.isArray(candidate);
+  if (!isRecord(value)) throw new Error("Board configuration must be a JSON object.");
+  if (typeof value.id !== "string" || value.id.trim() === "") {
+    throw new Error("Board configuration is missing a non-empty id.");
+  }
+  if (!Array.isArray(value.columns) || value.columns.some((column) =>
+    !isRecord(column) || typeof column.key !== "string" || typeof column.name !== "string"
+  )) {
+    throw new Error("Board configuration must contain columns with string key and name values.");
+  }
+  const objectArrays: Array<[string, readonly string[]]> = [
+    ["fields", ["key", "label"]],
+    ["labels", ["label"]],
+    ["swimlanes", ["key", "name"]],
+  ];
+  for (const [field, requiredStrings] of objectArrays) {
+    const candidate = value[field];
+    if (candidate === undefined) continue;
+    if (!Array.isArray(candidate) || candidate.some((entry) =>
+      !isRecord(entry) || requiredStrings.some((key) => typeof entry[key] !== "string")
+    )) {
+      throw new Error(`Board configuration has an invalid ${field} array.`);
+    }
+  }
+  if (value.project !== undefined && !isRecord(value.project)) {
+    throw new Error("Board configuration has invalid project metadata.");
+  }
+  if (value.swimlaneMigration !== undefined) {
+    const migration = value.swimlaneMigration;
+    if (!isRecord(migration) || !Array.isArray(migration.mapping) || migration.mapping.some((entry) =>
+      !isRecord(entry) || typeof entry.value !== "string" || typeof entry.swimlaneKey !== "string"
+    )) {
+      throw new Error("Board configuration has an invalid swimlane migration.");
+    }
+  }
+  return {
+    ...value,
+    id: value.id,
+    title: typeof value.title === "string" && value.title.trim() ? value.title : fallbackTitle,
+    columns: value.columns,
+  } as BoardDocumentConfig;
+}
+
 export type BoardConfigIssue =
   | { kind: "duplicate_swimlane_key"; key: string }
   | { kind: "duplicate_swimlane_name"; name: string }
@@ -107,7 +165,13 @@ export type BoardViewCard = {
   assignee?: string | null;
   /** Stable custom swimlane identity from card frontmatter `swimlane`. */
   swimlaneKey?: string | null;
+  /** Planned start day (`YYYY-MM-DD`), used by the Gantt projection. */
+  start?: string | null;
   due?: string | null;
+  /** Portable project reminder day (`YYYY-MM-DD`). */
+  reminder?: string | null;
+  /** Archived Cards remain Markdown documents but leave active projections. */
+  archived?: boolean;
   tags: BoardTag[];
   /** Markdown body / description. */
   notes?: string;
@@ -158,7 +222,10 @@ const RESERVED_CARD_FRONTMATTER_KEYS = new Set([
   "assignee",
   "swimlane",
   "swimlaneKey",
+  "start",
   "due",
+  "reminder",
+  "archived",
   "icon",
   "tags",
   "attachments",
@@ -185,7 +252,10 @@ export function applyBoardCardPatch(content: string, patch: Partial<BoardViewCar
   if (patch.priority !== undefined) next.priority = patch.priority ?? "";
   if (patch.assignee !== undefined) next.assignee = patch.assignee ?? "";
   if (patch.swimlaneKey !== undefined) next.swimlane = patch.swimlaneKey ?? "";
+  if (patch.start !== undefined) next.start = patch.start ?? "";
   if (patch.due !== undefined) next.due = patch.due ?? "";
+  if (patch.reminder !== undefined) next.reminder = patch.reminder ?? "";
+  if (patch.archived !== undefined) next.archived = patch.archived ? "true" : "";
   if (patch.icon !== undefined) next.icon = patch.icon ?? "";
   if (patch.tags !== undefined) next.tags = patch.tags.map((tag) => tag.label).join(", ");
   if (patch.attachments !== undefined) next.attachments = serializeAttachments(patch.attachments);
@@ -249,6 +319,7 @@ export type CardFilter =
   | { prop: "swimlaneIssue"; value: "dangling" };
 
 export type BoardDueFilter = "overdue" | "today" | "nextSevenDays" | "none";
+export type BoardArchiveFilter = "active" | "archived" | "all";
 
 /**
  * Personal, view-only board filters. Values within one dimension are ORed;
@@ -261,8 +332,24 @@ export type BoardFilters = {
   due?: BoardDueFilter;
   blocked?: boolean;
   mine?: boolean;
+  /** Active is the implicit default, so archived Cards never disappear forever. */
+  archived?: BoardArchiveFilter;
   /** Recovery-only filter for cards that reference a deleted custom row. */
   missingRow?: boolean;
+};
+
+/** Device/user-owned display state. Never serialize this into `.board`. */
+export type BoardPersonalViewState = {
+  version: 1;
+  viewType?: BoardViewType;
+  groupBy?: BoardGroupKey;
+  swimlaneBy?: BoardSwimlaneGroupKey;
+  calendarMode?: CalendarMode;
+  sortBy?: BoardSortKey;
+  filters?: BoardFilters;
+  collapsedGroupKeys?: string[];
+  scope?: BoardWorkScope;
+  dismissedInboxItemKeys?: string[];
 };
 
 export type BoardFilterContext = {
@@ -292,8 +379,50 @@ export type BoardComment = {
   updatedAt?: string;
 };
 
-/** One entry in a card's activity timeline (newest first). */
-export type BoardActivityEvent = { kind: string; at: string; by?: string | null };
+export type BoardActivityActor = {
+  kind: "user" | "agent" | "system";
+  userId?: string | null;
+  label: string;
+};
+
+export type BoardActivityClient = {
+  kind: string;
+  label?: string | null;
+};
+
+export type BoardActivityToken = {
+  label?: string | null;
+};
+
+export type BoardFieldChange = {
+  field: string;
+  before?: unknown;
+  after?: unknown;
+};
+
+/** One immutable entry in a Card's activity timeline (newest first). */
+export type BoardActivityEvent = {
+  id?: string;
+  kind: string;
+  at: string;
+  /** Legacy version-history author. */
+  by?: string | null;
+  actor?: BoardActivityActor;
+  client?: BoardActivityClient;
+  token?: BoardActivityToken;
+  changes?: BoardFieldChange[];
+};
+
+export type BoardInboxKind = "mention" | "reminder" | "due" | "blocked";
+
+export type BoardInboxItem = {
+  key: string;
+  cardId: string;
+  kind: BoardInboxKind;
+  title: string;
+  summary: string;
+  date?: string | null;
+};
 
 export const PRIORITIES = ["none", "low", "medium", "high", "urgent"];
 export const PRIORITY_ORDER = ["urgent", "high", "medium", "low", "none"];
@@ -322,7 +451,10 @@ export const RESERVED_CARD_KEYS = [
   "priority",
   "assignee",
   "swimlane",
+  "start",
   "due",
+  "reminder",
+  "archived",
   "tags",
   "icon",
   "blocked_by",
@@ -479,7 +611,7 @@ function cardReferenceResolver(cards: BoardViewCard[]): (reference: string) => B
  * unfinished when it is not in the done column. Slugs that resolve to no card (or
  * to a finished one) don't count. Cycle-safe (no recursion).
  */
-export function blockedCounts(cards: BoardViewCard[], doneColumn?: string): Map<string, number> {
+export function blockingCardIds(cards: BoardViewCard[], doneColumn?: string): Map<string, ReadonlySet<string>> {
   const doneKey = doneColumn || DEFAULT_DONE_COLUMN;
   const resolveReference = cardReferenceResolver(cards);
   const unfinished = (c: BoardViewCard | undefined): c is BoardViewCard => !!c && c.columnKey !== doneKey;
@@ -503,8 +635,12 @@ export function blockedCounts(cards: BoardViewCard[], doneColumn?: string): Map<
       if (x && x.id !== y.id) add(x.id, y);
     }
   }
+  return blockers;
+}
+
+export function blockedCounts(cards: BoardViewCard[], doneColumn?: string): Map<string, number> {
   const counts = new Map<string, number>();
-  for (const [id, set] of blockers) counts.set(id, set.size);
+  for (const [id, set] of blockingCardIds(cards, doneColumn)) counts.set(id, set.size);
   return counts;
 }
 
@@ -849,6 +985,7 @@ export function hasBoardFilters(filters: BoardFilters): boolean {
     filters.due ||
     filters.blocked ||
     filters.mine ||
+    (filters.archived !== undefined && filters.archived !== "active") ||
     filters.missingRow
   );
 }
@@ -862,6 +999,7 @@ export function activeBoardFilterCount(filters: BoardFilters): number {
     !!filters.due,
     !!filters.blocked,
     !!filters.mine,
+    filters.archived !== undefined && filters.archived !== "active",
     !!filters.missingRow,
   ].filter(Boolean).length;
 }
@@ -875,6 +1013,10 @@ export function cardMatchesFilters(
   filters: BoardFilters,
   context: BoardFilterContext = {},
 ): boolean {
+  const archiveMode = filters.archived ?? "active";
+  if (archiveMode === "active" && card.archived) return false;
+  if (archiveMode === "archived" && !card.archived) return false;
+
   const priorities = normalizedFilterValues(filters.priorities);
   if (priorities.size > 0 && !priorities.has((card.priority || "none").toLowerCase())) {
     return false;
@@ -973,7 +1115,7 @@ export function visibleCards(
 
 export function sortCards(list: BoardViewCard[], sortBy: BoardSortKey): BoardViewCard[] {
   const arr = [...list];
-  if (sortBy === "due") arr.sort((a, b) => (a.due || "9999-99-99").localeCompare(b.due || "9999-99-99"));
+  if (sortBy === "due") arr.sort((a, b) => (isIsoDate(a.due) ? a.due : "9999-99-99").localeCompare(isIsoDate(b.due) ? b.due : "9999-99-99"));
   else if (sortBy === "priority") arr.sort((a, b) => (PRIORITY_RANK[a.priority || "none"] ?? 5) - (PRIORITY_RANK[b.priority || "none"] ?? 5));
   else if (sortBy === "title") arr.sort((a, b) => a.title.localeCompare(b.title));
   else arr.sort((a, b) => a.position - b.position);
@@ -991,7 +1133,9 @@ function isoDay(d: Date): string {
 
 /** True when `s` is a well-formed zero-padded ISO date (`YYYY-MM-DD`). */
 export function isIsoDate(s: string | null | undefined): s is string {
-  return !!s && /^\d{4}-\d{2}-\d{2}$/.test(s);
+  if (!s || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+  const parsed = new Date(`${s}T00:00:00Z`);
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === s;
 }
 
 /** Today's month as `YYYY-MM` (local). */

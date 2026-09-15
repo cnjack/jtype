@@ -88,10 +88,20 @@ test("saveDocument posts the payload; deleteDocument accepts 204", async () => {
       : new Response(null, { status: 204 }),
   );
   const client = createJTypeClient({ baseUrl: "https://x.test", token: TOKEN, fetchImpl: f });
-  const saved = await client.saveDocument("w", { relativePath: "b/x.md", content: "hi", baseContentHash: "h1" });
+  const saved = await client.saveDocument("w", {
+    relativePath: "b/x.md",
+    content: "hi",
+    baseContentHash: "h1",
+    createOnly: true,
+  });
   expect(saved.mergeStatus).toBe("accepted");
   expect(calls[0]!.init?.method).toBe("POST");
-  expect(JSON.parse(String(calls[0]!.init?.body))).toEqual({ relativePath: "b/x.md", content: "hi", baseContentHash: "h1" });
+  expect(JSON.parse(String(calls[0]!.init?.body))).toEqual({
+    relativePath: "b/x.md",
+    content: "hi",
+    baseContentHash: "h1",
+    createOnly: true,
+  });
   await expect(client.deleteDocument!("w", "doc-9")).resolves.toBeUndefined();
 });
 

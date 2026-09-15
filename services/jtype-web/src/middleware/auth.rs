@@ -9,7 +9,7 @@ pub async fn extract_user(pool: &Pool<MySql>, headers: &HeaderMap) -> Result<Aut
     let token = bearer_token(headers)?;
     let token_hash = sha256_hex(token);
     let row = sqlx::query(
-        r#"SELECT u.id, u.username, u.role, u.disabled_at, s.scope
+        r#"SELECT u.id, u.username, u.role, u.disabled_at, s.scope, s.label AS session_label
            FROM sessions s
            JOIN users u ON u.id = s.user_id
            WHERE s.token_hash = ?
@@ -31,6 +31,7 @@ pub async fn extract_user(pool: &Pool<MySql>, headers: &HeaderMap) -> Result<Aut
         role: row.try_get("role")?,
         // Fail closed: a scope read failure must deny, never escalate to `full`.
         scope: row.try_get("scope")?,
+        session_label: row.try_get("session_label")?,
     })
 }
 

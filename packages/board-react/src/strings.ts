@@ -20,7 +20,10 @@ export type UiStrings = {
   unassigned: string
   priority: string
   assignee: string
+  start: string
   due: string
+  reminder: string
+  archived: string
   tags: string
   attachments: string
   notes: string
@@ -53,7 +56,10 @@ const en: UiStrings = {
   unassigned: 'Unassigned',
   priority: 'Priority',
   assignee: 'Assignee',
+  start: 'Start',
   due: 'Due',
+  reminder: 'Reminder',
+  archived: 'Archived',
   tags: 'Tags',
   attachments: 'Attachments',
   notes: 'Notes',
@@ -86,7 +92,10 @@ const zh: UiStrings = {
   unassigned: '未分配',
   priority: '优先级',
   assignee: '负责人',
+  start: '开始',
   due: '截止',
+  reminder: '提醒',
+  archived: '已归档',
   tags: '标签',
   attachments: '附件',
   notes: '备注',
@@ -119,7 +128,10 @@ const ja: UiStrings = {
   unassigned: '未割り当て',
   priority: '優先度',
   assignee: '担当者',
+  start: '開始',
   due: '期限',
+  reminder: 'リマインダー',
+  archived: 'アーカイブ済み',
   tags: 'タグ',
   attachments: '添付ファイル',
   notes: 'メモ',
@@ -152,7 +164,10 @@ const ko: UiStrings = {
   unassigned: '미할당',
   priority: '우선순위',
   assignee: '담당자',
+  start: '시작',
   due: '마감',
+  reminder: '알림',
+  archived: '보관됨',
   tags: '태그',
   attachments: '첨부파일',
   notes: '메모',

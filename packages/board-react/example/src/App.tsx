@@ -1,14 +1,20 @@
 import { useState } from 'react'
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
-import { JTypeBoard, type JTypeBoardConnection, type BoardLocale } from 'jtype-board-react'
+import {
+  JTypeBoard,
+  type BoardLocale,
+  type BoardPersonalViewState,
+  type JTypeBoardConnection,
+} from 'jtype-board-react'
 
 // Manual-verification host. Connection settings come from Vite env
 // (VITE_JTYPE_BASE_URL / _TOKEN / _WORKSPACE_ID / _BOARD_REF — e.g. via
 // example/.env.local) with a localStorage-backed form as fallback, so the
 // acceptance flow "bare React app on a non-jtype origin + 4 props" is a
-// paste-and-reload. NOTE: keeping a raw token in the HOST page's localStorage
-// is the trusted-host trade-off the package README warns about — fine for this
-// dev rig, not a pattern for production embeds.
+// paste-and-reload. NOTE: this must be a full REST session token, not the
+// board-pinned token from Settings → MCP access. Keeping it in the HOST page's
+// localStorage is the trusted-host trade-off the package README warns about —
+// fine for this dev rig, not a pattern for production embeds.
 
 type Cfg = {
   baseUrl: string
@@ -20,6 +26,15 @@ type Cfg = {
 }
 
 const LS_KEY = 'jtype-board-react-example.cfg'
+const VIEW_LS_KEY = 'jtype-board-react-example.views.v1'
+
+function initialViewStates(): Record<string, BoardPersonalViewState> {
+  try {
+    return JSON.parse(localStorage.getItem(VIEW_LS_KEY) ?? '{}') as Record<string, BoardPersonalViewState>
+  } catch {
+    return {}
+  }
+}
 
 function initialCfg(): Cfg {
   const env = import.meta.env
@@ -47,10 +62,22 @@ export function App() {
   })
   const [conn, setConn] = useState<JTypeBoardConnection | null>(null)
   const [secondBoard, setSecondBoard] = useState('')
+  const [viewStates, setViewStates] = useState<Record<string, BoardPersonalViewState>>(initialViewStates)
 
   const apply = () => {
     localStorage.setItem(LS_KEY, JSON.stringify(cfg))
     setApplied({ ...cfg })
+  }
+
+  const updateViewState = (board: string, patch: Partial<BoardPersonalViewState>) => {
+    setViewStates((current) => {
+      const next = {
+        ...current,
+        [board]: { ...(current[board] ?? { version: 1 }), ...patch, version: 1 as const },
+      }
+      localStorage.setItem(VIEW_LS_KEY, JSON.stringify(next))
+      return next
+    })
   }
 
   const field = (label: string, key: keyof Cfg, type = 'text') => (
@@ -133,6 +160,8 @@ export function App() {
               readOnly={applied.readOnly}
               live={true}
               locale={applied.locale}
+              viewState={viewStates[applied.boardRef]}
+              onViewStateChange={(patch) => updateViewState(applied.boardRef, patch)}
               onConnectionChange={setConn}
             />
           </div>
@@ -146,6 +175,8 @@ export function App() {
                 readOnly={applied.readOnly}
                 live={true}
                 locale={applied.locale}
+                viewState={viewStates[secondBoard]}
+                onViewStateChange={(patch) => updateViewState(secondBoard, patch)}
               />
             </div>
           )}

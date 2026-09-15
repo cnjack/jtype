@@ -366,8 +366,7 @@ pub(crate) async fn call_api(
         .uri(uri)
         .header(header::CONTENT_TYPE, "application/json")
         .header(header::AUTHORIZATION, format!("Bearer {token}"))
-        // Document `source` is an enum (desktop|web|system); MCP writes record as `web`.
-        .header("x-client-type", "web")
+        .header("x-client-type", "mcp")
         .body(Body::from(body_bytes))
         .map_err(|e| AppError::Server(e.to_string()))?;
     request.extensions_mut().insert(InternalMcpDispatch);

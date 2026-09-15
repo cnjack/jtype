@@ -1,3 +1,4 @@
+pub mod board_memberships;
 pub mod migrations;
 pub mod models;
 

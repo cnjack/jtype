@@ -1,5 +1,6 @@
 pub mod board_events;
 pub mod db;
+pub mod domain_events;
 pub mod error;
 pub mod handlers;
 pub mod hub;
@@ -303,6 +304,12 @@ pub fn build_app_with_trusted_oauth(
             "/api/v1/workspaces/:workspace_id/boards/:board_ref/events/pull",
             get(handlers::kanban_events::pull),
         )
+        // Current Card snapshot for one logical board. Membership is based on
+        // exact `board` frontmatter, not the document directory.
+        .route(
+            "/api/v1/workspaces/:workspace_id/boards/:board_ref/cards",
+            get(handlers::document::list_board_cards),
+        )
         // Mint a personal mcp-scoped token for the board Settings "MCP access" panel.
         .route("/api/v1/mcp-token", post(handlers::mcp_token::mint))
         .route(
@@ -345,6 +352,10 @@ pub fn build_app_with_trusted_oauth(
         .route(
             "/api/v1/workspaces/:workspace_id/documents/:document_id/versions",
             get(handlers::document::list_versions),
+        )
+        .route(
+            "/api/v1/workspaces/:workspace_id/documents/:document_id/activity",
+            get(handlers::activity::list_activity),
         )
         // Card comments (document-backed board)
         .route(

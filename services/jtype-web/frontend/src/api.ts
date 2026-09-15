@@ -1,4 +1,5 @@
 import { httpRequest } from '@shared/lib/http'
+import type { BoardActivityEvent } from '@shared/lib/board'
 
 const API_BASE = ''
 const TOKEN_STORAGE_KEY = 'jtype.token'
@@ -171,6 +172,8 @@ export const api = {
     request<DocumentListItem[]>(`/api/v1/workspaces/${workspaceId}/documents`),
   getDocument: (workspaceId: string, docId: string) =>
     request<CloudDocument>(`/api/v1/workspaces/${workspaceId}/documents/${docId}`),
+  listBoardCards: (workspaceId: string, boardRef: string) =>
+    request<CloudDocument[]>(`/api/v1/workspaces/${workspaceId}/boards/${encodeURIComponent(boardRef)}/cards`),
   deleteDocument: (workspaceId: string, docId: string) =>
     request<void>(`/api/v1/workspaces/${workspaceId}/documents/${docId}`, { method: 'DELETE' }),
   saveDocument: (workspaceId: string, data: SaveDocumentRequest) =>
@@ -261,6 +264,10 @@ export const api = {
     request<void>(`/api/v1/workspaces/${workspaceId}/documents/${docId}/publish`, { method: 'DELETE' }),
   listVersions: (workspaceId: string, docId: string) =>
     request<DocumentVersion[]>(`/api/v1/workspaces/${workspaceId}/documents/${docId}/versions`),
+  listCardActivity: (workspaceId: string, docId: string, limit = 100) =>
+    request<CardActivityResponse>(
+      `/api/v1/workspaces/${workspaceId}/documents/${docId}/activity?limit=${limit}`,
+    ),
   // Card comments (document-backed board): keyed by the card's document id.
   listComments: (workspaceId: string, docId: string) =>
     request<CardComment[]>(`/api/v1/workspaces/${workspaceId}/documents/${docId}/comments`),
@@ -572,6 +579,12 @@ export interface DocumentVersion {
   authorUsername?: string | null
 }
 
+export interface CardActivityResponse {
+  events: BoardActivityEvent[]
+  nextSequence?: number
+  hasMore?: boolean
+}
+
 export interface CardComment {
   id: string
   documentId: string
@@ -603,8 +616,10 @@ export interface WebhookCreated extends Webhook {
 }
 
 export interface KanbanEvent {
+  eventId?: string
   sequence: number
-  event: 'kanban:card-created' | 'kanban:card-updated'
+  event: string
+  domainEvent?: string
   workspaceId: string
   board: string
   card: {
@@ -617,6 +632,10 @@ export interface KanbanEvent {
   }
   editedBy: string
   updatedClock: number
+  actor?: BoardActivityEvent['actor']
+  client?: BoardActivityEvent['client']
+  token?: BoardActivityEvent['token']
+  changes?: BoardActivityEvent['changes']
 }
 
 export interface KanbanEventPullResponse {

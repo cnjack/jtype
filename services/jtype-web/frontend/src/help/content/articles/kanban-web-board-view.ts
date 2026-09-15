@@ -6,14 +6,14 @@ const article: ArticleMeta = {
   id: 'web-board-view',
   categoryId: 'kanban',
   order: 2,
-  updated: '2026-07-30',
+  updated: '2026-08-11',
   title: {
     en: 'The web board view',
     zh: '网页看板视图',
   },
   summary: {
-    en: 'Open a board in the web app: choose vertical swimlanes, drag cards between them, and combine lightweight filters.',
-    zh: '在网页应用中打开看板：选择纵向泳道、跨泳道拖拽卡片，并组合轻量筛选。',
+    en: 'Open one project through five views, preserve personal context, batch-edit Cards, and audit every field change.',
+    zh: '用五种视图打开同一项目，保留个人上下文，批量编辑卡片并审计字段变更。',
   },
   body: { en, zh },
 }

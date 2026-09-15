@@ -158,6 +158,18 @@ fn all_migrations() -> Vec<Migration> {
             up: include_str!("../../migrations/0029_oauth_device_scope.up.sql"),
             down: include_str!("../../migrations/0029_oauth_device_scope.down.sql"),
         },
+        Migration {
+            version: 30,
+            name: "project_activity",
+            up: include_str!("../../migrations/0030_project_activity.up.sql"),
+            down: include_str!("../../migrations/0030_project_activity.down.sql"),
+        },
+        Migration {
+            version: 31,
+            name: "board_membership_rollout_bridge",
+            up: include_str!("../../migrations/0031_board_membership_rollout_bridge.up.sql"),
+            down: include_str!("../../migrations/0031_board_membership_rollout_bridge.down.sql"),
+        },
     ]
 }
 
@@ -238,6 +250,13 @@ async fn exec_sql(pool: &Pool<MySql>, sql: &str) -> Result<(), AppError> {
                 eprintln!("[migrations] ignoring duplicate-object error (already applied): {e}");
                 continue;
             }
+            if is_missing_alter_drop_object(stmt, &e) {
+                // A DOWN migration may have stopped after one of MySQL's
+                // auto-committed ALTER TABLE ... DROP statements. Re-running it
+                // should continue past objects that were already removed.
+                eprintln!("[migrations] ignoring missing DROP target (already removed): {e}");
+                continue;
+            }
             if is_denied_drop(stmt, &e) {
                 // A DROP that the DB user has no privilege to run. Cleanup-only
                 // migrations (e.g. 0018_drop_kanban) retire now-unused objects; if
@@ -289,6 +308,35 @@ fn is_duplicate_state_or_message(code: Option<&str>, msg: &str) -> bool {
         || msg.contains("already exists")
         || msg.contains("duplicate key name")
         || msg.contains("duplicate column")
+}
+
+/// True only for MySQL error 1091 raised when a repeated
+/// `ALTER TABLE ... DROP {COLUMN|INDEX}` targets an object already removed by a
+/// partially completed DOWN migration. Other DROP failures remain fatal.
+fn is_missing_alter_drop_object(stmt: &str, err: &sqlx::Error) -> bool {
+    let Some(db_err) = err.as_database_error() else {
+        return false;
+    };
+    let number = db_err
+        .try_downcast_ref::<sqlx::mysql::MySqlDatabaseError>()
+        .map(|e| e.number());
+    is_missing_alter_drop_object_core(stmt, number, db_err.message())
+}
+
+fn is_missing_alter_drop_object_core(stmt: &str, number: Option<u16>, msg: &str) -> bool {
+    let normalized = stmt
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ")
+        .to_ascii_uppercase();
+    if !normalized.starts_with("ALTER TABLE ") || !normalized.contains(" DROP ") {
+        return false;
+    }
+    if number == Some(1091) {
+        return true;
+    }
+    let msg = msg.to_ascii_lowercase();
+    msg.contains("can't drop") && msg.contains("check that column/key exists")
 }
 
 /// True when a statement is a `DROP` that failed purely because the DB user
@@ -370,6 +418,42 @@ mod tests {
         // A syntax error or connection failure must NOT be swallowed.
         assert!(!is_duplicate_state_or_message(Some("42000"), "You have an error in your SQL syntax"));
         assert!(!is_duplicate_state_or_message(None, "connection refused"));
+    }
+
+    #[test]
+    fn repeated_alter_drop_tolerates_missing_target_by_error_number() {
+        assert!(is_missing_alter_drop_object_core(
+            "ALTER TABLE kanban_events DROP INDEX idx_document_sequence",
+            Some(1091),
+            "目标不存在"
+        ));
+    }
+
+    #[test]
+    fn repeated_alter_drop_tolerates_standard_missing_target_message() {
+        assert!(is_missing_alter_drop_object_core(
+            "ALTER   TABLE kanban_events\nDROP COLUMN actor",
+            None,
+            "Can't DROP 'actor'; check that column/key exists"
+        ));
+    }
+
+    #[test]
+    fn missing_target_error_is_not_tolerated_for_non_drop_statement() {
+        assert!(!is_missing_alter_drop_object_core(
+            "UPDATE kanban_events SET actor = NULL",
+            Some(1091),
+            "Can't DROP 'actor'; check that column/key exists"
+        ));
+    }
+
+    #[test]
+    fn alter_drop_failure_other_than_missing_target_is_not_tolerated() {
+        assert!(!is_missing_alter_drop_object_core(
+            "ALTER TABLE kanban_events DROP COLUMN actor",
+            Some(1451),
+            "Cannot delete or update a parent row"
+        ));
     }
 
     #[test]
@@ -464,6 +548,16 @@ async fn run_all_locked(pool: &Pool<MySql>) -> Result<(), AppError> {
         }
         eprintln!("[migrations] applying UP v{}: {}", m.version, m.name);
         exec_sql(pool, m.up).await?;
+        if m.version == 31 {
+            // Lock each workspace's mutation clock before the rollout rebuild,
+            // then persist the exact high-water mark. Legacy instances acquire
+            // the same lock before document writes, so writes committed later
+            // are detectable and repaired by the next board read.
+            let projected = super::board_memberships::backfill_with_watermarks(pool).await?;
+            eprintln!(
+                "[migrations] projected {projected} Markdown Cards and initialized rollout watermarks"
+            );
+        }
         record_version(pool, m.version, m.name).await?;
         eprintln!("[migrations] applied v{}: {}", m.version, m.name);
     }

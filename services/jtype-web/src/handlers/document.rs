@@ -8,6 +8,10 @@ use sqlx::Row;
 use uuid::Uuid;
 
 use crate::db::models::*;
+use crate::domain_events::{
+    audit_provenance, card_domain_event, card_field_changes, newly_added_body_mentions,
+    normalize_authenticated_source, CardMutation, FieldChange,
+};
 use crate::error::AppError;
 use crate::handlers::workspace::require_workspace_role;
 use crate::hub::WorkspaceEvent;
@@ -51,6 +55,63 @@ pub async fn list_documents(
         .collect();
 
     Ok(Json(docs))
+}
+
+/// Return the current Markdown documents projected onto one logical board.
+///
+/// Board membership is a transactionally maintained projection of the exact
+/// `board` frontmatter value, so cards can live in any folder without making the
+/// folder path part of the board identity or forcing an O(workspace) content scan.
+pub async fn list_board_cards(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Path((workspace_id, board_ref)): Path<(String, String)>,
+) -> Result<Json<Vec<CloudDocument>>, AppError> {
+    let user = extract_user(&state.pool, &headers).await?;
+    require_workspace_role(
+        &state.pool,
+        &workspace_id,
+        &user.id,
+        &["owner", "admin", "editor", "viewer"],
+    )
+    .await?;
+
+    // Migration 0030 installs a durable dirty queue so old service instances
+    // may keep writing safely during a rolling deploy. Repair those legacy
+    // writes with the canonical parser before consulting the projection.
+    crate::db::board_memberships::reconcile_workspace(&state.pool, &workspace_id).await?;
+
+    let rows = sqlx::query(
+        r#"SELECT d.id, d.relative_path, d.title, d.is_published, d.content, d.content_hash,
+                  COALESCE(d.current_version_id, d.id) AS version_id, d.updated_clock
+           FROM board_document_memberships bm
+           JOIN documents d
+             ON d.workspace_id = bm.workspace_id AND d.id = bm.document_id
+           WHERE bm.workspace_id = ? AND bm.board_ref = ?
+           ORDER BY d.relative_path ASC"#,
+    )
+    .bind(&workspace_id)
+    .bind(&board_ref)
+    .fetch_all(&state.pool)
+    .await?;
+
+    let cards = rows
+        .into_iter()
+        .map(|row| {
+            Ok(CloudDocument {
+                document_id: row.try_get("id")?,
+                relative_path: row.try_get("relative_path")?,
+                title: row.try_get("title")?,
+                is_published: row.try_get::<i8, _>("is_published").unwrap_or(0) != 0,
+                content: row.try_get("content")?,
+                content_hash: row.try_get("content_hash")?,
+                version_id: row.try_get("version_id")?,
+                updated_clock: row.try_get("updated_clock")?,
+            })
+        })
+        .collect::<Result<Vec<_>, AppError>>()?;
+
+    Ok(Json(cards))
 }
 
 pub async fn get_document(
@@ -107,8 +168,19 @@ pub async fn delete_document(
         .get("x-device-id")
         .and_then(|v| v.to_str().ok())
         .map(|s| s.to_string());
+    let source = normalize_authenticated_source(
+        &user,
+        headers
+            .get("x-client-type")
+            .and_then(|value| value.to_str().ok())
+            .unwrap_or("web"),
+    );
 
     let mut tx = state.pool.begin().await?;
+
+    // Match document-save lock order: workspace clock first, then document.
+    // A missing document rolls the transaction back, so it consumes no clock.
+    let next_clock = next_workspace_clock(&mut tx, &workspace_id).await?;
 
     let row = sqlx::query(
         r#"SELECT relative_path, title, content, content_hash, COALESCE(current_version_id, id) AS version_id
@@ -127,8 +199,6 @@ pub async fn delete_document(
     let version_id: String = row.try_get("version_id")?;
 
     let trash_id = Uuid::new_v4().to_string();
-    let next_clock = next_workspace_clock(&mut tx, &workspace_id).await?;
-
     sqlx::query(
         r#"INSERT INTO document_trash (id, workspace_id, document_id, relative_path, title, content, content_hash, version_id, deleted_by_user_id, deleted_by_device_id, source_device_id, source_user_id, deleted_clock, expires_at)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 30 DAY))"#,
@@ -149,6 +219,27 @@ pub async fn delete_document(
     .execute(&mut *tx)
     .await?;
 
+    let deleted_doc = CloudDocument {
+        document_id: document_id.clone(),
+        relative_path: relative_path.clone(),
+        title: title.clone(),
+        is_published: false,
+        content: content.clone(),
+        content_hash: content_hash.clone(),
+        version_id: version_id.clone(),
+        updated_clock: next_clock,
+    };
+    let event_sequences = persist_card_event(
+        &mut tx,
+        &workspace_id,
+        &deleted_doc,
+        &user,
+        source,
+        CardMutation::Deleted,
+        None,
+    )
+    .await?;
+
     sqlx::query("DELETE FROM documents WHERE id = ? AND workspace_id = ?")
         .bind(&document_id)
         .bind(&workspace_id)
@@ -156,6 +247,7 @@ pub async fn delete_document(
         .await?;
 
     tx.commit().await?;
+    fire_card_webhook(&state.pool, &workspace_id, &event_sequences).await;
 
     let session_id = super::extract_session_id(&headers);
     state
@@ -168,7 +260,7 @@ pub async fn delete_document(
                 relative_path,
                 action: "trashed".to_string(),
                 event_clock: next_clock,
-                source: "desktop".to_string(),
+                source: source.to_string(),
                 device_id: device_id.clone(),
             },
             session_id.as_deref(),
@@ -197,10 +289,13 @@ pub async fn save_document(
     )
     .await?;
 
-    let client_type = headers
-        .get("x-client-type")
-        .and_then(|v| v.to_str().ok())
-        .unwrap_or("web");
+    let client_type = normalize_authenticated_source(
+        &user,
+        headers
+            .get("x-client-type")
+            .and_then(|v| v.to_str().ok())
+            .unwrap_or("web"),
+    );
     let device_id = headers
         .get("x-device-id")
         .and_then(|v| v.to_str().ok())
@@ -208,24 +303,26 @@ pub async fn save_document(
     let session_id = super::extract_session_id(&headers);
 
     match save_document_version(&state.pool, &workspace_id, &user, payload, client_type).await? {
-        SaveDocumentOutcome::Saved(doc, merge_status, _created) => {
-            state
-                .hub
-                .publish_to_workspace(
-                    &workspace_id,
-                    WorkspaceEvent::DocumentChanged {
-                        workspace_id: workspace_id.clone(),
-                        source_session_id: session_id.clone(),
-                        relative_path: doc.relative_path.clone(),
-                        content_hash: doc.content_hash.clone(),
-                        updated_clock: doc.updated_clock,
-                        edited_by: user.username.clone(),
-                        source: client_type.to_string(),
-                        device_id,
-                    },
-                    session_id.as_deref(),
-                )
-                .await;
+        SaveDocumentOutcome::Saved(doc, merge_status, _created, _) => {
+            if merge_status != MergeStatus::Unchanged {
+                state
+                    .hub
+                    .publish_to_workspace(
+                        &workspace_id,
+                        WorkspaceEvent::DocumentChanged {
+                            workspace_id: workspace_id.clone(),
+                            source_session_id: session_id.clone(),
+                            relative_path: doc.relative_path.clone(),
+                            content_hash: doc.content_hash.clone(),
+                            updated_clock: doc.updated_clock,
+                            edited_by: user.username.clone(),
+                            source: client_type.to_string(),
+                            device_id,
+                        },
+                        session_id.as_deref(),
+                    )
+                    .await;
+            }
 
             Ok(Json(serde_json::json!({
                 "documentId": doc.document_id,
@@ -312,7 +409,7 @@ pub enum SaveDocumentOutcome {
     /// `created` is true only for a brand-new document (no prior row at this
     /// `relativePath` in the workspace) — distinguishes `kanban:card-created`
     /// from `kanban:card-updated` webhooks/SSE events.
-    Saved(CloudDocument, MergeStatus, bool),
+    Saved(CloudDocument, MergeStatus, bool, Vec<i64>),
     Conflict(SyncConflict),
 }
 
@@ -330,70 +427,380 @@ pub async fn save_document_version(
     payload: CloudSaveDocumentRequest,
     source: &str,
 ) -> Result<SaveDocumentOutcome, AppError> {
+    let source = normalize_authenticated_source(user, source);
+    save_document_version_with_source(pool, workspace_id, user, payload, source).await
+}
+
+/// Trusted internal write path. `system` provenance cannot be selected through
+/// HTTP/WS client hints; only Rust service code can call this helper.
+pub(crate) async fn save_system_document_version(
+    pool: &sqlx::Pool<sqlx::MySql>,
+    workspace_id: &str,
+    user: &AuthUser,
+    payload: CloudSaveDocumentRequest,
+) -> Result<SaveDocumentOutcome, AppError> {
+    save_document_version_with_source(pool, workspace_id, user, payload, "system").await
+}
+
+async fn save_document_version_with_source(
+    pool: &sqlx::Pool<sqlx::MySql>,
+    workspace_id: &str,
+    user: &AuthUser,
+    payload: CloudSaveDocumentRequest,
+    source: &str,
+) -> Result<SaveDocumentOutcome, AppError> {
     let outcome = save_document_version_inner(pool, workspace_id, user, payload, source).await?;
-    if let SaveDocumentOutcome::Saved(doc, status, created) = &outcome {
+    if let SaveDocumentOutcome::Saved(_, status, _, event_sequences) = &outcome {
         // Unchanged = a no-op re-save; don't fire on those.
         if !matches!(status, MergeStatus::Unchanged) {
-            fire_card_webhook(pool, workspace_id, doc, &user.username, *created).await;
+            fire_card_webhook(pool, workspace_id, event_sequences).await;
         }
     }
     Ok(outcome)
 }
 
-/// Build the canonical payload shared by the durable log, SSE, and webhooks.
-/// A non-card document is a no-op.
+#[derive(Debug)]
+struct BuiltCardEvent {
+    id: String,
+    board_ref: String,
+    sequence: i64,
+    event_type: &'static str,
+    actor: serde_json::Value,
+    changes: serde_json::Value,
+    payload: serde_json::Value,
+}
+
+/// Build the canonical payload shared by the durable log, SSE, webhooks, and
+/// per-Card Activity. A non-card document is a no-op. The field diff is always
+/// derived from accepted Markdown; the actor always comes from AuthUser.
 fn build_card_event(
     workspace_id: &str,
     doc: &CloudDocument,
-    editor: &str,
-    created: bool,
-) -> Option<(String, &'static str, serde_json::Value)> {
-    if !doc.relative_path.to_ascii_lowercase().ends_with(".md") {
-        return None;
-    }
-    let fm = jtype_core::parse_frontmatter(&doc.content);
-    let Some(board_ref) = fm.get("board").map(String::as_str).filter(|b| !b.is_empty()) else {
-        return None;
-    };
-    let event = if created { "kanban:card-created" } else { "kanban:card-updated" };
-    let payload = serde_json::json!({
-        "sequence": doc.updated_clock,
-        "event": event,
+    user: &AuthUser,
+    source: &str,
+    board_ref: &str,
+    sequence: i64,
+    event_type: &'static str,
+    domain_event: &'static str,
+    changes: &[FieldChange],
+    snapshot: &std::collections::HashMap<String, String>,
+) -> Result<BuiltCardEvent, AppError> {
+    let provenance = audit_provenance(user, source);
+    let event_id = Uuid::new_v4().to_string();
+    let actor = serde_json::to_value(&provenance.actor)
+        .map_err(|error| AppError::Server(format!("serialize activity actor: {error}")))?;
+    let changes_json = serde_json::to_value(changes)
+        .map_err(|error| AppError::Server(format!("serialize activity changes: {error}")))?;
+    let mut payload = serde_json::json!({
+        "eventId": event_id,
+        "sequence": sequence,
+        "event": event_type,
+        "domainEvent": domain_event,
         "workspaceId": workspace_id,
         "board": board_ref,
         "card": {
+            "documentId": doc.document_id,
             "path": doc.relative_path,
-            "title": fm.get("title").cloned().unwrap_or_default(),
-            "status": fm.get("status").cloned().unwrap_or_default(),
-            "priority": fm.get("priority"),
-            "assignee": fm.get("assignee"),
-            "due": fm.get("due"),
+            "title": snapshot.get("title").cloned().unwrap_or_else(|| doc.title.clone()),
+            "status": snapshot.get("status").cloned().unwrap_or_default(),
+            "priority": snapshot.get("priority"),
+            "assignee": snapshot.get("assignee"),
+            "start": snapshot.get("start"),
+            "due": snapshot.get("due"),
+            "reminder": snapshot.get("reminder"),
+            "archived": snapshot.get("archived"),
         },
-        "editedBy": editor,
-        "updatedClock": doc.updated_clock,
+        "editedBy": user.username,
+        "actor": actor,
+        "client": provenance.client,
+        "changes": changes_json,
+        "updatedClock": sequence,
     });
-    Some((board_ref.to_string(), event, payload))
+    if let Some(token) = provenance.token {
+        payload
+            .as_object_mut()
+            .expect("card event payload is an object")
+            .insert(
+                "token".to_string(),
+                serde_json::to_value(token).map_err(|error| {
+                    AppError::Server(format!("serialize activity token: {error}"))
+                })?,
+            );
+    }
+    Ok(BuiltCardEvent {
+        id: event_id,
+        board_ref: board_ref.to_string(),
+        sequence,
+        event_type,
+        actor,
+        changes: changes_json,
+        payload,
+    })
+}
+
+fn board_ref(frontmatter: &std::collections::HashMap<String, String>) -> Option<String> {
+    frontmatter
+        .get("board")
+        .map(String::as_str)
+        .map(str::trim)
+        .filter(|board| !board.is_empty())
+        .map(str::to_string)
 }
 
 /// Persist the card event inside the same transaction as its document version.
 /// `next_workspace_clock` serializes those transactions, so a higher sequence
 /// cannot become visible before a lower one.
-async fn persist_card_event(
+pub(crate) async fn persist_card_event(
     tx: &mut sqlx::Transaction<'_, sqlx::MySql>,
     workspace_id: &str,
     doc: &CloudDocument,
-    editor: &str,
-    created: bool,
-) -> Result<(), AppError> {
-    if let Some((board_ref, event, payload)) =
-        build_card_event(workspace_id, doc, editor, created)
-    {
+    user: &AuthUser,
+    source: &str,
+    mutation: CardMutation,
+    previous_content: Option<&str>,
+) -> Result<Vec<i64>, AppError> {
+    match mutation {
+        CardMutation::Deleted => {
+            crate::db::board_memberships::remove_document(tx, workspace_id, &doc.document_id)
+                .await?;
+        }
+        CardMutation::Created | CardMutation::Updated => {
+            crate::db::board_memberships::sync_document(
+                tx,
+                workspace_id,
+                &doc.document_id,
+                &doc.relative_path,
+                &doc.content,
+            )
+            .await?;
+        }
+    }
+    if !doc.relative_path.to_ascii_lowercase().ends_with(".md") {
+        return Ok(Vec::new());
+    }
+    let current_fm = jtype_core::parse_frontmatter(&doc.content);
+    let previous_fm = previous_content
+        .map(jtype_core::parse_frontmatter)
+        .unwrap_or_default();
+    let current_board = board_ref(&current_fm);
+    let previous_board = match mutation {
+        CardMutation::Created => None,
+        CardMutation::Updated => board_ref(&previous_fm),
+        CardMutation::Deleted => current_board.clone(),
+    };
+    let changes = match mutation {
+        CardMutation::Created => card_field_changes(None, Some(&doc.content)),
+        CardMutation::Updated => card_field_changes(previous_content, Some(&doc.content)),
+        CardMutation::Deleted => card_field_changes(Some(&doc.content), None),
+    };
+    let mut events = Vec::new();
+
+    match mutation {
+        CardMutation::Created => {
+            if let Some(board) = current_board.as_deref() {
+                events.push(build_card_event(
+                    workspace_id,
+                    doc,
+                    user,
+                    source,
+                    board,
+                    doc.updated_clock,
+                    "kanban:card-created",
+                    "card.created",
+                    &changes,
+                    &current_fm,
+                )?);
+            }
+        }
+        CardMutation::Deleted => {
+            if let Some(board) = previous_board.as_deref() {
+                events.push(build_card_event(
+                    workspace_id,
+                    doc,
+                    user,
+                    source,
+                    board,
+                    doc.updated_clock,
+                    "kanban:card-deleted",
+                    "card.deleted",
+                    &changes,
+                    &current_fm,
+                )?);
+            }
+        }
+        CardMutation::Updated if previous_board == current_board => {
+            if let Some(board) = current_board.as_deref() {
+                events.push(build_card_event(
+                    workspace_id,
+                    doc,
+                    user,
+                    source,
+                    board,
+                    doc.updated_clock,
+                    "kanban:card-updated",
+                    card_domain_event(CardMutation::Updated, &changes),
+                    &changes,
+                    &current_fm,
+                )?);
+            }
+        }
+        CardMutation::Updated => {
+            // Board membership is a projection boundary. Remove from the old
+            // projection first, then add to the new one with its own durable
+            // sequence so board-scoped pull/SSE/webhooks cannot retain ghosts.
+            if let Some(board) = previous_board.as_deref() {
+                events.push(build_card_event(
+                    workspace_id,
+                    doc,
+                    user,
+                    source,
+                    board,
+                    doc.updated_clock,
+                    "kanban:card-deleted",
+                    "card.deleted",
+                    &changes,
+                    &previous_fm,
+                )?);
+            }
+            if let Some(board) = current_board.as_deref() {
+                let sequence = if previous_board.is_some() {
+                    next_workspace_clock(tx, workspace_id).await?
+                } else {
+                    doc.updated_clock
+                };
+                events.push(build_card_event(
+                    workspace_id,
+                    doc,
+                    user,
+                    source,
+                    board,
+                    sequence,
+                    "kanban:card-created",
+                    "card.created",
+                    &changes,
+                    &current_fm,
+                )?);
+            }
+        }
+    }
+
+    let mut sequences = Vec::with_capacity(events.len());
+    for event in events {
         crate::handlers::kanban_events::persist(
             tx,
+            &event.id,
             workspace_id,
-            &board_ref,
-            doc.updated_clock,
-            event,
+            &event.board_ref,
+            Some(&doc.document_id),
+            event.sequence,
+            event.event_type,
+            &event.actor,
+            &event.changes,
+            &event.payload,
+        )
+        .await?;
+        sequences.push(event.sequence);
+    }
+    if !matches!(mutation, CardMutation::Deleted) {
+        if let Some(board) = current_board.as_deref() {
+            persist_card_mention_events(
+                tx,
+                workspace_id,
+                doc,
+                board,
+                user,
+                source,
+                previous_content,
+            )
+            .await?;
+        }
+    }
+    Ok(sequences)
+}
+
+async fn persist_card_mention_events(
+    tx: &mut sqlx::Transaction<'_, sqlx::MySql>,
+    workspace_id: &str,
+    doc: &CloudDocument,
+    board_ref: &str,
+    user: &AuthUser,
+    source: &str,
+    previous_content: Option<&str>,
+) -> Result<(), AppError> {
+    let added = newly_added_body_mentions(previous_content, &doc.content);
+    if added.is_empty() {
+        return Ok(());
+    }
+    let rows = sqlx::query(
+        r#"SELECT u.id, u.username
+           FROM workspace_members m
+           JOIN users u ON u.id = m.user_id
+           WHERE m.workspace_id = ? AND m.status = 'active' AND u.disabled_at IS NULL"#,
+    )
+    .bind(workspace_id)
+    .fetch_all(&mut **tx)
+    .await?;
+    let frontmatter = jtype_core::parse_frontmatter(&doc.content);
+    let provenance = audit_provenance(user, source);
+    let actor = serde_json::to_value(&provenance.actor)
+        .map_err(|error| AppError::Server(format!("serialize activity actor: {error}")))?;
+
+    for row in rows {
+        let mentioned_user_id: String = row.try_get("id")?;
+        let mentioned_username: String = row.try_get("username")?;
+        if mentioned_username.eq_ignore_ascii_case(&user.username)
+            || !added.contains(&mentioned_username.to_ascii_lowercase())
+        {
+            continue;
+        }
+        let sequence = next_workspace_clock(tx, workspace_id).await?;
+        let event_id = Uuid::new_v4().to_string();
+        let changes = serde_json::json!([{
+            "field": "mention",
+            "after": {
+                "userId": mentioned_user_id,
+                "username": mentioned_username,
+            }
+        }]);
+        let mut payload = serde_json::json!({
+            "eventId": event_id,
+            "sequence": sequence,
+            "event": "mention.created",
+            "domainEvent": "mention.created",
+            "workspaceId": workspace_id,
+            "board": board_ref,
+            "card": {
+                "documentId": doc.document_id,
+                "path": doc.relative_path,
+                "title": frontmatter.get("title").cloned().unwrap_or_else(|| doc.title.clone()),
+                "status": frontmatter.get("status").cloned().unwrap_or_default(),
+            },
+            "actor": actor.clone(),
+            "client": provenance.client.clone(),
+            "changes": changes.clone(),
+            "updatedClock": sequence,
+        });
+        if let Some(token) = provenance.token.clone() {
+            payload
+                .as_object_mut()
+                .expect("mention event payload is an object")
+                .insert(
+                    "token".to_string(),
+                    serde_json::to_value(token).map_err(|error| {
+                        AppError::Server(format!("serialize activity token: {error}"))
+                    })?,
+                );
+        }
+        crate::handlers::kanban_events::persist(
+            tx,
+            &event_id,
+            workspace_id,
+            board_ref,
+            Some(&doc.document_id),
+            sequence,
+            "mention.created",
+            &actor,
+            &changes,
             &payload,
         )
         .await?;
@@ -406,13 +813,38 @@ async fn persist_card_event(
 pub(crate) async fn fire_card_webhook(
     pool: &sqlx::Pool<sqlx::MySql>,
     workspace_id: &str,
-    doc: &CloudDocument,
-    editor: &str,
-    created: bool,
+    event_sequences: &[i64],
 ) {
-    let Some((board_ref, event, payload)) =
-        build_card_event(workspace_id, doc, editor, created)
-    else {
+    for sequence in event_sequences {
+        fire_card_event_by_sequence(pool, workspace_id, *sequence).await;
+    }
+}
+
+/// Deliver the exact payload that committed with the document. Querying the
+/// durable row avoids minting a second event id or recomputing a divergent diff
+/// after commit.
+async fn fire_card_event_by_sequence(
+    pool: &sqlx::Pool<sqlx::MySql>,
+    workspace_id: &str,
+    sequence: i64,
+) {
+    let row = sqlx::query(
+        "SELECT board_ref, event_type, payload FROM kanban_events WHERE workspace_id = ? AND sequence = ?",
+    )
+    .bind(workspace_id)
+    .bind(sequence)
+    .fetch_optional(pool)
+    .await;
+    let Ok(Some(row)) = row else {
+        return;
+    };
+    let Ok(board_ref) = row.try_get::<String, _>("board_ref") else {
+        return;
+    };
+    let Ok(event_type) = row.try_get::<String, _>("event_type") else {
+        return;
+    };
+    let Ok(payload) = row.try_get::<serde_json::Value, _>("payload") else {
         return;
     };
     crate::board_events::global().publish(workspace_id, &board_ref, payload.to_string());
@@ -420,7 +852,7 @@ pub(crate) async fn fire_card_webhook(
         pool,
         workspace_id,
         Some(&board_ref),
-        event,
+        &event_type,
         payload,
     )
     .await;
@@ -484,7 +916,7 @@ async fn save_document_version_inner(
             if let Some(base_content) = payload.base_content.as_deref() {
                 match smart_three_way_merge(base_content, &payload.content, &cloud_content) {
                     MergeResult::Merged(merged) => {
-                        let doc = save_merged_document(
+                        let saved = save_merged_document_with_outcome(
                             pool,
                             workspace_id,
                             user,
@@ -498,7 +930,12 @@ async fn save_document_version_inner(
                             source,
                         )
                         .await?;
-                        return Ok(SaveDocumentOutcome::Saved(doc, MergeStatus::Merged, false));
+                        return Ok(SaveDocumentOutcome::Saved(
+                            saved.document,
+                            MergeStatus::Merged,
+                            false,
+                            saved.event_sequences,
+                        ));
                     }
                     MergeResult::Conflict { conflict_ranges } => {
                         let conflict = create_sync_conflict_with_ranges(
@@ -573,9 +1010,10 @@ async fn save_document_version_inner(
                 },
                 MergeStatus::Unchanged,
                 false,
+                Vec::new(),
             ));
         }
-        let saved = save_merged_document(
+        let saved = save_merged_document_with_outcome(
             pool,
             workspace_id,
             user,
@@ -589,7 +1027,12 @@ async fn save_document_version_inner(
             source,
         )
         .await?;
-        return Ok(SaveDocumentOutcome::Saved(saved, MergeStatus::Accepted, false));
+        return Ok(SaveDocumentOutcome::Saved(
+            saved.document,
+            MergeStatus::Accepted,
+            false,
+            saved.event_sequences,
+        ));
     }
 
     ensure_workspace_budget(pool, workspace_id, &relative_path, &payload.content).await?;
@@ -643,12 +1086,14 @@ async fn save_document_version_inner(
         version_id,
         updated_clock: next_clock,
     };
-    persist_card_event(
+    let event_sequences = persist_card_event(
         &mut tx,
         workspace_id,
         &doc,
-        &user.username,
-        true,
+        user,
+        source,
+        CardMutation::Created,
+        None,
     )
     .await?;
     tx.commit().await?;
@@ -657,6 +1102,7 @@ async fn save_document_version_inner(
         doc,
         MergeStatus::Accepted,
         true,
+        event_sequences,
     ))
 }
 
@@ -673,11 +1119,89 @@ pub async fn save_merged_document(
     expected_content_hash: Option<&str>,
     source: &str,
 ) -> Result<CloudDocument, AppError> {
+    Ok(save_merged_document_with_outcome(
+        pool,
+        workspace_id,
+        user,
+        document_id,
+        relative_path,
+        title,
+        content,
+        parent_version_id,
+        base_version_id,
+        expected_content_hash,
+        source,
+    )
+    .await?
+    .document)
+}
+
+pub(crate) struct MergedDocumentSave {
+    pub document: CloudDocument,
+    pub changed: bool,
+    pub event_sequences: Vec<i64>,
+}
+
+pub(crate) async fn save_merged_document_with_outcome(
+    pool: &sqlx::Pool<sqlx::MySql>,
+    workspace_id: &str,
+    user: &AuthUser,
+    document_id: &str,
+    relative_path: &str,
+    title: &str,
+    content: &str,
+    parent_version_id: Option<&str>,
+    base_version_id: Option<&str>,
+    expected_content_hash: Option<&str>,
+    source: &str,
+) -> Result<MergedDocumentSave, AppError> {
     ensure_workspace_budget(pool, workspace_id, relative_path, content).await?;
     let content_hash = sha256_hex(content);
     let mut tx = pool.begin().await?;
     let version_id = Uuid::new_v4().to_string();
     let next_clock = next_workspace_clock(&mut tx, workspace_id).await?;
+
+    // Lock and capture the accepted "before" Markdown inside the write
+    // transaction. The resulting diff therefore cannot race a concurrent save.
+    let current = sqlx::query(
+        r#"SELECT title, is_published, content, content_hash,
+                  COALESCE(current_version_id, id) AS version_id, updated_clock
+           FROM documents
+           WHERE id = ? AND workspace_id = ?
+           FOR UPDATE"#,
+    )
+    .bind(document_id)
+    .bind(workspace_id)
+    .fetch_optional(&mut *tx)
+    .await?
+    .ok_or(AppError::NotFound)?;
+    let previous_content: String = current.try_get("content")?;
+    let current_hash: String = current.try_get("content_hash")?;
+    if current_hash == content_hash {
+        let existing = CloudDocument {
+            document_id: document_id.to_string(),
+            relative_path: relative_path.to_string(),
+            title: current.try_get("title")?,
+            is_published: current.try_get::<i8, _>("is_published").unwrap_or(0) != 0,
+            content: previous_content,
+            content_hash: current_hash,
+            version_id: current.try_get("version_id")?,
+            updated_clock: current.try_get("updated_clock")?,
+        };
+        // `next_workspace_clock` ran first to preserve the global lock order;
+        // rollback makes an idempotent resolution consume neither clock nor event.
+        tx.rollback().await?;
+        return Ok(MergedDocumentSave {
+            document: existing,
+            changed: false,
+            event_sequences: Vec::new(),
+        });
+    }
+    if expected_content_hash.is_some_and(|expected| expected != current_hash.as_str()) {
+        return Err(AppError::BadRequest(
+            "document changed since it was read; retry".to_string(),
+        ));
+    }
     let updated = sqlx::query(
         r#"UPDATE documents SET title = ?, content_hash = ?, content = ?, updated_clock = ?, current_version_id = ?
            WHERE id = ? AND workspace_id = ?
@@ -722,17 +1246,23 @@ pub async fn save_merged_document(
         version_id,
         updated_clock: next_clock,
     };
-    persist_card_event(
+    let event_sequences = persist_card_event(
         &mut tx,
         workspace_id,
         &doc,
-        &user.username,
-        false,
+        user,
+        source,
+        CardMutation::Updated,
+        Some(&previous_content),
     )
     .await?;
     tx.commit().await?;
 
-    Ok(doc)
+    Ok(MergedDocumentSave {
+        document: doc,
+        changed: true,
+        event_sequences,
+    })
 }
 
 async fn insert_document_version(

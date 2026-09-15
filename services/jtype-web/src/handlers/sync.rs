@@ -140,7 +140,7 @@ pub async fn push(
         )
         .await?
         {
-            crate::handlers::document::SaveDocumentOutcome::Saved(doc, status, _created) => {
+            crate::handlers::document::SaveDocumentOutcome::Saved(doc, status, _created, _) => {
                 accepted += 1;
                 if status != crate::handlers::document::MergeStatus::Unchanged {
                     state
@@ -343,12 +343,11 @@ pub async fn resolve_conflict(
                 base_content: None,
                 create_only: false,
             };
-            let outcome = crate::handlers::document::save_document_version(
+            let outcome = crate::handlers::document::save_system_document_version(
                 &state.pool,
                 &workspace_id,
                 &user,
                 save,
-                "system",
             )
             .await?;
             sqlx::query("UPDATE sync_conflicts SET status = 'resolved', resolution = 'keep_both', resolved_at = CURRENT_TIMESTAMP WHERE id = ?")
@@ -356,7 +355,7 @@ pub async fn resolve_conflict(
                 .execute(&state.pool)
                 .await?;
             return match outcome {
-                crate::handlers::document::SaveDocumentOutcome::Saved(doc, _, _) => {
+                crate::handlers::document::SaveDocumentOutcome::Saved(doc, _, _, _) => {
                     state
                         .hub
                         .publish_to_workspace(
@@ -390,7 +389,7 @@ pub async fn resolve_conflict(
     };
 
     let title = extract_title(&content).unwrap_or_else(|| relative_path.clone());
-    let saved = crate::handlers::document::save_merged_document(
+    let save = crate::handlers::document::save_merged_document_with_outcome(
         &state.pool,
         &workspace_id,
         &user,
@@ -404,6 +403,9 @@ pub async fn resolve_conflict(
         "system",
     )
     .await?;
+    let changed = save.changed;
+    let event_sequences = save.event_sequences;
+    let saved = save.document;
     sqlx::query("UPDATE sync_conflicts SET status = 'resolved', resolution = ?, resolved_at = CURRENT_TIMESTAMP WHERE id = ?")
         .bind(&resolution)
         .bind(&conflict_id)
@@ -414,26 +416,31 @@ pub async fn resolve_conflict(
     // committed its durable event row with the document, but (unlike the
     // `save_document_version` wrapper) does not publish SSE/webhooks itself, so
     // notify those best-effort paths explicitly here.
-    crate::handlers::document::fire_card_webhook(&state.pool, &workspace_id, &saved, &user.username, false).await;
+    if changed {
+        crate::handlers::document::fire_card_webhook(&state.pool, &workspace_id, &event_sequences)
+            .await;
+    }
 
     // Broadcast the resolved document so other connected clients refresh.
-    state
-        .hub
-        .publish_to_workspace(
-            &workspace_id,
-            WorkspaceEvent::DocumentChanged {
-                workspace_id: workspace_id.clone(),
-                source_session_id: session_id.clone(),
-                relative_path: saved.relative_path.clone(),
-                content_hash: saved.content_hash.clone(),
-                updated_clock: saved.updated_clock,
-                edited_by: user.username.clone(),
-                source: "system".to_string(),
-                device_id: None,
-            },
-            session_id.as_deref(),
-        )
-        .await;
+    if changed {
+        state
+            .hub
+            .publish_to_workspace(
+                &workspace_id,
+                WorkspaceEvent::DocumentChanged {
+                    workspace_id: workspace_id.clone(),
+                    source_session_id: session_id.clone(),
+                    relative_path: saved.relative_path.clone(),
+                    content_hash: saved.content_hash.clone(),
+                    updated_clock: saved.updated_clock,
+                    edited_by: user.username.clone(),
+                    source: "system".to_string(),
+                    device_id: None,
+                },
+                session_id.as_deref(),
+            )
+            .await;
+    }
 
     Ok(Json(saved))
 }
@@ -558,6 +565,10 @@ async fn trash_document_by_relative_path(
     let relative_path = normalize_relative_markdown_path(relative_path)?;
     let mut tx = pool.begin().await?;
 
+    // Serialize with document saves/deletes before locking the document row.
+    // If the path no longer exists, rolling back returns this clock increment.
+    let next_clock = crate::handlers::document::next_workspace_clock(&mut tx, workspace_id).await?;
+
     let row = sqlx::query(
         r#"SELECT id, title, content, content_hash, COALESCE(current_version_id, id) AS version_id
            FROM documents
@@ -570,7 +581,7 @@ async fn trash_document_by_relative_path(
     .await?;
 
     let Some(row) = row else {
-        tx.commit().await?;
+        tx.rollback().await?;
         return Ok(None);
     };
 
@@ -580,7 +591,6 @@ async fn trash_document_by_relative_path(
     let content_hash: String = row.try_get("content_hash")?;
     let version_id: String = row.try_get("version_id")?;
     let trash_id = Uuid::new_v4().to_string();
-    let next_clock = crate::handlers::document::next_workspace_clock(&mut tx, workspace_id).await?;
 
     sqlx::query(
         r#"INSERT INTO document_trash (id, workspace_id, document_id, relative_path, title, content, content_hash, version_id, deleted_by_user_id, deleted_by_device_id, source_device_id, source_user_id, deleted_clock, expires_at)
@@ -602,6 +612,27 @@ async fn trash_document_by_relative_path(
     .execute(&mut *tx)
     .await?;
 
+    let deleted_doc = CloudDocument {
+        document_id: document_id.clone(),
+        relative_path: relative_path.clone(),
+        title: title.clone(),
+        is_published: false,
+        content: content.clone(),
+        content_hash: content_hash.clone(),
+        version_id: version_id.clone(),
+        updated_clock: next_clock,
+    };
+    let event_sequences = crate::handlers::document::persist_card_event(
+        &mut tx,
+        workspace_id,
+        &deleted_doc,
+        user,
+        crate::domain_events::normalize_authenticated_source(user, "desktop"),
+        crate::domain_events::CardMutation::Deleted,
+        None,
+    )
+    .await?;
+
     sqlx::query("DELETE FROM documents WHERE id = ? AND workspace_id = ?")
         .bind(&document_id)
         .bind(workspace_id)
@@ -609,6 +640,7 @@ async fn trash_document_by_relative_path(
         .await?;
 
     tx.commit().await?;
+    crate::handlers::document::fire_card_webhook(pool, workspace_id, &event_sequences).await;
     Ok(Some(DeletedPath {
         relative_path,
         deleted_clock: next_clock,

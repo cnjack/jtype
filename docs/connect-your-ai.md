@@ -5,7 +5,8 @@ JType exposes your **notes and kanban boards** to AI agents through a built-in
 Cursor, Cline, or `jcode` can search and read your notes, create and update
 documents, and triage your kanban board — with your permission and your data.
 
-- **Server URL:** `https://<your-jtype-host>/mcp` (locally: `http://localhost:13345/mcp`)
+- **Notes server:** `https://<your-jtype-host>/mcp` (locally: `http://localhost:13345/mcp`)
+- **Kanban server:** `https://<your-jtype-host>/mcp/kanban`
 - **Transport:** Streamable HTTP
 - **Auth:** OAuth 2.1 (browser, recommended) **or** a scoped access token (fallback)
 
@@ -51,11 +52,17 @@ Then sign in: `jtype login`.
 | Notes | Kanban |
 |---|---|
 | `list_workspaces` · `list_notes` · `get_note` | `list_boards` · `get_board` · `list_cards` |
-| `search_notes` · `create_note` | `create_card` · `update_card` · `move_card` |
-| `update_note` · `append_note` | `list_members` |
+| `search_notes` · `create_note` | `create_card` · `update_card` · `move_card` · `delete_card` |
+| `update_note` · `append_note` | labels · attachment references · relations · batch updates · status management |
 
 Read tools return Markdown; writes respect your workspace role. Admin actions
 are **never** available to an AI token.
+
+Notes and Kanban are separate MCP tool surfaces. Connect `/mcp/kanban` when the
+assistant needs Board tools. For a single Board, Board Settings can generate a
+pinned URL `/mcp/kanban/<workspace>/<board>` and a token that works only on that
+URL. That Board-pinned token is not a general REST/embed token. See the
+[Kanban MCP contract](api/kanban-mcp.md) for mutation and recovery semantics.
 
 ---
 
@@ -64,7 +71,7 @@ are **never** available to an AI token.
 ### A. OAuth (recommended — no token to copy)
 
 For clients that support MCP OAuth (Claude Desktop / claude.ai connectors,
-Cursor, Claude Code), just give them the **server URL**. The client discovers
+Cursor, Claude Code), give them the **Notes or Kanban server URL** you need. The client discovers
 the auth server automatically, opens a browser, you **approve once**, and it's
 connected. No token is ever pasted or stored in a config file. Tokens issued
 this way are scoped to `mcp` and expire after 90 days.
@@ -90,7 +97,7 @@ reach admin endpoints or mint more tokens. Revoke any time with
 
 ### Claude Desktop / claude.ai (custom connector)
 1. **Settings → Connectors → Add custom connector**.
-2. URL: `https://<your-jtype-host>/mcp`.
+2. URL: `https://<your-jtype-host>/mcp` for Notes, or `/mcp/kanban` for Boards.
 3. Approve in the browser. Done — uses OAuth (A).
 
 ### Claude Code
@@ -129,6 +136,10 @@ On first use Claude Code runs the OAuth flow in your browser. (Or pass a token:
 ```
 Then verify with `jcode mcp list`.
 
+For clients configured as JSON, add a second server entry pointing to
+`https://<your-jtype-host>/mcp/kanban` when Board tools are required. The same
+OAuth or broad `mcp` token can authorize both unpinned surfaces.
+
 ### Local / stdio-only clients
 The `jtype` CLI can act as a local stdio MCP server that bridges to the HTTP
 endpoint — useful for clients that only speak stdio:
@@ -137,11 +148,13 @@ endpoint — useful for clients that only speak stdio:
 ```
 (Run `jtype login` first so the bridge has a token.)
 
+For the separate Kanban surface, use `"args": ["mcp-stdio", "--kanban"]`.
+
 ---
 
 ## Try it
 
-Ask your assistant:
+With both Notes and Kanban servers connected, ask your assistant:
 
 > "List my JType workspaces, find notes about the launch, and add a high-priority
 > card 'Draft the launch plan' to my Launch board."

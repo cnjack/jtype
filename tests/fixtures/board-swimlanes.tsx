@@ -7,10 +7,13 @@ import {
   boardLaneValueOf,
   cardPatchForLaneValue,
   slugify,
+  type BoardActivityEvent,
+  type BoardPersonalViewState,
   type BoardViewCard,
   type BoardViewConfig,
 } from "@shared/lib/board";
 import { renderMarkdownToHtml, renderToContainer } from "@shared/lib/markdown";
+import { boardPersonalViewDefaults } from "@shared/lib/boardViewState";
 import { i18n, ensureLocaleActivated } from "@shared/i18n";
 import "../../src/styles.css";
 
@@ -18,8 +21,16 @@ declare global {
   interface Window {
     __BOARD_TEST_DROP_UPDATES__?: boolean;
     __BOARD_TEST_CREATE_FAILURE__?: boolean;
+    __BOARD_TEST_CARD_SAVE_FAILURE__?: boolean;
+    __BOARD_TEST_CARD_SAVE_FAILURE_COUNT__?: number;
+    __BOARD_TEST_ACTIVITY_FAILURE__?: boolean;
+    __BOARD_TEST_COMMENTS_FAILURE__?: boolean;
+    __BOARD_TEST_DELETE_FAILURE__?: boolean;
+    __BOARD_TEST_SET_VIEW_STATE__?: (patch: Partial<BoardPersonalViewState>) => void;
+    __BOARD_TEST_UPDATE_FAILURE__?: boolean;
     __BOARD_TEST_STATE__?: {
       config: BoardViewConfig;
+      viewState: BoardPersonalViewState;
       cards: BoardViewCard[];
       actions: Array<{
         type: "setConfig" | "updateCards";
@@ -40,6 +51,12 @@ const initialConfig: BoardViewConfig = {
     { key: "done", name: "Done", color: "#22c55e" },
   ],
   doneColumn: "done",
+  project: {
+    key: "JT",
+    summary: "Professional local-first project management",
+    startDate: "2026-08-01",
+    targetDate: "2026-09-15",
+  },
   swimlanes: [
     { key: "lane_platform_11111111", name: "Platform", color: "#0ea5e9" },
     { key: "lane_growth_22222222", name: "Growth", color: "#22c55e" },
@@ -55,7 +72,10 @@ const initialCards: BoardViewCard[] = [
     title: "Offline conflict indicator",
     priority: "high",
     assignee: "Jack",
+    start: "2026-08-01",
     due: "2026-08-02",
+    reminder: "2026-08-01",
+    notes: "Please review this with @Jack before release.",
     swimlaneKey: "lane_platform_11111111",
     tags: [{ label: "frontend" }],
     blockedBy: ["roadmap/dependency"],
@@ -94,6 +114,7 @@ const initialCards: BoardViewCard[] = [
 
 function Harness() {
   const [config, setConfig] = useState<BoardViewConfig>(initialConfig);
+  const [viewState, setViewState] = useState<BoardPersonalViewState>(() => boardPersonalViewDefaults(initialConfig));
   const [cards, setCards] = useState<BoardViewCard[]>(initialCards);
   const actionLog = useRef<
     Array<{
@@ -103,7 +124,14 @@ function Harness() {
     }>
   >([]);
 
-  window.__BOARD_TEST_STATE__ = { config, cards, actions: actionLog.current };
+  window.__BOARD_TEST_STATE__ = { config, viewState, cards, actions: actionLog.current };
+  window.__BOARD_TEST_SET_VIEW_STATE__ = (patch) => setViewState((current) => ({ ...current, ...patch }));
+
+  const projectionConfig = useMemo(() => ({
+    ...config,
+    groupBy: viewState.groupBy ?? config.groupBy,
+    swimlaneBy: viewState.swimlaneBy ?? (viewState.groupBy ? undefined : config.swimlaneBy),
+  }), [config, viewState.groupBy, viewState.swimlaneBy]);
 
   const actions = useMemo<BoardActions>(
     () => ({
@@ -118,7 +146,7 @@ function Harness() {
       createCard: async (laneKey, title, initial) => {
         if (window.__BOARD_TEST_CREATE_FAILURE__) throw new Error("simulated create failure");
         const id = `roadmap/${slugify(title)}.md`;
-        const activeLane = activeBoardLaneKey(config);
+        const activeLane = activeBoardLaneKey(projectionConfig);
         setCards((current) => [
           ...current,
           {
@@ -137,6 +165,11 @@ function Harness() {
       },
       updateCard: async (cardId, patch) => {
         await Promise.resolve();
+        if (window.__BOARD_TEST_CARD_SAVE_FAILURE__) throw new Error("simulated card save failure");
+        if ((window.__BOARD_TEST_CARD_SAVE_FAILURE_COUNT__ ?? 0) > 0) {
+          window.__BOARD_TEST_CARD_SAVE_FAILURE_COUNT__ = (window.__BOARD_TEST_CARD_SAVE_FAILURE_COUNT__ ?? 1) - 1;
+          throw new Error("simulated first card save failure");
+        }
         setCards((current) =>
           current.map((card) => (card.id === cardId ? { ...card, ...patch } : card)),
         );
@@ -146,6 +179,7 @@ function Harness() {
           type: "updateCards",
           cardIds: updates.map((update) => update.cardId),
         });
+        if (window.__BOARD_TEST_UPDATE_FAILURE__) throw new Error("simulated bulk failure");
         if (window.__BOARD_TEST_DROP_UPDATES__) {
           onProgress?.(updates.length, updates.length);
           return;
@@ -163,7 +197,7 @@ function Harness() {
         }
       },
       moveCard: async (cardId, laneKey, position) => {
-        const activeLane = activeBoardLaneKey(config);
+        const activeLane = activeBoardLaneKey(projectionConfig);
         setCards((current) =>
           current.map((card) =>
             card.id === cardId
@@ -172,7 +206,7 @@ function Harness() {
                   ...cardPatchForLaneValue(activeLane, laneKey),
                   position:
                     activeLane === "status" ||
-                    boardLaneValueOf(card, config) === laneKey
+                    boardLaneValueOf(card, projectionConfig) === laneKey
                       ? position
                       : card.position,
                 }
@@ -181,6 +215,7 @@ function Harness() {
         );
       },
       deleteCard: async (card) => {
+        if (window.__BOARD_TEST_DELETE_FAILURE__) throw new Error("simulated delete failure");
         setCards((current) => current.filter((item) => item.id !== card.id));
       },
       addColumn: async (name) => {
@@ -238,18 +273,44 @@ function Harness() {
         }));
       },
     }),
-    [config],
+    [config, projectionConfig],
   );
+
+  const loadActivity = async (): Promise<BoardActivityEvent[]> => {
+    if (window.__BOARD_TEST_ACTIVITY_FAILURE__) throw new Error("simulated Activity failure");
+    return [
+      {
+        id: "activity-1",
+        kind: "card.status_changed",
+        at: "2026-08-11T09:30:00Z",
+        actor: { kind: "agent", label: "Planning agent" },
+        client: { kind: "mcp", label: "MCP" },
+        token: { label: "Roadmap automation" },
+        changes: [{ field: "column_key", before: "todo", after: "doing" }],
+      },
+    ];
+  };
+  const loadComments = async () => {
+    if (window.__BOARD_TEST_COMMENTS_FAILURE__) throw new Error("simulated comments failure");
+    return [];
+  };
 
   return (
     <BoardSurface
       config={config}
       cards={cards}
       actions={actions}
+      viewState={viewState}
+      onViewStateChange={setViewState}
       currentUser="Jack"
+      assigneeOptions={[{ value: "Jack", label: "Jack" }, { value: "Kim", label: "Kim" }, { value: "Maya", label: "Maya" }]}
+      tagOptions={[{ label: "frontend", color: "#0ea5e9" }, { label: "analytics", color: "#22c55e" }, { label: "release", color: "#f59e0b" }]}
+      loadActivity={loadActivity}
+      loadComments={loadComments}
       renderMarkdownToContainer={renderToContainer}
       renderMarkdownToHtml={renderMarkdownToHtml}
       peekComponent={BoardPeek}
+      readOnly={new URLSearchParams(window.location.search).get("readonly") === "1"}
     />
   );
 }

@@ -20,6 +20,10 @@ import {
   RectangleStackIcon,
   TagIcon,
   UserIcon,
+  ArrowLeftIcon,
+  BellAlertIcon,
+  ArchiveBoxIcon,
+  ArrowPathIcon,
 } from "@heroicons/react/24/outline";
 import { PRIORITIES, attachmentName, isSafeAttachmentUrl, type BoardViewCard } from "../../lib/board";
 import { fieldCls, EmojiField, ListboxSelect, TagMultiSelect } from "./controls";
@@ -59,7 +63,10 @@ export function BoardPeek({
   renderMarkdownToHtml,
   portalClassName,
   supplement,
+  readOnly,
+  onBack,
   onChange,
+  onCloseRequestReady,
   onClose,
   onDelete,
   onOpenFull,
@@ -71,24 +78,102 @@ export function BoardPeek({
   const childRequestRef = useRef(0);
   const [draft, setDraft] = useState<BoardViewCard>(card);
   const [notes, setNotes] = useState(card.notes ?? "");
-  const [mode, setMode] = useState<"write" | "preview">("write");
+  const [mode, setMode] = useState<"write" | "preview">(readOnly ? "preview" : "write");
   const [newAttach, setNewAttach] = useState("");
   const [uploading, setUploading] = useState(false);
   const [comments, setComments] = useState<BoardComment[]>([]);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [commentsError, setCommentsError] = useState("");
+  const [commentsAttempt, setCommentsAttempt] = useState(0);
   const [newComment, setNewComment] = useState("");
   const [activity, setActivity] = useState<BoardActivityEvent[]>([]);
+  const [activityLoading, setActivityLoading] = useState(false);
+  const [activityError, setActivityError] = useState("");
+  const [activityAttempt, setActivityAttempt] = useState(0);
+  const [saveError, setSaveError] = useState("");
+  const [savingCount, setSavingCount] = useState(0);
+  const [closing, setClosing] = useState(false);
+  const titleInputRef = useRef<HTMLInputElement>(null);
   const previewRef = useRef<HTMLElement>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingPatch = useRef<Partial<BoardViewCard>>({});
   const pendingOnChange = useRef(onChange);
+  const failedPatch = useRef<Partial<BoardViewCard> | null>(null);
+  const failedAction = useRef<(() => Promise<void> | void) | null>(null);
+  const activeSaves = useRef(new Set<Promise<void>>());
+  const closingRef = useRef(false);
+  const readOnlyRef = useRef(!!readOnly);
+  readOnlyRef.current = !!readOnly;
+
+  const persistPatch = useCallback((patch: Partial<BoardViewCard>): Promise<void> => {
+    if (readOnlyRef.current || Object.keys(patch).length === 0) return Promise.resolve();
+    let request!: Promise<void>;
+    setSavingCount((count) => count + 1);
+    request = Promise.resolve(pendingOnChange.current(patch)).then(
+      () => {
+        const failed = failedPatch.current;
+        if (!failed) return;
+        const remaining = Object.fromEntries(
+          Object.entries(failed).filter(([key]) => !Object.prototype.hasOwnProperty.call(patch, key)),
+        ) as Partial<BoardViewCard>;
+        failedPatch.current = Object.keys(remaining).length > 0 ? remaining : null;
+        if (!failedPatch.current && !failedAction.current) setSaveError("");
+      },
+      (error) => {
+        failedPatch.current = { ...(failedPatch.current ?? {}), ...patch };
+        setSaveError(error instanceof Error && error.message ? error.message : t`Could not save changes.`);
+      },
+    ).finally(() => {
+      activeSaves.current.delete(request);
+      setSavingCount((count) => Math.max(0, count - 1));
+    });
+    activeSaves.current.add(request);
+    return request;
+  }, []);
 
   const flushPendingPatch = useCallback((extra: Partial<BoardViewCard> = {}) => {
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = null;
     const patch = { ...pendingPatch.current, ...extra };
     pendingPatch.current = {};
-    if (Object.keys(patch).length > 0) pendingOnChange.current(patch);
-  }, []);
+    return persistPatch(patch);
+  }, [persistPatch]);
+
+  const runAfterPendingSaves = useCallback(async (action: () => Promise<void> | void) => {
+    if (closingRef.current) return;
+    closingRef.current = true;
+    setClosing(true);
+    await flushPendingPatch();
+    while (activeSaves.current.size > 0) {
+      await Promise.all([...activeSaves.current]);
+    }
+    if (failedPatch.current || Object.keys(pendingPatch.current).length > 0) {
+      closingRef.current = false;
+      setClosing(false);
+      return;
+    }
+    try {
+      await action();
+      failedAction.current = null;
+      setSaveError("");
+    } catch (error) {
+      failedAction.current = action;
+      setSaveError(error instanceof Error && error.message ? error.message : t`Could not save changes.`);
+    } finally {
+      closingRef.current = false;
+      setClosing(false);
+    }
+  }, [flushPendingPatch]);
+
+  const requestClose = useCallback(
+    () => runAfterPendingSaves(onClose),
+    [onClose, runAfterPendingSaves],
+  );
+
+  useEffect(() => {
+    onCloseRequestReady?.(() => { void requestClose(); });
+    return () => onCloseRequestReady?.(null);
+  }, [onCloseRequestReady, requestClose]);
 
   // Re-init when a different card is opened; lazily load notes if needed.
   useEffect(() => {
@@ -98,6 +183,12 @@ export function BoardPeek({
     setNewChild("");
     setAddingChild(false);
     setChildError("");
+    failedPatch.current = null;
+    failedAction.current = null;
+    pendingPatch.current = {};
+    setSaveError("");
+    closingRef.current = false;
+    setClosing(false);
     if (loadNotes) {
       let cancelled = false;
       void loadNotes(card.id).then((body) => {
@@ -110,51 +201,93 @@ export function BoardPeek({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [card.id]);
 
+  useEffect(() => {
+    const focusTimer = window.setTimeout(() => titleInputRef.current?.focus(), 0);
+    return () => window.clearTimeout(focusTimer);
+  }, [card.id]);
+
   // A quick close/card switch must not discard the last debounced title/notes
   // edit. The callback is captured when that patch is queued, so it still
   // targets the card that owned the draft.
-  useEffect(() => () => flushPendingPatch(), [card.id, flushPendingPatch]);
+  useEffect(() => () => { void flushPendingPatch(); }, [card.id, flushPendingPatch]);
+
+  useEffect(() => {
+    if (!readOnly) return;
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = null;
+    pendingPatch.current = {};
+    failedPatch.current = null;
+    closingRef.current = false;
+    setClosing(false);
+    setSaveError("");
+    setMode("preview");
+  }, [readOnly]);
 
   // Load comments when a card opens (DB board only).
   useEffect(() => {
     if (!loadComments) {
       setComments([]);
+      setCommentsLoading(false);
+      setCommentsError("");
       return;
     }
     let cancelled = false;
     setNewComment("");
+    setCommentsLoading(true);
+    setCommentsError("");
     void loadComments(card.id)
       .then((cs) => {
-        if (!cancelled) setComments(cs);
+        if (!cancelled) {
+          setComments(cs);
+          setCommentsLoading(false);
+        }
       })
-      .catch(() => {});
+      .catch((error) => {
+        if (!cancelled) {
+          setCommentsLoading(false);
+          setCommentsError(error instanceof Error && error.message ? error.message : t`Could not load comments.`);
+        }
+      });
     return () => {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [card.id]);
+  }, [card.id, commentsAttempt]);
 
   // Load the activity timeline when a card opens (DB board only).
   useEffect(() => {
     if (!loadActivity) {
       setActivity([]);
+      setActivityLoading(false);
+      setActivityError("");
       return;
     }
     let cancelled = false;
+    setActivity([]);
+    setActivityLoading(true);
+    setActivityError("");
     void loadActivity(card.id)
       .then((evs) => {
-        if (!cancelled) setActivity(evs);
+        if (!cancelled) {
+          setActivity(evs);
+          setActivityLoading(false);
+        }
       })
-      .catch(() => {});
+      .catch((error) => {
+        if (!cancelled) {
+          setActivityLoading(false);
+          setActivityError(error instanceof Error ? error.message : t`Could not load activity.`);
+        }
+      });
     return () => {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [card.id]);
+  }, [activityAttempt, card.id, loadActivity]);
 
   const submitComment = async () => {
     const body = newComment.trim();
-    if (!body || !addComment) return;
+    if (readOnly || !body || !addComment) return;
     try {
       const created = await addComment(card.id, body);
       setComments((cs) => [...cs, created]);
@@ -164,7 +297,7 @@ export function BoardPeek({
     }
   };
   const removeComment = async (id: string) => {
-    if (!deleteComment) return;
+    if (readOnly || !deleteComment) return;
     try {
       await deleteComment(id);
       // Deleting a root cascades to its replies server-side; mirror locally.
@@ -189,15 +322,17 @@ export function BoardPeek({
 
   const debouncedPatch = useCallback(
     (patch: Partial<BoardViewCard>) => {
+      if (readOnly) return;
       pendingPatch.current = { ...pendingPatch.current, ...patch };
       pendingOnChange.current = onChange;
       if (saveTimer.current) clearTimeout(saveTimer.current);
       saveTimer.current = setTimeout(() => flushPendingPatch(), 350);
     },
-    [flushPendingPatch, onChange],
+    [flushPendingPatch, onChange, readOnly],
   );
 
   const setField = (patch: Partial<BoardViewCard>, immediate = false) => {
+    if (readOnly) return;
     setDraft((d) => ({ ...d, ...patch }));
     if (immediate) {
       pendingOnChange.current = onChange;
@@ -208,6 +343,7 @@ export function BoardPeek({
   };
 
   const setBodyText = (value: string) => {
+    if (readOnly) return;
     setNotes(value);
     debouncedPatch({ notes: value });
   };
@@ -233,7 +369,7 @@ export function BoardPeek({
   };
   const submitNewChild = async () => {
     const title = newChild.trim();
-    if (!title || !onAddChild || addingChild) return;
+    if (readOnly || !title || !onAddChild || addingChild) return;
     const requestId = childRequestRef.current + 1;
     childRequestRef.current = requestId;
     setAddingChild(true);
@@ -250,7 +386,7 @@ export function BoardPeek({
     }
   };
   const handleUpload = async (file: File | undefined) => {
-    if (!file || !onUploadAttachment) return;
+    if (readOnly || !file || !onUploadAttachment) return;
     setUploading(true);
     try {
       addAttachment(await onUploadAttachment(file));
@@ -297,13 +433,27 @@ export function BoardPeek({
       value={(draft[key] ?? []).map(resolveDependencyValue)}
       options={dependencyOptions}
       onChange={(slugs) => setField({ [key]: slugs }, true)}
+      disabled={readOnly}
       portalClassName={portalClassName}
+      emptyLabel={t`Add relation`}
+      emptyMessage={t`No cards`}
     />
   );
 
   return (
     <div className="flex h-full w-full flex-col overflow-hidden bg-white">
       <header className="flex h-14 shrink-0 items-center gap-2 border-b border-line px-5">
+        {onBack && (
+          <button
+            type="button"
+            onClick={() => void runAfterPendingSaves(onBack)}
+            title={t`Back to previous card`}
+            aria-label={t`Back to previous card`}
+            className="-ml-2 rounded-lg p-1.5 text-stone-500 outline-none transition hover:bg-stone-100 hover:text-brand-dark focus-visible:ring-2 focus-visible:ring-brand"
+          >
+            <ArrowLeftIcon className="h-4 w-4" />
+          </button>
+        )}
         <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-soft text-brand-dark">
           {draft.icon ? <span className="text-sm">{draft.icon}</span> : <RectangleStackIcon className="h-4 w-4" />}
         </span>
@@ -316,38 +466,65 @@ export function BoardPeek({
           {onOpenFull && (
             <button
               type="button"
-              onClick={onOpenFull}
+              onClick={() => void runAfterPendingSaves(onOpenFull)}
+              disabled={closing}
               title={t`Open in full editor`}
-              className="rounded-lg p-1.5 text-stone-400 transition hover:bg-stone-100 hover:text-brand-dark"
+              className="rounded-lg p-1.5 text-stone-400 outline-none transition hover:bg-stone-100 hover:text-brand-dark focus-visible:ring-2 focus-visible:ring-brand"
             >
               <ArrowTopRightOnSquareIcon className="h-4 w-4" />
             </button>
           )}
-          <button
+          {onDelete && !readOnly && <button
             type="button"
-            onClick={onDelete}
+            onClick={() => void runAfterPendingSaves(onDelete)}
+            disabled={closing}
             title={t`Delete card`}
-            className="rounded-lg p-1.5 text-stone-400 transition hover:bg-red-50 hover:text-red-600"
+            className="rounded-lg p-1.5 text-stone-400 outline-none transition hover:bg-red-50 hover:text-red-600 focus-visible:ring-2 focus-visible:ring-red-500"
           >
             <TrashIcon className="h-4 w-4" />
-          </button>
+          </button>}
           <button
             type="button"
-            onClick={onClose}
+            onClick={() => void requestClose()}
+            disabled={closing}
             title={t`Close`}
             aria-label={t`Close`}
-            className="rounded-lg p-1.5 text-stone-400 transition hover:bg-stone-100 hover:text-stone-700"
+            className="rounded-lg p-1.5 text-stone-400 outline-none transition hover:bg-stone-100 hover:text-stone-700 focus-visible:ring-2 focus-visible:ring-brand"
           >
             <XMarkIcon className="h-4 w-4" />
           </button>
         </div>
       </header>
 
+      {(saveError || savingCount > 0) && (
+        <div
+          className={`mx-4 mt-3 flex items-center gap-3 rounded-lg border px-3 py-2 text-xs ${saveError ? "border-red-100 bg-red-50 text-red-700" : "border-brand/15 bg-brand-soft/40 text-brand-dark"}`}
+          role={saveError ? "alert" : "status"}
+        >
+          <span className="min-w-0 flex-1">{saveError || t`Saving changes…`}</span>
+          {saveError && <button
+            type="button"
+            disabled={readOnly || (!failedPatch.current && !failedAction.current)}
+            onClick={() => {
+              const patch = failedPatch.current;
+              if (patch) void persistPatch(patch);
+              else if (failedAction.current) void runAfterPendingSaves(failedAction.current);
+            }}
+            className="inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1 font-medium outline-none hover:bg-white focus-visible:ring-2 focus-visible:ring-red-500 disabled:opacity-50"
+          >
+            <ArrowPathIcon className="h-3.5 w-3.5" />
+            <Trans>Retry</Trans>
+          </button>}
+        </div>
+      )}
+
       <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
         <main className="min-h-0 min-w-0 flex-1 overflow-y-auto px-6 py-6 sm:px-8 lg:px-12">
           <input
+            ref={titleInputRef}
             autoFocus
-            className="w-full bg-transparent text-2xl font-semibold tracking-[-0.025em] text-stone-950 outline-none placeholder:text-stone-300 sm:text-[1.75rem]"
+            readOnly={readOnly}
+            className="w-full bg-transparent text-2xl font-semibold tracking-[-0.025em] text-stone-950 outline-none placeholder:text-stone-300 focus-visible:ring-2 focus-visible:ring-brand sm:text-[1.75rem] read-only:cursor-default"
             placeholder={t`Untitled card`}
             value={draft.title}
             onChange={(e) => setField({ title: e.target.value })}
@@ -378,6 +555,7 @@ export function BoardPeek({
             </div>
             {mode === "write" ? (
               <textarea
+                readOnly={readOnly}
                 className="mt-2 min-h-[280px] w-full resize-y rounded-xl border border-stone-200 bg-stone-50/35 px-4 py-3 text-sm leading-6 text-stone-800 outline-none transition focus:border-brand/50 focus:bg-white focus:ring-4 focus:ring-brand/5"
                 value={notes}
                 placeholder={t`Add details...`}
@@ -407,7 +585,9 @@ export function BoardPeek({
                     <button
                       type="button"
                       className="flex w-full items-center gap-2 rounded-xl border border-stone-100 bg-stone-50/55 px-3 py-2 text-left text-xs transition hover:border-brand/25 hover:bg-brand-soft/20"
-                      onClick={() => onOpenCard?.(child.id)}
+                      onClick={() => {
+                        if (onOpenCard) void runAfterPendingSaves(() => onOpenCard(child.id));
+                      }}
                       title={t`Open sub-card`}
                     >
                       <span className={`h-2 w-2 shrink-0 rounded-full ${child.done ? "bg-emerald-500" : "bg-stone-300"}`} />
@@ -420,7 +600,7 @@ export function BoardPeek({
                   </li>
                 ))}
               </ul>
-              {onAddChild && (
+              {onAddChild && !readOnly && (
                 <form
                   className="mt-2"
                   onSubmit={(e) => {
@@ -470,19 +650,19 @@ export function BoardPeek({
                         {attachmentName(url)} <span className="text-red-500">({t`unsafe`})</span>
                       </span>
                     )}
-                    <button
+                    {!readOnly && <button
                       type="button"
                       onClick={() => setAttachments(attachments.filter((a) => a !== url))}
                       title={t`Remove`}
                       className="rounded p-0.5 text-stone-400 hover:text-red-600"
                     >
                       <XMarkIcon className="h-3.5 w-3.5" />
-                    </button>
+                    </button>}
                   </div>
                 ))}
               </div>
             )}
-            <div className="mt-2 flex items-center gap-2">
+            {!readOnly && <div className="mt-2 flex items-center gap-2">
               <form
                 className="flex-1"
                 onSubmit={(e) => {
@@ -513,7 +693,7 @@ export function BoardPeek({
                   />
                 </label>
               )}
-            </div>
+            </div>}
           </section>
 
           {loadComments && (
@@ -522,16 +702,26 @@ export function BoardPeek({
                 <ChatBubbleLeftIcon className="h-3.5 w-3.5 text-stone-400" />
                 <Trans>Comments</Trans>
               </span>
-              <ul className="mt-2 space-y-2">
+              {commentsError ? (
+                <div className="mt-2 flex items-center gap-2 rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-xs text-red-700" role="alert">
+                  <span className="min-w-0 flex-1 truncate">{commentsError}</span>
+                  <button type="button" onClick={() => setCommentsAttempt((attempt) => attempt + 1)} className="inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1 font-medium outline-none hover:bg-white focus-visible:ring-2 focus-visible:ring-red-500"><ArrowPathIcon className="h-3.5 w-3.5" /><Trans>Retry</Trans></button>
+                </div>
+              ) : commentsLoading ? (
+                <div className="mt-2 space-y-2" aria-label={t`Loading comments`}>
+                  <div className="h-10 animate-pulse rounded-lg bg-stone-100" />
+                  <div className="h-10 animate-pulse rounded-lg bg-stone-100" />
+                </div>
+              ) : <ul className="mt-2 space-y-2">
                 {rootComments.map((root) => (
                   <CommentThread
                     key={root.id}
                     root={root}
                     replies={repliesByRoot.get(root.id) ?? []}
                     currentUser={currentUser}
-                    canReply={!!addComment}
+                    canReply={!!addComment && !readOnly}
                     onReply={
-                      addComment
+                      addComment && !readOnly
                         ? async (body) => {
                             const created = await addComment(card.id, body, root.id);
                             setComments((cs) => [...cs, created]);
@@ -539,23 +729,23 @@ export function BoardPeek({
                         : undefined
                     }
                     onEdit={
-                      updateComment
+                      updateComment && !readOnly
                         ? async (id, body) => {
                             const updated = await updateComment(id, body);
                             replaceComment(updated);
                           }
                         : undefined
                     }
-                    onDelete={deleteComment ? (id) => void removeComment(id) : undefined}
+                    onDelete={deleteComment && !readOnly ? (id) => void removeComment(id) : undefined}
                     onReact={
-                      toggleReaction
+                      toggleReaction && !readOnly
                         ? async (id, emoji) => {
                             replaceComment(await toggleReaction(id, emoji));
                           }
                         : undefined
                     }
                     onResolve={
-                      resolveComment
+                      resolveComment && !readOnly
                         ? async (resolved) => {
                             replaceComment(await resolveComment(root.id, resolved));
                           }
@@ -569,8 +759,8 @@ export function BoardPeek({
                     <Trans>No comments yet</Trans>
                   </li>
                 )}
-              </ul>
-              {addComment && (
+              </ul>}
+              {addComment && !readOnly && (
                 <form
                   className="mt-3"
                   onSubmit={(e) => {
@@ -605,33 +795,30 @@ export function BoardPeek({
             </section>
           )}
 
-          {loadActivity && activity.length > 0 && (
+          {loadActivity && (
             <section className="mb-3 mt-8 border-t border-line pt-6">
-              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-stone-700">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-stone-700">
                 <ClockIcon className="h-3.5 w-3.5 text-stone-400" />
                 <Trans>Activity</Trans>
-              </span>
-              <ul className="mt-2 space-y-1.5">
-                {activity.map((ev, i) => (
-                  <li key={i} className="flex items-baseline gap-2 text-xs text-stone-500">
-                    <span className="font-medium text-stone-700">
-                      {ev.kind === "created" ? (
-                        <Trans>Created</Trans>
-                      ) : ev.kind === "updated" ? (
-                        <Trans>Updated</Trans>
-                      ) : ev.kind === "archived" ? (
-                        <Trans>Archived</Trans>
-                      ) : ev.kind === "restored" ? (
-                        <Trans>Restored</Trans>
-                      ) : (
-                        ev.kind
-                      )}
-                    </span>
-                    {ev.by && <span className="text-stone-400">· {ev.by}</span>}
-                    <span className="ml-auto whitespace-nowrap text-stone-400">{ev.at.slice(0, 16)}</span>
-                  </li>
-                ))}
-              </ul>
+                {activityLoading && <span className="ml-auto text-[10px] font-normal text-stone-400"><Trans>Loading…</Trans></span>}
+              </div>
+              {activityError ? (
+                <div className="mt-2 flex items-center gap-2 rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-xs text-red-700" role="alert">
+                  <span className="min-w-0 flex-1 truncate">{activityError}</span>
+                  <button type="button" onClick={() => setActivityAttempt((attempt) => attempt + 1)} className="inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1 font-medium outline-none hover:bg-white focus-visible:ring-2 focus-visible:ring-red-500"><ArrowPathIcon className="h-3.5 w-3.5" /><Trans>Retry</Trans></button>
+                </div>
+              ) : activityLoading ? (
+                <div className="mt-2 space-y-2" aria-label={t`Loading activity`}>
+                  <div className="h-10 animate-pulse rounded-lg bg-stone-100" />
+                  <div className="h-10 animate-pulse rounded-lg bg-stone-100" />
+                </div>
+              ) : activity.length === 0 ? (
+                <p className="mt-2 text-xs text-stone-400"><Trans>No activity yet</Trans></p>
+              ) : (
+                <ul className="mt-2 space-y-2">
+                  {activity.map((event, index) => <ActivityRow key={event.id ?? `${event.at}-${index}`} event={event} />)}
+                </ul>
+              )}
             </section>
           )}
         </main>
@@ -645,6 +832,7 @@ export function BoardPeek({
               <EmojiField
                 value={draft.icon}
                 onChange={(v) => setField({ icon: v }, true)}
+                disabled={readOnly}
                 portalClassName={portalClassName}
               />
             </PropertyRow>
@@ -653,6 +841,7 @@ export function BoardPeek({
                 value={draft.columnKey}
                 options={statusOptions}
                 onChange={(v) => setField({ columnKey: v }, true)}
+                disabled={readOnly}
                 portalClassName={portalClassName}
               />
             </PropertyRow>
@@ -662,7 +851,7 @@ export function BoardPeek({
                   value={draft.swimlaneKey ?? ""}
                   options={swimlaneOptions}
                   onChange={(v) => setField({ swimlaneKey: v || null }, true)}
-                  disabled={swimlaneDisabled}
+                  disabled={swimlaneDisabled || readOnly}
                   portalClassName={portalClassName}
                 />
               </PropertyRow>
@@ -672,6 +861,7 @@ export function BoardPeek({
                 value={draft.priority ?? "none"}
                 options={PRIORITIES.map((p) => ({ value: p, label: p }))}
                 onChange={(v) => setField({ priority: v }, true)}
+                disabled={readOnly}
                 portalClassName={portalClassName}
               />
             </PropertyRow>
@@ -681,6 +871,7 @@ export function BoardPeek({
                   value={draft.assignee ?? ""}
                   options={[{ value: "", label: t`Unassigned` }, ...assigneeOptions]}
                   onChange={(v) => setField({ assignee: v || null }, true)}
+                  disabled={readOnly}
                   portalClassName={portalClassName}
                 />
               ) : (
@@ -688,16 +879,48 @@ export function BoardPeek({
                   className={`${fieldCls} w-full`}
                   value={draft.assignee ?? ""}
                   placeholder="—"
+                  readOnly={readOnly}
                   onChange={(e) => setField({ assignee: e.target.value })}
                 />
               )}
             </PropertyRow>
+            <PropertyRow icon={<CalendarDaysIcon className="h-4 w-4" />} label={<Trans>Start</Trans>}>
+              <input
+                type="date"
+                aria-label={t`Start`}
+                className={`${fieldCls} w-full read-only:cursor-default read-only:bg-stone-50 read-only:opacity-70`}
+                value={draft.start ?? ""}
+                readOnly={readOnly}
+                onChange={(e) => setField({ start: e.target.value || null }, true)}
+              />
+            </PropertyRow>
             <PropertyRow icon={<CalendarDaysIcon className="h-4 w-4" />} label={<Trans>Due</Trans>}>
               <input
                 type="date"
-                className={`${fieldCls} w-full`}
+                aria-label={t`Due`}
+                className={`${fieldCls} w-full read-only:cursor-default read-only:bg-stone-50 read-only:opacity-70`}
                 value={draft.due ?? ""}
+                readOnly={readOnly}
                 onChange={(e) => setField({ due: e.target.value || null }, true)}
+              />
+            </PropertyRow>
+            <PropertyRow icon={<BellAlertIcon className="h-4 w-4" />} label={<Trans>Reminder</Trans>}>
+              <input
+                type="date"
+                aria-label={t`Reminder`}
+                className={`${fieldCls} w-full read-only:cursor-default read-only:bg-stone-50 read-only:opacity-70`}
+                value={draft.reminder ?? ""}
+                readOnly={readOnly}
+                onChange={(e) => setField({ reminder: e.target.value || null }, true)}
+              />
+            </PropertyRow>
+            <PropertyRow icon={<ArchiveBoxIcon className="h-4 w-4" />} label={<Trans>State</Trans>}>
+              <ListboxSelect
+                value={draft.archived ? "archived" : "active"}
+                options={[{ value: "active", label: t`Active` }, { value: "archived", label: t`Archived` }]}
+                onChange={(value) => setField({ archived: value === "archived" }, true)}
+                disabled={readOnly}
+                portalClassName={portalClassName}
               />
             </PropertyRow>
             <PropertyRow icon={<TagIcon className="h-4 w-4" />} label={<Trans>Tags</Trans>}>
@@ -708,6 +931,7 @@ export function BoardPeek({
                   onChange={(labels) =>
                     setField({ tags: labels.map((l) => tagOptions.find((tg) => tg.label === l) ?? { label: l }) }, true)
                   }
+                  disabled={readOnly}
                   portalClassName={portalClassName}
                 />
               ) : (
@@ -715,6 +939,7 @@ export function BoardPeek({
                   className={`${fieldCls} w-full`}
                   value={tagLabels.join(", ")}
                   placeholder={t`comma, separated`}
+                  readOnly={readOnly}
                   onChange={(e) =>
                     setField({
                       tags: e.target.value
@@ -744,6 +969,7 @@ export function BoardPeek({
                       type={f.type === "number" ? "number" : f.type === "date" ? "date" : "text"}
                       className={`${fieldCls} w-full`}
                       value={draft.custom?.[f.key] ?? ""}
+                      readOnly={readOnly}
                       onChange={(e) =>
                         setField(
                           { custom: { ...(draft.custom ?? {}), [f.key]: e.target.value } },
@@ -753,7 +979,7 @@ export function BoardPeek({
                     />
                   </label>
                 ))}
-                {onAddField && (
+                {onAddField && !readOnly && (
                   <form
                     onSubmit={(e) => {
                       e.preventDefault();
@@ -790,6 +1016,7 @@ export function BoardPeek({
                     value={resolveDependencyValue(draft.parent ?? "")}
                     options={[{ value: "", label: "—" }, ...dependencyOptions]}
                     onChange={(v) => setField({ parent: v || null }, true)}
+                    disabled={readOnly}
                     portalClassName={portalClassName}
                   />
                 </RelationField>
@@ -808,6 +1035,124 @@ export function BoardPeek({
         </aside>
       </div>
     </div>
+  );
+}
+
+function activityValue(value: unknown): string {
+  if (value === null || value === undefined || value === "") return "—";
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  try {
+    const serialized = JSON.stringify(value);
+    return serialized.length > 96 ? `${serialized.slice(0, 93)}…` : serialized;
+  } catch {
+    return String(value);
+  }
+}
+
+function activityKindLabel(kind: string): string {
+  const labels: Record<string, string> = {
+    created: t`Created`,
+    updated: t`Updated`,
+    archived: t`Archived`,
+    restored: t`Restored`,
+    "card.created": t`Created card`,
+    "card.updated": t`Updated card`,
+    "card.deleted": t`Deleted card`,
+    "card.status_changed": t`Changed status`,
+    "card.assignee_changed": t`Changed assignee`,
+    "card.schedule_changed": t`Changed schedule`,
+    "card.labels_changed": t`Changed labels`,
+    "card.dependencies_changed": t`Changed dependencies`,
+    "card.archived": t`Archived card`,
+    "card.restored": t`Restored card`,
+    "comment.created": t`Added comment`,
+    "comment.updated": t`Edited comment`,
+    "comment.deleted": t`Deleted comment`,
+    "comment.resolved": t`Resolved comment thread`,
+    "comment.reopened": t`Reopened comment thread`,
+    "mention.created": t`Mentioned someone`,
+  };
+  return labels[kind] ?? kind;
+}
+
+function activityFieldLabel(field: string): string {
+  const labels: Record<string, string> = {
+    title: t`Title`,
+    notes: t`Description`,
+    status: t`Status`,
+    column_key: t`Status`,
+    swimlane_key: t`Swimlane`,
+    priority: t`Priority`,
+    assignee: t`Assignee`,
+    labels: t`Labels`,
+    tags: t`Labels`,
+    start: t`Start date`,
+    start_date: t`Start date`,
+    due: t`Due date`,
+    due_date: t`Due date`,
+    reminder: t`Reminder`,
+    archived: t`Archived`,
+    blocked_by: t`Blocked by`,
+    blocks: t`Blocks`,
+    relates: t`Related cards`,
+    parent: t`Parent card`,
+    dependencies: t`Dependencies`,
+  };
+  return labels[field] ?? field.replace(/_/g, " ");
+}
+
+function activityClientLabel(client: NonNullable<BoardActivityEvent["client"]>): string {
+  if (client.label) return client.label;
+  const labels: Record<string, string> = {
+    desktop: "Desktop",
+    web: "Web",
+    mcp: "MCP",
+    system: "System",
+  };
+  return labels[client.kind.toLowerCase()] ?? client.kind;
+}
+
+function ActivityRow({ event }: { event: BoardActivityEvent }) {
+  const actor = event.actor?.label || event.by || t`Unknown actor`;
+  const actorTone = event.actor?.kind === "agent"
+    ? "bg-sky-50 text-sky-700"
+    : event.actor?.kind === "system"
+      ? "bg-stone-100 text-stone-600"
+      : "bg-brand-soft text-brand-dark";
+  const kind = activityKindLabel(event.kind);
+  return (
+    <li className="rounded-lg border border-line bg-stone-50/60 px-3 py-2.5 text-xs">
+      <div className="flex flex-wrap items-center gap-1.5">
+        <span className="font-semibold text-stone-700">{kind}</span>
+        <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${actorTone}`}>{actor}</span>
+        {event.client && (
+          <span className="rounded-full border border-stone-200 bg-white px-2 py-0.5 text-[10px] text-stone-500">
+            {activityClientLabel(event.client)}
+          </span>
+        )}
+        {event.token?.label && (
+          <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] text-amber-700">
+            {event.token.label}
+          </span>
+        )}
+        <time className="ml-auto whitespace-nowrap text-[10px] text-stone-400" dateTime={event.at}>{event.at.slice(0, 16)}</time>
+      </div>
+      {!!event.changes?.length && (
+        <dl className="mt-2 space-y-1 border-l-2 border-stone-200 pl-2">
+          {event.changes.map((change, index) => (
+            <div key={`${change.field}-${index}`} className="grid grid-cols-[minmax(4.5rem,0.6fr)_minmax(0,1fr)] gap-2 text-[11px]">
+              <dt className="truncate font-medium capitalize text-brand-gray" title={change.field}>{activityFieldLabel(change.field)}</dt>
+              <dd className="flex min-w-0 items-center gap-1 text-stone-500">
+                <code className="max-w-[42%] truncate rounded bg-white px-1 py-0.5">{activityValue(change.before)}</code>
+                <ChevronRightIcon className="h-3 w-3 shrink-0 text-stone-300" />
+                <code className="min-w-0 truncate rounded bg-white px-1 py-0.5 text-stone-700">{activityValue(change.after)}</code>
+              </dd>
+            </div>
+          ))}
+        </dl>
+      )}
+    </li>
   );
 }
 

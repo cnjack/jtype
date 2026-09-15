@@ -87,9 +87,15 @@ async fn pull_returns_only_new_card_events_in_sequence_order() {
     assert_eq!(events[0]["sequence"], created_sequence);
     assert_eq!(events[0]["updatedClock"], created_sequence);
     assert_eq!(events[0]["event"], "kanban:card-created");
+    assert_eq!(events[0]["domainEvent"], "card.created");
+    assert_eq!(events[0]["eventId"].as_str().unwrap().len(), 36);
     assert_eq!(events[0]["board"], "board-a");
+    assert_eq!(events[0]["card"]["documentId"], created["documentId"]);
     assert_eq!(events[0]["card"]["path"], "cards/alpha.md");
     assert_eq!(events[0]["card"]["status"], "todo");
+    assert_eq!(events[0]["actor"]["kind"], "user");
+    assert_eq!(events[0]["client"]["kind"], "web");
+    assert!(events[0]["changes"].as_array().is_some());
 
     let updated = common::save_doc(
         app.clone(),
@@ -111,7 +117,66 @@ async fn pull_returns_only_new_card_events_in_sequence_order() {
     assert_eq!(events.len(), 1, "{body}");
     assert_eq!(events[0]["sequence"], updated_sequence);
     assert_eq!(events[0]["event"], "kanban:card-updated");
+    assert_eq!(events[0]["domainEvent"], "card.updated");
     assert_eq!(events[0]["card"]["status"], "done");
+}
+
+#[tokio::test]
+async fn changing_board_emits_remove_then_add_for_both_projections() {
+    let (app, _pool) = common::setup().await;
+    let (token, _) = common::register_user(app.clone(), &common::uid()).await;
+    let workspace_id = common::create_workspace(app.clone(), &token, &common::wname()).await;
+
+    let created = common::save_doc(
+        app.clone(),
+        &token,
+        &workspace_id,
+        "cards/moving.md",
+        &card("board-old", "Moving", "todo", "before"),
+    )
+    .await;
+    let created_sequence = created["updatedClock"].as_i64().unwrap();
+
+    let moved = common::save_doc(
+        app.clone(),
+        &token,
+        &workspace_id,
+        "cards/moving.md",
+        &card("board-new", "Moving", "doing", "after"),
+    )
+    .await;
+    let removal_sequence = moved["updatedClock"].as_i64().unwrap();
+
+    let (status, old_feed) = pull(
+        app.clone(),
+        &token,
+        &workspace_id,
+        "board-old",
+        created_sequence,
+        100,
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK, "{old_feed}");
+    assert_eq!(old_feed["events"].as_array().unwrap().len(), 1);
+    assert_eq!(old_feed["events"][0]["sequence"], removal_sequence);
+    assert_eq!(old_feed["events"][0]["event"], "kanban:card-deleted");
+    assert_eq!(old_feed["events"][0]["domainEvent"], "card.deleted");
+    assert_eq!(
+        old_feed["events"][0]["changes"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|change| change["field"] == "board")
+            .unwrap()["after"],
+        "board-new"
+    );
+
+    let (status, new_feed) = pull(app, &token, &workspace_id, "board-new", 0, 100).await;
+    assert_eq!(status, StatusCode::OK, "{new_feed}");
+    assert_eq!(new_feed["events"].as_array().unwrap().len(), 1);
+    assert_eq!(new_feed["events"][0]["event"], "kanban:card-created");
+    assert_eq!(new_feed["events"][0]["domainEvent"], "card.created");
+    assert!(new_feed["events"][0]["sequence"].as_i64().unwrap() > removal_sequence);
 }
 
 #[tokio::test]

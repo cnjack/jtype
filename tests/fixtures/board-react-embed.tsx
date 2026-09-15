@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
   JTypeBoard,
@@ -5,6 +6,7 @@ import {
   type JTypeCloudDocument,
   type JTypeDocumentListItem,
   type JTypeSaveDocumentRequest,
+  type BoardPersonalViewState,
 } from "../../packages/board-react/dist/index.js";
 import "../../packages/board-react/dist/style.css";
 
@@ -12,7 +14,15 @@ declare global {
   interface Window {
     __BOARD_EMBED_TEST__?: {
       saveCalls: JTypeSaveDocumentRequest[];
+      saveAttempts: JTypeSaveDocumentRequest[];
+      viewStateChanges: Partial<BoardPersonalViewState>[];
       openedCardTitle?: string;
+      openedCardCount: number;
+      cardWritePaused: boolean;
+      contentAt: (relativePath: string) => string | undefined;
+      pauseNextCardWrite: () => void;
+      releaseCardWrite: () => void;
+      setReadOnly?: (value: boolean) => void;
     };
   }
 }
@@ -111,9 +121,48 @@ put(
   managedCardTitle,
   cardContent(managedCardTitle, 23),
 );
+put(
+  "doc-collision-note",
+  "jcode/collision-note.md",
+  "Collision note",
+  "# Collision note\n\nThis ordinary Markdown note must survive Card quick-create.\n",
+);
+put(
+  "doc-collision-board",
+  "jcode/collision-board.md",
+  "Collision board",
+  `---
+title: Collision board
+board: b_other
+status: todo
+---
+# Card owned by another board
+`,
+);
 
 const saveCalls: JTypeSaveDocumentRequest[] = [];
-window.__BOARD_EMBED_TEST__ = { saveCalls };
+const saveAttempts: JTypeSaveDocumentRequest[] = [];
+const viewStateChanges: Partial<BoardPersonalViewState>[] = [];
+let pauseNextCardWrite = false;
+let releasePausedCardWrite: (() => void) | null = null;
+window.__BOARD_EMBED_TEST__ = {
+  saveCalls,
+  saveAttempts,
+  viewStateChanges,
+  openedCardCount: 0,
+  cardWritePaused: false,
+  contentAt: (relativePath) =>
+    [...stored.values()].find((doc) => doc.relativePath === relativePath)?.content,
+  pauseNextCardWrite: () => {
+    pauseNextCardWrite = true;
+  },
+  releaseCardWrite: () => {
+    releasePausedCardWrite?.();
+  },
+};
+
+const query = new URLSearchParams(window.location.search);
+let simulatedUpdateFailures = query.get("failupdate") === "1" ? 1 : 0;
 
 const client: JTypeBoardDataClient = {
   async listDocuments(): Promise<JTypeDocumentListItem[]> {
@@ -133,14 +182,34 @@ const client: JTypeBoardDataClient = {
     return { ...doc };
   },
   async saveDocument(_workspaceId, request) {
+    saveAttempts.push(request);
     if (request.relativePath.endsWith("/failing-child.md")) {
       throw new Error("simulated child create failure");
     }
-    saveCalls.push(request);
+    if (request.relativePath === "jcode/card-0.md" && simulatedUpdateFailures > 0) {
+      simulatedUpdateFailures -= 1;
+      throw new Error("simulated Card update failure");
+    }
     const existing = [...stored.values()].find((doc) => doc.relativePath === request.relativePath);
+    if (request.createOnly && existing) {
+      throw Object.assign(new Error("simulated document create conflict"), {
+        status: 409,
+        code: "document_conflict",
+      });
+    }
+    saveCalls.push(request);
     const id = existing?.id ?? `doc-${clock}`;
     put(id, request.relativePath, request.title ?? existing?.title ?? request.relativePath, request.content);
     const saved = stored.get(id)!;
+    if (pauseNextCardWrite && request.relativePath.endsWith(".md") && request.baseContentHash) {
+      pauseNextCardWrite = false;
+      window.__BOARD_EMBED_TEST__!.cardWritePaused = true;
+      await new Promise<void>((resolve) => {
+        releasePausedCardWrite = resolve;
+      });
+      releasePausedCardWrite = null;
+      window.__BOARD_EMBED_TEST__!.cardWritePaused = false;
+    }
     return {
       relativePath: saved.relativePath,
       contentHash: saved.contentHash,
@@ -153,55 +222,73 @@ const client: JTypeBoardDataClient = {
   },
 };
 
-const query = new URLSearchParams(window.location.search);
-const readOnly = query.get("readonly") === "1";
+const initialReadOnly = query.get("readonly") === "1";
+const fixtureLocale = query.get("locale") === "zh" ? "zh" : "en";
 const interceptOpen = query.get("intercept") === "1";
 const showSupplement = query.get("supplement") === "1";
 const initialCardPath = query.get("card") ?? undefined;
+const controlledViewStateMode = query.get("controlled-view");
+const controlledViewState: Partial<BoardPersonalViewState> | undefined =
+  controlledViewStateMode
+    ? { version: 1, scope: "inbox", dismissedInboxItemKeys: ["stale:missing-signal"] }
+    : undefined;
 const additionalCardRoots = query.get("managed") === "1"
   ? ["jcode-automation"]
-  : undefined;
+  : query.get("limited") === "1"
+    ? []
+    : undefined;
 
-createRoot(document.getElementById("root")!).render(
-  <div className="cloud-shell">
-    <div className="cloud-modal" data-testid="cloud-modal">
-      <header className="cloud-header">Kanban</header>
-      <section className="cloud-config">
-        <strong>Automation columns</strong>
-        <span>Trigger: To do</span>
-        <span>Complete: Done</span>
-      </section>
-      <main className="cloud-board-host" data-testid="cloud-board-host">
-        <JTypeBoard
-          client={client}
-          workspaceId="ws-team"
-          boardRef="jcode.board"
-          live={false}
-          locale="en"
-          readOnly={readOnly}
-          initialCardPath={initialCardPath}
-          additionalCardRoots={additionalCardRoots}
-          pollIntervalMs={initialCardPath ? 5_000 : undefined}
-          renderCardSupplement={
-            showSupplement
-              ? (card) => (
-                  <section data-testid="host-card-supplement">
-                    Cloud executions for {card.title}
-                  </section>
-                )
-              : undefined
-          }
-          onCardOpen={
-            interceptOpen
-              ? (card) => {
+function EmbedFixture() {
+  const [readOnly, setReadOnly] = useState(initialReadOnly);
+  window.__BOARD_EMBED_TEST__!.setReadOnly = setReadOnly;
+
+  return (
+    <div className="cloud-shell">
+      <div className="cloud-modal" data-testid="cloud-modal">
+        <header className="cloud-header">Kanban</header>
+        <section className="cloud-config">
+          <strong>Automation columns</strong>
+          <span>Trigger: To do</span>
+          <span>Complete: Done</span>
+        </section>
+        <main className="cloud-board-host" data-testid="cloud-board-host">
+          <JTypeBoard
+            client={client}
+            workspaceId="ws-team"
+            boardRef="jcode.board"
+            live={false}
+            locale={fixtureLocale}
+            readOnly={readOnly}
+            viewState={controlledViewState}
+            onViewStateChange={
+              controlledViewStateMode === "ignored"
+                ? (next) => window.__BOARD_EMBED_TEST__!.viewStateChanges.push(next)
+                : undefined
+            }
+            initialCardPath={initialCardPath}
+            additionalCardRoots={additionalCardRoots}
+            pollIntervalMs={initialCardPath ? 5_000 : undefined}
+            renderCardSupplement={
+              showSupplement
+                ? (card) => (
+                    <section data-testid="host-card-supplement">
+                      Cloud executions for {card.title}
+                    </section>
+                  )
+                : undefined
+            }
+            onCardOpen={
+              interceptOpen
+                ? (card) => {
                   window.__BOARD_EMBED_TEST__!.openedCardTitle = card.title;
+                  window.__BOARD_EMBED_TEST__!.openedCardCount += 1;
                 }
-              : undefined
-          }
-        />
-      </main>
-    </div>
-    <style>{`
+                : undefined
+            }
+          />
+        </main>
+      </div>
+      <style>{`
       * { box-sizing: border-box; }
       html, body, #root { width: 100%; height: 100%; margin: 0; }
       body { color: #292524; font-family: ui-sans-serif, system-ui, sans-serif; }
@@ -250,6 +337,9 @@ createRoot(document.getElementById("root")!).render(
         overflow: auto;
         margin: 0 20px 20px;
       }
-    `}</style>
-  </div>,
-);
+      `}</style>
+    </div>
+  );
+}
+
+createRoot(document.getElementById("root")!).render(<EmbedFixture />);
