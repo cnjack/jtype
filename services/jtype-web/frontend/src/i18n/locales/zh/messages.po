@@ -236,7 +236,6 @@ msgstr "允许全部访问"
 msgid "Already accepted"
 msgstr "已接受"
 
-#: src/pages/DeviceOAuth.tsx
 #: src/pages/Login.tsx
 msgid "Already have an account?"
 msgstr "已有账户？"
@@ -262,8 +261,8 @@ msgid "At least 8 characters"
 msgstr "至少 8 个字符"
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Authentication failed"
-msgstr "认证失败"
+#~ msgid "Authentication failed"
+#~ msgstr "认证失败"
 
 #: src/pages/DeviceOAuth.tsx
 msgid "Authorization failed"
@@ -779,7 +778,6 @@ msgstr "域名"
 msgid "Domains"
 msgstr "域名"
 
-#: src/pages/DeviceOAuth.tsx
 #: src/pages/Login.tsx
 msgid "Don't have an account?"
 msgstr "没有账户？"
@@ -1618,7 +1616,6 @@ msgid "Pass ownership to another admin member."
 msgstr "将所有权转让给另一个管理员成员。"
 
 #: src/pages/Admin.tsx
-#: src/pages/DeviceOAuth.tsx
 #: src/pages/Login.tsx
 msgid "Password"
 msgstr "密码"
@@ -1656,8 +1653,8 @@ msgid "Play the explainer video"
 msgstr "播放讲解视频"
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Please wait..."
-msgstr "请稍候…"
+#~ msgid "Please wait..."
+#~ msgstr "请稍候…"
 
 #: src/help/pages/HelpHome.tsx
 msgid "Popular articles"
@@ -1791,14 +1788,13 @@ msgstr "推荐：将此 URL 粘贴到支持 OAuth 的客户端（Claude、Cursor
 msgid "Region"
 msgstr "区域"
 
-#: src/pages/DeviceOAuth.tsx
 #: src/pages/Login.tsx
 msgid "Register"
 msgstr "注册"
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Register & authorize"
-msgstr "注册并授权"
+#~ msgid "Register & authorize"
+#~ msgstr "注册并授权"
 
 #: src/pages/DeviceOAuth.tsx
 #~ msgid "Register & Authorize"
@@ -2073,23 +2069,26 @@ msgstr "侧栏"
 msgid "Sidebar width"
 msgstr "侧栏宽度"
 
-#: src/pages/DeviceOAuth.tsx
 #: src/pages/Landing.tsx
 #: src/pages/Login.tsx
 msgid "Sign in"
 msgstr "登录"
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Sign in & authorize"
-msgstr "登录并授权"
+#~ msgid "Sign in & authorize"
+#~ msgstr "登录并授权"
 
 #: src/pages/DeviceOAuth.tsx
 #~ msgid "Sign in & Authorize"
 #~ msgstr "登录并授权"
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Sign in to approve this device"
-msgstr "登录以批准此设备"
+#~ msgid "Sign in to approve this device"
+#~ msgstr "登录以批准此设备"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Sign in to JType to continue authorizing this device."
+msgstr "登录 JType 以继续授权此设备。"
 
 #: src/pages/Login.tsx
 msgid "Sign in to your JType Cloud account."
@@ -2113,9 +2112,14 @@ msgstr "注册以开始同步您的库。"
 msgid "Signed in as {0}"
 msgstr "已以 {0} 身份登录"
 
+#. placeholder {0}: user.username
 #: src/pages/DeviceOAuth.tsx
-msgid "Signed in as <0>{loggedInName}</0>"
-msgstr "已登录为 <0>{loggedInName}</0>"
+msgid "Signed in as <0>{0}</0>"
+msgstr "已以 <0>{0}</0> 身份登录"
+
+#: src/pages/DeviceOAuth.tsx
+#~ msgid "Signed in as <0>{loggedInName}</0>"
+#~ msgstr "已登录为 <0>{loggedInName}</0>"
 
 #: src/pages/DeviceOAuth.tsx
 #~ msgid "Signed in. Ready to authorize device."
@@ -2454,7 +2458,6 @@ msgstr "用户菜单"
 
 #: src/components/Layout.tsx
 #: src/pages/Admin.tsx
-#: src/pages/DeviceOAuth.tsx
 #: src/pages/Login.tsx
 msgid "Username"
 msgstr "用户名"

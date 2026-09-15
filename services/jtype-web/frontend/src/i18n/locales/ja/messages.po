@@ -236,7 +236,6 @@ msgstr "フルアクセスを許可"
 msgid "Already accepted"
 msgstr "承諾済み"
 
-#: src/pages/DeviceOAuth.tsx
 #: src/pages/Login.tsx
 msgid "Already have an account?"
 msgstr "すでにアカウントをお持ちですか？"
@@ -262,8 +261,8 @@ msgid "At least 8 characters"
 msgstr ""
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Authentication failed"
-msgstr "認証に失敗しました"
+#~ msgid "Authentication failed"
+#~ msgstr "認証に失敗しました"
 
 #: src/pages/DeviceOAuth.tsx
 msgid "Authorization failed"
@@ -779,7 +778,6 @@ msgstr "ドメイン"
 msgid "Domains"
 msgstr "ドメイン"
 
-#: src/pages/DeviceOAuth.tsx
 #: src/pages/Login.tsx
 msgid "Don't have an account?"
 msgstr "アカウントをお持ちでないですか？"
@@ -1618,7 +1616,6 @@ msgid "Pass ownership to another admin member."
 msgstr "別の管理者メンバーに所有権を渡します。"
 
 #: src/pages/Admin.tsx
-#: src/pages/DeviceOAuth.tsx
 #: src/pages/Login.tsx
 msgid "Password"
 msgstr "パスワード"
@@ -1656,8 +1653,8 @@ msgid "Play the explainer video"
 msgstr "解説動画を再生"
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Please wait..."
-msgstr "しばらくお待ちください..."
+#~ msgid "Please wait..."
+#~ msgstr "しばらくお待ちください..."
 
 #: src/help/pages/HelpHome.tsx
 msgid "Popular articles"
@@ -1791,14 +1788,13 @@ msgstr "推奨：この URL を OAuth 対応クライアント（Claude、Cursor
 msgid "Region"
 msgstr "リージョン"
 
-#: src/pages/DeviceOAuth.tsx
 #: src/pages/Login.tsx
 msgid "Register"
 msgstr "登録"
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Register & authorize"
-msgstr ""
+#~ msgid "Register & authorize"
+#~ msgstr ""
 
 #: src/pages/DeviceOAuth.tsx
 #~ msgid "Register & Authorize"
@@ -2073,23 +2069,26 @@ msgstr "サイドバー"
 msgid "Sidebar width"
 msgstr "サイドバーの幅"
 
-#: src/pages/DeviceOAuth.tsx
 #: src/pages/Landing.tsx
 #: src/pages/Login.tsx
 msgid "Sign in"
 msgstr "サインイン"
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Sign in & authorize"
-msgstr ""
+#~ msgid "Sign in & authorize"
+#~ msgstr ""
 
 #: src/pages/DeviceOAuth.tsx
 #~ msgid "Sign in & Authorize"
 #~ msgstr "サインインして承認"
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Sign in to approve this device"
-msgstr ""
+#~ msgid "Sign in to approve this device"
+#~ msgstr ""
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Sign in to JType to continue authorizing this device."
+msgstr "このデバイスを承認するには、JType にサインインしてください。"
 
 #: src/pages/Login.tsx
 msgid "Sign in to your JType Cloud account."
@@ -2113,9 +2112,14 @@ msgstr "サインアップしてボルトの同期を開始します。"
 msgid "Signed in as {0}"
 msgstr "{0} としてサインイン済み"
 
+#. placeholder {0}: user.username
 #: src/pages/DeviceOAuth.tsx
-msgid "Signed in as <0>{loggedInName}</0>"
-msgstr ""
+msgid "Signed in as <0>{0}</0>"
+msgstr "<0>{0}</0> としてサインイン中"
+
+#: src/pages/DeviceOAuth.tsx
+#~ msgid "Signed in as <0>{loggedInName}</0>"
+#~ msgstr ""
 
 #: src/pages/DeviceOAuth.tsx
 #~ msgid "Signed in. Ready to authorize device."
@@ -2454,7 +2458,6 @@ msgstr "ユーザーメニュー"
 
 #: src/components/Layout.tsx
 #: src/pages/Admin.tsx
-#: src/pages/DeviceOAuth.tsx
 #: src/pages/Login.tsx
 msgid "Username"
 msgstr "ユーザー名"
