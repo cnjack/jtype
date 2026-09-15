@@ -235,7 +235,6 @@ msgstr "Allow full access"
 msgid "Already accepted"
 msgstr "Already accepted"
 
-#: src/pages/DeviceOAuth.tsx
 #: src/pages/Login.tsx
 msgid "Already have an account?"
 msgstr "Already have an account?"
@@ -261,8 +260,8 @@ msgid "At least 8 characters"
 msgstr "At least 8 characters"
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Authentication failed"
-msgstr "Authentication failed"
+#~ msgid "Authentication failed"
+#~ msgstr "Authentication failed"
 
 #: src/pages/DeviceOAuth.tsx
 msgid "Authorization failed"
@@ -778,7 +777,6 @@ msgstr "Domain"
 msgid "Domains"
 msgstr "Domains"
 
-#: src/pages/DeviceOAuth.tsx
 #: src/pages/Login.tsx
 msgid "Don't have an account?"
 msgstr "Don't have an account?"
@@ -1617,7 +1615,6 @@ msgid "Pass ownership to another admin member."
 msgstr "Pass ownership to another admin member."
 
 #: src/pages/Admin.tsx
-#: src/pages/DeviceOAuth.tsx
 #: src/pages/Login.tsx
 msgid "Password"
 msgstr "Password"
@@ -1655,8 +1652,8 @@ msgid "Play the explainer video"
 msgstr "Play the explainer video"
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Please wait..."
-msgstr "Please wait..."
+#~ msgid "Please wait..."
+#~ msgstr "Please wait..."
 
 #: src/help/pages/HelpHome.tsx
 msgid "Popular articles"
@@ -1790,14 +1787,13 @@ msgstr "Recommended: paste this URL into an OAuth-capable client (Claude, Cursor
 msgid "Region"
 msgstr "Region"
 
-#: src/pages/DeviceOAuth.tsx
 #: src/pages/Login.tsx
 msgid "Register"
 msgstr "Register"
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Register & authorize"
-msgstr "Register & authorize"
+#~ msgid "Register & authorize"
+#~ msgstr "Register & authorize"
 
 #: src/pages/DeviceOAuth.tsx
 #~ msgid "Register & Authorize"
@@ -2072,23 +2068,26 @@ msgstr "Sidebar"
 msgid "Sidebar width"
 msgstr "Sidebar width"
 
-#: src/pages/DeviceOAuth.tsx
 #: src/pages/Landing.tsx
 #: src/pages/Login.tsx
 msgid "Sign in"
 msgstr "Sign in"
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Sign in & authorize"
-msgstr "Sign in & authorize"
+#~ msgid "Sign in & authorize"
+#~ msgstr "Sign in & authorize"
 
 #: src/pages/DeviceOAuth.tsx
 #~ msgid "Sign in & Authorize"
 #~ msgstr "Sign in & Authorize"
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Sign in to approve this device"
-msgstr "Sign in to approve this device"
+#~ msgid "Sign in to approve this device"
+#~ msgstr "Sign in to approve this device"
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Sign in to JType to continue authorizing this device."
+msgstr "Sign in to JType to continue authorizing this device."
 
 #: src/pages/Login.tsx
 msgid "Sign in to your JType Cloud account."
@@ -2112,9 +2111,14 @@ msgstr "Sign up to start syncing your vaults."
 msgid "Signed in as {0}"
 msgstr "Signed in as {0}"
 
+#. placeholder {0}: user.username
 #: src/pages/DeviceOAuth.tsx
-msgid "Signed in as <0>{loggedInName}</0>"
-msgstr "Signed in as <0>{loggedInName}</0>"
+msgid "Signed in as <0>{0}</0>"
+msgstr "Signed in as <0>{0}</0>"
+
+#: src/pages/DeviceOAuth.tsx
+#~ msgid "Signed in as <0>{loggedInName}</0>"
+#~ msgstr "Signed in as <0>{loggedInName}</0>"
 
 #: src/pages/DeviceOAuth.tsx
 #~ msgid "Signed in. Ready to authorize device."
@@ -2453,7 +2457,6 @@ msgstr "User menu"
 
 #: src/components/Layout.tsx
 #: src/pages/Admin.tsx
-#: src/pages/DeviceOAuth.tsx
 #: src/pages/Login.tsx
 msgid "Username"
 msgstr "Username"

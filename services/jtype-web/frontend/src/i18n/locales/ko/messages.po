@@ -236,7 +236,6 @@ msgstr "전체 액세스 허용"
 msgid "Already accepted"
 msgstr "이미 수락됨"
 
-#: src/pages/DeviceOAuth.tsx
 #: src/pages/Login.tsx
 msgid "Already have an account?"
 msgstr "이미 계정이 있으신가요?"
@@ -262,8 +261,8 @@ msgid "At least 8 characters"
 msgstr ""
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Authentication failed"
-msgstr "인증 실패"
+#~ msgid "Authentication failed"
+#~ msgstr "인증 실패"
 
 #: src/pages/DeviceOAuth.tsx
 msgid "Authorization failed"
@@ -779,7 +778,6 @@ msgstr "도메인"
 msgid "Domains"
 msgstr "도메인"
 
-#: src/pages/DeviceOAuth.tsx
 #: src/pages/Login.tsx
 msgid "Don't have an account?"
 msgstr "계정이 없으신가요?"
@@ -1618,7 +1616,6 @@ msgid "Pass ownership to another admin member."
 msgstr "다른 관리자 멤버에게 소유권을 넘깁니다."
 
 #: src/pages/Admin.tsx
-#: src/pages/DeviceOAuth.tsx
 #: src/pages/Login.tsx
 msgid "Password"
 msgstr "비밀번호"
@@ -1656,8 +1653,8 @@ msgid "Play the explainer video"
 msgstr "설명 영상 재생"
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Please wait..."
-msgstr "잠시 기다려 주세요..."
+#~ msgid "Please wait..."
+#~ msgstr "잠시 기다려 주세요..."
 
 #: src/help/pages/HelpHome.tsx
 msgid "Popular articles"
@@ -1791,14 +1788,13 @@ msgstr "권장: 이 URL을 OAuth 지원 클라이언트(Claude, Cursor)에 붙�
 msgid "Region"
 msgstr "리전"
 
-#: src/pages/DeviceOAuth.tsx
 #: src/pages/Login.tsx
 msgid "Register"
 msgstr "등록"
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Register & authorize"
-msgstr ""
+#~ msgid "Register & authorize"
+#~ msgstr ""
 
 #: src/pages/DeviceOAuth.tsx
 #~ msgid "Register & Authorize"
@@ -2073,23 +2069,26 @@ msgstr "사이드바"
 msgid "Sidebar width"
 msgstr "사이드바 너비"
 
-#: src/pages/DeviceOAuth.tsx
 #: src/pages/Landing.tsx
 #: src/pages/Login.tsx
 msgid "Sign in"
 msgstr "로그인"
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Sign in & authorize"
-msgstr ""
+#~ msgid "Sign in & authorize"
+#~ msgstr ""
 
 #: src/pages/DeviceOAuth.tsx
 #~ msgid "Sign in & Authorize"
 #~ msgstr "로그인 및 인증"
 
 #: src/pages/DeviceOAuth.tsx
-msgid "Sign in to approve this device"
-msgstr ""
+#~ msgid "Sign in to approve this device"
+#~ msgstr ""
+
+#: src/pages/DeviceOAuth.tsx
+msgid "Sign in to JType to continue authorizing this device."
+msgstr "이 기기의 승인을 계속하려면 JType에 로그인하세요."
 
 #: src/pages/Login.tsx
 msgid "Sign in to your JType Cloud account."
@@ -2113,9 +2112,14 @@ msgstr "볼트 동기화를 시작하려면 회원가입하세요."
 msgid "Signed in as {0}"
 msgstr "{0}(으)로 로그인됨"
 
+#. placeholder {0}: user.username
 #: src/pages/DeviceOAuth.tsx
-msgid "Signed in as <0>{loggedInName}</0>"
-msgstr ""
+msgid "Signed in as <0>{0}</0>"
+msgstr "<0>{0}</0>님으로 로그인됨"
+
+#: src/pages/DeviceOAuth.tsx
+#~ msgid "Signed in as <0>{loggedInName}</0>"
+#~ msgstr ""
 
 #: src/pages/DeviceOAuth.tsx
 #~ msgid "Signed in. Ready to authorize device."
@@ -2454,7 +2458,6 @@ msgstr "사용자 메뉴"
 
 #: src/components/Layout.tsx
 #: src/pages/Admin.tsx
-#: src/pages/DeviceOAuth.tsx
 #: src/pages/Login.tsx
 msgid "Username"
 msgstr "사용자 이름"
