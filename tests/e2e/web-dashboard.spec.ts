@@ -636,6 +636,65 @@ test.describe("Authentication", () => {
   });
 });
 
+test.describe("Device OAuth", () => {
+  // Registered after mockApi so it wins for /api/oauth/device/* routes.
+  function mockDeviceApi(page: Page) {
+    return page.route("**/api/oauth/device/**", (route) => {
+      const url = route.request().url();
+      if (url.includes("/api/oauth/device/request")) {
+        return route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({ clientName: "jtype CLI", scope: "full" }),
+        });
+      }
+      if (url.endsWith("/api/oauth/device/approve")) {
+        return route.fulfill({ status: 200, contentType: "application/json", body: "{}" });
+      }
+      return route.fulfill({ status: 404, body: "{}" });
+    });
+  }
+
+  test("redirects unauthenticated visitors to sign-in, then returns to authorize", async ({ page }) => {
+    await mockApi(page);
+    await mockDeviceApi(page);
+    await page.goto("/oauth/device?code=123456");
+
+    // Not signed in: the device page defers to the login page, keeping the
+    // code in the `next` parameter.
+    await expect(page).toHaveURL(/\/login\?next=%2Foauth%2Fdevice%3Fcode%3D123456$/);
+
+    await page.getByLabel("Username").fill("testuser");
+    await page.getByLabel("Password").fill("password123");
+    await page.locator("form").getByRole("button", { name: "Sign in" }).click();
+
+    // Signed in: back on the device page with the code prefilled and consent shown.
+    await expect(page).toHaveURL(/\/oauth\/device\?code=123456$/);
+    await expect(page.getByText("jtype CLI requests access to your JType account.")).toBeVisible();
+    await page.getByRole("button", { name: "Allow full access" }).click();
+    await expect(
+      page.getByText("Access approved. You can return to the app that requested access."),
+    ).toBeVisible();
+  });
+
+  test("signed-in user can enter a device code manually and approve", async ({ page }) => {
+    await mockApi(page);
+    await mockDeviceApi(page);
+    await loginAs(page);
+    await page.goto("/oauth/device");
+
+    const digits = "654321";
+    for (let i = 0; i < 6; i++) {
+      await page.getByLabel(`Digit ${i + 1} of 6`).fill(digits[i]);
+    }
+    await expect(page.getByText("jtype CLI requests access to your JType account.")).toBeVisible();
+    await page.getByRole("button", { name: "Allow full access" }).click();
+    await expect(
+      page.getByText("Access approved. You can return to the app that requested access."),
+    ).toBeVisible();
+  });
+});
+
 test.describe("Dashboard", () => {
   test.beforeEach(async ({ page }) => {
     await mockApi(page);

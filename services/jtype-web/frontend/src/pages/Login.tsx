@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { t } from '@lingui/core/macro'
 import { Trans } from '@lingui/react/macro'
 import { useAuth } from '../components/AuthContext'
@@ -42,6 +42,13 @@ export function Login() {
   const [otpError, setOtpError] = useState('')
   const { login, register, completeLogin, user, loading } = useAuth()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  // Post-login destination. Only same-origin local paths are honored so a
+  // crafted `next` cannot bounce users off-site (e.g. the device OAuth flow
+  // sends `/oauth/device?code=…` here before the user is signed in).
+  const rawNext = searchParams.get('next') || ''
+  const nextPath =
+    rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/workspaces'
   // When signing in with an email, OTP is the default method; the user can opt
   // into password via "Use password instead". Username sign-in is always password.
   const isEmailSignIn = !isRegister && username.includes('@')
@@ -49,9 +56,9 @@ export function Login() {
 
   useEffect(() => {
     if (!loading && user) {
-      navigate('/workspaces', { replace: true })
+      navigate(nextPath, { replace: true })
     }
-  }, [loading, navigate, user])
+  }, [loading, navigate, nextPath, user])
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -66,7 +73,7 @@ export function Login() {
       } else {
         await login(username, password)
       }
-      navigate('/workspaces')
+      navigate(nextPath)
     } catch (err) {
       setError(err instanceof Error ? err.message : t`Something went wrong`)
     } finally {
@@ -112,7 +119,7 @@ export function Login() {
     try {
       const res: AuthResponse = await api.loginOtpVerify(username, code)
       completeLogin(res)
-      navigate('/workspaces')
+      navigate(nextPath)
     } catch (err) {
       setOtpCode('')
       setOtpError(err instanceof Error ? err.message : t`Verification failed`)
