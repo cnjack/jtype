@@ -11,6 +11,7 @@ import {
   ExclamationCircleIcon,
   CheckCircleIcon,
   ArrowPathIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline'
 
 export function DeviceOAuth() {
@@ -81,6 +82,15 @@ export function DeviceOAuth() {
     })
   }
 
+  // After approving, nothing on this page is actionable anymore. Browsers only
+  // honor window.close() for script-opened tabs; when the CLI flow had the user
+  // open the URL manually the call is a no-op, so fall back to the dashboard
+  // instead of leaving a dead authorization card on screen.
+  const handleClose = () => {
+    window.close()
+    window.setTimeout(() => navigate('/workspaces'), 300)
+  }
+
   const icon = (
     <ComputerDesktopIcon className="h-6 w-6" />
   )
@@ -116,83 +126,97 @@ export function DeviceOAuth() {
         </p>
       }
     >
-      {/* OTP input — unified with brand design system */}
-      <OTPInput
-        value={userCode}
-        onChange={setUserCode}
-        onComplete={(v) => { void v }}
-        error={!!error}
-        autoFocus
-        ariaLabel={t`Device code`}
-      />
-      <p className="otp-hint mt-3 text-center text-xs text-stone-500">
-        {copied ? <Trans>Copied</Trans> : (
-          <button type="button" onClick={copyCode} className="font-semibold text-brand hover:underline">
-            <Trans>Copy code</Trans>
-          </button>
-        )}
-      </p>
-
-      <div className="mt-6 border-t border-black/[0.06] pt-5">
+      {status ? (
+        /* Completion state — the code inputs and Allow controls no longer
+           apply and would only invite a second, ambiguous interaction. */
         <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-2.5 text-sm text-stone-600">
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-soft font-bold text-brand-dark">
-              {user.username.charAt(0).toUpperCase() || '?'}
-            </span>
-            <Trans>Signed in as <b className="text-stone-800">{user.username}</b></Trans>
-          </div>
-
-          {request && !status && (
-            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-stone-700">
-              <p className="font-semibold text-stone-900">
-                {request.clientName} <Trans>requests access to your JType account.</Trans>
-              </p>
-              {request.scope === 'full' ? (
-                <>
-                  <p className="mt-2 font-semibold text-amber-800">
-                    <Trans>Full account access</Trans>
-                  </p>
-                  <ul className="mt-1 list-disc space-y-1 pl-5 text-xs leading-5 text-stone-600">
-                    <li><Trans>View and manage all cloud workspaces you can access</Trans></li>
-                    <li><Trans>Read, create, update, and delete documents and kanban cards</Trans></li>
-                    <li><Trans>Use your workspace and administrator permissions</Trans></li>
-                  </ul>
-                </>
-              ) : (
-                <p className="mt-2 text-xs text-stone-600">
-                  <Trans>Read and manage your documents and kanban boards.</Trans>
-                </p>
-              )}
-            </div>
-          )}
-
-          {status && (
-            <p className="flex items-start gap-2 rounded-lg bg-brand-soft px-3 py-2 text-sm text-brand-dark">
-              <CheckCircleIcon className="mt-0.5 h-4 w-4 shrink-0" />
-              <span>{status}</span>
-            </p>
-          )}
-          {error && (
-            <p className="flex items-start gap-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
-              <ExclamationCircleIcon className="mt-0.5 h-4 w-4 shrink-0" />
-              <span>{error}</span>
-            </p>
-          )}
-
+          <p className="flex items-start gap-2 rounded-lg bg-brand-soft px-3 py-2 text-sm text-brand-dark">
+            <CheckCircleIcon className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>{status}</span>
+          </p>
           <button
-            onClick={handleApprove}
-            disabled={loading || !codeComplete || !request}
-            className="toolbar-button toolbar-button-primary h-10 justify-center disabled:opacity-50"
+            onClick={handleClose}
+            className="toolbar-button toolbar-button-primary h-10 justify-center"
           >
-            {loading && <ArrowPathIcon className="h-4 w-4 animate-spin" />}
-            {loading
-              ? t`Authorizing...`
-              : request?.scope === 'full'
-                ? t`Allow full access`
-                : t`Allow access`}
+            <XMarkIcon className="h-4 w-4" />
+            <Trans>Close this page</Trans>
           </button>
         </div>
-      </div>
+      ) : (
+        <>
+          {/* OTP input — unified with brand design system */}
+          <OTPInput
+            value={userCode}
+            onChange={setUserCode}
+            onComplete={(v) => { void v }}
+            error={!!error}
+            autoFocus
+            ariaLabel={t`Device code`}
+          />
+          <p className="otp-hint mt-3 text-center text-xs text-stone-500">
+            {copied ? <Trans>Copied</Trans> : (
+              <button type="button" onClick={copyCode} className="font-semibold text-brand hover:underline">
+                <Trans>Copy code</Trans>
+              </button>
+            )}
+          </p>
+
+          <div className="mt-6 border-t border-black/[0.06] pt-5">
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center gap-2.5 text-sm text-stone-600">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-soft font-bold text-brand-dark">
+                  {user.username.charAt(0).toUpperCase() || '?'}
+                </span>
+                <Trans>Signed in as <b className="text-stone-800">{user.username}</b></Trans>
+              </div>
+
+              {request && (
+                <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-stone-700">
+                  <p className="font-semibold text-stone-900">
+                    {request.clientName} <Trans>requests access to your JType account.</Trans>
+                  </p>
+                  {request.scope === 'full' ? (
+                    <>
+                      <p className="mt-2 font-semibold text-amber-800">
+                        <Trans>Full account access</Trans>
+                      </p>
+                      <ul className="mt-1 list-disc space-y-1 pl-5 text-xs leading-5 text-stone-600">
+                        <li><Trans>View and manage all cloud workspaces you can access</Trans></li>
+                        <li><Trans>Read, create, update, and delete documents and kanban cards</Trans></li>
+                        <li><Trans>Use your workspace and administrator permissions</Trans></li>
+                      </ul>
+                    </>
+                  ) : (
+                    <p className="mt-2 text-xs text-stone-600">
+                      <Trans>Read and manage your documents and kanban boards.</Trans>
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {error && (
+                <p className="flex items-start gap-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
+                  <ExclamationCircleIcon className="mt-0.5 h-4 w-4 shrink-0" />
+                  <span>{error}</span>
+                </p>
+              )}
+
+              <button
+                onClick={handleApprove}
+                disabled={loading || !codeComplete || !request}
+                className="toolbar-button toolbar-button-primary h-10 justify-center disabled:opacity-50"
+              >
+                {loading && <ArrowPathIcon className="h-4 w-4 animate-spin" />}
+                {loading
+                  ? t`Authorizing...`
+                  : request?.scope === 'full'
+                    ? t`Allow full access`
+                    : t`Allow access`}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </AuthCard>
   )
 }

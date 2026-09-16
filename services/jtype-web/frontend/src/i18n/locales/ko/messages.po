@@ -454,6 +454,10 @@ msgstr "닫기"
 msgid "Close menu"
 msgstr "메뉴 닫기"
 
+#: src/pages/DeviceOAuth.tsx
+msgid "Close this page"
+msgstr "이 페이지 닫기"
+
 #: src/pages/Login.tsx
 msgid "Cloud Sync"
 msgstr "클라우드 동기화"
