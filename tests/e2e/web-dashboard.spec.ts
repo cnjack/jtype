@@ -757,6 +757,13 @@ test.describe("Device OAuth", () => {
     await expect(
       page.getByText("Access approved. You can return to the app that requested access."),
     ).toBeVisible();
+
+    // Completion state: the code inputs and Allow controls are gone; only the
+    // success banner and a close action remain.
+    await expect(page.getByLabel("Digit 1 of 6")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Allow full access" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Copy code" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Close this page" })).toBeVisible();
   });
 
   test("signed-in user can enter a device code manually and approve", async ({ page }) => {
@@ -774,6 +781,8 @@ test.describe("Device OAuth", () => {
     await expect(
       page.getByText("Access approved. You can return to the app that requested access."),
     ).toBeVisible();
+    await expect(page.getByLabel("Digit 1 of 6")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Close this page" })).toBeVisible();
   });
 });
 

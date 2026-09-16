@@ -454,6 +454,10 @@ msgstr "閉じる"
 msgid "Close menu"
 msgstr "メニューを閉じる"
 
+#: src/pages/DeviceOAuth.tsx
+msgid "Close this page"
+msgstr "このページを閉じる"
+
 #: src/pages/Login.tsx
 msgid "Cloud Sync"
 msgstr "クラウド同期"

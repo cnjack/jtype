@@ -453,6 +453,10 @@ msgstr "Close"
 msgid "Close menu"
 msgstr "Close menu"
 
+#: src/pages/DeviceOAuth.tsx
+msgid "Close this page"
+msgstr "Close this page"
+
 #: src/pages/Login.tsx
 msgid "Cloud Sync"
 msgstr "Cloud Sync"
